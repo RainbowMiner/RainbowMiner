@@ -1202,7 +1202,7 @@ function Get-StatFromFile {
                 Remove-Item -Path $Path -Force -Confirm:$false
             }
             if ($Cached -and $Global:StatsCache[$Name] -ne $null) {
-                $Global:StatsCache[$Name].Remove($Name)
+                $Global:StatsCache.Remove($Name)
             }
         }
     }

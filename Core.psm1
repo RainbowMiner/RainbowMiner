@@ -266,12 +266,11 @@ function Update-ActiveMiners {
     $MinersUpdated = 0
     $MinersFailed  = 0
     $ExclusiveMinersFailed = 0
-    $Global:ActiveMiners | Where-Object Best |  Foreach-Object {
-        $Miner = $_
+    foreach($Miner in @($Global:ActiveMiners | Where-Object Best | Select-Object)) {
         if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
             if (-not $FirstRound -or $Miner.Rounds) {
                 $Miner.UpdateMinerData() > $null
-                if (-not $Miner.CheckShareRatio() -and -not ($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])})) {
+                if (-not $Miner.CheckShareRatio() -and -not ($Miner.BaseAlgorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])})) {
                     Write-Log "Too many rejected shares for miner $($Miner.Name)"
                     $Miner.ResetMinerData()
                 }
@@ -307,10 +306,8 @@ function Set-MinerStats {
     )
 
     $Miner_Failed_Total = 0
-    $Global:ActiveMiners | Foreach-Object {
-        $Miner = $_
-
-        if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])})}
+    foreach ($Miner in $Global:ActiveMiners) {
+        if ($Miner.New) {$Miner.New = [Boolean]($Miner.BaseAlgorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])})}
 
         if ($Miner.New) {$Miner.Benchmarked++}
 
@@ -391,8 +388,7 @@ function Invoke-ReportMinerStatus {
     $TempAlert = 0
 
     $minerreport = ConvertTo-Json @(
-        $Global:ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
-            $Miner = $_
+        foreach($Miner in @($Global:ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object)) {
             $Miner_PowerDraw = $Miner.GetPowerDraw()
             $Profit += [Double]$Miner.Profit
             $PowerDraw += [Double]$Miner_PowerDraw
@@ -430,8 +426,8 @@ function Invoke-ReportMinerStatus {
                 Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $Miner.GetActiveTime()
                 Algorithm      = @($Miner.BaseAlgorithm)
                 Currency       = $Miner.Currency
-                CoinName       = @($Miner.CoinName | Where-Object {$Miner} | Select-Object)
-                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$Miner} | Select-Object)
+                CoinName       = @($Miner.CoinName | Where-Object {$_} | Select-Object)
+                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$_} | Select-Object)
                 Pool           = @($Miner.Pool)
                 CurrentSpeed   = @($Miner.Speed_Live)
                 EstimatedSpeed = @($Miner.Speed)
@@ -442,6 +438,7 @@ function Invoke-ReportMinerStatus {
                 Benchmarking   = $Miner.Speed -contains $null
                 Devices        = $Devices
             }
+            $Devices = $null
         }
     ) -Depth 10 -Compress
     
@@ -2297,31 +2294,47 @@ function Invoke-Core {
 
     if (($Miners | Measure-Object).Count -gt 0) {
         #Get most profitable miner combination
-        $BestMiners = $Global:ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Global:ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+
+        $ActiveMiners_Sorted = @($Global:ActiveMiners | Where-Object {$_.Enabled} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$(if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval})})
+
+        $BestMiners = @($ActiveMiners_Sorted | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($ActiveMiners_Sorted | Where-Object {(Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Select-Object -First 1)})
 
         #If post block mining: check for minimum profit
         if ($Miners_PBM = $BestMiners | Where-Object {$_.PostBlockMining -gt 0 -and -not $_.IsExclusiveMiner -and -not $_.IsLocked -and -not $_.IsFocusWalletMiner -and -not $_.NeedsBenchmark -and -not $_.IsRunningFirstRounds -and $Session.Config.Coins."$($_.CoinSymbol)".MinProfitPercent -gt 0}) {
+            $Miners_PBM_Remove = @()
             $Miners_PBM | Foreach-Object {
                 $Miner_PBM = $_
-                $BestMiner = $Global:ActiveMiners | Where-Object {$_.Enabled -and $_.PostBlockMining -eq 0 -and (Compare-Object $Miner_PBM.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1
-                $BestMiner_Profit = $BestMiner.Profit - $(if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost -ne $null -and $BestMiner.Profit_Cost -gt 0) {$BestMiner.Profit_Cost})
-                $Miner_PBM_Profit = $Miner_PBM.Profit - $(if ($Session.Config.UsePowerPrice -and $Miner_PBM.Profit_Cost -ne $null -and $Miner_PBM.Profit_Cost -gt 0) {$Miner_PBM.Profit_Cost})
+                $BestMiner = $ActiveMiners_Sorted | Where-Object {$_.PostBlockMining -eq 0 -and (Compare-Object $Miner_PBM.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Select-Object -First 1
+                $BestMiner_Profit = $BestMiner.Profit + $(if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost -ne $null -and $BestMiner.Profit_Cost -gt 0) {$BestMiner.Profit_Cost})
+                $Miner_PBM_Profit = $Miner_PBM.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner_PBM.Profit_Cost -ne $null -and $Miner_PBM.Profit_Cost -gt 0) {$Miner_PBM.Profit_Cost})
                 if ($BestMiner -and ($BestMiner_Profit * $Session.Config.Coins."$($Miner_PBM.CoinSymbol)".MinProfitPercent / 100 -gt $Miner_PBM_Profit)) {
-                    $BestMiners = (@($BestMiners | Select-Object) + $BestMiner) | Where-Object {$_ -ne $Miner_PBM}
+                    $BestMiners += $BestMiner
+                    $Miners_PBM_Remove += $Miner_PBM
                 }
             }
+            if ($Miners_PBM_Remove.Count) {
+                $BestMiners = @($BestMiners | Where-Object {$_ -notin $Miners_PBM_Remove})
+            }
+
+            #Cleanup
+            Remove-Variable "Miners_PBM"
+            Remove-Variable "Miners_PBM_Remove"
+            if ($BestMiner  -ne $null) {Remove-Variable "BestMiner"}
+            if ($Miner_PBM  -ne $null) {Remove-Variable "Miner_PBM"}
         }
-        if ($Miners_PBM -ne $null) {Remove-Variable "Miners_PBM"}
+        
 
         $NoCPUMining = $Session.Config.EnableCheckMiningConflict -and $MinersNeedingBenchmarkCount -eq 0 -and ($BestMiners | Where-Object DeviceModel -eq "CPU" | Measure-Object).Count -and ($BestMiners | Where-Object NoCPUMining -eq $true | Measure-Object).Count
-        if ($NoCPUMining) {$BestMiners2 = $Global:ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Global:ActiveMiners | Where-Object {-not $_.NoCPUMining -and $_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}}
+        if ($NoCPUMining) {
+            $BestMiners2 = @($ActiveMiners_Sorted | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($ActiveMiners_Sorted | Where-Object {-not $_.NoCPUMining -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Select-Object -First 1)})
+        }
 
         $Check_Profitability = $false
         if ($Session.Config.UsePowerPrice -and $MinersNeedingBenchmarkCount -eq 0) {
             #Remove no longer profitable miners
             if ($Session.Config.CheckProfitability) {
-                $BestMiners = $BestMiners | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner -or $_.IsLocked}
-                if ($BestMiners2) {$BestMiners2 = $BestMiners2 | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner -or $_.IsLocked}}
+                $BestMiners = @($BestMiners | Where-Object {$_.Profit -gt 0 -or $_.IsExclusiveMiner -or $_.IsLocked})
+                if ($BestMiners2) {$BestMiners2 = @($BestMiners2 | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner -or $_.IsLocked})}
             }
             $Check_Profitability = $true
         }
@@ -2370,11 +2383,14 @@ function Invoke-Core {
         if (-not $Session.PauseMiners -and -not $Session.PauseMinersByScheduler -and -not $Session.AutoUpdate -and $Session.Profitable) {
             $BestMiners_Combo | ForEach-Object {$_.Best = $true}
         }
+
+        #Cleanup
+        Remove-Variable "ActiveMiners_Sorted"
+        if ($BestMiners -ne $null) {Remove-Variable "BestMiners"}
+        if ($BestMiners2 -ne $null) {Remove-Variable "BestMiners2"}
+        if ($BestMiners_Combo -ne $null) {Remove-Variable "BestMiners_Combo"}
+        if ($BestMiners_Combo2 -ne $null) {Remove-Variable "BestMiners_Combo2"}
     }
-
-    if ($BestMiners_Combo -ne $null) {Remove-Variable "BestMiners_Combo"}
-    if ($BestMiners_Combo2 -ne $null) {Remove-Variable "BestMiners_Combo2"}
-
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Starting mining operation .."}
 
