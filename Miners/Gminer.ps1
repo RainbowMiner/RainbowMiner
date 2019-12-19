@@ -104,7 +104,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $DualIntensity = $_.Intensity
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and ($Pools.$Algorithm_Norm.Host -notmatch "Sparkpool" -or $Algorithm_Norm -ne "Eaglesong") -and (-not $SecondAlgorithm_Norm -or ($Pools.$SecondAlgorithm_Norm.Host -and ($_.NH2 -or $Pools.$SecondAlgorithm_Norm.Name -notmatch "Nicehash") -and (-not $_.Coins2 -or $_.Coins2 -icontains $Pools.$SecondAlgorithm_Norm.CoinSymbol) -and ($Pools.$SecondAlgorithm_Norm.Host -notmatch "Sparkpool" -or $SecondAlgorithm_Norm -ne "Eaglesong")))) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $SecondAlgorithm_Norm -or ($Pools.$SecondAlgorithm_Norm.Host -and ($_.NH2 -or $Pools.$SecondAlgorithm_Norm.Name -notmatch "Nicehash") -and (-not $_.Coins2 -or $_.Coins2 -icontains $Pools.$SecondAlgorithm_Norm.CoinSymbol)))) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = if ($Ethmining -and $Algorithm_Norm_0 -match "^Ethash\d") {
