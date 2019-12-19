@@ -1854,7 +1854,7 @@ function Start-SubProcessInConsole {
             return
         }
 
-        [PSCustomObject]@{ProcessId = $Process.Id; ProcessHandle = $Process.Handle}
+        [PSCustomObject]@{ProcessId = $Process.Id}
 
         $ControllerProcess.Handle >$null
         $Process.Handle >$null
@@ -2022,7 +2022,7 @@ function Start-SubProcessInScreen {
             return
         }
 
-        [PSCustomObject]@{ProcessId = $Process.Id; ProcessHandle = $Process.Handle}
+        [PSCustomObject]@{ProcessId = $Process.Id}
 
         $ControllerProcess.Handle >$null
         $Process.Handle >$null
