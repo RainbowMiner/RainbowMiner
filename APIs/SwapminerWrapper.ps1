@@ -46,10 +46,11 @@ class SwapminerWrapper : Miner {
     }
 
     [Void]UpdateMinerData () {
-        if ($this.Process.HasMoreData) {
+        $MJob = $this.GetMiningJob()
+        if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
-            $this.Process | Receive-Job | ForEach-Object {
+            $MJob | Receive-Job | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple) {

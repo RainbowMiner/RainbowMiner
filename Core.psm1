@@ -284,7 +284,7 @@ function Update-ActiveMiners {
         }        
     }
     if ($MinersFailed) {
-        $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
+        $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Select-Object) -Depth 2
     }
     if (-not $Silent) {
         [PSCustomObject]@{
@@ -2520,9 +2520,9 @@ function Invoke-Core {
     #Update API miner information
     #$RunningMiners = $Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
     $API.WatchdogTimers = ConvertTo-Json $Global:WatchdogTimers
-    $API.ActiveMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
-    $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
-    $API.FailedMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
+    $API.ActiveMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object) -Depth 2
+    $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Select-Object) -Depth 2
+    $API.FailedMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Select-Object) -Depth 2
 
     #
     #Start output to host
