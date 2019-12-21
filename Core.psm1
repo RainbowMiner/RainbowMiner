@@ -293,7 +293,7 @@ function Update-ActiveMiners {
         }        
     }
     if ($MinersFailed) {
-        $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Select-Object) -Depth 2
+        $API.RunningMiners  = $Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running}
     }
     if (-not $Silent) {
         [PSCustomObject]@{
@@ -538,7 +538,7 @@ function Invoke-ReportMinerStatus {
                     $Earnings_Avg = 0.0
                     $Earnings_1d  = 0.0
                     $OtherWorkers | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
-                    $API.RemoteMiners = ConvertTo-Json $OtherWorkers -Depth 10
+                    $API.RemoteMiners = $OtherWorkers
                     $API.RemoteMinersProfit = $Profit
                     $API.RemoteMinersEarnings_Avg = $Earnings_Avg
                     $API.RemoteMinersEarnings_1d  = $Earnings_1d
@@ -1485,7 +1485,7 @@ function Invoke-Core {
     Get-Stat -Miners -Quiet
     [hashtable]$Disabled      = Get-Stat -Disabled
 
-    $API.Stats = ConvertTo-Json $Global:StatsCache
+    $API.Stats = $Global:StatsCache
 
     #Load information about the pools
     Write-Log "Loading pool information. "
@@ -2131,7 +2131,7 @@ function Invoke-Core {
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null}
     $MinersNeedingBenchmarkCount = ($MinersNeedingBenchmark | Measure-Object).Count
-    $API.MinersNeedingBenchmark = ConvertTo-Json @($MinersNeedingBenchmark | Select-Object)
+    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
 
     #Update the active miners
     $Global:ActiveMiners | Foreach-Object {
@@ -2531,10 +2531,10 @@ function Invoke-Core {
 
     #Update API miner information
     #$RunningMiners = $Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
-    $API.WatchdogTimers = ConvertTo-Json $Global:WatchdogTimers
-    $API.ActiveMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object) -Depth 2
-    $API.RunningMiners  = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Select-Object) -Depth 2
-    $API.FailedMiners   = ConvertTo-Json @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Select-Object) -Depth 2
+    $API.WatchdogTimers = $Global:WatchdogTimers
+    $API.ActiveMiners   = $Global:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner}
+    $API.RunningMiners  = $Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running}
+    $API.FailedMiners   = $Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed}
 
     #
     #Start output to host

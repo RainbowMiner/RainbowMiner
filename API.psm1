@@ -141,23 +141,23 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = if ($API.ActiveMiners) {$API.ActiveMiners} else {"[]"}
+                    $Data = if ($API.ActiveMiners) {ConvertTo-Json @($API.ActiveMiners | Select-Object) -Depth 2} else {"[]"}
                     break
                 }
                 "/runningminers" {
-                    $Data = if ($API.RunningMiners) {$API.RunningMiners} else {"[]"}
+                    $Data = if ($API.RunningMiners) {ConvertTo-Json @($API.RunningMiners | Select-Object) -Depth 2} else {"[]"}
                     Break
                 }
                 "/failedminers" {
-                    $Data = if ($API.FailedMiners) {$API.FailedMiners} else {"[]"}
+                    $Data = if ($API.FailedMiners) {ConvertTo-Json @($API.FailedMiners | Select-Object) -Depth 2} else {"[]"}
                     Break
                 }
                 "/remoteminers" {
-                    $Data = if ($API.RemoteMiners) {$API.RemoteMiners} else {"[]"}
+                    $Data = if ($API.RemoteMiners) {ConvertTo-Json @($API.RemoteMiners | Select-Object) -Depth 2} else {"[]"}
                     Break
                 }
                 "/minersneedingbenchmark" {
-                    $Data = if ($API.MinersNeedingBenchmark) {$API.MinersNeedingBenchmark} else {"[]"}
+                    $Data = if ($API.MinersNeedingBenchmark) {ConvertTo-Json @($API.MinersNeedingBenchmark | Select-Object) -Depth 2} else {"[]"}
                     Break
                 }
                 "/minerinfo" {
@@ -360,7 +360,7 @@
                     Break
                 }
                 "/stats" {
-                    $Data = $API.Stats
+                    $Data = if ($API.Stats) {ConvertTo-Json $API.Stats} else {""}
                     Break
                 }
                 "/totals" {
@@ -439,7 +439,7 @@
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = if ($API.WatchdogTimers) {$API.WatchdogTimers} else {"[]"}
+                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json @($API.WatchdogTimers | Select-Object) -Depth 2} else {"[]"}
                     Break
                 }
                 "/balances" {
@@ -899,8 +899,6 @@
                 }
                 "/mrrstats" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    if ($API.Stats)        {$Stats = ConvertFrom-Json $API.Stats}
-                    if ($API.ActiveMiners) {$ActiveMiners = ConvertFrom-Json $API.ActiveMiners}
                     if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
                     $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
                     $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
@@ -910,12 +908,12 @@
                         [hashtable]$StatsCPU = @{}
                         [hashtable]$StatsGPU = @{}
                         if ($CpuDevices) {
-                            $Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsCPU[$Matches[1]] = $Stats.$_.Day}}
-                            $ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                            $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         if ($GpuDevices) {
-                            $Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsGPU[$Matches[1]] = $Stats.$_.Day}}
-                            $ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                            $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         $Pool_Request | Foreach-Object {
                             $Algo  = Get-MiningRigRentalAlgorithm $_.name
@@ -939,14 +937,10 @@
                     }
                     $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
                     Remove-Variable "Mrr_Data"
-                    if ($Stats -ne $null) {Remove-Variable "Stats"}
-                    if ($ActiveMiners -ne $null) {Remove-Variable "ActiveMiners"}
                     break
                 }
                 "/mrrrigs" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    if ($API.Stats)        {$Stats = ConvertFrom-Json $API.Stats}
-                    if ($API.ActiveMiners) {$ActiveMiners = ConvertFrom-Json $API.ActiveMiners}
                     if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
                     $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
                     $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
@@ -958,12 +952,12 @@
                             [hashtable]$StatsCPU = @{}
                             [hashtable]$StatsGPU = @{}
                             if ($CpuDevices) {
-                                $Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsCPU[$Matches[1]] = $Stats.$_.Day}}
-                                $ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                                $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
+                                $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             if ($GpuDevices) {
-                                $Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsGPU[$Matches[1]] = $Stats.$_.Day}}
-                                $ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                                $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
+                                $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             $AllRigs_Request | Foreach-Object {
                                 $Rig = $_
@@ -999,8 +993,6 @@
                     }
                     $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
                     Remove-Variable "Mrr_Data"
-                    if ($Stats -ne $null) {Remove-Variable "Stats"}
-                    if ($ActiveMiners -ne $null) {Remove-Variable "ActiveMiners"}
                     break
                 }
                 default {
