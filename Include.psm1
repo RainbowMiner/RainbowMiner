@@ -1433,58 +1433,43 @@ function Get-PoolsContent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [String]$PoolName, 
+        [String]$PoolName,
         [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Config,        
-        [Parameter(Mandatory = $true)]
-        [TimeSpan]$StatSpan,
-        [Parameter(Mandatory = $false)]
-        [PSCustomObject]$Algorithms = $null,
-        [Parameter(Mandatory = $false)]
-        [PSCustomObject]$Coins = $null,
-        [Parameter(Mandatory = $false)]
-        [Bool]$InfoOnly = $false,
-        [Parameter(Mandatory = $false)]
-        [Bool]$IgnoreFees = $false,
-        [Parameter(Mandatory = $false)]
-        [Switch]$EnableErrorRatio = $false,
+        [Hashtable]$Parameters = @{},
         [Parameter(Mandatory = $false)]
         [Hashtable]$Disabled = $null
     )
-        
+
+    $EnableErrorRatio = $PoolName -ne "WhatToMine" -and -not $Parameters.InfoOnly -and $Session.Config.EnableErrorRatio
+
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
         $Pool_Name = $_.BaseName
-
-        if ($EnableErrorRatio -and $Config.DataWindow -in @("actual_last24h","minimum-3","minimum-2h")) {$EnableErrorRatio = $false}
-
-        [Hashtable]$Parameters = @{
-            StatSpan = $StatSpan
-            InfoOnly = $InfoOnly
-        }
-        foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
 
         $Content = & {
                 $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
                 & $_.FullName @Parameters
         }
 
-        foreach($Pool in @($Content)) {
+        foreach($c in @($Content)) {
             if ($PoolName -ne "WhatToMine") {
-                $Penalty = [Double]$Config.Penalty + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty
-                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) )/100
-                if ($EnableErrorRatio -and $Pool.ErrorRatio) {$Pool_Factor *= $Pool.ErrorRatio}
-                if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
-                if ($Pool.Price -eq $null) {$Pool.Price = 0}
-                if ($Pool.StablePrice -eq $null) {$Pool.StablePrice = 0}
-                $Pool.Price *= $Pool_Factor
-                $Pool.StablePrice *= $Pool_Factor
-                $Pool.Penalty = $Penalty
-                $Pool.PenaltyFactor = $Pool_Factor
-                if ($Disabled -and $Disabled.ContainsKey("$($PoolName)_$(if ($Pool.CoinSymbol) {$Pool.CoinSymbol} else {$Pool.Algorithm})_Profit")) {
-                    $Pool.Disabled = $true
+                $Penalty = [Double]$Config.Penalty
+                if (-not $Parameters.InfoOnly) {
+                    $Penalty += [Double]$Session.Config.Algorithms."$($c.Algorithm)".Penalty + [Double]$Session.Config.Coins."$($c.CoinSymbol)".Penalty
+                }
+                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $Parameters.InfoOnly -and -not $Session.Config.IgnoreFees){$c.PoolFee}) )/100
+                if ($EnableErrorRatio -and $c.ErrorRatio) {$Pool_Factor *= $c.ErrorRatio}
+                if ($Pool_Factor -lt 0)       {$Pool_Factor = 0}
+                if ($c.Price -eq $null)       {$c.Price = 0}
+                if ($c.StablePrice -eq $null) {$c.StablePrice = 0}
+                $c.Price        *= $Pool_Factor
+                $c.StablePrice  *= $Pool_Factor
+                $c.Penalty       = $Penalty
+                $c.PenaltyFactor = $Pool_Factor
+                if ($Disabled -and $Disabled.ContainsKey("$($PoolName)_$(if ($c.CoinSymbol) {$c.CoinSymbol} else {$c.Algorithm})_Profit")) {
+                    $c.Disabled = $true
                 }
             }
-            $Pool
+            $c
         }
     }
 }
