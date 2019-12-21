@@ -38,9 +38,9 @@ class Fireice : Miner {
                 Remove-Item "$Miner_Path\config_$($Miner_Vendor.ToLower())-*.txt" -Force -ErrorAction Ignore
                 $ArgumentList = "--poolconf $PoolConfigFN --config $ConfigFN --$($Miner_Vendor.ToLower()) $HwConfigFN $($Parameters.Params)".Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory $Miner_Path -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
-                if ($Job.Process | Get-Job -ErrorAction SilentlyContinue) {
+                $MJob = if ($Job -and $Job.Name) {Get-Job -Name $Job.Name -ErrorAction Ignore} else {$null}
+                if ($MJob) {
                     $wait = 0
-                    $Job | Add-Member HasOwnMinerWindow $true -Force
                     While ($wait -lt 60) {
                         if (Test-Path $HwConfigFile) {
                             $ThreadsConfigJson = "{$((Get-Content $HwConfigFile -Raw) -replace '(?ms)/\*.+\*/' -replace '//.*' -replace '\s' -replace '"bfactor":\d+,','"bfactor":8,' -replace ',}','}' -replace ',]',']' -replace ',$')}" | ConvertFrom-Json
@@ -52,7 +52,7 @@ class Fireice : Miner {
                         }
                         Start-Sleep -Milliseconds 500
                         $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
-                        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
+                        if ((-not $MiningProcess -and $MJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
                     }
                 }
                 Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
