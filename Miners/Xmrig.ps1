@@ -9,19 +9,19 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.3.0-xmrig/xmrig-5.3.0-xenial-cuda10_1-x64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.4.0-xmrig/xmrig-5.4.0-xenial-cuda10_1-x64.7z"
     $CudaLib = "libxmrig-cuda.so"
     $DevFee = 0.0
 } else {
     $Path = ".\Bin\ANY-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.3.0-xmrig/xmrig-5.3.0-msvc-cuda10_1-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.4.0-xmrig/xmrig-5.4.0-msvc-cuda10_1-win64.7z"
     $CudaLib = "xmrig-cuda.dll"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
 $Cuda = "10.1"
-$Version = "5.3.0"
+$Version = "5.4.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -49,6 +49,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "rx/0";          MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/arq";        MinMemGb = 1; MinMemGbW10 = 1; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/loki";       MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/sfx";        MinMemGb = 1; MinMemGbW10 = 1; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/v";          MinMemGb = 1; MinMemGbW10 = 1; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/wow";        MinMemGb = 1; MinMemGbW10 = 1; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
 )
 
