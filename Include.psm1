@@ -1435,17 +1435,33 @@ function Get-PoolsContent {
         [Parameter(Mandatory = $true)]
         [String]$PoolName, 
         [Parameter(Mandatory = $true)]
-        [Hashtable]$Parameters = @{},
+        [PSCustomObject]$Config,        
+        [Parameter(Mandatory = $true)]
+        [TimeSpan]$StatSpan,
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$Algorithms = $null,
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$Coins = $null,
+        [Parameter(Mandatory = $false)]
+        [Bool]$InfoOnly = $false,
+        [Parameter(Mandatory = $false)]
+        [Bool]$IgnoreFees = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$EnableErrorRatio = $false,
         [Parameter(Mandatory = $false)]
         [Hashtable]$Disabled = $null
     )
-
-    $EnableErrorRatio = $PoolName -ne "WhatToMine" -and -not $Parameters.InfoOnly -and $Session.Config.EnableErrorRatio
-
+        
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
         $Pool_Name = $_.BaseName
 
         if ($EnableErrorRatio -and $Config.DataWindow -in @("actual_last24h","minimum-3","minimum-2h")) {$EnableErrorRatio = $false}
+
+        [Hashtable]$Parameters = @{
+            StatSpan = $StatSpan
+            InfoOnly = $InfoOnly
+        }
+        foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
 
         $Content = & {
                 $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
@@ -1454,11 +1470,8 @@ function Get-PoolsContent {
 
         foreach($Pool in @($Content)) {
             if ($PoolName -ne "WhatToMine") {
-                $Penalty = [Double]$Config.Penalty
-                if (-not $Parameters.InfoOnly) {
-                    $Penalty += [Double]$Session.Config.Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Session.Config.Coins."$($Pool.CoinSymbol)".Penalty
-                }
-                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $Parameters.InfoOnly -and -not $Session.Config.IgnoreFees){$Pool.PoolFee}) )/100
+                $Penalty = [Double]$Config.Penalty + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty
+                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) )/100
                 if ($EnableErrorRatio -and $Pool.ErrorRatio) {$Pool_Factor *= $Pool.ErrorRatio}
                 if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
                 if ($Pool.Price -eq $null) {$Pool.Price = 0}

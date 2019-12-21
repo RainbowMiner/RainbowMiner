@@ -1492,13 +1492,10 @@ function Invoke-Core {
             $SelectedPoolNames.Add($_) > $null
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $StopWatch.Restart()
-            $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false}
-            $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
-            Get-PoolsContent $_ -Parameters $Pool_Parameters -Disabled $Disabled
+            Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms -Coins $Session.Config.Coins -EnableErrorRatio:$Session.Config.EnableErrorRatio -Disabled $Disabled
             $TimerPools[$_] = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
-            Remove-Variable "Pool_Parameters"
         }
     }
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
@@ -1631,7 +1628,7 @@ function Invoke-Core {
         if (($Pools_WTM | Measure-Object).Count) {
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading WhatToMine " -NoNewline}
             $start = Get-UnixTimestamp -Milliseconds
-            Get-PoolsContent "WhatToMine" -Parameters @{Pools = $Pools_WTM; StatSpan = $RoundSpan; InfoOnly = $false} | Foreach-Object {
+            Get-PoolsContent "WhatToMine" -Config ([PSCustomObject]@{Pools = $Pools_WTM}) -StatSpan $RoundSpan -InfoOnly $false | Foreach-Object {
                 $Pool_WTM = $_
                 $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
                    $_.Price         = $Pool_WTM.Price * $_.PenaltyFactor

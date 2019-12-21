@@ -733,7 +733,7 @@ try {
         }
     }
 
-    $MinersContent = Get-MinersContent -Parameters @{InfoOnly = $true}
+    $MinersContent = Get-MinersContent -InfoOnly
 
     if ($RemoveMinerStats.Count -gt 0) {
         $RemoveMinerStats | Foreach-Object {
