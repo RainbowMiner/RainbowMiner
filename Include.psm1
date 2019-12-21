@@ -1498,7 +1498,7 @@ function Get-MinersContent {
         [String]$MinerName = "*"
     )
 
-    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | Select-Object)) {
+    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$Parameters.InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$Parameters.InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | Select-Object)) {
         $Name = $Miner.BaseName
         if ($Parameters.InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($Global:MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
             $Content = & { 
