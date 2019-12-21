@@ -1282,16 +1282,16 @@ function Get-Stat {
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
-        [System.Collections.ArrayList]$Match = @()
-        if ($Miners)    {$Match.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
-        if ($Disabled)  {$Match.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
-        if ($Pools)     {$Match.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
-        if ($Totals)    {$Match.Add("Total") > $null;$Path = "Stats\Totals"}
-        if ($TotalAvgs) {$Match.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
-        if ($Balances)  {$Match.Add("Balance") > $null;$Path = "Stats\Balances"}
-        if (-not $Path -or $All -or $Match.Count -gt 1) {$Path = "Stats"; $Cached = $false}
+        [System.Collections.ArrayList]$MatchArray = @()
+        if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
+        if ($Disabled)  {$MatchArray.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
+        if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
+        if ($Totals)    {$MatchArray.Add("Total") > $null;$Path = "Stats\Totals"}
+        if ($TotalAvgs) {$MatchArray.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
+        if ($Balances)  {$MatchArray.Add("Balance") > $null;$Path = "Stats\Balances"}
+        if (-not $Path -or $All -or $MatchArray.Count -gt 1) {$Path = "Stats"; $Cached = $false}
 
-        $MatchStr = if ($Match.Count -gt 1) {$Match -join "|"} else {$Match}
+        $MatchStr = if ($MatchArray.Count -gt 1) {$MatchArray -join "|"} else {$MatchArray}
         if ($MatchStr -match "|") {$MatchStr = "($MatchStr)"}
 
         foreach($p in (Get-ChildItem -Recurse $Path -File -Filter "*.txt")) {
@@ -1435,38 +1435,30 @@ function Get-PoolsContent {
         [Parameter(Mandatory = $true)]
         [String]$PoolName, 
         [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Config,        
-        [Parameter(Mandatory = $true)]
-        [TimeSpan]$StatSpan,
-        [Parameter(Mandatory = $false)]
-        [PSCustomObject]$Algorithms = $null,
-        [Parameter(Mandatory = $false)]
-        [PSCustomObject]$Coins = $null,
-        [Parameter(Mandatory = $false)]
-        [Bool]$InfoOnly = $false,
-        [Parameter(Mandatory = $false)]
-        [Bool]$IgnoreFees = $false,
-        [Parameter(Mandatory = $false)]
-        [Switch]$EnableErrorRatio = $false,
+        [Hashtable]$Parameters = @{},
         [Parameter(Mandatory = $false)]
         [Hashtable]$Disabled = $null
     )
-        
+
+    $EnableErrorRatio = $PoolName -ne "WhatToMine" -and -not $Parameters.InfoOnly -and $Session.Config.EnableErrorRatio
+
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
         $Pool_Name = $_.BaseName
 
         if ($EnableErrorRatio -and $Config.DataWindow -in @("actual_last24h","minimum-3","minimum-2h")) {$EnableErrorRatio = $false}
 
-        [Hashtable]$Parameters = @{
-            StatSpan = $StatSpan
-            InfoOnly = $InfoOnly
+        $Content = & {
+                $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
+                & $_.FullName @Parameters
         }
-        foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
 
-        foreach($Pool in @(& $_.FullName @Parameters)) {
+        foreach($Pool in @($Content)) {
             if ($PoolName -ne "WhatToMine") {
-                $Penalty = [Double]$Config.Penalty + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty
-                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) )/100
+                $Penalty = [Double]$Config.Penalty
+                if (-not $Parameters.InfoOnly) {
+                    $Penalty += [Double]$Session.Config.Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Session.Config.Coins."$($Pool.CoinSymbol)".Penalty
+                }
+                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $Parameters.InfoOnly -and -not $Session.Config.IgnoreFees){$Pool.PoolFee}) )/100
                 if ($EnableErrorRatio -and $Pool.ErrorRatio) {$Pool_Factor *= $Pool.ErrorRatio}
                 if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
                 if ($Pool.Price -eq $null) {$Pool.Price = 0}
@@ -1488,23 +1480,20 @@ function Get-MinersContent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [PSCustomObject]$Pools = @{},
-        [Parameter(Mandatory = $false)]
-        [Switch]$InfoOnly,
+        [Hashtable]$Parameters = @{},
         [Parameter(Mandatory = $false)]
         [String]$MinerName = "*"
     )
 
-    [Hashtable]$Parameters = @{
-        Pools    = $Pools
-        InfoOnly = $InfoOnly
-    }
-
-    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0})) {
+    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | Select-Object)) {
         $Name = $Miner.BaseName
-        if ($InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($Global:MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
-            foreach($c in @(& $Miner.FullName @Parameters)) {
-                if ($InfoOnly) {
+        if ($Parameters.InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($Global:MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
+            $Content = & { 
+                    $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
+                    & $Miner.FullName @Parameters
+            }
+            foreach($c in @($Content)) {
+                if ($Parameters.InfoOnly) {
                     $c | Add-Member -NotePropertyMembers @{
                         Name     = if ($c.Name) {$c.Name} else {$Name}
                         BaseName = $Name
@@ -3757,8 +3746,8 @@ class Miner {
     $Profit_Cost
     $PowerDraw
     [PSCustomObject[]]$Stratum = @()
-    $Speed
-    $Speed_Live
+    [double[]]$Speed = @()
+    [double[]]$Speed_Live = @()
     [double[]]$Variance = @()
     $StartCommand
     $StopCommand
@@ -4286,8 +4275,8 @@ class Miner {
     }
 
     [Int64]GetPowerDraw() {
-        $Seconds = $this.DataInterval * [Math]::Max($this.ExtendInterval,1)
-        return ($this.Data | Where-Object PowerDraw | Where-Object Date -GE (Get-Date).ToUniversalTime().AddSeconds( - $Seconds) | Select-Object -ExpandProperty PowerDraw | Measure-Object -Average).Average
+        $TimeFrame = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * [Math]::Max($this.ExtendInterval,1))
+        return ($this.Data | Where-Object {$_.PowerDraw -and $_.Date -ge $TimeFrame} | Select-Object -ExpandProperty PowerDraw | Measure-Object -Average).Average
     }
 
     [bool]HasDevFees() {
@@ -4931,7 +4920,7 @@ function Set-MinersConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1"}
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
-            $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -InfoOnly)}
+            $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -Parameters @{InfoOnly = $true})}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
                 if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
                 else {
@@ -4962,7 +4951,7 @@ function Set-MinersConfigDefault {
                             [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                             foreach ($SetupDevice in $SetupDevices) {
                                 $NameKey = "$($Name)-$($SetupDevice)"
-                                [System.Collections.ArrayList]$ValueTmp = $Value.Clone()
+                                [System.Collections.ArrayList]$ValueTmp = $Value | ConvertTo-Json | ConvertFrom-Json
                                 if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
                                     [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                                     if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
@@ -5996,7 +5985,8 @@ Param(
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
 
-    if ($headers) {$headers_local = $headers.Clone()} else {$headers_local = @{}}
+    $headers_local = @{}
+    if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
     if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
@@ -6066,6 +6056,7 @@ Param(
             $ErrorMessage = "$($_.Exception.Message)"
         } finally {
             if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+            $ServicePoint = $null
         }
         if ($ErrorMessage -eq '') {$Data}
         if ($ErrorMessage -ne '') {throw $ErrorMessage}
