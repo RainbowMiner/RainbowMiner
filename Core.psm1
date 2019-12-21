@@ -260,9 +260,18 @@
 
 function Update-ActiveMiners {
     [CmdletBinding()]
-    param([Bool]$FirstRound = $false, [Switch]$Silent = $false)
+    param(
+        [Parameter(Mandatory = $false)]
+        [Bool]$FirstRound = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$UpdateDeviceInformation = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
 
-    Update-DeviceInformation $Global:ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
+    if ($UpdateDeviceInformation) {
+        Update-DeviceInformation $Global:ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
+    }
     $MinersUpdated = 0
     $MinersFailed  = 0
     $ExclusiveMinersFailed = 0
@@ -2842,7 +2851,7 @@ function Invoke-Core {
 
         $AllMinersFailed = $false
         if ($WaitRound % 3 -eq 0) {
-            $MinersUpdateStatus = Update-ActiveMiners -FirstRound (-not $WaitRound)
+            $MinersUpdateStatus = Update-ActiveMiners -FirstRound (-not $WaitRound) -UpdateDeviceInformation:$($WaitRound % 12 -eq 0)
 
             $LoopWarn = ""
             if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
@@ -3007,7 +3016,7 @@ function Invoke-Core {
         }
     } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $RoundEnd))
 
-    if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$Session.Timer = (Get-Date).ToUniversalTime();$SamplesPicked++}
+    if ($SamplesPicked -eq 0) {Update-ActiveMiners -UpdateDeviceInformation > $null;$Session.Timer = (Get-Date).ToUniversalTime();$SamplesPicked++}
 
     if ($Global:Downloader.HasMoreData) {$Global:Downloader | Receive-Job | Out-Host}
 
