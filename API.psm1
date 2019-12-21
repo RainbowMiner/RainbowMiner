@@ -153,7 +153,7 @@
                     Break
                 }
                 "/remoteminers" {
-                    $Data = if ($API.RemoteMiners) {ConvertTo-Json @($API.RemoteMiners | Select-Object) -Depth 2} else {"[]"}
+                    $Data = if ($API.RemoteMiners) {ConvertTo-Json @($API.RemoteMiners | Select-Object) -Depth 10} else {"[]"}
                     Break
                 }
                 "/minersneedingbenchmark" {
