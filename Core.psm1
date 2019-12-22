@@ -36,20 +36,6 @@
 
         #Setup console and display logo
         $host.UI.RawUI.WindowTitle = $Session.MainWindowTitle
-        if ($false -and -not $psISE -and $IsWindows) {
-            $ColorConfigPath = Join-Path $ConfigPath "colors.$(Split-Path $ConfigFile -Leaf)"
-            if (Test-Path $ColorConfigPath) {
-                try {
-                    $Colors = Get-ContentByStreamReader $ColorConfigPath | ConvertFrom-Json -ErrorAction Stop
-                    $Colors.PSObject.Properties.Name | Where-Object {$_ -match    "^(Fore|Back)" -and $Colors.$_ -and $Colors.$_ -ne -1 -and $Host.UI.RawUI.PSObject.Properties.Name -icontains $_} | Foreach-Object {$Host.UI.RawUI.$_ = $Colors.$_}
-                    $Colors.PSObject.Properties.Name | Where-Object {$_ -notmatch "^(Fore|Back)" -and $Colors.$_ -and $Colors.$_ -ne -1 -and $Host.PrivateData.PSObject.Properties.Name -icontains $_} | Foreach-Object {$Host.PrivateData.$_ = $Colors.$_}
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Warn "Your $ColorConfigPath file is corrupted. Resetting to defaults."
-                    if (Test-Path $ColorConfigPath) {Remove-Item $ColorConfigPath -Force}
-                }
-            }
-        }
 
         Clear-Host
 
@@ -78,7 +64,6 @@
         #Setup session variables
         [hashtable]$Session.ConfigFiles = @{
             Config     = @{Path='';LastWriteTime=0;Healthy=$false}
-            Colors     = @{Path='';LastWriteTime=0;Healthy=$false}
             Devices    = @{Path='';LastWriteTime=0;Healthy=$false}
             Miners     = @{Path='';LastWriteTime=0;Healthy=$false}
             OCProfiles = @{Path='';LastWriteTime=0;Healthy=$false}
