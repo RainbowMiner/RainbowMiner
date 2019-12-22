@@ -1861,7 +1861,7 @@ function Invoke-Core {
         $Miner_AlgoNames = @($Miner.HashRates.PSObject.Properties.Name | Select-Object)
 
         $Miner_Setup = @{
-            Pools         = if ($Miner_AlgoNames.Count -eq 1) {[PSCustomObject]@{$Miner_AlgoNames[0] = $Pools.$($Miner_AlgoNames[0])}} else {[PSCustomObject]@{$Miner_AlgoNames[0] = $Pools.$($Miner_AlgoNames[0]);$Miner_AlgoNames[1] = $Pools.$($Miner_AlgoNames[1])}}
+            Pools         = $(if ($Miner_AlgoNames.Count -eq 1) {[PSCustomObject]@{$Miner_AlgoNames[0] = $Pools.$($Miner_AlgoNames[0])}} else {[PSCustomObject]@{$Miner_AlgoNames[0] = $Pools.$($Miner_AlgoNames[0]);$Miner_AlgoNames[1] = $Pools.$($Miner_AlgoNames[1])}})
             Difficulties  = [hashtable]@{}
             Ratios        = [hashtable]@{}
             OCprofile     = [hashtable]@{}
@@ -1872,7 +1872,7 @@ function Invoke-Core {
             Disabled      = $false
         }
 
-        if ($Miner.DevFee -eq $null -or $Miner.DevFee -isnot [PSCustomObject]) {$Miner_Setup.DevFee = if ($Miner_AlgoNames.Count -eq 1) {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee}} else {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee;$Miner_AlgoNames[1] = 0}}}
+        if ($Miner.DevFee -eq $null -or $Miner.DevFee -isnot [PSCustomObject]) {$Miner_Setup.DevFee = $(if ($Miner_AlgoNames.Count -eq 1) {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee}} else {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee;$Miner_AlgoNames[1] = 0}})}
         if (-not $Miner.API)            {$Miner_Setup.API = "Miner"}
         if ($Miner.EnvVars -eq $null)   {$Miner_Setup.EnvVars = @()}
 
@@ -2230,7 +2230,7 @@ function Invoke-Core {
                 PowerDraw            = $Miner.PowerDraw
                 Speed                = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
                 Speed_Live           = @(0.0) * $Miner.HashRates.PSObject.Properties.Value.Count
-                Variance             = $Miner.Hashrates.PSObject.Properties.Name | Foreach-Object {0.0}
+                Variance             = @(0.0) * $Miner.Hashrates.PSObject.Properties.Value.Count
                 StartCommand         = $Miner.StartCommand
                 StopCommand          = $Miner.StopCommand
                 Best                 = $false
@@ -3083,7 +3083,7 @@ function Stop-Core {
     $Global:ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
         $Miner = $_
         if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
-            Write-Log "Closing $($Miner.Type) miner $($Miner.Name)"
+            Write-Log "Closing miner $($Miner.Name)"
             $Miner.StopMining()
         }
         if ($Miner.BaseName -like "Excavator*" -and -not $ExcavatorWindowsClosed.Contains($Miner.BaseName)) {

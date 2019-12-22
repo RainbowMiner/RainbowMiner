@@ -3722,20 +3722,19 @@ enum MinerStatus {
 }
 
 class Miner {
-    $Name
-    $Version
-    $Path
-    $Arguments
-    $API
-    $Port
-    $Type
+    [string]$Name
+    [string]$Version
+    [string]$Path
+    [string]$Arguments
+    [string]$API
+    [int]$Port
     [string[]]$Algorithm = @()
     [string[]]$BaseAlgorithm = @()
     [string[]]$Currency = @()
     [string[]]$CoinName = @()
     [string[]]$CoinSymbol = @()
     [string[]]$DeviceName = @()
-    $DeviceModel
+    [string]$DeviceModel
     [Bool]$Enabled = $false
     [string[]]$Pool = @()
     $Profit
@@ -3749,9 +3748,9 @@ class Miner {
     [double[]]$Variance = @()
     $StartCommand
     $StopCommand
-    $Best
-    $New
-    $Benchmarked
+    [Bool]$Best
+    [Bool]$New
+    [Int]$Benchmarked
     $LogFile    
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
@@ -3791,8 +3790,8 @@ class Miner {
     [DateTime]$StartTime = [DateTime]::MinValue
     [DateTime]$ActiveLast = [DateTime]::MinValue
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
-    [PSCustomObject]$Job = $null
-    [PSCustomObject]$EthPill = $null
+    $Job = $null
+    $EthPill = $null
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
@@ -3908,14 +3907,11 @@ class Miner {
     }
 
     hidden StartMiningPreProcess() {
-        if ($this.Stratum.Count -lt $this.Algorithm.Count -or $this.RejectedShareRatio.Count -lt $this.Algorithm.Count) {
-            $this.Stratum = @([PSCustomObject]@{Accepted=0;Rejected=0}) * $this.Algorithm.Count
-            $this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count
-        } else {
-            for ($Index = 0; $Index -lt $this.Algorithm.Count; $Index++) {
-                $this.Stratum[$Index].Accepted = $this.Stratum[$Index].Rejected = 0
-                $this.RejectedShareRatio[$Index] = 0.0
-            }
+        while ($this.Stratum.Count -lt $this.Algorithm.Count) {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
+        if ($this.RejectedShareRatio.Count -lt $this.Algorithm.Count) {$this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count}
+        for ($Index = 0; $Index -lt $this.Algorithm.Count; $Index++) {
+            $this.Stratum[$Index].Accepted = $this.Stratum[$Index].Rejected = 0
+            $this.RejectedShareRatio[$Index] = 0.0
         }
         $this.ActiveLast = Get-Date
     }
@@ -3996,10 +3992,6 @@ class Miner {
         return $this.Activated
     }
 
-    [TimeSpan]GetRunningTime() {
-        return $this.GetRunningTime($false)
-    }
-
     [TimeSpan]GetRunningTime([Bool]$MeasureInterval = $false) {
         $MiningProcess = if ($this.Job.OwnWindow -and $this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MeasureInterval) {$this.IntervalBegin}
@@ -4017,6 +4009,10 @@ class Miner {
         else {
             return [Timespan]0
         }
+    }
+
+    [TimeSpan]GetRunningTime() {
+        return $this.GetRunningTime($false)
     }
 
     [MinerStatus]GetStatus() {
