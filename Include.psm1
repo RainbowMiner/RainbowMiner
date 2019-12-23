@@ -1274,7 +1274,7 @@ function Get-Stat {
         Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached
     } else {
         # Return all stats
-        [hashtable]$Stats = @{}
+        [hashtable]$NewStats = @{}
 
         if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
         if (($Disabled -or $All) -and -not (Test-Path "Stats\Disabled")) {New-Item "Stats\Disabled" -ItemType "directory" > $null}
@@ -1299,17 +1299,17 @@ function Get-Stat {
             $FullName = $p.FullName
             if (-not $All -and $BaseName -notmatch "_$MatchStr$") {continue}
 
-            $StatsKey = $BaseName -replace "^(AMD|CPU|NVIDIA)-"
+            $NewStatsKey = $BaseName -replace "^(AMD|CPU|NVIDIA)-"
 
-            if ($Stat = Get-StatFromFile -Path $FullName -Name $StatsKey -Cached:$Cached) {
-                $Stats[$StatsKey] = $Stat
+            if ($Stat = Get-StatFromFile -Path $FullName -Name $NewStatsKey -Cached:$Cached) {
+                $NewStats[$NewStatsKey] = $Stat
             }
         }
         if ($Cached) {
-            $RemoveKeys = (Compare-Object @($Stats.Keys | Select-Object) @($Global:StatsCache.Keys | Where {$_ -match "_$MatchStr$"} | Select-Object)) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
+            $RemoveKeys = (Compare-Object @($NewStats.Keys | Select-Object) @($Global:StatsCache.Keys | Where {$_ -match "_$MatchStr$"} | Select-Object)) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
             $RemoveKeys | Foreach-Object {$Global:StatsCache.Remove($_)}
         }
-        if (-not $Quiet) {$Stats}
+        if (-not $Quiet) {$NewStats}
     }
 }
 
@@ -3728,54 +3728,54 @@ class Miner {
     [string]$Arguments
     [string]$API
     [int]$Port
-    [string[]]$Algorithm = @()
-    [string[]]$BaseAlgorithm = @()
-    [string[]]$Currency = @()
-    [string[]]$CoinName = @()
-    [string[]]$CoinSymbol = @()
-    [string[]]$DeviceName = @()
+    [string[]]$Algorithm
+    [string[]]$BaseAlgorithm
+    [string[]]$Currency
+    [string[]]$CoinName
+    [string[]]$CoinSymbol
+    [string[]]$DeviceName
     [string]$DeviceModel
     [Bool]$Enabled = $false
-    [string[]]$Pool = @()
+    [string[]]$Pool
     $Profit
     $Profit_Bias
     $Profit_Unbias
-    $Profit_Cost
-    $PowerDraw
-    [PSCustomObject[]]$Stratum = @()
-    [double[]]$Speed = @()
-    [double[]]$Speed_Live = @()
-    [double[]]$Variance = @()
-    $StartCommand
-    $StopCommand
+    [double]$Profit_Cost
+    [double]$PowerDraw
+    [PSCustomObject[]]$Stratum
+    [double[]]$Speed
+    [double[]]$Speed_Live
+    [double[]]$Variance
+    [string]$StartCommand
+    [string]$StopCommand
     [Bool]$Best
     [Bool]$New
     [Int]$Benchmarked
-    $LogFile    
+    [string]$LogFile    
     [Bool]$ShowMinerWindow = $false
-    $MSIAprofile
+    [int]$MSIAprofile
     [hashtable]$OCprofile = @{}
-    $DevFee
-    $BaseName = $null
-    $FaultTolerance = 0.1
-    $ExtendInterval = 0
-    $Penalty = 0
-    $PoolPenalty
-    $PostBlockMining = 0
-    $Rounds = 0
-    $MinSamples = 1
-    $ZeroRounds = 0
-    $CrashCount = 0
-    $MaxBenchmarkRounds = 3
-    $MaxRejectedShareRatio = 0.3
-    $MiningPriority
-    $MiningAffinity
-    $ManualUri
-    [Double[]]$RejectedShareRatio = @()
+    [PSCustomObject]$DevFee
+    [string]$BaseName
+    [double]$FaultTolerance = 0.1
+    [int]$ExtendInterval = 0
+    [double]$Penalty = 0
+    [PSCustomObject]$PoolPenalty
+    [int]$PostBlockMining = 0
+    [int]$Rounds = 0
+    [int]$MinSamples = 1
+    [int]$ZeroRounds = 0
+    [int]$CrashCount = 0
+    [int]$MaxBenchmarkRounds = 3
+    [double]$MaxRejectedShareRatio = 0.3
+    [int]$MiningPriority
+    [int]$MiningAffinity
+    [string]$ManualUri
+    [Double[]]$RejectedShareRatio
     [String]$EthPillEnable = "disable"
     [String]$EthPillEnableMTP = "disable"
-    $DataInterval
-    [String[]]$EnvVars = @()
+    [string]$DataInterval
+    [String[]]$EnvVars
     [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1;"CPUAffinity"=0}
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
@@ -3790,13 +3790,13 @@ class Miner {
     [DateTime]$StartTime = [DateTime]::MinValue
     [DateTime]$ActiveLast = [DateTime]::MinValue
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
-    $Job = $null
-    $EthPill = $null
+    [PSCustomObject]$Job
+    [PSCustomObject]$EthPill
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
-    hidden [System.Collections.ArrayList]$Data = @()
-    hidden [System.Collections.ArrayList]$OCprofileBackup = @()
+    hidden [Array]$Data = @()
+    hidden [Array]$OCprofileBackup = @()
     hidden [DateTime]$IntervalBegin = 0
     hidden [DateTime]$LastSetOCTime = 0
     hidden [Int]$StartPort = 0
@@ -3850,7 +3850,7 @@ class Miner {
             Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
             $Devices = @($this.DeviceModel -split '-')
-            $Vendor  = $Global:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+            $Vendor  = $Global:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
             $ArgumentList = $this.GetArguments()
             
@@ -4169,7 +4169,7 @@ class Miner {
     }
 
     AddMinerData($Raw,$HashRate,$Difficulty,$Devices) {
-        $this.Data.Add([PSCustomObject]@{
+        $this.Data += [PSCustomObject]@{
                 Raw        = if ($Global:Session.LogLevel -eq "Debug") {$Raw} else {$null}
                 HashRate   = $HashRate
                 Difficulty = $Difficulty
@@ -4177,7 +4177,7 @@ class Miner {
                 Date       = (Get-Date).ToUniversalTime()
                 PowerDraw  = Get-DevicePowerDraw -DeviceName $this.DeviceName
                 Round      = $this.Rounds
-            }) > $null        
+            }
         $this.ActiveLast = Get-Date
     }
 
@@ -4197,12 +4197,12 @@ class Miner {
         if ($this.Data.Count -gt $this.MinSamples) {
             $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*2)
             $i=0; While ($this.Data[$i].Date -lt $DataMinTime -and ($this.Data.Count - $i) -gt $this.MinSamples) {$i++}
-            if ($i -gt 0) {$this.Data.RemoveRange(0,$i)}
+            if ($i -gt 0) {$this.Data = $this.Data | Select-Object -Skip $i}
         }
     }
 
     ResetMinerData() {
-        $this.Data.Clear()
+        $this.Data = @()
     }
 
     [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm) {
@@ -4295,13 +4295,13 @@ class Miner {
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
-            $this.OCprofileBackup.Clear()
+            $this.OCprofileBackup = @()
             return
         }
         if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
         foreach($Profile in $this.OCprofileBackup) {foreach($Name in $Profile.Keys) {if ($Name -ne "Index") {$Script:abControl.GpuEntries[$Profile.Index].$Name = $Profile.$Name}}}
         $Script:abControl.CommitChanges()
-        $this.OCprofileBackup.Clear()
+        $this.OCprofileBackup = @()
         Write-Log "OC reset for $($this.BaseName)"
         if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
     }
@@ -4314,7 +4314,7 @@ class Miner {
 
         $this.LastSetOCTime = (Get-Date).ToUniversalTime()
 
-        $this.OCprofileBackup.Clear()
+        $this.OCprofileBackup = @()
 
         if (-not $this.HasOCprofile()) {return}
 
@@ -4322,7 +4322,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
         [System.Collections.ArrayList]$AmdCmd = @()
 
-        $Vendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
         if ($Global:IsWindows) {
             if ($Vendor -ne "NVIDIA") {
@@ -4417,7 +4417,7 @@ class Miner {
                         try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                         try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                         if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
-                        if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup.Add($ProfileBackup) > $null;$applied_any=$true}
+                        if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$OCprofileBackup += $ProfileBackup;$applied_any=$true}
                     }
                     $DeviceId++
                 }                 
@@ -5866,6 +5866,19 @@ Param(
     if ($Reset) {
         $Global:last_memory_usage_byte = $memusagebyte
     }
+}
+
+function Write-MemoryUsageToLog {
+[cmdletbinding()]
+Param(   
+    [Parameter(Mandatory = $False)]
+    [String]$Message = ""
+)
+    [System.GC]::Collect()
+    [System.GC]::WaitForPendingFinalizers()
+    [System.GC]::Collect()
+    Get-MemoryUsage -ForceFullCollection >$null
+    Write-Log "$($Message) $((Get-MemoryUsage -Reset).MemText)"
 }
 
 function Get-MD5Hash {

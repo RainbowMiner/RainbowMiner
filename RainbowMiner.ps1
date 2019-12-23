@@ -240,7 +240,7 @@ param(
     [String]$LogLevel = "Info" #select log level from "Debug", "Info", "Warn", "Error" and "Silent"
 )
 
-$ForceFullCollection = $false
+$ForceFullCollection = $true
 $EnableMinerStatus = $true
 
 Initialize-Session
