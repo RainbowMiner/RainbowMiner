@@ -14,6 +14,7 @@ function Initialize-Session {
         $Session.IsAdmin            = Test-IsElevated
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
         $Session.MachineName        = [System.Environment]::MachineName
+        $Session.MyIP               = Get-MyIP
     }
     if (-not (Test-Path Variable:Global:SyncCache)) {
         $Global:SyncCache = [hashtable]::Synchronized(@{})
