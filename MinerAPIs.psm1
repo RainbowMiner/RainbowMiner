@@ -1159,7 +1159,7 @@ class EthminerWrapper : Miner {
 class Fireice : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Miner_Path       = Split-Path $this.Path
@@ -1348,7 +1348,7 @@ class Gminer : Miner {
 class GrinPro : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Parameters = $Arguments | ConvertFrom-Json
@@ -1435,7 +1435,7 @@ class GrinPro : Miner {
 class Jceminer : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Parameters = $Arguments | ConvertFrom-Json
@@ -1633,7 +1633,7 @@ class MiniZ : Miner {
 class Nanominer : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Miner_Path = Split-Path $this.Path
@@ -1947,7 +1947,7 @@ class RHWrapper : Miner {
 class SrbMiner : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Parameters = $Arguments | ConvertFrom-Json
@@ -2011,7 +2011,7 @@ class SrbMiner : Miner {
 class SwapminerWrapper : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Parameters = $Arguments | ConvertFrom-Json
@@ -2147,7 +2147,7 @@ class Xgminer : Miner {
 class Xmrig : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Miner_Path        = Split-Path $this.Path
@@ -2272,7 +2272,7 @@ class Xmrig : Miner {
 class Xmrig3 : Miner {
 
     [String]GetArguments() {
-        $Arguments = ([Miner]$this).GetArguments()
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
         if ($Arguments -notlike "{*}") {return $Arguments}
 
         $ThreadsConfig     = $null
