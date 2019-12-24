@@ -2225,8 +2225,8 @@ function Invoke-Core {
                 Profit_Cost          = $Miner.Profit_Cost
                 PowerDraw            = $Miner.PowerDraw
                 Speed                = $Miner.HashRates.PSObject.Properties.Value
-                Speed_Live           = @(0.0) * $Miner.HashRates.PSObject.Properties.Value.Count
-                Variance             = @(0.0) * $Miner.Hashrates.PSObject.Properties.Value.Count
+                Speed_Live           = @(0.0) * $Miner.HashRates.PSObject.Properties.Name.Count
+                Variance             = @(0.0) * $Miner.Hashrates.PSObject.Properties.Name.Count
                 StartCommand         = $Miner.StartCommand
                 StopCommand          = $Miner.StopCommand
                 Best                 = $false
