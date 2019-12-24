@@ -97,8 +97,8 @@
         $Session.LockMiners = [PSCustomObject]@{Locked=$false;Enabled=$false;Pools=@()}
         $Session.AutoUpdate = $false
         $Session.MSIAcurrentprofile = -1
-        $Session.RunSetup = $SetupOnly
-        $Session.SetupOnly = $SetupOnly
+        $Session.RunSetup = Get-Yes $SetupOnly
+        $Session.SetupOnly = Get-Yes $SetupOnly
         $Session.IsBenchmarkingRun = $false
         $Session.IsDonationRun = $false
         $Session.IsExclusiveRun = $false
@@ -1197,8 +1197,8 @@ function Invoke-Core {
     $MiningHeatControl       = $Session.Config.MiningHeatControl
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun})
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun})
 
     $Session.CurrentPowerPrice              = $PowerPrice
     $Session.CurrentEnableMiningHeatControl = $EnableMiningHeatControl
