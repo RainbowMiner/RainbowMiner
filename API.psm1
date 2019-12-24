@@ -29,7 +29,6 @@
     $newRunspace.Open()
     $newRunspace.SessionStateProxy.SetVariable("API", $API)
     $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
-    $newRunspace.SessionStateProxy.SetVariable("SyncCache", $SyncCache)
     $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
 
@@ -818,8 +817,8 @@
                                 try {
                                     $RatesUri = [System.Uri]$Parameters.url
                                     $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
-                                    Compare-Object $SyncCache.GetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$SyncCache.GetTicker.Add($_.InputObject.ToUpper()) > $null}
-                                    $SymbolStr = "$(($SyncCache.GetTicker | Sort-Object) -join ',')".ToUpper()
+                                    Compare-Object $Session.GetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GetTicker.Add($_.InputObject.ToUpper()) > $null}
+                                    $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
                                     $Parameters.url = "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)"
                                     Remove-Variable "RatesUri" -ErrorAction Ignore
                                     Remove-Variable "RatesQry" -ErrorAction Ignore

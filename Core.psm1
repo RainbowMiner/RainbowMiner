@@ -78,7 +78,7 @@ function Start-Core {
             MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
-        [System.Collections.ArrayList]$SyncCache.GetTicker = @()
+        [System.Collections.ArrayList]$Session.GetTicker = @()
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
 
@@ -594,10 +594,10 @@ function Get-Balance {
         Caption = "*Total*"
     }
 
-    Get-WorldCurrencies -Silent
+    $WorldCurrencies = Get-WorldCurrencies
 
     [hashtable]$Digits = @{}
-    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($SyncCache.WorldCurrencies -icontains $_) {2} else {8}}
+    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($WorldCurrencies -icontains $_) {2} else {8}}
 
     $CurrenciesWithBalances | ForEach-Object {
         $Currency = $_.ToUpper()
@@ -672,12 +672,12 @@ function Update-Rates {
 
     Compare-Object $Symbols @($Global:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
         if ($_.SideIndicator -eq "==") {$Global:Rates[$_.InputObject] = [Double]$Global:NewRates[$_.InputObject]}
-        elseif ($SyncCache.GetTicker -inotcontains $_.InputObject) {$SyncCache.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
+        elseif ($Session.GetTicker -inotcontains $_.InputObject) {$Session.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
     }
 
-    if ($NewRatesFound -and $SyncCache.GetTicker.Count -gt 0) {
+    if ($NewRatesFound -and $Session.GetTicker.Count -gt 0) {
         try {
-            $SymbolStr = "$(($SyncCache.GetTicker | Sort-Object) -join ',')".ToUpper()
+            $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
             if (-not $RatesAPI.status) {
                 Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
@@ -691,8 +691,9 @@ function Update-Rates {
         }
     }
 
-    Get-WorldCurrencies -Silent
-    Compare-Object $SyncCache.WorldCurrencies @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
+    $WorldCurrencies = Get-WorldCurrencies
+
+    Compare-Object $WorldCurrencies @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
 }
 
 function Get-BestMinerDeviceCombos {
@@ -1553,7 +1554,7 @@ function Invoke-Core {
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best pools .."}
 
-    Set-UnprofitableAlgos
+    $UnprofitableAlgos = Get-UnprofitableAlgos
 
     $LockMiners = $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun
 
@@ -1578,8 +1579,8 @@ function Invoke-Core {
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
                 ($Session.Config.Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                ($Pool_CheckForUnprofitableAlgo -and $SyncCache.UnprofitableAlgos.Algorithms -and $SyncCache.UnprofitableAlgos.Algorithms.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                ($Pool_CheckForUnprofitableAlgo -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name -and $UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and $Session.Config.ExcludeCoin -icontains $_.CoinName) -or
                 ($Session.Config.ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Session.Config.ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
                 ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object $Session.Config.Pools.$Pool_Name.Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
