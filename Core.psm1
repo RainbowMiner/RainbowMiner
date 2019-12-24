@@ -1,4 +1,6 @@
-﻿function Start-Core {
+﻿using module .\MinerAPIs.psm1
+
+function Start-Core {
     [cmdletbinding()]
     param(
         [Parameter(Mandatory = $false)]
@@ -961,7 +963,7 @@ function Invoke-Core {
                                 ManualURI              = $ConfirmedVersion.ManualURI
                                 WorkerName             = $Session.Config.WorkerName
                                 EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
-                                AlgorithmMap           = $SyncCache.AlgorithmMap
+                                AlgorithmMap           = (Get-AlgorithmMap)
                                 OCmode                 = $Session.OCmode
                                 UsePowerPrice          = $Session.Config.UsePowerPrice
                                 PowerPriceCurrency     = $Session.Config.PowerPriceCurrency
@@ -1434,7 +1436,7 @@ function Invoke-Core {
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Loading API modules .."}
 
-    Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
+    #Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
 
     if ($UseTimeSync) {Test-TimeSync}
     $Session.Timer = (Get-Date).ToUniversalTime()
