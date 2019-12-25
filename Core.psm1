@@ -1568,6 +1568,8 @@ function Invoke-Core {
         $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
     }
 
+    $Global:AllPools = $null #well be set to NewPools later
+
     $NewPools = $NewPools.Where({
         $Pool_Name = $_.Name
         $Pool_Algo = $_.Algorithm0
@@ -1642,8 +1644,8 @@ function Invoke-Core {
             Remove-Variable "Pools_WTM"
         }
 
-        $API.AllPools   = ConvertTo-Json @($NewPools | Select-Object)
-        $API.Algorithms = ConvertTo-Json @(($NewPools | Select-Object).Algorithm | Sort-Object -Unique) 
+        $API.AllPools   = $NewPools
+        $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
 
         #Decrease compare prices, if out of sync window
         # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
@@ -2100,7 +2102,7 @@ function Invoke-Core {
     if ($Miner_WatchdogTimers -ne $null) {Remove-Variable "Miner_WatchdogTimers"}
 
     #Give API access to the miners information
-    $API.Miners = ConvertTo-Json @($Miners | Select-Object)
+    $API.Miners = $Miners.Where({$true})
 
     #Remove all failed and disabled miners
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
@@ -2109,7 +2111,7 @@ function Invoke-Core {
     if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
-    $API.FastestMiners = ConvertTo-Json @($Miners | Select-Object)
+    $API.FastestMiners = $Miners.Where({$true})
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners.Where({$_.HashRates.PSObject.Properties.Value -contains $null})
@@ -2139,7 +2141,7 @@ function Invoke-Core {
             $_.Arguments -eq $Miner.Arguments -and
             $_.API -eq $Miner.API -and
             (Compare-Object $_.Algorithm ($Miner.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
-        },'First') | Select-Object
+        },'First')
 
         $FirstAlgoName            = "$($Miner.HashRates.PSObject.Properties.Name | Select-Object -First 1)"
 
@@ -2161,7 +2163,8 @@ function Invoke-Core {
         if ($Miner_MaxRejectedShareRatio -lt 0) {$Miner_MaxRejectedShareRatio = 0}
         elseif ($Miner_MaxRejectedShareRatio -gt 1) {$Miner_MaxRejectedShareRatio = 1}
 
-        if ($ActiveMiner) {
+        if ($ActiveMiner.Count) {
+            $ActiveMiner = $ActiveMiner[0]
             $ActiveMiner.Version            = $Miner.Version
             $ActiveMiner.Profit             = $Miner.Profit
             $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
