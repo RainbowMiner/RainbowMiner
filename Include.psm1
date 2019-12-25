@@ -194,7 +194,7 @@ function Get-WhatToMineData {
     if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
         try {
             $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10 -method "WEB"
-            [System.Collections.ArrayList]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
+            [System.Collections.Generic.List[PSCustomObject]]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
                     [PSCustomObject]@{
                         algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
                         id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
@@ -1285,7 +1285,7 @@ function Get-Stat {
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
-        [System.Collections.ArrayList]$MatchArray = @()
+        [System.Collections.Generic.List[string]]$MatchArray = @()
         if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
         if ($Disabled)  {$MatchArray.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
         if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
@@ -1926,7 +1926,7 @@ function Start-SubProcessInScreen {
 
     Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
 
-    [System.Collections.ArrayList]$Stuff = @()
+    [System.Collections.Generic.List[string]]$Stuff = @()
     $Stuff.Add("export DISPLAY=:0") > $null
     $Stuff.Add("cd /") > $null
     $Stuff.Add("cd '$WorkingDirectory'") > $null
@@ -1946,7 +1946,7 @@ function Start-SubProcessInScreen {
     $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
     $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
 
-    [System.Collections.ArrayList]$Cmd = @()
+    [System.Collections.Generic.List[string]]$Cmd = @()
     $Cmd.Add("screen -ls `"$ScreenName`" | (") > $null
     $Cmd.Add("  IFS=`$(printf '\t');") > $null
     $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
@@ -2529,7 +2529,7 @@ function Get-Device {
     $GPUVendorLists = @{}
     $GPUDeviceNames = @{}
     foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
-    [System.Collections.ArrayList]$AllPlatforms = @()
+    [System.Collections.Generic.List[string]]$AllPlatforms = @()
     $Platform_Devices = try {
         [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
             $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
@@ -2578,7 +2578,7 @@ function Get-Device {
 
     try {
         $AmdModels   = @{}
-        [System.Collections.ArrayList]$AmdModelsEx = @()
+        [System.Collections.Generic.List[string]]$AmdModelsEx = @()
         $Platform_Devices | Foreach-Object {
             $PlatformId = $_.PlatformId
             $_.Devices | Foreach-Object {    
@@ -4176,7 +4176,7 @@ function Set-MinersConfigDefault {
                 foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
                     if (-not $Name -or (Get-Member -inputobject $Preset -name $Name -Membertype Properties)) {continue}
                     $Preset | Add-Member $Name @(
-                        [System.Collections.ArrayList]$MinerCheck = @()
+                        [System.Collections.Generic.List[string]]$MinerCheck = @()
                         foreach($cmd in $PresetTmp.$Name) {
                             $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                             $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4193,19 +4193,19 @@ function Set-MinersConfigDefault {
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
             $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -Parameters @{InfoOnly = $true})}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
-                if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
+                if ($a -eq "CPU") {[System.Collections.Generic.List[string]]$SetupDevices = @("CPU")}
                 else {
                     $Devices = @($AllDevices | Where-Object {$_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
-                    [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
+                    [System.Collections.Generic.List[string]]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
                     if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
                 }
                 
-                [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
-                [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
+                [System.Collections.Generic.List[PSCustomObject]]$Miners = @($AllMiners | Where-Object Type -icontains $a)
+                [System.Collections.Generic.List[string]]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {                        
                         $Done | Add-Member "$($Miner.Name)-$($SetupDevice)" @(
-                            [System.Collections.ArrayList]$MinerCheck = @()
+                            [System.Collections.Generic.List[string]]$MinerCheck = @()
                             foreach($cmd in $Miner.Commands) {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                                 $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4219,12 +4219,12 @@ function Set-MinersConfigDefault {
                 if ($Setup) {
                     foreach ($Name in @($Setup.PSObject.Properties.Name)) {
                         if ($MinerNames.Contains($Name)) {
-                            [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                            [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                             foreach ($SetupDevice in $SetupDevices) {
                                 $NameKey = "$($Name)-$($SetupDevice)"
-                                [System.Collections.ArrayList]$ValueTmp = $Value | ConvertTo-Json | ConvertFrom-Json
+                                [System.Collections.Generic.List[PSCustomObject]]$ValueTmp = $Value | ConvertTo-Json | ConvertFrom-Json
                                 if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
-                                    [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                                    [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                                     if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
                                     $Done | Add-Member $NameKey $ValueTmp -Force
                                 }
@@ -4236,9 +4236,9 @@ function Set-MinersConfigDefault {
 
             if ($Preset) {
                 foreach ($Name in @($Preset.PSObject.Properties.Name)) {
-                    [System.Collections.ArrayList]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                    [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                     if (Get-Member -inputobject $Done -name $Name -Membertype Properties) {
-                        [System.Collections.ArrayList]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                        [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                         if ($NewValues.Count) {$Value.AddRange($NewValues) > $null}
                     }
                     $Done | Add-Member $Name $Value.ToArray() -Force
@@ -5004,7 +5004,7 @@ function Get-YiiMPValue {
         [Double]$ActualDivisor = 1000
     )    
     [Double]$Value = 0
-    [System.Collections.ArrayList]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
+    [System.Collections.Generic.List[string]]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
     [hashtable]$values = @{}
     [bool]$hasdetails=$false
     [bool]$containszero = $false
@@ -5037,10 +5037,10 @@ function Get-YiiMPValue {
     if ($Value -eq 0) {
         if ($DataWindow -match '^(.+)-(.+)$') {
             Switch ($Matches[2]) {
-                "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current");Break}
-                "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current");Break}
-                "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h");Break}
-                "3"  {[System.Collections.ArrayList]$fields = $allfields;Break}
+                "2"  {[System.Collections.Generic.List[string]]$fields = @("actual_last24h","estimate_current");Break}
+                "2e" {[System.Collections.Generic.List[string]]$fields = @("estimate_last24h","estimate_current");Break}
+                "2h" {[System.Collections.Generic.List[string]]$fields = @("actual_last24h","estimate_last24h");Break}
+                "3"  {[System.Collections.Generic.List[string]]$fields = $allfields;Break}
             }
             Switch ($Matches[1]) {
                 "minimum" {
@@ -5084,7 +5084,7 @@ function Get-YiiMPValue {
 function Get-DeviceSubsets($Device) {
     $Models = @($Device | Select-Object Model,Model_Name -Unique)
     if ($Models.Count) {
-        [System.Collections.ArrayList]$a = @();0..$($Models.Count-1) | Foreach-Object {$a.Add('{0:x}' -f $_) > $null}
+        [System.Collections.Generic.List[string]]$a = @();0..$($Models.Count-1) | Foreach-Object {$a.Add('{0:x}' -f $_) > $null}
         @(Get-Subsets $a | Where-Object {$_.Length -gt 1} | Foreach-Object{
             [PSCustomObject[]]$x = @($_.ToCharArray() | Foreach-Object {$Models[[int]"0x$_"]}) | Sort-Object -Property Model
             [PSCustomObject]@{
@@ -5712,7 +5712,7 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$ConvertDot = $false
 )
-    [System.Collections.ArrayList]$Uri2 = @()
+    [System.Collections.Generic.List[string]]$Uri2 = @()
     while ($Uri -match "^(.*?)({[^}]+})(.*?)$") {
         if ($Matches[1].Length) {$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Matches[1])) > $null}
         $Tmp=$Matches[2]
@@ -5757,7 +5757,7 @@ param(
     [Int]$Priority = 0
 )
     if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Data\autoexec.default.txt")) {Copy-Item ".\Data\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
-    [System.Collections.ArrayList]$Global:AutoexecCommands = @()
+    [System.Collections.Generic.List[PSCustomObject]]$Global:AutoexecCommands = @()
     foreach($cmd in @(Get-ContentByStreamReader ".\Config\autoexec.txt" -ExpandLines | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
             if (Test-Path $Matches[1]) {

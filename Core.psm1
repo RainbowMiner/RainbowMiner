@@ -58,7 +58,7 @@ function Start-Core {
         [hashtable]$Global:NewRates     = @{}
         [hashtable]$Global:MinerInfo    = @{}
 
-        [System.Collections.ArrayList]$Global:ActiveMiners   = @()
+        [System.Collections.Generic.List[Miner]]$Global:ActiveMiners   = @()
         $Global:WatchdogTimers = @()
 
         $Global:AllPools = $null
@@ -78,7 +78,7 @@ function Start-Core {
             MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
-        [System.Collections.ArrayList]$Session.GetTicker = @()
+        [System.Collections.Generic.List[string]]$Session.GetTicker = @()
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
 
@@ -376,7 +376,7 @@ function Invoke-ReportMinerStatus {
     $ReportRates = [PSCustomObject]@{}
     $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
-    [System.Collections.ArrayList]$Including_Strings = @()
+    [System.Collections.Generic.List[string]]$Including_Strings = @()
     if ($Session.ReportTotals)    {$Including_Strings.Add("totals") > $null}
     if ($Session.ReportMinerData) {$Including_Strings.Add("minerdata") > $null}
     if ($Session.ReportPoolsData) {$Including_Strings.Add("poolsdata") > $null}
@@ -393,7 +393,7 @@ function Invoke-ReportMinerStatus {
             $Profit += [Double]$Miner.Profit
             $PowerDraw += [Double]$Miner_PowerDraw
 
-            [System.Collections.ArrayList]$Devices = @()
+            [System.Collections.Generic.List[PSCustomObject]]$Devices = @()
             Get-Device $Miner.DeviceName | Foreach-Object {
                 if ($_.Type -eq "GPU") {
                     if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
@@ -566,9 +566,9 @@ function Get-Balance {
     if (-not $Balances) {return}
 
     #Get exchange rates for all payout currencies
-    [System.Collections.ArrayList]$CurrenciesWithBalances = @()
-    [System.Collections.ArrayList]$CurrenciesToExchange   = @()
-    [System.Collections.ArrayList]$CurrenciesMissing = @()
+    [System.Collections.Generic.List[string]]$CurrenciesWithBalances = @()
+    [System.Collections.Generic.List[string]]$CurrenciesToExchange   = @()
+    [System.Collections.Generic.List[string]]$CurrenciesMissing = @()
 
     $RatesAPI = [PSCustomObject]@{}
     
@@ -1037,7 +1037,7 @@ function Invoke-Core {
             $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
             if (Test-Config "Scheduler" -Health) {
                 if ($AllScheduler -isnot [array] -and $AllScheduler.value -ne $null) {$AllScheduler = $AllScheduler.value}
-                $Session.Config | Add-Member Scheduler ([System.Collections.ArrayList]@()) -Force
+                $Session.Config | Add-Member Scheduler ([System.Collections.Generic.List[PSCustomObject]]@()) -Force
                 $AllScheduler | Foreach-Object {
                     $_ | Add-Member Name "$($_.Name)" -Force
                     $_ | Add-Member DayOfWeek $([string]("$($_.DayOfWeek -replace "[^0-6\*]+")"[0])) -Force
@@ -1478,7 +1478,7 @@ function Invoke-Core {
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Loading pool modules .."}
 
-    [System.Collections.ArrayList]$SelectedPoolNames = @()
+    [System.Collections.Generic.List[string]]$SelectedPoolNames = @()
     $NewPools = @()
     $TimerPools = @{}
     $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
@@ -1849,7 +1849,7 @@ function Invoke-Core {
 
     [hashtable]$AllMiners_VersionCheck = @{}
     [hashtable]$AllMiners_VersionDate  = @{}
-    [System.Collections.ArrayList]$Miner_Arguments_List = @()
+    [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
     $AllMiners.ForEach({
         $Miner = $_
 
@@ -1884,8 +1884,8 @@ function Invoke-Core {
             $Miner_MSIAprofile = 0
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
             $Miner_CommonCommands_found = $false
-            [System.Collections.ArrayList]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
-            $Miner_CommonCommands_array.AddRange(@($Miner.BaseAlgorithm -split '-' | Select-Object))
+            [System.Collections.Generic.List[string]]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
+            $Miner_CommonCommands_array.AddRange([System.Collections.Generic.List[string]]@($Miner.BaseAlgorithm -split '-' | Select-Object))
             for($i=$Miner_CommonCommands_array.Count;$i -gt 0; $i--) {
                 $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
                 if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
@@ -2174,6 +2174,8 @@ function Invoke-Core {
             #$ActiveMiner.DeviceModel        = $Miner.DeviceModel
             $ActiveMiner.ShowMinerWindow    = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
             $ActiveMiner.MSIAprofile        = $Miner.MSIAprofile
+            $ActiveMiner.DevFee             = $Miner.DevFee
+            $ActiveMiner.OCprofile          = $Miner.OCprofile
             $ActiveMiner.FaultTolerance     = $Miner.FaultTolerance
             $ActiveMiner.Penalty            = $Miner.Penalty
             $ActiveMiner.ManualUri          = "$Miner_ManualUri"
@@ -2197,10 +2199,10 @@ function Invoke-Core {
             $ActiveMiner.MiningAffinity     = $Miner.MiningAffinity
             $ActiveMiner.MultiProcess       = [int]$Miner.MultiProcess
 
-            $Miner.HashRates.PSObject.Properties.Name | Foreach-Object {
-                $ActiveMiner.DevFee.$_ = $Miner.DevFee.$_
-            }
-            $Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
+            #$Miner.HashRates.PSObject.Properties.Name | Foreach-Object {
+            #    $ActiveMiner.DevFee.$_ = $Miner.DevFee.$_
+            #}
+            #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
         }
         else {
             Write-Log -Level Info "New miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+')"
@@ -2235,6 +2237,7 @@ function Invoke-Core {
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
                 MSIAprofile          = $Miner.MSIAprofile
                 DevFee               = $Miner.DevFee
+                OCprofile            = $Miner.OCprofile
                 ExtendInterval       = $Miner.ExtendInterval
                 ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
                 FaultTolerance       = $Miner.FaultTolerance
@@ -2261,7 +2264,7 @@ function Invoke-Core {
                 MiningAffinity       = $Miner.MiningAffinity
                 MultiProcess         = [int]$Miner.MultiProcess
             }
-            $Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
+            #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
             $Global:ActiveMiners.Add($ActiveMiner) > $null
         }
     })
@@ -2579,7 +2582,7 @@ function Invoke-Core {
         Write-Host $Miner_DeviceTitle
         Write-Host $("=" * $Miner_DeviceTitle.Length)
 
-        [System.Collections.ArrayList]$Miner_Table = @(
+        [System.Collections.Generic.List[hashtable]]$Miner_Table = @(
             @{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}},
             @{Label = "Fee"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.DevFee.$_) {'{0:p2}' -f ($m.DevFee.$_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'},
             @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}},
@@ -2590,7 +2593,7 @@ function Invoke-Core {
         foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
             $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
         }
-        $Miner_Table.AddRange(@(
+        $Miner_Table.AddRange([System.Collections.Generic.List[hashtable]]@(
             @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
             @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}}
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
@@ -2695,7 +2698,7 @@ function Invoke-Core {
         $NextBalances = $Session.Config.BalanceUpdateMinutes-[int]((Get-Date).ToUniversalTime()-$Session.Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
         Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Session.Updatetracker.Balances)) (next update $($NextBalances)): "        
-        [System.Collections.ArrayList]$ColumnFormat = @()
+        [System.Collections.Generic.List[hashtable]]$ColumnFormat = @()
         $ColumnFormat.Add(@{Name = "Name"; Expression = "Name"}) > $null
         if (($BalancesData.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
             $ColumnFormat.Add(@{Name = "Sym"; Expression = {if ($_.Currency -and (-not $Session.Config.Pools."$($_.Name)".AECurrency -or $Session.Config.Pools."$($_.Name)".AECurrency -eq $_.Currency)) {$ColumnMark -replace "{value}","$($_.Currency)"} else {$_.Currency}}}) > $null
@@ -2710,7 +2713,7 @@ function Invoke-Core {
     #Display exchange rates
     $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = $($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_.Profit} | Measure-Object -Sum).Sum
     if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost;$CurrentProfitWithoutCostTotal += $($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_.Profit_Cost} | Measure-Object -Sum).Sum}
-    [System.Collections.ArrayList]$StatusLine = @()
+    [System.Collections.Generic.List[string]]$StatusLine = @()
     foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
             $Miner_Currency_Out = $Miner_Currency
             $CurrentProfitTotal_Out = $CurrentProfitTotal
@@ -2819,7 +2822,7 @@ function Invoke-Core {
     if ($IsWindows) {$Host.UI.RawUI.FlushInputBuffer()}
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    [System.Collections.ArrayList]$cmdMenu = @("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset")
+    [System.Collections.Generic.List[string]]$cmdMenu = @("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset")
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {$cmdMenu.Insert(0,"[U]pdate RainbowMiner") > $null}
     if (-not $Session.IsDonationRun){$cmdMenu.Add("[C]onfiguration") > $null}
     $cmdMenu.Add("[V]erbose$(if ($Session.Config.UIstyle -eq "full"){" off"})") > $null
@@ -3077,7 +3080,7 @@ function Stop-Core {
 
     Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
     Write-Log "Gracefully halting RainbowMiner"
-    [System.Collections.ArrayList]$ExcavatorWindowsClosed = @()
+    [System.Collections.Generic.List[string]]$ExcavatorWindowsClosed = @()
     $Global:ActiveMiners | Where-Object {$_.Activated -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
         $Miner = $_
         if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
