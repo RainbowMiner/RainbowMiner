@@ -180,7 +180,8 @@ function Get-CoinSymbol {
     }
     if (-not $Silent) {
         if ($Reverse) {
-            (Get-Culture).TextInfo.ToTitleCase("$($Script:ScriptCoinNames.Keys | Where-Object {$Script:ScriptCoinNames.$_ -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
+            $CoinName = $CoinName.ToUpper()
+            (Get-Culture).TextInfo.ToTitleCase("$($Script:ScriptCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
         } else {
             $Script:ScriptCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
