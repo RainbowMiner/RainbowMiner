@@ -334,7 +334,7 @@ function Set-MinerStats {
                 }
 
                 #Update watchdog timer
-                if ($WatchdogTimer = $Global:WatchdogTimers.Where({$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) | Select-Object) {
+                if ($WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) {
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
                         $Miner.CrashCount = 0
@@ -734,8 +734,8 @@ function Invoke-Core {
     $CheckGpuGroups = $false
     $CheckCombos = $false
     
-    [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object
-    [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
+    [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object)
+    [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
 
@@ -1294,18 +1294,18 @@ function Invoke-Core {
 
         #Load information about the devices
         $Global:DeviceCache.Devices = @()
-        if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName | Select-Object)}
+        if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = (Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName).Foreach({$_})}
         $Global:DeviceCache.DevicesByTypes = [PSCustomObject]@{
-            NVIDIA = @($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"} | Select-Object)
-            AMD    = @($Global:DeviceCache.Devices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"} | Select-Object)
-            CPU    = @($Global:DeviceCache.Devices | Where-Object Type -eq "CPU" | Select-Object)
+            NVIDIA = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"})
+            AMD    = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"})
+            CPU    = $Global:DeviceCache.Devices.Where({$_.Type -eq "CPU"})
             Combos = [PSCustomObject]@{}
             FullComboModels = [PSCustomObject]@{}
         }
         [hashtable]$Global:DeviceCache.DevicesToVendors = @{}
 
         $Session.Config | Add-Member DeviceModel @($Global:DeviceCache.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
-        $Session.Config | Add-Member CUDAVersion $(if (($Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
+        $Session.Config | Add-Member CUDAVersion $(if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and $Global:DeviceCache.DevicesByTypes.NVIDIA[0].OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
         $Session.Config | Add-Member DotNETRuntimeVersion $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}}) -Force
 
         if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles) {
@@ -1369,8 +1369,8 @@ function Invoke-Core {
         $Session.PauseMiners = $API.Pause = $true
     }
 
-    $API.AllDevices = ConvertTo-Json @($Global:DeviceCache.AllDevices | Select-Object)
-    $API.Devices    = ConvertTo-Json @($Global:DeviceCache.Devices | Select-Object)
+    $API.AllDevices = ConvertTo-Json @($Global:DeviceCache.AllDevices | Select-Object *)
+    $API.Devices    = ConvertTo-Json @($Global:DeviceCache.Devices | Select-Object *)
 
     #Check for miner config
     if (Set-ConfigDefault "Miners") {
