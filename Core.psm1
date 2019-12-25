@@ -58,7 +58,7 @@ function Start-Core {
         [hashtable]$Global:NewRates     = @{}
         [hashtable]$Global:MinerInfo    = @{}
 
-        [System.Collections.Generic.List[Miner]]$Global:ActiveMiners   = @()
+        [System.Collections.ArrayList]$Global:ActiveMiners   = @()
         $Global:WatchdogTimers = @()
 
         $Global:AllPools = $null
