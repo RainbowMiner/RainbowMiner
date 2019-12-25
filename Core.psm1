@@ -1369,8 +1369,8 @@ function Invoke-Core {
         $Session.PauseMiners = $API.Pause = $true
     }
 
-    $API.AllDevices = ConvertTo-Json @($Global:DeviceCache.AllDevices | Select-Object *)
-    $API.Devices    = ConvertTo-Json @($Global:DeviceCache.Devices | Select-Object *)
+    $API.AllDevices = $Global:DeviceCache.AllDevices
+    $API.Devices    = $Global:DeviceCache.Devices
 
     #Check for miner config
     if (Set-ConfigDefault "Miners") {
@@ -1746,7 +1746,7 @@ function Invoke-Core {
     }
 
     #Give API access to the pools information
-    $API.Pools = ConvertTo-Json @($Pools.PSObject.Properties | Select-Object -ExpandProperty Value)
+    $API.Pools = @($Pools.PSObject.Properties | Select-Object -ExpandProperty Value)
  
     #Load information about the miners
     Write-Log "Getting miner information. "

@@ -165,15 +165,11 @@
                     Break
                 }
                 "/pools" {
-                    $Data = if ($API.Pools) {$API.Pools} else {"[]"}
+                    $Data = if ($API.Pools) {ConvertTo-Json $API.Pools} else {"[]"}
                     Break
                 }
                 "/allpools" {
                     $Data = if ($API.AllPools) {ConvertTo-Json $API.AllPools} else {"[]"}
-                    Break
-                }
-                "/poolscalculations" {
-                    $Data = $API.PoolsCalculations
                     Break
                 }
                 "/algorithms" {
@@ -262,7 +258,7 @@
                     Break
                 }
                 "/ocprofiles" {
-                    $Data = ConvertTo-Json @($Session.Config.OCProfiles.PSObject.Properties | Foreach-Object {
+                    $Data = ConvertTo-Json $Session.Config.OCProfiles.PSObject.Properties.Foreach({
                                 [PSCustomObject]@{
                                     Name             = $_.Name -replace "-.+$"
                                     Device           = $(if ($_.Name -match "-(.+)$") {$Matches[1]} else {""})
@@ -272,7 +268,7 @@
                                     CoreClockBoost   = $_.Value.CoreClockBoost
                                     LockVoltagePoint = $_.Value.LockVoltagePoint
                                 }
-                            } | Select-Object)
+                            })
                     Break
                 }
                 "/downloadlist" {
@@ -346,15 +342,15 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = if ($API.AllDevices) {$API.AllDevices} else {"[]"}
+                    $Data = if ($API.AllDevices) {ConvertTo-Json $API.AllDevices.ForEach({$_}) -Depth 10} else {"[]"}
                     Break
                 }
                 "/devices" {
-                    $Data = if ($API.Devices) {$API.Devices} else {"[]"}
+                    $Data = if ($API.Devices) {ConvertTo-Json $API.Devices.ForEach({$_}) -Depth 10} else {"[]"}
                     Break
                 }
                 "/devicecombos" {
-                    $Data = ConvertTo-Json @($API.DeviceCombos | Select-Object)
+                    $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos.ForEach({$_})} else {"[]"}
                     Break
                 }
                 "/stats" {
@@ -437,7 +433,7 @@
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json @($API.WatchdogTimers | Select-Object) -Depth 2} else {"[]"}
+                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers.ForEach({$_}) -Depth 2} else {"[]"}
                     Break
                 }
                 "/balances" {
@@ -543,7 +539,7 @@
                     Break
                 }
                 "/asyncloaderjobs" {
-                    $Data = ConvertTo-Json @($Asyncloader.Jobs | Select-Object)
+                    $Data = ConvertTo-Json $Asyncloader.Jobs.ForEach({$_})
                     Break
                 }
                 "/decsep" {
