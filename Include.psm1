@@ -2517,7 +2517,8 @@ function Get-Device {
         return
     }
 
-    $Devices = @()
+    $Global:GlobalCachedDevices = @()
+
     $PlatformId = 0
     $Index = 0
     $PlatformId_Index = @{}
@@ -2624,6 +2625,7 @@ function Get-Device {
                 $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
 
                 $Device = [PSCustomObject]@{
+                    Name = ""
                     Index = [Int]$Index
                     PlatformId = [Int]$PlatformId
                     PlatformId_Index = [Int]$PlatformId_Index."$($PlatformId)"
@@ -2671,7 +2673,8 @@ function Get-Device {
                     ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
                     ((-not $ExcludeName) -or (-not ($ExcludeName_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -and -not ($ExcludeName | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})))
                 ) {
-                    $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
+                    $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
+                    $Global:GlobalCachedDevices += $Device
                     if ($AmdModelsEx -notcontains $Device.Model) {
                         $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
                         if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx.Add($Device.Model) > $null}
@@ -2698,7 +2701,7 @@ function Get-Device {
 
         $AmdModelsEx | Foreach-Object {
             $Model = $_
-            $Devices | Where-Object Model -eq $Model | Foreach-Object {
+            $Global:GlobalCachedDevices | Where-Object Model -eq $Model | Foreach-Object {
                 $AmdGb = "$([int]($_.OpenCL.GlobalMemSize / 1GB))GB"
                 $_.Model = "$($_.Model)$AmdGb"
                 $_.Model_Base = "$($_.Model)$AmdGb"
@@ -2777,6 +2780,7 @@ function Get-Device {
         for ($CPUIndex=0;$CPUIndex -lt $Global:GlobalCPUInfo.PhysicalCPUs;$CPUIndex++) {
             # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
             $Device = [PSCustomObject]@{
+                Name = ""
                 Index = [Int]$Index
                 Vendor = $Global:GlobalCPUInfo.Vendor
                 Vendor_Name = $Global:GlobalCPUInfo.Manufacturer
@@ -2807,7 +2811,8 @@ function Get-Device {
             }
 
             if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
-                $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
+                $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
+                $Global:GlobalCachedDevices += $Device
             }
             $Index++
         }
@@ -2817,8 +2822,7 @@ function Get-Device {
         Write-Log -Level Warn "CPU detection has failed. "
     }
 
-    $Global:GlobalCachedDevices = $Devices
-    $Devices
+    $Global:GlobalCachedDevices
 }
 
 function Get-CPUFeatures { 
