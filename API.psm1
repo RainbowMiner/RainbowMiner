@@ -893,10 +893,8 @@
                 }
                 "/mrrstats" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
-                    $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
-                    if ($Devices -ne $null) {Remove-Variable "Devices"}
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($Pool_Request = Get-MiningRigRentalAlgos) {
                         [hashtable]$StatsCPU = @{}
@@ -935,10 +933,8 @@
                 }
                 "/mrrrigs" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
-                    $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
-                    if ($Devices -ne $null) {Remove-Variable "Devices"}
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($Session.Config.Pools.MiningRigRentals.API_Key -and $Session.Config.Pools.MiningRigRentals.API_Secret) {
                         $Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Session.Config.WorkerName | Select-Object -Unique
