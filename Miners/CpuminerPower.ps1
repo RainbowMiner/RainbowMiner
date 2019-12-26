@@ -22,11 +22,11 @@ $Version = "1.3"
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower (CpuminerRKZ faster)
+    #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower (CpuminerRKZ faster)
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #YescryptR8
-    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #YescryptR32
+    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #YescryptR8
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #YescryptR32
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower
     [PSCustomObject]@{MainAlgorithm = "yespowerinter"; Params = ""} #Yespower Intercoin (ITC)
     [PSCustomObject]@{MainAlgorithm = "yespowerlitb"; Params = ""} #Yespower LightBit (LITB)
