@@ -8,21 +8,30 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-CpuPower\cpuminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.5-cpupower/Cpuminer-opt-cpupower-1.0-linux64.tar.gz"
+    $Path = ".\Bin\CPU-Power\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'aes-avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3-cpupool/cpuminer-opt-cpupool-1.3-linux.7z"
 } else {
-    $Path = ".\Bin\CPU-CpuPower\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.5-cpupower/Cpuminer-opt-cpupower-1.0-win64.zip"
+    $Path = ".\Bin\CPU-Power\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3-cpupool/cpuminer-opt-cpupool-1.3-win64.7z"
 }
 $ManualUri = "https://github.com/cpu-pool/cpuminer-opt-cpupower/releases"
 $Port = "539{0:d2}"
 $DevFee = 0.0
-$Version = "3.8.8.5"
+$Version = "1.3"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower (CpuminerRKZ faster)
+    [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower (CpuminerRKZ faster)
+    [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #YescryptR8
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower
+    [PSCustomObject]@{MainAlgorithm = "yespowerinter"; Params = ""} #Yespower Intercoin (ITC)
+    [PSCustomObject]@{MainAlgorithm = "yespowerlitb"; Params = ""} #Yespower LightBit (LITB)
+    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16
+    [PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""} #Yespower Uranium-X (URX)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
