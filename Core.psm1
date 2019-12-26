@@ -55,7 +55,6 @@ function Start-Core {
         [hashtable]$Global:StatsCache   = @{}
         [hashtable]$Global:DeviceCache  = @{}
         [hashtable]$Global:Rates        = @{BTC = [Double]1}
-        [hashtable]$Global:NewRates     = @{}
         [hashtable]$Global:MinerInfo    = @{}
 
         [System.Collections.ArrayList]$Global:ActiveMiners   = @()
@@ -645,37 +644,24 @@ function Get-Balance {
 }
 
 function Update-Rates {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $false)]
-        $Symbols
-    )
 
-    $NewRatesFound = $false
+    $Symbols = @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+    [hashtable]$NewRates = @{}
+    try {(Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase").data.rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
-    if (-not $Symbols) {
-        $Symbols = @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
-        $Global:NewRates.Clear()
-        try {(Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase").data.rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Global:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Global:NewRates.Clear()}
-
-        if (-not $Global:NewRates.Count) {
-            Write-Log -Level Info "Coinbase is down, using fallback. "
-            try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Global:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Global:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
-        }
-
-        $Global:Rates["BTC"] = $Global:NewRates["BTC"] = [Double]1
-
-        $NewRatesFound = $true
-    } else {
-        $Symbols = @($Symbols | Select-Object -Unique)
+    if (-not $NewRates.Count) {
+        Write-Log -Level Info "Coinbase is down, using fallback. "
+        try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Coinbase down. "}
     }
 
-    Compare-Object $Symbols @($Global:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
-        if ($_.SideIndicator -eq "==") {$Global:Rates[$_.InputObject] = [Double]$Global:NewRates[$_.InputObject]}
-        elseif ($Session.GetTicker -inotcontains $_.InputObject) {$Session.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
+    $Global:Rates["BTC"] = $NewRates["BTC"] = [Double]1
+
+    Compare-Object $Symbols @($NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
+        if ($_.SideIndicator -eq "==") {$Global:Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
+        elseif ($Session.GetTicker -inotcontains $_.InputObject) {$Session.GetTicker.Add($_.InputObject.ToUpper()) > $null}
     }
 
-    if ($NewRatesFound -and $Session.GetTicker.Count -gt 0) {
+    if ($Session.GetTicker.Count -gt 0) {
         try {
             $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
