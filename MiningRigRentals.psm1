@@ -207,7 +207,7 @@ param(
 )
     if (-not $id) {return}
 
-    if ($Global:MRRInfoCache -eq $null) {
+    if (-not (Test-Path Variable:Global:MRRInfoCache)) {
         [hashtable]$Global:MRRInfoCache = @{}
         if (Test-Path ".\Data\mrrinfo.json") {
             try {
@@ -256,7 +256,7 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Status = ""
 )
-    if ($Global:MRRStatus -eq $null) {$Global:MRRStatus = @{}}
+    if (-not (Test-Path Variable:Global:MRRStatus)) {[hashtable]$Global:MRRStatus = @{}}
     $time = (Get-Date).ToUniversalTime()
     $RigKey = "$RigId"
     if ($Global:MRRStatus.ContainsKey($RigKey)) {
