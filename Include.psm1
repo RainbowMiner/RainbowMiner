@@ -4405,7 +4405,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
+                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType})
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
@@ -5903,8 +5903,7 @@ param(
     [String[]]$DeviceName
 )
     if (-not $IsWindows) {return}
-    $Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
-    if ($Device) {
+    if ($Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}) {
         $DeviceId   = $Device.Type_Vendor_Index -join ','
         $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
         $Arguments = "--opencl $($PlatformId) --gpu $($DeviceId) --hbcc %onoff% --admin fullrestart"
