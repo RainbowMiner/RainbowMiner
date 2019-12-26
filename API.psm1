@@ -433,7 +433,7 @@
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json @($API.WatchdogTimers).Where({$_}) -Depth 2} else {"[]"}
+                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers -Depth 2} else {"[]"}
                     Break
                 }
                 "/balances" {
