@@ -4167,6 +4167,10 @@ function Set-MinersConfigDefault {
             $PresetTmp = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
             $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
+
+            #autofix json array in array for count one
+            $PresetTmp.PSObject.Properties.Name | Where-Object {$PresetTmp.$_ -is [array] -and $PresetTmp.$_.Count -eq 1 -and $PresetTmp.$_[0].value -is [array]} | Foreach-Object {$PresetTmp.$_ = $PresetTmp.$_[0].value}
+
             #cleanup duplicates in algorithm lists
             $Preset = [PSCustomObject]@{}
             if ($PresetTmp.PSObject.Properties.Name.Count -gt 0 ) {
