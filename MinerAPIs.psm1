@@ -27,7 +27,7 @@ class Miner {
     $Profit_Unbias
     [double]$Profit_Cost
     [double]$PowerDraw
-    [PSCustomObject[]]$Stratum
+    $Stratum
     [double[]]$Speed
     [double[]]$Speed_Live
     [double[]]$Variance
@@ -39,13 +39,13 @@ class Miner {
     [string]$LogFile    
     [Bool]$ShowMinerWindow = $false
     [int]$MSIAprofile
-    [hashtable]$OCprofile = @{}
-    [PSCustomObject]$DevFee
+    $OCprofile
+    $DevFee
     [string]$BaseName
     [double]$FaultTolerance = 0.1
     [int]$ExtendInterval = 0
     [double]$Penalty = 0
-    [PSCustomObject]$PoolPenalty
+    [double[]]$PoolPenalty
     [int]$PostBlockMining = 0
     [int]$Rounds = 0
     [int]$MinSamples = 1
@@ -75,8 +75,8 @@ class Miner {
     [DateTime]$StartTime = [DateTime]::MinValue
     [DateTime]$ActiveLast = [DateTime]::MinValue
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
-    [PSCustomObject]$Job
-    [PSCustomObject]$EthPill
+    $Job
+    $EthPill
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
@@ -192,12 +192,9 @@ class Miner {
     }
 
     hidden StartMiningPreProcess() {
+        $this.Stratum = @()
         while ($this.Stratum.Count -lt $this.Algorithm.Count) {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
-        if ($this.RejectedShareRatio.Count -lt $this.Algorithm.Count) {$this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count}
-        for ($Index = 0; $Index -lt $this.Algorithm.Count; $Index++) {
-            $this.Stratum[$Index].Accepted = $this.Stratum[$Index].Rejected = 0
-            $this.RejectedShareRatio[$Index] = 0.0
-        }
+        $this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count
         $this.ActiveLast = Get-Date
     }
 
@@ -603,9 +600,9 @@ class Miner {
 
         if (-not $this.HasOCprofile()) {return}
 
-        [System.Collections.ArrayList]$applied = @()
-        [System.Collections.ArrayList]$NvCmd = @()
-        [System.Collections.ArrayList]$AmdCmd = @()
+        [System.Collections.Generic.List[string]]$applied = @()
+        [System.Collections.Generic.List[string]]$NvCmd = @()
+        [System.Collections.Generic.List[string]]$AmdCmd = @()
 
         $Vendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
@@ -640,8 +637,8 @@ class Miner {
                 default {3}
             }
 
-            [System.Collections.ArrayList]$DeviceIds = @()
-            [System.Collections.ArrayList]$CardIds   = @()
+            [System.Collections.Generic.List[int]]$DeviceIds = @()
+            [System.Collections.Generic.List[string]]$CardIds   = @()
             $Global:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                 $VendorIndex = $_.Type_Vendor_Index
                 $CardId = $_.CardId

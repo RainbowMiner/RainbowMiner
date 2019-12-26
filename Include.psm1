@@ -180,7 +180,8 @@ function Get-CoinSymbol {
     }
     if (-not $Silent) {
         if ($Reverse) {
-            (Get-Culture).TextInfo.ToTitleCase("$($Script:ScriptCoinNames.Keys | Where-Object {$Script:ScriptCoinNames.$_ -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
+            $CoinName = $CoinName.ToUpper()
+            (Get-Culture).TextInfo.ToTitleCase("$($Script:ScriptCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
         } else {
             $Script:ScriptCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
@@ -194,7 +195,7 @@ function Get-WhatToMineData {
     if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
         try {
             $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10 -method "WEB"
-            [System.Collections.ArrayList]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
+            [System.Collections.Generic.List[PSCustomObject]]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
                     [PSCustomObject]@{
                         algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
                         id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
@@ -1285,7 +1286,7 @@ function Get-Stat {
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
-        [System.Collections.ArrayList]$MatchArray = @()
+        [System.Collections.Generic.List[string]]$MatchArray = @()
         if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
         if ($Disabled)  {$MatchArray.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
         if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
@@ -1926,7 +1927,7 @@ function Start-SubProcessInScreen {
 
     Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
 
-    [System.Collections.ArrayList]$Stuff = @()
+    [System.Collections.Generic.List[string]]$Stuff = @()
     $Stuff.Add("export DISPLAY=:0") > $null
     $Stuff.Add("cd /") > $null
     $Stuff.Add("cd '$WorkingDirectory'") > $null
@@ -1946,7 +1947,7 @@ function Start-SubProcessInScreen {
     $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
     $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
 
-    [System.Collections.ArrayList]$Cmd = @()
+    [System.Collections.Generic.List[string]]$Cmd = @()
     $Cmd.Add("screen -ls `"$ScreenName`" | (") > $null
     $Cmd.Add("  IFS=`$(printf '\t');") > $null
     $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
@@ -2481,344 +2482,339 @@ function Get-Device {
         [Switch]$IgnoreOpenCL = $false
     )
 
-    if (-not (Test-Path Variable:Global:GlobalDataDeviceList) -or -not $Global:GlobalDataDeviceList) {$Global:GlobalDataDeviceList = Get-ContentByStreamReader ".\Data\devices.json" | ConvertFrom-Json -ErrorAction Ignore}
-
     if ($Name) {
+        $DeviceList = Get-ContentByStreamReader ".\Data\devices.json" | ConvertFrom-Json -ErrorAction Ignore
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $Global:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
             $Name_Device
         }
     }
 
     if ($ExcludeName) {
+        if (-not $DeviceList) {$DeviceList = Get-ContentByStreamReader ".\Data\devices.json" | ConvertFrom-Json -ErrorAction Ignore}
         $ExcludeName_Devices = $ExcludeName | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $Global:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
             $Name_Device
         }
     }
 
-    # Try to get cached devices first to improve performance
-    if ((Test-Path Variable:Global:GlobalCachedDevices) -and -not $Refresh) {
-        $Global:GlobalCachedDevices | Foreach-Object {
-            $Device = $_
-            if (
-                ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
-                ((-not $ExcludeName) -or (-not ($ExcludeName_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -and -not ($ExcludeName | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})))
-             ) {
-                $Device
-            }
-        }
-        return
-    }
+    if ($Global:GlobalCachedDevices -isnot [array] -or $Refresh) {
+        $Global:GlobalCachedDevices = @()
 
-    $Devices = @()
-    $PlatformId = 0
-    $Index = 0
-    $PlatformId_Index = @{}
-    $Type_PlatformId_Index = @{}
-    $Vendor_Index = @{}
-    $Type_Vendor_Index = @{}
-    $Type_Index = @{}
-    $Type_Mineable_Index = @{}
-    $GPUVendorLists = @{}
-    $GPUDeviceNames = @{}
-    foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
-    [System.Collections.ArrayList]$AllPlatforms = @()
-    $Platform_Devices = try {
-        [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
-            $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
-            $Device_Index = 0
-            [PSCustomObject]@{
-                PlatformId=$PlatformId
-                Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
+        $PlatformId = 0
+        $Index = 0
+        $PlatformId_Index = @{}
+        $Type_PlatformId_Index = @{}
+        $Vendor_Index = @{}
+        $Type_Vendor_Index = @{}
+        $Type_Index = @{}
+        $Type_Mineable_Index = @{}
+        $GPUVendorLists = @{}
+        $GPUDeviceNames = @{}
+        foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
+        [System.Collections.Generic.List[string]]$AllPlatforms = @()
+        $Platform_Devices = try {
+            [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
+                $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
+                $Device_Index = 0
+                [PSCustomObject]@{
+                    PlatformId=$PlatformId
+                    Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
+                        [PSCustomObject]@{
+                            DeviceIndex     = $Device_Index
+                            Name            = $_.Name
+                            Type            = $_.Type
+                            Vendor          = $_.Vendor
+                            GlobalMemSize   = $_.GlobalMemSize
+                            MaxComputeUnits = $_.MaxComputeUnits
+                            PlatformVersion = $_.Platform.Version
+                            DriverVersion   = $_.DriverVersion
+                            PCIBusId        = if ($_.Vendor -match "NVIDIA") {"{0:X2}:{1:X2}" -f [int]$_.PCIBusId,[int]$_.PCISlotId} else {$_.PCITopology}
+                            CardId          = -1
+                        }
+                        $Device_Index++
+                    }
+                }
+                $PlatformId++
+             }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $Cuda = Get-NvidiaSmi | Where-Object {$_} | Foreach-Object {Invoke-Exe $_ -ExcludeEmptyLines -ExpandLines | Where-Object {$_ -match "CUDA.+?:\s*(\d+\.\d+)"} | Foreach-Object {$Matches[1]} | Select-Object -First 1 | Foreach-Object {"$_.0"}}
+            if ($Cuda) {
+                $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total","pci.bus_id" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
                     [PSCustomObject]@{
-                        DeviceIndex     = $Device_Index
-                        Name            = $_.Name
-                        Type            = $_.Type
-                        Vendor          = $_.Vendor
-                        GlobalMemSize   = $_.GlobalMemSize
-                        MaxComputeUnits = $_.MaxComputeUnits
-                        PlatformVersion = $_.Platform.Version
-                        DriverVersion   = $_.DriverVersion
-                        PCIBusId        = if ($_.Vendor -match "NVIDIA") {"{0:X2}:{1:X2}" -f [int]$_.PCIBusId,[int]$_.PCISlotId} else {$_.PCITopology}
+                        DeviceIndex     = $_.index
+                        Name            = $_.gpu_name
+                        Type            = "Gpu"
+                        Vendor          = "NVIDIA Corporation"
+                        GlobalMemSize   = 1MB * [int64]$_.memory_total
+                        PlatformVersion = "CUDA $Cuda"
+                        PCIBusId        = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
                         CardId          = -1
                     }
-                    $Device_Index++
                 }
+                if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
+            } else {
+                Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
             }
-            $PlatformId++
-         }
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        $Cuda = Get-NvidiaSmi | Where-Object {$_} | Foreach-Object {Invoke-Exe $_ -ExcludeEmptyLines -ExpandLines | Where-Object {$_ -match "CUDA.+?:\s*(\d+\.\d+)"} | Foreach-Object {$Matches[1]} | Select-Object -First 1 | Foreach-Object {"$_.0"}}
-        if ($Cuda) {
-            $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total","pci.bus_id" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
-                [PSCustomObject]@{
-                    DeviceIndex     = $_.index
-                    Name            = $_.gpu_name
-                    Type            = "Gpu"
-                    Vendor          = "NVIDIA Corporation"
-                    GlobalMemSize   = 1MB * [int64]$_.memory_total
-                    PlatformVersion = "CUDA $Cuda"
-                    PCIBusId        = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
-                    CardId          = -1
-                }
-            }
-            if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
-        } else {
-            Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
         }
-    }
 
-    try {
-        $AmdModels   = @{}
-        [System.Collections.ArrayList]$AmdModelsEx = @()
-        $Platform_Devices | Foreach-Object {
-            $PlatformId = $_.PlatformId
-            $_.Devices | Foreach-Object {    
-                $Device_OpenCL = $_
+        try {
+            $AmdModels   = @{}
+            [System.Collections.Generic.List[string]]$AmdModelsEx = @()
+            $Platform_Devices | Foreach-Object {
+                $PlatformId = $_.PlatformId
+                $_.Devices | Foreach-Object {    
+                    $Device_OpenCL = $_
 
-                $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
-                $Vendor_Name = [String]$Device_OpenCL.Vendor
-                $InstanceId  = ''
-                $SubId = ''
-                $PCIBusId = $null
-                $CardId = -1
+                    $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
+                    $Vendor_Name = [String]$Device_OpenCL.Vendor
+                    $InstanceId  = ''
+                    $SubId = ''
+                    $PCIBusId = $null
+                    $CardId = -1
 
-                if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
-                    $Vendor_Name = "NVIDIA"
-                } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
-                    $Vendor_Name = "AMD"
-                    if (-not $GPUDeviceNames[$Vendor_Name]) {
-                        $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
-                            if ((Test-OCDaemon) -or (Test-IsElevated)) {
-                                try {
-                                    $data = @(Get-DeviceName "amd" -UseAfterburner $false | Select-Object)
-                                    if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\amd-names.json" -Data $data > $null}
-                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                            }
-                            if (Test-Path ".\Data\amd-names.json") {Get-ContentByStreamReader ".\Data\amd-names.json" | ConvertFrom-Json -ErrorAction Ignore}
-                        }
+                    if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
+                        $Vendor_Name = "NVIDIA"
+                    } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
+                        $Vendor_Name = "AMD"
                         if (-not $GPUDeviceNames[$Vendor_Name]) {
-                            $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
+                            $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
+                                if ((Test-OCDaemon) -or (Test-IsElevated)) {
+                                    try {
+                                        $data = @(Get-DeviceName "amd" -UseAfterburner $false | Select-Object)
+                                        if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\amd-names.json" -Data $data > $null}
+                                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                                }
+                                if (Test-Path ".\Data\amd-names.json") {Get-ContentByStreamReader ".\Data\amd-names.json" | ConvertFrom-Json -ErrorAction Ignore}
+                            }
+                            if (-not $GPUDeviceNames[$Vendor_Name]) {
+                                $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
+                            }
+                        }
+                        $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId; $PCIBusId = $_.PCIBusId; $CardId = $_.CardId}
+                        if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
+                            if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
+                            elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
+                        } elseif ($Device_Name -eq "gfx906") {
+                            $Device_Name = "Radeon VII"
+                        }
+                        if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
+                    } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
+                        $Vendor_Name = "INTEL"
+                    }
+
+                    $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
+
+                    $Device = [PSCustomObject]@{
+                        Name = ""
+                        Index = [Int]$Index
+                        PlatformId = [Int]$PlatformId
+                        PlatformId_Index = [Int]$PlatformId_Index."$($PlatformId)"
+                        Type_PlatformId_Index = [Int]$Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"
+                        Vendor = [String]$Vendor_Name
+                        Vendor_Name = [String]$Device_OpenCL.Vendor                    
+                        Vendor_Index = [Int]$Vendor_Index."$($Device_OpenCL.Vendor)"
+                        Type_Vendor_Index = [Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"
+                        Type = [String]$Device_OpenCL.Type
+                        Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
+                        Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
+                        OpenCL = $Device_OpenCL
+                        Model = $Model
+                        Model_Base = $Model
+                        Model_Name = [String]$Device_Name
+                        InstanceId = [String]$InstanceId
+                        CardId = $CardId
+                        GpuGroup = ""
+                        Data = [PSCustomObject]@{
+                                        AdapterId         = 0  #amd
+                                        Utilization       = 0  #amd/nvidia
+                                        UtilizationMem    = 0  #amd/nvidia
+                                        Clock             = 0  #amd/nvidia
+                                        ClockMem          = 0  #amd/nvidia
+                                        FanSpeed          = 0  #amd/nvidia
+                                        Temperature       = 0  #amd/nvidia
+                                        PowerDraw         = 0  #amd/nvidia
+                                        PowerLimit        = 0  #nvidia
+                                        PowerLimitPercent = 0  #amd/nvidia
+                                        PowerMaxLimit     = 0  #nvidia
+                                        PowerDefaultLimit = 0  #nvidia
+                                        Pstate            = "" #nvidia
+                                        Method            = "" #amd/nvidia
+                        }
+                        DataMax = [PSCustomObject]@{
+                                    Clock       = 0
+                                    ClockMem    = 0
+                                    Temperature = 0
+                                    FanSpeed    = 0
+                                    PowerDraw   = 0
                         }
                     }
-                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId; $PCIBusId = $_.PCIBusId; $CardId = $_.CardId}
-                    if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
-                        if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
-                        elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
-                    } elseif ($Device_Name -eq "gfx906") {
-                        $Device_Name = "Radeon VII"
+
+                    if ($Device.Type -ne "Cpu") {
+                        $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
+                        $Global:GlobalCachedDevices += $Device
+                        if ($AmdModelsEx -notcontains $Device.Model) {
+                            $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
+                            if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx.Add($Device.Model) > $null}
+                            else {$AmdModels[$Device.Model]=$AmdGb}
+                        }
+                        $Index++
                     }
-                    if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
-                } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
-                    $Vendor_Name = "INTEL"
+
+                    if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
+                        $Type_PlatformId_Index."$($Device_OpenCL.Type)" = @{}
+                    }
+                    if (-not $Type_Vendor_Index."$($Device_OpenCL.Type)") {
+                        $Type_Vendor_Index."$($Device_OpenCL.Type)" = @{}
+                    }
+                
+                    $PlatformId_Index."$($PlatformId)"++
+                    $Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"++
+                    $Vendor_Index."$($Device_OpenCL.Vendor)"++
+                    $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
+                    $Type_Index."$($Device_OpenCL.Type)"++
+                    if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                }
+            }
+
+            $AmdModelsEx | Foreach-Object {
+                $Model = $_
+                $Global:GlobalCachedDevices | Where-Object Model -eq $Model | Foreach-Object {
+                    $AmdGb = "$([int]($_.OpenCL.GlobalMemSize / 1GB))GB"
+                    $_.Model = "$($_.Model)$AmdGb"
+                    $_.Model_Base = "$($_.Model)$AmdGb"
+                    $_.Model_Name = "$($_.Model_Name) $AmdGb"
+                }
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "GPU detection has failed: $($_.Exception.Message)"
+        }
+
+        #CPU detection
+        try {
+            if ($Refresh -or -not (Test-Path Variable:Global:GlobalCPUInfo)) {
+
+                $Global:GlobalCPUInfo = [PSCustomObject]@{}
+
+                if ($IsWindows) {
+                    try {$chkcpu = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    if ($chkcpu.physical_cpus) {
+                        $Global:GlobalCPUInfo | Add-Member Name          $chkcpu.cpu_name
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $chkcpu.cpu_vendor
+                        $Global:GlobalCPUInfo | Add-Member Cores         $chkcpu.cores
+                        $Global:GlobalCPUInfo | Add-Member Threads       $chkcpu.threads
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $chkcpu.physical_cpus
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
+                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                    } else {
+                        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
+                        $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
+                        $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
+                        $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
+                        Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                    }
+                } elseif ($IsLinux) {
+                    $Data = Get-Content "/proc/cpuinfo"
+                    if ($Data) {
+                        $Global:GlobalCPUInfo | Add-Member Name          (($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1].Trim()
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  (($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1].Trim()
+                        $Global:GlobalCPUInfo | Add-Member Cores         ([int](($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1].Trim())
+                        $Global:GlobalCPUInfo | Add-Member Threads       ([int] (($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1].Trim())
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Foreach-Object {[int]($_ -split ":")[1].Trim()} | Select-Object -Unique).Count
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+")[0].Trim())
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int](($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1].Trim())
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
+                        (($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+                    }
                 }
 
-                $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
+                $Global:GlobalCPUInfo | Add-Member Vendor $(if ($GPUVendorLists.INTEL -icontains $Global:GlobalCPUInfo.Manufacturer){"INTEL"}else{$Global:GlobalCPUInfo.Manufacturer.ToUpper()})
 
+                if ($IsLinux -and $Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
+                    $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
+                    $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
+                    $Global:GlobalCPUInfo.PhysicalCPUs = 1
+                }
+
+                $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
+                if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "CIM CPU detection has failed. "
+        }
+   
+        try {
+            for ($CPUIndex=0;$CPUIndex -lt $Global:GlobalCPUInfo.PhysicalCPUs;$CPUIndex++) {
+                # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
                 $Device = [PSCustomObject]@{
+                    Name = ""
                     Index = [Int]$Index
-                    PlatformId = [Int]$PlatformId
-                    PlatformId_Index = [Int]$PlatformId_Index."$($PlatformId)"
-                    Type_PlatformId_Index = [Int]$Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"
-                    Vendor = [String]$Vendor_Name
-                    Vendor_Name = [String]$Device_OpenCL.Vendor                    
-                    Vendor_Index = [Int]$Vendor_Index."$($Device_OpenCL.Vendor)"
-                    Type_Vendor_Index = [Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"
-                    Type = [String]$Device_OpenCL.Type
-                    Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
-                    Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
-                    OpenCL = $Device_OpenCL
-                    Model = $Model
-                    Model_Base = $Model
-                    Model_Name = [String]$Device_Name
-                    InstanceId = [String]$InstanceId
-                    CardId = $CardId
-                    GpuGroup = ""
+                    Vendor = $Global:GlobalCPUInfo.Vendor
+                    Vendor_Name = $Global:GlobalCPUInfo.Manufacturer
+                    Type_PlatformId_Index = $CPUIndex
+                    Type_Vendor_Index = $CPUIndex
+                    Type = "Cpu"
+                    Type_Index = $CPUIndex
+                    Type_Mineable_Index = $CPUIndex
+                    Model = "CPU"
+                    Model_Base = "CPU"
+                    Model_Name = $Global:GlobalCPUInfo.Name
+                    Features = $Global:GlobalCPUInfo.Features.Keys
                     Data = [PSCustomObject]@{
-                                    AdapterId         = 0  #amd
-                                    Utilization       = 0  #amd/nvidia
-                                    UtilizationMem    = 0  #amd/nvidia
-                                    Clock             = 0  #amd/nvidia
-                                    ClockMem          = 0  #amd/nvidia
-                                    FanSpeed          = 0  #amd/nvidia
-                                    Temperature       = 0  #amd/nvidia
-                                    PowerDraw         = 0  #amd/nvidia
-                                    PowerLimit        = 0  #nvidia
-                                    PowerLimitPercent = 0  #amd/nvidia
-                                    PowerMaxLimit     = 0  #nvidia
-                                    PowerDefaultLimit = 0  #nvidia
-                                    Pstate            = "" #nvidia
-                                    Method            = "" #amd/nvidia
+                                Cores       = 0
+                                Threads     = 0
+                                CacheL3     = 0
+                                Clock       = 0
+                                Utilization = 0
+                                PowerDraw   = 0
+                                Temperature = 0
+                                Method      = ""
                     }
                     DataMax = [PSCustomObject]@{
                                 Clock       = 0
-                                ClockMem    = 0
-                                Temperature = 0
-                                FanSpeed    = 0
+                                Utilization = 0
                                 PowerDraw   = 0
                     }
                 }
 
-                if ($Device.Type -ne "Cpu" -and 
-                    ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
-                    ((-not $ExcludeName) -or (-not ($ExcludeName_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -and -not ($ExcludeName | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})))
-                ) {
-                    $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
-                    if ($AmdModelsEx -notcontains $Device.Model) {
-                        $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
-                        if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx.Add($Device.Model) > $null}
-                        else {$AmdModels[$Device.Model]=$AmdGb}
-                    }
-                    $Index++
-                }
-
-                if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
-                    $Type_PlatformId_Index."$($Device_OpenCL.Type)" = @{}
-                }
-                if (-not $Type_Vendor_Index."$($Device_OpenCL.Type)") {
-                    $Type_Vendor_Index."$($Device_OpenCL.Type)" = @{}
-                }
-                
-                $PlatformId_Index."$($PlatformId)"++
-                $Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"++
-                $Vendor_Index."$($Device_OpenCL.Vendor)"++
-                $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
-                $Type_Index."$($Device_OpenCL.Type)"++
-                if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
+                $Global:GlobalCachedDevices += $Device
+                $Index++
             }
         }
-
-        $AmdModelsEx | Foreach-Object {
-            $Model = $_
-            $Devices | Where-Object Model -eq $Model | Foreach-Object {
-                $AmdGb = "$([int]($_.OpenCL.GlobalMemSize / 1GB))GB"
-                $_.Model = "$($_.Model)$AmdGb"
-                $_.Model_Base = "$($_.Model)$AmdGb"
-                $_.Model_Name = "$($_.Model_Name) $AmdGb"
-            }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "CPU detection has failed. "
         }
     }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "GPU detection has failed: $($_.Exception.Message)"
-    }
 
-    #CPU detection
-    try {
-        if ($Refresh -or -not (Test-Path Variable:Global:GlobalCPUInfo)) {
-
-            $Global:GlobalCPUInfo = [PSCustomObject]@{}
-
-            if ($IsWindows) {
-                try {$chkcpu = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                if ($chkcpu.physical_cpus) {
-                    $Global:GlobalCPUInfo | Add-Member Name          $chkcpu.cpu_name
-                    $Global:GlobalCPUInfo | Add-Member Manufacturer  $chkcpu.cpu_vendor
-                    $Global:GlobalCPUInfo | Add-Member Cores         $chkcpu.cores
-                    $Global:GlobalCPUInfo | Add-Member Threads       $chkcpu.threads
-                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $chkcpu.physical_cpus
-                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
-                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
-                    $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                } else {
-                    $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
-                    $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
-                    $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
-                    $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
-                    $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
-                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
-                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
-                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
-                    $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                }
-            } elseif ($IsLinux) {
-                $Data = Get-Content "/proc/cpuinfo"
-                if ($Data) {
-                    $Global:GlobalCPUInfo | Add-Member Name          (($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1].Trim()
-                    $Global:GlobalCPUInfo | Add-Member Manufacturer  (($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1].Trim()
-                    $Global:GlobalCPUInfo | Add-Member Cores         ([int](($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1].Trim())
-                    $Global:GlobalCPUInfo | Add-Member Threads       ([int] (($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1].Trim())
-                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Foreach-Object {[int]($_ -split ":")[1].Trim()} | Select-Object -Unique).Count
-                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+")[0].Trim())
-                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int](($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1].Trim())
-                    $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    (($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
-                }
-            }
-
-            $Global:GlobalCPUInfo | Add-Member Vendor $(if ($GPUVendorLists.INTEL -icontains $Global:GlobalCPUInfo.Manufacturer){"INTEL"}else{$Global:GlobalCPUInfo.Manufacturer.ToUpper()})
-
-            if ($IsLinux -and $Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
-                $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
-                $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
-                $Global:GlobalCPUInfo.PhysicalCPUs = 1
-            }
-
-            $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
-            if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
+    $Global:GlobalCachedDevices | Foreach-Object {
+        $Device = $_
+        if (
+            ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
+            ((-not $ExcludeName) -or (-not ($ExcludeName_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -and -not ($ExcludeName | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})))
+            ) {
+            $Device
         }
     }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "CIM CPU detection has failed. "
-    }
-   
-    try {
-        for ($CPUIndex=0;$CPUIndex -lt $Global:GlobalCPUInfo.PhysicalCPUs;$CPUIndex++) {
-            # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
-            $Device = [PSCustomObject]@{
-                Index = [Int]$Index
-                Vendor = $Global:GlobalCPUInfo.Vendor
-                Vendor_Name = $Global:GlobalCPUInfo.Manufacturer
-                Type_PlatformId_Index = $CPUIndex
-                Type_Vendor_Index = $CPUIndex
-                Type = "Cpu"
-                Type_Index = $CPUIndex
-                Type_Mineable_Index = $CPUIndex
-                Model = "CPU"
-                Model_Base = "CPU"
-                Model_Name = $Global:GlobalCPUInfo.Name
-                Features = $Global:GlobalCPUInfo.Features.Keys
-                Data = [PSCustomObject]@{
-                            Cores       = 0
-                            Threads     = 0
-                            CacheL3     = 0
-                            Clock       = 0
-                            Utilization = 0
-                            PowerDraw   = 0
-                            Temperature = 0
-                            Method      = ""
-                }
-                DataMax = [PSCustomObject]@{
-                            Clock       = 0
-                            Utilization = 0
-                            PowerDraw   = 0
-                }
-            }
-
-            if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
-                $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
-            }
-            $Index++
-        }
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "CPU detection has failed. "
-    }
-
-    $Global:GlobalCachedDevices = $Devices
-    $Devices
 }
 
 function Get-CPUFeatures { 
@@ -4176,7 +4172,7 @@ function Set-MinersConfigDefault {
                 foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
                     if (-not $Name -or (Get-Member -inputobject $Preset -name $Name -Membertype Properties)) {continue}
                     $Preset | Add-Member $Name @(
-                        [System.Collections.ArrayList]$MinerCheck = @()
+                        [System.Collections.Generic.List[string]]$MinerCheck = @()
                         foreach($cmd in $PresetTmp.$Name) {
                             $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                             $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4193,19 +4189,19 @@ function Set-MinersConfigDefault {
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
             $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -Parameters @{InfoOnly = $true})}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
-                if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
+                if ($a -eq "CPU") {[System.Collections.Generic.List[string]]$SetupDevices = @("CPU")}
                 else {
                     $Devices = @($AllDevices | Where-Object {$_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
-                    [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
+                    [System.Collections.Generic.List[string]]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
                     if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
                 }
                 
-                [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
-                [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
+                [System.Collections.Generic.List[PSCustomObject]]$Miners = @($AllMiners | Where-Object Type -icontains $a)
+                [System.Collections.Generic.List[string]]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {                        
                         $Done | Add-Member "$($Miner.Name)-$($SetupDevice)" @(
-                            [System.Collections.ArrayList]$MinerCheck = @()
+                            [System.Collections.Generic.List[string]]$MinerCheck = @()
                             foreach($cmd in $Miner.Commands) {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                                 $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4219,12 +4215,12 @@ function Set-MinersConfigDefault {
                 if ($Setup) {
                     foreach ($Name in @($Setup.PSObject.Properties.Name)) {
                         if ($MinerNames.Contains($Name)) {
-                            [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                            [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                             foreach ($SetupDevice in $SetupDevices) {
                                 $NameKey = "$($Name)-$($SetupDevice)"
-                                [System.Collections.ArrayList]$ValueTmp = $Value | ConvertTo-Json | ConvertFrom-Json
+                                [System.Collections.Generic.List[PSCustomObject]]$ValueTmp = $Value | ConvertTo-Json | ConvertFrom-Json
                                 if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
-                                    [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                                    [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                                     if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
                                     $Done | Add-Member $NameKey $ValueTmp -Force
                                 }
@@ -4236,9 +4232,9 @@ function Set-MinersConfigDefault {
 
             if ($Preset) {
                 foreach ($Name in @($Preset.PSObject.Properties.Name)) {
-                    [System.Collections.ArrayList]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                    [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                     if (Get-Member -inputobject $Done -name $Name -Membertype Properties) {
-                        [System.Collections.ArrayList]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                        [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                         if ($NewValues.Count) {$Value.AddRange($NewValues) > $null}
                     }
                     $Done | Add-Member $Name $Value.ToArray() -Force
@@ -4409,7 +4405,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
+                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType})
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
@@ -5004,7 +5000,7 @@ function Get-YiiMPValue {
         [Double]$ActualDivisor = 1000
     )    
     [Double]$Value = 0
-    [System.Collections.ArrayList]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
+    [System.Collections.Generic.List[string]]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
     [hashtable]$values = @{}
     [bool]$hasdetails=$false
     [bool]$containszero = $false
@@ -5037,10 +5033,10 @@ function Get-YiiMPValue {
     if ($Value -eq 0) {
         if ($DataWindow -match '^(.+)-(.+)$') {
             Switch ($Matches[2]) {
-                "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current");Break}
-                "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current");Break}
-                "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h");Break}
-                "3"  {[System.Collections.ArrayList]$fields = $allfields;Break}
+                "2"  {[System.Collections.Generic.List[string]]$fields = @("actual_last24h","estimate_current");Break}
+                "2e" {[System.Collections.Generic.List[string]]$fields = @("estimate_last24h","estimate_current");Break}
+                "2h" {[System.Collections.Generic.List[string]]$fields = @("actual_last24h","estimate_last24h");Break}
+                "3"  {[System.Collections.Generic.List[string]]$fields = $allfields;Break}
             }
             Switch ($Matches[1]) {
                 "minimum" {
@@ -5084,7 +5080,7 @@ function Get-YiiMPValue {
 function Get-DeviceSubsets($Device) {
     $Models = @($Device | Select-Object Model,Model_Name -Unique)
     if ($Models.Count) {
-        [System.Collections.ArrayList]$a = @();0..$($Models.Count-1) | Foreach-Object {$a.Add('{0:x}' -f $_) > $null}
+        [System.Collections.Generic.List[string]]$a = @();0..$($Models.Count-1) | Foreach-Object {$a.Add('{0:x}' -f $_) > $null}
         @(Get-Subsets $a | Where-Object {$_.Length -gt 1} | Foreach-Object{
             [PSCustomObject[]]$x = @($_.ToCharArray() | Foreach-Object {$Models[[int]"0x$_"]}) | Sort-Object -Property Model
             [PSCustomObject]@{
@@ -5712,7 +5708,7 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$ConvertDot = $false
 )
-    [System.Collections.ArrayList]$Uri2 = @()
+    [System.Collections.Generic.List[string]]$Uri2 = @()
     while ($Uri -match "^(.*?)({[^}]+})(.*?)$") {
         if ($Matches[1].Length) {$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Matches[1])) > $null}
         $Tmp=$Matches[2]
@@ -5757,7 +5753,7 @@ param(
     [Int]$Priority = 0
 )
     if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Data\autoexec.default.txt")) {Copy-Item ".\Data\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
-    [System.Collections.ArrayList]$Global:AutoexecCommands = @()
+    [System.Collections.Generic.List[PSCustomObject]]$Global:AutoexecCommands = @()
     foreach($cmd in @(Get-ContentByStreamReader ".\Config\autoexec.txt" -ExpandLines | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
             if (Test-Path $Matches[1]) {
@@ -5907,8 +5903,7 @@ param(
     [String[]]$DeviceName
 )
     if (-not $IsWindows) {return}
-    $Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
-    if ($Device) {
+    if ($Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}) {
         $DeviceId   = $Device.Type_Vendor_Index -join ','
         $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
         $Arguments = "--opencl $($PlatformId) --gpu $($DeviceId) --hbcc %onoff% --admin fullrestart"

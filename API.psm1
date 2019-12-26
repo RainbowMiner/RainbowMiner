@@ -141,23 +141,23 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = if ($API.ActiveMiners) {ConvertTo-Json @($API.ActiveMiners | Select-Object) -Depth 2} else {"[]"}
+                    $Data = if ($API.ActiveMiners) {ConvertTo-Json $API.ActiveMiners -Depth 2} else {"[]"}
                     break
                 }
                 "/runningminers" {
-                    $Data = if ($API.RunningMiners) {ConvertTo-Json @($API.RunningMiners | Select-Object) -Depth 2} else {"[]"}
+                    $Data = if ($API.RunningMiners) {ConvertTo-Json $API.RunningMiners -Depth 2} else {"[]"}
                     Break
                 }
                 "/failedminers" {
-                    $Data = if ($API.FailedMiners) {ConvertTo-Json @($API.FailedMiners | Select-Object) -Depth 2} else {"[]"}
+                    $Data = if ($API.FailedMiners) {ConvertTo-Json $API.FailedMiners -Depth 2} else {"[]"}
                     Break
                 }
                 "/remoteminers" {
-                    $Data = if ($API.RemoteMiners) {ConvertTo-Json @($API.RemoteMiners | Select-Object) -Depth 10} else {"[]"}
+                    $Data = if ($API.RemoteMiners) {ConvertTo-Json $API.RemoteMiners -Depth 10} else {"[]"}
                     Break
                 }
                 "/minersneedingbenchmark" {
-                    $Data = if ($API.MinersNeedingBenchmark) {ConvertTo-Json @($API.MinersNeedingBenchmark | Select-Object) -Depth 2} else {"[]"}
+                    $Data = if ($API.MinersNeedingBenchmark) {ConvertTo-Json $API.MinersNeedingBenchmark -Depth 2} else {"[]"}
                     Break
                 }
                 "/minerinfo" {
@@ -165,27 +165,23 @@
                     Break
                 }
                 "/pools" {
-                    $Data = if ($API.Pools) {$API.Pools} else {"[]"}
+                    $Data = if ($API.Pools) {ConvertTo-Json $API.Pools} else {"[]"}
                     Break
                 }
                 "/allpools" {
-                    $Data = if ($API.AllPools) {$API.AllPools} else {"[]"}
-                    Break
-                }
-                "/poolscalculations" {
-                    $Data = $API.PoolsCalculations
+                    $Data = if ($API.AllPools) {ConvertTo-Json $API.AllPools} else {"[]"}
                     Break
                 }
                 "/algorithms" {
-                    $Data = if ($API.Algorithms) {$API.Algorithms} else {"[]"}
+                    $Data = if ($API.Algorithms) {ConvertTo-Json $API.Algorithms} else {"[]"}
                     Break
                 }
                 "/miners" {
-                    $Data = if ($API.Miners) {$API.Miners} else {"[]"}
+                    $Data = if ($API.Miners) {ConvertTo-Json $API.Miners} else {"[]"}
                     Break
                 }
                 "/fastestminers" {
-                    $Data = if ($API.FastestMiners) {$API.FastestMiners} else {"[]"}
+                    $Data = if ($API.FastestMiners) {ConvertTo-Json $API.FastestMiners} else {"[]"}
                     Break
                 }
                 "/disabled" {
@@ -197,8 +193,7 @@
                     $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Select-Object -ExpandProperty algo)
                     $WTMdata_result = [hashtable]@{}
                     if ($API.Rates) {$LocalRates = ConvertFrom-Json $API.Rates}
-                    $FastestMiners = $API.FastestMiners | ConvertFrom-Json
-                    $FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
+                    $API.FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                         $Group = $_.Group
                         $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
                     }
@@ -206,7 +201,6 @@
                     Remove-Variable "WTMdata"
                     Remove-Variable "WTMdata_algos"
                     Remove-Variable "WTMdata_result"
-                    if ($FastestMiners -ne $null) {Remove-Variable "FastestMiners"}
                     if ($LocalRates -ne $null) {Remove-Variable "LocalRates"}
                     Break
                 }
@@ -264,7 +258,7 @@
                     Break
                 }
                 "/ocprofiles" {
-                    $Data = ConvertTo-Json @($Session.Config.OCProfiles.PSObject.Properties | Foreach-Object {
+                    $Data = ConvertTo-Json $Session.Config.OCProfiles.PSObject.Properties.Foreach({
                                 [PSCustomObject]@{
                                     Name             = $_.Name -replace "-.+$"
                                     Device           = $(if ($_.Name -match "-(.+)$") {$Matches[1]} else {""})
@@ -274,7 +268,7 @@
                                     CoreClockBoost   = $_.Value.CoreClockBoost
                                     LockVoltagePoint = $_.Value.LockVoltagePoint
                                 }
-                            } | Select-Object)
+                            })
                     Break
                 }
                 "/downloadlist" {
@@ -348,15 +342,15 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = if ($API.AllDevices) {$API.AllDevices} else {"[]"}
+                    $Data = if ($API.AllDevices) {ConvertTo-Json $API.AllDevices.ForEach({$_}) -Depth 10} else {"[]"}
                     Break
                 }
                 "/devices" {
-                    $Data = if ($API.Devices) {$API.Devices} else {"[]"}
+                    $Data = if ($API.Devices) {ConvertTo-Json $API.Devices.ForEach({$_}) -Depth 10} else {"[]"}
                     Break
                 }
                 "/devicecombos" {
-                    $Data = ConvertTo-Json @($API.DeviceCombos | Select-Object)
+                    $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos.ForEach({$_})} else {"[]"}
                     Break
                 }
                 "/stats" {
@@ -439,7 +433,7 @@
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json @($API.WatchdogTimers | Select-Object) -Depth 2} else {"[]"}
+                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers.ForEach({$_}) -Depth 2} else {"[]"}
                     Break
                 }
                 "/balances" {
@@ -545,7 +539,7 @@
                     Break
                 }
                 "/asyncloaderjobs" {
-                    $Data = ConvertTo-Json @($Asyncloader.Jobs | Select-Object)
+                    $Data = ConvertTo-Json $Asyncloader.Jobs.ForEach({$_})
                     Break
                 }
                 "/decsep" {
@@ -557,7 +551,7 @@
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
                     
-                    ($API.Miners | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
+                    $API.Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -899,10 +893,8 @@
                 }
                 "/mrrstats" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
-                    $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
-                    if ($Devices -ne $null) {Remove-Variable "Devices"}
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($Pool_Request = Get-MiningRigRentalAlgos) {
                         [hashtable]$StatsCPU = @{}
@@ -941,10 +933,8 @@
                 }
                 "/mrrrigs" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
-                    $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
-                    if ($Devices -ne $null) {Remove-Variable "Devices"}
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($Session.Config.Pools.MiningRigRentals.API_Key -and $Session.Config.Pools.MiningRigRentals.API_Secret) {
                         $Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Session.Config.WorkerName | Select-Object -Unique
