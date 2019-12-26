@@ -3775,7 +3775,7 @@ function Get-DeviceModelName {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $True)]
-        [PSCustomObject]$Device,
+        $Device,
         [Parameter(Mandatory = $False)]
         [Array]$Name = @(),
         [Parameter(Mandatory = $False)]

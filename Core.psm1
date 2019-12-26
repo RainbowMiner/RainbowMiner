@@ -126,7 +126,7 @@ function Start-Core {
 
         Write-Host "Detecting devices .."
 
-        $Global:DeviceCache.AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
+        $Global:DeviceCache.AllDevices = (Get-Device "cpu","gpu" -IgnoreOpenCL).Foreach({$_})
 
         Write-Host "Initialize configuration .."
 
@@ -1313,7 +1313,7 @@ function Invoke-Core {
             }
             Get-DeviceSubSets @($Global:DeviceCache.DevicesByTypes.$SubsetType) | Where-Object {$Session.Config.Combos.$SubsetType."$($_.Model -join '-')"} | Foreach-Object {                       
                 $SubsetModel= $_
-                $Global:DeviceCache.DevicesByTypes.Combos.$SubsetType += @($Global:DeviceCache.DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
+                $Global:DeviceCache.DevicesByTypes.Combos.$SubsetType += @($Global:DeviceCache.DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json;$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
             }
             if ($Global:DeviceCache.DevicesByTypes.$SubsetType) {
                 @($Global:DeviceCache.DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique) + @($Global:DeviceCache.DevicesByTypes.Combos.$SubsetType | Select-Object -ExpandProperty Model) | Where-Object {$_} | Foreach-Object {$Global:DeviceCache.DevicesToVendors[$_] = $SubsetType}
@@ -2261,7 +2261,7 @@ function Invoke-Core {
     if ($ActiveMiner -ne $null)  {Remove-Variable "ActiveMiner"}
     if ($Miner_DevFee -ne $null) {Remove-Variable "Miner_DevFee"}
 
-    $ActiveMiners_DeviceNames = @($Global:ActiveMiners.Where({$_.Enabled}).Foreach({$_.DeviceName}) | Select-Object -Unique | Sort-Object)
+    $ActiveMiners_DeviceNames = @(($Global:ActiveMiners | Where-Object {$_.Enabled}).DeviceName | Select-Object -Unique | Sort-Object)
 
     #Don't penalize active miners and control round behavior
     $Global:ActiveMiners.Where({$Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching -or ($_.Status -eq [MinerStatus]::Running)}).ForEach({
@@ -2715,8 +2715,8 @@ function Invoke-Core {
     }
 
     #Display exchange rates
-    $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = $($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_.Profit} | Measure-Object -Sum).Sum
-    if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost;$CurrentProfitWithoutCostTotal += $($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_.Profit_Cost} | Measure-Object -Sum).Sum}
+    $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit | Measure-Object -Sum).Sum
+    if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost;$CurrentProfitWithoutCostTotal += ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit_Cost | Measure-Object -Sum).Sum}
     [System.Collections.Generic.List[string]]$StatusLine = @()
     foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
             $Miner_Currency_Out = $Miner_Currency
@@ -2943,7 +2943,7 @@ function Invoke-Core {
                     if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {
                         $Session.LockMiners.Locked = -not $Session.LockMiners.Locked
                         if ($Session.LockMiners.Locked) {
-                            $Session.LockMiners.Pools = @($Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {for($i=0;$i -lt $_.Pool.Count;$i++) {"$($_.Pool | Select-Object -Index $i)-$($_.BaseAlgorithm | Select-Object -Index $i)-$($_.CoinSymbol | Select-Object -Index $i)"}} | Select-Object -Unique)
+                            $Session.LockMiners.Pools = @($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}) | Foreach-Object {for($i=0;$i -lt $_.Pool.Count;$i++) {"$($_.Pool | Select-Object -Index $i)-$($_.BaseAlgorithm | Select-Object -Index $i)-$($_.CoinSymbol | Select-Object -Index $i)"}} | Select-Object -Unique)
                         }
                         $API.LockMiners = $Session.LockMiners.Locked
                         Write-Host -NoNewline "[L] pressed - switching will be $(if ($Session.LockMiners.Locked) {"LOCKED"} else {"UNLOCKED"})"
@@ -3088,7 +3088,7 @@ function Stop-Core {
     Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
     Write-Log "Gracefully halting RainbowMiner"
     [System.Collections.Generic.List[string]]$ExcavatorWindowsClosed = @()
-    $Global:ActiveMiners | Where-Object {$_.Activated -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
+    $Global:ActiveMiners.Where({$_.Activated -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running}).ForEach({
         $Miner = $_
         if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
             Write-Log "Closing miner $($Miner.Name)"
@@ -3098,7 +3098,7 @@ function Stop-Core {
             $Miner.ShutDownMiner()
             $ExcavatorWindowsClosed.Add($Miner.BaseName) > $null
         }
-    }
+    })
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
     } elseif ($IsLinux) {
