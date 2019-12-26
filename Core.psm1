@@ -126,7 +126,7 @@ function Start-Core {
 
         Write-Host "Detecting devices .."
 
-        $Global:DeviceCache.AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
+        $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL).Where({$_})
 
         Write-Host "Initialize configuration .."
 
@@ -1280,7 +1280,7 @@ function Invoke-Core {
 
         #Load information about the devices
         $Global:DeviceCache.Devices = @()
-        if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = (Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName).Foreach({$_})}
+        if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName).Foreach({$_})}
         $Global:DeviceCache.DevicesByTypes = [PSCustomObject]@{
             NVIDIA = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"})
             AMD    = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"})
@@ -1311,7 +1311,7 @@ function Invoke-Core {
                 # always force enable full combos
                 $Session.Config.Combos.$SubsetType | Add-Member $_ $true -Force
             }
-            Get-DeviceSubSets @($Global:DeviceCache.DevicesByTypes.$SubsetType) | Where-Object {$Session.Config.Combos.$SubsetType."$($_.Model -join '-')"} | Foreach-Object {                       
+            Get-DeviceSubSets $Global:DeviceCache.DevicesByTypes.$SubsetType | Where-Object {$Session.Config.Combos.$SubsetType."$($_.Model -join '-')"} | Foreach-Object {                       
                 $SubsetModel= $_
                 $Global:DeviceCache.DevicesByTypes.Combos.$SubsetType += @($Global:DeviceCache.DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json;$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
             }
@@ -1337,8 +1337,8 @@ function Invoke-Core {
             $Global:DeviceCache.DevicesByTypes.$_ | Group-Object Model | Foreach-Object {$Global:DeviceCache.DeviceNames[$_.Name] = @($_.Group | Select-Object -ExpandProperty Name | Sort-Object)}
         }
 
-        $Global:DeviceCache.DeviceCombos = @($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Global:DeviceCache.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
-        $Global:DeviceCache.DevicesNames = @($Global:DeviceCache.Devices.Name | Select-Object -Unique | Sort-Object)
+        $Global:DeviceCache.DeviceCombos = @($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name | ForEach-Object {$Global:DeviceCache.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object).Where({$_})
+        $Global:DeviceCache.DevicesNames = @($Global:DeviceCache.Devices.Name | Select-Object -Unique | Sort-Object).Where({$_})
 
         $API.DeviceCombos     = $Global:DeviceCache.DeviceCombos
         $API.DevicesToVendors = $Global:DeviceCache.DevicesToVendors
@@ -1349,7 +1349,7 @@ function Invoke-Core {
     
     if ($ConfigBackup -ne $null) {Remove-Variable "ConfigBackup"}
 
-    $Global:DeviceCache.ConfigFullComboModelNames = @($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name)
+    $Global:DeviceCache.ConfigFullComboModelNames = @($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name).Where({$_})
 
     if (-not $Global:DeviceCache.Devices) {
         $Session.PauseMiners = $API.Pause = $true

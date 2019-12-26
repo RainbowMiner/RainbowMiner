@@ -342,15 +342,15 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = if ($API.AllDevices) {ConvertTo-Json $API.AllDevices.ForEach({$_}) -Depth 10} else {"[]"}
+                    $Data = if ($API.AllDevices) {ConvertTo-Json $API.AllDevices -Depth 10} else {"[]"}
                     Break
                 }
                 "/devices" {
-                    $Data = if ($API.Devices) {ConvertTo-Json $API.Devices.ForEach({$_}) -Depth 10} else {"[]"}
+                    $Data = if ($API.Devices) {ConvertTo-Json $API.Devices -Depth 10} else {"[]"}
                     Break
                 }
                 "/devicecombos" {
-                    $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos.ForEach({$_})} else {"[]"}
+                    $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos} else {"[]"}
                     Break
                 }
                 "/stats" {
