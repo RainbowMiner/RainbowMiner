@@ -161,7 +161,7 @@
                     Break
                 }
                 "/minerinfo" {
-                    $Data = if ($API.MinerInfo) {$API.MinerInfo} else {"[]"}
+                    $Data = if ($API.MinerInfo) {ConvertTo-Json $API.MinerInfo} else {"{}"}
                     Break
                 }
                 "/pools" {
@@ -258,7 +258,7 @@
                     Break
                 }
                 "/ocprofiles" {
-                    $Data = ConvertTo-Json $Session.Config.OCProfiles.PSObject.Properties.Foreach({
+                    $Data = ConvertTo-Json @($Session.Config.OCProfiles.PSObject.Properties).Foreach({
                                 [PSCustomObject]@{
                                     Name             = $_.Name -replace "-.+$"
                                     Device           = $(if ($_.Name -match "-(.+)$") {$Matches[1]} else {""})
@@ -433,7 +433,7 @@
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers.ForEach({$_}) -Depth 2} else {"[]"}
+                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json @($API.WatchdogTimers).Where({$_}) -Depth 2} else {"[]"}
                     Break
                 }
                 "/balances" {
@@ -539,7 +539,7 @@
                     Break
                 }
                 "/asyncloaderjobs" {
-                    $Data = ConvertTo-Json $Asyncloader.Jobs.ForEach({$_})
+                    $Data = ConvertTo-Json @($Asyncloader.Jobs).Where({$_})
                     Break
                 }
                 "/decsep" {
