@@ -4173,7 +4173,7 @@ function Set-MinersConfigDefault {
                 foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
                     if (-not $Name -or (Get-Member -inputobject $Preset -name $Name -Membertype Properties)) {continue}
                     $Preset | Add-Member $Name @(
-                        [System.Collections.Generic.List[string]]$MinerCheck = @()
+                        [System.Collections.ArrayList]$MinerCheck = @()
                         foreach($cmd in $PresetTmp.$Name) {
                             $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                             $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4190,19 +4190,19 @@ function Set-MinersConfigDefault {
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
             $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -Parameters @{InfoOnly = $true})}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
-                if ($a -eq "CPU") {[System.Collections.Generic.List[string]]$SetupDevices = @("CPU")}
+                if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
                 else {
                     $Devices = @($AllDevices | Where-Object {$_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
-                    [System.Collections.Generic.List[string]]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
+                    [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
                     if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
                 }
                 
-                [System.Collections.Generic.List[PSCustomObject]]$Miners = @($AllMiners | Where-Object Type -icontains $a)
-                [System.Collections.Generic.List[string]]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
+                [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
+                [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {                        
                         $Done | Add-Member "$($Miner.Name)-$($SetupDevice)" @(
-                            [System.Collections.Generic.List[string]]$MinerCheck = @()
+                            [System.Collections.ArrayList]$MinerCheck = @()
                             foreach($cmd in $Miner.Commands) {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                                 $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4216,12 +4216,12 @@ function Set-MinersConfigDefault {
                 if ($Setup) {
                     foreach ($Name in @($Setup.PSObject.Properties.Name)) {
                         if ($MinerNames.Contains($Name)) {
-                            [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                            [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                             foreach ($SetupDevice in $SetupDevices) {
                                 $NameKey = "$($Name)-$($SetupDevice)"
-                                [System.Collections.Generic.List[PSCustomObject]]$ValueTmp = $Value | ConvertTo-Json | ConvertFrom-Json
+                                [System.Collections.ArrayList]$ValueTmp = $Value.Clone()
                                 if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
-                                    [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                                    [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                                     if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
                                     $Done | Add-Member $NameKey $ValueTmp -Force
                                 }
@@ -4233,9 +4233,9 @@ function Set-MinersConfigDefault {
 
             if ($Preset) {
                 foreach ($Name in @($Preset.PSObject.Properties.Name)) {
-                    [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                    [System.Collections.ArrayList]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                     if (Get-Member -inputobject $Done -name $Name -Membertype Properties) {
-                        [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                        [System.Collections.ArrayList]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                         if ($NewValues.Count) {$Value.AddRange($NewValues) > $null}
                     }
                     $Done | Add-Member $Name $Value.ToArray() -Force
