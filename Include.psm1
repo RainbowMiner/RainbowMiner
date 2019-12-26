@@ -367,8 +367,9 @@ Function Write-Log {
             $mutex = New-Object System.Threading.Mutex($false, "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)")
             # Attempt to aquire mutex, waiting up to 2 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
             if ($mutex.WaitOne(2000)) {
-                $proc = Get-Process -id $PID
-                Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
+                #$proc = Get-Process -id $PID
+                #Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
+                "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $LevelText $Message" | Out-File $filename -Append -Encoding utf8
                 $mutex.ReleaseMutex()
             }
             else {
@@ -398,7 +399,7 @@ Function Write-ActivityLog {
         # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         if ($mutex.WaitOne(1000)) {
             $ocmode = if ($Miner.DeviceModel -notmatch "^CPU") {$Session.OCmode} else {"off"}
-            Write-ToFile -FilePath $filename -Message "$([PSCustomObject]@{
+            "$([PSCustomObject]@{
                 ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $ActiveStart
                 ActiveLast     = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveLast()
                 Name           = $Miner.BaseName
@@ -412,7 +413,7 @@ Function Write-ActivityLog {
                 Crashed        = $Crashed
                 OCmode         = $ocmode
                 OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
-            } | ConvertTo-Json -Compress)," -Append
+            } | ConvertTo-Json -Compress)," | Out-File $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
         else {
@@ -2504,7 +2505,7 @@ function Get-Device {
         }
     }
 
-    if ($Global:GlobalCachedDevices -isnot [array] -or $Refresh) {
+    if (-not (Test-Path Variable:Global:GlobalCachedDevices) -or $Refresh) {
         $Global:GlobalCachedDevices = @()
 
         $PlatformId = 0
@@ -4166,13 +4167,17 @@ function Set-MinersConfigDefault {
             $PresetTmp = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
             $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
+
+            #autofix json array in array for count one
+            $PresetTmp.PSObject.Properties.Name | Where-Object {$PresetTmp.$_ -is [array] -and $PresetTmp.$_.Count -eq 1 -and $PresetTmp.$_[0].value -is [array]} | Foreach-Object {$PresetTmp.$_ = $PresetTmp.$_[0].value}
+
             #cleanup duplicates in algorithm lists
             $Preset = [PSCustomObject]@{}
             if ($PresetTmp.PSObject.Properties.Name.Count -gt 0 ) {
                 foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
                     if (-not $Name -or (Get-Member -inputobject $Preset -name $Name -Membertype Properties)) {continue}
                     $Preset | Add-Member $Name @(
-                        [System.Collections.Generic.List[string]]$MinerCheck = @()
+                        [System.Collections.ArrayList]$MinerCheck = @()
                         foreach($cmd in $PresetTmp.$Name) {
                             $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                             $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4189,19 +4194,19 @@ function Set-MinersConfigDefault {
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
             $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -Parameters @{InfoOnly = $true})}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
-                if ($a -eq "CPU") {[System.Collections.Generic.List[string]]$SetupDevices = @("CPU")}
+                if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
                 else {
                     $Devices = @($AllDevices | Where-Object {$_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
-                    [System.Collections.Generic.List[string]]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
+                    [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
                     if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
                 }
                 
-                [System.Collections.Generic.List[PSCustomObject]]$Miners = @($AllMiners | Where-Object Type -icontains $a)
-                [System.Collections.Generic.List[string]]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
+                [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
+                [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {                        
                         $Done | Add-Member "$($Miner.Name)-$($SetupDevice)" @(
-                            [System.Collections.Generic.List[string]]$MinerCheck = @()
+                            [System.Collections.ArrayList]$MinerCheck = @()
                             foreach($cmd in $Miner.Commands) {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                                 $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
@@ -4215,12 +4220,12 @@ function Set-MinersConfigDefault {
                 if ($Setup) {
                     foreach ($Name in @($Setup.PSObject.Properties.Name)) {
                         if ($MinerNames.Contains($Name)) {
-                            [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                            [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                             foreach ($SetupDevice in $SetupDevices) {
                                 $NameKey = "$($Name)-$($SetupDevice)"
-                                [System.Collections.Generic.List[PSCustomObject]]$ValueTmp = $Value | ConvertTo-Json | ConvertFrom-Json
+                                [System.Collections.ArrayList]$ValueTmp = $Value.Clone()
                                 if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
-                                    [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                                    [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                                     if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
                                     $Done | Add-Member $NameKey $ValueTmp -Force
                                 }
@@ -4232,9 +4237,9 @@ function Set-MinersConfigDefault {
 
             if ($Preset) {
                 foreach ($Name in @($Preset.PSObject.Properties.Name)) {
-                    [System.Collections.Generic.List[PSCustomObject]]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                    [System.Collections.ArrayList]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                     if (Get-Member -inputobject $Done -name $Name -Membertype Properties) {
-                        [System.Collections.Generic.List[PSCustomObject]]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                        [System.Collections.ArrayList]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                         if ($NewValues.Count) {$Value.AddRange($NewValues) > $null}
                     }
                     $Done | Add-Member $Name $Value.ToArray() -Force
@@ -5903,7 +5908,8 @@ param(
     [String[]]$DeviceName
 )
     if (-not $IsWindows) {return}
-    if ($Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}) {
+    $Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
+    if ($Device) {
         $DeviceId   = $Device.Type_Vendor_Index -join ','
         $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
         $Arguments = "--opencl $($PlatformId) --gpu $($DeviceId) --hbcc %onoff% --admin fullrestart"
