@@ -367,8 +367,9 @@ Function Write-Log {
             $mutex = New-Object System.Threading.Mutex($false, "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)")
             # Attempt to aquire mutex, waiting up to 2 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
             if ($mutex.WaitOne(2000)) {
-                $proc = Get-Process -id $PID
-                Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
+                #$proc = Get-Process -id $PID
+                #Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
+                "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $LevelText $Message" | Out-File $filename -Append -Encoding utf8
                 $mutex.ReleaseMutex()
             }
             else {
@@ -398,7 +399,7 @@ Function Write-ActivityLog {
         # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         if ($mutex.WaitOne(1000)) {
             $ocmode = if ($Miner.DeviceModel -notmatch "^CPU") {$Session.OCmode} else {"off"}
-            Write-ToFile -FilePath $filename -Message "$([PSCustomObject]@{
+            "$([PSCustomObject]@{
                 ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $ActiveStart
                 ActiveLast     = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveLast()
                 Name           = $Miner.BaseName
@@ -412,7 +413,7 @@ Function Write-ActivityLog {
                 Crashed        = $Crashed
                 OCmode         = $ocmode
                 OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
-            } | ConvertTo-Json -Compress)," -Append
+            } | ConvertTo-Json -Compress)," | Out-File $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
         else {
@@ -2504,7 +2505,7 @@ function Get-Device {
         }
     }
 
-    if ($Global:GlobalCachedDevices -isnot [array] -or $Refresh) {
+    if (-not (Test-Path Variable:Global:GlobalCachedDevices) -or $Refresh) {
         $Global:GlobalCachedDevices = @()
 
         $PlatformId = 0
@@ -5903,7 +5904,8 @@ param(
     [String[]]$DeviceName
 )
     if (-not $IsWindows) {return}
-    if ($Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}) {
+    $Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
+    if ($Device) {
         $DeviceId   = $Device.Type_Vendor_Index -join ','
         $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
         $Arguments = "--opencl $($PlatformId) --gpu $($DeviceId) --hbcc %onoff% --admin fullrestart"
