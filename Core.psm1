@@ -126,7 +126,7 @@ function Start-Core {
 
         Write-Host "Detecting devices .."
 
-        $Global:DeviceCache.AllDevices = (Get-Device "cpu","gpu" -IgnoreOpenCL).Foreach({$_})
+        $Global:DeviceCache.AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
 
         Write-Host "Initialize configuration .."
 
