@@ -281,7 +281,7 @@
                     $DebugPath = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
                     $PurgeStrings = @()
                     $UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
-                    @($Session.Config,$UserConfig) | Select-Object | Foreach-Object {
+                    @($Session.Config,$UserConfig) | Where-Object {$_} | Foreach-Object {
                         $CurrentConfig = $_
                         @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
@@ -299,14 +299,14 @@
                         Get-ContentByStreamReader $_ | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
                     }
 
-                    @("Config") | Where-Object {$API.$_} | Foreach-Object {
-                        $NewFile = "$DebugPath\$($_).json"
-                        ($API.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                    if ($Session.Config) {
+                        $NewFile = "$DebugPath\config.json"
+                        ($Session.Config | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
-                    @("UserConfig") | Where-Object {$API.$_} | Foreach-Object {
-                        $NewFile = "$DebugPath\$($_).json"
-                        $UserConfig -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                    if ($API.UserConfig) {
+                        $NewFile = "$DebugPath\userconfig.json"
+                        $API.UserConfig -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
                     if ($IsLinux) {
