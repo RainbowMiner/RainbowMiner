@@ -34,7 +34,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/conceal";    Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_conceal"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8_double"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_masari"; Params = ""}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_masari"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast2";      Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8_half"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_r"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8_reversewaltz"; Params = ""}
