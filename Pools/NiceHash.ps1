@@ -15,6 +15,7 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Request = [PSCustomObject]@{}
+$Pool_MiningRequest = [PSCustomObject]@{}
 
 if (-not $InfoOnly) {
     if (-not $Wallets.BTC) {return}

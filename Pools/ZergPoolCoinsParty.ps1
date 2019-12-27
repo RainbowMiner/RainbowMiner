@@ -62,6 +62,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Host = "$($PoolCoins_Request.$Pool_CoinSymbol.algo).mine.zergpool.com"
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
+    if ($Pool_Algorithm -eq "cryptonight_fast") {$Pool_Algorithm = "cryptonight_fast2"} #temp. fix since MSR is mined with CnFast2
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
