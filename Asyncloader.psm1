@@ -76,7 +76,6 @@ Param(
                         }
                     }
                 }
-                Get-Job -State Completed | Remove-Job -Force
             }
             if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Error.Clear()}
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
