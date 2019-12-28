@@ -5388,13 +5388,13 @@ Param(
     Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers
 }
 
-function Get-HashtableKey {
+function Get-HashtableAsJson {
 [cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $False)]
     [hashtable]$hashtable = @{}
 )
-    "{$(@($hashtable.Keys | Sort-Object | Foreach-Object {"$($_):$(if ($hashtable.$_ -is [hashtable]) {Get-HashtableKey $hashtable.$_} else {ConvertTo-Json $hashtable.$_})"}) -join ",")}"
+    "{$(@($hashtable.Keys | Sort-Object | Foreach-Object {"$($_):$(if ($hashtable.$_ -is [hashtable]) {Get-HashtableAsJson $hashtable.$_} else {ConvertTo-Json $hashtable.$_})"}) -join ",")}"
 }
 
 function Invoke-GetUrlAsync {
@@ -5433,7 +5433,7 @@ Param(
 )
     if (-not $url -and -not $Jobkey) {return}
 
-    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableKey $body)$(Get-HashtableKey $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
         $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
@@ -5445,7 +5445,7 @@ Param(
         return
     }
     
-    if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableKey $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableKey $body) -or (Get-HashtableKey $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableKey $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
+    if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
@@ -6272,7 +6272,7 @@ param(
     if ($secret) {$secret = Get-ReadableHex32 $secret}
     if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
 
-    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableKey $params)"
+    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
     if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]@{}}
     if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 

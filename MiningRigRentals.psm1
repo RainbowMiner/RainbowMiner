@@ -74,7 +74,7 @@ param(
     [Parameter(Mandatory = $False)]
     [switch]$Raw
 )
-    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableKey $params)"
+    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
     if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
     if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].request -or -not $Global:MRRCache[$keystr].request.success -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
