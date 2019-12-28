@@ -26,7 +26,7 @@
     MiningHeatControl = 2.0
     DisableUnprofitableAlgolist = $false
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores
-    CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -Hex
+    CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToHex
     GPUMiningAffinity = ""
     Delay = 1
     EthPillEnable = "disable"

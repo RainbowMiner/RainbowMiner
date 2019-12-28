@@ -4941,9 +4941,12 @@ function Get-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [int]$Threads = 0,
         [Parameter(Mandatory = $False)]
-        [switch]$Hex
+        [switch]$ToHex,
+        [Parameter(Mandatory = $False)]
+        [switch]$ToInt
     )
-    if ($Hex) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads) -ToHex}
+    if ($ToHex) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads) -ToHex}
+    elseif ($ToInt) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads)}
     else {
         @(if ($Threads -and $Threads -ne $Global:GlobalCPUInfo.RealCores.Count) {
             $a = $r = 0; $b = [Math]::max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));

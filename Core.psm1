@@ -888,6 +888,18 @@ function Invoke-Core {
         if ($Session.CurrentPowerPrice -eq $null) {$Session.CurrentPowerPrice = $Session.Config.PowerPrice}
 
         $Session.LogLevel = $Session.Config.LogLevel
+
+        #crosscheck for invalid cpu mining parameters to avoid system overload
+        if ($Session.Config.DeviceName -match "^CPU") {
+            $CPUAffinityInt = (ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
+            if (-not $CPUAffinityInt) {$CPUAffinityInt = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToInt}
+            if ($Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
+                $CPUAffinityInt = Get-CPUAffinity ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2))) -ToInt
+                Write-Log -Level Warn "All threads selected for CPU mining! This will overload your system, auto-adjusting affinity to $("0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt)"
+            }
+            $Session.Config.CPUMiningAffinity = "0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt
+            $Session.Config.CPUMiningThreads  = @(ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity).Count
+        }
     }
 
     #Start/stop services
@@ -1570,7 +1582,7 @@ function Invoke-Core {
         $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
     }
 
-    $Global:AllPools = $null #well be set to NewPools later
+    $Global:AllPools = $null #will be set to NewPools later
 
     $NewPools = $NewPools.Where({
         $Pool_Name = $_.Name
