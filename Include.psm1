@@ -1447,6 +1447,8 @@ function Get-PoolsContent {
 
     $EnableErrorRatio = $PoolName -ne "WhatToMine" -and -not $Parameters.InfoOnly -and $Session.Config.EnableErrorRatio
 
+    if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
+
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
         $Pool_Name = $_.BaseName
 
@@ -1487,6 +1489,8 @@ function Get-MinersContent {
         [Parameter(Mandatory = $false)]
         [String]$MinerName = "*"
     )
+
+    if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
     foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$Parameters.InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$Parameters.InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | Select-Object)) {
         $Name = $Miner.BaseName
@@ -4558,6 +4562,9 @@ function Set-PoolsConfigDefault {
                         foreach($SetupName in $Setup.$Pool_Name.Fields.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Setup.$Pool_Name.Fields.$SetupName -Force}}
                     }
                     foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Default.$SetupName -Force}}
+                    if ($Setup.$Pool_Name.Autoexchange -and (Get-Yes $Setup_Content.EnableAutoCoin)) {
+                        $Setup_Content.EnableAutoCoin = "0" # do not allow EnableAutoCoin for pools with autoexchange feature
+                    }
                     $Done | Add-Member $Pool_Name $Setup_Content
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null
