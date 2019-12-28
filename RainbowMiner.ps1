@@ -245,7 +245,7 @@ $EnableMinerStatus = $true
 
 Initialize-Session
 
-$Session.Version         = "4.5.0.0"
+$Session.Version         = "4.5.0.1"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
