@@ -123,11 +123,24 @@ function Start-Core {
         if ($env:GPU_SINGLE_ALLOC_PERCENT -ne 100)   {$env:GPU_SINGLE_ALLOC_PERCENT = 100}
         if ($env:GPU_MAX_WORKGROUP_SIZE -ne 256)     {$env:GPU_MAX_WORKGROUP_SIZE = 256}
         if ($env:CUDA_DEVICE_ORDER -ne 'PCI_BUS_ID') {$env:CUDA_DEVICE_ORDER = 'PCI_BUS_ID'}
+    } 
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Error "Cannot run RainbowMiner: $($_.Exception.Message)"
+        $false
+    }
 
+    try {
         Write-Host "Detecting devices .."
-
         $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL).Where({$_})
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Error "Device detection failed: $($_.Exception.Message)"
+        $Session.Pause = $true
+    }
 
+    try {
         Write-Host "Initialize configuration .."
 
         Set-PresetDefault
@@ -219,18 +232,23 @@ function Start-Core {
 
         #Remove stuck update
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force -ErrorAction Ignore}
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Error "Please check your configuration: $($_.Exception.Message)"
+        $Session.Pause = $true
+    }
 
+    try {
         #Read miner info
         if (Test-Path ".\Data\minerinfo.json") {try {(Get-ContentByStreamReader ".\Data\minerinfo.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 
         #write version to data
         Set-ContentJson -PathToFile ".\Data\version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
-        $true
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Error "$($_) Cannot run RainbowMiner. "
-        $false
+        Write-Log -Level Error "Error writing version: $($_.Exception.Message)"
     }
 
     $Session.Timer      = (Get-Date).ToUniversalTime()
@@ -242,6 +260,8 @@ function Start-Core {
         MinerSave = if (Test-Path ".\Data\minerdata.json") {Get-ChildItem ".\Data\minerdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
         PoolsSave = if (Test-Path ".\Data\poolsdata.json") {Get-ChildItem ".\Data\poolsdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
     }
+
+    $true
 }
 
 function Update-ActiveMiners {
