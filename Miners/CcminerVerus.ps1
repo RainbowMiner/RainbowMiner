@@ -23,7 +23,7 @@ $Version = "3.611-revD"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "verus"; Params = "-a verus -i 20"; ExtendInterval = 2} #Verushash
+    [PSCustomObject]@{MainAlgorithm = "verus"; Params = "-a verus"; ExtendInterval = 2} #Verushash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
