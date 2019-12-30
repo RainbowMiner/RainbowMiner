@@ -56,7 +56,7 @@ $Pool_Ports = [PSCustomObject]@{
     "YTN"   = 3382
 }
 
-$Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $Pool_Ports."$($_.Name)".symbol) -or $InfoOnly} | ForEach-Object {
+$Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $Pool_Ports."$($_.Name)") -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.Name
     $Pool_Algorithm      = $_.Value.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
