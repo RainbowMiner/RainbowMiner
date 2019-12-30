@@ -59,6 +59,9 @@
         "Cortexmint" = [PSCustomObject]@{
             Currencies=@("CTXC")
         }
+        "CpuPool" = [PSCustomObject]@{
+            Currencies=@("CPU","MBC")
+        }
         "CryptoKnight" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
