@@ -38,6 +38,8 @@
 137	CcminerYescryptR8G
 138	CcminerLyra2z330
 139	CcminerVerus
+140	CcminerKlausT
+141	CcminerKlausT820
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -100,6 +102,7 @@
 351	FireIceRXAmd (linux)
 352	FireIceRXCpu (linux)
 353	FireIceRXNvidia (linux)
+354	Gminer183
 
 400	Sgminer
 401	SgminerBitcore
