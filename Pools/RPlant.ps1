@@ -14,19 +14,9 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pools_BlocksRequest = [PSCustomObject]@{}
-try {
-    $Pools_BlocksRequest = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/blocks" -tag $Name -timeout 15 -cycletime 120
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool blocks API ($Name) has failed. "
-    return
-}
-
 $Pools_Request       = [PSCustomObject]@{}
 try {
-    $Pools_Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/stats" -tag $Name -timeout 15 -cycletime 120
+    $Pools_Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/currencies" -tag $Name -timeout 15 -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -46,10 +36,13 @@ $Pool_Ports = [PSCustomObject]@{
     "CRP"   = 3335
     "CSM"   = 7044
     "DMS"   = 7047
+    "DNGR"  = 7045
     "GXX"   = 7025
+    "ITC"   = 7048
     "IOTS"  = 7028
     "ISO"   = 7030
     "KOTO"  = 3032
+    "LDC"   = 7046
     "LITB"  = 7041
     "LBTC"  = 3355
     "LTFN"  = 3385
@@ -59,24 +52,19 @@ $Pool_Ports = [PSCustomObject]@{
     "SWAMP" = 7023
     "URX"   = 3361
     "VECO"  = 3351
+    "XEBEC" = 7051
     "YTN"   = 3382
 }
 
-$Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.symbol)" -and $Pool_Ports."$($_.symbol)") -or $InfoOnly} | ForEach-Object {
-    $Pool_Currency       = $_.symbol
-    $Pool_RpcPath        = $_.name
-    $Pool_Algorithm      = $_.algorithm
+$Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $Pool_Ports."$($_.Name)".symbol) -or $InfoOnly} | ForEach-Object {
+    $Pool_Currency       = $_.Name
+    $Pool_Algorithm      = $_.Value.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Fee            = 1.0
-    $Pool_User           = $Wallets."$($_.symbol)"
-
-    $TimeStamp = Get-UnixTimestamp
-    if ($TimeStamp -lt $Pools_Request.time) {$TimeStamp = $Pools_Request.time}
-
-    $Pool_TSL            = if ($FirstBlock = $Pools_BlocksRequest.PSObject.Properties.Name | Where-Object {$_ -match "^$($Pool_RpcPath)-"} | Select-Object -First 1) {$TimeStamp - ($Pools_BlocksRequest.$FirstBlock -split ':' | Select-Object -Index 4)}
+    $Pool_User           = $Wallets."$($_.Name)"
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hashrate) -BlockRate ([double]$_.maxRoundTime) -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.Value.hashrate) -BlockRate ([double]$_.Value."24h_blocks") -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -84,7 +72,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
-            CoinName      = $_.namelong
+            CoinName      = $_.Value.name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = 0
@@ -99,9 +87,9 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
             SSL           = $false
             Updated       = (Get-Date).ToUniversalTime()
             PoolFee       = $Pool_Fee
-            Workers       = $_.minerCount
+            Workers       = [int]$_.Value.workers
             Hashrate      = $Stat.HashRate_Live
-            TSL           = $Pool_TSL
+            TSL           = [int]$_.Value.timesincelast
             BLK           = $Stat.BlockRate_Average
             EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"minerproxy"} else {$null}
             Name          = $Name
