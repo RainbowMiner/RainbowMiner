@@ -913,7 +913,7 @@ function Invoke-Core {
         if ($Session.Config.DeviceName -match "^CPU") {
             $CPUAffinityInt = (ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
             if (-not $CPUAffinityInt) {$CPUAffinityInt = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToInt}
-            if ($Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
+            if ($Session.Config.EnableAutoAdjustAffinity -and $Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
                 $CPUAffinityInt = Get-CPUAffinity ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2))) -ToInt
                 Write-Log -Level Warn "All threads selected for CPU mining! This will overload your system, auto-adjusting affinity to $("0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt)"
             }
