@@ -61,7 +61,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
     $TimeStamp = Get-UnixTimestamp
     if ($TimeStamp -lt $Pools_Request.time) {$TimeStamp = $Pools_Request.time}
 
-    $Pool_TSL            = if ($FirstBlock = $Pools_BlocksRequest.PSObject.Properties.Name | Where-Object {$_ -match "^$($Pool_RpcPath)-"} | Select-Object -First 1) {$TimeStamp - ($Pools_BlocksRequest.$FirstBlock -split ':' | Select-Object -Index 4)}
+    $Pool_TSL            = if ($FirstBlock = $Pools_BlocksRequest.PSObject.Properties.Name | Where-Object {$_ -match "^$($Pool_RpcPath)-"} | Select-Object -First 1) {$TimeStamp - ($Pools_BlocksRequest.$FirstBlock -split ':' | Select-Object -Index 4)/1000}
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hashrate) -BlockRate ([double]$_.maxRoundTime) -Quiet
@@ -87,7 +87,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
             SSL           = $false
             Updated       = (Get-Date).ToUniversalTime()
             PoolFee       = $Pool_Fee
-            Workers       = $_.minerCount
+            Workers       = $_.workerCount
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average
