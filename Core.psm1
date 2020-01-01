@@ -137,7 +137,7 @@ function Start-Core {
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Error "Device detection failed: $($_.Exception.Message)"
-        $Session.Pause = $true
+        $Session.PauseMiners = $true
     }
 
     try {
@@ -236,7 +236,7 @@ function Start-Core {
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Error "Please check your configuration: $($_.Exception.Message)"
-        $Session.Pause = $true
+        $Session.PauseMiners = $true
     }
 
     try {
@@ -1005,7 +1005,7 @@ function Invoke-Core {
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
                             }) -Depth 10
     }
-    if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
+    if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Session.PauseMiners)) {$Session.PauseMiners = $API.Pause = $true}
 
     #Check for algorithms config
     if (Set-ConfigDefault "Algorithms") {
