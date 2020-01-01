@@ -93,6 +93,7 @@ function Start-Core {
         $Session.StartDownloader = $false
         $Session.PauseMiners = $false
         $Session.PauseMinersByScheduler = $false
+        $Session.PauseMinersByActivity = $false
         $Session.RestartMiners = $false
         $Session.Restart = $false
         $Session.LockMiners = [PSCustomObject]@{Locked=$false;Enabled=$false;Pools=@()}
@@ -2937,6 +2938,18 @@ function Invoke-Core {
                 $Session.NextReport = $Session.Timer.AddSeconds(60)
             }
         }
+
+        if ($Session.Config.EnablePauseOnActivity -and $Session.RoundCounter -gt 0) {
+            if ($ActivityTimer = Get-LastUserInput) {
+                if ($Session.PauseMinersByActivity) {
+                    if ($Session.Config.ResumeOnInactivitySeconds -and $ActivityTimer.IdleTime.TotalSeconds -ge $Session.Config.ResumeOnInactivitySeconds) {
+                        $API.Pause = $false
+                    }
+                } elseif ($ActivityTimer.IdleTime -lt ((Get-Date).ToUniversalTime() - $Session.RoundStart)) {
+                    $API.Pause = $Session.PauseMinersByActivity = $true
+                }
+            }
+        }
  
         $keyPressedValue =  if ((Test-Path ".\stopp.txt") -or $API.Stop) {"X"}
                             elseif ($API.Pause -ne $Session.PauseMiners) {"P"}
@@ -2991,6 +3004,7 @@ function Invoke-Core {
                 "P" {
                     $Session.PauseMiners = -not $Session.PauseMiners
                     $API.Pause = $Session.PauseMiners
+                    if (-not $Session.PauseMiners) {$Session.PauseMinersByActivity = $false}
                     Write-Host -NoNewline "[P] pressed - miner script will be $(if ($Session.PauseMiners) {"PAUSED"} else {"RESTARTED"})"
                     $keyPressed = $true
                     Break

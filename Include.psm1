@@ -5138,7 +5138,7 @@ function Get-Subsets($a){
 function Get-MemoryUsage
 {
 [cmdletbinding()]
-Param(   
+Param(
     [Parameter(Mandatory = $False)]
     [Switch]$ForceFullCollection,
     [Parameter(Mandatory = $False)]
@@ -6371,3 +6371,14 @@ function Get-WalletWithPaymentId {
         "$($wallet)$(if ($paymentid -and $pidchar) {"$($pidchar)$($paymentid)"})$(if ($difficulty -and $withdiff) {"$($diffchar)$($difficulty)"})"
     }
 }
+
+function Get-LastUserInput {
+    if ($IsWindows) {
+        Add-Type -Path .\DotNet\Tools\UserInput.cs
+        [PSCustomObject]@{
+            IdleTime  = [PInvoke.Win32.UserInput]::IdleTime
+            LastInput = [PInvoke.Win32.UserInput]::LastInput
+        }
+    }
+}
+
