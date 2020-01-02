@@ -76,7 +76,7 @@ class Miner {
     [DateTime]$ActiveLast = [DateTime]::MinValue
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
     $Job
-    $EthPill
+    $EthPillJob
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
@@ -181,13 +181,14 @@ class Miner {
             $this.Active = $this.GetActiveTime()
             $this.Job    = $null
             $this.Status = [MinerStatus]::Idle
-
-            if ($this.EthPillJob) {
-                Write-Log "Stopping OhGodAnETHlargementPill"
-                Stop-SubProcess $this.EthPillJob -Title "OhGodAnETHlargementPill"
-                $this.EthPillJob = $null
-            }
         }
+
+        if ($this.EthPillJob) {
+            Write-Log "Stopping OhGodAnETHlargementPill"
+            Stop-SubProcess -Job $this.EthPillJob -Title "OhGodAnETHlargementPill"
+            $this.EthPillJob = $null
+        }
+
         if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
     }
 

@@ -5,20 +5,25 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-CcminerVerus\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.61-ccminerverus/ccminerverus-3.611cuda-win.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-CcminerVerus\ccminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.61-ccminerverus/ccminerverus-3.611cuda-revD-linux.7z"
+} else {
+    $Path = ".\Bin\NVIDIA-CcminerVerus\ccminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.61-ccminerverus/ccminerverus-3.611cuda-revD-win.7z"
+}
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "139{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.1"
-$Version = "3.611"
+$Version = "3.611-revD"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "verus"; Params = "-a verus -i 18"; ExtendInterval = 2} #Verushash
+    [PSCustomObject]@{MainAlgorithm = "verus"; Params = "-a verus"; ExtendInterval = 2} #Verushash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

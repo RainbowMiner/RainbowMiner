@@ -161,7 +161,7 @@
                     Break
                 }
                 "/minerinfo" {
-                    $Data = if ($API.MinerInfo) {$API.MinerInfo} else {"[]"}
+                    $Data = if ($API.MinerInfo) {ConvertTo-Json $API.MinerInfo} else {"{}"}
                     Break
                 }
                 "/pools" {
@@ -258,7 +258,7 @@
                     Break
                 }
                 "/ocprofiles" {
-                    $Data = ConvertTo-Json $Session.Config.OCProfiles.PSObject.Properties.Foreach({
+                    $Data = ConvertTo-Json @($Session.Config.OCProfiles.PSObject.Properties).Foreach({
                                 [PSCustomObject]@{
                                     Name             = $_.Name -replace "-.+$"
                                     Device           = $(if ($_.Name -match "-(.+)$") {$Matches[1]} else {""})
@@ -281,7 +281,7 @@
                     $DebugPath = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
                     $PurgeStrings = @()
                     $UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
-                    @($Session.Config,$UserConfig) | Select-Object | Foreach-Object {
+                    @($Session.Config,$UserConfig) | Where-Object {$_} | Foreach-Object {
                         $CurrentConfig = $_
                         @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
@@ -299,14 +299,14 @@
                         Get-ContentByStreamReader $_ | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
                     }
 
-                    @("Config") | Where-Object {$API.$_} | Foreach-Object {
-                        $NewFile = "$DebugPath\$($_).json"
-                        ($API.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                    if ($Session.Config) {
+                        $NewFile = "$DebugPath\config.json"
+                        ($Session.Config | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
-                    @("UserConfig") | Where-Object {$API.$_} | Foreach-Object {
-                        $NewFile = "$DebugPath\$($_).json"
-                        $UserConfig -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                    if ($API.UserConfig) {
+                        $NewFile = "$DebugPath\userconfig.json"
+                        $API.UserConfig -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
                     if ($IsLinux) {
@@ -342,15 +342,15 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = if ($API.AllDevices) {ConvertTo-Json $API.AllDevices.ForEach({$_}) -Depth 10} else {"[]"}
+                    $Data = if ($API.AllDevices) {ConvertTo-Json $API.AllDevices -Depth 10} else {"[]"}
                     Break
                 }
                 "/devices" {
-                    $Data = if ($API.Devices) {ConvertTo-Json $API.Devices.ForEach({$_}) -Depth 10} else {"[]"}
+                    $Data = if ($API.Devices) {ConvertTo-Json $API.Devices -Depth 10} else {"[]"}
                     Break
                 }
                 "/devicecombos" {
-                    $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos.ForEach({$_})} else {"[]"}
+                    $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos} else {"[]"}
                     Break
                 }
                 "/stats" {
@@ -433,7 +433,7 @@
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers.ForEach({$_}) -Depth 2} else {"[]"}
+                    $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers -Depth 2} else {"[]"}
                     Break
                 }
                 "/balances" {
@@ -539,7 +539,7 @@
                     Break
                 }
                 "/asyncloaderjobs" {
-                    $Data = ConvertTo-Json $Asyncloader.Jobs.ForEach({$_})
+                    $Data = ConvertTo-Json @($Asyncloader.Jobs).Where({$_})
                     Break
                 }
                 "/decsep" {
