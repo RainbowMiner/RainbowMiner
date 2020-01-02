@@ -23,7 +23,7 @@ $UriCuda = @(
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-i 17 -N 1"} #Neoscrypt
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-i 17.6"; ExtendInterval = 3} #Neoscrypt
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
