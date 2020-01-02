@@ -6401,12 +6401,16 @@ function Get-WalletWithPaymentId {
 }
 
 function Get-LastUserInput {
-    if ($IsWindows) {
-        Add-Type -Path .\DotNet\Tools\UserInput.cs
-        [PSCustomObject]@{
-            IdleTime  = [PInvoke.Win32.UserInput]::IdleTime
-            LastInput = [PInvoke.Win32.UserInput]::LastInput
+    try {
+        if ($IsWindows) {
+            Add-Type -Path .\DotNet\Tools\UserInput.cs
+            [PSCustomObject]@{
+                IdleTime  = [PInvoke.Win32.UserInput]::IdleTime
+                LastInput = [PInvoke.Win32.UserInput]::LastInput
+            }
         }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
     }
 }
 
