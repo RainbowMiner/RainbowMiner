@@ -124,21 +124,21 @@ function Get-NvidiaArchitecture {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    if (-not (Test-Path Variable:Script:ScriptPoolFields)) {
+    if (-not (Test-Path Variable:Global:GlobalPoolFields)) {
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-        $Script:ScriptPoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
+        $Global:GlobalPoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
     }
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Script:ScriptPoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:GlobalPoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
 function Set-UnprofitableAlgos {
-    if (-not (Test-Path Variable:Script:ScriptUnprofitableAlgos)) {
-        $Script:ScriptUnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)};@()}
+    if (-not (Test-Path Variable:Global:GlobalUnprofitableAlgos)) {
+        $Global:GlobalUnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)};@()}
     }
 
-    if (-not $Script:ScriptUnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
-        $Key = Get-ContentDataMD5hash $Script:ScriptUnprofitableAlgos
+    if (-not $Global:GlobalUnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
+        $Key = Get-ContentDataMD5hash $Global:GlobalUnprofitableAlgos
         try {
             $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable2"
         }
@@ -147,31 +147,31 @@ function Set-UnprofitableAlgos {
             Write-Log -Level Warn "Unprofitable algo API failed. "
         }
         if ($Request.Algorithms -and $Request.Algorithms -gt 10) {
-            $Script:ScriptUnprofitableAlgos = $Request
-            Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Script:ScriptUnprofitableAlgos -MD5hash $Key > $null
+            $Global:GlobalUnprofitableAlgos = $Request
+            Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Global:GlobalUnprofitableAlgos -MD5hash $Key > $null
         }
     }
 }
 
 function Get-UnprofitableAlgos {
-    if (-not (Test-Path Variable:Script:ScriptUnprofitableAlgos)) {Set-UnprofitableAlgos}
-    $Script:ScriptUnprofitableAlgos
+    if (-not (Test-Path Variable:Global:GlobalUnprofitableAlgos)) {Set-UnprofitableAlgos}
+    $Global:GlobalUnprofitableAlgos
 }
 
 function Get-EthDAGSize {
     [CmdletBinding()]
     param($CoinSymbol)
-    if (-not (Test-Path Variable:Script:EthDAGSizes)) {
-        $Script:EthDAGSizes = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
+    if (-not (Test-Path Variable:Global:GlobalEthDAGSizes)) {
+        $Global:GlobalEthDAGSizes = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
     }
-    if ($CoinSymbol -and $Script:EthDAGSizes.$CoinSymbol -ne $null) {$Script:EthDAGSizes.$CoinSymbol} else {4}
+    if ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null) {$Global:GlobalEthDAGSizes.$CoinSymbol} else {4}
 }
 
 function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)
     
-    if (-not (Test-Path Variable:Script:ScriptCoinNames) -or -not $Script:ScriptCoinNames.Count) {
+    if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
             $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
@@ -184,15 +184,15 @@ function Get-CoinSymbol {
             if (Test-Path "Data\coins.json") {try {$Request = Get-ContentByStreamReader "Data\coins.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
         } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
-        [hashtable]$Script:ScriptCoinNames = @{}
-        $Request.PSObject.Properties | Foreach-Object {$Script:ScriptCoinNames[$_.Name] = $_.Value}
+        [hashtable]$Global:GlobalCoinNames = @{}
+        $Request.PSObject.Properties | Foreach-Object {$Global:GlobalCoinNames[$_.Name] = $_.Value}
     }
     if (-not $Silent) {
         if ($Reverse) {
             $CoinName = $CoinName.ToUpper()
-            (Get-Culture).TextInfo.ToTitleCase("$($Script:ScriptCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
+            (Get-Culture).TextInfo.ToTitleCase("$($Global:GlobalCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
         } else {
-            $Script:ScriptCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
+            $Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
     }
 }
@@ -219,7 +219,7 @@ function Get-WhatToMineData {
                     }
                 }
                 Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
-                $Script:ScriptWTMData = $null
+                $Global:GlobalWTMData = $null
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -228,11 +228,11 @@ function Get-WhatToMineData {
         }
     }
 
-    if (-not (Test-Path Variable:Script:ScriptWTMData) -or $Script:ScriptWTMData -eq $null) {
-        $Script:ScriptWTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
+    if (-not (Test-Path Variable:Global:GlobalWTMData) -or $Global:GlobalWTMData -eq $null) {
+        $Global:GlobalWTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
     }
 
-    if (-not $Silent) {$Script:ScriptWTMData}
+    if (-not $Silent) {$Global:GlobalWTMData}
 }
 
 function Get-WhatToMineUrl {
@@ -253,8 +253,8 @@ function Get-WhatToMineFactor {
         [int]$Factor = 10
     )
     if ($Algo) {
-        if (-not (Test-Path Variable:Script:ScriptWTMData) -or $Script:ScriptWTMData -eq $null) {Get-WhatToMineData -Silent}
-        $Script:ScriptWTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
+        if (-not (Test-Path Variable:Global:GlobalWTMData) -or $Global:GlobalWTMData -eq $null) {Get-WhatToMineData -Silent}
+        $Global:GlobalWTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
     }
 }
 
@@ -3489,9 +3489,9 @@ function Get-Algorithm {
     if ($Algorithm -eq '*') {$Algorithm}
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if (-not (Test-Path Variable:Script:ScriptAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:ScriptAlgorithmsTimeStamp) {Get-Algorithms -Silent}
+        if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
-        if ($Script:ScriptAlgorithms.ContainsKey($Algorithm)) {$Script:ScriptAlgorithms[$Algorithm]} else {$Algorithm}
+        if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {$Global:GlobalAlgorithms[$Algorithm]} else {$Algorithm}
     }
 }
 
@@ -3508,9 +3508,9 @@ function Get-Coin {
     if ($CoinSymbol -eq '*') {$CoinSymbol}
     elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
     else {
-        if (-not (Test-Path Variable:Script:ScriptCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Script:ScriptCoinsDBTimeStamp) {Get-CoinsDB -Silent}
+        if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {Get-CoinsDB -Silent}
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
-        if ($Script:ScriptCoinsDB.ContainsKey($CoinSymbol)) {$Script:ScriptCoinsDB[$CoinSymbol]}
+        if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
     }
 }
 
@@ -3521,8 +3521,8 @@ function Get-MappedAlgorithm {
         $Algorithm
     )
     if (-not $Session.Config.EnableAlgorithmMapping) {return $Algorithm}
-    if (-not (Test-Path Variable:Script:ScriptAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Script:ScriptAlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
-    $Algorithm | Foreach-Object {if ($Script:ScriptAlgorithmMap.ContainsKey($_)) {$Script:ScriptAlgorithmMap[$_]} else {$_}}
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
+    $Algorithm | Foreach-Object {if ($Global:GlobalAlgorithmMap.ContainsKey($_)) {$Global:GlobalAlgorithmMap[$_]} else {$_}}
 }
 
 function Get-AlgorithmMap {
@@ -3531,13 +3531,13 @@ function Get-AlgorithmMap {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Script:ScriptAlgorithmMapTimeStamp) {
-        [hashtable]$Script:ScriptAlgorithmMap = @{}
-        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Script:ScriptAlgorithmMap[$_.Name]=$_.Value}
-        $Script:ScriptAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {
+        [hashtable]$Global:GlobalAlgorithmMap = @{}
+        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
+        $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        $Script:ScriptAlgorithmMap
+        $Global:GlobalAlgorithmMap
     }
 }
 
@@ -3549,8 +3549,8 @@ function Get-EquihashCoinPers {
         [Parameter(Mandatory = $false)]
         [String]$Default = "auto"
     )
-    if (-not (Test-Path Variable:Script:ScriptEquihashCoins)) {Get-EquihashCoins -Silent}        
-    if ($Coin -and $Script:ScriptEquihashCoins.ContainsKey($Coin)) {$Script:ScriptEquihashCoins[$Coin]} else {$Default}
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {Get-EquihashCoins -Silent}        
+    if ($Coin -and $Global:GlobalEquihashCoins.ContainsKey($Coin)) {$Global:GlobalEquihashCoins[$Coin]} else {$Default}
 }
 
 function Get-NimqHashrate {
@@ -3561,8 +3561,8 @@ function Get-NimqHashrate {
         [Parameter(Mandatory = $false)]
         [Int]$Default = 100
     )
-    if (-not (Test-Path Variable:Script:ScriptNimqHashrates)) {Get-NimqHashrates -Silent}        
-    if ($GPU -and $Script:ScriptNimqHashrates.ContainsKey($GPU)) {$Script:ScriptNimqHashrates[$GPU]} else {$Default}
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {Get-NimqHashrates -Silent}        
+    if ($GPU -and $Global:GlobalNimqHashrates.ContainsKey($GPU)) {$Global:GlobalNimqHashrates[$GPU]} else {$Default}
 }
 
 function Get-Region {
@@ -3571,9 +3571,9 @@ function Get-Region {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not (Test-Path Variable:Script:ScriptRegions)) {Get-Regions -Silent}
+    if (-not (Test-Path Variable:Global:GlobalRegions)) {Get-Regions -Silent}
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
-    if ($Script:ScriptRegions.ContainsKey($Region)) {$Script:ScriptRegions[$Region]} else {foreach($r in @($Script:ScriptRegions.Keys)) {if ($Region -match "^$($r)") {$Script:ScriptRegions[$r];return}};$Region}
+    if ($Global:GlobalRegions.ContainsKey($Region)) {$Global:GlobalRegions[$Region]} else {foreach($r in @($Global:GlobalRegions.Keys)) {if ($Region -match "^$($r)") {$Global:GlobalRegions[$r];return}};$Region}
 }
 
 function Get-Region2 {
@@ -3582,8 +3582,8 @@ function Get-Region2 {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not (Test-Path Variable:Script:ScriptRegions2)) {Get-Regions2 -Silent}
-    if ($Script:ScriptRegions2.ContainsKey($Region)) {$Script:ScriptRegions2[$Region]}
+    if (-not (Test-Path Variable:Global:GlobalRegions2)) {Get-Regions2 -Silent}
+    if ($Global:GlobalRegions2.ContainsKey($Region)) {$Global:GlobalRegions2[$Region]}
 }
 
 function Get-Algorithms {
@@ -3594,14 +3594,14 @@ function Get-Algorithms {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:ScriptAlgorithmsTimeStamp) {
-        [hashtable]$Script:ScriptAlgorithms = @{}
-        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Script:ScriptAlgorithms[$_.Name]=$_.Value}
-        $Script:ScriptAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
+    if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
+        [hashtable]$Global:GlobalAlgorithms = @{}
+        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
+        $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Script:ScriptAlgorithms.Values | Select-Object -Unique | Sort-Object}
-        else {$Script:ScriptAlgorithms.Keys | Sort-Object}
+        if ($Values) {$Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object}
+        else {$Global:GlobalAlgorithms.Keys | Sort-Object}
     }
 }
 
@@ -3613,14 +3613,14 @@ function Get-CoinsDB {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Script:ScriptCoinsDBTimeStamp) {
-        [hashtable]$Script:ScriptCoinsDB = @{}
-        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Script:ScriptCoinsDB[$_.Name]=$_.Value}
-        $Script:ScriptCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
+    if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
+        [hashtable]$Global:GlobalCoinsDB = @{}
+        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
+        $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Script:ScriptCoinsDB.Values | Select-Object -Unique | Sort-Object}
-        else {$Script:ScriptCoinsDB.Keys | Sort-Object}
+        if ($Values) {$Global:GlobalCoinsDB.Values | Select-Object -Unique | Sort-Object}
+        else {$Global:GlobalCoinsDB.Keys | Sort-Object}
     }
 }
 
@@ -3630,11 +3630,11 @@ function Get-EquihashCoins {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptEquihashCoins)) {
-        [hashtable]$Script:ScriptEquihashCoins = @{}
-        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Script:ScriptEquihashCoins[$_.Name]=$_.Value}
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {
+        [hashtable]$Global:GlobalEquihashCoins = @{}
+        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Script:ScriptEquihashCoins.Keys}
+    if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
 }
 
 function Get-NimqHashrates {
@@ -3643,11 +3643,11 @@ function Get-NimqHashrates {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptNimqHashrates)) {
-        [hashtable]$Script:ScriptNimqHashrates = @{}
-        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Script:ScriptNimqHashrates[$_.Name]=$_.Value}
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {
+        [hashtable]$Global:GlobalNimqHashrates = @{}
+        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Script:ScriptNimqHashrates.Keys}
+    if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
 
 function Get-PoolsInfo {
@@ -3663,26 +3663,26 @@ function Get-PoolsInfo {
         [Switch]$Clear = $false
     )
     
-    if (-not (Test-Path Variable:Script:ScriptPoolsInfo) -or $Script:ScriptPoolsInfo -eq $null) {
-        $Script:ScriptPoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Script:ScriptPoolsInfo.PSObject.Properties | Foreach-Object {
+    if (-not (Test-Path Variable:Global:GlobalPoolsInfo) -or $Global:GlobalPoolsInfo -eq $null) {
+        $Global:GlobalPoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {
             $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
         }
     }
     if ($Name -and @("Algorithm","Currency","CoinSymbol","CoinName","Minable") -icontains $Name) {
         if ($Values.Count) {
             if ($AsObjects) {
-                $Script:ScriptPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
+                $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
             } else {
-                $Script:ScriptPoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
+                $Global:GlobalPoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
             }
         } else {
-            $Script:ScriptPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
+            $Global:GlobalPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
         }
     } else {
-        $Script:ScriptPoolsInfo.$Name
+        $Global:GlobalPoolsInfo.$Name
     }
-    if ($Clear) {$Script:ScriptPoolsInfo = $null}
+    if ($Clear) {$Global:GlobalPoolsInfo = $null}
 }
 
 function Get-Regions {
@@ -3692,13 +3692,13 @@ function Get-Regions {
         [Switch]$Silent = $false,
         [Switch]$AsHash = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptRegions)) {
-        [hashtable]$Script:ScriptRegions = @{}
-        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Script:ScriptRegions[$_.Name]=$_.Value}
+    if (-not (Test-Path Variable:Global:GlobalRegions)) {
+        [hashtable]$Global:GlobalRegions = @{}
+        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
     }
     if (-not $Silent) {
-        if ($AsHash) {$Script:ScriptRegions}
-        else {$Script:ScriptRegions.Keys}
+        if ($AsHash) {$Global:GlobalRegions}
+        else {$Global:GlobalRegions.Keys}
     }
 }
 
@@ -3708,11 +3708,11 @@ function Get-Regions2 {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptRegions2)) {
-        [hashtable]$Script:ScriptRegions2 = @{}
-        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Script:ScriptRegions2[$_.Name]=$_.Value}
+    if (-not (Test-Path Variable:Global:GlobalRegions2)) {
+        [hashtable]$Global:GlobalRegions2 = @{}
+        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Script:ScriptRegions2.Keys}
+    if (-not $Silent) {$Global:GlobalRegions2.Keys}
 }
 
 function Get-WorldCurrencies {
@@ -3721,10 +3721,10 @@ function Get-WorldCurrencies {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Script:ScriptWorldCurrencies)) {
-        $Script:ScriptWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
+    if (-not (Test-Path Variable:Global:GlobalWorldCurrencies)) {
+        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
     }
-    if (-not $Silent) {$Script:ScriptWorldCurrencies}
+    if (-not $Silent) {$Global:GlobalWorldCurrencies}
 }
 
 function Invoke-NvidiaSettings {
@@ -4549,7 +4549,7 @@ function Set-PoolsConfigDefault {
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
-            $Script:ScriptPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+            $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
             if ($Pools.Count -gt 0) {
                 $Pools | Foreach-Object {
                     $Pool_Name = $_
