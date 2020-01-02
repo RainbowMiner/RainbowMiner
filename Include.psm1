@@ -158,6 +158,15 @@ function Get-UnprofitableAlgos {
     $Script:ScriptUnprofitableAlgos
 }
 
+function Get-EthDAGSize {
+    [CmdletBinding()]
+    param($CoinSymbol)
+    if (-not (Test-Path Variable:Script:EthDAGSizes)) {
+        $Script:EthDAGSizes = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
+    }
+    if ($CoinSymbol -and $Script:EthDAGSizes.$CoinSymbol -ne $null) {$Script:EthDAGSizes.$CoinSymbol} else {4}
+}
+
 function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)

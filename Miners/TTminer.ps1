@@ -25,8 +25,6 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 3; NH = $false; Params = "-A BLAKE2S%CUDA% -coin kda"; ExtendInterval = 2; Coins = @("KDA")} #Kadena
     [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 3; NH = $false; Params = "-A EAGLESONG%CUDA% -coin ckb"; ExtendInterval = 2; Coins = @("CKB")} #Eaglesong
-    [PSCustomObject]@{MainAlgorithm = "ETHASH2gb"     ; MinMemGB = 2; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash2GB 
-    [PSCustomObject]@{MainAlgorithm = "ETHASH3gb"     ; MinMemGB = 3; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash3GB 
     [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 4; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
     #[PSCustomObject]@{MainAlgorithm = "HONEYCOMB"     ; MinMemGB = 2; NH = $false; Params = "-A HONEYCOMB%CUDA%"; ExtendInterval = 2} #HoneyComb
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 2; NH = $true;  Params = "-A LYRA2V3%CUDA%"; ExtendInterval = 2} #LYRA2V3
@@ -74,8 +72,8 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $First = $True
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-        $MinMemGB = $_.MinMemGB
-        if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
+        $MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
+
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {

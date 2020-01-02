@@ -62,8 +62,9 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $Commands |  Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-            $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
-            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
+
+            $MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} elseif ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
+
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {

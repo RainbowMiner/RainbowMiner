@@ -23,8 +23,6 @@ $Version = "4.9b"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash2gb"  ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash2GB
-    [PSCustomObject]@{MainAlgorithm = "ethash3gb"  ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash3GB
     [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
     [PSCustomObject]@{MainAlgorithm = "progpow2gb" ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow2GB
     [PSCustomObject]@{MainAlgorithm = "progpow3gb" ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow3GB
@@ -64,8 +62,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 		$Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
 			$Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-			$MinMemGB = $_.MinMemGB
-            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
+
+			$MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
+
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
