@@ -158,15 +158,6 @@ function Get-UnprofitableAlgos {
     $Global:GlobalUnprofitableAlgos
 }
 
-function Get-EthDAGSize {
-    [CmdletBinding()]
-    param($CoinSymbol)
-    if (-not (Test-Path Variable:Global:GlobalEthDAGSizes)) {
-        $Global:GlobalEthDAGSizes = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
-    }
-    if ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null) {$Global:GlobalEthDAGSizes.$CoinSymbol} else {4}
-}
-
 function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)
@@ -3489,7 +3480,7 @@ function Get-Algorithm {
     if ($Algorithm -eq '*') {$Algorithm}
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {Get-Algorithms -Silent}
+        if (-not (Test-Path Variable:Global:GlobalAlgorithms)) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
         if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {$Global:GlobalAlgorithms[$Algorithm]} else {$Algorithm}
     }
@@ -3508,7 +3499,7 @@ function Get-Coin {
     if ($CoinSymbol -eq '*') {$CoinSymbol}
     elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
     else {
-        if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {Get-CoinsDB -Silent}
+        if (-not (Test-Path Variable:Global:GlobalCoinsDB)) {Get-CoinsDB -Silent}
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
         if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
     }
@@ -3521,7 +3512,7 @@ function Get-MappedAlgorithm {
         $Algorithm
     )
     if (-not $Session.Config.EnableAlgorithmMapping) {return $Algorithm}
-    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap)) {Get-AlgorithmMap -Silent}
     $Algorithm | Foreach-Object {if ($Global:GlobalAlgorithmMap.ContainsKey($_)) {$Global:GlobalAlgorithmMap[$_]} else {$_}}
 }
 
@@ -3549,8 +3540,18 @@ function Get-EquihashCoinPers {
         [Parameter(Mandatory = $false)]
         [String]$Default = "auto"
     )
-    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {Get-EquihashCoins -Silent}        
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {Get-EquihashCoins -Silent}
     if ($Coin -and $Global:GlobalEquihashCoins.ContainsKey($Coin)) {$Global:GlobalEquihashCoins[$Coin]} else {$Default}
+}
+
+function Get-EthDAGSize {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$CoinSymbol = ""
+    )
+    if (-not (Test-Path Variable:Global:GlobalEthDAGSizes)) {Get-EthDAGSizes -Silent}
+    if ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null) {$Global:GlobalEthDAGSizes.$CoinSymbol} else {4}
 }
 
 function Get-NimqHashrate {
@@ -3561,7 +3562,7 @@ function Get-NimqHashrate {
         [Parameter(Mandatory = $false)]
         [Int]$Default = 100
     )
-    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {Get-NimqHashrates -Silent}        
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {Get-NimqHashrates -Silent}
     if ($GPU -and $Global:GlobalNimqHashrates.ContainsKey($GPU)) {$Global:GlobalNimqHashrates[$GPU]} else {$Default}
 }
 
@@ -3630,11 +3631,25 @@ function Get-EquihashCoins {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins) -or (Get-ChildItem "Data\equihashcoins.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalEquihashCoinsTimeStamp) {
         [hashtable]$Global:GlobalEquihashCoins = @{}
         (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
+        $Global:GlobalEquihashCoinsTimeStamp = (Get-ChildItem "Data\equihashcoins.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
+}
+
+function Get-EthDAGSizes {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalEthDAGSizes) -or (Get-ChildItem "Data\ethdagsizes.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalEthDAGSizesTimeStamp) {
+        $Global:GlobalEthDAGSizes = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalEthDAGSizesTimeStamp = (Get-ChildItem "Data\ethdagsizes.json").LastWriteTime.ToUniversalTime()
+    }
+    if (-not $Silent) {$Global:GlobalEquihashCoins}
 }
 
 function Get-NimqHashrates {
@@ -3643,9 +3658,11 @@ function Get-NimqHashrates {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates) -or (Get-ChildItem "Data\nimqhashrates.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalNimqHashratesTimeStamp) {
         [hashtable]$Global:GlobalNimqHashrates = @{}
         (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
+        $Global:GlobalNimqHashratesTimeStamp = (Get-ChildItem "Data\nimqhashrates.json").LastWriteTime.ToUniversalTime()
+
     }
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
@@ -3692,9 +3709,10 @@ function Get-Regions {
         [Switch]$Silent = $false,
         [Switch]$AsHash = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions)) {
+    if (-not (Test-Path Variable:Global:GlobalRegions) -or (Get-ChildItem "Data\regions.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalRegionsTimeStamp) {
         [hashtable]$Global:GlobalRegions = @{}
         (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
+        $Global:GlobalRegionsTimeStamp = (Get-ChildItem "Data\regions.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
         if ($AsHash) {$Global:GlobalRegions}
@@ -3708,9 +3726,10 @@ function Get-Regions2 {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions2)) {
+    if (-not (Test-Path Variable:Global:GlobalRegions2) -or (Get-ChildItem "Data\regions2.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalRegions2TimeStamp) {
         [hashtable]$Global:GlobalRegions2 = @{}
         (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
+        $Global:GlobalRegions2TimeStamp = (Get-ChildItem "Data\regions2.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {$Global:GlobalRegions2.Keys}
 }

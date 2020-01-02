@@ -760,6 +760,18 @@ function Invoke-Core {
     [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object)
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
+    #Update databases every 40 rounds
+    if (-not ($Session.RoundCounter % 40)) {
+        Get-AlgorithmMap -Silent
+        Get-Algorithms -Silent
+        Get-CoinsDB -Silent
+        Get-EquihashCoins -Silent
+        Get-EthDAGSizes -Silent
+        Get-NimqHashrates -Silent
+        Get-Regions -Silent
+        Get-Regions2 -Silent
+    }
+
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
 
         if (-not $Session.IsDonationRun) {Get-SessionServerConfig}
