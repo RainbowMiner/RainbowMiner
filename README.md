@@ -816,6 +816,8 @@ For Server (Runmode=server) setup:
 - **DisableMSIAmonitor** = set to 1, to fully disable MSI Afterburner monitoring (if more than six AMD GPU are used for mining)
 - **Quickstart** = set to 1 to read all pool data from cache during startup (speeds up first start, but balance data may be out of date)
 - **StartPaused** = set to 1 to start RainbowMiner in pause mode (no mining, you will have to press "P" to enable mining)
+- **EnablePauseOnActivity** = set to 1 to automatically send RainbowMiner into pause mode, if user input is detected (also see **ResumeOnInactivitySeconds**)
+- **ResumeOnInactivitySeconds** = seconds of no user input, until RainbowMiner leaves pause-on-activity mode (0 = never, default = 300)
 
 #### Maintenance ####
 - **MaxLogfileDays** = max. days to keep logfiles in Logs folder [default=5]

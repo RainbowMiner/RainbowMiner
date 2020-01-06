@@ -1977,13 +1977,22 @@ function Invoke-Core {
                     foreach ($p in @(" $Miner_Arguments" -split '\s+-')) {
                         if (-not $p) {continue}
                         $p="-$p"
-                        if ($p -match "([\s=]+)") {
-                            $pdiv = $matches[1].Trim()
-                            if ($pdiv -eq ''){$pdiv=" "}
-                            $q = $p -split "[\s=]+"
-                            if ($Miner.Arguments -is [string]) {$Miner.Arguments = $Miner.Arguments -replace "$($q[0])[\s=]+[^\s=]+\s*"}
-                            else {$Miner.Arguments.Params = $Miner.Arguments.Params -replace "$($q[0])[\s=]+[^\s=]+\s*"}
-                            $Miner_Arguments_List.Add($q -join $pdiv)>$null
+                        if ($p -match "^([-\w]+)([\s=]*)(.*)$") {
+                            $pcmd = $matches[1]
+                            $pdiv = $matches[2].Trim(); if ($pdiv -eq "") {$pdiv = " "}
+                            $parg = $matches[3].Trim()
+                            if ($Miner.Arguments -is [string]) {
+                                $psub = $Miner.Arguments -replace "$($pcmd)[\s=]+[^\s]+\s*"
+                                $pchg = $psub -ne $Miner.Arguments
+                                $Miner.Arguments = $psub
+                            } else {
+                                $psub = $Miner.Arguments.Params -replace "$($pcmd)[\s=]+[^\s]+\s*"
+                                $pchg = $psub -ne $Miner.Arguments.Params
+                                $Miner.Arguments.Params = $psub
+                            }
+                            if (-not $pchg -or $parg -ne "") {
+                                $Miner_Arguments_List.Add("$($pcmd)$(if ($parg) {"$($pdiv)$($parg)"})")>$null
+                            }
                         } else {
                             $Miner_Arguments_List.Add($p)>$null
                         }

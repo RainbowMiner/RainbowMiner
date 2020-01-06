@@ -7,23 +7,23 @@ param(
 
 if (-not $IsWindows) {return}
 
-$Path = ".\Bin\NVIDIA-KlausT820\ccminer.exe"
+$Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
 $ManualUri = "https://github.com/KlausT/ccminer/releases"
-$Port = "141{0:d2}"
+$Port = "140{0:d2}"
 $DevFee = 0.0
-$Version = "8.20"
+$Version = "8.25"
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.20-ccminerklaust/ccminer-820-cuda91-x64.zip"
-        Cuda = "9.1"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.25-klaust/ccminer-825-cuda101-x64.7z"
+        Cuda = "10.1"
     }        
 )
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-i 17 -N 1"} #Neoscrypt
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; ExtendInterval = 3} #Neoscrypt
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
