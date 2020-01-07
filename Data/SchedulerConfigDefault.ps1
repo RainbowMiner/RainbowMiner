@@ -8,4 +8,8 @@
     Pause      = "0"
     EnableMiningHeatControl = ""
     MiningHeatControl = ""
+    Algorithm  = ""
+    ExcludeAlgorithm = ""
+    CoinSymbol = ""
+    ExcludeCoinSymbol = ""
 }

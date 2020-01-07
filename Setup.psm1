@@ -2934,6 +2934,10 @@ function Start-Setup {
                         Pause = "0"
                         EnableMiningHeatControl = ""
                         MiningHeatControl = ""
+                        Algorithm = ""
+                        ExcludeAlgorithm = ""
+                        CoinSymbol = ""
+                        ExcludeCoinSymbol = ""
                     }
 
                     if ($Scheduler_Action -eq "a") {
@@ -2950,7 +2954,7 @@ function Start-Setup {
                     $SchedulerSetupStep = 0
 
                     if ($Scheduler_Action -ne "d") {
-                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableminingheatcontrol","miningheatcontrol")) > $null
+                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableminingheatcontrol","miningheatcontrol","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol")) > $null
                     }
                     $SchedulerSetupSteps.Add("save") > $null
 
@@ -3002,6 +3006,18 @@ function Start-Setup {
                                         } else {$mhc = ""}
                                     }
                                 }
+                                "algorithm" {
+                                    $Schedule.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine during this schedule ($(if ($Schedule.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $Schedule.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "excludealgorithm" {
+                                    $Schedule.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude from this schedule" -Default $Schedule.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "coinsymbol" {
+                                    $Schedule.CoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to mine during this schedule ($(if ($Schedule.CoinSymbol) {"clear"} else {"leave empty"}) for all)" -Default $Schedule.CoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "excludecoinsymbol" {
+                                    $Schedule.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to exclude from this schedule" -Default $Schedule.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
                                 "save" {
                                     Write-Host " "
                                     if ($Scheduler_Action -eq "d") {
@@ -3024,6 +3040,10 @@ function Start-Setup {
                                             Enable     = if (Get-Yes $_.Enable) {"1"} else {"0"}
                                             EnableMiningHeatControl = "$($_.EnableMiningHeatControl)"
                                             MiningHeatControl = "$($_.MiningHeatControl)"
+                                            Algorithm  = "$($_.Algorithm -join ",")"
+                                            ExcludeAlgorithm  = "$($_.ExcludeAlgorithm -join ",")"
+                                            CoinSymbol  = "$($_.CoinSymbol -join ",")"
+                                            ExcludeCoinSymbol  = "$($_.ExcludeCoinSymbol -join ",")"
                                         }
                                     }
                                     Set-ContentJson -PathToFile $ConfigFiles["Scheduler"].Path -Data $SchedulerSave > $null
