@@ -110,7 +110,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)$(if ($DualIntensity -ne $null) {"-$($DualIntensity)"})"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                         if ($_.Intensity -ne $null) {
-                            $DeviceIntensitiesAll = " $($DualIntensity)"*$Miner_Device.Count
+                            $DeviceIntensitiesAll = " $($DualIntensity)"*($Miner_Device | Measure-Object).Count
                         }
                         $First = $false
                     }
