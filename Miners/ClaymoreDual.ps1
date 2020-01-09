@@ -108,21 +108,28 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
  
 		$Commands | ForEach-Object {
             $First = $true
+
 			$MainAlgorithm = $_.MainAlgorithm
 			$MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
+
             $SecondAlgorithm = $_.SecondAlgorithm
+            $SecondAlgorithm_Norm = if ($SecondAlgorithm) {Get-Algorithm $SecondAlgorithm} else {$null}
 
 			$MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
 
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+
+            if ($SecondAlgorithm_Norm) {
+                $Miner_Config = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)".Intensity
+                if ($Miner_Config -and $Miner_Config -notcontains $_.SecondIntensity) {$Miner_Device = $null}
+            }
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 			            $Miner_Fee = $Fee
-                        if ($SecondAlgorithm) {
-				            $SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
+                        if ($SecondAlgorithm_Norm) {
                             $Miner_BaseAlgo = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)"
                             $Miner_Name = ((@($Name) + @($SecondAlgorithm_Norm) + @(if ($_.SecondIntensity -ge 0) {$_.SecondIntensity}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
 				            if ($Miner_Fee -gt 0) {$Miner_Fee = $DevFeeDual}

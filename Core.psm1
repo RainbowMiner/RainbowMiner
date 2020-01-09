@@ -1445,6 +1445,9 @@ function Invoke-Core {
                     if ($CcMinerOk) {
                         foreach($p in @($CcMiner.Value)) {
                             $p | Add-Member Disable $(Get-Yes $p.Disable) -Force
+                            if ($p.SecondaryAlgorithm) {
+                                $p | Add-Member Intensity @($p.Intensity -replace "[^0-9,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique) -Force
+                            }
                             if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $q -ne "Disable" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($q -eq "Disable" -and $p.Disable)) {$true;break}})) {
                                 $CcMinerNameToAdd = $CcMinerName
                                 if ($p.MainAlgorithm -ne '*') {

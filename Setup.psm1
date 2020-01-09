@@ -1726,7 +1726,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable")) > $null                                    
+                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","intensity")) > $null
                 $MinerSetupSteps.Add("save") > $null                         
 
                 do { 
@@ -1780,6 +1780,9 @@ function Start-Setup {
                                     Difficulty = ""
                                     Disable = "0"
                                 }
+                                if ($EditSecondaryAlgorithm) {
+                                    $EditMinerConfig | Add-Member Intensity "" -Force
+                                }
                         
                                 if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {$MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name)) {$EditMinerConfig | Add-Member $p $_.$p -Force}}}
                                 $MinerSetupStepStore = $false
@@ -1823,6 +1826,20 @@ function Start-Setup {
                                     $MinerSetupStepStore = $true
                                 }
                                 $EditMinerConfig.Disable = if (Get-Yes $EditMinerConfig.Disable) {"1"} else {"0"}
+                            }
+                            "intensity" {
+                                $MinerSetupStepStore = $false
+                                if ($EditAlgorithm -ne '*' -and $EditSecondaryAlgorithm) {
+                                    $Valid_Values = switch ($Miner_Name) {
+                                        "Gminer" {0..10 | %{"$_"}}
+                                        "NBminer" {0..10 | %{"$_"}}
+                                    }
+                                    if ($Valid_Values) {
+                                        $EditMinerConfig.Intensity = Read-HostArray -Prompt "Enter allowed intensities as comma list ($(if ($EditMinerConfig.Intensity) {"clear"} else {"leave empty"}) for all)" -Default $EditMinerConfig.Intensity -Valid $Valid_Values | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $EditMinerConfig.Intensity = "$($EditMinerConfig.Intensity -join ",")"
+                                        $MinerSetupStepStore = $true
+                                    }
+                                }
                             }
                             "save" {
                                 Write-Host " "

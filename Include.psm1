@@ -4278,14 +4278,19 @@ function Set-MinersConfigDefault {
                 }
             }
 
-            $Default = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0"}
+            $Default     = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0"}
+            $DefaultDual = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";Intensity=""}
             $DoneSave = [PSCustomObject]@{}
             $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {
                 $Name = $_
                 if ($Done.$Name.Count) {
                     $Done.$Name | Foreach-Object {
                         $Done1 = $_
-                        $Default.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $Default.$_ -Force}
+                        if ($_.SecondaryAlgorithm) {
+                            $DefaultDual.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $DefaultDual.$_ -Force}
+                        } else {
+                            $Default.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $Default.$_ -Force}
+                        }
                     }
                     $DoneSave | Add-Member $Name @($Done.$Name | Sort-Object MainAlgorithm,SecondaryAlgorithm)
                 }
