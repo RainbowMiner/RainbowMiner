@@ -2222,7 +2222,7 @@ function Invoke-Core {
         $FirstAlgoName            = "$($Miner.HashRates.PSObject.Properties.Name | Select-Object -First 1)"
 
         $Miner_MinSamples         = if ($Miner.MinSamples) {$Miner.MinSamples} else {3} #min. 10 seconds, 3 samples needed
-        $Miner_IsLocked           = ($LockMiners -and $Session.LockMiners.Pools -and -not (Compare-Object $Session.LockMiners.Pools @($Miner.Pools.PSObject.Properties.Name | Foreach-Object {"$($Miner.Pools.$_.Name)-$($Miner.Pools.$_.Algorithm0)-$($Miner.Pools.$_.CoinSymbol)"} | Select-Object -Unique)))
+        $Miner_IsLocked           = ($LockMiners -and $Session.LockMiners.Pools -and -not (Compare-Object $Session.LockMiners.Pools @($Miner.Pools.PSObject.Properties.Name | Foreach-Object {"$($Miner.Pools.$_.Name)-$($Miner.Pools.$_.Algorithm0)-$($Miner.Pools.$_.CoinSymbol)"} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>"))
         $Miner_IsFocusWalletMiner = $false
         $Miner_IsExclusiveMiner   = $false
         $Miner.Pools.PSObject.Properties.Value | Foreach-Object {
