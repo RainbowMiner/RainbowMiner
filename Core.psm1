@@ -1935,6 +1935,7 @@ function Invoke-Core {
             Profit_Bias   = 0.0
             Profit_Unbias = 0.0
             Profit_Cost   = 0.0
+            Profit_Cost_Bias = 0.0
             Disabled      = $false
         }
 
@@ -2082,6 +2083,7 @@ function Invoke-Core {
             $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
             $Miner.Profit_Bias -= $Miner.Profit_Cost * $HmF
             $Miner.Profit_Unbias -= $Miner.Profit_Cost * $HmF
+            $Miner.Profit_Cost_Bias = $Miner.Profit_Cost * $HmF
         }
 
         $Miner.DeviceName = @($Miner.DeviceName | Select-Object -Unique | Sort-Object)
@@ -2187,7 +2189,15 @@ function Invoke-Core {
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
-    if ($Session.Config.FastestMinerOnly) {$Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}).Where({$_})}
+    if ($Session.Config.FastestMinerOnly) {
+        $Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {
+            if ($_.Group.Count -eq 1) {$_.Group[0]}
+            else {
+                $BaseName = $_.Group[0].BaseName 
+                $_.Group | Where-Object {$_.BaseName -eq $BaseName}
+            }
+        }).Where({$_})
+    }
  
     #Give API access to the fasted miners information
     $API.FastestMiners = $Miners
