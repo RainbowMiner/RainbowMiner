@@ -1918,6 +1918,8 @@ function Invoke-Core {
 
     Write-Log "Calculating profit for each miner. "
 
+    $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
+
     [hashtable]$AllMiners_VersionCheck = @{}
     [hashtable]$AllMiners_VersionDate  = @{}
     [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
@@ -2074,13 +2076,10 @@ function Invoke-Core {
             if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner.Profit_Cost=0}
         }
 
-        $HmF = $Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw
-
-        if (($Session.Config.UsePowerPrice -or $HmF) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
+        if (($Session.Config.UsePowerPrice -or ($Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw)) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             if ($Session.Config.UsePowerPrice) {
                 $Miner.Profit -= $Miner.Profit_Cost
             }
-            $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
             $Miner.Profit_Cost_Bias = $Miner.Profit_Cost * $HmF
         }
 
