@@ -2711,29 +2711,29 @@ function Get-Device {
                 $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
                 if ($IsWindows) {
-                    try {$chkcpu = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                    if ($chkcpu.physical_cpus) {
-                        $Global:GlobalCPUInfo | Add-Member Name          $chkcpu.cpu_name
-                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $chkcpu.cpu_vendor
-                        $Global:GlobalCPUInfo | Add-Member Cores         $chkcpu.cores
-                        $Global:GlobalCPUInfo | Add-Member Threads       $chkcpu.threads
-                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $chkcpu.physical_cpus
-                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
-                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
-                        $Global:GlobalCPUInfo | Add-Member Features      @{}
-                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                    } else {
-                        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
-                        $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
-                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
-                        $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
-                        $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
-                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
-                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
-                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
-                        $Global:GlobalCPUInfo | Add-Member Features      @{}
-                        Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                    }
+                    #try {$chkcpu = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    #if ($chkcpu.physical_cpus) {
+                    #    $Global:GlobalCPUInfo | Add-Member Name          $chkcpu.cpu_name
+                    #    $Global:GlobalCPUInfo | Add-Member Manufacturer  $chkcpu.cpu_vendor
+                    #    $Global:GlobalCPUInfo | Add-Member Cores         $chkcpu.cores
+                    #    $Global:GlobalCPUInfo | Add-Member Threads       $chkcpu.threads
+                    #    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $chkcpu.physical_cpus
+                    #    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
+                    #    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
+                    #    $Global:GlobalCPUInfo | Add-Member Features      @{}
+                    #    $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                    #} else {
+                    $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
+                    $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
+                    $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
+                    $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
+                    $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
+                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
+                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
+                    $Global:GlobalCPUInfo | Add-Member Features      @{}
+                    Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                    #}
                 } elseif ($IsLinux) {
                     $Data = Get-Content "/proc/cpuinfo"
                     if ($Data) {
@@ -2746,10 +2746,15 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int](($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1].Trim())
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
                         (($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+                        $Global:GlobalCPUInfo.Features.avx512 = $Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw
                     }
                 }
 
-                $Global:GlobalCPUInfo | Add-Member Vendor $(if ($GPUVendorLists.INTEL -icontains $Global:GlobalCPUInfo.Manufacturer){"INTEL"}else{$Global:GlobalCPUInfo.Manufacturer.ToUpper()})
+                $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ($Global:GlobalCPUInfo.Manufacturer) {
+                            "(AMD|Advanced Micro Devices)" {"AMD"}
+                            "Intel" {"INTEL"}
+                            default {$Global:GlobalCPUInfo.Manufacturer.ToUpper() -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                        })
 
                 if ($IsLinux -and $Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
                     $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
@@ -2905,6 +2910,8 @@ function Get-CPUFeatures {
         $features.avx512_dq = ($info[1] -band ([int]1 -shl 17)) -ne 0
         $features.avx512_ifma = ($info[1] -band ([int]1 -shl 21)) -ne 0
         $features.avx512_vbmi = ($info[2] -band ([int]1 -shl 01)) -ne 0
+
+        $features.avx512 = $features.avx512_f -and $features.avx512_vl -and $features.avx512_dq -and $features.avx512_bw
     }
 
     if ($nExIds -ge 0x80000001) { 
