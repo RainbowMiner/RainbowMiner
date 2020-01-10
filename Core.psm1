@@ -2185,7 +2185,7 @@ function Invoke-Core {
     #Remove all failed and disabled miners
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
 
-    #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
+    #Use only use fastest miner per algo and device index, if one miner handles multiple intensities, all intensity instances of the fastest miner will be used
     if ($Session.Config.FastestMinerOnly) {
         $Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {[double]$_.Profit_Bias - $_.Profit_Cost_Bias}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {
             if ($_.Group.Count -eq 1) {$_.Group[0]}
