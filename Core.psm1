@@ -2081,8 +2081,6 @@ function Invoke-Core {
                 $Miner.Profit -= $Miner.Profit_Cost
             }
             $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
-            $Miner.Profit_Bias -= $Miner.Profit_Cost * $HmF
-            $Miner.Profit_Unbias -= $Miner.Profit_Cost * $HmF
             $Miner.Profit_Cost_Bias = $Miner.Profit_Cost * $HmF
         }
 
@@ -2190,7 +2188,7 @@ function Invoke-Core {
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
     if ($Session.Config.FastestMinerOnly) {
-        $Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {
+        $Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {[double]$_.Profit_Bias - $_.Profit_Cost_Bias}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {
             if ($_.Group.Count -eq 1) {$_.Group[0]}
             else {
                 $BaseName = $_.Group[0].BaseName 
@@ -2213,6 +2211,7 @@ function Invoke-Core {
         $_.Profit_Bias = 0
         $_.Profit_Unbias = 0
         $_.Profit_Cost = 0
+        $_.Profit_Cost_Bias = 0
         $_.Best = $false
         $_.Stopped = $false
         $_.Enabled = $false
@@ -2259,6 +2258,7 @@ function Invoke-Core {
             $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
             $ActiveMiner.Profit_Unbias      = $Miner.Profit_Unbias
             $ActiveMiner.Profit_Cost        = $Miner.Profit_Cost
+            $ActiveMiner.Profit_Cost_Bias   = $Miner.Profit_Cost_Bias
             $ActiveMiner.PowerDraw          = $Miner.PowerDraw
             $ActiveMiner.Speed              = $Miner.HashRates.PSObject.Properties.Value
             #$ActiveMiner.DeviceName         = $Miner.DeviceName
@@ -2316,6 +2316,7 @@ function Invoke-Core {
                 Profit_Bias          = $Miner.Profit_Bias
                 Profit_Unbias        = $Miner.Profit_Unbias
                 Profit_Cost          = $Miner.Profit_Cost
+                Profit_Cost_Bias     = $Miner.Profit_Cost_Bias
                 PowerDraw            = $Miner.PowerDraw
                 Speed                = $Miner.HashRates.PSObject.Properties.Value
                 Speed_Live           = @(0.0) * $Miner.HashRates.PSObject.Properties.Name.Count
@@ -2377,12 +2378,15 @@ function Invoke-Core {
         }
     })
 
+    $Global:ActiveMiners.Where({$_.Profit_Cost_Bias -gt 0}).Foreach({$_.Profit_Bias -= $_.Profit_Cost_Bias})
+
     $Session.Profitable = $true
 
     $PowerOffset_Watt = [Double]0
     $PowerOffset_Cost = [Double]0
 
     if (($Miners | Measure-Object).Count -gt 0) {
+        
         #Get most profitable miner combination
 
         $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$(if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval})})

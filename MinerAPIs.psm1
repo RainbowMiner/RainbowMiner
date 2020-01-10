@@ -26,6 +26,7 @@ class Miner {
     $Profit_Bias
     $Profit_Unbias
     [double]$Profit_Cost
+    [double]$Profit_Cost_Bias
     [double]$PowerDraw
     $Stratum
     [double[]]$Speed
