@@ -2746,7 +2746,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int](($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1].Trim())
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
                         (($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
-                        $Global:GlobalCPUInfo.Features.avx512 = $Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw
+                        if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
                     }
                 }
 
