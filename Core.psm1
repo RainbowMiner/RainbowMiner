@@ -1651,7 +1651,9 @@ function Invoke-Core {
                 ($Session.Config.Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name -and $UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Coins -and $UnprofitableAlgos.Coins.Count -and $UnprofitableAlgos.Coins -icontains $_.CoinSymbol) -or
+                ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -and $UnprofitableAlgos.Pools.$Pool_Name.Coins.Count -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -icontains $_.CoinSymbol) -or
                 ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and $Session.Config.ExcludeCoin -icontains $_.CoinName) -or
                 ($Test_CoinSymbol.Count -and $_.CoinSymbol -and $Test_CoinSymbol -inotcontains $_.CoinSymbol) -or
                 ($Test_ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Test_ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
