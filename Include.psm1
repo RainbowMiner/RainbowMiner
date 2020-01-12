@@ -4454,7 +4454,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType})
+                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $SubsetType})
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
