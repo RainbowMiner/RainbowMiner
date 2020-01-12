@@ -31,7 +31,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC";  port = 4444; fee = 1.0; rpc = "etc";     user="%wallet%.%worker%"}
     [PSCustomObject]@{symbol = "ETP";  port = 6666; fee = 1.0; rpc = "etp";     user="%wallet%.%worker%"}
     [PSCustomObject]@{symbol = "NUKO"; port = 7777; fee = 1.0; rpc = "nuko";    user="%wallet%.%worker%"}
-    [PSCustomObject]@{symbol = "PGC";  port = 1111; fee = 1.0; rpc = "pgc";     user="%wallet%.%worker%"}
+    #[PSCustomObject]@{symbol = "PGC";  port = 1111; fee = 1.0; rpc = "pgc";     user="%wallet%.%worker%"}
 
     [PSCustomObject]@{symbol = "ZANO"; port = 7020; fee = 1.0; rpc = "zano";    user="%wallet%.%worker%"}
 )
