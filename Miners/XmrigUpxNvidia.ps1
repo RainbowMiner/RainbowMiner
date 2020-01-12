@@ -7,40 +7,32 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
+
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-CcminerTCR\ccminer"
+    $Path = ".\Bin\NVIDIA-XmrigUpx\xmrig-nvidia"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-linux-cuda101.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrigupx/xmrig-nvidia-2.14.4_with_upx2-cuda10_1-linux-x64.tar.gz"
             Cuda = "10.1"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-linux-cuda100.7z"
-            Cuda = "10.0"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-linux-cuda92.7z"
-            Cuda = "9.2"
         }
     )
 } else {
-    $Path = ".\Bin\NVIDIA-CcminerTCR\ccminer.exe"
+    $Path = ".\Bin\NVIDIA-XmrigUpx\xmrig-nvidia.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrigupx/xmrig-nvidia-2.14.4_with-upx2-cuda10_1-win64.7z"
             Cuda = "10.1"
         }
     )
 }
-$Version = "1.2.7"
-$ManualUri = "https://github.com/tecracoin/ccminer/releases"
-$Port = "136{0:d2}"
+$ManualUri = "https://github.com/Bendr0id/xmrig-nvidia/releases"
+$Port = "303{0:d2}"
 $DevFee = 0.0
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
+$Version = "2.14.4"
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTPTcr
+    [PSCustomObject]@{MainAlgorithm = "cn-extremelite"; MinMemGb = 1; Params = ""}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -75,35 +67,61 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
     $Commands | ForEach-Object {
         $First = $true
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+        $MinMemGb = $_.MinMemGb
+        $Params = $_.Params
 
-        $MinMemGB = $_.MinMemGB
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Pools.$Algorithm_Norm.Name -notmatch "(NiceHash|MiningRigRentals)") {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
                     $First = $false
                 }
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+
+                $Arguments = [PSCustomObject]@{
+                    PoolParams = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --keepalive$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})"
+                    DeviceParams = "--cuda-devices=$($Miner_Device.Type_Vendor_Index -join ',')"
+                    Config = [PSCustomObject]@{
+                        "algo"            = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+                        "api" = [PSCustomObject]@{
+                            "port"         = "`$mport"
+                            "access-token" = $null
+                            "worker-id"    = $null
+                        }
+                        "background"       = $false
+                        "colors"           = $true
+                        "cuda-bfactor"     = 11
+                        "cuda-max-threads" = 64
+                        "donate-level"     = if ($IsLinux) {1} else {0}
+                        "log-file"         = $null
+                        "print-time"       = 5
+                        "retries"          = 5
+                        "retry-pause"      = 1
+                    }
+                    Devices = @($Miner_Device.Type_Vendor_Index)
+                    HwSig   = "$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"
+                    Params  =  "--api-port=`$mport $Params".Trim()
+                    Threads = 1
+                }
+
 				[PSCustomObject]@{
 					Name           = $Miner_Name
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 -N 3 -b `$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
+					Arguments      = $Arguments
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
-					API            = "Ccminer"
+					API            = "XMRig"
 					Port           = $Miner_Port
 					Uri            = $Uri
                     FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
                     Penalty        = 0
-					DevFee         = 0.0
+					DevFee         = $DevFee
 					ManualUri      = $ManualUri
-                    MiningPriority = 2
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name

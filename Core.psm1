@@ -1095,6 +1095,12 @@ function Invoke-Core {
                     $_ | Add-Member Pause  $(Get-Yes $_.Pause)  -Force
                     $_ | Add-Member EnableMiningHeatControl $(if ($_.EnableMiningHeatControl -eq "") {$Session.Config.EnableMiningHeatControl} else {Get-Yes $_.EnableMiningHeatControl}) -Force
                     $_ | Add-Member MiningHeatControl "$($_.MiningHeatControl -replace ",","." -replace "[^0-9\.]+")" -Force
+
+                    foreach($q in @("Algorithm","ExcludeAlgorithm","CoinSymbol","ExcludeCoinSymbol")) {
+                        if ($_.$q -is [string]) {$_.$q = @($_.$q -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
+                        $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+                    }
+
                     $PowerPrice = if ($_.PowerPrice -eq "") {$Session.Config.PowerPrice} else {$_.PowerPrice}
                     try {$PowerPrice = [Double]$PowerPrice} catch {if ($Error.Count){$Error.RemoveAt(0)};$PowerPrice = $Session.Config.PowerPrice}
                     $_.PowerPrice = $PowerPrice
@@ -1245,10 +1251,14 @@ function Invoke-Core {
     $PowerPrice              = [Double]$Session.Config.PowerPrice
     $EnableMiningHeatControl = $Session.Config.EnableMiningHeatControl
     $MiningHeatControl       = $Session.Config.MiningHeatControl
+    $Scheduler_Algorithm     = @()
+    $Scheduler_ExcludeAlgorithm = @()
+    $Scheduler_CoinSymbol    = @()
+    $Scheduler_ExcludeCoinSymbol = @()
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun})
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun})
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler_Algorithm = $_.Algorithm;$Scheduler_ExcludeAlgorithm = $_.ExcludeAlgorithm;$Scheduler_CoinSymbol = $_.CoinSymbol;$Scheduler_ExcludeCoinSymbol = $_.ExcludeCoinSymbol})
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler_Algorithm = $_.Algorithm;$Scheduler_ExcludeAlgorithm = $_.ExcludeAlgorithm;$Scheduler_CoinSymbol = $_.CoinSymbol;$Scheduler_ExcludeCoinSymbol = $_.ExcludeCoinSymbol})
 
     $Session.CurrentPowerPrice              = $PowerPrice
     $Session.CurrentEnableMiningHeatControl = $EnableMiningHeatControl
@@ -1435,6 +1445,9 @@ function Invoke-Core {
                     if ($CcMinerOk) {
                         foreach($p in @($CcMiner.Value)) {
                             $p | Add-Member Disable $(Get-Yes $p.Disable) -Force
+                            if ($p.SecondaryAlgorithm) {
+                                $p | Add-Member Intensity @($p.Intensity -replace "[^0-9,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique) -Force
+                            }
                             if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $q -ne "Disable" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($q -eq "Disable" -and $p.Disable)) {$true;break}})) {
                                 $CcMinerNameToAdd = $CcMinerName
                                 if ($p.MainAlgorithm -ne '*') {
@@ -1609,6 +1622,15 @@ function Invoke-Core {
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     $Test_Algorithm = @($Session.Config.Algorithm | Select-Object)
     $Test_ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | Select-Object)
+    $Test_CoinSymbol = @()
+    $Test_ExcludeCoinSymbol = @($Session.Config.ExcludeCoinSymbol | Select-Object)
+
+    if (-not $Session.IsDonationRun) {
+        if ($Scheduler_Algorithm.Count) {$Test_Algorithm = @($Test_Algorithm + $Scheduler_Algorithm | Select-Object -Unique)}
+        if ($Scheduler_ExcludeAlgorithm.Count) {$Test_ExcludeAlgorithm = @($Test_ExcludeAlgorithm + $Scheduler_ExcludeAlgorithm | Select-Object -Unique)}
+        if ($Scheduler_CoinSymbol.Count) {$Test_CoinSymbol = @($Test_CoinSymbol + $Scheduler_CoinSymbol | Select-Object -Unique)}
+        if ($Scheduler_ExcludeCoinSymbol.Count) {$Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + $Scheduler_ExcludeCoinSymbol | Select-Object -Unique)}
+    }
 
     if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject) {
         Write-Log -Level Info "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
@@ -1631,7 +1653,8 @@ function Invoke-Core {
                 ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name -and $UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and $Session.Config.ExcludeCoin -icontains $_.CoinName) -or
-                ($Session.Config.ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Session.Config.ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
+                ($Test_CoinSymbol.Count -and $_.CoinSymbol -and $Test_CoinSymbol -inotcontains $_.CoinSymbol) -or
+                ($Test_ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Test_ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
                 ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object $Session.Config.Pools.$Pool_Name.Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object $Session.Config.Pools.$Pool_Name.ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($_.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and $Session.Config.Pools.$Pool_Name.CoinName -inotcontains $_.CoinName) -or
@@ -1652,6 +1675,8 @@ function Invoke-Core {
         )
     Remove-Variable "Test_Algorithm"
     Remove-Variable "Test_ExcludeAlgorithm"
+    Remove-Variable "Test_CoinSymbol"
+    Remove-Variable "Test_ExcludeCoinSymbol"
 
     $AllPools_BeforeWD_Count = $NewPools.Count
 
@@ -1893,6 +1918,8 @@ function Invoke-Core {
 
     Write-Log "Calculating profit for each miner. "
 
+    $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
+
     [hashtable]$AllMiners_VersionCheck = @{}
     [hashtable]$AllMiners_VersionDate  = @{}
     [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
@@ -1910,6 +1937,7 @@ function Invoke-Core {
             Profit_Bias   = 0.0
             Profit_Unbias = 0.0
             Profit_Cost   = 0.0
+            Profit_Cost_Bias = 0.0
             Disabled      = $false
         }
 
@@ -2048,15 +2076,11 @@ function Invoke-Core {
             if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner.Profit_Cost=0}
         }
 
-        $HmF = $Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw
-
-        if (($Session.Config.UsePowerPrice -or $HmF) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
+        if (($Session.Config.UsePowerPrice -or ($Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw)) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             if ($Session.Config.UsePowerPrice) {
                 $Miner.Profit -= $Miner.Profit_Cost
             }
-            $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
-            $Miner.Profit_Bias -= $Miner.Profit_Cost * $HmF
-            $Miner.Profit_Unbias -= $Miner.Profit_Cost * $HmF
+            $Miner.Profit_Cost_Bias = $Miner.Profit_Cost * $HmF
         }
 
         $Miner.DeviceName = @($Miner.DeviceName | Select-Object -Unique | Sort-Object)
@@ -2161,8 +2185,16 @@ function Invoke-Core {
     #Remove all failed and disabled miners
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
 
-    #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
-    if ($Session.Config.FastestMinerOnly) {$Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}).Where({$_})}
+    #Use only use fastest miner per algo and device index, if one miner handles multiple intensities, all intensity instances of the fastest miner will be used
+    if ($Session.Config.FastestMinerOnly) {
+        $Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {[double]$_.Profit_Bias - $_.Profit_Cost_Bias}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {
+            if ($_.Group.Count -eq 1) {$_.Group[0]}
+            else {
+                $BaseName = $_.Group[0].BaseName 
+                $_.Group | Where-Object {$_.BaseName -eq $BaseName}
+            }
+        }).Where({$_})
+    }
  
     #Give API access to the fasted miners information
     $API.FastestMiners = $Miners
@@ -2178,6 +2210,7 @@ function Invoke-Core {
         $_.Profit_Bias = 0
         $_.Profit_Unbias = 0
         $_.Profit_Cost = 0
+        $_.Profit_Cost_Bias = 0
         $_.Best = $false
         $_.Stopped = $false
         $_.Enabled = $false
@@ -2200,7 +2233,7 @@ function Invoke-Core {
         $FirstAlgoName            = "$($Miner.HashRates.PSObject.Properties.Name | Select-Object -First 1)"
 
         $Miner_MinSamples         = if ($Miner.MinSamples) {$Miner.MinSamples} else {3} #min. 10 seconds, 3 samples needed
-        $Miner_IsLocked           = ($LockMiners -and $Session.LockMiners.Pools -and -not (Compare-Object $Session.LockMiners.Pools @($Miner.Pools.PSObject.Properties.Name | Foreach-Object {"$($Miner.Pools.$_.Name)-$($Miner.Pools.$_.Algorithm0)-$($Miner.Pools.$_.CoinSymbol)"} | Select-Object -Unique)))
+        $Miner_IsLocked           = ($LockMiners -and $Session.LockMiners.Pools -and -not (Compare-Object $Session.LockMiners.Pools @($Miner.Pools.PSObject.Properties.Name | Foreach-Object {"$($Miner.Pools.$_.Name)-$($Miner.Pools.$_.Algorithm0)-$($Miner.Pools.$_.CoinSymbol)"} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>"))
         $Miner_IsFocusWalletMiner = $false
         $Miner_IsExclusiveMiner   = $false
         $Miner.Pools.PSObject.Properties.Value | Foreach-Object {
@@ -2224,6 +2257,7 @@ function Invoke-Core {
             $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
             $ActiveMiner.Profit_Unbias      = $Miner.Profit_Unbias
             $ActiveMiner.Profit_Cost        = $Miner.Profit_Cost
+            $ActiveMiner.Profit_Cost_Bias   = $Miner.Profit_Cost_Bias
             $ActiveMiner.PowerDraw          = $Miner.PowerDraw
             $ActiveMiner.Speed              = $Miner.HashRates.PSObject.Properties.Value
             #$ActiveMiner.DeviceName         = $Miner.DeviceName
@@ -2281,6 +2315,7 @@ function Invoke-Core {
                 Profit_Bias          = $Miner.Profit_Bias
                 Profit_Unbias        = $Miner.Profit_Unbias
                 Profit_Cost          = $Miner.Profit_Cost
+                Profit_Cost_Bias     = $Miner.Profit_Cost_Bias
                 PowerDraw            = $Miner.PowerDraw
                 Speed                = $Miner.HashRates.PSObject.Properties.Value
                 Speed_Live           = @(0.0) * $Miner.HashRates.PSObject.Properties.Name.Count
@@ -2342,12 +2377,15 @@ function Invoke-Core {
         }
     })
 
+    $Global:ActiveMiners.Where({$_.Profit_Cost_Bias -gt 0}).Foreach({$_.Profit_Bias -= $_.Profit_Cost_Bias})
+
     $Session.Profitable = $true
 
     $PowerOffset_Watt = [Double]0
     $PowerOffset_Cost = [Double]0
 
     if (($Miners | Measure-Object).Count -gt 0) {
+        
         #Get most profitable miner combination
 
         $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$(if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval})})
