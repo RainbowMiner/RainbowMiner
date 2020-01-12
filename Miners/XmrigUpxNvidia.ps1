@@ -13,7 +13,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-XmrigUpx\xmrig-nvidia"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrigupx/xmrig-nvidia-2.14.4_with_upx2-cuda10_1-linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrigupx/xmrig-nvidia-2.14.4_with_upx2-cuda10_1-linux-x64.7z"
             Cuda = "10.1"
         }
     )
@@ -95,7 +95,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                         "colors"           = $true
                         "cuda-bfactor"     = 11
                         "cuda-max-threads" = 64
-                        "donate-level"     = if ($IsLinux) {1} else {0}
+                        "donate-level"     = 0
                         "log-file"         = $null
                         "print-time"       = 5
                         "retries"          = 5
