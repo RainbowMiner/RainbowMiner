@@ -9,12 +9,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-XmrigUpx\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-lin64.tar.gz"
-    $DevFee = 1.0
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-linux-x64.7z"
+    $DevFee = 0.0
 } else {
     $Path = ".\Bin\CPU-XmrigUpx\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-win64.zip"
-    $DevFee = 1.0
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-win-x64.7z"
+    $DevFee = 0.0
 }
 $ManualUri = "https://github.com/uPlexa/xmrig-upx/releases"
 $Port = "540{0:d2}"
