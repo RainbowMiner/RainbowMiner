@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cn/1";          MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/2";          MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/half";       MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/fast2";      MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Algorithm = "cn/fast"; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/r";          MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
