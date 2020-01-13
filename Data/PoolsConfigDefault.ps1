@@ -199,6 +199,9 @@
             Autoexchange=$true
             Yiimp=$true
         }
+        "Poolin" = [PSCustomObject]@{
+            Currencies=@("ETH","RVN")
+        }
         "PoolSexy" = [PSCustomObject]@{
             Currencies=@("DBIX")
         }
