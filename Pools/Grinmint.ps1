@@ -38,9 +38,11 @@ catch {
 
 @("eu-west","us-east") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
+$Pool_Coin = Get-Coin $Pool_Currency
+
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 3416; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 4416; ssl = $true}
+    [PSCustomObject]@{algo = $Pool_Coin.algo; port = 3416; ssl = $false}
+    [PSCustomObject]@{algo = $Pool_Coin.algo; port = 4416; ssl = $true}
     [PSCustomObject]@{algo = "Cuckatoo31";  port = 3416; ssl = $false}
     [PSCustomObject]@{algo = "Cuckatoo31";  port = 4416; ssl = $true}
 )
