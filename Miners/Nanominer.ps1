@@ -9,29 +9,26 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.2-nanominer/nanominer-linux-1.6.2.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.0-nanominer/nanominer-linux-1.7.0.tar.gz"
 } else {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.2-nanominer/nanominer-windows-1.6.2.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.0-nanominer/nanominer-windows-1.7.0.zip"
 }
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "8.0"
 $DevFee = 3.0
-$Version = "1.6.2"
+$Version = "1.7.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";              Params = ""; MinMemGb = 6; MinMemGbW10 = 8; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";             Params = ""; MinMemGb = 6; MinMemGbW10 = 8; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckarood29
-    #[PSCustomObject]@{MainAlgorithm = "CryptonightR";            Params = ""; MinMemGb = 4; MinMemGbW10 = 8; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightR
-    [PSCustomObject]@{MainAlgorithm = "CryptoNightReverseWaltz"; Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightRwz
     [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 1.0} #Ethash
-    #[PSCustomObject]@{MainAlgorithm = "RandomHash";              Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash/PASCcoin
     [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash2/PASCcoin
-    [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomX
-    #[PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #UbqHash
+    [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #RandomX
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #UbqHash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
