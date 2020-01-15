@@ -53,14 +53,14 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
-        "CuckooCycle" {"AE"}
-        "Cuckarood29" {"GRIN"}
-        "Cuckaroom29" {"GRIN"}
-        "Cuckatoo31" {"GRIN"}
-        "Eaglesong" {"CKB"}
+        "CuckooCycle"     {"AE"}
+        "Cuckaroo29"      {"XBG"}
+        "Cuckarood29"     {"GRIN"}
+        "Cuckaroom29"     {"GRIN"}
+        "Eaglesong"       {"CKB"}
         "EquihashR25x5x3" {"BEAM"}
-        "Lbry" {"LBC"}
-        "RandomX" {"XMR"}
+        "Lbry"            {"LBC"}
+        "RandomX"         {"XMR"}
     }
     
     $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
