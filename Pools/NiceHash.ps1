@@ -52,7 +52,18 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin = ""
+    $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
+        "CuckooCycle" {"AE"}
+        "Cuckarood29" {"GRIN"}
+        "Cuckaroom29" {"GRIN"}
+        "Cuckatoo31" {"GRIN"}
+        "Eaglesong" {"CKB"}
+        "EquihashR25x5x3" {"BEAM"}
+        "Lbry" {"LBC"}
+        "RandomX" {"XMR"}
+    }
+    
+    $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
@@ -71,8 +82,8 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
 					Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin
-                    CoinSymbol    = ""
+                    CoinName      = "$($Pool_Coin.Name)"
+                    CoinSymbol    = "$Pool_CoinSymbol"
                     Currency      = "BTC"
                     Price         = $Stat.$StatAverage
                     StablePrice   = $Stat.Week
