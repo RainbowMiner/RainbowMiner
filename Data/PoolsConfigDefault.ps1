@@ -177,6 +177,11 @@
         "MintPond" = [PSCustomObject]@{
             Currencies=@("XZC")
         }
+        "MoneroOcean" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Password="x"}
+            SetupFields=[PSCustomObject]@{Password="Enter your MoneroOcean password (eMail or Password)"}
+            Currencies=@("XMR")
+        }
         "Nanopool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Email=""}
             SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address"}

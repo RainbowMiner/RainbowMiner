@@ -5286,7 +5286,7 @@ Param(
     }
 
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
-    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -replace "{unixtimestamp}",(Get-UnixTimestamp)
 
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
