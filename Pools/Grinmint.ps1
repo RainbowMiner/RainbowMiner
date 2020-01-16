@@ -47,10 +47,21 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "Cuckatoo31";  port = 4416; ssl = $true}
 )
 
+$block_time_sec = 60
+
+$hour_height = 3600 / $block_time_sec
+$day_height  = 24 * $hour_height
+$week_height = 7 * $day_height
+$year_height = 52 * $week_height
+
+#$seconday_weight = 90 - $Pool_NetworkRequest.height / (2 * $year_height / 90)
+
 $reward = 60
+
 $diff   = $Pool_NetworkRequest.target_difficulty
 $PBR29  = (86400 / 42) * ($Pool_NetworkRequest.secondary_scaling/$diff)
 $PBR31  = (86400 / 42) * (7936/$diff) #31*2^8
+$PBR32  = (86400 / 42) * (16384/$diff) #32*2^9
 
 $lastBlock     = $Pool_Request.mined_blocks | Sort-Object height | Select-Object -last 1
 $Pool_BLK      = $Pool_Request.pool_stats.blocks_found_last_24_hours

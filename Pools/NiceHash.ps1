@@ -43,7 +43,7 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 
 $Pool_PoolFee = 2.0
 
-$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
+$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | Where-Object {$_.algorithm -ne "GRINCUCKAROOD29"} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
     $Pool_Port = $Pool_Data.port
