@@ -55,7 +55,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
     $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
         "CuckooCycle"     {"AE"}
         "Cuckaroo29"      {"XBG"}
-        "Cuckarood29"     {"GRIN"}
+        #"Cuckarood29"     {"GRIN"}
         "Cuckaroom29"     {"GRIN"}
         "Eaglesong"       {"CKB"}
         "EquihashR25x5x3" {"BEAM"}
