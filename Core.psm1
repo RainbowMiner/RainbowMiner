@@ -760,6 +760,20 @@ function Invoke-Core {
     [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object)
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
+    #Fork detection
+    if (Test-Path ".\Data\coinsdb-fork.json“) {
+        try {
+            $Request = Invoke-GetUrlAsync "https://api-grin.blockscan.com/v1/api?module=block&action=getblock&blockno=524159" -Timeout 15 -tag "fork"
+            if ([int]$Request.status) {
+                Remove-Item “.\Data\coinsdb.json" -Force
+                Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
+                Get-CoinsDB -Silent -Force
+                Stop-AsyncJob "fork"
+            }
+        }
+        catch {}
+    }
+
     #Update databases every 40 rounds
     if (-not ($Session.RoundCounter % 40)) {
         Get-AlgorithmMap -Silent
