@@ -30,10 +30,10 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
     Caption     = "$($Name) (XMR)"
 	BaseName    = $Name
     Currency    = "XMR"
-    Balance     = [Decimal]$Request.amtDue
+    Balance     = [Decimal]$Request.amtDue/1e12
     Pending     = [Decimal]0
-    Total       = [Decimal]$Request.amtDue
-    Paid        = [Decimal]$Request.amtPaid
+    Total       = [Decimal]$Request.amtDue/1e12
+    Paid        = [Decimal]$Request.amtPaid/1e12
     Payouts     = @()
     LastUpdated = (Get-Date).ToUniversalTime()
 }
