@@ -24,7 +24,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # 
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 4; MinMemGBWin10 = 6; Params = "--coin GRIN-C29D"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckarood29
-    #[PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGB = 4; MinMemGBWin10 = 6; Params = "--coin GRIN-C29M"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckaroom29
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGB = 4; MinMemGBWin10 = 6; Params = "--coin GRIN-C29M"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckaroom29
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGB = 8; MinMemGBWin10 = 10; Params = "--coin GRIN-C31"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckatoo31
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";      MinMemGB = 8; MinMemGBWin10 = 10; Params = "--coin GRIN-C32"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckatoo32
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 2; MinMemGBWin10 = 2; Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 96,5
