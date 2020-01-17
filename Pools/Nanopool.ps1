@@ -45,15 +45,15 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_RequestWorkers = [PSCustomObject]@{}
         $Pool_RequestHashrate = [PSCustomObject]@{}
 
-        try {
-            $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Symbol.ToLower())/approximated_earnings/1000" -tag $Name -retry 5 -retrywait 200 -cycletime 120
-            if (-not $Pool_Request.status) {throw}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
-            $ok = $false
-        }
+        #try {
+        #    $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Symbol.ToLower())/approximated_earnings/1000" -tag $Name -retry 5 -retrywait 200 -cycletime 120
+        #    if (-not $Pool_Request.status) {throw}
+        #}
+        #catch {
+        #    if ($Error.Count){$Error.RemoveAt(0)}
+        #    Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
+        #    $ok = $false
+        #}
 
 
         try {
@@ -66,8 +66,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         }
 
         if ($ok) {
-            $Pool_ExpectedEarning = [double]$Pool_Request.data.day.bitcoins / $_.divisor / 1000
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -Hashrate ([double]$Pool_RequestHashrate.data * $_.divisor) -ChangeDetection $true -Quiet
+            #$Pool_ExpectedEarning = [double]$Pool_Request.data.day.bitcoins / $_.divisor / 1000
+            #$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -Hashrate ([double]$Pool_RequestHashrate.data * $_.divisor) -ChangeDetection $true -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -Hashrate ([double]$Pool_RequestHashrate.data * $_.divisor) -ChangeDetection $true -Quiet
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
     }
@@ -82,9 +83,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     CoinName      = $Pool_Coin.Name
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
-                    Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.Week
-                    MarginOfError = $Stat.Week_Fluctuation
+                    Price         = 0 #$Stat.$StatAverage #instead of .Live
+                    StablePrice   = 0 #$Stat.Week
+                    MarginOfError = 0 #$Stat.Week_Fluctuation
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = "$($_.symbol.ToLower())-$($Pool_Region)1.nanopool.org"
                     Port          = $Pool_Port
@@ -92,6 +93,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Pass          = "x"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
+                    WTM           = $true
                     Updated       = $Stat.Updated
                     PoolFee       = $_.fee
                     DataWindow    = $DataWindow
