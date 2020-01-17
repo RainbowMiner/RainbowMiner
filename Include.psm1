@@ -2523,6 +2523,32 @@ function Get-Device {
         $GPUVendorLists = @{}
         $GPUDeviceNames = @{}
         foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
+        
+        if ($IsWindows) {
+            #Get WDDM data               
+            $WDDM_Devices = try {
+                Get-CimInstance CIM_VideoController | ForEach-Object { 
+                    $BusId = (Get-PnpDevice $_.PNPDeviceID | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber").Data
+                    [PSCustomObject]@{
+                        Name        = $_.Name
+                        InstanceId  = $_.PNPDeviceId
+                        Bus         = $(if ($BusId -ne $null -and $BusId.GetType() -match "int") {[int]$BusId})
+                        Vendor      = switch -Regex ([String]$_.AdapterCompatibility) { 
+                                        "Advanced Micro Devices" {"AMD"}
+                                        "Intel"  {"INTEL"}
+                                        "NVIDIA" {"NVIDIA"}
+                                        "AMD"    {"AMD"}
+                                        default {$_.AdapterCompatibility -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                            }
+                    }
+                }
+            }
+            catch { 
+                Write-Log -Level Warn "WDDM device detection has failed. "
+            }
+            $WDDM_Devices = @($WDDM_Devices | Sort-Object -Property Bus)
+        }
+
         [System.Collections.Generic.List[string]]$AllPlatforms = @()
         $Platform_Devices = try {
             [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
@@ -2636,6 +2662,7 @@ function Get-Device {
                         Model_Name = [String]$Device_Name
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
+                        Bus = $null
                         GpuGroup = ""
                         Data = [PSCustomObject]@{
                                         AdapterId         = 0  #amd
@@ -2671,6 +2698,16 @@ function Get-Device {
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
                         $Index++
+                        if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                        if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+):[A-F0-9]+$") {
+                               $Device.Bus = [int]"0x$($Matches[1])"
+                        }
+                        if ($IsWindows) {
+                            $WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
+                                if ($_.Bus -ne $null -and $Device.Bus -isnot [int]) {$Device.Bus = $_.Bus}
+                                if ($_.InstanceId -and $Device.InstanceId -eq "")   {$Device.InstanceId = $_.InstanceId}
+                            }
+                        }
                     }
 
                     if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
@@ -2685,7 +2722,6 @@ function Get-Device {
                     $Vendor_Index."$($Device_OpenCL.Vendor)"++
                     $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                     $Type_Index."$($Device_OpenCL.Type)"++
-                    if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                 }
             }
 
