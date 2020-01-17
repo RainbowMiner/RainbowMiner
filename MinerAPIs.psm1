@@ -875,13 +875,13 @@ class Claymore : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
-        $Timeout = 10 #seconds
+        $Server   = "localhost"
+        $Timeout  = 10 #seconds
 
-        $Request = @{id = 1; jsonrpc = "2.0"; method = "miner_getstat1"} | ConvertTo-Json -Compress
+        $Request  = '{"id":1,"jsonrpc":"2.0","method":"miner_getstat1"}'
         $Response = ""
 
-        $HashRate   = [PSCustomObject]@{}
+        $HashRate = [PSCustomObject]@{}
 
         try {
             $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
