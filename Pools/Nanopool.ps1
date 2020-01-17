@@ -41,7 +41,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $ok = $true
     if (-not $InfoOnly) {
-        $Pool_Request = [PSCustomObject]@{}
+        #$Pool_Request = [PSCustomObject]@{}
         $Pool_RequestWorkers = [PSCustomObject]@{}
         $Pool_RequestHashrate = [PSCustomObject]@{}
 
