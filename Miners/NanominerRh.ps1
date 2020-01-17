@@ -22,7 +22,7 @@ $Version = "1.5.3"
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "RandomHash"; Params = ""; NH = $true; ExtendInterval = 2; DevFee = 3.0} #RandomHash/PASCcoin
+    [PSCustomObject]@{MainAlgorithm = "RandomHash"; Params = ""; NH = $true; ExtendInterval = 2; DevFee = 3.0} #RandomHash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
