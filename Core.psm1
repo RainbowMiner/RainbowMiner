@@ -912,6 +912,13 @@ function Invoke-Core {
         if ($WiderRegion = Get-Region2 $Session.Config.Region) {
             $Session.Config.DefaultPoolRegion = @($WiderRegion | Select-Object) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -notin $WiderRegion} | Select-Object)
         }
+        #make sure the following regions are always part of DefaultPoolRegion to avoid erratic sorting of pools
+        @("US","Europe","Asia","Russia") | Foreach-Object {
+            $MissingRegion = Get-Region $_
+            if ($Session.Config.DefaultPoolRegion -inotcontains $MissingRegion) {
+                $Session.Config.DefaultPoolRegion += $MissingRegion
+            }
+        }
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
