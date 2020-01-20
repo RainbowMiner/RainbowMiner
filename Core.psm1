@@ -906,6 +906,7 @@ function Invoke-Core {
         }
         $Session.Config.Algorithm = @($Session.Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
+        if (-not $Session.Config.Region) {$Session.Config | Add-Member Region "US" -Force}
         $Session.Config.Region = Get-Region $Session.Config.Region
         $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique)
         if ($WiderRegion = Get-Region2 $Session.Config.Region) {
