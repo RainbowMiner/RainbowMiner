@@ -679,6 +679,10 @@ try {
         $AddAlgorithm += @("Cuckaroom29")
     }
 
+    if ($Version -le (Get-Version "4.5.1.4")) {
+        $AddAlgorithm += @("CPUPower","CryptonightCAT","CryptonightTLO","CryptonightXEQ","K12","Kadena","RandomARQ","RandomHash2","RandomSFX","Tensority","VerusHash","YespowerIOTS","YespowerITC","YespowerLITB","YespowerLTNCG","YespowerSUGAR","YespowerURX")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
