@@ -35,7 +35,8 @@ if (($Pool_Request.return | Measure-Object).Count -le 1) {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-@("europe", "us-east", "asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("europe", "us-east", "asia")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 0.9 + 0.2
 
@@ -65,7 +66,7 @@ $Pool_Request.return | ForEach-Object {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -Quiet
     }
 
-    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+    foreach($Pool_Region in $Pool_Regions) {
         if ($User -or $InfoOnly) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm

@@ -41,7 +41,8 @@ $Pool_Port = 3737
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("us","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("us","eu","asia")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$_ -eq "x16rv2"} | ForEach-Object {
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
@@ -63,7 +64,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
     if ($Pool_User -or $InfoOnly) {
-        foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+        foreach($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 Algorithm0    = $Pool_Algorithm_Norm

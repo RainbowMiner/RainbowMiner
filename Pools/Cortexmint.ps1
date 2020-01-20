@@ -46,7 +46,8 @@ if (-not $ok) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{algo = "Cortex"; port = 8008; ssl = $false}
@@ -74,7 +75,7 @@ if (-not $InfoOnly) {
 
 $Pools_Data | ForEach-Object {
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    Foreach ($Pool_Region in $Pool_RegionsTable.Keys) {
+    Foreach ($Pool_Region in $Pool_Regions) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm

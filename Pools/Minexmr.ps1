@@ -23,7 +23,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("eu","ca","sg")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request = [PSCustomObject]@{}
 $Pool_Ports   = @([PSCustomObject]@{})
@@ -98,7 +99,7 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
     $Pool_SSL = $false
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
     foreach ($Pool_Port in $Pool_Ports) {
-        foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+        foreach($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 Algorithm0    = $Pool_Algorithm_Norm

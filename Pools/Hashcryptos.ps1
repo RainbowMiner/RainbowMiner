@@ -34,7 +34,8 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{algo = "blake2s";   port = 4001; stratum = "stratum3.hashcryptos.com"; factor = 1e15}
@@ -84,7 +85,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+    foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Currency in $Pool_Currencies) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm

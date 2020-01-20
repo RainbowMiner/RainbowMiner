@@ -26,7 +26,8 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("ru","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("ru","eu","asia")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Ports = [PSCustomObject]@{
     "BNODE" = 7017
@@ -68,7 +69,7 @@ $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    foreach ($Pool_Region in $Pool_RegionsTable.Keys) {    
+    foreach ($Pool_Region in $Pool_Regions) {    
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm

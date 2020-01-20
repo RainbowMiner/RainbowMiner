@@ -37,7 +37,8 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-@("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | ForEach-Object {
     $Pool_Currency = $Pool_Currency -replace '-.+$'
@@ -73,7 +74,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
 
-        foreach($Pool_Region in $Pool_RegionsTable.Keys) {        
+        foreach($Pool_Region in $Pool_Regions) {        
             [PSCustomObject]@{
                 Algorithm     = $_
 				Algorithm0    = $_

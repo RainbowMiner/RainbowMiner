@@ -36,7 +36,8 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("eu-west","us-east") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("eu-west","us-east")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Coin = Get-Coin $Pool_Currency
 
@@ -76,7 +77,7 @@ if (-not $InfoOnly) {
 $Pools_Data | ForEach-Object {
     $Stat = if ($_.algo -match "29") {$Stat29} else {$Stat31}
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    Foreach ($Pool_Region in $Pool_RegionsTable.Keys) {
+    Foreach ($Pool_Region in $Pool_Regions) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm

@@ -16,10 +16,10 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region_Default = @("us","eu","cn","sg")
-
 [hashtable]$Pool_RegionsTable = @{}
-@("us","eu","cn","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
+$Pool_Regions = @("us","eu","cn","sg")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AION";    port = 3366; fee = 3.0; rpc = "aion"}
@@ -70,7 +70,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
     
     if ($ok -or $InfoOnly) {
         $Pool_Wallet = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$User}
-        foreach ($Pool_Region in $Pool_Region_Default) {
+        foreach ($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 Algorithm0    = $Pool_Algorithm_Norm
