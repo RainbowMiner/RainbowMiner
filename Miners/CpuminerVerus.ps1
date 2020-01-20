@@ -8,7 +8,6 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    if (-not $Global:GlobalCPUInfo.Features.avx) {return}
     $Path = ".\Bin\CPU-Verus\ccminer"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.61-ccminerverus/ccminerverus-3.61cpu-revD-linux.7z"
 } else {
