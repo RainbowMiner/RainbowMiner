@@ -1273,14 +1273,15 @@ function Invoke-Core {
     $PowerPrice              = [Double]$Session.Config.PowerPrice
     $EnableMiningHeatControl = $Session.Config.EnableMiningHeatControl
     $MiningHeatControl       = $Session.Config.MiningHeatControl
-    $Scheduler_Algorithm     = @()
-    $Scheduler_ExcludeAlgorithm = @()
-    $Scheduler_CoinSymbol    = @()
-    $Scheduler_ExcludeCoinSymbol = @()
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler_Algorithm = $_.Algorithm;$Scheduler_ExcludeAlgorithm = $_.ExcludeAlgorithm;$Scheduler_CoinSymbol = $_.CoinSymbol;$Scheduler_ExcludeCoinSymbol = $_.ExcludeCoinSymbol})
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler_Algorithm = $_.Algorithm;$Scheduler_ExcludeAlgorithm = $_.ExcludeAlgorithm;$Scheduler_CoinSymbol = $_.CoinSymbol;$Scheduler_ExcludeCoinSymbol = $_.ExcludeCoinSymbol})
+    $Scheduler = $null
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
+
+    if ($Scheduler) {
+        Write-Log -Level Info "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To)"
+    }
 
     $Session.CurrentPowerPrice              = $PowerPrice
     $Session.CurrentEnableMiningHeatControl = $EnableMiningHeatControl
@@ -1647,11 +1648,11 @@ function Invoke-Core {
     $Test_CoinSymbol = @()
     $Test_ExcludeCoinSymbol = @($Session.Config.ExcludeCoinSymbol | Select-Object)
 
-    if (-not $Session.IsDonationRun) {
-        if ($Scheduler_Algorithm.Count) {$Test_Algorithm = @($Test_Algorithm + $Scheduler_Algorithm | Select-Object -Unique)}
-        if ($Scheduler_ExcludeAlgorithm.Count) {$Test_ExcludeAlgorithm = @($Test_ExcludeAlgorithm + $Scheduler_ExcludeAlgorithm | Select-Object -Unique)}
-        if ($Scheduler_CoinSymbol.Count) {$Test_CoinSymbol = @($Test_CoinSymbol + $Scheduler_CoinSymbol | Select-Object -Unique)}
-        if ($Scheduler_ExcludeCoinSymbol.Count) {$Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + $Scheduler_ExcludeCoinSymbol | Select-Object -Unique)}
+    if (-not $Session.IsDonationRun -and $Scheduler) {
+        if ($Scheduler.Algorithm.Count) {$Test_Algorithm = @($Test_Algorithm + $Scheduler.Algorithm | Select-Object -Unique)}
+        if ($Scheduler.ExcludeAlgorithm.Count) {$Test_ExcludeAlgorithm = @($Test_ExcludeAlgorithm + $Scheduler.ExcludeAlgorithm | Select-Object -Unique)}
+        if ($Scheduler.CoinSymbol.Count) {$Test_CoinSymbol = @($Test_CoinSymbol + $Scheduler.CoinSymbol | Select-Object -Unique)}
+        if ($Scheduler.ExcludeCoinSymbol.Count) {$Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + $Scheduler.ExcludeCoinSymbol | Select-Object -Unique)}
     }
 
     if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object {$_.SideIndicator -EQ "=>" -and $_.InputObject -ne "MiningRigRentals"} | Select-Object -ExpandProperty InputObject) {
