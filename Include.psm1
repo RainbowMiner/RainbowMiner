@@ -2492,9 +2492,11 @@ function Get-Device {
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
-            $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
-            $Name_Device
+            if ($DeviceList.("{0}" -f $Name_Split)) {
+                $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
+                $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
+                $Name_Device
+            }
         }
     }
 
@@ -2503,9 +2505,11 @@ function Get-Device {
         $ExcludeName_Devices = $ExcludeName | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
-            $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
-            $Name_Device
+            if ($DeviceList.("{0}" -f $Name_Split)) {
+                $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
+                $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
+                $Name_Device
+            }
         }
     }
 
