@@ -127,6 +127,9 @@
         "Icemining" = [PSCustomObject]@{
             Currencies=@("RVN","SIN","YEC")
         }
+        "LeafPool" = [PSCustomObject]@{
+            Currencies=@("BEAM")
+        }
         "LuckyPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
