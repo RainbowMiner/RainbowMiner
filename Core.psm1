@@ -392,7 +392,7 @@ function Invoke-ReportMinerStatus {
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
-    $Status = if ($Session.Paused) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
+    $Status = if ($Session.PauseMiners -or $Session.PauseMinersByScheduler) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
     $ReportRates = [PSCustomObject]@{}
     $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
@@ -2978,7 +2978,7 @@ function Invoke-Core {
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {$cmdMenu.Insert(0,"[U]pdate RainbowMiner") > $null}
     if (-not $Session.IsDonationRun){$cmdMenu.Add("[C]onfiguration") > $null}
     $cmdMenu.Add("[V]erbose$(if ($Session.Config.UIstyle -eq "full"){" off"})") > $null
-    $cmdMenu.Add("[P]ause$(if ($Session.PauseMiners){" off"})") > $null
+    if (-not $Session.PauseMinersByScheduler) {$cmdMenu.Add("[P]ause$(if ($Session.PauseMiners){" off"})") > $null}
     if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {$cmdMenu.Add("$(if ($LockMiners){"Un[l]ock"} else {"[L]ock"})") > $null}
     Write-Host "Waiting $($WaitSeconds)s until next run: $($cmdMenu -join ", ")"
 
