@@ -44,7 +44,8 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-@("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("eu","us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Currencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Foreach-Object {if ($PoolCoins_Request.$_.symbol -eq $null){$_} else {$PoolCoins_Request.$_.symbol}}) | Select-Object -Unique | Where-Object {$Wallets.$_}
 
@@ -86,7 +87,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
-    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+    foreach($Pool_Region in $Pool_Regions) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm

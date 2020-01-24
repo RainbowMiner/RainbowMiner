@@ -392,7 +392,7 @@ function Invoke-ReportMinerStatus {
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
-    $Status = if ($Session.Paused) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
+    $Status = if ($Session.PauseMiners -or $Session.PauseMinersByScheduler) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
     $ReportRates = [PSCustomObject]@{}
     $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
@@ -760,6 +760,20 @@ function Invoke-Core {
     [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object)
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
+    #Fork detection
+    if (Test-Path ".\Data\coinsdb-fork.json“) {
+        try {
+            $Request = Invoke-GetUrlAsync "https://api-grin.blockscan.com/v1/api?module=block&action=getblock&blockno=524159" -Timeout 15 -tag "fork"
+            if ([int]$Request.status) {
+                Remove-Item “.\Data\coinsdb.json" -Force
+                Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
+                Get-CoinsDB -Silent -Force
+                Stop-AsyncJob "fork"
+            }
+        }
+        catch {}
+    }
+
     #Update databases every 40 rounds
     if (-not ($Session.RoundCounter % 40)) {
         Get-AlgorithmMap -Silent
@@ -892,10 +906,18 @@ function Invoke-Core {
         }
         $Session.Config.Algorithm = @($Session.Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
+        if (-not $Session.Config.Region) {$Session.Config | Add-Member Region "US" -Force}
         $Session.Config.Region = Get-Region $Session.Config.Region
         $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique)
         if ($WiderRegion = Get-Region2 $Session.Config.Region) {
             $Session.Config.DefaultPoolRegion = @($WiderRegion | Select-Object) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -notin $WiderRegion} | Select-Object)
+        }
+        #make sure the following regions are always part of DefaultPoolRegion to avoid erratic sorting of pools
+        @("US","Europe","Asia","Russia") | Foreach-Object {
+            $MissingRegion = Get-Region $_
+            if ($Session.Config.DefaultPoolRegion -inotcontains $MissingRegion) {
+                $Session.Config.DefaultPoolRegion += $MissingRegion
+            }
         }
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
@@ -983,7 +1005,7 @@ function Invoke-Core {
     $ConfirmedVersion = Confirm-Version $Session.Version
     $API.Version = $ConfirmedVersion
     $Session.AutoUpdate = $false
-    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun) {
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Session.PauseMinersByActivity) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
         if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
             $Last_Autoupdate = [PSCustomObject]@{
@@ -1251,14 +1273,15 @@ function Invoke-Core {
     $PowerPrice              = [Double]$Session.Config.PowerPrice
     $EnableMiningHeatControl = $Session.Config.EnableMiningHeatControl
     $MiningHeatControl       = $Session.Config.MiningHeatControl
-    $Scheduler_Algorithm     = @()
-    $Scheduler_ExcludeAlgorithm = @()
-    $Scheduler_CoinSymbol    = @()
-    $Scheduler_ExcludeCoinSymbol = @()
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler_Algorithm = $_.Algorithm;$Scheduler_ExcludeAlgorithm = $_.ExcludeAlgorithm;$Scheduler_CoinSymbol = $_.CoinSymbol;$Scheduler_ExcludeCoinSymbol = $_.ExcludeCoinSymbol})
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler_Algorithm = $_.Algorithm;$Scheduler_ExcludeAlgorithm = $_.ExcludeAlgorithm;$Scheduler_CoinSymbol = $_.CoinSymbol;$Scheduler_ExcludeCoinSymbol = $_.ExcludeCoinSymbol})
+    $Scheduler = $null
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
+
+    if ($Scheduler) {
+        Write-Log -Level Info "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To)"
+    }
 
     $Session.CurrentPowerPrice              = $PowerPrice
     $Session.CurrentEnableMiningHeatControl = $EnableMiningHeatControl
@@ -1607,8 +1630,8 @@ function Invoke-Core {
 
     #Remove stats from pools & miners not longer in use
     if (-not $Session.IsDonationRun -and (Test-Path "Stats")) {
-        if ($SelectedPoolNames -and $SelectedPoolNames.Count -gt 0) {Compare-Object @($SelectedPoolNames | Select-Object) @($Global:StatsCache.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Pools\$($_.InputObject)_*_Profit.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item -Force}}
-        if ($Session.AvailMiners -and $Session.AvailMiners.Count -gt 0) {Compare-Object @($Session.AvailMiners | Select-Object) @($Global:StatsCache.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Miners\$($_.InputObject)-*_Hashrate.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item -Force}}
+        if ($SelectedPoolNames -and $SelectedPoolNames.Count -gt 0) {Compare-Object @($SelectedPoolNames | Select-Object) @($Global:StatsCache.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Pools\$($_.InputObject)_*_Profit.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Foreach-Object{Remove-Item $_.FullName -Force}}}
+        if ($Session.AvailMiners -and $Session.AvailMiners.Count -gt 0) {Compare-Object @($Session.AvailMiners | Select-Object) @($Global:StatsCache.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Miners\*-$($_.InputObject)-*_Hashrate.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Foreach-Object {Remove-Item $_.FullName -Force}}}
     }
     Remove-Variable "SelectedPoolNames"
 
@@ -1625,14 +1648,14 @@ function Invoke-Core {
     $Test_CoinSymbol = @()
     $Test_ExcludeCoinSymbol = @($Session.Config.ExcludeCoinSymbol | Select-Object)
 
-    if (-not $Session.IsDonationRun) {
-        if ($Scheduler_Algorithm.Count) {$Test_Algorithm = @($Test_Algorithm + $Scheduler_Algorithm | Select-Object -Unique)}
-        if ($Scheduler_ExcludeAlgorithm.Count) {$Test_ExcludeAlgorithm = @($Test_ExcludeAlgorithm + $Scheduler_ExcludeAlgorithm | Select-Object -Unique)}
-        if ($Scheduler_CoinSymbol.Count) {$Test_CoinSymbol = @($Test_CoinSymbol + $Scheduler_CoinSymbol | Select-Object -Unique)}
-        if ($Scheduler_ExcludeCoinSymbol.Count) {$Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + $Scheduler_ExcludeCoinSymbol | Select-Object -Unique)}
+    if (-not $Session.IsDonationRun -and $Scheduler) {
+        if ($Scheduler.Algorithm.Count) {$Test_Algorithm = @($Test_Algorithm + $Scheduler.Algorithm | Select-Object -Unique)}
+        if ($Scheduler.ExcludeAlgorithm.Count) {$Test_ExcludeAlgorithm = @($Test_ExcludeAlgorithm + $Scheduler.ExcludeAlgorithm | Select-Object -Unique)}
+        if ($Scheduler.CoinSymbol.Count) {$Test_CoinSymbol = @($Test_CoinSymbol + $Scheduler.CoinSymbol | Select-Object -Unique)}
+        if ($Scheduler.ExcludeCoinSymbol.Count) {$Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + $Scheduler.ExcludeCoinSymbol | Select-Object -Unique)}
     }
 
-    if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject) {
+    if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object {$_.SideIndicator -EQ "=>" -and $_.InputObject -ne "MiningRigRentals"} | Select-Object -ExpandProperty InputObject) {
         Write-Log -Level Info "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
         $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
     }
@@ -1648,10 +1671,12 @@ function Invoke-Core {
                 (-not $Session.Config.Pools.$Pool_Name) -or
                 ($Session.Config.PoolName.Count -and $Session.Config.PoolName -inotcontains $Pool_Name) -or
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
-                ($Session.Config.Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Test_Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Test_ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name -and $UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Coins -and $UnprofitableAlgos.Coins.Count -and $UnprofitableAlgos.Coins -icontains $_.CoinSymbol) -or
+                ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -and $UnprofitableAlgos.Pools.$Pool_Name.Coins.Count -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -icontains $_.CoinSymbol) -or
                 ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and $Session.Config.ExcludeCoin -icontains $_.CoinName) -or
                 ($Test_CoinSymbol.Count -and $_.CoinSymbol -and $Test_CoinSymbol -inotcontains $_.CoinSymbol) -or
                 ($Test_ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Test_ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
@@ -1753,6 +1778,8 @@ function Invoke-Core {
                     $Pool_Rounds = $Pools_Running[$Pool_Ix]
                     if ($Pool_Rounds -ne $null -and ($Session.IsBenchmarkingRun -and $Pools_Benchmarking[$Pool_Ix] -or $Pool_Rounds -lt $Session.Config.MinimumMiningIntervals)) {
                         $Price_Cmp *= 100
+                    } elseif (-not $_.PostBlockMining -and $_.CoinSymbol -and $Session.Config.Pools."$($_.Name)".CoinSymbolPBM -icontains $_.CoinSymbol) {
+                        $Price_Cmp = 0
                     } else {
                         $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                         if (-not ($Session.Config.EnableFastSwitching -or $Session.SkipSwitchingPrevention)) {
@@ -1778,7 +1805,7 @@ function Invoke-Core {
         #$(if ($Session.Config.EnableFastSwitching -or $_.PaysLive) {$_.Price} else {$_.StablePrice * (1 - $_.MarginOfError*($Session.Config.PoolAccuracyWeight/100))}) * $(if ($_.Hashrate -eq $null -or -not $Session.Config.HashrateWeightStrength) {1} else {1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm)$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100))*$Session.Config.HashrateWeight/100}) * ([Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1))
 
         Write-Log "Selecting best pool for each algorithm. "
-        $SortedPools = @($NewPools | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {-not $_.PostBlockMining -and (-not $_.CoinSymbol -or $Session.Config.Pools."$($_.Name)".CoinSymbolPBM -inotcontains $_.CoinSymbol)}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.SSL})
+        $SortedPools = @($NewPools | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.SSL})
         foreach($Algorithm_Name in @($NewPools.ForEach({$_.Algorithm.ToLower()}) | Select-Object -Unique)) {
             $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
         }
@@ -2888,6 +2915,8 @@ function Invoke-Core {
                 Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) starts as soon as exclusive mining ends" -ForegroundColor Yellow
             } elseif ($IsExclusiveRun) {
                 Write-Host "Exclusive run finished. Automatic update to v$($ConfirmedVersion.RemoteVersion) starts after the next round" -ForegroundColor Yellow
+            } elseif ($Session.PauseMinersByActivity) {
+                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) starts as soon as mining op will be resumed" -ForegroundColor Yellow
             } else {
                 Write-Host "Automatic update failed! Please exit RainbowMiner and start Updater.bat manually to proceed" -ForegroundColor Yellow
             }
@@ -2949,7 +2978,7 @@ function Invoke-Core {
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {$cmdMenu.Insert(0,"[U]pdate RainbowMiner") > $null}
     if (-not $Session.IsDonationRun){$cmdMenu.Add("[C]onfiguration") > $null}
     $cmdMenu.Add("[V]erbose$(if ($Session.Config.UIstyle -eq "full"){" off"})") > $null
-    $cmdMenu.Add("[P]ause$(if ($Session.PauseMiners){" off"})") > $null
+    if (-not $Session.PauseMinersByScheduler) {$cmdMenu.Add("[P]ause$(if ($Session.PauseMiners){" off"})") > $null}
     if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {$cmdMenu.Add("$(if ($LockMiners){"Un[l]ock"} else {"[L]ock"})") > $null}
     Write-Host "Waiting $($WaitSeconds)s until next run: $($cmdMenu -join ", ")"
 

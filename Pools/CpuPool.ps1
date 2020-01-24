@@ -36,7 +36,8 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("ru") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("ru")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Ports = [PSCustomObject]@{
     "BELL"  = 63338
@@ -68,7 +69,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    foreach ($Pool_Region in $Pool_RegionsTable.Keys) {    
+    foreach ($Pool_Region in $Pool_Regions) {    
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm

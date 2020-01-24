@@ -37,14 +37,26 @@ catch {
 
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | Foreach-Object {
     
-    $Pool_BLK      = [Math]::Floor(86400 / $_.networkStats.networkDifficulty * $_.poolStats.poolHashrate)
-    $reward        = 1.5
-    $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
-    $btcRewardLive = if ($_.poolStats.poolHashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $_.poolStats.poolHashrate} else {0}
-    $Divisor       = 1
-    
+    $ok = $true
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
+        $Pool_BlocksRequest = @()
+        try {
+            $Pool_BlocksRequest = Invoke-RestMethodAsync "https://api.aionmine.org/api/pools/aion/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
+            $Pool_BlocksRequest = @($Pool_BlocksRequest | Where-Object {$_.status -ne "orphaned"} | Foreach-Object {Get-Date $_.created})
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
+            $ok = $false
+        }
+        if ($ok -and ($Pool_BlocksRequest | Measure-Object).Count) {
+            $timestamp24h = (Get-Date).AddHours(-24)
+            $blocks_measure = $Pool_BlocksRequest | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
+            $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds} else {1})*$blocks_measure.Count)
+            $Pool_TSL = ((Get-Date) - $Pool_BlocksRequest[0]).TotalSeconds
+        }
+
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -70,7 +82,8 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
         Workers       = $_.poolStats.connectedMiners
         Hashrate      = $Stat.HashRate_Live
         BLK           = $Stat.BlockRate_Average
-        #TSL           = $Pool_TSL
+        TSL           = $Pool_TSL
+        WTM           = $true
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1

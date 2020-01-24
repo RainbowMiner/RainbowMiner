@@ -27,6 +27,13 @@
     "X14",
     "X15"
   ],
+  "Coins": [],
   "Pools": {
+    "ZergPoolCoins": {
+      "Algorithms": [],
+      "Coins": [
+        "BTG"
+      ]
+    }
   }
 }

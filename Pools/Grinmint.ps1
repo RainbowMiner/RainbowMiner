@@ -36,19 +36,33 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("eu-west","us-east") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("eu-west","us-east")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
+$Pool_Coin = Get-Coin $Pool_Currency
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 3416; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 4416; ssl = $true}
+    [PSCustomObject]@{algo = $Pool_Coin.algo; port = 3416; ssl = $false}
+    [PSCustomObject]@{algo = $Pool_Coin.algo; port = 4416; ssl = $true}
     [PSCustomObject]@{algo = "Cuckatoo31";  port = 3416; ssl = $false}
     [PSCustomObject]@{algo = "Cuckatoo31";  port = 4416; ssl = $true}
 )
 
+$block_time_sec = 60
+
+$hour_height = 3600 / $block_time_sec
+$day_height  = 24 * $hour_height
+$week_height = 7 * $day_height
+$year_height = 52 * $week_height
+
+#$seconday_weight = 90 - $Pool_NetworkRequest.height / (2 * $year_height / 90)
+
 $reward = 60
+
 $diff   = $Pool_NetworkRequest.target_difficulty
-$PBR29  = (86400 / 21) * ($Pool_NetworkRequest.secondary_scaling/$diff)
+$PBR29  = (86400 / 42) * ($Pool_NetworkRequest.secondary_scaling/$diff)
 $PBR31  = (86400 / 42) * (7936/$diff) #31*2^8
+$PBR32  = (86400 / 42) * (16384/$diff) #32*2^9
 
 $lastBlock     = $Pool_Request.mined_blocks | Sort-Object height | Select-Object -last 1
 $Pool_BLK      = $Pool_Request.pool_stats.blocks_found_last_24_hours
@@ -63,7 +77,7 @@ if (-not $InfoOnly) {
 $Pools_Data | ForEach-Object {
     $Stat = if ($_.algo -match "29") {$Stat29} else {$Stat31}
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    Foreach ($Pool_Region in $Pool_RegionsTable.Keys) {
+    Foreach ($Pool_Region in $Pool_Regions) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm

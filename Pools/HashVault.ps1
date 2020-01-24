@@ -119,7 +119,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     PoolFee       = $Pool_Fee
                     Workers       = $Pool_Request.pool_statistics.miners
                     Hashrate      = $Stat.HashRate_Live
-                    TSL           = $timestamp - $Pool_Request.pool_statistics.lastBlockFoundTime
+                    TSL           = if ($Pool_Request.pool_statistics.lastBlockFoundTime) {$timestamp - $Pool_Request.pool_statistics.lastBlockFoundTime} else {$timestamp}
                     BLK           = $Stat.BlockRate_Average
                     Name          = $Name
                     Penalty       = 0

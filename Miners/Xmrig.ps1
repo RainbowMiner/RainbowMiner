@@ -9,19 +9,19 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.5.0-xmrig/xmrig-5.5.0-xenial-cuda-10_1-2.1.0-x64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.5.1-xmrig/xmrig-5.5.1-xenial-cuda-10_1-x64.7z"
     $CudaLib = "libxmrig-cuda.so"
     $DevFee = 0.0
 } else {
     $Path = ".\Bin\ANY-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.5.0-xmrig/xmrig-5.5.0-msvc-cuda10_1-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.5.1-xmrig/xmrig-5.5.1-msvc-cuda10_1-win64.7z"
     $CudaLib = "xmrig-cuda.dll"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
 $Cuda = "10.1"
-$Version = "5.5.0"
+$Version = "5.5.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cn/1";          MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/2";          MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/half";       MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/fast2";      MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Algorithm = "cn/fast"; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/r";          MinMemGb = 2; MinMemGbW10 = 2; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}

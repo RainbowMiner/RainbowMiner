@@ -35,7 +35,8 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Coin = "Tecracoin"
 $Pool_Currency = "TCR"
@@ -61,7 +62,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
     
     if ($Pool_User -or $InfoOnly) {
-        foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+        foreach($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 Algorithm0    = $Pool_Algorithm_Norm

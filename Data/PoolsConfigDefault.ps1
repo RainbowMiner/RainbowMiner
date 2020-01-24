@@ -127,6 +127,9 @@
         "Icemining" = [PSCustomObject]@{
             Currencies=@("RVN","SIN","YEC")
         }
+        "LeafPool" = [PSCustomObject]@{
+            Currencies=@("BEAM")
+        }
         "LuckyPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
@@ -177,6 +180,11 @@
         "MintPond" = [PSCustomObject]@{
             Currencies=@("XZC")
         }
+        "MoneroOcean" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Password="x"}
+            SetupFields=[PSCustomObject]@{Password="Enter your MoneroOcean password (eMail or Password)"}
+            Currencies=@("XMR")
+        }
         "Nanopool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Email=""}
             SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address"}
@@ -198,6 +206,9 @@
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+        }
+        "Poolin" = [PSCustomObject]@{
+            Currencies=@("ETH","RVN")
         }
         "PoolSexy" = [PSCustomObject]@{
             Currencies=@("DBIX")
@@ -227,35 +238,35 @@
             Yiimp=$true
         }
         "ZergPoolCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AECurrency=""}
+            Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
         }
         "ZergPoolCoinsParty" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency=""}
+            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
         }
         "ZergPoolCoinsSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";AECurrency=""}
+            Fields=[PSCustomObject]@{AllowZero="1";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
         }
         "ZergPoolParty" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
+            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";Penalty=12}
             SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
         }
         "ZergPoolSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1"}
+            Fields=[PSCustomObject]@{AllowZero="1";Penalty=12}
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true

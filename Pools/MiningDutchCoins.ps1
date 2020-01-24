@@ -37,7 +37,8 @@ if (($PoolCoins_Request.PSObject.Properties.Name | Measure-Object).Count -le 1) 
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-@("americas","asia","eu") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("americas","asia","eu")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 2
 
@@ -65,7 +66,7 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+    foreach($Pool_Region in $Pool_Regions) {
         if ($Pool_User -or $InfoOnly) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm

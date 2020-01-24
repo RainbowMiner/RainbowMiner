@@ -140,7 +140,7 @@ function Set-UnprofitableAlgos {
     if (-not $Global:GlobalUnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
         $Key = Get-ContentDataMD5hash $Global:GlobalUnprofitableAlgos
         try {
-            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable2"
+            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable3.json" -cycletime 3600 -Jobkey "unprofitable3"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2492,9 +2492,11 @@ function Get-Device {
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
-            $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
-            $Name_Device
+            if ($DeviceList.("{0}" -f $Name_Split)) {
+                $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
+                $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
+                $Name_Device
+            }
         }
     }
 
@@ -2503,9 +2505,11 @@ function Get-Device {
         $ExcludeName_Devices = $ExcludeName | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
-            $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
-            $Name_Device
+            if ($DeviceList.("{0}" -f $Name_Split)) {
+                $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
+                $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
+                $Name_Device
+            }
         }
     }
 
@@ -2523,6 +2527,32 @@ function Get-Device {
         $GPUVendorLists = @{}
         $GPUDeviceNames = @{}
         foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
+        
+        if ($IsWindows) {
+            #Get WDDM data               
+            $WDDM_Devices = try {
+                Get-CimInstance CIM_VideoController | ForEach-Object { 
+                    $BusId = (Get-PnpDevice $_.PNPDeviceID | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber").Data
+                    [PSCustomObject]@{
+                        Name        = $_.Name
+                        InstanceId  = $_.PNPDeviceId
+                        Bus         = $(if ($BusId -ne $null -and $BusId.GetType() -match "int") {[int]$BusId})
+                        Vendor      = switch -Regex ([String]$_.AdapterCompatibility) { 
+                                        "Advanced Micro Devices" {"AMD"}
+                                        "Intel"  {"INTEL"}
+                                        "NVIDIA" {"NVIDIA"}
+                                        "AMD"    {"AMD"}
+                                        default {$_.AdapterCompatibility -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                            }
+                    }
+                }
+            }
+            catch { 
+                Write-Log -Level Warn "WDDM device detection has failed. "
+            }
+            $WDDM_Devices = @($WDDM_Devices | Sort-Object -Property Bus)
+        }
+
         [System.Collections.Generic.List[string]]$AllPlatforms = @()
         $Platform_Devices = try {
             [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
@@ -2636,6 +2666,7 @@ function Get-Device {
                         Model_Name = [String]$Device_Name
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
+                        Bus = $null
                         GpuGroup = ""
                         Data = [PSCustomObject]@{
                                         AdapterId         = 0  #amd
@@ -2671,6 +2702,16 @@ function Get-Device {
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
                         $Index++
+                        if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                        if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+):[A-F0-9]+$") {
+                               $Device.Bus = [int]"0x$($Matches[1])"
+                        }
+                        if ($IsWindows) {
+                            $WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
+                                if ($_.Bus -ne $null -and $Device.Bus -isnot [int]) {$Device.Bus = $_.Bus}
+                                if ($_.InstanceId -and $Device.InstanceId -eq "")   {$Device.InstanceId = $_.InstanceId}
+                            }
+                        }
                     }
 
                     if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
@@ -2685,7 +2726,6 @@ function Get-Device {
                     $Vendor_Index."$($Device_OpenCL.Vendor)"++
                     $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                     $Type_Index."$($Device_OpenCL.Type)"++
-                    if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                 }
             }
 
@@ -3619,9 +3659,11 @@ function Get-CoinsDB {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$Values = $false
+        [Switch]$Values = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Force = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
+    if ($Force -or -not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
         [hashtable]$Global:GlobalCoinsDB = @{}
         (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
         $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
@@ -4235,7 +4277,7 @@ function Set-MinersConfigDefault {
             foreach ($a in @("CPU","NVIDIA","AMD")) {
                 if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
                 else {
-                    $Devices = @($AllDevices | Where-Object {$_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
+                    $Devices = @($AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
                     [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
                     if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
                 }
@@ -4454,7 +4496,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType})
+                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $SubsetType})
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
@@ -5286,7 +5328,7 @@ Param(
     }
 
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
-    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -replace "{unixtimestamp}",(Get-UnixTimestamp)
 
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}

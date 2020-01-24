@@ -19,7 +19,8 @@ $Pool_Request = [PSCustomObject]@{}
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("asia","eu","jp","us-east","us-west", "au") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("asia","eu","jp","us-east","us-west", "au")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
@@ -47,14 +48,16 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Symbol.ToLower())/approximated_earnings/1000" -tag $Name -retry 5 -retrywait 200 -cycletime 120
-            if (-not $Pool_Request.status) {throw}
+            if (-not $Pool_Request.status) {$ok = $false}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
             $ok = $false
         }
-
+        if (-not $ok) {
+            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
+            return
+        }
 
         try {
             $Pool_RequestWorkers = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Symbol.ToLower())/pool/activeworkers" -tag $Name -retry 5 -retrywait 200 -cycletime 120
@@ -66,14 +69,14 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         }
 
         if ($ok) {
-            $Pool_ExpectedEarning = [double]$Pool_Request.data.day.bitcoins / $_.divisor / 1000
+            $Pool_ExpectedEarning = $(if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.data.day.coins / $Global:Rates.$Pool_Currency} else {[double]$Pool_Request.data.day.bitcoins}) / $_.divisor / 1000
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -Hashrate ([double]$Pool_RequestHashrate.data * $_.divisor) -ChangeDetection $true -Quiet
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
     }
 
     if ($ok) {
-        foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+        foreach($Pool_Region in $Pool_Regions) {
             $Pool_SSL = $false
             foreach($Pool_Port in @($_.port | Select-Object)) {
                 [PSCustomObject]@{

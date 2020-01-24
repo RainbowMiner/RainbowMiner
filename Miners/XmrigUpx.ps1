@@ -9,12 +9,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-XmrigUpx\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-lin64.tar.gz"
-    $DevFee = 1.0
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-linux-x64.7z"
+    $DevFee = 0.0
 } else {
     $Path = ".\Bin\CPU-XmrigUpx\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-win64.zip"
-    $DevFee = 1.0
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2.0-xmrigupx/xmrig-upx-v0.2.0-win-x64.7z"
+    $DevFee = 0.0
 }
 $ManualUri = "https://github.com/uPlexa/xmrig-upx/releases"
 $Port = "540{0:d2}"
@@ -64,7 +64,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-                    Arguments      = "-R 1 --api-port `$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=1 --print-time=5 $($_.Params)"
+                    Arguments      = "-R 1 --api-port `$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=0 --print-time=5 $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "XMRig"
 					Port           = $Miner_Port

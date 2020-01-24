@@ -39,11 +39,12 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-@("eu", "usa", "hk", "jp", "in", "br") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
-$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
+$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | Where-Object {$_.algorithm -ne "GRINCUCKAROOD29"} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
     $Pool_Port = $Pool_Data.port
@@ -52,7 +53,18 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin = ""
+    $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
+        "CuckooCycle"     {"AE"}
+        "Cuckaroo29"      {"XBG"}
+        #"Cuckarood29"     {"GRIN"}
+        "Cuckaroom29"     {"GRIN"}
+        "Eaglesong"       {"CKB"}
+        "EquihashR25x5x3" {"BEAM"}
+        "Lbry"            {"LBC"}
+        "RandomX"         {"XMR"}
+    }
+    
+    $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
@@ -63,7 +75,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
     }
 
-    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
+    foreach($Pool_Region in $Pool_Regions) {
         if ($Wallets.BTC -or $InfoOnly) {
             $This_Host = "$Pool_Algorithm.$Pool_Region$Pool_Host"
             $Pool_Failover = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {"$Pool_Algorithm.$_$Pool_Host"})
@@ -71,8 +83,8 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
 					Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin
-                    CoinSymbol    = ""
+                    CoinName      = "$($Pool_Coin.Name)"
+                    CoinSymbol    = "$Pool_CoinSymbol"
                     Currency      = "BTC"
                     Price         = $Stat.$StatAverage
                     StablePrice   = $Stat.Week
