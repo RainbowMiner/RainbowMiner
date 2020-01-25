@@ -29,10 +29,13 @@
   ],
   "Coins": [],
   "Pools": {
+    "ZergPool": {
+      "Algorithms": ["RandomX"]
+    },
     "ZergPoolCoins": {
       "Algorithms": [],
       "Coins": [
-        "BTG"
+        "BTG","XMR"
       ]
     }
   }
