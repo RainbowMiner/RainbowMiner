@@ -143,7 +143,7 @@ function Get-UnprofitableAlgos {
     }
 
     if ($Request.Algorithms -and $Request.Algorithms -gt 10) {
-        Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Request > $null
+        Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Request -MD5hash $Global:GlobalUnprofitableAlgosHash > $null
     } elseif (Test-Path ".\Data\unprofitable.json") {
         try{
             $Request = Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore
@@ -152,6 +152,7 @@ function Get-UnprofitableAlgos {
             Write-Log -Level Warn "Unprofitable database is corrupt. "
         }
     }
+    $Global:GlobalUnprofitableAlgosHash = Get-ContentDataMD5hash $Request
     $Request
 }
 
