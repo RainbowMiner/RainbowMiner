@@ -132,30 +132,27 @@ function Get-PoolPayoutCurrencies {
     $Payout_Currencies
 }
 
-function Set-UnprofitableAlgos {
-    if (-not (Test-Path Variable:Global:GlobalUnprofitableAlgos)) {
-        $Global:GlobalUnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)};@()}
-    }
-
-    if (-not $Global:GlobalUnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
-        $Key = Get-ContentDataMD5hash $Global:GlobalUnprofitableAlgos
-        try {
-            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable3.json" -cycletime 3600 -Jobkey "unprofitable3"
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Unprofitable algo API failed. "
-        }
-        if ($Request.Algorithms -and $Request.Algorithms -gt 10) {
-            $Global:GlobalUnprofitableAlgos = $Request
-            Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Global:GlobalUnprofitableAlgos -MD5hash $Key > $null
-        }
-    }
-}
-
 function Get-UnprofitableAlgos {
-    if (-not (Test-Path Variable:Global:GlobalUnprofitableAlgos)) {Set-UnprofitableAlgos}
-    $Global:GlobalUnprofitableAlgos
+    $Request = [PSCustomObject]@{}
+    try {
+        $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable3.json" -cycletime 3600 -Jobkey "unprofitable3"
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Unprofitable algo API failed. "
+    }
+
+    if ($Request.Algorithms -and $Request.Algorithms -gt 10) {
+        Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Request > $null
+    } elseif (Test-Path ".\Data\unprofitable.json") {
+        try{
+            $Request = Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Unprofitable database is corrupt. "
+        }
+    }
+    $Request
 }
 
 function Get-CoinSymbol {
