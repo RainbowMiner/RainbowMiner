@@ -3596,7 +3596,7 @@ function Get-EthDAGSize {
         [String]$CoinSymbol = ""
     )
     if (-not (Test-Path Variable:Global:GlobalEthDAGSizes)) {Get-EthDAGSizes -Silent}
-    if ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null) {$Global:GlobalEthDAGSizes.$CoinSymbol} else {4}
+    if ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null) {$Global:GlobalEthDAGSizes.$CoinSymbol} else {3}
 }
 
 function Get-NimqHashrate {
@@ -3692,11 +3692,24 @@ function Get-EthDAGSizes {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalEthDAGSizes) -or (Get-ChildItem "Data\ethdagsizes.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalEthDAGSizesTimeStamp) {
-        $Global:GlobalEthDAGSizes = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:GlobalEthDAGSizesTimeStamp = (Get-ChildItem "Data\ethdagsizes.json").LastWriteTime.ToUniversalTime()
+
+    $Request = [PSCustomObject]@{}
+    try {
+        $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/ethdagsizes.json" -cycletime 3600 -Jobkey "ethdagsizes"
     }
-    if (-not $Silent) {$Global:GlobalEquihashCoins}
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "EthDAGsize API failed. "
+    }
+
+    if ($Request -and ($Request.PSObject.Properties | Measure-Object).Count -gt 10) {
+        Set-ContentJson -PathToFile ".\Data\ethdagsizes.json" -Data $Request -MD5hash (Get-ContentDataMD5hash $Global:GlobalEthDAGSizes) > $null
+    } else {
+        $Request = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
+    }
+    $Global:GlobalEthDAGSizes = [PSCustomObject]@{}
+    $Request.PSObject.Properties | Foreach-Object {$Global:GlobalEthDAGSizes | Add-Member $_.Name ($_.Value/1Gb)}
+    if (-not $Silent) {$Global:GlobalEthDAGSizes}
 }
 
 function Get-NimqHashrates {
@@ -3720,7 +3733,7 @@ function Test-VRAM {
         [Parameter(Mandatory = $true)]
         $Device,
         [Parameter(Mandatory = $false)]
-        [int]$MinMemGB = 0
+        $MinMemGB = 0.0
     )
     if ($IsWindows -and $Session.WindowsVersion -ge "10.0.0.0") {
         $Device.OpenCL.GlobalMemsize*0.825 -ge ($MinMemGB * 1gb)
