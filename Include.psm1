@@ -3714,6 +3714,21 @@ function Get-NimqHashrates {
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
 
+function Test-VRAM {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Device,
+        [Parameter(Mandatory = $false)]
+        [int]$MinMemGB = 0
+    )
+    if ($IsWindows -and $Session.WindowsVersion -ge "10.0.0.0") {
+        $Device.OpenCL.GlobalMemsize*0.825 -ge ($MinMemGB * 1gb)
+    } else {
+        $Device.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)
+    }
+}
+
 function Get-PoolsInfo {
     [CmdletBinding()]
     param(

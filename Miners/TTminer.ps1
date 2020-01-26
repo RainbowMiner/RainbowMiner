@@ -23,22 +23,22 @@ $Version = "3.2.2"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 3; NH = $false; Params = "-A BLAKE2S%CUDA% -coin kda"; ExtendInterval = 2; Coins = @("KDA")} #Kadena
-    [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 3; NH = $false; Params = "-A EAGLESONG%CUDA% -coin ckb"; ExtendInterval = 2; Coins = @("CKB")} #Eaglesong
-    [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 4; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
-    #[PSCustomObject]@{MainAlgorithm = "HONEYCOMB"     ; MinMemGB = 2; NH = $false; Params = "-A HONEYCOMB%CUDA%"; ExtendInterval = 2} #HoneyComb
-    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 2; NH = $true;  Params = "-A LYRA2V3%CUDA%"; ExtendInterval = 2} #LYRA2V3
-    [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 6; NH = $true;  Params = "-A MTP%CUDA%"; ExtendInterval = 2} #MTP
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 2; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 3; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW3gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 4; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW (BCI)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 2; NH = $false; Params = "-A PROGPOW092%CUDA%"; Coins = @("BNA","HORA","SERO"); ExtendInterval = 2; Cuda ="10.1"} #ProgPoW2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 3; NH = $false; Params = "-A PROGPOW092%CUDA%"; Coins = @("BNA","HORA","SERO"); ExtendInterval = 2; Cuda ="10.1"} #ProgPoW3gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 4; NH = $false; Params = "-A PROGPOW092%CUDA%"; Coins = @("BNA","HORA","SERO"); ExtendInterval = 2; Cuda ="10.1"} #ProgPoW (BNA,HORA,SERO)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ2gb"   ; MinMemGB = 2; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ2gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ3gb"   ; MinMemGB = 3; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ3gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 4; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ (ZANO)
-    [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 3; NH = $false; Params = "-A UBQHASH%CUDA%"; ExtendInterval = 2} #Ubqhash 
+    [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; NH = $false; Params = "-A BLAKE2S%CUDA% -coin kda"; ExtendInterval = 2; Coins = @("KDA")} #Kadena
+    [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 2.4; NH = $false; Params = "-A EAGLESONG%CUDA% -coin ckb"; ExtendInterval = 2; Coins = @("CKB")} #Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
+    #[PSCustomObject]@{MainAlgorithm = "HONEYCOMB"     ; MinMemGB = 1.5; NH = $false; Params = "-A HONEYCOMB%CUDA%"; ExtendInterval = 2} #HoneyComb
+    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; NH = $true;  Params = "-A LYRA2V3%CUDA%"; ExtendInterval = 2} #LYRA2V3
+    [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5; NH = $true;  Params = "-A MTP%CUDA%"; ExtendInterval = 2} #MTP
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 1.5; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 2.4; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW3gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3.3; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW (BCI)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 1.5; NH = $false; Params = "-A PROGPOW092%CUDA%"; Coins = @("BNA","HORA","SERO"); ExtendInterval = 2; Cuda ="10.1"} #ProgPoW2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 2.4; NH = $false; Params = "-A PROGPOW092%CUDA%"; Coins = @("BNA","HORA","SERO"); ExtendInterval = 2; Cuda ="10.1"} #ProgPoW3gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3.3; NH = $false; Params = "-A PROGPOW092%CUDA%"; Coins = @("BNA","HORA","SERO"); ExtendInterval = 2; Cuda ="10.1"} #ProgPoW (BNA,HORA,SERO)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ2gb"   ; MinMemGB = 1.5; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ2gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ3gb"   ; MinMemGB = 2.4; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ3gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3.3; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ (ZANO)
+    [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 2.4; NH = $false; Params = "-A UBQHASH%CUDA%"; ExtendInterval = 2} #Ubqhash 
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -74,7 +74,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         $MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
 
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {

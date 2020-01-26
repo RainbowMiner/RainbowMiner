@@ -18,23 +18,23 @@ $Version = "2.10.8"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v7"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/conceal";    Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_conceal"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8_double"; Params = ""}
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_masari"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast2";      Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8_half"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_r"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8_reversewaltz"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v7_stellite"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/zls";        Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8_zelerius"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Threads = 1; MinMemGb = 1; Algorithm = "cryptonight_lite"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Threads = 1; MinMemGb = 1; Algorithm = "cryptonight_lite_v7"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Threads = 1; MinMemGb = 1; Algorithm = "cryptonight_lite_v7_xor"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_gpu"; Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_heavy"; Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_bittube2"; Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_haven"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_v7"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_v8"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/conceal";    Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_conceal"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_v8_double"; Params = ""}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_masari"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast2";      Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_v8_half"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_r"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_v8_reversewaltz"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_v7_stellite"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/zls";        Threads = 1; MinMemGb = 1.5; Algorithm = "cryptonight_v8_zelerius"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Threads = 1; MinMemGb = 1;   Algorithm = "cryptonight_lite"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Threads = 1; MinMemGb = 1;   Algorithm = "cryptonight_lite_v7"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Threads = 1; MinMemGb = 1;   Algorithm = "cryptonight_lite_v7_xor"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Threads = 1; MinMemGb = 3.3; Algorithm = "cryptonight_gpu"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Threads = 1; MinMemGb = 3.3; Algorithm = "cryptonight_heavy"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Threads = 1; MinMemGb = 3.3; Algorithm = "cryptonight_bittube2"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; MinMemGb = 3.3; Algorithm = "cryptonight_haven"; Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -72,7 +72,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
             $MinMemGb = $_.MinMemGb
             $Params = $_.Params
         
-            $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+            $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {

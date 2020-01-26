@@ -59,29 +59,29 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon";        NH = $true;  MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
-    #[PSCustomObject]@{MainAlgorithm = "aeternity";   NH = $false; MinMemGb = 6; MinMemGbW10 = 8; Params = ""} #Aeternity / Cuckoocycle
+    #[PSCustomObject]@{MainAlgorithm = "aeternity";   NH = $false; MinMemGb = 5; Params = ""} #Aeternity / Cuckoocycle
     #[PSCustomObject]@{MainAlgorithm = "allium";      NH = $true;  MinMemGb = 1; Params = ""} #Allium (CD 0.16.0 faster)
     [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d-Dyn
     [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d-Nim
     [PSCustomObject]@{MainAlgorithm = "argon2d250";  NH = $true;  MinMemGb = 1; Params = ""} #Argon2d250
-    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; NH = $true;  MinMemGb = 4; Params = ""} #Argon2d4096
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; NH = $true;  MinMemGb = 3.3; Params = ""} #Argon2d4096
     [PSCustomObject]@{MainAlgorithm = "bcd";         NH = $true;  MinMemGb = 1; Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";     NH = $true;  MinMemGb = 1; Params = ""} #BitCore
     #[PSCustomObject]@{MainAlgorithm = "c11";         NH = $true;  MinMemGb = 1; Params = ""} #C11, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "chukwa";      NH = $true;  MinMemGb = 2; Params = ""} #Chukwa, new with v0.21.0
-    [PSCustomObject]@{MainAlgorithm = "chukwa-wrkz"; NH = $true;  MinMemGb = 2; Params = ""} #Chukwa-Wrkz, new with v0.21.0
-    [PSCustomObject]@{MainAlgorithm = "cnconceal";    NH = $true;  MinMemGb = 2; Params = ""} #CryptonighConceal, new with v0.21.0
-    #[PSCustomObject]@{MainAlgorithm = "cnfast";      NH = $true;  MinMemGb = 2; Params = ""} #CryptonightFast, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "cnfast2";     NH = $true;  MinMemGb = 2; Params = ""} #CryptonightFast2 / Masari
-    [PSCustomObject]@{MainAlgorithm = "cngpu";       NH = $true;  MinMemGb = 4; Params = ""} #CryptonightGPU
-    [PSCustomObject]@{MainAlgorithm = "cnhaven";     NH = $true;  MinMemGb = 4; Params = ""} #Cryptonighthaven
-    [PSCustomObject]@{MainAlgorithm = "cnheavy";     NH = $true;  MinMemGb = 4; Params = ""} #Cryptonightheavy
-    [PSCustomObject]@{MainAlgorithm = "cnsaber";     NH = $true;  MinMemGb = 4; Params = ""} #Cryptonightheavytube
-    #[PSCustomObject]@{MainAlgorithm = "cnsuperfast";   NH = $true;  MinMemGb = 2; Params = ""} #CryptonightSuperFast, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "cnturtle";    NH = $true;  MinMemGb = 4; Params = ""} #Cryptonightturtle
-    #[PSCustomObject]@{MainAlgorithm = "cnv7";        NH = $true;  MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "cnv8";        NH = $true;  MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
-    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
+    [PSCustomObject]@{MainAlgorithm = "chukwa";      NH = $true;  MinMemGb = 1.5; Params = ""} #Chukwa, new with v0.21.0
+    [PSCustomObject]@{MainAlgorithm = "chukwa-wrkz"; NH = $true;  MinMemGb = 1.5; Params = ""} #Chukwa-Wrkz, new with v0.21.0
+    [PSCustomObject]@{MainAlgorithm = "cnconceal";    NH = $true;  MinMemGb = 1.5; Params = ""} #CryptonighConceal, new with v0.21.0
+    #[PSCustomObject]@{MainAlgorithm = "cnfast";      NH = $true;  MinMemGb = 1.5; Params = ""} #CryptonightFast, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "cnfast2";     NH = $true;  MinMemGb = 1.5; Params = ""} #CryptonightFast2 / Masari
+    [PSCustomObject]@{MainAlgorithm = "cngpu";       NH = $true;  MinMemGb = 3.3; Params = ""} #CryptonightGPU
+    [PSCustomObject]@{MainAlgorithm = "cnhaven";     NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonighthaven
+    [PSCustomObject]@{MainAlgorithm = "cnheavy";     NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonightheavy
+    [PSCustomObject]@{MainAlgorithm = "cnsaber";     NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonightheavytube
+    #[PSCustomObject]@{MainAlgorithm = "cnsuperfast";   NH = $true;  MinMemGb = 1.5; Params = ""} #CryptonightSuperFast, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "cnturtle";    NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonightturtle
+    #[PSCustomObject]@{MainAlgorithm = "cnv7";        NH = $true;  MinMemGb = 1.5; Params = ""; ExtendInterval = 2} #CryptonightV7, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "cnv8";        NH = $true;  MinMemGb = 1.5; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  NH = $true;  MinMemGb = 3.3; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
     #[PSCustomObject]@{MainAlgorithm = "dedal";       NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "hmq1725";     NH = $true;  MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lux";         NH = $true;  MinMemGb = 1; Params = ""; Algorithm = "phi2"} #Lux/PHI2
@@ -138,8 +138,8 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
     $Commands | ForEach-Object {
         $First = $true
-        $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+        $MinMemGb = $_.MinMemGb
+        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm

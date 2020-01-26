@@ -22,29 +22,29 @@ $Version = "0.6.1"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cn_conceal";       MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_haven";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_heavy";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_saber";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnr";              MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8";             MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";         MinMemGb = 4; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_half";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_trtl";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cuckarood29_grin"; MinMemGb = 8; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";  MinMemGb = 8; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 4; Params = ""; DevFee = 0.75}
-    [PSCustomObject]@{MainAlgorithm = "lyra2rev3";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";           MinMemGb = 2; Params = ""; DevFee = 3.0}
-    [PSCustomObject]@{MainAlgorithm = "mtp";              MinMemGb = 6; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "phi2";             MinMemGb = 2; Params = ""; DevFee = 3.0}
-    [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";      MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "x16r";             MinMemGb = 4; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16rt";            MinMemGb = 2; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16rv2";           MinMemGb = 2; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16s";             MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_conceal";       MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_haven";         MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_heavy";         MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_saber";         MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnr";              MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8";             MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";         MinMemGb = 3.3; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_half";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";         MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_trtl";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cuckarood29_grin"; MinMemGb = 6;   Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";  MinMemGb = 8;   Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 3.3; Params = ""; DevFee = 0.75}
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";           MinMemGb = 1.5; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "mtp";              MinMemGb = 5;   Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "phi2";             MinMemGb = 1.5; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";      MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "x16r";             MinMemGb = 3.3; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16rt";            MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16rv2";           MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16s";             MinMemGb = 1.5; Params = ""; DevFee = 2.5}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -72,7 +72,11 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
     $Commands | ForEach-Object {
         $First = $True
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-        $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)})
+
+        $MinMemGB = if ($_.MainAlgorithm -eq "ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
+
+        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+
         $Miner_DevFee = $_.DevFee
 
         if ($_.MainAlgorithm -eq "ethash" -and (($Miner_Model -split '-') -notmatch "(Baffin|Ellesmere|RX\d)" | Measure-Object).Count) {

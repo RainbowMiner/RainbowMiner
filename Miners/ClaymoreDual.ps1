@@ -38,7 +38,7 @@ $DevFeeDual = 1.0
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = ""; SecondIntensity = 00; Params = ""} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 3; SecondAlgorithm = ""; SecondIntensity = 00; Params = ""} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 40; Params = ""} #Ethash/Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 60; Params = ""} #Ethash/Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 80; Params = ""} #Ethash/Blake2s
@@ -117,7 +117,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 			$MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
 
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
             if ($SecondAlgorithm_Norm) {
                 $Miner_Config = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)".Intensity

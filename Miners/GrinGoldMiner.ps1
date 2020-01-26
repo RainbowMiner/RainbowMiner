@@ -25,7 +25,7 @@ $Version = "3.0"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cuckarood29";  MinMemGb = 6; MinMemGbW10 = 8; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = $Vendors; NoCPUMining = $true} #GRIN/Cuckaroo29
+    [PSCustomObject]@{MainAlgorithm = "cuckarood29";  MinMemGb = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = $Vendors; NoCPUMining = $true} #GRIN/Cuckaroo29
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -53,8 +53,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
-            $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+            $MinMemGb = $_.MinMemGb
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
             $Algorithm = $_.MainAlgorithm
             $Algorithm_Norm_0 = Get-Algorithm $Algorithm

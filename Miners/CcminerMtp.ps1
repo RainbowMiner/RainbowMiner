@@ -40,7 +40,7 @@ $DevFee = 0.0
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -79,7 +79,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $MinMemGB = $_.MinMemGB
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb) -and (Get-NvidiaArchitecture $_.Model_Base) -ne "Other"}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (Get-NvidiaArchitecture $_.Model_Base) -ne "Other"}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Miner_Device.Count -le 6 -and $Pools.$Algorithm_Norm.Name -notmatch "(NiceHash|MiningRigRentals)") {
