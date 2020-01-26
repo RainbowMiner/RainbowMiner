@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'aes-avx'} elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.11.6-jayddee/cpuminer-opt-3.11.6-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.11.7-jayddee/cpuminer-opt-3.11.7-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.11.6-jayddee/cpuminer-opt-3.11.6-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.11.7-jayddee/cpuminer-opt-3.11.7-windows.zip"
 }
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
-$Version = "3.11.6"
+$Version = "3.11.7"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -55,6 +55,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; NH = $true; Params = ""} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; NH = $true; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256q"; NH = $true; Params = ""} #sha256q
+    [PSCustomObject]@{MainAlgorithm = "sha3d"; NH = $true; Params = ""} #sha3d, BSHA3
     [PSCustomObject]@{MainAlgorithm = "shavite3"; NH = $true; Params = ""} #shavite3
     [PSCustomObject]@{MainAlgorithm = "skein2"; NH = $true; Params = ""} #skein2
     [PSCustomObject]@{MainAlgorithm = "sonoa"; NH = $true; Params = ""} #Sonoa
@@ -72,6 +73,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; NH = $true; Params = ""} #yescryptr16, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; NH = $true; Params = ""} #yescryptr32, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; NH = $true; Params = ""} #yescryptr8, CpuminerOptBF faster
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; NH = $true; Params = ""} #yescryptr8g, KOTO
     [PSCustomObject]@{MainAlgorithm = "yespower"; NH = $true; Params = ""} #YesPower
     #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; NH = $true; Params = ""} #YesPowerR16, CpuminerRplant faster
     [PSCustomObject]@{MainAlgorithm = "zr5"; NH = $true; Params = ""} #zr5

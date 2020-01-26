@@ -561,6 +561,7 @@
     "sha256q": "SHA256q",
     "sha256t": "SHA256t",
     "sha3": "Keccak",
+    "sha3d": "SHA3d",
     "shabal": "Axiom",
     "shabal256": "Axiom",
     "shavite3": "shavite3",
