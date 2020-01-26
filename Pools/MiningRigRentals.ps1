@@ -170,6 +170,8 @@ foreach ($Worker1 in $Workers) {
 
                 if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
 
+                $Pool_SSL = $Pool_Algorithm_Norm -eq "EquihashR25x5"
+
                 #END temporary fixes
             
                 [PSCustomObject]@{
@@ -181,13 +183,13 @@ foreach ($Worker1 in $Workers) {
                     Price         = $Pool_Price
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+tcp"
+                    Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = $Miner_Server
                     Port          = $Miner_Port
                     User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
                     Pass          = "x"
                     Region        = $Pool_RegionsTable."$($_.region)"
-                    SSL           = $false
+                    SSL           = $Pool_SSL
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     Exclusive     = ($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable
