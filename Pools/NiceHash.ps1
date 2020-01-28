@@ -44,7 +44,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
-$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | Where-Object {$_.algorithm -ne "GRINCUCKAROOD29"} | ForEach-Object {
+$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
     $Pool_Port = $Pool_Data.port
@@ -56,7 +56,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
     $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
         "CuckooCycle"     {"AE"}
         "Cuckaroo29"      {"XBG"}
-        #"Cuckarood29"     {"GRIN"}
+        "Cuckarood29"     {"MWC"}
         "Cuckaroom29"     {"GRIN"}
         "Eaglesong"       {"CKB"}
         "EquihashR25x5x3" {"BEAM"}
