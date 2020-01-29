@@ -138,43 +138,46 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
     if ($ok) {
         $Pool_Hosts = @()
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
-        $Pool_HostStatus | Where-Object {$_.host -notmatch 'solo-' -and $_.host -match "$($Pool_Host)" -and $Pool_Hosts -notcontains "$($_.host)$([int]$_.port -ge 10000)"} | Select-Object host,port | Sort-Object -Descending:$($Pool_Currency -eq "XZC") {[int]$_.port} | Foreach-Object {
-            $SSL = [int]$_.port -ge 10000
-            $Pool_Hosts += "$($_.host)$($SSL)"
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = if ($SSL) {"stratum+ssl"} else {"stratum+tcp"}
-                Host          = "$($_.host)"
-                Port          = [int]$_.port
-                User          = "$($Pool_Wallet).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
-                SSL           = $SSL
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_Fee
-                DataWindow    = $DataWindow
-                Workers       = $Pool_Request.workersTotal
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Pool_Wallet
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+        $Pool_HostStatus | Where-Object {$_.host -notmatch 'solo-' -and $_.host -match "$($Pool_Host)"} | Select-Object host,port | Sort-Object -Descending:$($Pool_Currency -eq "XZC") {[int]$_.port} | Foreach-Object {
+            $Pool_SSL = [int]$_.port -ge 10000
+            if ($Pool_Hosts -notcontains "$($_.host)$($Pool_SSL)") {
+                $Pool_Hosts += "$($_.host)$($Pool_SSL)"
+                Write-Host "$($_.host)$([int]$_.port -ge 10000)"
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    Algorithm0    = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = $Stat.$StatAverage #instead of .Live
+                    StablePrice   = $Stat.Week
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = if ($Pool_SSL) {"stratum+ssl"} else {"stratum+tcp"}
+                    Host          = "$($_.host)"
+                    Port          = [int]$_.port
+                    User          = "$($Pool_Wallet).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
+                    SSL           = $Pool_SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $Pool_Fee
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_Request.workersTotal
+                    Hashrate      = $Stat.HashRate_Live
+                    TSL           = $Pool_TSL
+                    BLK           = $Stat.BlockRate_Average
+                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Pool_Wallet
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
             }
         }
     }
