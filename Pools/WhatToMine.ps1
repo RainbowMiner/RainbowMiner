@@ -154,8 +154,8 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
         $Pool_CoinRequest = [PSCustomObject]@{reward=$null;revenue=$null}
         try {
             (Invoke-WebRequestAsync "https://minerstat.com/coin/$($_.coin1)" -tag $Name -cycletime 120) -split "icon_coins reward" | Select-Object -Skip 1 | Foreach-Object {
-                $dat = ([regex]'(?smi)>([\d\.\,E+-]+)\s+([\w]+)<.+for\s([\d\.\,]+)\s*(.+?)<').Matches($_)
-                if ($dat -and $dat.Groups -and $dat.Groups.Count -eq 5) {
+                $dat = ([regex]'(?si)>([\d\.\,E+-]+)\s+([\w]+)<.+?for\s([\d\.\,]+)\s*(.+?)<').Matches($_)
+                if ($dat -and $dat.Groups -and $dat.Groups.Count -ge 5) {
                     $Pool_CoinRequest.reward  = [PSCustomObject]@{value=[decimal]($dat.Groups[1].Value -replace ',');currency=$dat.Groups[2].Value;fact=[decimal]($dat.Groups[3].Value -replace ',');unit=$dat.Groups[4].Value}
                     $Pool_CoinRequest.revenue = [PSCustomObject]@{currency='';value=0}
                     ([regex]'(currency|exchangeRate)[\s='']+([^\s'';]+)').Matches($_) | Foreach-Object {
