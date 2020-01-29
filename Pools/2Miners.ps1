@@ -142,7 +142,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
             $Pool_SSL = [int]$_.port -ge 10000
             if ($Pool_Hosts -notcontains "$($_.host)$($Pool_SSL)") {
                 $Pool_Hosts += "$($_.host)$($Pool_SSL)"
-                Write-Host "$($_.host)$([int]$_.port -ge 10000)"
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     Algorithm0    = $Pool_Algorithm_Norm
