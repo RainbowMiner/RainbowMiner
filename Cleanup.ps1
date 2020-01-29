@@ -679,6 +679,11 @@ try {
         $AddAlgorithm += @("Cuckaroom29")
     }
 
+    if ($Version -le (Get-Version "4.5.2.1")) {
+        $AddAlgorithm += @("Sha3d")
+        Get-ChildItem "Stats\Pools" -Filter "WhatToMine_*_Profit.txt" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
+    }
+
     if ($Version -le (Get-Version "4.5.1.4")) {
         $AddAlgorithm += @("CPUPower","CryptonightCAT","CryptonightTLO","CryptonightXEQ","K12","Kadena","RandomARQ","RandomHash2","RandomSFX","Tensority","VerusHash","YespowerIOTS","YespowerITC","YespowerLITB","YespowerLTNCG","YespowerSUGAR","YespowerURX")
     }
