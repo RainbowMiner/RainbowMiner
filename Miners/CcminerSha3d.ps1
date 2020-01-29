@@ -5,15 +5,20 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsLinux -and -not $IsWindows) {return}
 
-$Path = ".\Bin\NVIDIA-CcminerSha3d\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-ccminersha3d/ccminersha3d-v1.0.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-CcminerSha3d\ccminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ccminersha3d/ccminersha3d-v1.0.1-linux.7z"
+} else {
+    $Path = ".\Bin\NVIDIA-CcminerSha3d\ccminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ccminersha3d/ccminersha3d-v1.0.1-win.7z"
+}
 $ManualUri = "https://github.com/brian112358/ccminer-bsha3/releases"
 $Port = "143{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.1"
-$Version = "1.0"
+$Version = "1.0.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
