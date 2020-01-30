@@ -1705,6 +1705,9 @@ function Invoke-Core {
 
     $AllPools_BeforeWD_Count = $NewPools.Count
 
+    $API.AllPools   = $NewPools
+    $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
+
     #Apply watchdog to pools, only if there is more than one pool selected
     if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
         $WDIntervalTime = $Session.Timer.AddSeconds( - $Session.WatchdogInterval)
@@ -1740,9 +1743,6 @@ function Invoke-Core {
             Write-Log "WhatToMine loaded in $($done)s "
             Remove-Variable "Pools_WTM"
         }
-
-        $API.AllPools   = $NewPools
-        $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
 
         #Decrease compare prices, if out of sync window
         # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
@@ -1780,7 +1780,7 @@ function Invoke-Core {
                         $Price_Cmp *= 100
                     } elseif (-not $_.PostBlockMining -and $_.CoinSymbol -and $Session.Config.Pools."$($_.Name)".CoinSymbolPBM -icontains $_.CoinSymbol) {
                         $Price_Cmp = 0
-                        if ($_.Disabled -ne $null) {$_.Disabled = $true} else {$_ | Add-Member Disabled $true -Force}
+                        $_ | Add-Member DisabledDueToCoinSymbolPBM $true -Force
                     } else {
                         $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                         if (-not ($Session.Config.EnableFastSwitching -or $Session.SkipSwitchingPrevention)) {
@@ -1808,7 +1808,7 @@ function Invoke-Core {
         Write-Log "Selecting best pool for each algorithm. "
         $SortedPools = @($NewPools | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.SSL})
         foreach($Algorithm_Name in @($NewPools.ForEach({$_.Algorithm.ToLower()}) | Select-Object -Unique)) {
-            $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.Disabled},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
+            $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.DisabledDueToCoinSymbolPBM},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
         }
         if ($SortedPools -ne $null) {Remove-Variable "SortedPools"}
 
