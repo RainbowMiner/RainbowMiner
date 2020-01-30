@@ -10,17 +10,17 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "1.5s"
+$Version = "1.5t"
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda10_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda10_linux-x64.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda8_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda8_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -28,11 +28,11 @@ if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda10_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda10_win-x64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda8_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda8_win-x64.zip"
             Cuda = "8.0"
         }
     )
@@ -43,7 +43,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 1; Params = "--par=96,5";  ExtendInterval = 2; AutoPers = $true}  #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2; Params = "--par=144,5"; ExtendInterval = 2; AutoPers = $true} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2; Params = "--par=192,7"; ExtendInterval = 2; AutoPers = $true} #Equihash 192,7 
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2; Params = "--par=192,7"; ExtendInterval = 2; AutoPers = $true} #Equihash 192,7 
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGB = 2; Params = "--par=125,4"; ExtendInterval = 3; AutoPers = $true} #Equihash 125,4,0 (ZelCash)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3; Params = "--par=150,5"; ExtendInterval = 3; AutoPers = $true} #Equihash 150,5,0 (GRIMM)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3; Params = "--par=beam";  ExtendInterval = 3; AutoPers = $false} #Equihash 150,5,3 (BEAM)
