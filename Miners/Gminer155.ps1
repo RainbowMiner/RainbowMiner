@@ -23,7 +23,7 @@ $Version = "1.55"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5"; MinMemGb = 3; Params = "--algo 150_5"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; AutoPers = $false} #Equihash 150,5,0 (GRIMM)
+    #[PSCustomObject]@{MainAlgorithm = "EquihashR25x5"; MinMemGb = 3; Params = "--algo 150_5"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; AutoPers = $false} #Equihash 150,5,0 (GRIMM)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
