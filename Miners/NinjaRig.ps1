@@ -57,7 +57,16 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-            $Miner_Type = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
+            if ($Miner_Vendor -eq "CPU") {
+                $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+                $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+
+                $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
+                $Miner_Type   = "CPU"
+            } else {
+                $DeviceParams = ""
+                $Miner_Type   = "GPU"
+            }
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
@@ -66,10 +75,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = ($Miner_Device | % {'[{0:d}]' -f ($_.Type_Vendor_Index+1)} ) -join ','
             
-                        $DeviceParams = Switch ($Miner_Vendor) {
-                            "CPU"    {"$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" --cpu-affinity $($Session.Config.CPUMiningAffinity)"})$($f=$Global:GlobalCPUInfo.Features;if($f.avx2 -and $f.aes){" --cpu-optimization AVX2"})"}
-                            "AMD"    {"-t 0 --use-gpu=OPENCL --gpu-filter=$DeviceIDsAll"}
-                            "NVIDIA" {"-t 0 --use-gpu=CUDA --gpu-filter=$DeviceIDsAll"}
+                        $DeviceParamsGlobal = Switch ($Miner_Vendor) {
+                            "CPU"    {"$($f=$Global:GlobalCPUInfo.Features;if($f.avx2 -and $f.aes){" --cpu-optimization AVX2"})"}
+                            "AMD"    {" -t 0 --use-gpu=OPENCL --gpu-filter=$DeviceIDsAll"}
+                            "NVIDIA" {" -t 0 --use-gpu=CUDA --gpu-filter=$DeviceIDsAll"}
                         }
                         $First = $false
                     }
@@ -79,7 +88,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-                        Arguments      = "--api-port=`$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
+                        Arguments      = "--api-port=`$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParamsGlobal)$($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
 					    API            = "XMRig"
 					    Port           = $Miner_Port

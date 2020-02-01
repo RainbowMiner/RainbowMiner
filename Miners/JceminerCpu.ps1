@@ -85,12 +85,16 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 
     $Miner_Threads = @()
     if ($Session.Config.CPUMiningAffinity -ne '') {$Miner_Threads = ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity}
-    if (-not $Miner_Threads) {$Miner_Threads = $Global:GlobalCPUInfo.RealCores}
 
     $DevFee = if($GLobal:GlobalCPUInfo.Features.aes -and $Global:GlobalCPUInfo.Features.'64bit'){1.5}else{3.0}
 
     $Commands | ForEach-Object {
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+
+        $Miner_Threads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity -ne '') {$Session.Config.CPUMiningAffinity}
+
+        if ($Miner_Threads) {$Miner_Threads = ConvertFrom-CPUAffinity $Miner_Threads}
+        if (-not $Miner_Threads) {$Miner_Threads = $Global:GlobalCPUInfo.RealCores}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Pools.$Algorithm_Norm.Host -notmatch '_') {

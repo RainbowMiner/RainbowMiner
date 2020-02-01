@@ -122,9 +122,9 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Vendor  = $Miner_Vendor
                         Params  = $Params
                         HwSig   = if ($Miner_Vendor -eq "CPU") {"$(($Global:DeviceCache.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"} else {"$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"}
-                        Threads = if ($Miner_Vendor -eq "CPU") {if ($Session.Config.CPUMiningThreads) {$Session.Config.CPUMiningThreads}  else {$Global:GlobalCPUInfo.Threads}} else {1}
+                        Threads = if ($Miner_Vendor -eq "CPU") {if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.Threads}} else {1}
                         Devices = $Miner_Device.Type_Vendor_Index
-                        Affinity= if ($Miner_Vendor -eq "CPU" -and $Session.Config.CPUMiningAffinity -ne '') {$Session.Config.CPUMiningAffinity} else {$null}
+                        Affinity= if ($Miner_Vendor -eq "CPU") {if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity} else {$null}} else {$null}
                     }
 
 				    [PSCustomObject]@{

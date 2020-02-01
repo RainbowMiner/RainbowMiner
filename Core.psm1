@@ -1459,6 +1459,7 @@ function Invoke-Core {
             $MinersConfig = Get-ConfigContent "Miners" -UpdateLastWriteTime
             if (Test-Config "Miners" -Health) {
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
+                $CPU_GlobalAffinityMask = Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt
                 foreach ($CcMiner in @($MinersConfig.PSObject.Properties)) {
                     $CcMinerName = $CcMiner.Name
                     [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
@@ -1482,6 +1483,19 @@ function Invoke-Core {
                                     $p.MSIAprofile = ""
                                 }
                                 if ($p.Difficulty -ne $null) {$p.Difficulty = $p.Difficulty -replace "[^\d]"}
+                                if ($p.Affinity) {
+                                    $CPUAffinityInt = (ConvertFrom-CPUAffinity $p.Affinity -ToInt) -band $CPU_GlobalAffinityMask
+                                    if ($CPUAffinityInt) {
+                                        $p.Affinity = "0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt
+                                        if (-not $p.Threads) {
+                                            $CPUThreads = @(ConvertFrom-CPUAffinity $p.Affinity).Count
+                                            if ($p.Threads -eq $null) {$p | Add-Member Threads $Threads -Force} else {$p.Threads = $CPUThreads}
+                                        }
+                                    } else {
+                                        $p.Affinity = ""
+                                    }
+                                }
+                                if ($p.Threads -ne $null) {$p.Threads = [int]($p.Threads -replace "[^\d]")}
                                 $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $p -MemberType NoteProperty -Force
                                 $Session.Config.Miners.$CcMinerNameToAdd.Disable = Get-Yes $Session.Config.Miners.$CcMinerNameToAdd.Disable
                             }

@@ -3539,7 +3539,9 @@ function Get-Coin {
             ParameterSetName = '',   
             ValueFromPipeline = $True,
             Mandatory = $false)]
-        [String]$CoinSymbol = ""
+        [String]$CoinSymbol = "",
+        [Parameter(Mandatory = $false)]
+        [String]$Algorithm = ""
     )
     if ($CoinSymbol -eq '*') {$CoinSymbol}
     elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
@@ -3547,6 +3549,7 @@ function Get-Coin {
         if (-not (Test-Path Variable:Global:GlobalCoinsDB)) {Get-CoinsDB -Silent}
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
         if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
+        elseif ($Algorithm -ne "" -and $Global:GlobalCoinsDB.ContainsKey("$CoinSymbol-$Algorithm")) {$Global:GlobalCoinsDB["$CoinSymbol-$Algorithm"]}
     }
 }
 
@@ -4318,7 +4321,14 @@ function Set-MinersConfigDefault {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                                 $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
                                 $k = "$m-$s"                                
-                                if (-not $MinerCheck.Contains($k)) {[PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0"};$MinerCheck.Add($k)>$null}
+                                if (-not $MinerCheck.Contains($k)) {
+                                    if ($SetupDevice -eq "CPU") {
+                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";Affinity = "";Threads = ""}
+                                    } else {
+                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0"}
+                                    }
+                                    $MinerCheck.Add($k)>$null
+                                }
                             }
                         )
                     }
@@ -4354,6 +4364,7 @@ function Set-MinersConfigDefault {
             }
 
             $Default     = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0"}
+            $DefaultCPU  = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";Affinity="";Threads=""}
             $DefaultDual = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";Intensity=""}
             $DoneSave = [PSCustomObject]@{}
             $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {
@@ -4361,11 +4372,8 @@ function Set-MinersConfigDefault {
                 if ($Done.$Name.Count) {
                     $Done.$Name | Foreach-Object {
                         $Done1 = $_
-                        if ($_.SecondaryAlgorithm) {
-                            $DefaultDual.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $DefaultDual.$_ -Force}
-                        } else {
-                            $Default.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $Default.$_ -Force}
-                        }
+                        $DefaultHandler = if ($_.SecondaryAlgorithm) {$DefaultDual} elseif ($Name -match "-CPU$") {$DefaultCPU} else {$Default}
+                        $DefaultHandler.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $DefaultHandler.$_ -Force}
                     }
                     $DoneSave | Add-Member $Name @($Done.$Name | Sort-Object MainAlgorithm,SecondaryAlgorithm)
                 }

@@ -54,11 +54,14 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
 
-        $DeviceParams = if ($Miner_Vendor -eq "CPU") {"$(if ($Session.Config.CPUMiningThreads){" -cputhreads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" -processorsaffinity $((ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -join ",")"})"} else {""}
-    
         $Commands |  Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+
+            if ($Miner_Vendor -eq "CPU") {
+                $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+                $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+            }
 
             $MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGb}
 
@@ -93,7 +96,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Worker    = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
                         Pass      = $Pools.$Algorithm_Norm.Pass
                         Email     = $Pools.$Algorithm_Norm.Email
-                        Threads   = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningThreads} else {$null}
+                        Threads   = if ($Miner_Vendor -eq "CPU") {$CPUThreads} else {$null}
                         Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Mineable_Index} else {$null} 
 				    }
 
@@ -112,7 +115,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Penalty        = 0
 					    DevFee         = $_.DevFee
 					    ManualUri      = $ManualUri
-                        MiningAffinity = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningAffinity} else {$null}
+                        MiningAffinity = if ($Miner_Vendor -eq "CPU") {$CPUAffinity} else {$null}
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
