@@ -18,7 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("us","us-east","us-west","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "BEAM";  port = 3333; fee = 0.5; rpc = "beam"; region = @("us","eu","asia"); coinUnits = 100000000}
+    [PSCustomObject]@{symbol = "BEAM";  port = 3333; fee = 0.5; rpc = "beam"; region = @("us","eu","asia"); coinUnits = 100000000; ssl = $true}
     [PSCustomObject]@{symbol = "TTNZ";  port = 3333; fee = 0.1; rpc = "ttnz"; region = @("us","eu"); endpoint = "stats"}
     [PSCustomObject]@{symbol = "RYO";   port = 5555; fee = 1.0; rpc = "ryo";  region = @("us-west","us-east","eu"); endpoint = "stats"}
     [PSCustomObject]@{symbol = "DEFT";  port = 6622; fee = 1.0; rpc = "deft"; region = @("us","eu"); coinUnits = 1}
@@ -86,7 +86,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     if ($ok -or $InfoOnly) {
-        $Pool_SSL = $false
+        $Pool_SSL = if ($_.endpoint) {$false} else {[bool]$_.ssl}
         $Pool_Wallet = if ($Pool_Ports_Found) {Get-WalletWithPaymentId $Wallets.$Pool_Currency -asobject} else {$null}
         foreach ($Pool_Port in $Pool_Ports) {
             if ($Pool_Port) {
