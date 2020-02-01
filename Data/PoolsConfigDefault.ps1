@@ -53,6 +53,9 @@
             Currencies=@("RVN","SIN")
             Yiimp=$true
         }
+        "BtcPrivate" = [PSCustomObject]@{
+            Currencies=@("BTCP")
+        }
         "CoinFoundry" = [PSCustomObject]@{
             Currencies=@("BCD")
         }
