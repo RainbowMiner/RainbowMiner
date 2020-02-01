@@ -1726,7 +1726,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","intensity")) > $null
+                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","intensity","affinity","threads")) > $null
                 $MinerSetupSteps.Add("save") > $null                         
 
                 do { 
@@ -1782,6 +1782,10 @@ function Start-Setup {
                                 }
                                 if ($EditSecondaryAlgorithm) {
                                     $EditMinerConfig | Add-Member Intensity "" -Force
+                                }
+                                if ($EditDeviceName -match "^CPU") {
+                                    $EditMinerConfig | Add-Member Affinity "" -Force
+                                    $EditMinerConfig | Add-Member Threads  "" -Force
                                 }
                         
                                 if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {$MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name)) {$EditMinerConfig | Add-Member $p $_.$p -Force}}}
@@ -1839,6 +1843,21 @@ function Start-Setup {
                                         $EditMinerConfig.Intensity = "$($EditMinerConfig.Intensity -join ",")"
                                         $MinerSetupStepStore = $true
                                     }
+                                }
+                            }
+                            "affinity" {
+                                if ($EditDeviceName -match "^CPU") {
+                                    $EditMinerConfig.Affinity = Read-HostString -Prompt "Enter individual miner CPU affinity ($(if ($EditMinerConfig.Difficulty) {"enter clear"} else {"leave empty"}) to use global default)" -Default $EditMinerConfig.Affinity -Characters "A-F0-9x"  | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                } else {
+                                    $MinerSetupStepStore = $false
+                                }
+                            }
+                            "threads" {
+                                if ($EditDeviceName -match "^CPU") {
+                                    $EditMinerConfig.Threads = Read-HostInt -Prompt "Enter individual miner CPU threads (or 0 for global default)" -Default ([int]$EditMinerConfig.Threads) -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $EditMinerConfig.Threads = "$(if ($EditMinerConfig.Threads -gt 0) {$EditMinerConfig.Threads})"
+                                } else {
+                                    $MinerSetupStepStore = $false
                                 }
                             }
                             "save" {
