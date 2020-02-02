@@ -9,7 +9,7 @@
 	"Russia": ["Europe", "Asia", "SoutheastAsia"],
 	"SouthAmerica": ["US", "USEast", "USWest", "Canada"],
 	"SoutheastAsia": ["HongKong","Japan","Asia"],
-    "Taiwan": ["HongKong","Asia","SoutheastAsia"],
+    "Taiwan": ["HongKong","SoutheastAsia","Asia"],
     "US": ["Canada", "USWest","USEast"],
 	"USEast": ["US", "Canada", "USWest"],
 	"USWest": ["US", "Canada", "USEast"]
