@@ -20,6 +20,9 @@
         "BaikalMineSolo" = [PSCustomObject]@{
             Currencies=@("REOSC")
         }
+        "BeePool" = [PSCustomObject]@{
+            Currencies=@("ETH","RVN")
+        }
         "BlazePool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=22}
             Currencies=@("BTC")
