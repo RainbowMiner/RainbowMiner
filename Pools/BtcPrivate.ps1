@@ -29,12 +29,14 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Regions   = $_.region
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
+    $Pool_Request = @()
+    $Pool_Blocks  = [PSCustomObject]@{}
 
     $ok = $true
     if (-not $InfoOnly) {
         try {
             $Pool_Request = ((Invoke-RestMethodAsync "https://pool.btcprivate.org/api/pool_stats" -tag $Name -timeout 15 -cycletime 120) | Select-Object -Last 1).pools
-            $Pool_Blocks  = [int](Invoke-RestMethodAsync "https://pool.btcprivate.org/api/last24" -tag $Name -timeout 15 -cycletime 120)
+            $Pool_Blocks  = Invoke-RestMethodAsync "https://pool.btcprivate.org/api/blocks" -tag $Name -timeout 15 -cycletime 120
             $ok = $Pool_Request.'bitcoin private' -ne $null
         }
         catch {
@@ -45,7 +47,16 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
 
     if ($ok -and -not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate ([Math]::Round($Pool_Request.'bitcoin private'.hashrate * 2 / 1000) / 1000) -BlockRate $Pool_Blocks -ChangeDetection $false -Quiet
+
+        $timestamp = Get-UnixTimestamp
+        $timestamp24h = $timestamp - 24*3600
+
+        $blocks = $Pool_Blocks.PSObject.Properties.Value | Where-Object {$_ -match ":(\d+)$"} | Foreach-Object {[int]($Matches[1]/1000)} | Where-Object {$_ -ge $timestamp24h} | Sort-Object -Descending
+        $blocks_measure = $blocks | Measure-Object -Minimum -Maximum
+        $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+        $Pool_TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
+
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate ([Math]::Round($Pool_Request.'bitcoin private'.hashrate * 2 / 1000) / 1000) -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
@@ -72,7 +83,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 PoolFee       = $Pool_Fee
                 Workers       = [int]$Pool_Request.'bitcoin private'.workerCount
                 Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_Data.TSL
+                TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
                 Name          = $Name
                 Penalty       = 0
