@@ -80,6 +80,10 @@ function formatPrices(data) {
 function formatPricesBTC(data) {
     if (typeof data == "undefined" || !data) return "-";
     var value = parseFloat(data);
+    var currency = ($("#profit_currency option").length)? $("#profit_currency option:selected").val() : window.localStorage.getItem("currency");
+    if (currency == "BTC") {
+        return value.toFixed(8).toString();
+	}
     var i = Math.floor(Math.log(value) / Math.log(1000));
     var cm = "", rto = 5;
     if (i < 0) { cm = "m"; value *= 1e3; rto = 5 }
