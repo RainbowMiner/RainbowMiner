@@ -136,6 +136,9 @@
         "LuckyPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
+        "LuckPool" = [PSCustomObject]@{
+            Currencies=@("VRSC","YEC")
+        }
         "Luxor" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User=""}
             SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable automatic Catalyst mining"}
