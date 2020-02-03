@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-RHminer\rhminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-rhminer/rhminer.2.1.Linux.CPU.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-rhminer/rhminer.2.1c.Linux.CPU.zip"
 } else {
     $Path = ".\Bin\CPU-RHminer\rhminer.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-rhminer/rhminer.2.1.Windows.CPU.zip"
