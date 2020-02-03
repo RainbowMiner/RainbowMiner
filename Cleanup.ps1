@@ -688,7 +688,7 @@ try {
         $AddAlgorithm += @("CPUPower","CryptonightCAT","CryptonightTLO","CryptonightXEQ","K12","Kadena","RandomARQ","RandomHash2","RandomSFX","Tensority","VerusHash","YespowerIOTS","YespowerITC","YespowerLITB","YespowerLTNCG","YespowerSUGAR","YespowerURX")
     }
 
-    if ($Version -le (Get-Version "4.5.2.5")) {
+    if ($Version -le (Get-Version "4.5.2.6")) {
         $AddAlgorithm += @("ProgPowSero")
         Get-ChildItem "Stats\Pools" -Filter "BeePool_SERO_Profit" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
     }
