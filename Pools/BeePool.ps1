@@ -91,6 +91,10 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
         #$Pool_Rate = if ($Global:Rates.$Pool_Currency -and $Pool_Currency -ne "GRIN") {$Pool_Data.pps_value / $Global:Rates.$Pool_Currency / $Divisor} else {0}
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate (ConvertFrom-Hash $Pool_Data.poolhash) -BlockRate ([int]$Pool_Data.last_24_hour_block_total) -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        if ($Pool_Currency -eq "GRIN" -and $Pool_Wallet -match "@.*-") {
+            Write-Log -Level Warn "GRIN mining failed: BeePool doen't accept email domains, that contain hyphen (`"-`")."
+            return
+        }
     }
 
     $Pool_SSL = $false
