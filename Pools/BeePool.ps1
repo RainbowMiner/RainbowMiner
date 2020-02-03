@@ -37,7 +37,7 @@ $Pools_Data = @(
 $Pool_Request = [PSCustomObject]@{}
 $ok = $false
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.beepool.org/pool_status" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://www.beepool.org/pool_status" -tag $Name -cycletime 120 -timeout 20
     $ok = "$($Pool_Request.code)" -eq "0"
 }
 catch {
@@ -77,7 +77,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
         if ($TZ_China_Standard_Time) {
             $Pool_Blocks = [PSCustomObject]@{}
             try {
-                $Pool_Blocks = Invoke-RestMethodAsync "https://www.beepool.org/get_blocks" -tag $Name -cycletime 120 -body @{coin=$Pool_Data.coin}
+                $Pool_Blocks = Invoke-RestMethodAsync "https://www.beepool.org/get_blocks" -tag $Name -cycletime 120 -body @{coin=$Pool_Data.coin} -timeout 20
                 if ("$($Pool_Blocks.code)" -eq "0" -and ($Pool_Blocks.data.data | Measure-Object).Count) {
                     $Pool_TSL = ((Get-Date).ToUniversalTime() - [System.TimeZoneInfo]::ConvertTimeToUtc(($Pool_Blocks.data.data | Select-Object -First 1).time, $TZ_China_Standard_Time)).TotalSeconds
                 }
@@ -87,14 +87,13 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
             }
         }
 
-        #$Divisor  = Switch($Pool_Data.pps_unit.Substring(0,1)) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
-        #$Pool_Rate = if ($Global:Rates.$Pool_Currency -and $Pool_Currency -ne "GRIN") {$Pool_Data.pps_value / $Global:Rates.$Pool_Currency / $Divisor} else {0}
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate (ConvertFrom-Hash $Pool_Data.poolhash) -BlockRate ([int]$Pool_Data.last_24_hour_block_total) -ChangeDetection $false -Quiet
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
-        if ($Pool_Currency -eq "GRIN" -and $Pool_Wallet -match "@.*-") {
-            Write-Log -Level Warn "GRIN mining failed: BeePool doen't accept email domains, that contain hyphen (`"-`")."
-            return
+        $Pool_Rate = 0
+        if ($Pool_Currency -eq "SERO") {
+            $Divisor  = Switch($Pool_Data.pps_unit.Substring(0,1)) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
+            $Pool_Rate = if ($Global:Rates.$Pool_Currency -and $Pool_Currency -ne "GRIN") {$Pool_Data.pps_value / $Global:Rates.$Pool_Currency / $Divisor} else {0}
         }
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Rate -Duration $StatSpan -HashRate (ConvertFrom-Hash $Pool_Data.poolhash) -BlockRate ([int]$Pool_Data.last_24_hour_block_total) -ChangeDetection (-not $Pool_Rate) -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     $Pool_SSL = $false
@@ -123,7 +122,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
             EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
-            WTM           = $true
+            WTM           = -not $Pool_Rate
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1
