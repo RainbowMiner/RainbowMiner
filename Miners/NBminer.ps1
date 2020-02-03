@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 9;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 10; Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = ""; Params = "-a ethash";        NH = $true; MinMemGb = 3;  DevFee = 0.65; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "ProgPow";      SecondaryAlgorithm = ""; Params = "-a progpow_sero";  NH = $true; MinMemGb = 4;  DevFee = 0.65; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #ProgPowSero
+    [PSCustomObject]@{MainAlgorithm = "ProgPowSero";  SecondaryAlgorithm = ""; Params = "-a progpow_sero";  NH = $true; MinMemGb = 3;  DevFee = 0.65; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "ScryptSIPC";   SecondaryAlgorithm = ""; Params = "-a sipc";          NH = $true; MinMemGb = 1;  DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 1;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 2;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
@@ -104,7 +104,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and 
                         ($MainAlgorithm -ne "Ethash" -or $Pools.$MainAlgorithm_Norm.Name -ne "MiningRigRentals") -and 
-                        ($MainAlgorithm -ne "ProgPow" -or $Pools.$MainAlgorithm_Norm.CoinSymbol -eq "SERO") -and
                         ($_.NH -or ($Pools.$MainAlgorithm_Norm.Name -notmatch "Nicehash" -and ($SecondAlgorithm -eq '' -or $Pools.$SecondAlgorithm_Norm.Name -notmatch "Nicehash")))
                     ) {
                     if ($First) {
@@ -120,7 +119,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 
                     $Stratum = $Pools.$MainAlgorithm_Norm.Protocol
-                    if ($MainAlgorithm_Norm -match "^(Ethash|ProgPow)") {
+                    if ($MainAlgorithm_Norm -match "^Ethash") {
                         Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                             "ethproxy" {$Stratum = $Stratum -replace "stratum","ethproxy"}
                             "ethstratumnh" {$Stratum = $Stratum -replace "stratum","nicehash"}
@@ -148,7 +147,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             PowerDraw      = 0
                             BaseName       = $Name
                             BaseAlgorithm  = $MainAlgorithm_Norm_0
-                            EnvVars        = if ($IsLinux -and $MainAlgorithm_Norm_0 -eq "ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
+                            EnvVars        = if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
 						}
 					} else {
                         $Pool_Port2 = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
