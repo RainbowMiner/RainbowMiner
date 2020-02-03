@@ -40,6 +40,8 @@
 139	CcminerVerus
 140	CcminerKlausT
 141	CcminerKlausT820
+142	CcminerKlausT825
+143	CcminerSha3d
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -103,6 +105,7 @@
 352	FireIceRXCpu (linux)
 353	FireIceRXNvidia (linux)
 354	Gminer183
+355	ProgPOWSeroNvidia
 
 400	Sgminer
 401	SgminerBitcore
@@ -118,6 +121,7 @@
 411	SgminerMTP
 412	WildRig01538
 413	ProgPOWZAMD
+414	ProgPOWSeroAMD
 
 500	CpuminerJayddee
 501	CpuminerJayddeeAessse42
