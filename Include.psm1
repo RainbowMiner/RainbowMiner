@@ -55,7 +55,7 @@ function Confirm-Version {
         try {
             $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
             if ($Force) {
-                $Request = Invoke-GetUrl $ReposURI
+                $Request = Invoke-GetUrl $ReposURI -timeout 20
             } else {
                 $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600 -noquickstart
             }
