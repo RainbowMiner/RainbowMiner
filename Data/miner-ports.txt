@@ -148,6 +148,7 @@
 541	Xlarig
 542	CpuminerRKZ
 543	CpuminerPower2b
+544	CpuminerVerium
 
 
 4068    CcminerSpModTribus
