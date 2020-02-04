@@ -35,7 +35,7 @@ $Commands = [PSCustomObject[]]@(
 	[PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; LinuxOnly = $true} #Lyra2h
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b
-	[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; LinuxOnly = $true} #Verium
+	#[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; LinuxOnly = $false} #ScryptN2, CpuminerVerium faster
 	[PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
     [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2

@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; NH = $true; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "pluck"; NH = $true; Params = ""} #pluck
     [PSCustomObject]@{MainAlgorithm = "power2b"; NH = $true; Params = ""} #power2b
-    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; NH = $true; Params = ""} #Verium
+    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; NH = $true; Params = ""} #ScryptN2
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; NH = $true; Params = ""} #ScryptN
     [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; NH = $true; Params = ""} #Scrypt8k
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; NH = $true; Params = ""} #ScryptJane16

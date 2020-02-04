@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""} #ScryptN
     #[PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #SHAvite3
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #Skein2
-    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #Verium
+    #[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium faster
     #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #X12
     #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt, CpuminerJayddee faster
     #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #ZR5
