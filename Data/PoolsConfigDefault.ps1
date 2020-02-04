@@ -180,6 +180,11 @@
             Currencies=@()
             Autoexchange=$true
         }
+        "MiningPoolOvh" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{API_Key="";Password="x"}
+            SetupFields=[PSCustomObject]@{API_Key="Enter your mining-pool.ovh API-Key";Password="Enter your mining-pool.ovh password"}
+            Currencies=@("VRM")
+        }
         "MiningRigRentals" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_Key="";API_Secret="";EnableMining="0";EnableAutoCreate="1";EnablePriceUpdates="1";EnableAutoPrice="1";EnableMinimumPrice="1";PriceBTC="0";PriceFactor="1.3";PriceCurrencies="BTC";Title = "%algorithm% mining";Description = "Autostart mining with RainbowMiner (https://rbminer.net) on $(if ($IsWindows) {"Windows"} else {"Linux"}). This rig is idle and will activate itself, as soon, as you rent it. %workername%"}
             SetupFields=[PSCustomObject]@{User="Enter your MiningRigRentals username";API_Key="Enter your MiningRigRentals API key";API_Secret = "Enter your MiningRigRentals API secret key";EnableAutoCreate="Automatically create MRR-rigs";EnablePriceUpdates="Enable rental price updates";EnableAutoPrice="Enable automatic price changes to rig's profit";EnableMinimumPrice="Set minimum price, instead of using a fixed price";PriceBTC="Fixed price in BTC (used, if EnableAutoPrice=0)";PriceFactor="Enter profit multiplicator: price = rig's profit x this multiplicator";PriceCurrencies="List of accepted currencies (must contain BTC)";EnableMining="Enable switching to MiningRigRentals, even it is not rentend (not recommended)";Title="Title for autocreate, %algorithm% will be substituted with algorithm";Description="Description for autocreate, %workername% will be substituted with rig's workername"}
@@ -218,6 +223,11 @@
         }
         "Poolin" = [PSCustomObject]@{
             Currencies=@("ETH","RVN")
+        }
+        "Poolium" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{API_Key="";Password="x"}
+            SetupFields=[PSCustomObject]@{API_Key="Enter your poolium.win API-Key";Password="Enter your poolium.win password"}
+            Currencies=@("VRM")
         }
         "PoolSexy" = [PSCustomObject]@{
             Currencies=@("DBIX")
