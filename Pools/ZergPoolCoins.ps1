@@ -100,6 +100,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             "qubit" {1000}
             "rfv2" {1}
             "scrypt" {1000}
+            "scryptn2" {0.001}
             "sha256" {1000000000}
             "skein" {1000}
             "skunk" {1}
