@@ -30,7 +30,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_RpcPath   = $_.rpc
     $Pool_Regions   = $_.region
 
-    if ($Wallets.$Pool_Currency -notmatch "\.") {
+    if (-not $InfoOnly -and $Wallets.$Pool_Currency -notmatch "\.") {
         Write-Log -Level Warn "$Name's $Pool_Currency wallet must be in the form xxx.yyy - check the pool's `"My Workers`" page."
         return
     }
