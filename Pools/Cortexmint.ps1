@@ -50,7 +50,7 @@ $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "Cortex"; port = 8008; ssl = $false}
+    [PSCustomObject]@{algo = "Cuckaroo30"; port = 8008; ssl = $false}
 )
 
 $timestamp     = [int]($Pool_Request.now /1000)
