@@ -80,6 +80,7 @@ function Start-Core {
         [System.Collections.Generic.List[string]]$Session.GetTicker = @()
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
+        $Session.StartTimeCore     = (Get-Date).ToUniversalTime()
 
         $Session.Strikes           = 3
         $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
@@ -98,6 +99,7 @@ function Start-Core {
         $Session.Restart = $false
         $Session.LockMiners = [PSCustomObject]@{Locked=$false;Enabled=$false;Pools=@()}
         $Session.AutoUpdate = $false
+        $Session.RestartComputer = $false
         $Session.MSIAcurrentprofile = -1
         $Session.RunSetup = Get-Yes $SetupOnly
         $Session.SetupOnly = Get-Yes $SetupOnly
@@ -3245,6 +3247,10 @@ function Invoke-Core {
             }
         }
         if ($Session.Stopp -and ($Session.AutoUpdate -or $Session.Restart)) {Set-LastStartTime}
+    }
+
+    if ($Session.Config.EnableRestartComputer -and $Session.Config.RestartComputerHours -gt 0 -and $Session.StartTimeCore.AddHours($Session.Config.RestartComputerHours) -le (Get-Date).ToUniversalTime()) {
+        $Session.Stopp = $Session.RestartComputer = $true
     }
 
     if ($Session.IsBenchmarkingRun -and -not $Session.Benchmarking) {$Session.IsBenchmarkingRun = $false}
