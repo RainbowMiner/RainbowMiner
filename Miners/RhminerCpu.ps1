@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-RHminer\rhminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-rhminer/rhminer.2.1c.Linux.CPU.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-rhminer/rhminer.2.2.Linux.CPU.zip"
 } else {
     $Path = ".\Bin\CPU-RHminer\rhminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-rhminer/rhminer.2.1.Windows.CPU.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-rhminer/rhminer.2.2.Windows.CPU.zip"
 }
 $ManualUri = "https://github.com/polyminer1/rhminer/releases"
 $Port = "131{0:d2}"
 $DevFee = 1.0
-$Version = "2.1"
+$Version = "2.2"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
