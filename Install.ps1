@@ -27,6 +27,8 @@ if ($IsLinux) {
     Start-Process ".\IncludesLinux\bash\libocl.sh" -Wait
     Write-Host "Install libjansson-dev .."
     Start-Process ".\IncludesLinux\bash\libjansson.sh" -Wait
+    Write-Host "Install libltdl7 .."
+    Start-Process ".\IncludesLinux\bash\libltdl7.sh" -Wait
     Write-Host "Install p7zip .."
     Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
     Write-Host "Install screen .."
