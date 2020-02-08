@@ -12,7 +12,7 @@ param(
     [String]$StatAverage = "Minute_10"
 )
 
-if (-not $InfoOnly -and -not (Compare-Object @("ETH","ETC","ETP","GRIN") $Wallets.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent)) {return}
+if (-not $InfoOnly -and -not (Compare-Object @("ETH","ETC","ETP","GRIN") @($Wallets.PSObject.Properties.Name | Select-Object) -IncludeEqual -ExcludeDifferent)) {return}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
