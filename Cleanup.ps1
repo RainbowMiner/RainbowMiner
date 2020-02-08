@@ -701,6 +701,16 @@ try {
 
     if ($Version -le (Get-Version "4.5.2.8")) {
         if ($IsLinux) {
+            if (Test-Path "Bin\ANY-Xmrig") {
+                $ChangesTotalTmp = $ChangesTotal
+                Get-ChildItem "Bin\ANY-Xmrig" -Filter "config_*.json" -File | Foreach-Object {
+                    $Contents = Get-Content $_.FullName -Raw -ErrorAction Ignore
+                    if ($Contents -match "libltdl") {Remove-Item $_.FullName -Force;$ChangesTotal++}
+                }
+                if ($ChangesTotal -gt $ChangesTotalTmp) {
+                    Get-ChildItem "Bin\ANY-Xmrig" -Filter "threads_*.json" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
+                }
+            }
             $RemoveMinerStats += @("*-Xmrig-*_HashRate.txt")
         }
     }
