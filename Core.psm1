@@ -3250,7 +3250,22 @@ function Invoke-Core {
     }
 
     if ($Session.Config.EnableRestartComputer -and $Session.Config.RestartComputerHours -gt 0 -and $Session.StartTimeCore.AddHours($Session.Config.RestartComputerHours) -le (Get-Date).ToUniversalTime()) {
-        $Session.Stopp = $Session.RestartComputer = $true
+        Write-Log -Level Warn "Restarting computer now."
+        try {
+            if ($IsLinux) {
+                if (Test-OCDaemon) {
+                    Invoke-OCDaemon -Cmd "reboot"
+                } else {
+                    Invoke-Exe -FilePath "reboot" -Runas > $null
+                }
+            } else {
+                Restart-Computer -Force -ErrorAction Stop
+            }
+            $Session.Stopp = $Session.RestartComputer = $true
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Failed to restart computer: $($_.Exception.Message) on item $($_.Exception.ItemName)"
+        }
     }
 
     if ($Session.IsBenchmarkingRun -and -not $Session.Benchmarking) {$Session.IsBenchmarkingRun = $false}

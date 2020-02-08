@@ -344,16 +344,10 @@ while (-not $Session.Stopp) {
 
 Stop-Core
 
-if ($Session.RestartComputer) {
-    Write-Log -Level Warn "Restarting computer now."
-}
-
 #Stop the log
 if (-not $psISE -and $Session.LogLevel -ne "Silent") {
     Stop-Transcript
 }
-
-if ($Session.RestartComputer -and -not $psISE) {Restart-Computer -Force}
 
 if ($IsWindows) {
     if ($Session.AutoUpdate -and -not $psISE) {Exit 999}
