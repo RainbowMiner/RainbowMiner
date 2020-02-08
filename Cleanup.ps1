@@ -697,6 +697,9 @@ try {
         $AddAlgorithm += @("Cuckaroo30","ScryptN2")
         Get-ChildItem "Cache" -Filter "9DFA752C6FD0FF15B7E1F4A10E54B228.asy" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
         Get-ChildItem "Cache" -Filter "AB88C0C3CF2AD655BE82469CE6957F2B.asy" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
+    }
+
+    if ($Version -le (Get-Version "4.5.2.8")) {
         if ($IsLinux) {
             $RemoveMinerStats += @("*-Xmrig-*_HashRate.txt")
         }
