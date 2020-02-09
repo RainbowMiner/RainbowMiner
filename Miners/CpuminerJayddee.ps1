@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'aes-avx'} elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.1-jayddee/cpuminer-opt-3.12.1-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.2-jayddee/cpuminer-opt-3.12.2-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.1-jayddee/cpuminer-opt-3.12.1-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.2-jayddee/cpuminer-opt-3.12.2-windows.zip"
 }
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
-$Version = "3.12.1"
+$Version = "3.12.2"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -50,7 +50,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "pluck"; NH = $true; Params = ""} #pluck
     [PSCustomObject]@{MainAlgorithm = "power2b"; NH = $true; Params = ""} #power2b
     [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; NH = $true; Params = ""} #ScryptN2
-    [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; NH = $true; Params = ""} #ScryptN11
+    #[PSCustomObject]@{MainAlgorithm = "scrypt:2048"; NH = $true; Params = ""} #ScryptN11, CpuminerMulti faster
     [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; NH = $true; Params = ""} #Scrypt8k
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; NH = $true; Params = ""} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; NH = $true; Params = ""} #scryptjane:nf
