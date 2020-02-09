@@ -64,6 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #SonoA
     [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""} # CryptoNightV3
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
+    [PSCustomObject]@{MainAlgorithm = "scrypt:10"; Params = ""} #ScryptN11
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
     #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
