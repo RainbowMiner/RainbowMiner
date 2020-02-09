@@ -34,81 +34,84 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
     return
 }
 
-[hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("us","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | ForEach-Object {
-    $Pool_Currency = $Pool_Currency -replace '-.+$'
+$Pools_Data = @(
+    [PSCustomObject]@{symbol="ARW";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    [PSCustomObject]@{symbol="BITC"; host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    [PSCustomObject]@{symbol="SIN";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    [PSCustomObject]@{symbol="PHL";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    [PSCustomObject]@{symbol="XRD";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    [PSCustomObject]@{symbol="CKB";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    [PSCustomObject]@{symbol="ZMY";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    [PSCustomObject]@{symbol="NIM";  host=@("nimiq");               region=@("us");           ; fee = 1.25; ssl = $true}
+    [PSCustomObject]@{symbol="KDA";  host=@("kda-us","kda-eu");     region=@("us","eu")       ; fee = 2}
+    [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "ProgPow"}
+    [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "RandomX"}
+    [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "CuckooCycle"}
+    [PSCustomObject]@{symbol="MWC";  host=@("mwc-us");              region=@("us");           ; fee = 1; algo = "Cuckarood29"; hashrate = "C29d"}
+    [PSCustomObject]@{symbol="MWC";  host=@("mwc-us");              region=@("us");           ; fee = 1; algo = "Cuckatoo31";  hashrate = "C31"}
+    [PSCustomObject]@{symbol="BEAM"; host=@("us-beam");             region=@("us");           ; fee = 0; ssl = $true}
+)
 
-    $Pool_Host = "$(if ($Pool_Currency -eq "NIM") {"nimiq"} else {"stratum"}).icemining.ca"
+$Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
+    $Pool_Coin           = Get-Coin "$Pool_Currency$(if ($_.algo) {"-$($_.algo)"})"
 
-    $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
-    $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
-
-    if ($Pool_Algorithm -eq "epic") {
-        $Pool_Algorithm_Norm = @("RandomX","ProgPoW","CuckooCycle") | Foreach-Object {
-            if (-not $Pool_Algorithms.ContainsKey($_)) {$Pool_Algorithms.$_ = Get-Algorithm $_}
-            $Pool_Algorithms.$_
-        }
+    if ($Pool_Coin) {
+        $Pool_Algorithm  = $Pool_Coin.Algo
+        $Pool_CoinName   = $Pool_Coin.Name
     } else {
-        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+        $Pool_Algorithm  = $PoolCoins_Request.$Pool_Currency.algo
+        $Pool_CoinName   = $PoolCoins_Request.$Pool_Currency.name
     }
 
-    $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
-    $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
-
-    $Divisor = 1e9
-
-    $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
-    $Pool_Algorithm_Norm | Foreach-Object {
+    if (-not $InfoOnly) {
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$(if ($_.algo) {"-$Pool_Algorithm_Norm"})_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_Currency -eq "EPIC") {10} elseif ($_.hashrate) {$PoolCoins_Request.$Pool_Currency.hashrate."$($_.hashrate)"} else {$PoolCoins_Request.$Pool_Currency.hashrate}) -BlockRate $PoolCoins_Request.$Pool_Currency."24h_blocks" -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+    }
 
-        if (-not $InfoOnly) {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)$(if ($Pool_CoinSymbol -eq "EPIC") {"-$_"})_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_CoinSymbol -eq "EPIC") {10} else {$PoolCoins_Request.$Pool_CoinSymbol.hashrate}) -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
-            if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+    $i = 0
+    foreach($Pool_Region in $_.region) {
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+			Algorithm0    = $Pool_Algorithm_Norm
+            CoinName      = $Pool_CoinName
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
+            Protocol      = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
+            Host          = "$(if ($Pool_Region -ne "us") {$_.host[$i] -replace "stratum",$Pool_Region} else {$_.host[$i]}).icemining.ca"
+            Port          = $PoolCoins_Request.$Pool_Currency.port
+            User          = $Wallets.$Pool_Currency
+            Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = if ($_.ssl) {$true} else {$false}
+            Updated       = $Stat.Updated
+            PoolFee       = $_.fee
+            Workers       = $PoolCoins_Request.$Pool_Currency.workers
+            Hashrate      = $Stat.HashRate_Live
+            BLK           = $Stat.BlockRate_Average
+            TSL           = $PoolCoins_Request.$Pool_Currency.timesincelast
+            WTM           = $true
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Disabled      = $false
+            HasMinerExclusions = $false
+            Price_Bias    = 0.0
+            Price_Unbias  = 0.0
+            Wallet        = $Wallets.$Pool_Currency
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
-
-        foreach($Pool_Region in $Pool_Regions) {        
-            [PSCustomObject]@{
-                Algorithm     = $_
-				Algorithm0    = $_
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_CoinSymbol
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+tcp"
-                Host          = $Pool_Host
-                Port          = $Pool_Port
-                User          = $Pool_User
-                Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_PoolFee
-                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-                WTM           = $true
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
-        }
+        $i++
     }
 }
