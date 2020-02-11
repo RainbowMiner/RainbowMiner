@@ -3259,7 +3259,16 @@ function Invoke-Core {
                     Invoke-Exe -FilePath "reboot" -Runas > $null
                 }
             } else {
-                Restart-Computer -Force -ErrorAction Stop
+                try {
+                    Restart-Computer -Force -ErrorAction Stop
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Info "Restart-Computer command failed. Falling back to shutdown."
+                    shutdown /r /f /t 10 /c "RainbowMiner scheduled restart" 2>$null
+                    if ($LastExitCode -ne 0) {
+                        throw "shutdown cannot reboot $($Session.MachineName) ($LastExitCode)"
+                    }
+                }
             }
             $Session.Stopp = $Session.RestartComputer = $true
         } catch {
