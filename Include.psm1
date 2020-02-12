@@ -2053,7 +2053,6 @@ function Start-SubProcessInScreen {
                         (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                     }
                 }
-
                 
                 $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
                     if (Test-OCDaemon) {
@@ -2061,6 +2060,16 @@ function Start-SubProcessInScreen {
                         $OCDcount++
                     } else {
                         $_.Kill()
+                    }
+                }
+
+                [int]$ScreenId = Invoke-Expression "screen -ls | grep $($ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+                if ($ScreenId) {
+                    if (Test-OCDaemon) {
+                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -S $($Job.ScreenName) -X quit" -Quiet > $null
+                        $OCDcount++
+                    } else {
+                        (Start-Process "screen" -ArgumentList "-S $($ScreenName) -X quit" -PassThru).WaitForExit() > $null
                     }
                 }
             }
@@ -2165,6 +2174,8 @@ function Stop-SubProcess {
                     if ($Job.ScreenName) {
                         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
                         try {
+                            [int]$ScreenId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+
                             $ToKill = @()
                             $ToKill += $Process
                             $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
@@ -2220,11 +2231,26 @@ function Stop-SubProcess {
                                     Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
                                     if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
                             }
-
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                             Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
                         }
+
+                        try {
+                            if ($ScreenId) {
+                                if (Test-OCDaemon) {
+                                    $Cmd = "screen -S $($Job.ScreenName) -X quit"
+                                    $Msg = Invoke-OCDaemon -Cmd $Cmd
+                                    if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
+                                } else {
+                                    (Start-Process "screen" -ArgumentList "-S $($Job.ScreenName) -X quit" -PassThru).WaitForExit() > $null
+                                }                            
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-Log -Level Warn "Problem killing bash screen $($Job.ScreenName): $($_.Exception.Message)"
+                        }
+
                     } else {
                         Stop-Process -id $Process.Id -Force -ErrorAction Ignore
                     }
