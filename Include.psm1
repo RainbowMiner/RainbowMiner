@@ -2024,7 +2024,7 @@ function Start-SubProcessInScreen {
                         if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
                     }
                 } else {
-                    $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $_.Parent.Id -eq $ScreenProcessId}
+                    $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $($_.Parent).Parent.Id -eq $ScreenProcessId}
                     if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
                 }
             } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
