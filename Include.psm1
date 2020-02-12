@@ -1987,9 +1987,11 @@ function Start-SubProcessInScreen {
         $Process  = $null
         $BashProc = $null
         $started  = $false
+        $OCDcount = 0
 
         if (Test-OCDaemon) {
-            $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.0.$ScreenName" -FilePath $PIDBash -Move -Quiet
+            $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -FilePath $PIDBash -Move -Quiet
+            $OCDcount++
         } else {
             $ProcessParams = @{
                 FilePath         = $PIDBash
@@ -2030,19 +2032,36 @@ function Start-SubProcessInScreen {
                 $ToKill += $Process
                 $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
 
-                $Proc = Start-Process "screen" -ArgumentList "-S $($ScreenName) -X stuff `^C" -PassThru
-                $Proc | Wait-Process
+                if (Test-OCDaemon) {
+                    Invoke-OCDaeminWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -S $($ScreenName) -X stuff `^C" -Quiet > $null
+                    $OCDcount++
+                } else {
+                    (Start-Process "screen" -ArgumentList "-S $($ScreenName) -X stuff `^C" -PassThru).WaitForExit() > $null
+                }
 
                 $StopWatch.Restart()
-                do {
+                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
                     Start-Sleep -Milliseconds 500
-                } until ($false -notin $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10)
+                }
 
-                $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
-                if (Test-OCDaemon) {
-                    Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
-                } else {
-                    (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                if (-not $Process.HasExited) {
+                    $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
+                    if (Test-OCDaemon) {
+                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
+                        $OCDcount++
+                    } else {
+                        (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                    }
+                }
+
+                
+                $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
+                    if (Test-OCDaemon) {
+                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "kill -9 $($_.Id)" -Quiet > $null
+                        $OCDcount++
+                    } else {
+                        $_.Kill()
+                    }
                 }
             }
             if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
@@ -2171,13 +2190,15 @@ function Stop-SubProcess {
 
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                                $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
-                                if (Test-OCDaemon) {
-                                    $Cmd = "start-stop-daemon $ArgumentList"
-                                    $Msg = Invoke-OCDaemon -Cmd $Cmd
-                                    if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
-                                } else {
-                                    (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                                if (-not $Process.HasExited) {
+                                    $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
+                                    if (Test-OCDaemon) {
+                                        $Cmd = "start-stop-daemon $ArgumentList"
+                                        $Msg = Invoke-OCDaemon -Cmd $Cmd
+                                        if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
+                                    } else {
+                                        (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                                    }
                                 }
                                 if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
                                 if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
