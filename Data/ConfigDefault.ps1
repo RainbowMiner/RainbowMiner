@@ -23,6 +23,7 @@
     EnableMiningHeatControl = $false
     EnableMinerBackups  = $true
     EnableKeepDownloads = $true
+    EnableMinersAsRoot = $true
     MiningHeatControl = 2.0
     DisableUnprofitableAlgolist = $false
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores

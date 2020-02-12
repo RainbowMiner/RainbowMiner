@@ -1980,8 +1980,8 @@ function Start-SubProcessInScreen {
     (Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru).WaitForExit() > $null
     (Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru).WaitForExit() > $null
 
-    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
-        param($ControllerProcessID, $WorkingDirectory, $FilePath, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
+    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
+        param($ControllerProcessID, $WorkingDirectory, $FilePath, $OCDaemonPrefix, $EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
 
         Import-Module "$(Join-Path $CurrentPwd "OCDaemon.psm1")"
 
@@ -1997,7 +1997,7 @@ function Start-SubProcessInScreen {
         $ScreenProcessId = 0
         $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
 
-        if (Test-OCDaemon) {
+        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
             $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -FilePath $PIDBash -Move -Quiet
             $OCDcount++
         } else {
@@ -2012,7 +2012,7 @@ function Start-SubProcessInScreen {
             }
         }
         if ($started) {
-            [int]$ScreenProcessId = invoke-expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
+            [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
             $MinerExecutable = Split-Path $FilePath -Leaf
 
             $StopWatch.Restart()
@@ -2049,8 +2049,8 @@ function Start-SubProcessInScreen {
                 $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
 
                 $ArgumentList = "$($ScreenName) -X stuff `^C"
-                if (Test-OCDaemon) {
-                    Invoke-OCDaeminWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
+                if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+                    Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                     $OCDcount++
                 } else {
                     (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
@@ -2063,7 +2063,7 @@ function Start-SubProcessInScreen {
 
                 if (-not $Process.HasExited -and $StartStopDaemon) {
                     $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
-                    if (Test-OCDaemon) {
+                    if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
@@ -2082,7 +2082,7 @@ function Start-SubProcessInScreen {
 
                 if ($ScreenProcessId) {
                     $ArgumentList = "-S $($ScreenName) -X quit"
-                    if (Test-OCDaemon) {
+                    if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
@@ -2200,7 +2200,7 @@ function Stop-SubProcess {
                             Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
                             $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
-                            if (Test-OCDaemon) {
+                            if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                 $Cmd = "screen $ArgumentList"
                                 $Msg = Invoke-OCDaemon -Cmd $Cmd
                                 if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
@@ -2221,7 +2221,7 @@ function Stop-SubProcess {
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                                 if (-not $Process.HasExited -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
                                     $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
-                                    if (Test-OCDaemon) {
+                                    if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                         $Cmd = "start-stop-daemon $ArgumentList"
                                         $Msg = Invoke-OCDaemon -Cmd $Cmd
                                         if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
