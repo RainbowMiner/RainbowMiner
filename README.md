@@ -48,7 +48,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ### Windows 7/8.1/10 pre-requesites
 
-1. Install PowerShell 6: [Download Installer for version 6.2.1](https://github.com/PowerShell/PowerShell/releases/download/v6.2.1/PowerShell-6.2.1-win-x64.msi)
+1. Install PowerShell 6: [Download Installer for version 6.2.4](https://github.com/PowerShell/PowerShell/releases/download/v6.2.4/PowerShell-6.2.4-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Update GPU drivers: [Nvidia 431.68](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 19.5.2](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
@@ -141,17 +141,17 @@ At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v6.2.2 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v6.2.4 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 ```
 # if not already done, download the package, change the ubuntu distro version number!
-wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.2/powershell_6.2.2-1.ubuntu.18.04_amd64.deb
+wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.4/powershell_6.2.4-1.ubuntu.18.04_amd64.deb
 
 # install powershell package
-dpkg -i powershell_6.2.2-1.ubuntu.18.04_amd64.deb
+dpkg -i powershell_6.2.4-1.ubuntu.18.04_amd64.deb
 
 # install powershell dependecies
 apt install -f
