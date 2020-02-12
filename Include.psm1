@@ -2156,16 +2156,13 @@ function Stop-SubProcess {
                             $Proc | Wait-Process
 
                             $StopWatch.Restart()
-                            do {
+                            while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
                                 Start-Sleep -Milliseconds 500
-                                if ($StopWatch.Elapsed.Seconds -gt 10) {
-                                    Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
-                                    if ($StopWatch.Elapsed.Seconds -gt 180) {
-                                        Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
-                                        if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
-                                    }
-                                }
-                            } until ($false -notin $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 180)
+                            }
+
+                            if ($false -in $ToKill.HasExited) {
+                                Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                            }
 
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
@@ -2179,6 +2176,24 @@ function Stop-SubProcess {
                                 if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
                                 if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
                             }
+
+                            $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
+                                if (Test-OCDaemon) {
+                                    Invoke-OCDaemon "kill -9 $($_.Id)" > $null
+                                } else {
+                                    $_.Kill()
+                                }
+                            }
+
+                            while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 180) {
+                                Start-Sleep -Milliseconds 500
+                            }
+
+                            if ($false -in $ToKill.HasExited) {
+                                    Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
+                                    if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
+                            }
+
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                             Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
