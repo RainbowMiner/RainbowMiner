@@ -719,6 +719,10 @@ try {
         $AddAlgorithm += @("ScryptN11")
     }
 
+    if ($Version -le (Get-Version "4.5.3.0")) {
+        $AddAlgorithm += @("Blake2bSHA3")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
