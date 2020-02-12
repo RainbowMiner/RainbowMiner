@@ -1707,7 +1707,7 @@ function Start-SubProcess {
         [Switch]$SetAMDEnv = $false
     )
 
-    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore) -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
+    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -SetAMDEnv:$SetAMDEnv
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
@@ -1909,6 +1909,8 @@ function Start-SubProcessInScreen {
         [Switch]$SetAMDEnv = $false
     )
 
+    $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
+
     $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
 
     if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
@@ -1948,7 +1950,11 @@ function Start-SubProcessInScreen {
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff.Add("export $($matches[1])=$($matches[2])") > $null}
 
     $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
-    $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
+    if ($StartStopDaemon) {
+        $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
+    } else {
+        $Stuff.Add("$FilePath $ArgumentList") > $null
+    }
 
     [System.Collections.Generic.List[string]]$Cmd = @()
     $Cmd.Add("screen -ls `"$ScreenName`" | (") > $null
@@ -1974,8 +1980,8 @@ function Start-SubProcessInScreen {
     (Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru).WaitForExit() > $null
     (Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru).WaitForExit() > $null
 
-    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
-        param($ControllerProcessID, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
+    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
+        param($ControllerProcessID, $WorkingDirectory, $FilePath, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
 
         Import-Module "$(Join-Path $CurrentPwd "OCDaemon.psm1")"
 
@@ -1988,6 +1994,8 @@ function Start-SubProcessInScreen {
         $BashProc = $null
         $started  = $false
         $OCDcount = 0
+        $ScreenProcessId = 0
+        $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
 
         if (Test-OCDaemon) {
             $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -FilePath $PIDBash -Move -Quiet
@@ -2004,12 +2012,20 @@ function Start-SubProcessInScreen {
             }
         }
         if ($started) {
+            [int]$ScreenProcessId = invoke-expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
+            $MinerExecutable = Split-Path $FilePath -Leaf
+
             $StopWatch.Restart()
             do {
                 Start-Sleep -Milliseconds 500
-                if (Test-Path $PIDPath) {
-                    $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
-                    if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
+                if ($StartStopDaemon) {
+                    if (Test-Path $PIDPath) {
+                        $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
+                        if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
+                    }
+                } else {
+                    $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $_.Parent.Id -eq $ScreenProcessId}
+                    if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
                 }
             } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
             $StopWatch.Stop()
@@ -2032,11 +2048,12 @@ function Start-SubProcessInScreen {
                 $ToKill += $Process
                 $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
 
+                $ArgumentList = "$($ScreenName) -X stuff `^C"
                 if (Test-OCDaemon) {
-                    Invoke-OCDaeminWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -S $($ScreenName) -X stuff `^C" -Quiet > $null
+                    Invoke-OCDaeminWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                     $OCDcount++
                 } else {
-                    (Start-Process "screen" -ArgumentList "-S $($ScreenName) -X stuff `^C" -PassThru).WaitForExit() > $null
+                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                 }
 
                 $StopWatch.Restart()
@@ -2044,7 +2061,7 @@ function Start-SubProcessInScreen {
                     Start-Sleep -Milliseconds 500
                 }
 
-                if (-not $Process.HasExited) {
+                if (-not $Process.HasExited -and $StartStopDaemon) {
                     $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
                     if (Test-OCDaemon) {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
@@ -2063,13 +2080,13 @@ function Start-SubProcessInScreen {
                     }
                 }
 
-                [int]$ScreenId = Invoke-Expression "screen -ls | grep $($ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
-                if ($ScreenId) {
+                if ($ScreenProcessId) {
+                    $ArgumentList = "-S $($ScreenName) -X quit"
                     if (Test-OCDaemon) {
-                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -S $($Job.ScreenName) -X quit" -Quiet > $null
+                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
-                        (Start-Process "screen" -ArgumentList "-S $($ScreenName) -X quit" -PassThru).WaitForExit() > $null
+                        (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                     }
                 }
             }
@@ -2174,7 +2191,7 @@ function Stop-SubProcess {
                     if ($Job.ScreenName) {
                         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
                         try {
-                            [int]$ScreenId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+                            [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
 
                             $ToKill = @()
                             $ToKill += $Process
@@ -2182,12 +2199,13 @@ function Stop-SubProcess {
 
                             Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
+                            $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
                             if (Test-OCDaemon) {
-                                $Cmd = "screen -S $($Job.ScreenName) -X stuff `^C"
+                                $Cmd = "screen $ArgumentList"
                                 $Msg = Invoke-OCDaemon -Cmd $Cmd
                                 if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                             } else {
-                                (Start-Process "screen" -ArgumentList "-S $($Job.ScreenName) -X stuff `^C" -PassThru).WaitForExit() > $null
+                                (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                             }
 
                             $StopWatch.Restart()
@@ -2201,7 +2219,7 @@ function Stop-SubProcess {
 
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                                if (-not $Process.HasExited) {
+                                if (-not $Process.HasExited -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
                                     $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
                                     if (Test-OCDaemon) {
                                         $Cmd = "start-stop-daemon $ArgumentList"
@@ -2237,13 +2255,14 @@ function Stop-SubProcess {
                         }
 
                         try {
-                            if ($ScreenId) {
+                            if ($ScreenProcessId) {
+                                $ArgumentList = "-S $($Job.ScreenName) -X quit"
                                 if (Test-OCDaemon) {
-                                    $Cmd = "screen -S $($Job.ScreenName) -X quit"
+                                    $Cmd = "screen $ArgumentList"
                                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                                     if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                                 } else {
-                                    (Start-Process "screen" -ArgumentList "-S $($Job.ScreenName) -X quit" -PassThru).WaitForExit() > $null
+                                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                                 }                            
                             }
                         } catch {
