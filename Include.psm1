@@ -2152,8 +2152,13 @@ function Stop-SubProcess {
 
                             Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
-                            $Proc = Start-Process "screen" -ArgumentList "-S $($Job.ScreenName) -X stuff `^C" -PassThru
-                            $Proc | Wait-Process
+                            if (Test-OCDaemon) {
+                                $Cmd = "screen -S $($Job.ScreenName) -X stuff `^C"
+                                $Msg = Invoke-OCDaemon -Cmd $Cmd
+                                if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
+                            } else {
+                                (Start-Process "screen" -ArgumentList "-S $($Job.ScreenName) -X stuff `^C" -PassThru).WaitForExit() > $null
+                            }
 
                             $StopWatch.Restart()
                             while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
@@ -2168,8 +2173,9 @@ function Stop-SubProcess {
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                                 $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
                                 if (Test-OCDaemon) {
-                                    $Msg = Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList"
-                                    if ($Msg) {Write-Log -Level Info "OCDaemon reports: $Msg"}
+                                    $Cmd = "start-stop-daemon $ArgumentList"
+                                    $Msg = Invoke-OCDaemon -Cmd $Cmd
+                                    if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
                                 } else {
                                     (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                                 }
