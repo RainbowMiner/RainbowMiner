@@ -3249,7 +3249,7 @@ function Invoke-Core {
         if ($Session.Stopp -and ($Session.AutoUpdate -or $Session.Restart)) {Set-LastStartTime}
     }
 
-    if ($Session.Config.EnableRestartComputer -and $Session.Config.RestartComputerHours -gt 0 -and $Session.StartTimeCore.AddHours($Session.Config.RestartComputerHours) -le (Get-Date).ToUniversalTime()) {
+    if ($Session.Config.EnableRestartComputer -and ($Session.RestartComputer -or $Session.Config.RestartComputerHours -gt 0 -and $Session.StartTimeCore.AddHours($Session.Config.RestartComputerHours) -le (Get-Date).ToUniversalTime())) {
         Write-Log -Level Warn "Restarting computer now."
         try {
             if ($IsLinux) {

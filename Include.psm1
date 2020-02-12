@@ -2026,6 +2026,18 @@ function Start-SubProcessInScreen {
 
         do {
             if ($ControllerProcess.WaitForExit(1000)) {
+                $ToKill = @()
+                $ToKill += $Process
+                $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
+
+                $Proc = Start-Process "screen" -ArgumentList "-S $($ScreenName) -X stuff `^C" -PassThru
+                $Proc | Wait-Process
+
+                $StopWatch.Restart()
+                do {
+                    Start-Sleep -Milliseconds 500
+                } until ($false -notin $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10)
+
                 $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
                 if (Test-OCDaemon) {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
@@ -2132,7 +2144,29 @@ function Stop-SubProcess {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
                 if ($IsLinux) {
                     if ($Job.ScreenName) {
+                        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
                         try {
+                            $ToKill = @()
+                            $ToKill += $Process
+                            $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
+
+                            Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
+
+                            $Proc = Start-Process "screen" -ArgumentList "-S $($Job.ScreenName) -X stuff `^C" -PassThru
+                            $Proc | Wait-Process
+
+                            $StopWatch.Restart()
+                            do {
+                                Start-Sleep -Milliseconds 500
+                                if ($StopWatch.Elapsed.Seconds -gt 10) {
+                                    Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                                    if ($StopWatch.Elapsed.Seconds -gt 180) {
+                                        Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
+                                        if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
+                                    }
+                                }
+                            } until ($false -notin $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 180)
+
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                                 $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
