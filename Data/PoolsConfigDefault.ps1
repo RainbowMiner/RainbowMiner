@@ -5,6 +5,9 @@
         "2MinersSolo" = [PSCustomObject]@{
             Currencies=@("XZC")
         }
+        "6Block" = [PSCustomObject]@{
+            Currencies=@("HNS")
+        }
         "AHashPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=22}
             Currencies=@("BTC")
