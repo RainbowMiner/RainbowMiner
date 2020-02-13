@@ -106,6 +106,7 @@
 353	FireIceRXNvidia (linux)
 354	Gminer183
 355	ProgPOWSeroNvidia
+356	6Miner
 
 400	Sgminer
 401	SgminerBitcore

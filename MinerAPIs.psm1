@@ -1942,6 +1942,49 @@ class RHWrapper : Miner {
     }
 }
 
+class SixMinerWrapper : Miner {
+
+    [Void]UpdateMinerData () {
+        $MJob = $this.GetMiningJob()
+        if ($MJob.HasMoreData) {
+            $HashRate_Name = $this.Algorithm[0]
+
+            $MJob | Receive-Job | ForEach-Object {
+                $Line = $_ -replace "`n|`r", ""
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
+                if ($Line_Simple -match "^.+?(speed|accepted)\s+(.+?)$") {
+                    $Mode  = $Matches[1]
+                    $Words = $Matches[2] -split "\s+"
+                    if ($Mode -eq "speed") {
+                        $HashRate = [PSCustomObject]@{}
+                        $Speed = if ($Words[2] -notmatch "n/a") {$Unit=$Words[3];$Words[2]} else {$Unit=$Words[1];$Words[0]}
+                        $HashRate_Value  = [double]($Speed -replace '^.*:' -replace ',','.')
+
+                        switch -Regex ($Unit) {
+                            "^k" {$HashRate_Value *= 1E+3}
+                            "^M" {$HashRate_Value *= 1E+6}
+                            "^G" {$HashRate_Value *= 1E+9}
+                            "^T" {$HashRate_Value *= 1E+12}
+                            "^P" {$HashRate_Value *= 1E+15}
+                        }
+
+                        if ($HashRate_Value -gt 0) {
+                            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                        }
+
+                        $this.AddMinerData($Line_Simple,$HashRate)
+                    } elseif ($Mode -eq "accepted" -and $Words[0] -match "(\d+)/(\d+)") {
+                        $Accepted_Shares = [Int64]$Matches[1]
+                        $Rejected_Shares = [Int64]$Matches[2]
+                        $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+                    }
+                }
+            }
+
+            $this.CleanupMinerData()
+        }
+    }
+}
 
 class SrbMiner : Miner {
 
@@ -2421,7 +2464,7 @@ class Xmrig3 : Miner {
 
 class XmrigWrapper : Miner {
 
-    [String[]]UpdateMinerData () {
+    [Void]UpdateMinerData () {
         $MJob = $this.GetMiningJob()
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
@@ -2460,7 +2503,5 @@ class XmrigWrapper : Miner {
 
             $this.CleanupMinerData()
         }
-
-        return @()
     }
 }
