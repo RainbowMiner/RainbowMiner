@@ -8,10 +8,10 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-6miner\6miner"
+    $Path = ".\Bin\GPU-6miner\6miner"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.0.5-6miner/6miner-v0.0.5-amd64-linux.tar.gz"
 } else {
-    $Path = ".\Bin\NVIDIA-6miner\6miner.exe"
+    $Path = ".\Bin\GPU-6miner\6miner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.0.5-6miner/6miner-v0.0.5-x64-windows.zip"
 }
 $Port = "356{0:d2}"
