@@ -22,7 +22,7 @@ $Version = "0.0.5"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "bl2bsha3"; Params = ""; ExtendInterval = 2} #ProgPOW
+    [PSCustomObject]@{MainAlgorithm = "bl2bsha3"; Params = ""; ExtendInterval = 2} #Blake2b+SHA3 / HNS
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -65,7 +65,7 @@ foreach ($Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-                        Arguments      = "-a hns/bl2bsha3 -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -m opencl --opcl-vendor=$Vendor --opcl-no-cuda-fix --devices=$DeviceIDsAll"
+                        Arguments      = "-a hns/bl2bsha3 -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -m opencl --opcl-vendor=$($Vendor.ToLower()) --opcl-no-cuda-fix --devices=$DeviceIDsAll"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week }
 					    API            = "SixMinerWrapper"
 					    Port           = $Miner_Port
