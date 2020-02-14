@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.29-rplant/cpuminer-rplant-4.0.29-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.31-rplant/cpuminer-rplant-4.0.31-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.29-rplant/cpuminer-rplant-4.0.29-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.31-rplant/cpuminer-rplant-4.0.31-win.zip"
 }
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
-$Version = "4.0.29"
+$Version = "4.0.31"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -33,7 +33,9 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
 	[PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; LinuxOnly = $true} #Lyra2h
+    [PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""} #Lyra2z330
+    [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b
 	#[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; LinuxOnly = $false} #ScryptN2, CpuminerVerium faster
 	[PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16

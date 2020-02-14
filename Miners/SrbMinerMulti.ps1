@@ -27,11 +27,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight_talleo";   Params = ""; Fee = 0.85;         Vendor = @("CPU")} #CryptonightTalleo
     [PSCustomObject]@{MainAlgorithm = "defyx"         ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #DefyX
     [PSCustomObject]@{MainAlgorithm = "m7mv2"         ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #m7m
-    [PSCustomObject]@{MainAlgorithm = "randomarq"     ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #RandomArq
-    [PSCustomObject]@{MainAlgorithm = "randomsfx"     ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #RandomSFX
-    [PSCustomObject]@{MainAlgorithm = "randomwow"     ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #RandomWow
+    [PSCustomObject]@{MainAlgorithm = "randomarq"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomArq
+    [PSCustomObject]@{MainAlgorithm = "randomsfx"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomSFX
+    [PSCustomObject]@{MainAlgorithm = "randomwow"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomWow
     [PSCustomObject]@{MainAlgorithm = "randomx"       ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomX
-    [PSCustomObject]@{MainAlgorithm = "randomxl"      ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #RandomXL
+    [PSCustomObject]@{MainAlgorithm = "randomxl"      ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomXL
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"   ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr16
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"   ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr32
     [PSCustomObject]@{MainAlgorithm = "yescryptr8"    ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr8
