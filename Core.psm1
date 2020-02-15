@@ -300,7 +300,7 @@ function Update-ActiveMiners {
         }
 
         Switch ("$($Miner_Status)") {
-            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Quiet};$API.ApplyOC=$false};$MinersUpdated++;Break}
+            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Miner $Miner -Quiet};$API.ApplyOC=$false};$MinersUpdated++;Break}
             "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++};Break}
         }        
     })
@@ -1393,9 +1393,9 @@ function Invoke-Core {
         if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles) {
             Invoke-NvidiaSmi -Arguments "-pm 1" -Runas > $null
             Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
-            if (Test-OCDaemon) {Set-OCDaemon "sleep 1"} else {Start-Sleep 1}
+            Set-OCDaemon "sleep 1"
             Invoke-NvidiaSettings -SetPowerMizer
-            Invoke-OCDaemon -Quiet
+            Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet
         }
 
         #Create combos
@@ -2629,7 +2629,7 @@ function Invoke-Core {
                 }
             } elseif ($Session.Config.EnableOCprofiles) {
                 $_.SetOCprofile($Session.Config,500)
-                if ($IsLinux) {Invoke-OCDaemon -Quiet}
+                if ($IsLinux) {Invoke-OCDaemon -Miner $_ -Quiet}
             }
         }
 
@@ -3312,6 +3312,13 @@ function Stop-Core {
                 Invoke-OCDaemon -Cmd $Cmd -Quiet > $null
             } else {
                 @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {Stop-Process $_ -Force -ErrorAction Ignore}
+            }
+        }
+        Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+).((ethpill|miner|oc|tmp)_[a-z0-9_-]+)\s+.*Detached"} | Foreach-Object {
+            if ($Matches[2] -ne "RainbowMiner") {
+                Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff `^C" > $null
+                Start-Sleep -Milliseconds 250
+                Invoke-Exe "screen" -ArgumentList "-S $($Matches[2]) -X quit" > $null
             }
         }
     }
