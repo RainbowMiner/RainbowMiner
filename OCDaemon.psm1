@@ -108,35 +108,53 @@ param(
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
 
     if ($Cmd -or $Global:GlobalOCD.Count) {
+
+        if ($FilePath -or $Miner) {
+            if ($Miner) {
+                $ScreenName = "oc_$(("$($Miner.DeviceName -join "_")" -replace "[^A-Z0-9_-]").ToLower())"
+                $FilePath = Join-Path (Split-Path $Miner.Path) "start$($ScreenName)_$($Miner.BaseAlgorithm -join "_").sh".ToLower()
+            } else {
+                if ($FilePath -notmatch "\.sh$") {$FilePath = "$FilePath.sh"}
+                $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
+                $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
+            }
+            Set-BashFile -FilePath $FilePath -Cmd $Cmd
+        }
+
         if (Test-OCDaemon) {
-            $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
-            Invoke-OCDaemonWithName -Name $tmpfn -Cmd $Cmd -Quiet:$Quiet
+            if ($FilePath) {
+                $tmpfn = "$($Session.OCDaemonPrefix).0.$ScreenName"
+                Invoke-OCDaemonWithName -Name $tmpfn -FilePath $FilePath -Quiet:$Quiet
+                $Session.OCDaemonCount++
+            } else {
+                $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
+                Invoke-OCDaemonWithName -Name $tmpfn -Cmd $Cmd -Quiet:$Quiet
+                $Session.OCDaemonCount++
+            }
             if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") {
                 Write-Log -Level Warn "OCDaemon failed. Please run `"./install.sh`" at the command line"
             }
-            $Session.OCDaemonCount++
         } else {
             $IsTemporaryPath = $false
             if ($Miner) {
-                $ScreenName = ("$($Miner.DeviceName -join "_")" -replace "[^A-Z0-9_-]").ToLower()
+                $DeviceNameMatch = "($(("$($Miner.DeviceName -join "|")" -replace "[^A-Z0-9\|]").ToLower()))"
                 Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.oc_[a-z0-9_-]+)"} | Foreach-Object {
                     $Name = $Matches[1]
-                    if ($Name -match "($(($ScreenName -split "_") -join "|"))") {
+                    if ($Name -match $DeviceNameMatch) {
                         Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
                         Start-Sleep -Milliseconds 250
                         Invoke-Exe "screen" -ArgumentList "-S $Name -X quit" > $null
                         Start-Sleep -Milliseconds 250
                     }
                 }
-                $ScreenName = "oc_$($ScreenName)"
-                $FilePath = Join-Path (Split-Path $Miner.Path) "start$($ScreenName)_$($Miner.BaseAlgorithm -join "_").sh".ToLower()
             } else {
-                if ($FilePath -eq "") {$FilePath = ".\Cache\tmp_$([System.IO.Path]::GetRandomFileName() -replace "\..+$").sh";$IsTemporaryPath = $true}
-                elseif ($FilePath -notmatch "\.sh$") {$FilePath = "$FilePath.sh"}
+                if ($FilePath -eq "") {
+                    $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Cache\tmp_$([System.IO.Path]::GetRandomFileName() -replace "\..+$").sh")
+                    $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
+                    $IsTemporaryPath = $true
+                    Set-BashFile -FilePath $FilePath -Cmd $Cmd
+                }
 
-                $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-
-                $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
                 Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$ScreenName)\s+"} | Foreach-Object {
                     $Name = $Matches[1]
                     Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
@@ -145,8 +163,6 @@ param(
                     Start-Sleep -Milliseconds 250
                 }
             }
-
-            Set-BashFile -FilePath $FilePath -Cmd $Cmd
 
             if (Test-Path $FilePath) {
                 (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null

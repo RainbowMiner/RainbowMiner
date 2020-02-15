@@ -300,7 +300,7 @@ function Update-ActiveMiners {
         }
 
         Switch ("$($Miner_Status)") {
-            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Miner $Miner -Quiet};$API.ApplyOC=$false};$MinersUpdated++;Break}
+            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Miner $Miner -Quiet > $null};$API.ApplyOC=$false};$MinersUpdated++;Break}
             "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++};Break}
         }        
     })
@@ -1395,7 +1395,7 @@ function Invoke-Core {
             Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
             Set-OCDaemon "sleep 1"
             Invoke-NvidiaSettings -SetPowerMizer
-            Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet
+            Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet > $null
         }
 
         #Create combos
@@ -2629,7 +2629,7 @@ function Invoke-Core {
                 }
             } elseif ($Session.Config.EnableOCprofiles) {
                 $_.SetOCprofile($Session.Config,500)
-                if ($IsLinux) {Invoke-OCDaemon -Miner $_ -Quiet}
+                if ($IsLinux) {Invoke-OCDaemon -Miner $_ -Quiet > $null}
             }
         }
 
@@ -3254,7 +3254,7 @@ function Invoke-Core {
         try {
             if ($IsLinux) {
                 if (Test-OCDaemon) {
-                    Invoke-OCDaemon -Cmd "reboot"
+                    Invoke-OCDaemon -Cmd "reboot" -Quiet > $null
                 } else {
                     Invoke-Exe -FilePath "reboot" -Runas > $null
                 }

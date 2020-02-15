@@ -2247,7 +2247,7 @@ function Stop-SubProcess {
 
                             $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
                                 if (Test-OCDaemon) {
-                                    Invoke-OCDaemon "kill -9 $($_.Id)" > $null
+                                    Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
                                 } else {
                                     $_.Kill()
                                 }
