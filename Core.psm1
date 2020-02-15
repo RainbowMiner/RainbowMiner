@@ -3316,7 +3316,7 @@ function Stop-Core {
         }
         Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+).((ethpill|miner|oc|tmp)_[a-z0-9_-]+)\s+.*Detached"} | Foreach-Object {
             if ($Matches[2] -ne "RainbowMiner") {
-                Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff `^C" > $null
+                Invoke-Exe "screen" -ArgumentList "-S $($Matches[2]) -X stuff `^C" > $null
                 Start-Sleep -Milliseconds 250
                 Invoke-Exe "screen" -ArgumentList "-S $($Matches[2]) -X quit" > $null
             }
