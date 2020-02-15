@@ -1913,7 +1913,7 @@ function Start-SubProcessInScreen {
 
     $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
 
-    if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
+    if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "tmp_$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
 
     if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
 
@@ -2053,7 +2053,7 @@ function Start-SubProcessInScreen {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                     $OCDcount++
                 } else {
-                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                    Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
                 }
 
                 $StopWatch.Restart()
@@ -2086,7 +2086,7 @@ function Start-SubProcessInScreen {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
-                        (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                        Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
                     }
                 }
             }
@@ -2205,7 +2205,7 @@ function Stop-SubProcess {
                                 $Msg = Invoke-OCDaemon -Cmd $Cmd
                                 if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                             } else {
-                                (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                                Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
                             }
 
                             $StopWatch.Restart()
@@ -2262,7 +2262,7 @@ function Stop-SubProcess {
                                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                                     if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                                 } else {
-                                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                                    Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
                                 }                            
                             }
                         } catch {
@@ -2444,7 +2444,11 @@ function Invoke-Exe {
             $process.WaitForExit($WaitForExit*1000)>$null
         } else {
             if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
-            $out = Invoke-OCDaemon "$FilePath $ArgumentList"
+            if (Test-OCDaemon) {
+                $out = Invoke-OCDaemon -Cmd "$FilePath $ArgumentList".Trim()
+            } else {
+                Write-Log -Level Warn "Could not execute sudo $("$FilePath $ArgumentList".Trim()) (ocdaemon is not running. Please stop RainbowMiner and run `"./install.sh`")"
+            }
         }
 
         if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
@@ -3961,11 +3965,7 @@ function Invoke-NvidiaSettings {
         }
         $Cmd = $Cmd.Trim()
         if ($Cmd) {
-            if (Test-OCDaemon) {
-                Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
-            } else {
-                Invoke-Exe -FilePath "nvidia-settings" -ArgumentList $Cmd -Runas > $null
-            }
+            Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
         }
     }
 }
@@ -6123,7 +6123,7 @@ param(
             $obj
         }
     } else {
-        if ($IsLinux -and $Runas -and (Test-OCDaemon)) {
+        if ($IsLinux -and $Runas) {
             Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
         } else {
             Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString -ExcludeEmptyLines -ExpandLines -Runas:$Runas

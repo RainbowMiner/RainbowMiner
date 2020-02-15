@@ -105,13 +105,6 @@ param(
     [Parameter(Mandatory = $False)]
     [Switch]$Quiet
 )
-
-    #if (-not (Test-OCDaemon)) {
-    #    if (-not $Session.IsAdmin) {
-    #        Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and run `"./install.sh`" at the commandline to enable overclocking."
-    #    }
-    #    return
-    #}
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
 
     if ($Cmd -or $Global:GlobalOCD.Count) {
