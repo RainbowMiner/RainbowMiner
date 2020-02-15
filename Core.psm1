@@ -1393,7 +1393,7 @@ function Invoke-Core {
         if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles) {
             Invoke-NvidiaSmi -Arguments "-pm 1" -Runas > $null
             Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
-            Set-OCDaemon "sleep 1"
+            Set-OCDaemon "sleep 1" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
             Invoke-NvidiaSettings -SetPowerMizer
             Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet > $null
         }
@@ -3314,12 +3314,11 @@ function Stop-Core {
                 @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {Stop-Process $_ -Force -ErrorAction Ignore}
             }
         }
-        Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+).((ethpill|miner|oc|tmp)_[a-z0-9_-]+)\s+.*Detached"} | Foreach-Object {
-            if ($Matches[2] -ne "RainbowMiner") {
-                Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]).$($Matches[2]) -X stuff `^C" > $null
-                Start-Sleep -Milliseconds 250
-                Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]).$($Matches[2]) -X quit" > $null
-            }
+        $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
+        Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_[a-z0-9_-]+)\s+.*Detached"} | Foreach-Object {
+            Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X stuff `^C" > $null
+            Start-Sleep -Milliseconds 250
+            Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X quit" > $null
         }
     }
     Stop-Autoexec

@@ -1915,10 +1915,13 @@ function Start-SubProcessInScreen {
 
     $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
 
+    $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
     $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
     $BashFileName = ($BashFileName -replace "[^A-Z0-9_-]").ToLower()
 
-    if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "tmp_$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
+    if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
+
+    $ScreenName = "$($WorkerName)_$($ScreenName)"
 
     if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
 

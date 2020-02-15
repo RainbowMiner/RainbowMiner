@@ -109,6 +109,8 @@ param(
 
     if ($Cmd -or $Global:GlobalOCD.Count) {
 
+        $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
+
         if ($FilePath -or $Miner) {
             if ($Miner) {
                 $ScreenName = "oc_$(("$($Miner.DeviceName -join "_")" -replace "[^A-Z0-9_-]").ToLower())"
@@ -135,10 +137,22 @@ param(
                 Write-Log -Level Warn "OCDaemon failed. Please run `"./install.sh`" at the command line"
             }
         } else {
-            $IsTemporaryPath = $false
+            if (-not $FilePath -and -not $Miner) {
+                $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Cache\tmp_$([System.IO.Path]::GetRandomFileName() -replace "\..+$").sh")
+                $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
+                $IsTemporaryPath = $true
+                Set-BashFile -FilePath $FilePath -Cmd $Cmd
+            } else {
+                $IsTemporaryPath = $false
+            }
+
+            $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
+
+            $ScreenName = "$($WorkerName)_$($ScreenName)"
+
             if ($Miner) {
                 $DeviceNameMatch = "($(("$($Miner.DeviceName -join "|")" -replace "[^A-Z0-9\|]").ToLower()))"
-                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.oc_[a-z0-9_-]+)"} | Foreach-Object {
+                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_oc_[a-z0-9_-]+)"} | Foreach-Object {
                     $Name = $Matches[1]
                     if ($Name -match $DeviceNameMatch) {
                         Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
@@ -148,13 +162,6 @@ param(
                     }
                 }
             } else {
-                if ($FilePath -eq "") {
-                    $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Cache\tmp_$([System.IO.Path]::GetRandomFileName() -replace "\..+$").sh")
-                    $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
-                    $IsTemporaryPath = $true
-                    Set-BashFile -FilePath $FilePath -Cmd $Cmd
-                }
-
                 Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$ScreenName)\s+"} | Foreach-Object {
                     $Name = $Matches[1]
                     Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
