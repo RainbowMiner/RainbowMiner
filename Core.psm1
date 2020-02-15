@@ -3315,7 +3315,7 @@ function Stop-Core {
             }
         }
         $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
-        Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_[a-z0-9_-]+)\s+.*Detached"} | Foreach-Object {
+        Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_[a-z0-9_-]+)"} | Foreach-Object {
             Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X stuff `^C" > $null
             Start-Sleep -Milliseconds 250
             Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X quit" > $null
