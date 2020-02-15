@@ -2060,7 +2060,7 @@ function Start-SubProcessInScreen {
                 $ToKill += $Process
                 $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
 
-                $ArgumentList = "$($ScreenName) -X stuff `^C"
+                $ArgumentList = "-S $($ScreenName) -X stuff `^C"
                 if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                     $OCDcount++
