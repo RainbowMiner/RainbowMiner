@@ -1931,6 +1931,8 @@ function Start-SubProcessInScreen {
     if (Test-Path $PIDInfo) { Remove-Item $PIDInfo -Force }
     if (Test-Path $PIDBash) { Remove-Item $PIDBash -Force }
 
+    $TestArgumentList = "$ArgumentList"
+
     if ($LogPath) {
         $ArgumentList = "$ArgumentList 2>&1 | tee `'$($LogPath)`'"
     }
@@ -1958,7 +1960,7 @@ function Start-SubProcessInScreen {
 
     [System.Collections.Generic.List[string]]$Test  = @()
     $Stuff | Foreach-Object {$Test.Add($_) > $null}
-    $Test.Add("$FilePath $ArgumentList") > $null
+    $Test.Add("$FilePath $TestArgumentList") > $null
 
     if ($StartStopDaemon) {
         $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
