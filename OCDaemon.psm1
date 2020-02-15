@@ -110,7 +110,7 @@ param(
     if ($Cmd -or $Global:GlobalOCD.Count) {
         if (Test-OCDaemon) {
             $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
-            Invoke-OCDaemonWithName -Name $tmpfn -Cmd $Cmd
+            Invoke-OCDaemonWithName -Name $tmpfn -Cmd $Cmd -Quiet:$Quiet
             if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") {
                 Write-Log -Level Warn "OCDaemon failed. Please run `"./install.sh`" at the command line"
             }
@@ -119,8 +119,8 @@ param(
             $IsTemporaryPath = $false
             if ($Miner) {
                 $ScreenName = ("$($Miner.DeviceName -join "_")" -replace "[^A-Z0-9_-]").ToLower()
-                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+)\.(oc_[a-z0-9_-]+)"} | Foreach-Object {
-                    $Name = $Matches[2]
+                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.oc_[a-z0-9_-]+)"} | Foreach-Object {
+                    $Name = $Matches[1]
                     if ($Name -match "($(($ScreenName -split "_") -join "|"))") {
                         Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
                         Start-Sleep -Milliseconds 250
@@ -137,10 +137,11 @@ param(
                 $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
 
                 $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
-                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "\d+\.$ScreenName\s+"} | Foreach-Object {
-                    Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff `^C" > $null
+                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$ScreenName)\s+"} | Foreach-Object {
+                    $Name = $Matches[1]
+                    Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
                     Start-Sleep -Milliseconds 250
-                    Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X quit" > $null
+                    Invoke-Exe "screen" -ArgumentList "-S $Name -X quit" > $null
                     Start-Sleep -Milliseconds 250
                 }
             }
@@ -150,9 +151,16 @@ param(
             if (Test-Path $FilePath) {
                 (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
                 Invoke-Exe "screen" -ArgumentList "-S $ScreenName -d -m" > $null
-                Start-Sleep 1
-                Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff $FilePath`n" > $null
-                Start-Sleep 1
+                $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+                $StopWatch.Restart()
+                do {
+                    Start-Sleep -Milliseconds 100
+                    $ScreenOut = (Invoke-Exe "screen" -ArgumentList "-ls $ScreenName" -ExpandLines | Where-Object {$_ -match $ScreenName} | Measure-Object).Count
+                } until ($ScreenOut -or $StopWatch.ElapsedMilliseconds -gt 5000)
+                if ($ScreenOut) {
+                    Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff $FilePath`n" > $null
+                }
+                $StopWatch.Stop()
                 if ($IsTemporaryPath) {Remove-Item $FilePath -Force -ErrorAction Ignore}
             }
         }
