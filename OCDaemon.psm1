@@ -106,12 +106,12 @@ param(
     [Switch]$Quiet
 )
 
-    if (-not (Test-OCDaemon)) {
-        if (-not $Session.IsAdmin) {
-            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and run `"./install.sh`" at the commandline to enable overclocking."
-        }
-        return
-    }
+    #if (-not (Test-OCDaemon)) {
+    #    if (-not $Session.IsAdmin) {
+    #        Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and run `"./install.sh`" at the commandline to enable overclocking."
+    #    }
+    #    return
+    #}
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
 
     if ($Cmd -or $Global:GlobalOCD.Count) {
@@ -140,6 +140,9 @@ param(
             } else {
                 if ($FilePath -eq "") {$FilePath = ".\Cache\tmp_$([System.IO.Path]::GetRandomFileName() -replace "\..+$").sh";$IsTemporaryPath = $true}
                 elseif ($FilePath -notmatch "\.sh$") {$FilePath = "$FilePath.sh"}
+
+                $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
+
                 $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
                 Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "\d+\.$ScreenName\s+"} | Foreach-Object {
                     Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff `^C" > $null
