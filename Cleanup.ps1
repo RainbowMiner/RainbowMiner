@@ -723,6 +723,10 @@ try {
         $AddAlgorithm += @("Blake2bSHA3")
     }
 
+    if ($Version -le (Get-Version "4.5.3.1")) {
+        $AddAlgorithm += @("Lyra2TDC","Minotaur")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
