@@ -300,7 +300,7 @@ function Update-ActiveMiners {
         }
 
         Switch ("$($Miner_Status)") {
-            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);$API.ApplyOC=$false};$MinersUpdated++;Break}
+            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);if ($IsLinux) {Invoke-OCDaemon -Quiet};$API.ApplyOC=$false};$MinersUpdated++;Break}
             "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++};Break}
         }        
     })
