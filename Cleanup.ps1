@@ -727,6 +727,15 @@ try {
         $AddAlgorithm += @("Lyra2TDC","Minotaur")
     }
 
+    if ($Version -le (Get-Version "4.5.3.3")) {
+        if ($IsLinux -and (Test-Path "Bin\ANY-Xmrig")) {
+            Get-ChildItem "Bin\ANY-Xmrig" -Filter "config_*json" -File | Foreach-Object {
+                $FileName = $_.FullName
+                ((Get-Content $FileName -Raw) -replace '"donate-level":\s+1','"donate-level": 0') | Set-Content -Path $FileName
+            }
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
