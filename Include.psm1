@@ -2065,7 +2065,7 @@ function Start-SubProcessInScreen {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                     $OCDcount++
                 } else {
-                    Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
+                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
                 }
 
                 $StopWatch.Restart()
@@ -2079,7 +2079,7 @@ function Start-SubProcessInScreen {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
-                        (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                        (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit(10000) > $null
                     }
                 }
                 
@@ -2098,7 +2098,7 @@ function Start-SubProcessInScreen {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
-                        Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
+                        (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
                     }
                 }
             }
@@ -2217,7 +2217,7 @@ function Stop-SubProcess {
                                 $Msg = Invoke-OCDaemon -Cmd $Cmd
                                 if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                             } else {
-                                Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
+                                (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
                             }
 
                             $StopWatch.Restart()
@@ -2274,8 +2274,8 @@ function Stop-SubProcess {
                                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                                     if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                                 } else {
-                                    Invoke-Exe "screen" -ArgumentList $ArgumentList > $null
-                                }                            
+                                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
+                                }
                             }
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
