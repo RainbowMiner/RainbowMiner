@@ -128,8 +128,8 @@ param(
                         Start-Sleep -Milliseconds 250
                     }
                 }
-                $ScreenName = "oc_$ScreenName"
-                $FilePath = Join-Path (Split-Path $Miner.Path) "$($Miner.BaseAlgorithm -join "_")_$($ScreenName).sh"
+                $ScreenName = "oc_$($ScreenName)"
+                $FilePath = Join-Path (Split-Path $Miner.Path) "start$($ScreenName)_$($Miner.BaseAlgorithm -join "_").sh".ToLower()
             } else {
                 if ($FilePath -eq "") {$FilePath = ".\Cache\tmp_$([System.IO.Path]::GetRandomFileName() -replace "\..+$").sh";$IsTemporaryPath = $true}
                 elseif ($FilePath -notmatch "\.sh$") {$FilePath = "$FilePath.sh"}

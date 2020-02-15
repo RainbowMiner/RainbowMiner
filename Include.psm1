@@ -1704,11 +1704,13 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$ScreenName = "",
         [Parameter(Mandatory = $false)]
+        [String]$BashFileName = "",
+        [Parameter(Mandatory = $false)]
         [Switch]$SetAMDEnv = $false
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
-        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -SetAMDEnv:$SetAMDEnv
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -SetAMDEnv:$SetAMDEnv
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     } else {
@@ -1906,12 +1908,15 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [String]$ScreenName = "",
         [Parameter(Mandatory = $false)]
+        [String]$BashFileName = "",
+        [Parameter(Mandatory = $false)]
         [Switch]$SetAMDEnv = $false
     )
 
     $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
 
     $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
+    $BashFileName = ($BashFileName -replace "[^A-Z0-9_-]").ToLower()
 
     if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "tmp_$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
 
@@ -1920,7 +1925,7 @@ function Start-SubProcessInScreen {
     $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_pid.txt"
     $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_info.txt"
     $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName).sh"
-    $PIDTest = Join-Path $WorkingDirectory "start_$($ScreenName).sh"
+    $PIDTest = Join-Path $WorkingDirectory "$(if ($BashFileName) {$BashFileName} else {"start_$($ScreenName)"}).sh"
 
     if (Test-Path $PIDPath) { Remove-Item $PIDPath -Force }
     if (Test-Path $PIDInfo) { Remove-Item $PIDInfo -Force }
