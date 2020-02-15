@@ -1955,6 +1955,11 @@ function Start-SubProcessInScreen {
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff.Add("export $($matches[1])=$($matches[2])") > $null}
 
     $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+
+    [System.Collections.Generic.List[string]]$Test  = @()
+    $Stuff | Foreach-Object {$Test.Add($_) > $null}
+    $Test.Add("$FilePath $ArgumentList") > $null
+
     if ($StartStopDaemon) {
         $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
     } else {
@@ -1979,7 +1984,7 @@ function Start-SubProcessInScreen {
     }
 
     Set-BashFile -FilePath $PIDbash -Cmd $Cmd
-    Set-BashFile -FilePath $PIDtest -Cmd $Stuff
+    Set-BashFile -FilePath $PIDtest -Cmd $Test
 
     (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
     (Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru).WaitForExit() > $null
