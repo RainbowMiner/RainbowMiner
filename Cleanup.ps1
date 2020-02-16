@@ -16,6 +16,7 @@ $OverridePoolPenalties = $false
 $ChangesTotal = 0
 $AddAlgorithm = @()
 $RemoveMinerStats = @()
+$RemovePoolStats = @()
 try {
     if ($Version -le (Get-Version "3.8.3.7")) {
         $Changes = 0
@@ -734,6 +735,7 @@ try {
                 ((Get-Content $FileName -Raw) -replace '"donate-level":\s+1','"donate-level": 0') | Set-Content -Path $FileName
             }
         }
+        $RemovePoolStats += "6Block_HNS_Profit.txt"
     }
 
     if ($OverridePoolPenalties) {
@@ -797,8 +799,19 @@ try {
     $MinersContent = Get-MinersContent -Parameters @{InfoOnly = $true}
 
     if ($RemoveMinerStats.Count -gt 0) {
-        $RemoveMinerStats | Foreach-Object {
-            Get-ChildItem ".\Stats\Miners" -Filter $_ -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        if (Test-Path ".\Stats\Miners") {
+            $RemoveMinerStats | Foreach-Object {
+                Get-ChildItem ".\Stats\Miners" -Filter $_ -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+            }
+        }
+    }
+
+
+    if ($RemovePoolStats.Count -gt 0) {
+        if (Test-Path ".\Stats\Pools") {
+            $RemovePoolStats | Foreach-Object {
+                Get-ChildItem ".\Stats\Pools" -Filter $_ -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+            }
         }
     }
 
