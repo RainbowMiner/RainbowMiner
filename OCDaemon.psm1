@@ -88,7 +88,7 @@ param(
     $OnEmptyAdd
 )
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
-    if ($OnEmptyAdd -and -not $Global:GlobalOCD.Count) {$OnEmptyAdd | Foreach-Object {$Global:GlobalOCD.Add($OnEmptyAdd) > $null}}
+    if ($OnEmptyAdd -and -not $Global:GlobalOCD.Count) {$OnEmptyAdd | Foreach-Object {$Global:GlobalOCD.Add($_) > $null}}
     $Global:GlobalOCD.Add($Cmd) > $null
 }
 
