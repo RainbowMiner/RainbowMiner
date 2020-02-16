@@ -3980,7 +3980,7 @@ function Invoke-NvidiaSettings {
         }
         $Cmd = $Cmd.Trim()
         if ($Cmd) {
-            Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+            Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd $Session.Config.OCDaemonOnEmptyAdd
         }
     }
 }
@@ -6139,9 +6139,31 @@ param(
         }
     } else {
         if ($IsLinux -and $Runas) {
-            Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+            Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd $Session.Config.OCDaemonOnEmptyAdd
         } else {
             Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString -ExcludeEmptyLines -ExpandLines -Runas:$Runas
+        }
+    }
+}
+
+function Get-LinuxXAuthority {
+    if ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
+        Get-ChildItem ".\IncludesLinux\bash" -Filter "getxauth.sh" -File | Foreach-Object {
+            try {
+                & chmod +x "$($_.FullName)" > $null
+                Invoke-exe $_.FullName -ExpandLines | Where-Object {$_ -match "XAUTHORITY=(.+)"} | Foreach-Object {$Matches[1]}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
+    }
+}
+
+function Get-LinuxDisplay {
+    if ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
+        Get-ChildItem ".\IncludesLinux\bash" -Filter "getdisplay.sh" -File | Foreach-Object {
+            try {
+                & chmod +x "$($_.FullName)" > $null
+                Invoke-exe $_.FullName -ExpandLines | Where-Object {$_ -match "DISPLAY=(.+)"} | Foreach-Object {$Matches[1]}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
     }
 }

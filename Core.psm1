@@ -1390,12 +1390,26 @@ function Invoke-Core {
         $Session.Config | Add-Member CUDAVersion $(if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and $Global:DeviceCache.DevicesByTypes.NVIDIA[0].OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
         $Session.Config | Add-Member DotNETRuntimeVersion $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}}) -Force
 
-        if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles) {
-            Invoke-NvidiaSmi -Arguments "-pm 1" -Runas > $null
-            Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
-            Set-OCDaemon "sleep 1" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
-            Invoke-NvidiaSettings -SetPowerMizer
-            Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet > $null
+        if ($IsLinux) {
+            $Session.Config | Add-Member OCDaemonOnEmptyAdd @() -Force
+
+            if ($Session.Config.EnableLinuxHeadless) {
+                if ($Session.Config.LinuxDisplay) {
+                    $Session.Config.OCDaemonOnEmptyAdd += "export DISPLAY=$($Session.Config.LinuxDisplay)"
+                }
+                if ($Session.Config.LinuxXAuthority) {
+                    $Session.Config.OCDaemonOnEmptyAdd += "export XAUTHORITY=$($Session.Config.LinuxXAuthority)"
+                }
+            }
+
+            if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles) {
+                $Session.Config.OCDaemonOnEmptyAdd += "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+                Invoke-NvidiaSmi -Arguments "-pm 1" -Runas > $null
+                Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
+                Set-OCDaemon "sleep 1" -OnEmptyAdd $Session.Config.OCDaemonOnEmptyAdd
+                Invoke-NvidiaSettings -SetPowerMizer
+                Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet > $null
+            }
         }
 
         #Create combos
