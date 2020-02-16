@@ -33,6 +33,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_TSL  = 0
 
+    $priceBTC = if ($Global:Rates.$Pool_Currency) {1/$Global:Rates.$Pool_Currency} else {0}
+
     $ok = $true
     if (-not $InfoOnly) {
         try {
@@ -60,10 +62,20 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }
+        if (-not $priceBTC) {
+            try {
+                $Ticker_Request = Invoke-RestMethodAsync "https://www.namebase.io/api/v0/ticker/price?symbol=HNSBTC" -tag $Name -timeout 15 -cycletime 120
+                if ($Ticker_Request.price) {
+                    $priceBTC = [double]$Ticker_Request.price
+                }            
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
     }
 
     if ($ok -and -not $InfoOnly) {
-        $priceBTC = if ($Global:Rates.$Pool_Currency) {1/$Global:Rates.$Pool_Currency} else {0}
         $divisor  = ConvertFrom-Hash "1$($Pool_Request.unit)"
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Request.profit*$priceBTC/$divisor) -Duration $StatSpan -HashRate ([int64]$Pool_Request.statPool) -BlockRate ([int]$Pool_Request.found24H) -ChangeDetection $true -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
