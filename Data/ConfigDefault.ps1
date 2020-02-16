@@ -29,6 +29,7 @@
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores
     CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToHex
     GPUMiningAffinity = ""
+    LinuxXAuthority = "$(Get-LinuxXAuthority)"
     Delay = 1
     EthPillEnable = "disable"
     MinimumMiningIntervals = 1
