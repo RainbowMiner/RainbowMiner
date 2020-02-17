@@ -121,6 +121,9 @@ param(
                 $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
             }
             Set-BashFile -FilePath $FilePath -Cmd $Cmd
+            if (Test-Path $FilePath) {
+                (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
+            }
         }
 
         if (Test-OCDaemon) {
