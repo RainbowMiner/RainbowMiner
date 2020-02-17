@@ -1709,7 +1709,7 @@ function Start-SubProcess {
         [Switch]$SetAMDEnv = $false
     )
 
-    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore) -and -not $IsWrapper) {
+    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -SetAMDEnv:$SetAMDEnv
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
