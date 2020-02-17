@@ -1989,9 +1989,17 @@ function Start-SubProcessInScreen {
     $Cmd.Add("screen -S $($ScreenName) -d -m") > $null
     $Cmd.Add("sleep .1") > $null
 
+    $StringChunkSize = 500
+
     $Stuff | Foreach-Object {
-        $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$_\n`"") > $null
-        $Cmd.Add("sleep .1") > $null
+        $str = $_
+        while ($str) {
+          $substr = $str.substring(0,[Math]::Min($str.length,$StringChunkSize))
+          $str = if ($str.length -gt $substr.length) {$str.substring($substr.length)} else {""}
+          $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$substr`"") > $null
+          $Cmd.Add("sleep .1") > $null
+        }
+        $Cmd.Add("screen -S $($ScreenName) -X stuff $`"\n`"") > $null
     }
 
     Set-BashFile -FilePath $PIDBash -Cmd $Cmd
