@@ -1709,7 +1709,7 @@ function Start-SubProcess {
         [Switch]$SetAMDEnv = $false
     )
 
-    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
+    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore) -and -not $IsWrapper) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -SetAMDEnv:$SetAMDEnv
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
@@ -1793,9 +1793,15 @@ function Start-SubProcessInConsole {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $LDExp = if ($IsLinux) {if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}} else {""}
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
-        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $CurrentPwd)
+    $LDExp = ""
+    $LinuxDisplay = ""
+    if ($IsLinux) {
+        $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
+        $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
+    }
+
+    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
+        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $LinuxDisplay, $CurrentPwd)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
@@ -1841,6 +1847,7 @@ function Start-SubProcessInConsole {
 
                 # Set lib path to local
                 #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
+                if ($LinuxDisplay) {$env:DISPLAY = "$($LinuxDisplay)"}
                 $env:LD_LIBRARY_PATH = "$($LDExportPath)"
             }
 
