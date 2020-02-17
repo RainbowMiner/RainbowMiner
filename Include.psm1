@@ -2004,7 +2004,7 @@ function Start-SubProcessInScreen {
             $substr = $str.substring(0,[Math]::Min($str.length,$StringChunkSize))
             if ($str.length -gt $substr.length) {
                 $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$substr`"") > $null
-                $str.substring($substr.length)
+                $str = $str.substring($substr.length)
             } else {
                 $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$substr\n`"") > $null
                 $str = ""
