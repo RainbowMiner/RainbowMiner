@@ -6089,6 +6089,40 @@ function Stop-Autoexec {
     }
 }
 
+function Start-Wrapper {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [int]$ProcessId = 0,
+        [Parameter(Mandatory = $false)]
+        [String]$LogPath = ""
+    )
+    if (-not $ProcessId -or -not $LogPath) {return}
+
+    Start-Job -ArgumentList $PID, $ProcessId, $LogPath {
+        param($ControllerProcessID, $ProcessId, $LogPath)
+
+        $ControllerProcess = Get-Process -Id $ControllerProcessID
+        if ($ControllerProcess -eq $null) {return}
+
+        $ControllerProcess.Handle >$null
+
+        $LogPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($LogPath)
+        
+        $TailJob = Start-Job([ScriptBlock]::Create("Get-Content '$LogPath' -Tail 30 -Wait *>&1 | Write-Output"))
+
+        if ($TailJob) {
+            do {
+                $Process = Get-Process -Id $ProcessId
+                if ($TailJob.HasMoreData) {$TailJob | Receive-Job | ForEach-Object {$Line = $_ -replace "`n|`r", "";$Line -replace "\x1B\[[0-?]*[ -/]*[@-~]"}}
+            }
+            while (-not $ControllerProcess.WaitForExit(10000) -and $Process -and -not $Process.HasExited -and $TailJob.State -eq "Running")
+            if ($TailJob.State -eq "Running") {$TailJob | Stop-Job}
+            $TailJob | Remove-Job -Force
+        }
+    }
+}
+
 function Invoke-PingStratum {
 [cmdletbinding()]
 param(

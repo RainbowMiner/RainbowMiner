@@ -78,6 +78,7 @@ class Miner {
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
     $Job
     $EthPillJob
+    $WrapperJob
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
@@ -102,6 +103,14 @@ class Miner {
     [System.Management.Automation.Job]GetMiningJob() {
         $MJob = if ($this.Job -and $this.Job.Name) {Get-Job -Name $this.Job.Name -ErrorAction Ignore} else {$null}
         return $MJob
+    }
+
+    [System.Management.Automation.Job]GetWrapperJob() {
+        if ($Global:IsLinux) {
+            return $this.WrapperJob
+        } else {
+            return $this.GetMiningJob()
+        }
     }
 
     hidden StartMining() {
@@ -167,6 +176,10 @@ class Miner {
 
             if ($this.GetMiningJob()) {
                 $this.Status = [MinerStatus]::Running
+                if ($Global:IsLinux -and $this.IsWrapper()) {
+                    Write-Log "Starting WrapperJob"
+                    $this.WrapperJob = Start-Wrapper -ProcessId $this.GetProcessId() -LogPath $this.LogFile
+                }
             }
         }
     }
@@ -188,6 +201,13 @@ class Miner {
             Write-Log "Stopping OhGodAnETHlargementPill"
             Stop-SubProcess -Job $this.EthPillJob -Title "OhGodAnETHlargementPill"
             $this.EthPillJob = $null
+        }
+
+        if ($this.WrapperJob) {
+            Write-Log "Stopping WrapperJob"
+            if ($this.WrapperJob.State -eq "Running") {$this.WrapperJob | Stop-Job}
+            $this.WrapperJob | Remove-Job -Force
+            $this.WrapperJob = $null
         }
 
         if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
@@ -214,7 +234,7 @@ class Miner {
     }
 
     EndOfRoundCleanup() {
-        if ($this.API -notmatch "Wrapper") {
+        if ($Global:IsLinux -or ($this.API -notmatch "Wrapper")) {
             $MJob = $this.GetMiningJob()
             if ($MJob.HasMoreData) {$MJob | Receive-Job > $null}
         }
@@ -386,7 +406,7 @@ class Miner {
     }
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetMiningJob()
+        $MJob = $this.GetWrapperJob()
         if ($MJob.HasMoreData) {
             $Date = (Get-Date).ToUniversalTime()
 
@@ -1116,7 +1136,7 @@ class EthminerWrapper : Miner {
     [Double]$Difficulty_Value = 0.0
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetMiningJob()
+        $MJob = $this.GetWrapperJob()
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -1910,7 +1930,7 @@ class RHWrapper : Miner {
     [Double]$Difficulty_Value = 0.0
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetMiningJob()
+        $MJob = $this.GetWrapperJob()
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -1955,7 +1975,7 @@ class RHWrapper : Miner {
 class SixMinerWrapper : Miner {
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetMiningJob()
+        $MJob = $this.GetWrapperJob()
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -2106,7 +2126,7 @@ class SwapminerWrapper : Miner {
     }
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetMiningJob()
+        $MJob = $this.GetWrapperJob()
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -2475,7 +2495,7 @@ class Xmrig3 : Miner {
 class XmrigWrapper : Miner {
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetMiningJob()
+        $MJob = $this.GetWrapperJob()
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
