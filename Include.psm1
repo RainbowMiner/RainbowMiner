@@ -2009,7 +2009,7 @@ function Start-SubProcessInScreen {
     Set-BashFile -FilePath $PIDBash -Cmd $Cmd
     Set-BashFile -FilePath $PIDTest -Cmd $Test
 
-    if (Test-Path $PIDBash) {
+    if ($Session.Config.EnableDebugMode -and (Test-Path $PIDBash)) {
         Copy-Item -Path $PIDBash -Destination $PIDDebug -ErrorAction Ignore
         (Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru).WaitForExit() > $null
     }
@@ -4003,7 +4003,7 @@ function Invoke-NvidiaSettings {
         }
         $Cmd = $Cmd.Trim()
         if ($Cmd) {
-            Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd $Session.Config.OCDaemonOnEmptyAdd
+            Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         }
     }
 }
@@ -6162,7 +6162,7 @@ param(
         }
     } else {
         if ($IsLinux -and $Runas) {
-            Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd $Session.Config.OCDaemonOnEmptyAdd
+            Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         } else {
             Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString -ExcludeEmptyLines -ExpandLines -Runas:$Runas
         }
