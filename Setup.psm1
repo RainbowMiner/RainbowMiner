@@ -1331,16 +1331,20 @@ function Start-Setup {
                         }
                         "linuxdisplay" {
                             if ($IsLinux -and $Config.EnableLinuxHeadless) {
-                                $Config.LinuxDisplay = Read-HostString -Prompt "Enter string for DISPLAY environement (normally :0)" -Default $Config.LinuxDisplay | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                if ($Config.LinuxDisplay -eq "`$LinuxDisplay") {$Config.LinuxDisplay = $ConfigSetup.LinuxDisplay}
+                                $Config.LinuxDisplay = Read-HostString -Prompt "Enter string for DISPLAY environement (normally :0)" -Default $Config.LinuxDisplay -Characters ":\.0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 $Config.LinuxDisplay = $Config.LinuxDisplay.Trim()
+                                if ($ConfigSetup.LinuxDisplay -eq $Config.LinuxDisplay) {$Config.LinuxDisplay = "`$LinuxDisplay"}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "linuxxauthority" {
                             if ($IsLinux -and $Config.EnableLinuxHeadless) {
-                                $Config.LinuxXAuthority = Read-HostString -Prompt "Enter string for XAUTHORITY environement" -Default $Config.LinuxXAuthority | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                if ($Config.LinuxXAuthority -eq "`$LinuxXAuthority") {$Config.LinuxXAuthority = $ConfigSetup.LinuxXAuthority}
+                                $Config.LinuxXAuthority = Read-HostString -Prompt "Enter string for XAUTHORITY environement" -Default $Config.LinuxXAuthority -Characters '' | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 $Config.LinuxXAuthority = $Config.LinuxXAuthority.Trim()
+                                if ($ConfigSetup.LinuxXAuthority -eq $Config.LinuxXAuthority) {$Config.LinuxXAuthority = "`$LinuxXAuthority"}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
