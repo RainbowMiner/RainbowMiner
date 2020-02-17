@@ -77,7 +77,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     if ($ok -and -not $InfoOnly) {
         $divisor  = ConvertFrom-Hash "1$($Pool_Request.unit)"
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Request.profit*$priceBTC/$divisor) -Duration $StatSpan -HashRate ([int64]$Pool_Request.statPool) -BlockRate ([int]$Pool_Request.found24H) -ChangeDetection $true -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Request.profit*$priceBTC/$divisor) -Duration $StatSpan -HashRate ([int64]$Pool_Request.statPool) -BlockRate ([int]$Pool_Request.found24H) -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
