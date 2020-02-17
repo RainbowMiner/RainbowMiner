@@ -5166,11 +5166,11 @@ function Get-ServerConfig {
                 $PathToFile = $ConfigFiles[$_].Path
                 $Data = $Result.Content.$_.data
                 if ($_ -eq "config") {
-                    $Preset = Get-ConfigContent "config"
+                    $Preset = Get-ConfigContent "config" -ConserveUnkownParameters
                     $Data.PSObject.Properties.Name | Where-Object {$ExcludeConfigVars -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
                     $Data = $Preset
                 } elseif ($_ -eq "pools") {
-                    $Preset = Get-ConfigContent "pools"
+                    $Preset = Get-ConfigContent "pools" -ConserveUnkownParameters
                     $Preset.PSObject.Properties.Name | Where-Object {$Data.$_ -eq $null -or $ExcludeConfigVars -match "^pools:$($_)$"} | Foreach-Object {$Data | Add-Member $_ $Preset.$_ -Force}
                     $ExcludeConfigVars -match "^pools:.+:.+$" | Foreach-Object {
                         $PoolName = ($_ -split ":")[1]
