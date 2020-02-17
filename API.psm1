@@ -767,7 +767,7 @@
                                 $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
                                                             isnew = $GetConfigNew
                                                             lwt   = $ConfigLwt
-                                                            data  = if ($GetConfigNew) {Get-ConfigContent -ConfigName $GetConfigA[0] -WorkerName $Parameters.workername -GroupName $Parameters.groupname -ConserveUnkownParameters}
+                                                            data  = if ($GetConfigNew) {Get-ConfigContent -ConfigName $GetConfigA[0] -WorkerName $Parameters.workername -GroupName $Parameters.groupname}
                                                             }) -Force
                                 $Status = $true
                             }
