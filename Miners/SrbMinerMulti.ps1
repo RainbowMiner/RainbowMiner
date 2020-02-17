@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.3-srbminermulti/SRBMiner-Multi-0-3-3_Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.4-srbminermulti/SRBMiner-Multi-0-3-4-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.3-srbminermulti/SRBMiner-Multi-0-3-3-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.4-srbminermulti/SRBMiner-Multi-0-3-4-win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.3.3"
+$Version = "0.3.4"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
