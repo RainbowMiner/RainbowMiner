@@ -247,6 +247,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$SetupOnly = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$EnableDebugMode = $false,
+    [Parameter(Mandatory = $false)]
     [Switch]$EnableRestartComputer = $false, # enable automatic computer restart, if one of the following conditions is met
     [Parameter(Mandatory = $false)]
     [Double]$RestartComputerHours = 0, # condition 1: restart after xx hours runtime
@@ -263,7 +265,7 @@ $EnableMinerStatus = $true
 
 Initialize-Session
 
-$Session.Version         = "4.5.3.5"
+$Session.Version         = "4.5.3.6"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
