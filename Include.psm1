@@ -1929,10 +1929,12 @@ function Start-SubProcessInScreen {
     $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_info.txt"
     $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName).sh"
     $PIDTest = Join-Path $WorkingDirectory "$(if ($BashFileName) {$BashFileName} else {"start_$($ScreenName)"}).sh"
+    $PIDDebug= Join-Path $WorkingDirectory "$(if ($BashFileName) {"debug_$BashFileName"} else {"debug_start_$($ScreenName)"}).sh"
 
     if (Test-Path $PIDPath) { Remove-Item $PIDPath -Force }
     if (Test-Path $PIDInfo) { Remove-Item $PIDInfo -Force }
     if (Test-Path $PIDBash) { Remove-Item $PIDBash -Force }
+    if (Test-Path $PIDDebug){ Remove-Item $PIDDebug -Force }
 
     $TestArgumentList = "$ArgumentList"
 
@@ -1976,6 +1978,10 @@ function Start-SubProcessInScreen {
     $Cmd.Add("  IFS=`$(printf '\t');") > $null
     $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
     $Cmd.Add("  while read -r name stuff; do") > $null
+    $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
+    $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
+    $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
+    $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
     $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
     $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
     $Cmd.Add("  done") > $null
@@ -1988,8 +1994,13 @@ function Start-SubProcessInScreen {
         $Cmd.Add("sleep .1") > $null
     }
 
-    Set-BashFile -FilePath $PIDbash -Cmd $Cmd
-    Set-BashFile -FilePath $PIDtest -Cmd $Test
+    Set-BashFile -FilePath $PIDBash -Cmd $Cmd
+    Set-BashFile -FilePath $PIDTest -Cmd $Test
+
+    if (Test-Path $PIDBash) {
+        Copy-Item -Path $PIDBash -Destination $PIDDebug -ErrorAction Ignore
+        (Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru).WaitForExit() > $null
+    }
 
     (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
     (Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru).WaitForExit() > $null
