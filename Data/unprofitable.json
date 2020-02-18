@@ -30,6 +30,7 @@
   "Pools": {
     "ZergPool": {
       "Algorithms": [
+        "Ethash",
         "RandomX"
       ]
     },
@@ -37,6 +38,7 @@
       "Algorithms": [],
       "Coins": [
         "BTG",
+        "NILU",
         "XMR"
       ]
     }
