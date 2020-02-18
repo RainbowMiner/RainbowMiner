@@ -22,7 +22,7 @@ $Version = "0.0.5"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "bl2bsha3"; Params = ""; ExtendInterval = 2} #Blake2b+SHA3 / HNS
+    [PSCustomObject]@{MainAlgorithm = "bl2bsha3"; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU")} #Blake2b+SHA3 / HNS (NBminer lot's faster for NVIDIA)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -47,7 +47,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $Miner_Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
 
-        $Commands | ForEach-Object {
+        $Commands | Where-Object {$Miner_Vendor -in $_.Vendor} | ForEach-Object {
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
