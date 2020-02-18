@@ -30,6 +30,40 @@ $Commands = [PSCustomObject[]]@(
 )
 $CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1"
 
+$CoinXlat = [PSCustomObject]@{
+    "AKA" = "akroma"
+    "ATH" = "ath"
+    "AURA" = "aura"
+    "B2G" = "b2g"
+    "BCI" = "bci"
+    "CLO" = "clo"
+    "DBIX" = "dbix"
+    "EGEM" = "egem"
+    "ELLA" = "ella"
+    "ESN" = "esn"
+    "ETC" = "etc"
+    "ETCC" = "etcc"
+    "ETH" = "eth"
+    "ETHO" = "etho"
+    "ETP" = "etp"
+    "ETZ" = "etz"
+    "EXP" = "exp"
+    "GEN" = "gen"
+    "HBC" = "hbc"
+    "MIX" = "mix"
+    "MOAC" = "moac"
+    "MUSIC" = "music"
+    "NUKO" = "nuko"
+    "PGC" = "pgc"
+    "PIRL" = "pirl"
+    "QKC" = "qkc"
+    "REOSC" = "reosc"
+    "UBQ" = "ubq"
+    "VIC" = "vic"
+    "WHL" = "whale"
+    "YOC" = "yoc"
+}
+
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($InfoOnly) {
@@ -87,9 +121,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     if ($Pools.$Algorithm_Norm.Name -eq "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
 
+                    $CoinSymbol = $Pools.$Algorithm_Norm.CoinSymbol
                     $Coin = if ($Algorithm_Norm -match "ProgPow") {"bci"}
-                            elseif ($Pools.$Algorithm_Norm.CoinSymbol -eq "UBQ" -or $Pools.$Algorithm_Norm.CoinName -like "ubiq") {"ubq"}
-                            elseif ($Pools.$Algorithm_Norm.CoinSymbol -eq "QKC" -or $Pools.$Algorithm_Norm.CoinName -like "quarkchain") {"qkc"}
+                            elseif ($CoinSymbol -and $CoinXlat.$CoinSymbol) {$CoinXlat.$CoinSymbol}
                             else {"auto"}
 
 					[PSCustomObject]@{
