@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hodl"; NH = $true; Params = ""} #HODL
     [PSCustomObject]@{MainAlgorithm = "jha"; NH = $true; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; NH = $true; Params = ""} #Lyra2v3
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z330"; NH = $true; Params = ""} #lyra2z330, CpuminerRplant faster
+    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; NH = $true; Params = ""} #lyra2z330, CpuminerRplant faster
     #[PSCustomObject]@{MainAlgorithm = "m7m"; NH = $true; Params = ""} #m7m, (CpuminerRKZ faster)
     [PSCustomObject]@{MainAlgorithm = "pentablake"; NH = $true; Params = ""} #pentablake
     [PSCustomObject]@{MainAlgorithm = "phi2"; NH = $true; Params = ""} #PHI2
