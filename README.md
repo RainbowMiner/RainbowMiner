@@ -808,10 +808,14 @@ For Server (Runmode=server) setup:
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
+- **EnableOCLinuxSetAllPStates** = set to 1, to set mem/core clock offsets to all PStates, instead to the highest, only [default=0]
 - **MaxActivityDays** = set max. days for localhost's Activity history [default=2]
 - **MSIApath** = absolute windows path to MSI Afterburner executable [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
 - **MSIAprofile** = default MSI Afterburner profile (1-5), set to 0 to disable [default=2]
 - **NVSMIpath** = absolute windows path to Nvidia smi tools [default=c:\Program Files\NVIDIA Corporation\NVSMI]
+- **EnableLinuxHeadless** = if set to 1, miner-startscripts and overclocking-scripts will include DISPLAY+XAUTHORITY settings
+- **LinuxDisplay** = default Linux DISPLAY for headless operation [default=:0]
+- **LinuxXAuthority** = default Linux XAUTHORITY for headless operation (needed for overclocking). [default=RainbowMiner will guess]
 - **MiningPriorityCPU** = process priority for CPU miners (-2..2) [default=-2]
 - **MiningPriorityGPU** = process priority for GPU miners (-2..2) [default=-1]
 - **AutoexecPriority** = process priority for commands started via autoexec.txt (-2..2) [default=0]

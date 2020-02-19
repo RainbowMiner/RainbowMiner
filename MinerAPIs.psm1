@@ -616,7 +616,7 @@ class Miner {
 
     SetOCprofile($Config,[int]$Sleep=500) {
 
-        $ApplyToAllPerformanceLevels = $true
+        $ApplyToAllPerformanceLevels = $Global:Session.Config.EnableOCLinuxSetAllPStates
 
         $this.LastSetOCTime = (Get-Date).ToUniversalTime()
 
