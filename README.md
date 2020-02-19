@@ -179,7 +179,7 @@ Alternative: start as Linux `screen`:
 ```
 
 - press `Ctrl+A`, then `d` to detach from screen (imagine you want to disconnect your ssh session)
-- enter `screen -r` to reconnect to screen
+- enter `screen -R RainbowMiner` to reconnect to screen
 
 
 #### 4. Enter basic information
@@ -518,6 +518,18 @@ The differences:
 - MSI Afterburner profiles are fixed to a maximum of five and is being selected by their number 1 to 5 in parameter "MSIprofile" in miners.config.txt"
 - ocprofiles are unlimited in ammount, you decide what their names are. RainbowMiner comes with an example ocprofiles.config.txt, where the profiles are named "Profile1", "Profile", .. "Profile9". The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
 
+> My overclocking settings do not work on Linux
+
+- check config.txt, if "EnableOCProfiles" is set to 1
+- are you running a headless system (without monitor), then set "EnableLinuxHeadless" to "1"
+- open a linux shell and start `ocdaemon status` - it should report `Running`. If not, run `./install.sh` again.
+- open a linux shell and cd to IncludesLinux/bash within your RainbowMiner folder - start `./getxauth.sh` and see, if the XAUTHORITY path matches your system's. If not, enter your system's path into parameter "LinuxXAuthority" in config.txt.
+
+
+```
+"EnableOCProfiles": "1",
+"EnableLinuxHeadless": "1",
+```
 
 ## OC OPTION1: MSI AFTERBURNER PROFILES
 
