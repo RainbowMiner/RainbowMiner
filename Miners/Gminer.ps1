@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.96-gminer/gminer_1_96_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.97-gminer/gminer_1_97_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.96-gminer/gminer_1_96_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.97-gminer/gminer_1_97_windows64.zip"
 }
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "1.96"
+$Version = "1.97"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -31,6 +31,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";      MinMemGb = 4;                     Params = "--algo cuckaroo29";  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Cuckaroo29/BitGRIN
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";     MinMemGb = 4;                     Params = "--algo swap";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGb = 8;                     Params = "--algo grin31";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Cuckatoo31/GRIN31
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";      MinMemGb = 8;                     Params = "--algo grin32";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Cuckatoo32/GRIN32
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGb = 4;                     Params = "--algo cuckarood29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Cuckarood29/GRIN upto 01/16/2020
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29v";    MinMemGb = 4;                     Params = "--algo cuckarood29v";Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true; Fee = 10.0} #Cuckarood29v/MoneroV
     [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGb = 4;                     Params = "--algo cuckaroom29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true; Fee = 3.0} #Cuckaroom29/GRIN from 01/16/2020
@@ -66,6 +67,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 8;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"; NH2 = $true} #Ethash+Eaglesong
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 9;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"; NH2 = $true} #Ethash+Eaglesong
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 10;   Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"; NH2 = $true} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Blake2bSHA3";     MinMemGb = 1;                     Params = "--algo handshake";             Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Blake2bSHA3/HNS
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
