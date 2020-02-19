@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.4-rplant/cpuminer-rplant-4.5.4-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.5-rplant/cpuminer-rplant-4.5.5-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.4-rplant/cpuminer-rplant-4.5.4-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.5-rplant/cpuminer-rplant-4.5.5-win.zip"
 }
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
-$Version = "4.5.4"
+$Version = "4.5.5"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
