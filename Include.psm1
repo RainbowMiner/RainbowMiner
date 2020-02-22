@@ -3908,7 +3908,7 @@ function Test-VRAM {
         [Parameter(Mandatory = $false)]
         $MinMemGB = 0.0
     )
-    $MinMemGB *= 0.97
+    $MinMemGB *= 0.975
     if ($IsWindows -and $Session.WindowsVersion -ge "10.0.0.0") {
         $Device.OpenCL.GlobalMemsize*0.835 -ge ($MinMemGB * 1gb)
     } else {
