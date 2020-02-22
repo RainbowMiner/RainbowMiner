@@ -109,6 +109,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash)") {"ethproxy"} else {$null}
 				ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0
