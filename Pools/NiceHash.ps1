@@ -44,6 +44,8 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
+$Pool_EthDAGSize = Get-EthDAGSize "ETH"
+
 $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
@@ -109,6 +111,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                         }
                     })
                     EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                    EthDAGSize    = if ($Pool_Algorithm_Norm -match "^(Ethash)") {$Pool_EthDAGSize} else {$null}
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
