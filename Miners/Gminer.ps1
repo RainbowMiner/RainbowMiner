@@ -99,7 +99,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $SecondAlgorithm_Norm = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
 
-            $Ethmining = $_.MainAlgorithm -match "^Ethash"
+            $Ethmining = $MainAlgorithm_Norm_0 -eq "Ethash"
 
             $DualIntensity = $_.Intensity
 

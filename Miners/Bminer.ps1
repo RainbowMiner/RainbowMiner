@@ -68,7 +68,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $MainAlgorithm_Norm_0 = if ($MainAlgorithm -eq "beam") {Get-Algorithm "EquihashR25x5"} else {Get-Algorithm $MainAlgorithm}
 			$SecondAlgorithm = $_.SecondaryAlgorithm
 
-            $MinMemGb = if ($MainAlgorithm -eq "ethash") {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol} else {$_.MinMemGb}
+            $MinMemGb = if ($MainAlgorithm_Norm_0 -eq "Ethash") {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol} else {$_.MinMemGb}
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
