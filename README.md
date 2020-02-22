@@ -50,7 +50,12 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 1. Install PowerShell 6: [Download Installer for version 6.2.4](https://github.com/PowerShell/PowerShell/releases/download/v6.2.4/PowerShell-6.2.4-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
-3. Update GPU drivers: [Nvidia 431.68](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 19.5.2](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
+3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
+    - **Nvidia**: there is one interesting repo on Github ([alanfox2000](https://github.com/alanfox2000/repack_NVIDIAGeforceGraphicsDriver)) - this user re-packs de-bloated lite versions of the Nvidia drivers. His packs often come with additional patches and fixes. The following driver versions v441.41 work well with RainbowMiner:
+[Nvidia Driver Version v441.41 - Standard - Windows 10](https://github.com/alanfox2000/repack_NVIDIAGeforceGraphicsDriver/releases/download/441.41/nvidia-geforce-graphics-driver-lite-441.41-win10-64bit-standard-27-11-2019.exe)
+[Nvidia Driver Version v441.41 - DCH - Windows 10](https://github.com/alanfox2000/repack_NVIDIAGeforceGraphicsDriver/releases/download/441.41/nvidia-geforce-graphics-driver-lite-441.41-win10-64bit-dch-27-11-2019.exe)
+[Nvidia Driver Version v441.41 - Standard - Windows 7, 8, 8.1](https://github.com/alanfox2000/repack_NVIDIAGeforceGraphicsDriver/releases/download/441.41/nvidia-geforce-graphics-driver-lite-441.41-win8-win7-64bit-standard-27-11-2019.exe)
+    - **AMD**: [AMD Adrenalin 2020 Edition 20.2.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64) - if you run into trouble, try older versions.
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 5. If you plan on using [GrinGoldMiner](https://github.com/mozkomor/GrinGoldMiner): Install Microsoft [.NET Core 2.2 Runtime](https://dotnet.microsoft.com/download) - download and install "Run Apps .NET Core Runtime", click the button "** Download .NET Core Runtime (see here: https://github.com/RainbowMiner/RainbowMiner/issues/441#issuecomment-465932125) **"
 
