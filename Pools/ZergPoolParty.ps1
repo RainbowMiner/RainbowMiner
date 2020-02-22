@@ -34,8 +34,10 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
     return
 }
 
+$Pool_EthDAGSize = 2.5
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -delay 1000 -tag $Name -cycletime 120
+    $Pool_EthDAGSize = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object {$_.algo -eq "ethash"} | Foreach-Object {Get-EthDAGSize $_.symbol} | Measure-Object -Maximum).Maximum
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -110,6 +112,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
                 EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash)") {"ethproxy"} else {$null}
+                EthDAGSize    = if ($Pool_Algorithm_Norm -match "^(Ethash)") {$Pool_EthDAGSize} else {$null}
 				ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0
