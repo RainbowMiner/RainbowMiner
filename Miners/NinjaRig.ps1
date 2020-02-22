@@ -52,8 +52,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
         $Commands | ForEach-Object {
             $First = $true
-            $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
-            $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+            $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 

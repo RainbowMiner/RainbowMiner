@@ -10,6 +10,7 @@ function Initialize-Session {
         $Global:Session = [hashtable]::Synchronized(@{})
         if ($IsWindows) {
             $Session.WindowsVersion = [System.Environment]::OSVersion.Version
+            $Session.IsWin10        = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0")
         }
         $Session.IsAdmin            = Test-IsElevated
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
@@ -3908,8 +3909,8 @@ function Test-VRAM {
         [Parameter(Mandatory = $false)]
         $MinMemGB = 0.0
     )
-    $MinMemGB *= 0.975
-    if ($IsWindows -and $Session.WindowsVersion -ge "10.0.0.0") {
+    $MinMemGB *= 0.98
+    if ($IsWindows -and $Session.IsWin10) {
         $Device.OpenCL.GlobalMemsize*0.835 -ge ($MinMemGB * 1gb)
     } else {
         $Device.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)
