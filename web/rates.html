@@ -1,0 +1,60 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 id="title" data-navbaractive="navrates" class="h2">Rate Conversion Table</h1>
+</div>
+<p>The following coins are currently in use</p>
+<table id="rates" class="table">
+  <thead>
+      <tr>
+      </tr>
+  </thead>
+</table>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+
+$.ajax({
+  url:"/currentprofit",
+  type:"GET",
+  dataType:"json",
+  success: function(retorno){
+    $("#rates").bootstrapTable('destroy');
+    $("#rates thead tr").html('');
+    var tr = $('<th data-field="symbol" data-sortable="true">Symbol</th>');
+    $("#rates thead tr").append(tr);
+    $.each(retorno.Rates, function(index, value) {
+      var tr = $('<th data-field="trate'+index+'" data-align="right">'+index+'</th>');
+      $("#rates thead tr").append(tr);
+    });
+    $("#rates").bootstrapTable({
+        toggle: "table",
+        url: "/rates?format=table",
+        responseHandler: "formatRates",
+        cache: false,
+        sortOrder: "asc",
+        sortName: "symbol",
+        showColumns: true,
+        showToggle: true,
+        showRefresh: true,
+        iconsPrefix: "fa",
+        icons: "icons",
+        detailView: true,
+        detailFormatter: detailFormatter
+    });
+    setTheme($('#theme').val());
+  }
+});
+
+  function formatRates(data) {
+  // This function can alter the returned data before building the table, formatting it in a way
+  // that is easier to display and manipulate in a table
+  $.each(data, function(index, item) {
+       $.each(item, function(col,val) {
+            if (col == "rateBTC") item.trateBTC = formatPricesBTC(val)
+            else if (col != "symbol") item["t"+col] = val.toFixed(4);
+       })
+  });
+  return data;
+}
+</script>
+<!--#include file="/parts/foot.html" -->

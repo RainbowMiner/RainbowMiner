@@ -535,7 +535,23 @@
                     Break
                 }
                 "/rates" {
-                    $Data = $API.Rates
+                    if ($Parameters.format -eq "table") {
+                        if ($API.Rates) {$LocalRates = ConvertFrom-Json $API.Rates}
+                        $CurrentRates = $API.ActualRates.PSObject.Properties.Name | Sort-Object | Foreach-Object {[PSCustomObject]@{symbol=$_;rate=$API.ActualRates.$_}}
+                        $Data = foreach ($sym in @($LocalRates.PSObject.Properties.Name)) {
+                            $val = [PSCustomObject]@{
+                                symbol = $sym
+                            }
+                            $rate = $LocalRates.$sym
+                            $CurrentRates | Foreach-Object {$val | Add-Member "rate$($_.symbol)" $($LocalRates."$($_.symbol)" / $rate)}
+                            $val
+                        }
+                        $Data = ConvertTo-Json @($Data)
+                        if ($LocalRates) {Remove-Variable "LocalRates"}
+                        if ($CurrentRates) {Remove-Variable "CurrentRates"}
+                    } else {
+                        $Data = $API.Rates
+                    }
                     Break
                 }
                 "/asyncloaderjobs" {
