@@ -39,9 +39,13 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if (-not $InfoOnly) {
         try {
             $WebRequest = Invoke-RestMethodAsync "https://6block.com/en" -tag $Name -timeout 15 -cycletime 120
+            $WebParams = if ($WebRequest -match "}}\(([^\)]+)\)") {$Matches[1] -split ',' | Foreach-Object {$_  -replace '^"' -replace '"$'}}
             foreach ($c in @("statPool","found24H","activeMiners")) {
                 if ($WebRequest -match "$($c):(.+?)[,}]") {
                     $Pool_Request | Add-Member $c ($Matches[1] -replace '^"' -replace '"$') -Force
+                    if ($Pool_Request.$c -match "^[a-zA-Z]$") {
+                        $Pool_Request.$c = $WebParams[[byte]$Pool_Request.$c[0] - [byte]('a'[0])]
+                    }
                 } else {
                     $ok = $false
                 }
