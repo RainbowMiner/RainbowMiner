@@ -738,6 +738,24 @@ try {
         $RemovePoolStats += "6Block_HNS_Profit.txt"
     }
 
+    if ($Version -le (Get-Version "4.5.4.0")) {
+        $Changes = 0
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($ConfigActual.ExcludeServerConfigVars -ne "`$ExcludeServerConfigVars" -and (Get-ConfigArray $ConfigActual.ExcludeServerConfigVars) -inotcontains "LinuxDisplay") {
+            $ConfigActual | Add-Member ExcludeServerConfigVars "$((@(Get-ConfigArray $ConfigActual.ExcludeServerConfigVars | Select-Object) + "LinuxDisplay" | Sort-Object) -join ',')" -Force
+            $Changes++;
+        }
+        if ($ConfigActual.ExcludeServerConfigVars -ne "`$ExcludeServerConfigVars" -and (Get-ConfigArray $ConfigActual.ExcludeServerConfigVars) -inotcontains "LinuxXAuthority") {
+            $ConfigActual | Add-Member ExcludeServerConfigVars "$((@(Get-ConfigArray $ConfigActual.ExcludeServerConfigVars | Select-Object) + "LinuxXAuthority" | Sort-Object) -join ',')" -Force
+            $Changes++;
+        }
+        if ($Changes) {
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal += $Changes
+        }
+    }
+
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
