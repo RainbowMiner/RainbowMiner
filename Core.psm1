@@ -1460,7 +1460,7 @@ function Invoke-Core {
     if ($ConfigBackup -ne $null) {Remove-Variable "ConfigBackup"}
 
 
-    if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles -and $Session.Config.EnableOCLinuxForcePState-and -not (Get-Process | Where-Object Name -eq "forcePstate") -and ((Test-Path "/opt/rainbowminer/bin/forcePstate") -or (Test-Path ".\IncludesLinux\bin\forcePstate"))) {
+    if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles -and $Session.Config.EnableOCLinuxForcePState -and -not (Get-Process | Where-Object Name -eq "forcePstate") -and ((Test-Path "/opt/rainbowminer/bin/forcePstate") -or (Test-Path ".\IncludesLinux\bin\forcePstate"))) {
         Set-OCDaemon "$(if (Test-Path "/opt/rainbowminer/bin/forcePstate") {"/opt/rainbowminer/bin/forcePstate"} else {$Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bin\forcePstate")}) &" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\forcePstate.sh" -Quiet > $null
     }
