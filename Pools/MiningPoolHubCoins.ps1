@@ -17,14 +17,6 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 
-#defines minimum memory required per coin, default is 4gb
-$MinMem = [PSCustomObject]@{
-    "Expanse"  = "2gb"
-    "Soilcoin" = "2gb"
-    "Ubiq"     = "2gb"
-    "Musicoin" = "3gb"
-}
-
 try {
     $Pool_Request = Invoke-RestMethodAsync "https://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&{timestamp}" -tag $Name -cycletime 120
 }
@@ -50,48 +42,37 @@ $Pool_Fee = 0.9 + 0.2
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
 $Pool_Request.return | ForEach-Object {
-    $Pool_Host = $_.host
-    $Pool_Hosts = $_.host_list.split(";")
-    $Pool_Port = $_.port
+    $Pool_Host      = $_.host
+    $Pool_Hosts     = $_.host_list.split(";")
+    $Pool_Port      = $_.port
     $Pool_Algorithm = $_.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin = $_.coin_name
-    $Pool_Symbol = Get-CoinSymbol $_.coin_name
-    if (-not $Pool_Symbol -and $_.coin_name -match '-') {
-        $Pool_Symbol = Get-CoinSymbol ($_.coin_name -split '-' | Select-Object -Index 0)
+    $Pool_Coin   = $_.coin_name
+    $Pool_Symbol = $_.symbol
+    if (-not $Pool_Symbol) {
+        $Pool_Symbol = Get-CoinSymbol $_.coin_name
+        if (-not $Pool_Symbol -and $_.coin_name -match '-') {
+            $Pool_Symbol = Get-CoinSymbol ($_.coin_name -split '-' | Select-Object -Index 0)
+        }
     }
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
 
     $Divisor = 1e9
 
-    $Pool_Hashrate = $_.pool_hash
-    if ($Pool_Hashrate -match "^([\d\.]+)([KMGTP])$") {
-        $Pool_Hashrate = [double]$Matches[1]
-        Switch($Matches[2]) {
-            "K" {$Pool_Hashrate *= 1e3}
-            "M" {$Pool_Hashrate *= 1e6}
-            "G" {$Pool_Hashrate *= 1e9}
-            "T" {$Pool_Hashrate *= 1e12}
-            "P" {$Pool_Hashrate *= 1e15}
-        }
-    } elseif ($Pool_Hashrate -notmatch "^[\d\.]+$") {$Pool_Hashrate = 0}
-
-    $Pool_Hashrate = [int64]$Pool_Hashrate
     $Pool_TSL = if ($_.time_since_last_block -eq "-") {$null} else {[int64]$_.time_since_last_block}
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_HashRate -FaultDetection $true -FaultTolerance 5 -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate (ConvertFrom-Hash $_.pool_hash) -FaultDetection $true -FaultTolerance 5 -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     foreach($Pool_Region in $Pool_Regions) {
         if ($User -or $InfoOnly) {
-            $Pool_Algorithm1 = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
             [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm1
-				Algorithm0    = $Pool_Algorithm1
+                Algorithm     = $Pool_Algorithm_Norm
+				Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_Symbol
                 Currency      = $Pool_Currency
@@ -124,8 +105,8 @@ $Pool_Request.return | ForEach-Object {
 
             if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
                 [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm1
-					Algorithm0    = $Pool_Algorithm1
+                    Algorithm     = $Pool_Algorithm_Norm
+					Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = $Pool_Currency

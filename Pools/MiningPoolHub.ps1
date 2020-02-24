@@ -43,16 +43,19 @@ $Pool_Fee = 0.9 + 0.2
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
 $Pool_Request.return | ForEach-Object {
-    $Pool_Hosts = $_.all_host_list.split(";")
-    $Pool_Port = $_.algo_switch_port
+    $Pool_Hosts     = $_.all_host_list.split(";")
+    $Pool_Port      = $_.algo_switch_port
     $Pool_Algorithm = $_.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     if ($_.current_mining_coin) {
-        $Pool_Coin = $_.current_mining_coin
-        $Pool_Symbol = Get-CoinSymbol $_.current_mining_coin
-        if (-not $Pool_Symbol -and $_.current_mining_coin -match '-') {
-            $Pool_Symbol = Get-CoinSymbol ($_.current_mining_coin -replace '\-.*$')
+        $Pool_Coin   = $_.current_mining_coin
+        $Pool_Symbol = $_.current_mining_coin_symbol
+        if (-not $Pool_Symbol) {
+            $Pool_Symbol = Get-CoinSymbol $_.current_mining_coin
+            if (-not $Pool_Symbol -and $_.current_mining_coin -match '-') {
+                $Pool_Symbol = Get-CoinSymbol ($_.current_mining_coin -replace '\-.*$')
+            }
         }
     } else {
         $Pool_Symbol = $Pool_Coin = ''
