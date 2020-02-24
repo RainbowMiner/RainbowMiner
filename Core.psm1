@@ -1460,8 +1460,8 @@ function Invoke-Core {
     if ($ConfigBackup -ne $null) {Remove-Variable "ConfigBackup"}
 
 
-    if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles -and $Session.Config.EnableOCLinuxForcePState -and -not (Get-Process | Where-Object Name -eq "forcePstate") -and ((Test-Path "/opt/rainbowminer/bin/forcePstate") -or (Test-Path ".\IncludesLinux\bin\forcePstate"))) {
-        Set-OCDaemon "$(if (Test-Path "/opt/rainbowminer/bin/forcePstate") {"/opt/rainbowminer/bin/forcePstate"} else {$Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bin\forcePstate")}) &" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
+    if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles -and $Session.Config.EnableOCLinuxForcePState -and -not (Get-Process | Where-Object Name -eq "forcePstate") -and (Test-Path ".\IncludesLinux\bin\forcePstate")) {
+        Set-OCDaemon "$($Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bin\forcePstate")) &" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\forcePstate.sh" -Quiet > $null
     }
 
@@ -3325,7 +3325,7 @@ function Stop-Core {
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
     } elseif ($IsLinux) {
-        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/Bin/*"} | Foreach-Object {
+        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/Bin/*" -or $_.Path -like "$(Get-Location)/IncludesLinux/bin/*"} | Foreach-Object {
             if (Test-OCDaemon) {
                 $Cmd = @()
                 @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {$Cmd += "kill $($_)"}
