@@ -1594,7 +1594,7 @@ function Invoke-Core {
     [System.Collections.Generic.List[string]]$SelectedPoolNames = @()
     $NewPools = @()
     $TimerPools = @{}
-    $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+    $StopWatch = [System.Diagnostics.StopWatch]::New()
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | Where-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
             $SelectedPoolNames.Add($_) > $null

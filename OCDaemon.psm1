@@ -49,7 +49,7 @@ param(
         if ($Move) {Remove-Item $FilePath -Force -ErrorAction Ignore}
     }
     if (Test-Path "/opt/rainbowminer/ocdcmd/$Name.lock") {Remove-Item "/opt/rainbowminer/ocdcmd/$Name.lock" -Force -ErrorAction Ignore}
-    $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+    $StopWatch = [System.Diagnostics.StopWatch]::New()
     $StopWatch.Start()
     $stoptime = 5000
     While ((Test-Path "/opt/rainbowminer/ocdcmd/$Name.sh") -and $StopWatch.ElapsedMilliseconds -lt $stoptime) {
@@ -177,7 +177,7 @@ param(
             if (Test-Path $FilePath) {
                 (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
                 Invoke-Exe "screen" -ArgumentList "-S $ScreenName -d -m" > $null
-                $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+                $StopWatch = [System.Diagnostics.StopWatch]::New()
                 $StopWatch.Restart()
                 do {
                     Start-Sleep -Milliseconds 100

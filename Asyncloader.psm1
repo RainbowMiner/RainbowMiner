@@ -47,7 +47,7 @@ Param(
 
         $Cycle = -1
 
-        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+        $StopWatch = [System.Diagnostics.StopWatch]::New()
 
         while (-not $AsyncLoader.Stop) {
             $StopWatch.Restart()

@@ -1,6 +1,7 @@
 ﻿Set-Location (Split-Path $MyInvocation.MyCommand.Path)
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
+Add-Type -Path .\DotNet\Tools\RBMTools.cs
 
 function Initialize-Session {
 
@@ -2034,7 +2035,7 @@ function Start-SubProcessInScreen {
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}
 
-        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+        $StopWatch = [System.Diagnostics.Stopwatch]::New()
 
         $Process  = $null
         $BashProc = $null
@@ -2235,7 +2236,7 @@ function Stop-SubProcess {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
                 if ($IsLinux) {
                     if ($Job.ScreenName) {
-                        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+                        $StopWatch = [System.Diagnostics.Stopwatch]::New()
                         try {
                             [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
 
@@ -2454,7 +2455,7 @@ function Invoke-Exe {
         [Parameter(Mandatory = $false)]
         [String]$ArgumentList = "", 
         [Parameter(Mandatory = $false)]
-        [String]$WorkingDirectory = "", 
+        [String]$WorkingDirectory = "",
         [Parameter(Mandatory = $false)]
         [Int]$WaitForExit = 5,
         [Parameter(Mandatory = $false)]
@@ -2470,24 +2471,8 @@ function Invoke-Exe {
         if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
 
         if ($IsWindows -or -not $Runas -or (Test-IsElevated)) {
-            if ($IsLinux) {
-                $psi = New-object System.Diagnostics.ProcessStartInfo $FilePath
-            } else {
-                $psi = New-object System.Diagnostics.ProcessStartInfo
-                $psi.FileName = Resolve-Path $FilePath
-            }
-            $psi.CreateNoWindow = $true
-            $psi.UseShellExecute = $false
-            $psi.RedirectStandardOutput = $true
-            $psi.RedirectStandardError = $true
-            $psi.Arguments = $ArgumentList
-            $psi.WorkingDirectory = $WorkingDirectory
-            if ($Runas) {$psi.Verb = "runas"}
-            $process = New-Object System.Diagnostics.Process
-            $process.StartInfo = $psi
-            [void]$process.Start()
-            $out = $process.StandardOutput.ReadToEnd()
-            $process.WaitForExit($WaitForExit*1000)>$null
+            $out = [RBMTools.process]::exec("$(if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath})",$ArgumentList,$WorkingDirectory,"$(if ($Runas) {"runas"})",[int]$WaitForExit);
+            if ($ExpandLines) {foreach ($line in $out) {if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace "[`r`n]+"}}} else {$out -join [Environment]::NewLine}
         } else {
             if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
             if (Test-OCDaemon) {
@@ -2495,16 +2480,12 @@ function Invoke-Exe {
             } else {
                 Write-Log -Level Warn "Could not execute sudo $("$FilePath $ArgumentList".Trim()) (ocdaemon is not running. Please stop RainbowMiner and run `"./install.sh`")"
             }
+            if ($ExpandLines) {foreach ($line in @($out -split "[$([Environment]::NewLine)]+")){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace "[`r`n]+"}}} else {$out}
         }
-
-        if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
 
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not execute $FilePath $($ArgumentList): $($_.Exception.Message)"
     } finally {
-        if ($psi) {
-            $process.Dispose()
-        }
     }
 }
 
@@ -5753,7 +5734,7 @@ Param(
 
         $retry = $AsyncLoader.Jobs.$Jobkey.Retry + 1
 
-        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+        $StopWatch = [System.Diagnostics.Stopwatch]::New()
         do {
             $Request = $RequestError = $null
             $StopWatch.Restart()
@@ -6111,7 +6092,7 @@ function Start-Wrapper {
         $LogPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($LogPath)
 
         # Wait 30 seconds for logfile to appear
-        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+        $StopWatch = [System.Diagnostics.Stopwatch]::New()
         $StopWatch.Restart()
         do {
             Start-Sleep -Milliseconds 500
