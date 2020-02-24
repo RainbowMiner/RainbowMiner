@@ -44,7 +44,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 if ($WebRequest -match "$($c):(.+?)[,}]") {
                     $Pool_Request | Add-Member $c ($Matches[1] -replace '^"' -replace '"$') -Force
                     if ($Pool_Request.$c -match "^[a-zA-Z]$") {
-                        $Pool_Request.$c = $WebParams[[byte]$Pool_Request.$c[0] - [byte]('a'[0])]
+                        $Base_Ord = if ($Pool_Request.$c -cmatch "^[a-z]$") {[int]('a'[0])} else {[int]('A'[0])-26}
+                        $Pool_Request.$c = $WebParams[[int]($Pool_Request.$c[0]) - $Base_Ord]
                     }
                 } else {
                     $ok = $false
