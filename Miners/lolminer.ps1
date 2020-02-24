@@ -9,24 +9,24 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.7-lolminer/lolMiner_v097_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.8-lolminer/lolMiner_v0981_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.7-lolminer/lolMiner_v097_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.8-lolminer/lolMiner_v098_Win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "0.9.7"
+$Version = "0.9.8"
 
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 6;   Params = "--coin GRIN-C29D"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckarood29
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGB = 6.6; Params = "--coin GRIN-C29M"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckaroom29
-    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGB = 4;   Params = "--coin GRIN-C31";  Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckatoo31
-    [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";      MinMemGB = 8;   Params = "--coin GRIN-C32";  Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckatoo32
+    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 6;   Params = "--coin MWC-C29D";  Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckarood29
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGB = 6;   Params = "--coin GRIN-C29M"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckaroom29
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGB = 4;   Params = "--coin GRIN-C31";  Fee=1; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); NH = $true} #Cuckatoo31
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";      MinMemGB = 4;   Params = "--coin GRIN-C32";  Fee=1; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); NH = $true} #Cuckatoo32
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 2;   Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 1;   Params = "--coin AION";      Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2;   Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 144,5
@@ -39,7 +39,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("AMD")
+        Type      = @("AMD","NVIDIA")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
@@ -51,9 +51,9 @@ if ($InfoOnly) {
     return
 }
 
-#if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-foreach ($Miner_Vendor in @("AMD")) {
+foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
