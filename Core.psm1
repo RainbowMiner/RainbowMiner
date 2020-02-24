@@ -1408,6 +1408,9 @@ function Invoke-Core {
                 Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
                 Set-OCDaemon "sleep 1" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
                 Invoke-NvidiaSettings -SetPowerMizer
+                if ($Session.Config.EnableOCLinuxForcePState -and (Test-Path ".\IncludesLinux\bin\forcePstate") -and -not (Get-Process | Where-Object Name -eq "forcePstate")) {
+                    Set-OCDaemon "$($Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bin\forcePstate")) &" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
+                }
                 Invoke-OCDaemon -FilePath ".\IncludesLinux\bash\oc_init.sh" -Quiet > $null
             }
         }
@@ -3319,7 +3322,7 @@ function Stop-Core {
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
     } elseif ($IsLinux) {
-        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/bin/*"} | Foreach-Object {
+        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/Bin/*" -or $_.Path -like "$(Get-Location)/IncludesLinux/bin/*"} | Foreach-Object {
             if (Test-OCDaemon) {
                 $Cmd = @()
                 @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {$Cmd += "kill $($_)"}
