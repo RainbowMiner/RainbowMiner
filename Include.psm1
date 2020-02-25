@@ -2487,7 +2487,7 @@ function Invoke-Exe {
             [void]$process.Start()
             $out = $process.StandardOutput.ReadToEnd()
             $process.WaitForExit($WaitForExit*1000)>$null
-            if ($ExpandLines) {foreach ($line in @($out -split "[$([Environment]::NewLine)]+")){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace "[`r`n]+"}}} else {$out}
+            if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
         } else {
             if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
             if (Test-OCDaemon) {
@@ -2495,7 +2495,7 @@ function Invoke-Exe {
             } else {
                 Write-Log -Level Warn "Could not execute sudo $("$FilePath $ArgumentList".Trim()) (ocdaemon is not running. Please stop RainbowMiner and run `"./install.sh`")"
             }
-            if ($ExpandLines) {foreach ($line in @($out -split "[$([Environment]::NewLine)]+")){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace "[`r`n]+"}}} else {$out}
+            if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
         }
 
     } catch {
