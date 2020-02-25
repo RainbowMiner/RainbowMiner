@@ -2471,7 +2471,7 @@ function Invoke-Exe {
         if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
 
         if ($IsWindows -or -not $Runas -or (Test-IsElevated)) {
-            #$out = [RBMTools.process]::exec("$(if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath})",$ArgumentList,$WorkingDirectory,"$(if ($Runas) {"runas"})",[int]$WaitForExit);
+            #$out = [RBMTools.process]::exec("$(if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath})",$ArgumentList,$WorkingDirectory,"$(if ($Runas) {"runas"})",[int]$WaitForExit)
             #if ($ExpandLines) {foreach ($line in $out) {if (-not $ExcludeEmptyLines -or "$line".Trim() -ne ''){"$line" -replace "[`r`n]+"}}} else {$out -join [Environment]::NewLine}
             $psi = [System.Diagnostics.ProcessStartInfo]::New()
             $psi.FileName               = if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath}
@@ -2501,6 +2501,9 @@ function Invoke-Exe {
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not execute $FilePath $($ArgumentList): $($_.Exception.Message)"
     } finally {
+        if ($psi) {
+            $process.Dispose()
+        }
     }
 }
 
