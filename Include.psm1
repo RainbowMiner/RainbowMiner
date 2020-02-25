@@ -2471,8 +2471,23 @@ function Invoke-Exe {
         if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
 
         if ($IsWindows -or -not $Runas -or (Test-IsElevated)) {
-            $out = [RBMTools.process]::exec("$(if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath})",$ArgumentList,$WorkingDirectory,"$(if ($Runas) {"runas"})",[int]$WaitForExit);
-            if ($ExpandLines) {foreach ($line in $out) {if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace "[`r`n]+"}}} else {$out -join [Environment]::NewLine}
+            #$out = [RBMTools.process]::exec("$(if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath})",$ArgumentList,$WorkingDirectory,"$(if ($Runas) {"runas"})",[int]$WaitForExit);
+            #if ($ExpandLines) {foreach ($line in $out) {if (-not $ExcludeEmptyLines -or "$line".Trim() -ne ''){"$line" -replace "[`r`n]+"}}} else {$out -join [Environment]::NewLine}
+            $psi = [System.Diagnostics.ProcessStartInfo]::New()
+            $psi.FileName               = if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath}
+            $psi.CreateNoWindow         = $true
+            $psi.UseShellExecute        = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError  = $true
+            $psi.Arguments              = $ArgumentList
+            $psi.WorkingDirectory       = $WorkingDirectory
+            if ($Runas) {$psi.Verb = "runas"}
+            $process = [System.Diagnostics.Process]::New()
+            $process.StartInfo = $psi
+            [void]$process.Start()
+            $out = $process.StandardOutput.ReadToEnd()
+            $process.WaitForExit($WaitForExit*1000)>$null
+            if ($ExpandLines) {foreach ($line in @($out -split "[$([Environment]::NewLine)]+")){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace "[`r`n]+"}}} else {$out}
         } else {
             if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
             if (Test-OCDaemon) {
