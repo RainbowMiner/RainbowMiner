@@ -6,7 +6,7 @@ namespace RBMTools
 {
   public static class process
   {
-    private static List<string> output;
+    public static List<string> output = null;
     
     public static List<string> exec(string executable, string args = "", string cwd = "", string verb = "runas", int timeout = 5) {
 
