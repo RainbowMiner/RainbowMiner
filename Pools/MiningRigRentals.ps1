@@ -133,7 +133,7 @@ foreach ($Worker1 in $Workers) {
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
         }
 
-        $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
+        $Pool_Rig = $RigInfo_Request | Where-Object {$_.rigid -eq $Pool_RigId -and $_.port -ne "error"}
 
         if ($Pool_Rig) {
             $Pool_Price = $Stat.$StatAverage
