@@ -13,6 +13,7 @@
     DisableMSIAmonitor = $false
     EnableOCProfiles = $false
     EnableOCVoltage = $false
+    EnableOCLinuxForcePState = $true
     EnableAutoUpdate = $true
     EnableErrorRatio = $true
     EnableAutoAlgorithmAdd = $true
