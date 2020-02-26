@@ -11,15 +11,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTCR\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-linux-cuda101.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda102.7z"
+            Cuda = "10.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda101.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-linux-cuda100.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda100.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-linux-cuda92.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda92.7z"
             Cuda = "9.2"
         }
     )
@@ -27,12 +31,12 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTCR\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.7-ccminertcr/ccminertcr-v1.2.7-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-win-cuda101.7z"
             Cuda = "10.1"
         }
     )
 }
-$Version = "1.2.7"
+$Version = "1.2.8"
 $ManualUri = "https://github.com/tecracoin/ccminer/releases"
 $Port = "136{0:d2}"
 $DevFee = 0.0
@@ -40,7 +44,7 @@ $DevFee = 0.0
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTPTcr
+    [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = "--cpu-affinity 1"; ExtendInterval = 2} #MTPTcr
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -80,7 +84,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Pools.$Algorithm_Norm.Name -notmatch "(NiceHash|MiningRigRentals)") {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Miner_Device | Measure-Object).Count -le 6 -and $Pools.$Algorithm_Norm.Name -notmatch "(NiceHash|MiningRigRentals)") {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
