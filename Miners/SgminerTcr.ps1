@@ -13,8 +13,8 @@ if ($IsLinux) {
     $Version = "0.1.4"
 } else {
     $Path = ".\Bin\AMD-SgminerTCR\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.6-sgminertcr/sgminertcr-v0.1.6-win64.zip"
-    $Version = "0.1.6"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.7-sgminertcr/sgminertcr-v0.1.7-win64.zip"
+    $Version = "0.1.7"
 }
 $ManualUri = "https://github.com/tecracoin/sgminer/releases"
 $Port = "414{0:d2}"
