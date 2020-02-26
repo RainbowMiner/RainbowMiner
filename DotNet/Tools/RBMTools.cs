@@ -48,19 +48,4 @@ namespace RBMTools
       output.Add(String.IsNullOrEmpty(outLine.Data)? "":outLine.Data);
     }
   }
-
-  public class ServerCertificateValidationCallback
-  {
-    public static void Ignore()
-    {
-      ServicePointManager.ServerCertificateValidationCallback += delegate(
-          Object obj,
-          X509Certificate certificate,
-          X509Chain chain,
-          SslPolicyErrors errors
-        ) {
-          return true;
-        };
-    }
-  }
 }
