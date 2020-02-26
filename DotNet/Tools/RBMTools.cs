@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace RBMTools
 {
@@ -43,6 +46,21 @@ namespace RBMTools
     }
     public static void OutputHandler(object sendingProcess, DataReceivedEventArgs outLine) {
       output.Add(String.IsNullOrEmpty(outLine.Data)? "":outLine.Data);
+    }
+  }
+
+  public class ServerCertificateValidationCallback
+  {
+    public static void Ignore()
+    {
+      ServicePointManager.ServerCertificateValidationCallback += delegate(
+          Object obj,
+          X509Certificate certificate,
+          X509Chain chain,
+          SslPolicyErrors errors
+        ) {
+          return true;
+        };
     }
   }
 }
