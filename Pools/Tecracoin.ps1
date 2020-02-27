@@ -37,8 +37,8 @@ $Pool_Algorithm_Norm = Get-Algorithm "MTPTcr"
 $Pool_Port           = [int]$Pool_Request.TCR_MTP.port
 $Pool_PoolFee        = [Double]$Pool_Request.TCR_MTP.fees
 $Pool_Factor         = $Pool_Request.TCR_MTP.mbtc_mh_factor
-$Pool_TSL            = $PoolCoins_Request.TCR_MTP.timesincelast
-$Pool_BLK            = $PoolCoins_Request.TCR_MTP."24h_blocks"
+$Pool_TSL            = $Pool_Request.TCR_MTP.timesincelast
+$Pool_BLK            = $Pool_Request.TCR_MTP."24h_blocks"
 
 $Pool_User           = $Wallets.$Pool_Currency
 
