@@ -43,7 +43,12 @@ $Pool_BLK            = $Pool_Request.TCR_MTP."24h_blocks"
 $Pool_User           = $Wallets.$Pool_Currency
 
 if (-not $InfoOnly) {
-    $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.TCR_MTP.hashrate -BlockRate $Pool_BLK -Quiet
+    $multiplicator = 32
+    $blockreward   = 112.5
+    $rate          = if ($Global:Rates.TCR) {1/$Global:Rates.TCR} else {0}
+    $difficulty = try {Invoke-RestMethodAsync "https://explorer.tecracoin.io/api/getdifficulty" -tag $Name -cycletime 120} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    $Price_BTC = if ($difficulty -and $rate) {$rate * $blockreward * 86400 / ($difficulty * [Math]::Pow(2,$multiplicator))} else {0}
+    $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Price_BTC -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.TCR_MTP.hashrate -BlockRate $Pool_BLK -Quiet
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 }
 
@@ -85,7 +90,6 @@ if ($Pool_User -or $InfoOnly) {
             Wallet        = $Wallets.$Pool_Currency
             Worker        = "{workername:$Worker}"
             Email         = $Email
-            WTM           = $true
         }
     }
 }
