@@ -8,18 +8,22 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer-linux-cuda"
+    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer_linux_cuda"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-linux-cuda101.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda102.7z"
+            Cuda = "10.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda101.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-linux-cuda100.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda100.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-linux-cuda92.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda92.7z"
             Cuda = "9.2"
         }
     )
@@ -27,20 +31,21 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-win.7z"
-            Cuda = "10.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-win.7z"
+            Cuda = "10.2"
         }
     )
 }
-$ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
+$Version = "1.2.8"
+$ManualUri = "https://github.com/tecracoin/ccminer/releases"
 $Port = "126{0:d2}"
-$Version = "1.3.1"
 $DevFee = 0.0
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp-classic"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTPTcr
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -95,7 +100,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 -N 3 -b `$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --no-donation $($_.Params)"
+					Arguments      = "-R 1 -N 3 -b `$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --cpu-affinity 1 --no-donation $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Ccminer"
 					Port           = $Miner_Port
