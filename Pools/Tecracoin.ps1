@@ -44,7 +44,7 @@ $Pool_User           = $Wallets.$Pool_Currency
 
 if (-not $InfoOnly) {
     $multiplicator = 32
-    $blockreward   = 112.5
+    $blockreward   = 1.125 # only 1% of 112.5 goes to miners
     $rate          = if ($Global:Rates.TCR) {1/$Global:Rates.TCR} else {0}
     $difficulty = try {Invoke-RestMethodAsync "https://explorer.tecracoin.io/api/getdifficulty" -tag $Name -cycletime 120} catch {if ($Error.Count){$Error.RemoveAt(0)}}
     $Price_BTC = if ($difficulty -and $rate) {$rate * $blockreward * 86400 / ($difficulty * [Math]::Pow(2,$multiplicator))} else {0}
