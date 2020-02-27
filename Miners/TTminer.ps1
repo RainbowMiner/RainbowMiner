@@ -28,7 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; NH = $false; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
-    [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   NH = $true;  Params = "-A MTP-TCR%CUDA%";               ExtendInterval = 2} #MTP-TCR
+    #[PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   NH = $true;  Params = "-A MTP-TCR%CUDA%";               ExtendInterval = 2} #MTP-TCR
     [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA%";               ExtendInterval = 2} #ProgPoW (BCI)
     [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW092%CUDA% -coin SERO"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWSero (SERO)
     [PSCustomObject]@{MainAlgorithm = "PROGPOWH"      ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW092%CUDA% -coin HORA"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW (HORA)
