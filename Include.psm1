@@ -1745,12 +1745,12 @@ function Start-SubProcessInBackground {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
-    $ScriptBlock += "& '$FilePath'"
+    $ScriptBlock = "Set-Location `"$($WorkingDirectory -replace '"','``"')`"; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
+    $ScriptBlock += "& `"$($FilePath -replace '"','``"')`""
     if ($ArgumentList) {$ScriptBlock += " $ArgumentList"}
     $ScriptBlock += " *>&1"
     $ScriptBlock += " | Write-Output"
-    if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
+    if ($LogPath) {$ScriptBlock += " | Tee-Object `"$($LogPath -replace '"','``"')`""}
 
     $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
     
