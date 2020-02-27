@@ -31,7 +31,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTCR\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-win-cuda101.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-win.7z"
             Cuda = "10.2"
         }
     )
