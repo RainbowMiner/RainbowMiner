@@ -13,8 +13,8 @@ if ($IsLinux) {
     $Version = "0.20.1"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.3-wildrig/wildrig-multi-windows-0.20.3.7z"
-    $Version = "0.20.3"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.4-wildrig/wildrig-multi-windows-0.20.4.7z"
+    $Version = "0.20.4"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
