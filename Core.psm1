@@ -782,7 +782,7 @@ function Invoke-Core {
         Get-Algorithms -Silent
         Get-CoinsDB -Silent
         Get-EquihashCoins -Silent
-        Get-EthDAGSizes -Silent
+        Get-EthDAGSizes -Silent -EnableRemoteUpdate:($Session.RoundCounter -gt 0)
         Get-NimqHashrates -Silent
         Get-Regions -Silent
         Get-Regions2 -Silent

@@ -3863,16 +3863,20 @@ function Get-EthDAGSizes {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [Switch]$Silent = $false
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$EnableRemoteUpdate = $false
     )
 
-    $Request = [PSCustomObject]@{}
-    try {
-        $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/ethdagsizes.json" -cycletime 3600 -Jobkey "ethdagsizes"
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "EthDAGsize API failed. "
+    if ($EnableRemoteUpdate) {
+        $Request = [PSCustomObject]@{}
+        try {
+            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/ethdagsizes.json" -cycletime 3600 -Jobkey "ethdagsizes"
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "EthDAGsize API failed. "
+        }
     }
 
     if ($Request -and ($Request.PSObject.Properties | Measure-Object).Count -gt 10) {
