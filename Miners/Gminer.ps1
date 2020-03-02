@@ -9,21 +9,22 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.98-gminer/gminer_1_98_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.99-gminer/gminer_1_99_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.98-gminer/gminer_1_98_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.99-gminer/gminer_1_99_windows64.zip"
 }
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "1.98"
+$Version = "1.99"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Aeternity";       MinMemGb = 4;                     Params = "--algo aeternity";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Cuckoo29/Aeternity
+    [PSCustomObject]@{MainAlgorithm = "Blake2bSHA3";     MinMemGb = 1;                     Params = "--algo handshake";   Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Blake2bSHA3/HNS
     [PSCustomObject]@{MainAlgorithm = "Blake2s";         MinMemGb = 2;                     Params = "--algo blake2s";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $false; NoCPUMining = $false; Coins = @("KDA")} #Blake2s
     [PSCustomObject]@{MainAlgorithm = "Cortex";          MinMemGb = 8;                     Params = "--algo cortex";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; NoCPUMining = $false; Fee = 5.0} #Cortex
     [PSCustomObject]@{MainAlgorithm = "CryptoNightBBC";  MinMemGb = 2;                     Params = "--algo bbc";         Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; NoCPUMining = $true;  Fee = 5.0} #CryptonightBBC
@@ -67,7 +68,17 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 8;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"; NH2 = $true} #Ethash+Eaglesong
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 9;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"; NH2 = $true} #Ethash+Eaglesong
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 10;   Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"; NH2 = $true} #Ethash+Eaglesong
-    [PSCustomObject]@{MainAlgorithm = "Blake2bSHA3";     MinMemGb = 1;                     Params = "--algo handshake";             Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Blake2bSHA3/HNS
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 0;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 1;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 2;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 3;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 4;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 5;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 6;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 7;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 8;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 9;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 10;   Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
