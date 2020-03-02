@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'aes-avx'} elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.4.6-jayddee/cpuminer-opt-3.12.4.6-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.5-jayddee/cpuminer-opt-3.12.5-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.4.6-jayddee/cpuminer-opt-3.12.4.6-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.12.5-jayddee/cpuminer-opt-3.12.5-windows.zip"
 }
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
-$Version = "3.12.4.6"
+$Version = "3.12.5"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "blake2s"; NH = $false; Params = ""} #blake2s
     [PSCustomObject]@{MainAlgorithm = "bmw"; NH = $true; Params = ""} #bmw
     #[PSCustomObject]@{MainAlgorithm = "bmw512"; NH = $true; Params = ""} #bmw512
-    #[PSCustomObject]@{MainAlgorithm = "cpupower"; NH = $true; Params = "-N 2048 -R 32 -K `"CPUpower: The number of CPU working or available for proof-of-work mining`""; Algorithm = "yespower"} #CpuPower
+    #[PSCustomObject]@{MainAlgorithm = "cpupower"; NH = $true; Params = "--param-key `"CPUpower: The number of CPU working or available for proof-of-work mining`""; Algorithm = "yespower"} #CpuPower
     #[PSCustomObject]@{MainAlgorithm = "cryptonightv7"; NH = $true; Params = ""} #CryptoNightV7
     [PSCustomObject]@{MainAlgorithm = "deep"; NH = $true; Params = ""} #deep
     [PSCustomObject]@{MainAlgorithm = "drop"; NH = $true; Params = ""} #drop
@@ -48,8 +48,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "pentablake"; NH = $true; Params = ""} #pentablake
     [PSCustomObject]@{MainAlgorithm = "phi2"; NH = $true; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "pluck"; NH = $true; Params = ""} #pluck
-    [PSCustomObject]@{MainAlgorithm = "power2b"; NH = $true; Params = ""} #power2b
-    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; NH = $true; Params = ""} #ScryptN2
+    [PSCustomObject]@{MainAlgorithm = "power2b"; NH = $true; Params = "--param-n 2048 --param-r 32 --param-key `"Now I am become Death, the destroyer of worlds`""; Algorithm = "yespower-b2b"} #power2b
+    [PSCustomObject]@{MainAlgorithm = "scryptn2"; NH = $true; Params = "--param-n 1048576"; Algorithm = "scrypt"} #ScryptN2
     #[PSCustomObject]@{MainAlgorithm = "scrypt:2048"; NH = $true; Params = ""} #ScryptN11, CpuminerMulti faster
     [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; NH = $true; Params = ""} #Scrypt8k
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; NH = $true; Params = ""} #ScryptJane16
@@ -75,7 +75,13 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; NH = $true; Params = ""} #yescryptr8, CpuminerOptBF faster
     [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; NH = $true; Params = ""} #yescryptr8g, KOTO
     [PSCustomObject]@{MainAlgorithm = "yespower"; NH = $true; Params = ""} #YesPower
+    [PSCustomObject]@{MainAlgorithm = "yespowerIC"; Params = "--param-n 2048 --param-r 32 --param-key `"IsotopeC`""; Algorithm = "yespower"} #Yespower IsotopeC (IC)
+    [PSCustomObject]@{MainAlgorithm = "yespowerIOTS"; Params = "--param-n 2048 --param-key `"Iots is committed to the development of IOT`""; Algorithm = "yespower"} #Yespower .. (IOTS)
+    [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = "--param-n 2048 --param-r 32 --param-key `"LITBpower: The number of LITB working or available for proof-of-work mini`""; Algorithm = "yespower"} #Yespower LightBit (LITB)
+    [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = "--param-n 2048 --param-r 32 --param-key `"LTNCGYES`""; Algorithm = "yespower"} #Yespower LighningCash-Gold v3 (LTNCG)
     #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; NH = $true; Params = ""} #YesPowerR16, CpuminerRplant faster
+    [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = "--param-n 2048 -param-r 32 --param-key `"Satoshi Nakamoto 31/Oct/2008 Proof-of-work is essentially one-CPU-one-vote`""; Algorithm = "yespower"} #Yespower SugarChain (SUGAR)
+    [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = "--param-n 2048 --param-r 32 --param-key `"UraniumX`""; Algorithm = "yespower"} #Yespower Uranium-X (URX)
     [PSCustomObject]@{MainAlgorithm = "zr5"; NH = $true; Params = ""} #zr5
 
     #GPU or ASIC - never profitable
