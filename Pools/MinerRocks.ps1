@@ -22,6 +22,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "TUBE";  port = 5555;  fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
     #[PSCustomObject]@{symbol = "BBR";   port = 5555;  fee = 0.9; rpc = "boolberry"; regions = @("eu"); scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
     [PSCustomObject]@{symbol = "CCX";   port = 10126; fee = 0.9; rpc = "conceal"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "DERO";  port = 5555;  fee = 0.9; rpc = "dero";   regions = @("eu","sg")}
     [PSCustomObject]@{symbol = "GRFT";  port = 5005;  fee = 0.9; rpc = "graft"; regions = @("eu")}
     [PSCustomObject]@{symbol = "XHV";   port = 4005;  fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
     [PSCustomObject]@{symbol = "XTA";   port = 30042; fee = 0.9; rpc = "italo"; regions = @("eu")}
