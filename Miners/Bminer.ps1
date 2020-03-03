@@ -26,8 +26,8 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #" -nofee" #Aeternity
     #[PSCustomObject]@{MainAlgorithm = "beamhash2";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #" -nofee" #BEAM
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29m";  SecondaryAlgorithm = ""; NH = $true; MinMemGb = 5; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckaroom29/GRIN
-    [PSCustomObject]@{MainAlgorithm = "cuckatoo31";   SecondaryAlgorithm = ""; NH = $true; MinMemGb = 8; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo31
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29m";  SecondaryAlgorithm = ""; NH = $true; MinMemGb = 5; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckaroom29/GRIN
+    #[PSCustomObject]@{MainAlgorithm = "cuckatoo31";   SecondaryAlgorithm = ""; NH = $true; MinMemGb = 8; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo31
     #[PSCustomObject]@{MainAlgorithm = "equihash1445"; SecondaryAlgorithm = ""; NH = $true; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = ""; NH = $true; MinMemGb = 3; Params = ""; DevFee = 0.65; Vendor = @("AMD","NVIDIA")} #Ethash (ethminer is faster and no dev fee)
     #[PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2} #" -nofee" #Bytom
