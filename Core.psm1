@@ -765,8 +765,8 @@ function Invoke-Core {
     #Fork detection
     if (Test-Path ".\Data\coinsdb-fork.json“) {
         try {
-            $Request = Invoke-GetUrlAsync "https://api-grin.blockscan.com/v1/api?module=block&action=getblock&blockno=524159" -Timeout 15 -tag "fork"
-            if ([int]$Request.status) {
+            $Request = Invoke-GetUrlAsync "https://explorer.dero.io/" -Timeout 15 -tag "fork"
+            if ("$Request" -match "<font.+>4550555<") {
                 Remove-Item “.\Data\coinsdb.json" -Force
                 Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
                 Get-CoinsDB -Silent -Force
