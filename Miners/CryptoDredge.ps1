@@ -64,7 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d-Nim
     [PSCustomObject]@{MainAlgorithm = "argon2d250";  NH = $true;  MinMemGb = 1; Params = ""} #Argon2d250
     [PSCustomObject]@{MainAlgorithm = "argon2d4096"; NH = $true;  MinMemGb = 3.3; Params = ""} #Argon2d4096
-    [PSCustomObject]@{MainAlgorithm = "bcd";         NH = $true;  MinMemGb = 1; Params = ""} #BCD
+    #[PSCustomObject]@{MainAlgorithm = "bcd";         NH = $true;  MinMemGb = 1; Params = ""} #BCD (trex faster)
     [PSCustomObject]@{MainAlgorithm = "bitcore";     NH = $true;  MinMemGb = 1; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "chukwa";      NH = $true;  MinMemGb = 1.5; Params = ""} #Chukwa, new with v0.21.0
     [PSCustomObject]@{MainAlgorithm = "chukwa-wrkz"; NH = $true;  MinMemGb = 1.5; Params = ""} #Chukwa-Wrkz, new with v0.21.0
