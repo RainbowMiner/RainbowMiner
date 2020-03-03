@@ -24,7 +24,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; NH = $false; Params = "-A BLAKE2S%CUDA% -coin KDA";     ExtendInterval = 2; Coins = @("KDA")} #Kadena
-    [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; NH = $true;  Params = "-A EAGLESONG%CUDA% -coin CKB";   ExtendInterval = 2} #Eaglesong
+    #[PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; NH = $true;  Params = "-A EAGLESONG%CUDA% -coin CKB";   ExtendInterval = 2} #Eaglesong
     [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; NH = $false; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
