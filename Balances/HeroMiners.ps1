@@ -10,6 +10,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "TUBE";  port = 10280; fee = 0.9; rpc = "tube"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "BLOC";  port = 10430; fee = 0.9; rpc = "bloc"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "CCX";   port = 10360; fee = 0.9; rpc = "conceal"; region = @("fi","de","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "DERO";  port = 10125; fee = 0.9; rpc = "dero"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "XEQ";   port = 10600; fee = 0.9; rpc = "equilibria"; region = @("de","hk")}
     [PSCustomObject]@{symbol = "GRFT";  port = 10100; fee = 0.9; rpc = "graft"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "XHV";   port = 10450; fee = 0.9; rpc = "haven"; region = @("de","fi","ca","hk","sg")}
