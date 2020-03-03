@@ -28,6 +28,7 @@
     "argon2uis":  "Argon2d4096",
     "argon2wrkz": "Argon2Wrkz",
     "astralhash": "GLTAstralHash",
+    "astrobwt": "AstroBWT",
     "axiom": "Axiom",
     "balloon": "Balloon",
     "bastion": "Bastion",

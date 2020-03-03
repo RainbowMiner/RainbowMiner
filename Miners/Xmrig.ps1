@@ -9,19 +9,19 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.7.0-xmrig/xmrig-5.7.0-xenial-cuda10_1-x64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.8.0-xmrig/xmrig-5.8.0-xenial-cuda10_1-x64.7z"
     $CudaLib = "libxmrig-cuda.so"
     $DevFee = 0.0
 } else {
     $Path = ".\Bin\ANY-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.7.0-xmrig/xmrig-5.7.0-msvc-cuda10_1-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.8.0-xmrig/xmrig-5.8.0-msvc-cuda10_1-win64.7z"
     $CudaLib = "xmrig-cuda.dll"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
 $Cuda = "10.1"
-$Version = "5.7.0"
+$Version = "5.8.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -30,6 +30,7 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $CudaLib) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2/chukwa"; MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
     [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
+    [PSCustomObject]@{MainAlgorithm = "astrobwt";      MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
     #[PSCustomObject]@{MainAlgorithm = "cn/1";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/2";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
