@@ -138,12 +138,19 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
 
 					if ($SecondAlgorithm -eq '') {
+                        $FailoverMain = if ($Pools.$MainAlgorithm_Norm.Failover) {
+                            $i=1;
+                            @($Pools.$MainAlgorithm_Norm.Failover | Select-Object -First ([Math]::Min(2,$Pools.$MainAlgorithm_Norm.Failover.Count)) | Foreach-Object {
+                                "-o$i $($Stratum)://$($_.Host):$($_.Port) -u$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($_.Pass) {":$($_.Pass)"})"
+                                $i++
+                            }) -join ' '
+                        }
 						[PSCustomObject]@{
 							Name           = $Miner_Name
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) --no-watchdog --no-nvml $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog --no-nvml $($_.Params)"
 							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
 							API            = "NBminer"
 							Port           = $Miner_Port
@@ -169,12 +176,26 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                 "ethstratumnh" {$Stratum2 = $Stratum2 -replace "stratum","nicehash"}
                             }
                         }
+                        $FailoverMain = if ($Pools.$MainAlgorithm_Norm.Failover) {
+                            $i=1;
+                            @($Pools.$MainAlgorithm_Norm.Failover | Select-Object -First ([Math]::Min(2,$Pools.$MainAlgorithm_Norm.Failover.Count)) | Foreach-Object {
+                                "-do$i $($Stratum)://$($_.Host):$($_.Port) -du$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($_.Pass) {":$($_.Pass)"})"
+                                $i++
+                            }) -join ' '
+                        }
+                        $FailoverSecondary = if ($Pools.$SecondAlgorithm_Norm.Failover) {
+                            $i=1;
+                            @($Pools.$SecondAlgorithm_Norm.Failover | Select-Object -First ([Math]::Min(2,$Pools.$SecondAlgorithm_Norm.Failover.Count)) | Foreach-Object {
+                                "-o$i $($Stratum2)://$($_.Host):$($_.Port) -u$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($_.Pass) {":$($_.Pass)"})"
+                                $i++
+                            }) -join ' '
+                        }
 						[PSCustomObject]@{
 							Name           = $Miner_Name
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -u $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$($Pools.$SecondAlgorithm_Norm.Pass)"}) -do $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) -di$($DeviceIntensitiesAll) --no-watchdog --no-nvml $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -u $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($FailoverSecondary) {" $FailoverSecondary"}) -do $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) -di$($DeviceIntensitiesAll) --no-watchdog --no-nvml $($_.Params)"
 							HashRates      = [PSCustomObject]@{
                                                 $MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                 $SecondAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
