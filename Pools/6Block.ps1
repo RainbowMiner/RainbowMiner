@@ -121,6 +121,29 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Wallet        = $Wallets.$Pool_Currency
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
+                Failover      = @(
+                    [PSCustomObject]@{
+                        Protocol = "stratum+tcp"
+                        Host     = "handshake$(if ($Pool_Region -ne "hk") {"-$Pool_Region"}).6block.com"
+                        Port     = 1314
+                        User     = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                        Pass     = "x"
+                    }
+                    [PSCustomObject]@{
+                        Protocol = "stratum+tcp"
+                        Host     = "handshake$(if ($Pool_Region -eq "hk") {"-us"}).6block.com"
+                        Port     = $Pool_Port
+                        User     = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                        Pass     = "x"
+                    }
+                    [PSCustomObject]@{
+                        Protocol = "stratum+tcp"
+                        Host     = "handshake$(if ($Pool_Region -eq "hk") {"-us"}).6block.com"
+                        Port     = 1314
+                        User     = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                        Pass     = "x"
+                    }
+                )
             }
         }
     }
