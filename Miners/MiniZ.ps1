@@ -10,17 +10,17 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "1.5t"
+$Version = "1.5t2"
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda10_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t2-miniz/miniZ_v1.5t2_cuda10_linux-x64.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda8_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t2-miniz/miniZ_v1.5t2_cuda8_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -28,11 +28,11 @@ if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda10_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t2-miniz/miniZ_v1.5t2_cuda10_win-x64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t-miniz/miniZ_v1.5t_cuda8_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5t2-miniz/miniZ_v1.5t2_cuda8_win-x64.zip"
             Cuda = "8.0"
         }
     )
