@@ -79,25 +79,26 @@
         <div class="card-header"><h6>Set electricity cost handling</h6></div>
         <div class="card-body">
             <div class="form-group row">
-                <label for="inputPowerPrice" class="col-sm-2 col-form-label">Power Price per kW/h</label>
-                <div class="col-sm-10">
-                    <input type="number" class="form-control currency" id="inputPowerPrice" name="PowerPrice" min="0" step="0.01" data-number-to-fixed="2" data-number-stepfactor="100" placeholder="price of 1kW/h (kilowatt per hour) that your electricity supplier charges">
+                <label for="inputPowerPrice" class="col-sm-2 col-form-label">Powerprice</label>
+                <div class="input-group col-sm-10">
+                    <input type="number" class="form-control currency" id="inputPowerPrice" name="PowerPrice" min="0" step="0.01" data-number-to-fixed="2" data-number-stepfactor="100" placeholder="price of 1kW/h (kilowatt per hour) that your electricity supplier charges" aria-describedby="addto-inputPowerPrice" style="width:auto">
+                    <input type="text" class="form-control" id="inputPowerPriceCurrency" name="PowerPriceCurrency" maxlength="3" placeholder="ISO currency code (three letters) of your PowerPrice" style="width:64px;text-transform:uppercase;">
+                    <div class="input-group-append">
+                        <span class="input-group-text" id="addto-inputPowerPrice">per kW/h</span>
+                    </div>
                 </div>
             </div>
             <div class="form-group row">
-                <label for="inputPowerPriceCurrency" class="col-sm-2 col-form-label">Power Price Currency</label>
-                <div class="col-sm-10">
-                    <input type="text" class="form-control" id="inputPowerPriceCurrency" name="PowerPriceCurrency" maxlength="3" placeholder="currency of your PowerPrice" style="text-transform:uppercase">
+                <label for="inputPowerOffset" class="col-sm-2 col-form-label">Poweroffset</label>
+                <div class="input-group col-sm-10">
+                    <input type="number" class="form-control" id="inputPowerOffset" name="PowerOffset" min="0" step="1" data-number-to-fixed="0" data-number-stepfactor="1" placeholder="power offset to allow consideration for overhead power" aria-describedby="addto-inputPowerOffset">
+                    <div class="input-group-append">
+                        <span class="input-group-text" id="addto-inputPowerOffset">Watt</span>
+                    </div>
                 </div>
             </div>
             <div class="form-group row">
-                <label for="inputPowerOffset" class="col-sm-2 col-form-label">Power Offset in Watt</label>
-                <div class="col-sm-10">
-                    <input type="number" class="form-control currency" id="inputPowerOffset" name="PowerOffset" min="0" step="1" data-number-to-fixed="0" data-number-stepfactor="1" placeholder="power offset to allow consideration for overhead power">
-                </div>
-            </div>
-            <div class="form-group row">
-                <label for="inputUsePowerPrice" class="col-sm-2 col-form-label">Use Power Price</label>
+                <label for="inputUsePowerPrice" class="col-sm-2 col-form-label">Use Powerprice</label>
                 <div class="input-group col-sm-10">
                     <select class="form-control mr-sm-2" id="inputUsePowerPrice" name="UsePowerPrice">
                         <option value="0">disable</option>
