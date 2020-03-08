@@ -41,6 +41,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
     }
 
     foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
+        $Port = if ($Pool_Protocol -match "ssl") {20001} else {10001}
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
 			Algorithm0    = $Pool_Algorithm_Norm
@@ -52,7 +53,8 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = $Pool_Protocol
             Host          = "gulf.moneroocean.stream"
-            Port          = if ($Pool_Protocol -match "ssl") {20001} else {10001}
+            Port          = $Port
+            Ports         = [PSCustomObject]@{CPU=$Port; GPU=$Port+1; RIG=$Port+31}
             User          = "$($Wallets.XMR)"
             Pass          = "{workername:$Worker}:$($Password)~$($_.algo)"
             Region        = Get-Region "US"
