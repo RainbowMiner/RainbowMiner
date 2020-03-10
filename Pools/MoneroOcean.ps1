@@ -33,7 +33,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
     $Pool_Port = $_.port
     $Pool_CoinSymbol = $_.coin
     $Pool_Coin = Get-Coin $Pool_CoinSymbol
-    $Pool_Algorithm_Norm = $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = if ($Pool_Coin) {$Pool_Coin.Algo} else {Get-Algorithm $_.algo}
 
     if (-not $InfoOnly) {
         $Pool_TSL = if ($_.tsl -ge 0) {$_.tsl} else {$null}
@@ -45,7 +45,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
 			Algorithm0    = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Coin.Name
+            CoinName      = if ($Pool_Coin) {$Pool_Coin.Name} else {$Pool_CoinSymbol}
             CoinSymbol    = $Pool_CoinSymbol
             Currency      = "XMR"
             Price         = $Stat.$StatAverage
