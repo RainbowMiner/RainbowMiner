@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.9-srbminermulti/SRBMiner-Multi-0-3-9-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.0-srbminermulti/SRBMiner-Multi-0-4-0-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.9-srbminermulti/SRBMiner-Multi-0-3-9-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.0-srbminermulti/SRBMiner-Multi-0-4-0-win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.3.9"
+$Version = "0.4.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
@@ -26,6 +26,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "defyx"         ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #DefyX
     [PSCustomObject]@{MainAlgorithm = "m7mv2"         ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #m7m
     [PSCustomObject]@{MainAlgorithm = "randomarq"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomArq
+    [PSCustomObject]@{MainAlgorithm = "randomkeva"    ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomKEVA
     [PSCustomObject]@{MainAlgorithm = "randomsfx"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomSFX
     [PSCustomObject]@{MainAlgorithm = "randomwow"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomWow
     [PSCustomObject]@{MainAlgorithm = "randomx"       ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomX
