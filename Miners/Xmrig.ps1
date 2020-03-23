@@ -8,20 +8,51 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-xenial-cuda10_1-x64.7z"
+            Cuda = "10.1"
+        }
+    )
+
     $Path = ".\Bin\ANY-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.9.0-xmrig/xmrig-5.9.0-xenial-cuda10_1-x64.7z"
     $CudaLib = "libxmrig-cuda.so"
     $DevFee = 0.0
 } else {
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda10_1-win64.7z"
+            Cuda = "10.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda10-win64.7z"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda9_2-win64.7z"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda9_1-win64.7z"
+            Cuda = "9.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda9-win64.7z"
+            Cuda = "9.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda8-win64.7z"
+            Cuda = "8.0"
+        }
+    )
+
     $Path = ".\Bin\ANY-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.9.0-xmrig/xmrig-5.9.0-msvc-cuda10_1-win64.7z"
     $CudaLib = "xmrig-cuda.dll"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
-$Cuda = "10.1"
-$Version = "5.9.0"
+$Version = "5.10.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -30,11 +61,11 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $CudaLib) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2/chukwa"; MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
     [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
-    [PSCustomObject]@{MainAlgorithm = "astrobwt";      MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
+    [PSCustomObject]@{MainAlgorithm = "astrobwt";      MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU")}
     #[PSCustomObject]@{MainAlgorithm = "cn/1";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/2";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","NVIDIA")}
+    #[PSCustomObject]@{MainAlgorithm = "cn/gpu";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/half";       MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/fast";       MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/r";          MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
@@ -65,7 +96,7 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda.Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
@@ -73,7 +104,20 @@ if ($InfoOnly) {
     return
 }
 
-if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+$Uri = ""
+if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
+    for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+            $Uri = $UriCuda[$i].Uri
+            $Cuda= $UriCuda[$i].Cuda
+        }
+    }
+} else {
+    $Uri = $UriCuda[0].Uri
+    $Cuda= $UriCuda[0].Cuda
+}
+
+if (-not $Uri) {return}
 
 foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
