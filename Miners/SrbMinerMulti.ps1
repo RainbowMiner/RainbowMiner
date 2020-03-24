@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.0-srbminermulti/SRBMiner-Multi-0-4-0-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.1-srbminermulti/SRBMiner-Multi-0-4-1-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.0-srbminermulti/SRBMiner-Multi-0-4-0-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.1-srbminermulti/SRBMiner-Multi-0-4-1-win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.4.0"
+$Version = "0.4.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
@@ -25,6 +25,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cpupower"      ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
     [PSCustomObject]@{MainAlgorithm = "defyx"         ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #DefyX
     [PSCustomObject]@{MainAlgorithm = "m7mv2"         ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #m7m
+    [PSCustomObject]@{MainAlgorithm = "minotaur"      ; Params = ""; Fee = 2.50;               Vendor = @("CPU")} #Minotaur/RING Coin
     [PSCustomObject]@{MainAlgorithm = "randomarq"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomArq
     [PSCustomObject]@{MainAlgorithm = "randomkeva"    ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomKEVA
     [PSCustomObject]@{MainAlgorithm = "randomsfx"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomSFX
@@ -42,6 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespowerlitb"  ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerlitb
     [PSCustomObject]@{MainAlgorithm = "yespowerltncg" ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerltncg
     [PSCustomObject]@{MainAlgorithm = "yespowerr16"   ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerr16
+    [PSCustomObject]@{MainAlgorithm = "yespowerres"   ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerRES
     [PSCustomObject]@{MainAlgorithm = "yespowersugar" ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowersugar
     [PSCustomObject]@{MainAlgorithm = "yespowerurx"   ; Params = ""; Fee = 0.00;               Vendor = @("CPU")} #yespowerurx
     [PSCustomObject]@{MainAlgorithm = "bl2bsha3"      ; Params = ""; Fee = 2.00; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2b+sha3/HNS
