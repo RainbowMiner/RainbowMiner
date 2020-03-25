@@ -13,8 +13,8 @@ if ($IsLinux) {
     $Version = "0.20.1"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.4-wildrig/wildrig-multi-windows-0.20.4.7z"
-    $Version = "0.20.4"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5-wildrig/wildrig-multi-windows-0.20.5.7z"
+    $Version = "0.20.5"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -64,6 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16rv2";     Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
     [PSCustomObject]@{MainAlgorithm = "x16s";       Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";        Params = ""} #X17
+    [PSCustomObject]@{MainAlgorithm = "x17r";       Params = ""} #X17r
     [PSCustomObject]@{MainAlgorithm = "x18";        Params = ""} #X18
     [PSCustomObject]@{MainAlgorithm = "x20r";       Params = ""} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";       Params = ""} #X21s
