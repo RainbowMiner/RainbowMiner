@@ -9,16 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-wildrig/wildrig-multi-linux-0.20.1.tar.gz"
-    $Version = "0.20.1"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.1-wildrig/wildrig-multi-linux-0.20.5.1.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5-wildrig/wildrig-multi-windows-0.20.5.7z"
-    $Version = "0.20.5"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.1-wildrig/wildrig-multi-windows-0.20.5.1.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
+$Version = "0.20.5.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
