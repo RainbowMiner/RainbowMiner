@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.1-wildrig/wildrig-multi-linux-0.20.5.1.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.3-wildrig/wildrig-multi-linux-0.20.5.3.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.1-wildrig/wildrig-multi-windows-0.20.5.1.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.3-wildrig/wildrig-multi-windows-0.20.5.3.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
-$Version = "0.20.5.1"
+$Version = "0.20.5.3"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -64,6 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16s";       Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";        Params = ""} #X17
     [PSCustomObject]@{MainAlgorithm = "x17r";       Params = ""} #X17r
+    [PSCustomObject]@{MainAlgorithm = "x17r-protocol2";       Params = ""} #X17r-protocol2
     [PSCustomObject]@{MainAlgorithm = "x18";        Params = ""} #X18
     [PSCustomObject]@{MainAlgorithm = "x20r";       Params = ""} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";       Params = ""} #X21s
