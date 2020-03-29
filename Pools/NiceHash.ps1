@@ -110,7 +110,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                             Pass     = "x"
                         }
                     })
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"ethstratumnh"} else {$null}
                     EthDAGSize    = if ($Pool_Algorithm_Norm -match "^(Ethash)") {$Pool_EthDAGSize} else {$null}
                     Name          = $Name
                     Penalty       = 0

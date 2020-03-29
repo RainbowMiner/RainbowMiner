@@ -90,7 +90,7 @@ $Pool_Request.return | ForEach-Object {
                 PoolFee       = $Pool_Fee
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"ethstratumnh"} else {$null}
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

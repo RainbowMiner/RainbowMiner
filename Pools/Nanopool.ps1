@@ -100,7 +100,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     DataWindow    = $DataWindow
                     Workers       = $Pool_RequestWorkers.data
                     Hashrate      = $Stat.HashRate_Live
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"ethproxy"} else {$null}
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1

@@ -169,6 +169,9 @@ foreach ($Worker1 in $Workers) {
                 }
 
                 if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
+                if ($Pool_Algorithm_Norm -eq "ProgPOW") {
+                    $Pool_Algorithm_Norm = "ProgPoWEthercore"
+                }
 
                 $Pool_SSL = $Pool_Algorithm_Norm -eq "EquihashR25x5"
 
@@ -203,7 +206,7 @@ foreach ($Worker1 in $Workers) {
                             Pass     = "x"
                         }
                     })
-                    EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
+                    EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"qtminer"} else {$null}
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
