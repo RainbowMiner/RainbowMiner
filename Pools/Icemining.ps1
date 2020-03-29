@@ -39,21 +39,22 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 @("us","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol="ARW";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
-    [PSCustomObject]@{symbol="BITC"; host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
     [PSCustomObject]@{symbol="SIN";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
-    [PSCustomObject]@{symbol="PHL";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
     [PSCustomObject]@{symbol="XRD";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
-    [PSCustomObject]@{symbol="CKB";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
-    [PSCustomObject]@{symbol="ZMY";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
     [PSCustomObject]@{symbol="NIM";  host=@("nimiq");               region=@("us");           ; fee = 1.25; ssl = $true}
     [PSCustomObject]@{symbol="KDA";  host=@("kda-us","kda-eu");     region=@("us","eu")       ; fee = 2}
     [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "ProgPow"}
     [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "RandomX"}
     [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "CuckooCycle"}
-    [PSCustomObject]@{symbol="MWC";  host=@("mwc-us");              region=@("us");           ; fee = 1; algo = "Cuckarood29"; hashrate = "C29d"}
-    [PSCustomObject]@{symbol="MWC";  host=@("mwc-us");              region=@("us");           ; fee = 1; algo = "Cuckatoo31";  hashrate = "C31"}
-    [PSCustomObject]@{symbol="BEAM"; host=@("us-beam");             region=@("us");           ; fee = 0; ssl = $true}
+    [PSCustomObject]@{symbol="MWC";  host=@("mwc-us","mwc-eu");     region=@("us","eu");      ; fee = 1; algo = "Cuckarood29"; hashrate = "C29d"}
+    [PSCustomObject]@{symbol="MWC";  host=@("mwc-us","mwc-eu");     region=@("us","eu");      ; fee = 1; algo = "Cuckatoo31";  hashrate = "C31"}
+    [PSCustomObject]@{symbol="ATOM"; host=@("atom-us");             region=@("us");           ; fee = 0; ssl = $true}
+    [PSCustomObject]@{symbol="ARW";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+
+    #[PSCustomObject]@{symbol="BITC"; host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    #[PSCustomObject]@{symbol="PHL";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    #[PSCustomObject]@{symbol="CKB";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
+    #[PSCustomObject]@{symbol="ZMY";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
@@ -76,6 +77,18 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
+    $Pool_User = if ($Pool_Currency -eq "MWC") {
+        $Wallets.$Pool_Currency
+    } else {
+        "$($Wallets.$Pool_Currency).{workername:$Worker}"
+    }
+
+    $Pool_Pass = if ($Pool_Currency -eq "MWC") {
+        "$(if ($Pool_Params) {$Pool_Params} else {"x"})"
+    } else {
+        "c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+    }
+
     $i = 0
     foreach($Pool_Region in $_.region) {
         [PSCustomObject]@{
@@ -88,10 +101,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool
             StablePrice   = 0
             MarginOfError = 0
             Protocol      = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
-            Host          = "$(if ($Pool_Region -ne "us") {$_.host[$i] -replace "stratum",$Pool_Region} else {$_.host[$i]}).icemining.ca"
+            Host          = "$($_.host[$i]).icemining.ca"
             Port          = $PoolCoins_Request.$Pool_Currency.port
-            User          = $Wallets.$Pool_Currency
-            Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+            User          = $Pool_User
+            Pass          = $Pool_Pass
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = if ($_.ssl) {$true} else {$false}
             Updated       = $Stat.Updated
