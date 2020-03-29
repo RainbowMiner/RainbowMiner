@@ -918,9 +918,7 @@ class Claymore : Miner {
         $Rejected_Shares  = [Int64]($Data.result[2] -split ";")[2]
         $Accepted_Shares -= $Rejected_Shares
 
-        if ($this.Algorithm -like "ethash*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
-        if ($this.Algorithm -like "progpow*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
-        if ($this.Algorithm -eq "neoscrypt") {$HashRate_Value *= 1000}
+        if ($this.Algorithm -match "^(ethash|kawpow|neoscrypt|progpow)" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
 
         $HashRate_Value = [Int64]$HashRate_Value
 
