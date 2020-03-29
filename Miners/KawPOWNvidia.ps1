@@ -24,7 +24,7 @@ if ($IsLinux) {
     $UriCuda = @(
         [PSCustomObject]@{
             Path = ".\Bin\NVIDIA-KawPOW\kawpowminer.exe"
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-kawpowminer/kawpowminer-windows-cuda10_2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-kawpowminer/kawpowminer-windows-cuda10_2.7z"
             Cuda = "10.2"
         }
     )
