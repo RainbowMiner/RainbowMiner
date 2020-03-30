@@ -442,6 +442,7 @@
     "grincuckatoo32": "Cuckatoo32",
     "groestl": "Groestl",
     "groestlcoin": "Groestl",
+    "handshake": "Blake2bSHA3",
     "heavy": "Heavy",
     "hex": "Hex",
     "hmq1725": "HMQ1725",
