@@ -2138,8 +2138,9 @@ function Invoke-Core {
             $Miner.Profit        = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
-            $Miner.Profit_Cost   = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
-            if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner.Profit_Cost=0}
+            $Miner.Profit_Cost   = if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
+                [Double]($Miner.PowerDraw*(100+$Session.Config.PowerOffsetPercent)*24/100000 * $PowerPriceBTC)
+            }
         }
 
         if (($Session.Config.UsePowerPrice -or ($Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw)) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
@@ -2542,9 +2543,6 @@ function Invoke-Core {
 
         if (($NewPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
             $PowerOffset_Watt = $Session.Config.PowerOffset
-            if ($Session.Config.PowerOffsetPercent -gt 0) {
-                $PowerOffset_Watt += ($BestMiners_Combo.PowerDraw | Measure-Object -Sum).Sum * $Session.Config.PowerOffsetPercent / 100
-            }
             $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $PowerPriceBTC)
             if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
                 if ($Session.Config.CheckProfitability -and ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner -or $_.IsLocked} | Measure-Object).Count -eq 0) {$Session.Profitable = $false}
