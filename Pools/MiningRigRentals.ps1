@@ -169,9 +169,6 @@ foreach ($Worker1 in $Workers) {
                 }
 
                 if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
-                if ($Pool_Algorithm_Norm -eq "ProgPOW") {
-                    $Pool_Algorithm_Norm = "ProgPoWEthercore"
-                }
 
                 $Pool_SSL = $Pool_Algorithm_Norm -eq "EquihashR25x5"
 
