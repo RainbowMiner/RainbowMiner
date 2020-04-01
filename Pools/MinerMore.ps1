@@ -34,46 +34,32 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 [hashtable]$Pool_Algorithms = @{}
 
 [hashtable]$Pool_RegionsTable = @{}
-@("us","eu","hk","east.us","west.us","ca") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $(if ($_ -match '^(.+)\.(.+)$') {"$($Matches[2])$($Matches[1])"} else {$_})}
+@("us","eu","asia","east.us","west.us","ca") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $(if ($_ -match '^(.+)\.(.+)$') {"$($Matches[2])$($Matches[1])"} else {$_})}
 
 $Pool_Coins = [PSCustomObject]@{
-    HTH  = [PSCustomObject]@{port = 4515; fee = 1.0; rpc="hth";      regions=@("us")}
     MYNT = [PSCustomObject]@{port = 4548; fee = 1.0; rpc="mynt";     regions=@("us")}
-    PEXA = [PSCustomObject]@{port = 4553; fee = 1.0; rpc="pexa";     regions=@("us")}
     PGN  = [PSCustomObject]@{port = 4517; fee = 1.0; rpc="pgn";      regions=@("us")}
-    RITO = [PSCustomObject]@{port = 4545; fee = 1.0; rpc="rito";     regions=@("us","eu")}
-    RVN  = [PSCustomObject]@{port = 4501; fee = 1.0; rpc="rvn";      regions=@("us","eu","hk","east.us","west.us","ca"); algo = "X16rv2"}
-    RVNt = [PSCustomObject]@{port = 4505; fee = 1.0; rpc="rvnt";     regions=@("us"); algo = "KAWPOW"}
-    SAFE = [PSCustomObject]@{port = 4503; fee = 1.0; rpc="safe";     regions=@("us")}
-    STONE= [PSCustomObject]@{port = 4518; fee = 1.0; rpc="pool";     regions=@("us")}
+    RITO = [PSCustomObject]@{port = 4545; fee = 1.0; rpc="rito";     regions=@("us","eu","asia")}
+    RVN  = [PSCustomObject]@{port = 4501; fee = 1.0; rpc="rvn";      regions=@("us","eu","asia","east.us","west.us","ca")}
+    RVNt = [PSCustomObject]@{port = 4505; fee = 1.0; rpc="rvnt";     regions=@("us")}
+    SAFE = [PSCustomObject]@{port = 4503; fee = 0.0; rpc="safe";     regions=@("us")}
     VDL  = [PSCustomObject]@{port = 4547; fee = 1.0; rpc="vdl";      regions=@("us")}
-    XMG  = [PSCustomObject]@{port = 4537; fee = 1.0; rpc="xmg";      regions=@("us")}
-    XRD  = [PSCustomObject]@{port = 4552; fee = 1.0; rpc="xrd";      regions=@("us")}
-    YEC  = [PSCustomObject]@{port = 4550; fee = 1.0; rpc="yec";      regions=@("us")}
-    YTN  = [PSCustomObject]@{port = 4543; fee = 1.0; rpc="ytn";      regions=@("us")}
+    XSG  = [PSCustomObject]@{port = 4508; fee = 0.0; rpc="xsg";      regions=@("us")}
 }
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | ForEach-Object {
 
-    $Pool_Coin = $Pool_Coins.$Pool_CoinSymbol
+    $Pool_CoinData  = $Pool_Coins.$Pool_CoinSymbol
+    $Pool_Coin      = Get-Coin $Pool_CoinSymbol
 
-    $Pool_Host      = "$(if ($Pool_Coin.rpc -ne $null) {$Pool_Coin.rpc} else {$Pool_CoinSymbol.ToLower()}).minermore.com"
-    $Pool_Port      = if ($Pool_Coin.port) {$Pool_Coin.port} else {$PoolCoins_Request.$Pool_CoinSymbol.port}
-    $Pool_PoolFee   = if ($Pool_Coin.fee -ne $null) {$Pool_Coin.fee} else {$Pool_Fee}
-    $Pool_Regions   = if ($Pool_Coin.regions) {$Pool_Coin.regions} else {@("us")}
+    $Pool_Host      = "$(if ($Pool_CoinData.rpc -ne $null) {$Pool_CoinData.rpc} else {$Pool_CoinSymbol.ToLower()}).minermore.com"
+    $Pool_Port      = if ($Pool_CoinData.port) {$Pool_CoinData.port} else {$PoolCoins_Request.$Pool_CoinSymbol.port}
+    $Pool_PoolFee   = if ($Pool_CoinData.fee -ne $null) {$Pool_CoinData.fee} else {$Pool_Fee}
+    $Pool_Regions   = if ($Pool_CoinData.regions) {$Pool_CoinData.regions} else {@("us")}
 
-    $Pool_Algorithm = if ($Pool_Coin.algo) {$Pool_Coin.algo} else {$PoolCoins_Request.$Pool_CoinSymbol.algo}
-    $Pool_CoinName  = $PoolCoins_Request.$Pool_CoinSymbol.name
+    $Pool_Algorithm = $Pool_Coin.Algo
+    $Pool_CoinName  = $Pool_Coin.Name
 
-    if ($Pool_Algorithm -eq "equihash") {
-        $Pool_Algorithm = Switch ($Pool_CoinSymbol) {
-            "SAFE" {"Equihash24x7"}
-            "VDL"  {"Equihash24x7"}
-            "XSG"  {"Equihash24x5"}
-            "YEC"  {"Equihash24x7"}
-            default {"Equihash24x7"}
-        }
-    }
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
