@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-NBMiner\nbminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v28.1-nbminer/NBMiner_28.1_Linux.tgz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v29.0-nbminer/NBMiner_29.0_Linux.tgz"
 } else {
     $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v28.1-nbminer/NBMiner_28.1_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v29.0-nbminer/NBMiner_29.0_Win.zip"
 }
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
-$Version = "28.1"
+$Version = "29.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -66,7 +66,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 8;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 9;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 10; Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Blake2bSHA3";  SecondaryAlgorithm = ""; Params = "-a hns";     NH = $true; MinMemGb = 1;  DevFee = 2.0;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #HNS
+    [PSCustomObject]@{MainAlgorithm = "Blake2bSHA3";  SecondaryAlgorithm = ""; Params = "-a hns";     NH = $true; MinMemGb = 0.1;  DevFee = 2.0;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #HNS
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 1;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 2;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 3;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
@@ -77,7 +77,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 8;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 9;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 10; Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
-    [PSCustomObject]@{MainAlgorithm = "Tellor";  SecondaryAlgorithm = ""; Params = "-a trb";     NH = $true; MinMemGb = 1;  DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #TRB
+    [PSCustomObject]@{MainAlgorithm = "Tellor";       SecondaryAlgorithm = ""; Params = "-a trb";     NH = $true; MinMemGb = 0.1;  DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #TRB
+    [PSCustomObject]@{MainAlgorithm = "KawPOW";       SecondaryAlgorithm = ""; Params = "-a kawpow";  NH = $true; MinMemGb = 2.4;  DevFee = 2.0;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #KAWPoW
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
