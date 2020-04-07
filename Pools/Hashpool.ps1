@@ -113,7 +113,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "DGBODO","DGB")" -or 
         Region        = $Pool_DefaultRegion
         SSL           = $false
         Updated       = (Get-Date).ToUniversalTime()
-        PoolFee       = $Pool_PoolFee
+        PoolFee       = $Pool_Fee
         DataWindow    = $Pool_DataWindow
         Hashrate      = $Stat.HashRate_Live
         BLK           = $Stat.BlockRate_Average
