@@ -150,8 +150,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             "ethproxy" {$Stratum = $Stratum -replace "stratum","ethproxy"}
                             "ethstratumnh" {$Stratum = $Stratum -replace "stratum","nicehash"}
                         }
-                        if ($Pools.$MainAlgorithm_Norm.CoinSymbol -ne "") {
-                            $EthCoin = " --coin $($Pools.$MainAlgorithm_Norm.CoinSymbol.ToLower())"
+                        if ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "ETC") {
+                            $EthCoin = " --coin etc"
                         }
                     }
 
