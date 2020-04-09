@@ -27,16 +27,20 @@ if ($IsLinux) {
             Cuda = "9.2"
         }
     )
+    $Version = "1.2.8"
+    $UseCPUAffinity = $true
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.9b-ccminertcr/ccminertcr-v1.2.9b-win.7z"
             Cuda = "10.2"
         }
     )
+    $Version = "1.2.9-beta"
+    $UseCPUAffinity = $false
 }
-$Version = "1.2.8"
+
 $ManualUri = "https://github.com/tecracoin/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
@@ -100,7 +104,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 -N 3 -b `$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --cpu-affinity 1 --no-donation $($_.Params)"
+					Arguments      = "-R 1 -N 3 -b `$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($UseCPUAffinity) {" --cpu-affinity 1"}) --no-donation $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Ccminer"
 					Port           = $Miner_Port
