@@ -33,11 +33,11 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.9b-ccminertcr/ccminertcr-v1.2.9b-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.9-ccminertcr/ccminertcr-v1.2.9-release-win.7z"
             Cuda = "10.2"
         }
     )
-    $Version = "1.2.9-beta"
+    $Version = "1.2.9"
     $UseCPUAffinity = $false
 }
 
