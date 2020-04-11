@@ -154,6 +154,7 @@
 542	CpuminerRKZ
 543	CpuminerPower2b
 544	CpuminerVerium
+545	CpuminerArctichash
 
 
 4068    CcminerSpModTribus
