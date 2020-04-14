@@ -10,7 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-xenial-cuda10_1-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.11.0-xmrig/xmrig-5.11.0-xenial-cuda10_1-x64.7z"
             Cuda = "10.1"
         }
     )
@@ -21,27 +21,27 @@ if ($IsLinux) {
 } else {
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda10_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.11.0-xmrig/xmrig-5.11.0-msvc-cuda10_1-win64.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda10-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.11.0-xmrig/xmrig-5.11.0-msvc-cuda10-win64.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda9_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.11.0-xmrig/xmrig-5.11.0-msvc-cuda9_2-win64.7z"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda9_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.11.0-xmrig/xmrig-5.11.0-msvc-cuda9_1-win64.7z"
             Cuda = "9.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda9-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.11.0-xmrig/xmrig-5.11.0-msvc-cuda9_0-win64.7z"
             Cuda = "9.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.10.0-xmrig/xmrig-5.10.0-msvc-cuda8-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.11.0-xmrig/xmrig-5.11.0-msvc-cuda8-win64.7z"
             Cuda = "8.0"
         }
     )
@@ -52,7 +52,7 @@ if ($IsLinux) {
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
-$Version = "5.10.0"
+$Version = "5.11.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -61,7 +61,7 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $CudaLib) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2/chukwa"; MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
     [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
-    [PSCustomObject]@{MainAlgorithm = "astrobwt";      MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU")}
+    [PSCustomObject]@{MainAlgorithm = "astrobwt";      MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/1";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/2";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
