@@ -11,23 +11,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer_linux_cuda"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda102.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.9-ccminertcr/ccminertcr-v1.2.9-linux-cuda102.7z"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda101.7z"
-            Cuda = "10.1"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda100.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.9-ccminertcr/ccminertcr-v1.2.9-linux-cuda100.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.8-ccminertcr/ccminertcr-v1.2.8-linux-cuda92.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.9-ccminertcr/ccminertcr-v1.2.9-linux-cuda92.7z"
             Cuda = "9.2"
         }
     )
-    $Version = "1.2.8"
+    $Version = "1.2.9"
     $UseCPUAffinity = $true
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
