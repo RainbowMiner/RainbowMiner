@@ -61,6 +61,8 @@ $Pool_Request.return | ForEach-Object {
 
     $Divisor = 1e9
 
+    if ($Pool_Symbol -eq "ZCL") {$Divisor *= 12.5/0.78} #temp fix "tripple halving of ZCL"
+
     $Pool_TSL = if ($_.time_since_last_block -eq "-") {$null} else {[int64]$_.time_since_last_block}
 
     if (-not $InfoOnly) {
