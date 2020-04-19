@@ -7,29 +7,38 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+$Version = "0.19.0-alpha.3"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
-$Version = "0.17.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer"
     $UriCuda = @(
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0.alpha.3-ethminer/ethminer-0.19.0-alpha.3-cuda10.0-linux-amd64.7z"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.1-ethminer/ethminer-0.17.1-linux-x86_64.tar.gz"
             Cuda = "9.0"
+            Version = "0.17.1"
         }
     )
 } else {
     $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.1-ethminer/ethminer-0.17.1-cuda10.0-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0.alpha.3-ethminer/ethminer-0.19.0-alpha.3-cuda10.0-windows-amd64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.1-ethminer/ethminer-0.17.1-cuda9.0-windows-amd64.zip"
-            Cuda = "9.0"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0.alpha.3-ethminer/ethminer-0.19.0-alpha.3-cuda9.2-windows-amd64.zip"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0.alpha.3-ethminer/ethminer-0.19.0-alpha.3-cuda8.0-windows-amd64.zip"
+            Cuda = "8.0"
         }
     )
 }
@@ -63,6 +72,9 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
             $Uri = $UriCuda[$i].Uri
             $Cuda= $UriCuda[$i].Cuda
+            if ($UriCuda[$i].Version -ne $null) {
+                $Version = $UriCuda[$i].Version
+            }
         }
     }
 }
