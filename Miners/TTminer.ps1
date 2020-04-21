@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.3b1-ttminer/TT-Miner-3.2.3-beta1.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0.tar.xz"
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.3b1-ttminer/TT-Miner-3.2.3-beta1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "9.2"
-$Version = "3.2.3-beta1"
+$Version = "4.0.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -26,17 +26,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; NH = $false; Params = "-A BLAKE2S%CUDA% -coin KDA";     ExtendInterval = 2; Coins = @("KDA")} #Kadena
     #[PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; NH = $true;  Params = "-A EAGLESONG%CUDA% -coin CKB";   ExtendInterval = 2} #Eaglesong
     [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   NH = $true;  Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2} #KAWPOW (RVN)
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; NH = $false; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
-    #[PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   NH = $true;  Params = "-A MTP-TCR%CUDA%";               ExtendInterval = 2} #MTP-TCR
+    [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA% -coin TCR";         ExtendInterval = 2} #MTP-TCR
     [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA%";               ExtendInterval = 2} #ProgPoW (BCI)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW092%CUDA% -coin SERO"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWSero (SERO)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWH"      ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW092%CUDA% -coin HORA"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW (HORA)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOWZ%CUDA%";              ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ (ZANO)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA% -coin SERO";    ExtendInterval = 2} #ProgPoWSero (SERO)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWH"      ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA% -coin HORA";    ExtendInterval = 2} #ProgPoW (HORA)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOWZ%CUDA%";              ExtendInterval = 2} #ProgPoWZ (ZANO)
     [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 2.4; NH = $false; Params = "-A UBQHASH%CUDA%";               ExtendInterval = 2} #Ubqhash 
 )
 
-$CoinSymbols = @("EPIC","SERO","ZANO","ZCOIN","ETC","ETH","CLO","PIRL","MUSIC","EXP","ETP","CKB","KDA","VTC","UBQ","ERE")
+$CoinSymbols = @("EPIC","SERO","ZANO","ZCOIN","ETC","ETH","CLO","PIRL","MUSIC","EXP","ETP","CKB","KDA","VTC","UBQ","ERE","HANA","TCR","RVN","RVNt","VEIL")
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
