@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0-fix1.tar.xz"
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0-fix1.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
