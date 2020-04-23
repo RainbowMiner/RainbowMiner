@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\MiningRigRentals.psm1
+
+param(
     $Config
 )
 
