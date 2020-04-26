@@ -86,7 +86,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 		switch($_.Vendor) {
 			"NVIDIA" {$Miner_Deviceparams = "--cuda --cuda-devices"}
-			"AMD" {$Miner_Deviceparams = "--opencl --opencl-platform $($Device | Select-Object -First 1 -ExpandProperty PlatformId) --opencl-devices"}
+			"AMD" {$Miner_Deviceparams = "--opencl --opencl-devices"}
 			Default {$Miner_Deviceparams = ""}
 		}
 
