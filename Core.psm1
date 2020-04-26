@@ -764,16 +764,30 @@ function Invoke-Core {
 
     #Fork detection
     if (Test-Path ".\Data\coinsdb-fork.json“) {
+        $Fork_Meets_Target = $false
         try {
-            $Request = Invoke-GetUrlAsync "https://explorer.dero.io/" -Timeout 15 -tag "fork"
-            if ("$Request" -match "<font.+>4550555<") {
+            if ($true) {
+                #DateTime target
+                $Fork_Meets_Target = (Get-Date).ToUniversalTime() -ge [datetime]"2020-05-06 18:00:00"
+            } else {
+                #Blockchain target
+                $Request = Invoke-GetUrlAsync "https://explorer.dero.io/" -Timeout 15 -tag "fork"
+                if ("$Request" -match "<font.+>4550555<") {
+                    $Fork_Meets_Target = $true
+                }
+            }
+        }
+        catch {}
+
+        if ($Fork_Meets_Target) {
+            try {
                 Remove-Item “.\Data\coinsdb.json" -Force
                 Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
                 Get-CoinsDB -Silent -Force
                 Stop-AsyncJob "fork"
             }
+            catch {}
         }
-        catch {}
     }
 
     #Update databases every 40 rounds
