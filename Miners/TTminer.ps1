@@ -30,9 +30,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; NH = $false; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA% -coin TCR";         ExtendInterval = 2} #MTP-TCR
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA%";               ExtendInterval = 2} #ProgPoW (BCI)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA% -coin EPIC";    ExtendInterval = 2; Coins = @("EPIC")} #ProgPoW (only EPIC left)
     [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA% -coin SERO";    ExtendInterval = 2} #ProgPoWSero (SERO)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWH"      ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOW%CUDA% -coin HORA";    ExtendInterval = 2} #ProgPoW (HORA)
     [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3;   NH = $false; Params = "-A PROGPOWZ%CUDA%";              ExtendInterval = 2} #ProgPoWZ (ZANO)
     [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 2.4; NH = $false; Params = "-A UBQHASH%CUDA%";               ExtendInterval = 2} #Ubqhash 
 )
