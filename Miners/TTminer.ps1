@@ -79,7 +79,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $Miner_Protocol = "$(if ($Algorithm_Norm_0 -match "^(Ethash|ProgPow)" -and $Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Name -ne "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {"stratum1+$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl"} else {"tcp"})://"})"
+                    $Miner_Protocol = "stratum$(if ($Algorithm_Norm_0 -match "^(Ethash|ProgPow)" -and $Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Name -ne "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {"1"})+$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl"} else {"tcp"})://"
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                     $First = $False
                 }
