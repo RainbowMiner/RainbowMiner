@@ -53,7 +53,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight_catalans"; Params = ""; Fee = 0.85;         Vendor = @("AMD","CPU")} #CryptonightCatalans
     [PSCustomObject]@{MainAlgorithm = "cryptonight_talleo";   Params = ""; Fee = 0.85;         Vendor = @("AMD","CPU")} #CryptonightTalleo
     [PSCustomObject]@{MainAlgorithm = "eaglesong"     ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #eaglesong
-    [PSCustomObject]@{MainAlgorithm = "k12"           ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #kangaroo12/AEON from 2019-10-25
+    [PSCustomObject]@{MainAlgorithm = "k12"           ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
     [PSCustomObject]@{MainAlgorithm = "kadena"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); Coins = @("KDA")} #blake2s / Kadena
     [PSCustomObject]@{MainAlgorithm = "keccak"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "mtp"           ; Params = ""; Fee = 0.85; MinMemGb = 6; Vendor = @("AMD")} #mtp
