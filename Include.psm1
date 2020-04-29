@@ -3621,7 +3621,7 @@ function Update-DeviceInformation {
                         if (-not $CpuData.Utilization) {$CpuData.Utilization = $_.LoadPercentage}
                         if (-not $CpuData.Utilization) {$CpuData.Utilization = 100}
                         if (-not $CpuData.PowerDraw) {
-                            $CpuName = $_.Name.Trim()
+                            $CpuName = "$($_.Name.Trim()) "
                             if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
                             $CpuData.PowerDraw = $CPU_tdp * ($CpuData.Utilization / 100) * ($PowerAdjust[$Device.Model] / 100)
                         }
