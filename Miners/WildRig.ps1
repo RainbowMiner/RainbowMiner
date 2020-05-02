@@ -12,12 +12,12 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.3-wildrig/wildrig-multi-linux-0.20.5.3.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.3-wildrig/wildrig-multi-windows-0.20.5.3.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.6-wildrig/wildrig-multi-windows-0.20.6.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
-$Version = "0.20.5.3"
+$Version = "0.20.6"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -49,6 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
     #[PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
+    [PSCustomObject]@{MainAlgorithm = "sha256csm";  Params = ""} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";    Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";    Params = ""} #SHA256t
     [PSCustomObject]@{MainAlgorithm = "skein2";     Params = ""} #Skein2
