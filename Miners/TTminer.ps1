@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0-fix1.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.3-ttminer/TT-Miner-4.0.3.tar.xz"
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.0-ttminer/TT-Miner-4.0.0-fix1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.3-ttminer/TT-Miner-4.0.3.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "9.2"
-$Version = "4.0.0"
+$Version = "4.0.3"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -26,7 +26,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; NH = $false; Params = "-A BLAKE2S%CUDA% -coin KDA";     ExtendInterval = 2; Coins = @("KDA")} #Kadena
     #[PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; NH = $true;  Params = "-A EAGLESONG%CUDA% -coin CKB";   ExtendInterval = 2} #Eaglesong
     [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   NH = $true;  Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2} #KAWPOW (RVN)
+    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   NH = $true;  Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2} #KAWPOW (RVN), doesn't work on testnet
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; NH = $false; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   NH = $true;  Params = "-A MTP%CUDA% -coin TCR";         ExtendInterval = 2} #MTP-TCR
@@ -78,7 +78,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $Miner_Protocol = "stratum$(if ($Algorithm_Norm_0 -match "^(Ethash|ProgPow)" -and $Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Name -ne "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {"1"})+$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl"} else {"tcp"})://"
+                    $Miner_Protocol = "stratum$(if ($Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Name -ne "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {"1"})+$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl"} else {"tcp"})://"
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                     $First = $False
                 }
