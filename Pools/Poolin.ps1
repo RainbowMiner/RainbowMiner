@@ -83,7 +83,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
         #TSL           = $Pool_TSL
         BLK           = $Stat.BlockRate_Average
         WTM           = $true
-        EthMode       = if ($Pool_Coin.Algo -match "Ethash") {"ethproxy"} else {$null}
+        EthMode       = if ($Pool_Coin.Algo -match "^(Ethash|ProgPow|KawPow)") {"ethproxy"} else {$null}
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1

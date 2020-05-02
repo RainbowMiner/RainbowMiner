@@ -97,6 +97,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
             BLK           = $null
             TSL           = $null
             WTM           = $true
+            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"ethproxy"} else {$null}
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1
