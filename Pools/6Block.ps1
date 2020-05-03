@@ -40,7 +40,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         try {
             $WebRequest = Invoke-RestMethodAsync "https://6block.com/en" -tag $Name -timeout 15 -cycletime 120
             $WebParams = if ($WebRequest -match "}}\(([^\)]+)\)") {$Matches[1] -split ',' | Foreach-Object {$_  -replace '^"' -replace '"$'}} else {@()}
-            foreach ($c in @("statPool","blocks24H","activeMiners")) {
+            foreach ($c in @("statPool","found24H","activeMiners")) {
                 if ($WebRequest -match "$($c):(.+?)[,}]") {
                     $Pool_Request | Add-Member $c ($Matches[1] -replace '^"' -replace '"$') -Force
                     if ($Pool_Request.$c -match "^[a-zA-Z]$") {
@@ -82,7 +82,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     if ($ok -and -not $InfoOnly) {
         $divisor  = ConvertFrom-Hash "1$($Pool_Request.unit)"
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Request.profit*$priceBTC/$divisor) -Duration $StatSpan -HashRate ([int64]$Pool_Request.statPool) -BlockRate ([int]$Pool_Request.blocks24H) -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Request.profit*$priceBTC/$divisor) -Duration $StatSpan -HashRate ([int64]$Pool_Request.statPool) -BlockRate ([int]$Pool_Request.found24H) -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
