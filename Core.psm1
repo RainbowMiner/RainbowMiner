@@ -942,6 +942,7 @@ function Invoke-Core {
         $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.PoolSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
         $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.MinerSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
+        $Session.Config.MaxTimeSinceLastBlock = ConvertFrom-Time $Session.Config.MaxTimeSinceLastBlock
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
         Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.APIport} > $null
@@ -1074,6 +1075,7 @@ function Invoke-Core {
                     $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
                     $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Algorithms.$_.MaxTimeToFind) -Force
                     $Session.Config.Algorithms.$_ | Add-Member MSIAprofile ([int]$Session.Config.Algorithms.$_.MSIAprofile) -Force
+                    $Session.Config.Algorithms.$_ | Add-Member MinBLKRate $(if ($Session.Config.Algorithms.$_.MaxTimeToFind) {86400/$Session.Config.Algorithms.$_.MaxTimeToFind} else {0}) -Force
                 }
             }
             if ($AllAlgorithms -ne $null) {Remove-Variable "AllAlgorithms"}
@@ -1098,6 +1100,7 @@ function Invoke-Core {
                     $Session.Config.Coins.$_ | Add-Member EnableAutoPool (Get-Yes $Session.Config.Coins.$_.EnableAutoPool) -Force
                     $Session.Config.Coins.$_ | Add-Member PostBlockMining (ConvertFrom-Time $Session.Config.Coins.$_.PostBlockMining) -Force
                     $Session.Config.Coins.$_ | Add-Member MinProfitPercent ([double]($Session.Config.Coins.$_.MinProfitPercent -replace "[^\d\.]+")) -Force
+                    $Session.Config.Coins.$_ | Add-Member MinBLKRate $(if ($Session.Config.Coins.$_.MaxTimeToFind) {86400/$Session.Config.Coins.$_.MaxTimeToFind} else {0}) -Force
                 }
                 $CheckCoins = $true
             }
@@ -1743,11 +1746,11 @@ function Invoke-Core {
                     ($_.Idle) -or
                     ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
                     ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
-                    ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind))) -or
+                    ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinBLKRate -and ($_.BLK -lt $Session.Config.Algorithms."$($_.Algorithm)".MinBLKRate)) -or
                     ($_.CoinSymbol -and $_.Hashrate -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate -and $_.Hashrate -lt $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate) -or
                     ($_.CoinSymbol -and $_.Workers -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers -and $_.Workers -lt $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers) -or
-                    ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind)))
-                )                
+                    ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate -and ($_.BLK -lt $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate))
+                )
             )}
         )
     Remove-Variable "Test_Algorithm"
@@ -1848,6 +1851,15 @@ function Invoke-Core {
                         }
                         if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
                             $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm0)-$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100)) * ($Session.Config.HashrateWeight/100)
+                        }
+                        if ($_.TSL -ne $null -and $_.BLK -ne $null -and $Session.Config.MaxAllowedLuck -gt 0) {
+                            $Luck = $_.TSL / $(if ($_.BLK -gt 0) {86400/$_.BLK} else {86400})
+                            if ($Luck -gt $Session.Config.MaxAllowedLuck) {
+                                $Price_Cmp /= $Luck - $Session.Config.MaxAllowedLuck + 1
+                            }
+                        }
+                        if ($_.TSL -ne $null -and $Session.Config.MaxTimeSinceLastBlock -gt 0) {
+                            $Price_Cmp /= ($_.TSL - $Session.Config.MaxTimeSinceLastBlock)/3600 + 1
                         }
                     }
                 }
