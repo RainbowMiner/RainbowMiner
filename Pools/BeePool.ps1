@@ -27,10 +27,10 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "BEAM"; port = @(9507);      fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "GRIN29"; port = @(9510);    fee = 2.0}
     [PSCustomObject]@{symbol = "GRIN31"; port = @(9510);    fee = 2.0}
-    #[PSCustomObject]@{symbol = "GRIN32"; port = @(9510);    fee = 2.0}
+    [PSCustomObject]@{symbol = "GRIN32"; port = @(9510);    fee = 2.0}
     [PSCustomObject]@{symbol = "RVN";  port = @(9531);      fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "PGN";  port = @(9560);      fee = 2.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "CKB";  port = @(9550,9551); fee = 2.0; fee_pplns = 1.0}
+    #[PSCustomObject]@{symbol = "CKB";  port = @(9550,9551); fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "MOAC"; port = @(9540);      fee = 1.0; fee_pplns = 1.0}
 )
 

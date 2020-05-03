@@ -43,10 +43,11 @@ $Pool_Ports = [PSCustomObject]@{
     "BELL"  = 63338
     "CPU"   = 63386
     "CRP"   = 63358
-    "ITC"   = 63328
+    #"ITC"   = 63328
     "KOTO"  = 63318
     "LITB"  = 63398
     "MBC"   = 63408
+    "SUGAR" = 63418
     "URX"   = 63378
     "YTN"   = 63368
 }
