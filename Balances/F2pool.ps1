@@ -52,6 +52,7 @@ $Pools_Data = [PSCustomObject]@{
     GIN  = "gincoin/address"
     AION = "aion/address"
     BEAM = "beam/address"
+    HNS = "handshake/address"
 }
 
 $Payout_Currencies | Where-Object {$Pools_Data.$($_.Name) -ne $null} | Foreach-Object {
