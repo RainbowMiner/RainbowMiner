@@ -230,8 +230,13 @@
                         $ConfigActual.$_ = $DataSaved[$_]
                     }
 
+                    if ($ConfigActual.MinerStatusKey -eq "new") {
+                        $ConfigActual.MinerStatusKey = Get-MinerStatusKey
+                        $ConfigChanged++
+                    }
+
                     #reset checkbox-arrays
-                    @("ExcludePoolName") | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
+                    @("ExcludePoolName","ExcludeDeviceName") | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
                         $DataSaved[$_] = ""
                         if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
                             $ConfigChanged++
@@ -351,6 +356,13 @@
                 }
                 "/devicecombos" {
                     $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos} else {"[]"}
+                    Break
+                }
+                "/getdeviceconfig" {
+                    $Data = if ($API.AllDevices) {
+                        $GPUDevices = $API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","NVIDIA")}
+                        @(@("CPU") + @($GPUDevices.Vendor | Select-Object -Unique | Sort-Object) + @($GPUDevices.Model | Select-Object -Unique | Sort-Object) + @($GPUDevices.Name | Select-Object -Unique | Sort-Object) | Foreach-Object {[PSCustomObject]@{Name=$_;Selected=$($_ -in $Session.Config.DeviceName);Excluded=$($_ -in $Session.Config.ExcludeDeviceName)}}) | ConvertTo-Json
+                    } else {"[]"}
                     Break
                 }
                 "/stats" {

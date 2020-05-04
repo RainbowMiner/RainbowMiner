@@ -1057,6 +1057,8 @@ function Invoke-Core {
                                 UsePowerPrice          = $Session.Config.UsePowerPrice
                                 PowerPriceCurrency     = $Session.Config.PowerPriceCurrency
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
+                                IsWindows              = $Global:IsWindows
+                                IsLinux                = $Global:IsLinux
                             }) -Depth 10
     }
     if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Session.PauseMiners)) {$Session.PauseMiners = $API.Pause = $true}

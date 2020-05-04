@@ -126,6 +126,11 @@ $(function () {
         } else {
             $('#updatemsg-inner').hide()
         }
+        if(globalconfig.IsLinux) {
+            $(".is--linux").show()
+        } else {
+            $(".is--linux").hide()
+        }
         setTimeout(q, 600000);
     })();
 
