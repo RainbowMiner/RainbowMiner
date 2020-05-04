@@ -159,16 +159,26 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         $FailoverMain = if ($Pools.$MainAlgorithm_Norm.Failover) {
                             $i=1;
                             @($Pools.$MainAlgorithm_Norm.Failover | Select-Object -First ([Math]::Min(2,$Pools.$MainAlgorithm_Norm.Failover.Count)) | Foreach-Object {
-                                "-o$i $($Stratum)://$($_.Host):$($_.Port) -u$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($_.Pass) {":$($_.Pass)"})"
+                                $Pass = "$($_.Pass)"
+                                if ($Pass -and $Pools.$MainAlgorithm_Norm.Name -eq "MoneroOcean") {
+                                    $Pass = $Pass -replace ":[^:]+~","~"
+                                }
+                                "-o$i $($Stratum)://$($_.Host):$($_.Port) -u$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($Pass) {":$Pass"})"
                                 $i++
                             }) -join ' '
                         }
+
+                        $Pass = "$($Pools.$MainAlgorithm_Norm.Pass)"
+                        if ($Pass -and $Pools.$MainAlgorithm_Norm.Name -eq "MoneroOcean") {
+                            $Pass = $Pass -replace ":[^:]+~","~"
+                        }
+
 						[PSCustomObject]@{
 							Name           = $Miner_Name
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"})$EthCoin$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog --no-nvml $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pass) {":$Pass"})$EthCoin$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog --no-nvml $($_.Params)"
 							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
 							API            = "NBminer"
 							Port           = $Miner_Port
@@ -197,23 +207,42 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         $FailoverMain = if ($Pools.$MainAlgorithm_Norm.Failover) {
                             $i=1;
                             @($Pools.$MainAlgorithm_Norm.Failover | Select-Object -First ([Math]::Min(2,$Pools.$MainAlgorithm_Norm.Failover.Count)) | Foreach-Object {
-                                "-do$i $($Stratum)://$($_.Host):$($_.Port) -du$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($_.Pass) {":$($_.Pass)"})"
+                                $Pass = "$($_.Pass)"
+                                if ($Pass -and $Pools.$MainAlgorithm_Norm.Name -eq "MoneroOcean") {
+                                    $Pass = $Pass -replace ":[^:]+~","~"
+                                }
+                                "-do$i $($Stratum)://$($_.Host):$($_.Port) -du$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($Pass) {":$Pass"})"
                                 $i++
                             }) -join ' '
                         }
                         $FailoverSecondary = if ($Pools.$SecondAlgorithm_Norm.Failover) {
                             $i=1;
                             @($Pools.$SecondAlgorithm_Norm.Failover | Select-Object -First ([Math]::Min(2,$Pools.$SecondAlgorithm_Norm.Failover.Count)) | Foreach-Object {
-                                "-o$i $($Stratum2)://$($_.Host):$($_.Port) -u$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($_.Pass) {":$($_.Pass)"})"
+                                $Pass = "$($_.Pass)"
+                                if ($Pass -and $Pools.$SecondAlgorithm_Norm.Name -eq "MoneroOcean") {
+                                    $Pass = $Pass -replace ":[^:]+~","~"
+                                }
+                                "-o$i $($Stratum2)://$($_.Host):$($_.Port) -u$i $($_.User)$(if ($_.User -match '^solo:') {"."})$(if ($Pass) {":$Pass"})"
                                 $i++
                             }) -join ' '
                         }
+
+                        $Pass = "$($Pools.$MainAlgorithm_Norm.Pass)"
+                        if ($Pass -and $Pools.$MainAlgorithm_Norm.Name -eq "MoneroOcean") {
+                            $Pass = $Pass -replace ":[^:]+~","~"
+                        }
+
+                        $Pass2nd = "$($Pools.$SecondAlgorithm_Norm.Pass)"
+                        if ($Pass2nd -and $Pools.$SecondAlgorithm_Norm.Name -eq "MoneroOcean") {
+                            $Pass2nd = $Pass2nd -replace ":[^:]+~","~"
+                        }
+
 						[PSCustomObject]@{
 							Name           = $Miner_Name
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -u $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($FailoverSecondary) {" $FailoverSecondary"}) -do $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"})$EthCoin$(if ($FailoverMain) {" $FailoverMain"}) -di$($DeviceIntensitiesAll) --no-watchdog --no-nvml $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -u $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pass2nd) {":$Pass2nd"})$(if ($FailoverSecondary) {" $FailoverSecondary"}) -do $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pass) {":$Pass"})$EthCoin$(if ($FailoverMain) {" $FailoverMain"}) -di$($DeviceIntensitiesAll) --no-watchdog --no-nvml $($_.Params)"
 							HashRates      = [PSCustomObject]@{
                                                 $MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                 $SecondAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
