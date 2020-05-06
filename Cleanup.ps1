@@ -768,6 +768,10 @@ try {
         $AddAlgorithm += @("ArcticHash")
     }
 
+    if ($Version -le (Get-Version "4.5.5.6")) {
+        $RemoveMinerStats += @("*-KawPOWMiner-*_HashRate.txt")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
