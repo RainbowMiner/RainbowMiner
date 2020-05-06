@@ -30,8 +30,14 @@ catch {
 
 $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency;$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
 
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
+    $Pool_Coin      = Get-Coin $Pool_Currency
+    if ($Pool_Coin.Algo) {
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+        $Pool_CoinName       = $Pool_Coin.Name
+    } else {
+        $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+        $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
+    }
     if (-not $Pool_CoinName) {$Pool_CoinName = $Pool_Currency}
 
     if (-not $InfoOnly) {
