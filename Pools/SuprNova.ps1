@@ -26,7 +26,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "GRLC"  ; rpc = "grlc"     ; port = 8600}
     [PSCustomObject]@{symbol = "HODL"  ; rpc = "hodl"     ; port = 4693}
     [PSCustomObject]@{symbol = "ROI"   ; rpc = "roi"      ; port = 4699}
-    [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 7777}
+    [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 8888}
     [pscustomobject]@{symbol = "VEIL"  ; rpc = "veil"     ; port = 7220}
     [pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17"  ; port = 7477}
     [PSCustomObject]@{symbol = "VTC"   ; rpc = "vtc"      ; port = 5778}
