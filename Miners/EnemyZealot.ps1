@@ -10,25 +10,25 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/z-enemy/z-enemy/releases"
 $Port = "302{0:d2}"
 $DevFee = 1.0
-$Version = "2.4"
+$Version = "2.5"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-cuda101-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-cuda101-libcurl4.tar.gz"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-cuda100-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-cuda100-libcurl4.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-cuda92.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-cuda92-libcurl4.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-cuda91.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-cuda91.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -36,19 +36,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-win-cuda10.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-win-cuda10.1.zip"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-win-cuda10.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-win-cuda10.0.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-win-cuda9.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-win-cuda9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4-zenemy/z-enemy-2.4-win-cuda9.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5-zenemy/z-enemy-2.5-win-cuda9.1.zip"
             Cuda = "9.1"
         }
     )
@@ -63,6 +63,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} # New in 1.11
     [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5; HashrateDuration = "Day"} #HEX/XDNA, new in 1.15a
     #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
+    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3} #KawPOW/RVN, new in 2.5
     #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
     #[PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
@@ -103,13 +104,19 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
 if (-not $Uri) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $First = $true
     $Miner_Model = $_.Model
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
 
     $Commands | ForEach-Object {
+        $First = $true
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+
+        $Ethmining = $Algorithm_Norm_0 -eq "Ethash"
+
+        $MinMemGB = if ($Ethmining) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
+
+        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
