@@ -36,8 +36,8 @@ catch {
 $Pool_Coin = "Ravencoin"
 $Pool_Currency = "RVN"
 $Pool_Host = "ravenminer.com"
-$Pool_Algorithm = "X16rv2"
-$Pool_Port = 3737
+$Pool_Algorithm = "KawPOW"
+$Pool_Port = 3838
 
 [hashtable]$Pool_RegionsTable = @{}
 
