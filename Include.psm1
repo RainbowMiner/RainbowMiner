@@ -3118,6 +3118,9 @@ function Get-CPUFeatures {
         $features.avx512_dq = ($info[1] -band ([int]1 -shl 17)) -ne 0
         $features.avx512_ifma = ($info[1] -band ([int]1 -shl 21)) -ne 0
         $features.avx512_vbmi = ($info[2] -band ([int]1 -shl 01)) -ne 0
+        $features.avx512_vbmi2 = ($info[2] -band ([int]1 -shl 06)) -ne 0
+
+        $features.vaes = ($info[2] -band ([int]1 -shl 09)) -ne 0
 
         $features.avx512 = $features.avx512_f -and $features.avx512_vl -and $features.avx512_dq -and $features.avx512_bw
     }
