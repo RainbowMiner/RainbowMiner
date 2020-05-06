@@ -110,10 +110,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
+                    $Miner_Protocol_Auto = $false
                     $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.EthMode) {
                         "ethproxy"         {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 						"ethstratumnh"     {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})"}
+						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})";$Miner_Protocol_Auto = $true}
 					}
 
                     if ($Pools.$Algorithm_Norm.Name -eq "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
@@ -123,7 +124,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						DeviceName     = $Miner_Device.Name
 						DeviceModel    = $Miner_Model
 						Path           = $Path
-						Arguments      = "--api-port `$mport $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User -ConvertDot:$($Pools.$Algorithm_Norm.EthMode -ne "ethproxy"))$(if ($Pools.$Algorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass -ConvertDot)"})@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --HWMON 0 --farm-recheck 3000 --farm-retries 20 --work-timeout 900 --response-timeout 180 $($_.Params)"
+						Arguments      = "--api-port `$mport $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User -ConvertDot:$($Pools.$Algorithm_Norm.EthMode -ne "ethproxy"))$(if ($Pools.$Algorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass -ConvertDot)"})@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --HWMON 0$(if (-not $Miner_Protocol_Auto) {" --farm-recheck 3000 --farm-retries 20 --work-timeout 900 --response-timeout 180"}) $($_.Params)"
 						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 						API            = "Claymore"
 						Port           = $Miner_Port
