@@ -90,7 +90,7 @@ Nvidia has kindly supplied a ppa for their official drivers.
 sudo add-apt-repository ppa:graphics-drivers/ppa
 sudo apt -y install dkms build-essential
 sudo apt update
-sudo apt -y install nvidia-headless-430 nvidia-driver-430 nvidia-compute-utils-430 nvidia-cuda-toolkit
+sudo apt -y install nvidia-headless-440 nvidia-driver-440 nvidia-compute-utils-440 nvidia-cuda-toolkit
 
 ```
 Reboot after the driver have been installed.
