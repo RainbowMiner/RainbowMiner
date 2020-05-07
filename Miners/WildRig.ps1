@@ -49,9 +49,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp";        Params = ""} #MTP, new in v0.20.0 beta
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr";    Params = ""} #MTPTcr, new in v0.20.0 beta, --split-job 4
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
+    [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowEthercore
+    [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "sha256csm";  Params = ""} #SHA256csm
+    [PSCustomObject]@{MainAlgorithm = "sha256csm";  Params = ""; Version = "0.20.6"} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";    Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";    Params = ""} #SHA256t
     [PSCustomObject]@{MainAlgorithm = "skein2";     Params = ""} #Skein2
@@ -75,11 +77,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x25x";       Params = ""} #X25x
     [PSCustomObject]@{MainAlgorithm = "xevan";      Params = ""} #Xevan
 )
-
-if ($IsWindows) {
-    $Commands += [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2} #ProgPowZ
-    $Commands += [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Params = ""; ExtendInterval = 2} #ProgPowEthercore
-}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
