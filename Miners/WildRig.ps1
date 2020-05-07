@@ -10,14 +10,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.5.3-wildrig/wildrig-multi-linux-0.20.5.3.tar.gz"
+    $Version = "0.20.5.3"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.6-wildrig/wildrig-multi-windows-0.20.6.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-wildrigmulti/wildrig-multi-windows-0.21.0.7z"
+    $Version = "0.21.0"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
-$Version = "0.20.6"
+
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -74,6 +76,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "xevan";      Params = ""} #Xevan
 )
 
+if ($IsWindows) {
+    $Commands += [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2} #ProgPowZ
+    $Commands += [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Params = ""; ExtendInterval = 2} #ProgPowEthercore
+}
+
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($InfoOnly) {
@@ -102,7 +109,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $Params = "$(if ($Pools.$Algorithm_Norm.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm.CoinSymbol.ToLower()).bin "})$($_.Params)"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm -notmatch "^blake2b" -or ($Algorithm -eq "blake2b-btcc" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "GLT") -or ($Algorithm -eq "blake2b-glt" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "GLT"))) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm -ne "progpowz" -or $Pools.$Algorithm_Norm.Name -ne "Fairpool") -and ($Algorithm -notmatch "^blake2b" -or ($Algorithm -eq "blake2b-btcc" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "GLT") -or ($Algorithm -eq "blake2b-glt" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "GLT"))) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
