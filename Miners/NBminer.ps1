@@ -78,7 +78,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 9;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 10; Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
     [PSCustomObject]@{MainAlgorithm = "Tellor";       SecondaryAlgorithm = ""; Params = "-a trb";     NH = $true; MinMemGb = 0.1;  DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #TRB
-    [PSCustomObject]@{MainAlgorithm = "KawPOW";       SecondaryAlgorithm = ""; Params = "-a kawpow";  NH = $true; MinMemGb = 2.4;  DevFee = 2.0;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #KAWPoW
+    #[PSCustomObject]@{MainAlgorithm = "KawPOW";       SecondaryAlgorithm = ""; Params = "-a kawpow";  NH = $true; MinMemGb = 2.4;  DevFee = 2.0;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #KAWPoW
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
