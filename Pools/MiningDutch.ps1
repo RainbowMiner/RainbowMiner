@@ -93,7 +93,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
                 DataWindow    = $DataWindow
                 Workers       = [int]$_.Value.workers_shared
                 Hashrate      = $Stat.HashRate_Live
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"ethstratumnh"} else {$null}
+                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

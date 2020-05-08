@@ -98,6 +98,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
                     $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.EthMode) {
+                        "stratum"          {"stratum+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
                         "ethproxy"         {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 						"ethstratumnh"     {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})"}

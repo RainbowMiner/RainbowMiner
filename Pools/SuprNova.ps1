@@ -82,7 +82,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
             Hashrate      = $Pool_Hashrate
             DataWindow    = $DataWindow
             WTM           = $true
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"ethproxy"} else {$null}
+            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

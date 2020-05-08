@@ -92,7 +92,7 @@ $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $
             Hashrate      = $Stat.HashRate_Live
             TSL           = [int]$_.Value.timesincelast
             BLK           = $Stat.BlockRate_Average
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"minerproxy"} else {$null}
+            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"minerproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

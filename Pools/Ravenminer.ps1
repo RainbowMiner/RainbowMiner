@@ -89,7 +89,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
 				ErrorRatio    = $Stat.ErrorRatio
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"ethproxy"} else {$null}
+                EthMode       = "stratum"
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
