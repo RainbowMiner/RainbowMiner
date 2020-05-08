@@ -141,8 +141,8 @@ if (-not $Pool_Request -or ($Pool_Request | Measure-Object).Count -lt 10) {
 
 $Pool_Coins = @($WTMWallets.CoinSymbol | Select-Object)
 
-$Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | ForEach-Object {
-    $Pool_Currency   = $_.coin1
+$Pool_Request | Where-Object {$Pool_Coins -eq $_.coin} | Foreach-Object {
+    $Pool_Currency   = $_.coin
     $Pool_Algorithm  = $_.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
@@ -151,42 +151,20 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
 
         $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
-        $Pool_CoinRequest = [PSCustomObject]@{reward=$null;revenue=$null}
-        try {
-            (Invoke-WebRequestAsync "https://minerstat.com/coin/$($_.coin1)" -tag $Name -cycletime 120) -split "icon_coins reward" | Select-Object -Skip 1 | Foreach-Object {
-                $dat = ([regex]'(?si)>([\d\.\,E+-]+)\s+([\w]+)<.+?for\s([\d\.\,]+)\s*(.+?)<').Matches($_)
-                if ($dat -and $dat.Groups -and $dat.Groups.Count -ge 5) {
-                    $Pool_CoinRequest.reward  = [PSCustomObject]@{value=[decimal]($dat.Groups[1].Value -replace ',');currency=$dat.Groups[2].Value;fact=[decimal]($dat.Groups[3].Value -replace ',');unit=$dat.Groups[4].Value}
-                    $Pool_CoinRequest.revenue = [PSCustomObject]@{currency='';value=0}
-                    ([regex]'(currency|exchangeRate)[\s='']+([^\s'';]+)').Matches($_) | Foreach-Object {
-                        if ($_.Groups[1].Value -eq "currency") {$Pool_CoinRequest.revenue.currency = $_.Groups[2].Value}
-                        else {$Pool_CoinRequest.revenue.value = [decimal]$_.Groups[2].Value}
-                    }
-                }
-            }
-        } catch {
-           if ($Error.Count){$Error.RemoveAt(0)} 
+        if (-not ($lastSatPrice = Get-LastSatPrice $_.coin)) {
+            $lastSatPrice = if ($Global:Rates.USD -and $_.price -gt 0) {$_.price / $Global:Rates.USD * 1e8} else {0}
         }
 
-        if ($Pool_CoinRequest.reward -and $Pool_CoinRequest.revenue.value -and ($Divisor = ConvertFrom-Hash "$($Pool_CoinRequest.reward.fact) $($Pool_CoinRequest.reward.unit)")) {
-            if (-not ($lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.reward.currency)) {
-                $lastSatPrice = if ($Global:Rates."$($Pool_CoinRequest.revenue.currency)") {$Pool_CoinRequest.revenue.value / $Global:Rates."$($Pool_CoinRequest.revenue.currency)" * 1e8} else {0}
-            }
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($_.reward * $lastSatPrice / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
 
-            $revenue = $Pool_CoinRequest.reward.value * $lastSatPrice / 1e8
-            
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
-
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinSymbol    = $Pool_Currency
-                Price         = $Stat.Minute_10 #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Updated       = $Stat.Updated
-            }
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinSymbol    = $Pool_Currency
+            Price         = $Stat.Minute_10 #instead of .Live
+            StablePrice   = $Stat.Week
+            MarginOfError = $Stat.Week_Fluctuation
+            Updated       = $Stat.Updated
         }
-        if ($Pool_CoinRequest -ne $null) {Remove-Variable "Pool_CoinRequest"}
     }
 }
 
