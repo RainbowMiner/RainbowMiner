@@ -21,6 +21,7 @@
     "Equihash24x7":  1,
     "Ethash":  1000000,
     "Hex":  1000000,
+    "KawPOW":  1000000,
     "Keccak":  1000000,
     "KeccakC":  1000000,
     "LBK3":  1000,

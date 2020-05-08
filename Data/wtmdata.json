@@ -15,8 +15,8 @@
         "factor":  1
     },
     {
-        "algo":  "CryptoNightV8",
-        "id":  "cn8",
+        "algo":  "CryptoNightGPU",
+        "id":  "cng",
         "factor":  1
     },
     {
@@ -40,8 +40,13 @@
         "factor":  1
     },
     {
-        "algo":  "Cuckaroo29",
+        "algo":  "Cuckarood29",
         "id":  "cr29",
+        "factor":  1
+    },
+    {
+        "algo":  "Cuckaroom29",
+        "id":  "cm29",
         "factor":  1
     },
     {
@@ -50,8 +55,18 @@
         "factor":  1
     },
     {
-        "algo":  "Equihash25x5",
+        "algo":  "Cuckatoo32",
+        "id":  "ct32",
+        "factor":  1
+    },
+    {
+        "algo":  "EquihashR25x5x3",
         "id":  "eqb",
+        "factor":  1
+    },
+    {
+        "algo":  "RandomX",
+        "id":  "rmx",
         "factor":  1
     },
     {
@@ -60,17 +75,7 @@
         "factor":  1000
     },
     {
-        "algo":  "Bcd",
-        "id":  "bcd",
-        "factor":  1000000
-    },
-    {
-        "algo":  "Bitcore",
-        "id":  "tt10",
-        "factor":  1000000
-    },
-    {
-        "algo":  "X16r",
+        "algo":  "X16rv2",
         "id":  "x16r",
         "factor":  1000000
     },
@@ -80,19 +85,14 @@
         "factor":  1000000
     },
     {
-        "algo":  "Xevan",
-        "id":  "xn",
-        "factor":  1000000
+        "algo":  "Equihash24x7",
+        "id":  "eqz",
+        "factor":  1
     },
     {
-        "algo":  "Hex",
-        "id":  "hx",
-        "factor":  1000000
-    },
-    {
-        "algo":  "PHI",
-        "id":  "phi",
-        "factor":  1000000
+        "algo":  "EquihashR25x4",
+        "id":  "zlh",
+        "factor":  1
     },
     {
         "algo":  "ProgPoW",
@@ -116,6 +116,14 @@
     },
     {
         "algo":  "Allium",
+        "factor":  1000000
+    },
+    {
+        "algo":  "Bcd",
+        "factor":  1000000
+    },
+    {
+        "algo":  "Bitcore",
         "factor":  1000000
     },
     {
@@ -143,6 +151,14 @@
         "factor":  1
     },
     {
+        "algo":  "CryptoNightV8",
+        "factor":  1
+    },
+    {
+        "algo":  "Cuckaroo29",
+        "factor":  1
+    },
+    {
         "algo":  "Cuckaroo31",
         "factor":  1
     },
@@ -155,8 +171,12 @@
         "factor":  1000
     },
     {
-        "algo":  "Equihash24x7",
-        "factor":  1
+        "algo":  "Hex",
+        "factor":  1000000
+    },
+    {
+        "algo":  "KawPOW",
+        "factor":  1000000
     },
     {
         "algo":  "Keccak",
@@ -183,6 +203,10 @@
         "factor":  1000
     },
     {
+        "algo":  "PHI",
+        "factor":  1000000
+    },
+    {
         "algo":  "Randomhash",
         "factor":  1000
     },
@@ -200,6 +224,10 @@
     },
     {
         "algo":  "UbqHash",
+        "factor":  1000000
+    },
+    {
+        "algo":  "X16r",
         "factor":  1000000
     },
     {
