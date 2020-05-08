@@ -13,8 +13,8 @@ if ($IsLinux) {
     $Version = "0.20.5.3"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-wildrigmulti/wildrig-multi-windows-0.21.0.7z"
-    $Version = "0.21.0"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.22.0-wildrigmulti/wildrig-multi-windows-0.22.0.7z"
+    $Version = "0.22.0"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -43,6 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hex";        Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "honeycomb";  Params = ""} #Honeycomb
+    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = ""; ExtendInterval = 2; Version = "0.22.0"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "lyra2tdc";   Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
