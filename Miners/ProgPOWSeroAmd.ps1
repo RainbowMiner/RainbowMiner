@@ -50,11 +50,17 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $Miner_Protocol = $Pools.$Algorithm_Norm_0.Protocol
-                    if ($Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy") {$Miner_Protocol = $Miner_Protocol -replace "stratum","stratum1"}
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                     $First = $false
                 }
+
+                $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.EthMode) {
+                    "stratum"          {"stratum+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                    "ethproxy"         {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+					"ethstratumnh"     {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+					default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})"}
+				}
+
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
 					Name           = $Miner_Name

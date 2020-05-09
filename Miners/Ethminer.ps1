@@ -112,6 +112,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     $Miner_Protocol_Auto = $false
                     $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.EthMode) {
+                        "stratum"          {"stratum+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
                         "ethproxy"         {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 						"ethstratumnh"     {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})";$Miner_Protocol_Auto = $true}
