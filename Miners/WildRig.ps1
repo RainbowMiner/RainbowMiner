@@ -13,8 +13,8 @@ if ($IsLinux) {
     $Version = "0.20.5.3"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.22.0-wildrigmulti/wildrig-multi-windows-0.22.0.7z"
-    $Version = "0.22.0"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-wildrigmulti/wildrig-multi-windows-0.23.0.7z"
+    $Version = "0.23.0"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -51,6 +51,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr";    Params = ""} #MTPTcr, new in v0.20.0 beta, --split-job 4
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowEthercore
+    [PSCustomObject]@{MainAlgorithm = "progpow-sero"; Params = ""; ExtendInterval = 2; Version = "0.23.0"} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
