@@ -80,8 +80,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 8;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 9;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 10;   Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; NH2 = $true} #Ethash+Blake2bSHA3
-    [PSCustomObject]@{MainAlgorithm = "KawPOW";          MinMemGb = 3;                     Params = "--algo kawpow";                Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "ProgPoWSero";     MinMemGb = 3;                     Params = "--algo sero";                  Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #ProgPowSERO
+    [PSCustomObject]@{MainAlgorithm = "KawPOW";          MinMemGb = 3;                     Params = "--algo kawpow";                Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $false} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "ProgPoWSero";     MinMemGb = 3;                     Params = "--algo sero";                  Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $false} #ProgPowSERO
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
