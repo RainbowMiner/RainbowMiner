@@ -133,6 +133,9 @@
         "HashVault" = [PSCustomObject]@{
             Currencies=@("XMR")
         }
+        "Hellominer" = [PSCustomObject]@{
+            Currencies=@("RVN","XWP")
+        }
         "HeroMiners" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
