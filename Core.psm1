@@ -1860,7 +1860,7 @@ function Invoke-Core {
                                 $Price_Cmp /= $Luck - $Session.Config.MaxAllowedLuck + 1
                             }
                         }
-                        if ($_.TSL -ne $null -and $Session.Config.MaxTimeSinceLastBlock -gt 0) {
+                        if ($_.TSL -ne $null -and $Session.Config.MaxTimeSinceLastBlock -gt 0 -and $_.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
                             $Price_Cmp /= ($_.TSL - $Session.Config.MaxTimeSinceLastBlock)/3600 + 1
                         }
                     }
