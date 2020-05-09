@@ -23,7 +23,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETH";  port = @(9530);      fee = 1.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "ETC";  port = @(9518);      fee = 1.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "AE";   port = @(9505);      fee = 1.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "SERO"; port = @(9515);      fee = 2.0}
+    [PSCustomObject]@{symbol = "SERO"; port = @(9515);      fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "BEAM"; port = @(9507);      fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "GRIN29"; port = @(9510);    fee = 2.0}
     [PSCustomObject]@{symbol = "GRIN31"; port = @(9510);    fee = 2.0}
@@ -64,7 +64,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
 
     if ($Pool_Wallet -match "@(pps|pplns)$") {        
         if ($Matches[1] -ne "pplns" -or $_.fee_pplns -ne $null) {
-            $Pool_PP = "@$($Matches[1])"
+            $Pool_PP = $Matches[1]
             if ($Matches[1] -eq "pplns") {$Pool_Fee = $_.fee_pplns}
         }
         $Pool_Wallet = $Pool_Wallet -replace "@(pps|pplns)$"
@@ -88,9 +88,9 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
         }
 
         $Pool_Rate = 0
-        if ($Pool_Currency -eq "SERO") {
-            $Divisor  = Switch($Pool_Data.pps_unit.Substring(0,1)) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
-            $Pool_Rate = if ($Global:Rates.$Pool_Currency -and $Pool_Currency -ne "GRIN") {$Pool_Data.pps_value / $Global:Rates.$Pool_Currency / $Divisor} else {0}
+        if ($Pool_PP -and $Pool_Data."$($Pool_PP)_value" -and $Pool_Currency -ne "GRIN") {
+            $Divisor  = Switch($Pool_Data."$($Pool_PP)_unit".Substring(0,1)) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
+            $Pool_Rate = if ($Global:Rates.$Pool_Currency) {$Pool_Data."$($Pool_PP)_value" / $Global:Rates.$Pool_Currency / $Divisor} else {0}
         }
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Rate -Duration $StatSpan -HashRate (ConvertFrom-Hash $Pool_Data.poolhash) -BlockRate ([int]$Pool_Data.last_24_hour_block_total) -ChangeDetection (-not $Pool_Rate) -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
@@ -110,7 +110,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
             Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
             Host          = "$($Pool_Data.coin)-pool.beepool.org"
             Port          = $Pool_Port
-            User          = "$($Pool_Wallet)$(if ($Pool_Currency -eq "GRIN") {"/"} else {"."}){workername:$Worker}$Pool_PP"
+            User          = "$($Pool_Wallet)$(if ($Pool_Currency -eq "GRIN") {"/"} else {"."}){workername:$Worker}$(if ($Pool_PP) {"@$Pool_PP"})"
             Pass          = "x"
             Region        = $Pool_RegionsTable.$Pool_Region_Default
             SSL           = $Pool_SSL
@@ -131,7 +131,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
             Price_Bias    = 0.0
             Price_Unbias  = 0.0
             Wallet        = $Pool_Wallet
-            Worker        = "{workername:$Worker}$Pool_PP"
+            Worker        = "{workername:$Worker}$(if ($Pool_PP) {"@$Pool_PP"})"
             Email         = $Email
         }
         $Pool_SSL = $true
