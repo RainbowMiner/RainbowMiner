@@ -772,6 +772,10 @@ try {
         $RemoveMinerStats += @("*-KawPOWMiner-*_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.5.6.2")) {
+        $RemovePoolStats += @("MoneroOcean_*_Profit.txt")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
