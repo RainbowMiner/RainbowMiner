@@ -27,7 +27,7 @@ catch {
     return
 }
 
-$Pool_PoolFee = 0.68
+$Pool_PoolFee = 0.68 # cost for exchange
 
 $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashrate -gt 0)) -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
@@ -37,7 +37,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
 
     if (-not $InfoOnly) {
         $Pool_TSL = if ($_.tsl -ge 0) {$_.tsl} else {$null}
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $_.profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.diff -HashRate $_.hashrate -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $_.profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.diff -HashRate $_.hashrate -BlockRate $_.blk24h -Quiet
     }
 
     foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
@@ -61,11 +61,11 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
             SSL           = $Pool_Protocol -match "ssl"
             Updated       = $Stat.Updated
             #WTM           = $true
-            PoolFee       = $Pool_PoolFee
+            PoolFee       = $Pool_PoolFee + $_.fee
             Workers       = $_.worker
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
-            #BLK           = $Stat.BlockRate_Average
+            BLK           = $Stat.BlockRate_Average
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1
