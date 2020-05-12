@@ -25,16 +25,17 @@ catch {
 
 $Count = 0
 $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties.Name -replace '-.+' | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
+    $Pool_Currency = $_.Name
     try {
-        $Request = Invoke-RestMethodAsync "https://minermore.com/api/wallet?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = (Invoke-RestMethodAsync "https://minermore.com/api/wallet?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)).$Pool_Currency
         $Count++
-        if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
+        if ($Request -eq $null) {
+            Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
             [PSCustomObject]@{
-                Caption     = "$($Name) ($($Request.currency))"
+                Caption     = "$($Name) ($($Pool_Currency))"
 				BaseName    = $Name
-                Currency    = $Request.currency
+                Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]0
                 Total       = [Decimal]$Request.balance
@@ -46,6 +47,6 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties.Name
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
+        Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
     }
 }
