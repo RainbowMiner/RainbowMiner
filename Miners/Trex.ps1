@@ -119,12 +119,12 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
     $Commands | ForEach-Object {
         $First = $True
-        $MinMemGB     = [int]$_.MinMemGB
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($Cuda -match "^10" -or (Get-NvidiaArchitecture $_.Model) -ne "Turing")}
-
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         
+        $MinMemGB     = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($Cuda -match "^10" -or (Get-NvidiaArchitecture $_.Model) -ne "Turing")}
+
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -ne "Tensority" -or (Compare-Object @($Miner_Device | Foreach-Object {Get-NvidiaArchitecture $_.Model} | Select-Object -Unique) @("Turing") | Measure-Object).Count -eq 0)) {
                 if ($First) {
