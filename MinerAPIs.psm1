@@ -1089,7 +1089,7 @@ class EnemyZ : Miner {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary?gpuinfo=1" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
@@ -1103,7 +1103,10 @@ class EnemyZ : Miner {
         $Accepted_Shares  = [Int64]$Data.accepted_count
         $Rejected_Shares  = [Int64]$Data.rejected_count
         $Difficulty_Value = [Double]$Data.pool_difficulty
-        $HashRate_Value   = [Double]$Data.hashrate
+        $HashRate_Value = [Double]($Data.gpus.hashrate | Measure-Object -Sum).Sum
+        if (-not $HashRate_Value) {
+            $HashRate_Value   = [Double]$Data.hashrate
+        }
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
