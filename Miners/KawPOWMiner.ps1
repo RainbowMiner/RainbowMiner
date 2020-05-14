@@ -10,22 +10,22 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "358{0:d2}"
 $ManualURI = "https://github.com/RavenCommunity/kawpowminer/releases"
 $DevFee = 0.0
-$Version = "1.2.2"
+$Version = "1.2.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-KawPOWMiner\kawpowminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.2-kawpowminer/kawpowminer-ubuntu18-1.2.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.3-kawpowminer/kawpowminer-ubuntu18-1.2.3.zip"
             Cuda = "10.2"
         }
     )
-    #https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.2-kawpowminer/kawpowminer-ubuntu16-1.2.2.zip
+    #https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.3-kawpowminer/kawpowminer-ubuntu16-1.2.3.zip
 } else {
     $Path = ".\Bin\GPU-KawPOWMiner\kawpowminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.2-kawpowminer/kawpowminer-windows-1.2.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.3-kawpowminer/kawpowminer-windows-1.2.3.zip"
             Cuda = "10.2"
         }
     )
