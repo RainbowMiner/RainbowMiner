@@ -102,7 +102,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and ($_.ExcludePoolName -eq $null -or $_.ExcludePoolName -inotcontains $Pools.$Algorithm_Norm.Name)) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")")) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

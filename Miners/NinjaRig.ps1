@@ -24,7 +24,7 @@ $Cuda = "10.1"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "chukwa"; MinMemGb = 1; NH = $true; ExtendInterval = 2} #Argon2/Chukwa
+    [PSCustomObject]@{MainAlgorithm = "chukwa"; MinMemGb = 1; ExtendInterval = 2} #Argon2/Chukwa
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -68,7 +68,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             }
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

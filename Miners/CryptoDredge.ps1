@@ -58,47 +58,47 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "aeternity";   NH = $false; MinMemGb = 5; Params = ""} #Aeternity / Cuckoocycle (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
-    #[PSCustomObject]@{MainAlgorithm = "allium";      NH = $true; MinMemGb = 1; Params = ""} #Allium (CD 0.16.0 faster)
-    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d-Dyn
-    [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d-Nim
-    [PSCustomObject]@{MainAlgorithm = "argon2d250";  NH = $true;  MinMemGb = 1; Params = ""} #Argon2d250
-    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; NH = $true;  MinMemGb = 3.3; Params = ""} #Argon2d4096
-    #[PSCustomObject]@{MainAlgorithm = "bcd";         NH = $true;  MinMemGb = 1; Params = ""} #BCD (trex faster)
-    [PSCustomObject]@{MainAlgorithm = "bitcore";     NH = $true;  MinMemGb = 1; Params = ""} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "chukwa";      NH = $true;  MinMemGb = 1.5; Params = ""} #Chukwa, new with v0.21.0
-    [PSCustomObject]@{MainAlgorithm = "chukwa-wrkz"; NH = $true;  MinMemGb = 1.5; Params = ""} #Chukwa-Wrkz, new with v0.21.0
-    [PSCustomObject]@{MainAlgorithm = "cnconceal";   NH = $true;  MinMemGb = 1.5; Params = ""} #CryptonighConceal, new with v0.21.0
-    [PSCustomObject]@{MainAlgorithm = "cnfast2";     NH = $true;  MinMemGb = 1.5; Params = ""} #CryptonightFast2 / Masari
-    [PSCustomObject]@{MainAlgorithm = "cngpu";       NH = $true;  MinMemGb = 3.3; Params = ""} #CryptonightGPU
-    [PSCustomObject]@{MainAlgorithm = "cnhaven";     NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonighthaven
-    [PSCustomObject]@{MainAlgorithm = "cnheavy";     NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonightheavy
-    [PSCustomObject]@{MainAlgorithm = "cnsaber";     NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonightheavytube
-    [PSCustomObject]@{MainAlgorithm = "cnturtle";    NH = $true;  MinMemGb = 3.3; Params = ""} #Cryptonightturtle
-    [PSCustomObject]@{MainAlgorithm = "cnupx2";      NH = $true;  MinMemGb = 1.5; Params = ""} #CryptoNightLiteUpx2, new with v0.23.0
-    [PSCustomObject]@{MainAlgorithm = "cnzls";       NH = $true;  MinMemGb = 3.3; Params = ""} #CryptonightZelerius, new with v0.23.0
-    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  NH = $true;  MinMemGb = 3.3; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
-    [PSCustomObject]@{MainAlgorithm = "hmq1725";     NH = $true;  MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
-    [PSCustomObject]@{MainAlgorithm = "lux";         NH = $true;  MinMemGb = 1; Params = ""; Algorithm = "phi2"} #Lux/PHI2
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2Re3
-    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban"; NH = $true;  MinMemGb = 1; Params = ""} #Lyra2vc0banHash
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";      NH = $true;  MinMemGb = 1; Params = ""} #Lyra2z
-    [PSCustomObject]@{MainAlgorithm = "lyra2zz";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2zz
-    [PSCustomObject]@{MainAlgorithm = "mtp";         NH = $true;  MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
-    [PSCustomObject]@{MainAlgorithm = "mtp-tcr";     NH = $true;  MinMemGb = 5; Params = ""; ExtendInterval = 2} #MTP-TCR
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt";   NH = $true;  MinMemGb = 1; Params = ""} #Neoscrypt
-    #[PSCustomObject]@{MainAlgorithm = "phi2";        NH = $true;  MinMemGb = 1; Params = ""} #PHI2 (CD 0.16.0 faster)
-    [PSCustomObject]@{MainAlgorithm = "pipe";        NH = $true;  MinMemGb = 1; Params = ""} #Pipe
-    [PSCustomObject]@{MainAlgorithm = "skunk";       NH = $true;  MinMemGb = 1; Params = ""} #Skunk
-    [PSCustomObject]@{MainAlgorithm = "tribus";      NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "veil";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
-    [PSCustomObject]@{MainAlgorithm = "x16r";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16rt";       NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
-    [PSCustomObject]@{MainAlgorithm = "x16rv2";      NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
-    [PSCustomObject]@{MainAlgorithm = "x16s";        NH = $true;  MinMemGb = 1; Params = ""} #X16s
-    [PSCustomObject]@{MainAlgorithm = "x17";         NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
-    [PSCustomObject]@{MainAlgorithm = "x21s";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
-    #[PSCustomObject]@{MainAlgorithm = "x22i";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i (Trex faster)
+    #[PSCustomObject]@{MainAlgorithm = "aeternity";   MinMemGb = 5; Params = ""; ExcludePoolName = @("Nicehash")} #Aeternity / Cuckoocycle (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
+    #[PSCustomObject]@{MainAlgorithm = "allium";      MinMemGb = 1; Params = ""} #Allium (CD 0.16.0 faster)
+    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; MinMemGb = 1; Params = ""} #Argon2d-Dyn
+    [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; MinMemGb = 1; Params = ""} #Argon2d-Nim
+    [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 1; Params = ""} #Argon2d250
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 3.3; Params = ""} #Argon2d4096
+    #[PSCustomObject]@{MainAlgorithm = "bcd";         MinMemGb = 1; Params = ""} #BCD (trex faster)
+    [PSCustomObject]@{MainAlgorithm = "bitcore";     MinMemGb = 1; Params = ""} #BitCore
+    [PSCustomObject]@{MainAlgorithm = "chukwa";      MinMemGb = 1.5; Params = ""} #Chukwa, new with v0.21.0
+    [PSCustomObject]@{MainAlgorithm = "chukwa-wrkz"; MinMemGb = 1.5; Params = ""} #Chukwa-Wrkz, new with v0.21.0
+    [PSCustomObject]@{MainAlgorithm = "cnconceal";   MinMemGb = 1.5; Params = ""} #CryptonighConceal, new with v0.21.0
+    [PSCustomObject]@{MainAlgorithm = "cnfast2";     MinMemGb = 1.5; Params = ""} #CryptonightFast2 / Masari
+    [PSCustomObject]@{MainAlgorithm = "cngpu";       MinMemGb = 3.3; Params = ""} #CryptonightGPU
+    [PSCustomObject]@{MainAlgorithm = "cnhaven";     MinMemGb = 3.3; Params = ""} #Cryptonighthaven
+    [PSCustomObject]@{MainAlgorithm = "cnheavy";     MinMemGb = 3.3; Params = ""} #Cryptonightheavy
+    [PSCustomObject]@{MainAlgorithm = "cnsaber";     MinMemGb = 3.3; Params = ""} #Cryptonightheavytube
+    [PSCustomObject]@{MainAlgorithm = "cnturtle";    MinMemGb = 3.3; Params = ""} #Cryptonightturtle
+    [PSCustomObject]@{MainAlgorithm = "cnupx2";      MinMemGb = 1.5; Params = ""} #CryptoNightLiteUpx2, new with v0.23.0
+    [PSCustomObject]@{MainAlgorithm = "cnzls";       MinMemGb = 3.3; Params = ""} #CryptonightZelerius, new with v0.23.0
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 3.3; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
+    [PSCustomObject]@{MainAlgorithm = "hmq1725";     MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
+    [PSCustomObject]@{MainAlgorithm = "lux";         MinMemGb = 1; Params = ""; Algorithm = "phi2"} #Lux/PHI2
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";     MinMemGb = 1; Params = ""} #Lyra2Re3
+    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban"; MinMemGb = 1; Params = ""} #Lyra2vc0banHash
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";      MinMemGb = 1; Params = ""} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz";     MinMemGb = 1; Params = ""} #Lyra2zz
+    [PSCustomObject]@{MainAlgorithm = "mtp";         MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp-tcr";     MinMemGb = 5; Params = ""; ExtendInterval = 2} #MTP-TCR
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt";   MinMemGb = 1; Params = ""} #Neoscrypt
+    #[PSCustomObject]@{MainAlgorithm = "phi2";        MinMemGb = 1; Params = ""} #PHI2 (CD 0.16.0 faster)
+    [PSCustomObject]@{MainAlgorithm = "pipe";        MinMemGb = 1; Params = ""} #Pipe
+    [PSCustomObject]@{MainAlgorithm = "skunk";       MinMemGb = 1; Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "tribus";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "veil";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
+    [PSCustomObject]@{MainAlgorithm = "x16r";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16rt";       MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
+    [PSCustomObject]@{MainAlgorithm = "x16rv2";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
+    [PSCustomObject]@{MainAlgorithm = "x16s";        MinMemGb = 1; Params = ""} #X16s
+    [PSCustomObject]@{MainAlgorithm = "x17";         MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
+    [PSCustomObject]@{MainAlgorithm = "x21s";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
+    #[PSCustomObject]@{MainAlgorithm = "x22i";        MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i (Trex faster)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -139,7 +139,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")")) {
                 if ($First) {
 		            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

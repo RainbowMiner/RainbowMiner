@@ -126,7 +126,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($Cuda -match "^10" -or (Get-NvidiaArchitecture $_.Model) -ne "Turing")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -ne "Tensority" -or (Compare-Object @($Miner_Device | Foreach-Object {Get-NvidiaArchitecture $_.Model} | Select-Object -Unique) @("Turing") | Measure-Object).Count -eq 0)) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")") -and ($Algorithm_Norm -ne "Tensority" -or (Compare-Object @($Miner_Device | Foreach-Object {Get-NvidiaArchitecture $_.Model} | Select-Object -Unique) @("Turing") | Measure-Object).Count -eq 0)) {
                 if ($First) {
                     $Miner_Port   = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name   = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

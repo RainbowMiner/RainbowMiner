@@ -23,14 +23,14 @@ $Version = "1.9.3"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "Cuckaroo29";              Params = ""; MinMemGb = 6;    Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
-    #[PSCustomObject]@{MainAlgorithm = "Cuckarood29";             Params = ""; MinMemGb = 6;    Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckarood29
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
-    [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 1.0} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "KawPow";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 3;  Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash2/PASCcoin, RHminerCpu is more than 350% faster
-    [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #RandomX
-    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ")} #UbqHash
+    #[PSCustomObject]@{MainAlgorithm = "Cuckaroo29";              Params = ""; MinMemGb = 6;    Vendor = @("AMD");          ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
+    #[PSCustomObject]@{MainAlgorithm = "Cuckarood29";             Params = ""; MinMemGb = 6;    Vendor = @("AMD");          ExtendInterval = 2; DevFee = 2.0} #Cuckarood29
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
+    [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = @("F2Pool")} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "KawPow";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 2.0} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 5.0} #RandomHash2/PASCcoin, RHminerCpu is more than 350% faster
+    [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0} #RandomX
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = @("F2Pool")} #UbqHash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -70,7 +70,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (($Algorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and (Test-VRAM $_ $MinMemGb))}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($Algorithm_Norm -ne "Ethash" -or $Pools.$Algorithm_Norm.Name -notmatch "F2Pool") -and (-not $_.Coins -or ($Pools.$Algorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol))) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")") -and (-not $_.Coins -or ($Pools.$Algorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol))) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
