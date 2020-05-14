@@ -1665,7 +1665,7 @@ function Invoke-Core {
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {
             $BalancesData_DateTime = Get-Date
-            $BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.Name -ne "Wallet"} | Foreach-Object {
+            $BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.Name -notmatch "^Wallet"} | Foreach-Object {
                 $Balance = $_
                 $Earnings = Set-Balance $Balance -Updated $BalancesData_DateTime
                 $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "^Earnings" -or $_ -eq "Started"} | Foreach-Object {
@@ -1674,8 +1674,8 @@ function Invoke-Core {
             }
             if ($Earnings -ne $null) {Remove-Variable "Earnings"}
             $API.Balances = ConvertTo-Json $BalancesData -Depth 10
-            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.Name -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.Name -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.Name -notmatch "^Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.Name -notmatch "^Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
             if ($RefreshBalances) {$Session.ReportTotals = $true}
         }

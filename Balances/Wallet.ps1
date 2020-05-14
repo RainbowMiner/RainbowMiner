@@ -9,12 +9,14 @@ if ($Config.Wallet -notmatch "^[13]" -or $Config.Currency -notcontains "BTC") {
     return
 }
 
+$Wallets = @($Config.Wallet) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.BTC} | Foreach-Object {$_.BTC}) | Select-Object -Unique | Sort-Object
+
 $Request = [PSCustomObject]@{}
 
 $Success = $true
 try {
-    $Request = Invoke-RestMethodAsync "https://blockchain.info/balance?active=$($Config.Wallet)" -cycletime ($Config.BalanceUpdateMinutes*60)
-    if ($Request."$($Config.Wallet)" -eq $null){$Success = $false}
+    $Request = Invoke-RestMethodAsync "https://blockchain.info/multiaddr?active=$($Wallets -join "|")" -cycletime ($Config.BalanceUpdateMinutes*60)
+    if ($Request.addresses -eq $null) {$Success = $false}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -26,14 +28,17 @@ if (-not $Success) {
     return
 }
 
-[PSCustomObject]@{
-        Caption     = "$($Name) (BTC)"
-		BaseName    = $Name
-        Currency    = "BTC"
-        Balance     = [Decimal]$Request."$($Config.Wallet)".final_balance / 1e8
-        Pending     = 0
-        Total       = [Decimal]$Request."$($Config.Wallet)".final_balance / 1e8
-        Earned      = [Decimal]$Request."$($Config.Wallet)".total_received / 1e8
-        Payouts     = @()
-        LastUpdated = (Get-Date).ToUniversalTime()
+$Request.addresses | Sort-Object {$_.address} | Foreach-Object {
+    [PSCustomObject]@{
+            Caption     = "$($Name) ($($_.address))"
+		    BaseName    = $Name
+            Info        = " $($_.address.Substring(0,3))..$($_.address.Substring($_.address.Length-4,3))"
+            Currency    = "BTC"
+            Balance     = [Decimal]$_.final_balance / 1e8
+            Pending     = 0
+            Total       = [Decimal]$_.final_balance / 1e8
+            Earned      = [Decimal]$_.total_received / 1e8
+            Payouts     = @()
+            LastUpdated = (Get-Date).ToUniversalTime()
+    }
 }
