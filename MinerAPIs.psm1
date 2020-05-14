@@ -1104,8 +1104,9 @@ class EnemyZ : Miner {
         $Rejected_Shares  = [Int64]$Data.rejected_count
         $Difficulty_Value = [Double]$Data.pool_difficulty
         $HashRate_Value   = [Double]$Data.hashrate
-        if (-not $HashRate_Value) {
-            $HashRate_Value = [Double]($Data.gpus.hashrate | Measure-Object -Sum).Sum
+        $HashRateGPUs_Value = [Double]($Data.gpus.hashrate | Measure-Object -Sum).Sum
+        if ($HashRate_Value -le $HashRateGPUs_Value*0.6) {
+            $HashRate_Value = $HashRateGPUs_Value
         }
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
