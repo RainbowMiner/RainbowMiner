@@ -9,13 +9,13 @@ if ($Config.Wallet -notmatch "^[13]" -or $Config.Currency -notcontains "BTC") {
     return
 }
 
-$Wallets = @($Config.Wallet) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.BTC} | Foreach-Object {$_.BTC}) | Select-Object -Unique | Sort-Object
+$Wallets = @($Config.Wallet) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.BTC} | Foreach-Object {$_.Wallets.BTC}) | Select-Object -Unique | Sort-Object
 
 $Request = [PSCustomObject]@{}
 
 $Success = $true
 try {
-    $Request = Invoke-RestMethodAsync "https://blockchain.info/multiaddr?active=$($Wallets -join "|")" -cycletime ($Config.BalanceUpdateMinutes*60)
+    $Request = Invoke-RestMethodAsync "https://blockchain.info/multiaddr?active=$($Wallets -join "|")&n=0" -cycletime ($Config.BalanceUpdateMinutes*60)
     if ($Request.addresses -eq $null) {$Success = $false}
 }
 catch {
@@ -32,7 +32,7 @@ $Request.addresses | Sort-Object {$_.address} | Foreach-Object {
     [PSCustomObject]@{
             Caption     = "$($Name) ($($_.address))"
 		    BaseName    = $Name
-            Info        = " $($_.address.Substring(0,3))..$($_.address.Substring($_.address.Length-4,3))"
+            Info        = " $($_.address.Substring(0,3))..$($_.address.Substring($_.address.Length-3,3))"
             Currency    = "BTC"
             Balance     = [Decimal]$_.final_balance / 1e8
             Pending     = 0
