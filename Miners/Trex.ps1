@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb (new with 0.12.0)
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
     [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
-    #[PSCustomObject]@{MainAlgorithm = "kawpow"; Params = ""; ExtendInterval = 2} #KawPOW (new with v0.15.2)
+    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = ""; ExtendInterval = 2} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP-TCR (new with v0.15.2)
