@@ -74,7 +74,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($Algorithm_Norm_0 -ne "Ethash" -or $Pools.$Algorithm_Norm.Name -notmatch "MiningRigRentals") -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
+			if ($Pools.$Algorithm_Norm.Host -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($Algorithm_Norm_0 -ne "Ethash" -or $Pools.$Algorithm_Norm.Name -notmatch "MiningRigRentals") -and ($Algorithm_Norm_0 -ne "KawPow" -or $Pools.$Algorithm_Norm.Name -notmatch "MiningPoolHub") -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
