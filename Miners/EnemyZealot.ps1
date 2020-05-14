@@ -63,7 +63,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"; NH = $true} # New in 1.11
     [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5; HashrateDuration = "Day"; NH = $true} #HEX/XDNA, new in 1.15a
     #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"; NH = $true} #HSR
-    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; NH = $true} #KawPOW/RVN, new in 2.5
+    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; NH = $false} #KawPOW/RVN, new in 2.5
     #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2; NH = $true} #PHI
     #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"; NH = $true} #PHI2, new in 1.12
     #[PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"; NH = $true} #Polytimos
