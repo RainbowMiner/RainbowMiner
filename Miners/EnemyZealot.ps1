@@ -10,25 +10,25 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/z-enemy/z-enemy/releases"
 $Port = "302{0:d2}"
 $DevFee = 1.0
-$Version = "2.6"
+$Version = "2.6.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-cuda101-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda110-libcurl4.tar.gz"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-cuda100-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda100-libcurl4.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-cuda92-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda92-libcurl4.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-cuda91.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda91.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -36,19 +36,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-win-cuda10.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda10.1.zip"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-win-cuda10.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda10.0.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-win-cuda9.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-zenemy/z-enemy-2.6-win-cuda9.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda9.1.zip"
             Cuda = "9.1"
         }
     )
@@ -57,11 +57,11 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-N 1"; NH = $true} #AeriumX, new in 1.11
+    [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-N 1"; NH = $true} #AeriumX, new in 1.11
     #[PSCustomObject]@{MainAlgorithm = "bcd"; Params = "-N 1"; NH = $true} #Bcd, new in 1.20
     #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"; NH = $true} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"; NH = $true} # New in 1.11
-    #[PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5; HashrateDuration = "Day"; NH = $true} #HEX/XDNA, new in 1.15a
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5; HashrateDuration = "Day"; NH = $true} #HEX/XDNA, new in 1.15a
     #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"; NH = $true} #HSR
     [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; NH = $true} #KawPOW/RVN, new in 2.5
     #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2; NH = $true} #PHI
@@ -72,10 +72,10 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"; NH = $true} #Timetravel8
     #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"; NH = $true} #Tribus, new in 1.10
     #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; NH = $true} #X16R
-    #[PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; NH = $true} #X16Rv2
+    [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; NH = $true} #X16Rv2
     #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"; FaultTolerance = 0.5; NH = $true} #X16S (T-Rex faster)
     #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"; NH = $true} #X17 (T-Rex has better numbers at the pool)
-    #[PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"; NH = $true} #Xevan, new in 1.09a
+    [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"; NH = $true} #Xevan, new in 1.09a
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
