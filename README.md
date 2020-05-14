@@ -673,6 +673,7 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **Currency** = currencies, you want to be shown [default=BTC,USD,EUR]
 - **Region** = your region, [default=US]
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
+- **UIsorting** = set to "profit" in order to force UI sorting by profit, set to "biased" for internal biased profits [default=biased]
 - **APIport** = enter a free web-interface port localhost:<port> [default=4000]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
 - **EnableAutoAlgorithmAdd** = set to 1 if Rainbowminer should add all newly added algorithms to your config.txt, during (automatic) update
