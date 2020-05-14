@@ -22,15 +22,15 @@ $Version = "5.6.1.3-beta6a"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "allium";  Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "argon2d"; Params = "--gpu-threads 2 --worksize 64"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "--gpu-threads 1 --worksize 256 -I 24"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";  Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2zz"; Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "mtp";     Params = "-I 20"}
-    [PSCustomObject]@{MainAlgorithm = "phi2";    Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "x22i";    Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x25x";    Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "allium";  Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "argon2d"; Params = "--gpu-threads 2 --worksize 64"; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "--gpu-threads 1 --worksize 256 -I 24"; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";  Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz"; Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "mtp";     Params = "-I 20"; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "phi2";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "x22i";    Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = @("Nicehash")}
+    [PSCustomObject]@{MainAlgorithm = "x25x";    Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = @("Nicehash")}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -59,7 +59,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Pools.$Algorithm_Norm.Name -notmatch "Nicehash" -and $Miner_Device) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")")) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
