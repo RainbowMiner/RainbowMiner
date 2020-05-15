@@ -46,13 +46,13 @@ $Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
     $Pool_Hosts     = $_.host_list.split(";")
     $Pool_Port      = $_.port
 
-    $Pool_Coin      = Get-Coin $_.symbol
+    $Pool_Coin      = Get-Coin "$($_.symbol)$(if ($_.coin_name -match '-') {"-$($_.algo)"})"
     if ($Pool_Coin) {
         $Pool_Algorithm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
     } else {
         $Pool_Algorithm = $_.algo
-        $Pool_CoinName  = $_.coin_name
+        $Pool_CoinName  = (Get-Culture).TextInfo.ToTitleCase($_.coin_name -replace "-.+$")
     }
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
