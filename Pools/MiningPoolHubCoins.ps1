@@ -45,23 +45,33 @@ $Pool_Request.return | ForEach-Object {
     $Pool_Host      = $_.host
     $Pool_Hosts     = $_.host_list.split(";")
     $Pool_Port      = $_.port
-    $Pool_Algorithm = $_.algo
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin   = $_.coin_name
-    $Pool_Symbol = $_.symbol
-    if (-not $Pool_Symbol) {
-        $Pool_Symbol = Get-CoinSymbol $_.coin_name
-        if (-not $Pool_Symbol -and $_.coin_name -match '-') {
-            $Pool_Symbol = Get-CoinSymbol ($_.coin_name -split '-' | Select-Object -Index 0)
+
+    $Pool_Coin      = Get-Coin $_.symbol
+    if ($Pool_Coin) {
+        $Pool_Algorithm = $Pool_Coin.algo
+        $Pool_CoinName  = $Pool_Coin.name
+        $Pool_CoinSymbol= $Pool_Coin.symbol
+    } else {
+        $Pool_Algorithm = $_.algo
+        $Pool_CoinName  = $_.coin_name
+        $Pool_CoinSymbol= $_.symbol
+
+        if (-not $Pool_CoinSymbol) {
+            $Pool_CoinSymbol = Get-CoinSymbol $_.coin_name
+            if (-not $Pool_CoinSymbol -and $_.coin_name -match '-') {
+                $Pool_CoinSymbol = Get-CoinSymbol ($_.coin_name -split '-' | Select-Object -Index 0)
+            }
         }
     }
+
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
 
     $Divisor = 1e9
 
-    if ($Pool_Symbol -eq "ZCL") {$Divisor *= 12.5/0.78} #temp fix "tripple halving of ZCL"
+    if ($Pool_CoinSymbol -eq "ZCL") {$Divisor *= 12.5/0.78} #temp fix "tripple halving of ZCL"
 
     $Pool_TSL = if ($_.time_since_last_block -eq "-") {$null} else {[int64]$_.time_since_last_block}
 
@@ -75,8 +85,8 @@ $Pool_Request.return | ForEach-Object {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
 				Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_Symbol
+                CoinName      = $Pool_CoinName
+                CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
@@ -109,8 +119,8 @@ $Pool_Request.return | ForEach-Object {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
 					Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin
-                    CoinSymbol    = $Pool_Symbol
+                    CoinName      = $Pool_CoinName
+                    CoinSymbol    = $Pool_CoinSymbol
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
