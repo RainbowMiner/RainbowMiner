@@ -76,10 +76,10 @@ if (-not $Uri) {return}
 if ($IsLinux) {$Path += $Cuda -replace "\."}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
         $First = $true
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -118,5 +118,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    }
+    })
 }

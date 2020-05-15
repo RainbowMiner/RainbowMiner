@@ -80,15 +80,15 @@ if ($InfoOnly) {
 
 $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU.Where({$_.Model -eq $Miner_Model})
 
     $Miner_Threads = @()
     if ($Session.Config.CPUMiningAffinity -ne '') {$Miner_Threads = ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity}
 
     $DevFee = if($GLobal:GlobalCPUInfo.Features.aes -and $Global:GlobalCPUInfo.Features.'64bit'){1.5}else{3.0}
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $Miner_Threads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity -ne '') {$Session.Config.CPUMiningAffinity}
@@ -133,5 +133,5 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    }
+    })
 }

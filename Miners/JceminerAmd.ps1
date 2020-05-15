@@ -97,12 +97,12 @@ $Model_Defaults = @(
 )
 
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
     $DevFee = 0.9
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
         $First = $true
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         $MinMemGb = $_.MinMemGb
@@ -153,5 +153,5 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    }
+    })
 }

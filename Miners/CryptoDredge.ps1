@@ -127,10 +127,10 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
 if (-not $Uri) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
-    $Miner_Model = $_.Model    
+    $Miner_Model = $_.Model
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
         $First = $true
         $MinMemGb = $_.MinMemGb
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
@@ -170,5 +170,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    }
+    })
 }

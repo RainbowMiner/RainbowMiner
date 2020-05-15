@@ -26,7 +26,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; Params = "-A BLAKE2S%CUDA% -coin KDA";     ExtendInterval = 2; Coins = @("KDA"); ExcludePoolName = @("Nicehash")} #Kadena
     #[PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; Params = "-A EAGLESONG%CUDA% -coin CKB";   ExtendInterval = 2} #Eaglesong
     [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   Params = "-A ETHASH%CUDA%"; ExcludePoolName = @("MiningRigRentals")} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2; ExcludePoolName = @("MiningPoolHub")} #KAWPOW (RVN), doesn't work on testnet
+    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2; ExcludePoolName = @("MiningPoolHub")} #KAWPOW (RVN)
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2; ExcludePoolName = @("Nicehash")} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   Params = "-A MTP%CUDA% -coin TCR";         ExtendInterval = 2} #MTP-TCR
@@ -62,10 +62,10 @@ if ($IsLinux) {
 }
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-    $Commands | Where-Object {$_.Cuda -eq $null -or (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $_.Cuda -Warning "$($Name)-$($_.MainAlgorithm)")} | ForEach-Object {
+    $Commands.Where({$_.Cuda -eq $null -or (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $_.Cuda -Warning "$($Name)-$($_.MainAlgorithm)")}).ForEach({
         $First = $True
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -112,5 +112,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    }
+    })
 }
