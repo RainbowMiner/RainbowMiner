@@ -27,12 +27,27 @@ if (($Request.getuserallbalances.data | Get-Member -MemberType NoteProperty -Err
     return
 }
 
-$Request.getuserallbalances.data | Foreach-Object {
+$Pool_Request = [PSCustomObject]@{}
 
-    $Currency = Get-CoinSymbol $_.coin
-    if (-not $Currency -and $_.coin -match '-') {$Currency = Get-CoinSymbol ($_.coin -replace '\-.*$')}
+try {
+    $Pool_Request = Invoke-RestMethodAsync "https://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&{timestamp}" -tag $Name -cycletime 120
+}
+catch {
+    if ($Error.Count){$Error.RemoveAt(0)}
+    Write-Log -Level Warn "Pool API ($Name) has failed. "
+    return
+}
+
+if (($Pool_Request.return | Measure-Object).Count -le 1) {
+    Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+    return
+}
+
+$Request.getuserallbalances.data | Where-Object {$_.coin} | Foreach-Object {
+
+    $Pool_CoinName = $_.coin
+    $Currency = ($Pool_Request.return | Where-Object {$_.coin_name -eq $Pool_CoinName}).symbol
     if (-not $Currency) {
-        $Currency = $_.coin
         Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "
     }
 
