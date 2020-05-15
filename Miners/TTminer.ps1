@@ -10,15 +10,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-ttminer/TT-Miner-5.0.1.tar.xz"
+    $Version = "5.0.1"
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-ttminer/TT-Miner-5.0.1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.2-ttminer/TT-Miner-5.0.2.zip"
+    $Version = "5.0.2"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.2"
-$Version = "5.0.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
