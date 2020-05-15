@@ -41,7 +41,7 @@ $Pool_Fee = 0.9 + 0.2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
-$Pool_Request.return | ForEach-Object {
+$Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
     $Pool_Host      = $_.host
     $Pool_Hosts     = $_.host_list.split(";")
     $Pool_Port      = $_.port
@@ -50,18 +50,9 @@ $Pool_Request.return | ForEach-Object {
     if ($Pool_Coin) {
         $Pool_Algorithm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
-        $Pool_CoinSymbol= $Pool_Coin.symbol
     } else {
         $Pool_Algorithm = $_.algo
         $Pool_CoinName  = $_.coin_name
-        $Pool_CoinSymbol= $_.symbol
-
-        if (-not $Pool_CoinSymbol) {
-            $Pool_CoinSymbol = Get-CoinSymbol $_.coin_name
-            if (-not $Pool_CoinSymbol -and $_.coin_name -match '-') {
-                $Pool_CoinSymbol = Get-CoinSymbol ($_.coin_name -split '-' | Select-Object -Index 0)
-            }
-        }
     }
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
@@ -76,7 +67,7 @@ $Pool_Request.return | ForEach-Object {
     $Pool_TSL = if ($_.time_since_last_block -eq "-") {$null} else {[int64]$_.time_since_last_block}
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate (ConvertFrom-Hash $_.pool_hash) -FaultDetection $true -FaultTolerance 5 -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinName)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate (ConvertFrom-Hash $_.pool_hash) -FaultDetection $true -FaultTolerance 5 -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -86,7 +77,7 @@ $Pool_Request.return | ForEach-Object {
                 Algorithm     = $Pool_Algorithm_Norm
 				Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $Pool_CoinName
-                CoinSymbol    = $Pool_CoinSymbol
+                CoinSymbol    = $_.symbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
@@ -120,7 +111,7 @@ $Pool_Request.return | ForEach-Object {
                     Algorithm     = $Pool_Algorithm_Norm
 					Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = $Pool_CoinName
-                    CoinSymbol    = $Pool_CoinSymbol
+                    CoinSymbol    = $_.symbol
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
