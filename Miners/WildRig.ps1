@@ -52,7 +52,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowEthercore
     [PSCustomObject]@{MainAlgorithm = "progpow-sero"; Params = ""; ExtendInterval = 2; Version = "0.23.0"} #ProgPowSero
-    [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2; Version = "0.21.0"; ExcludePoolName = @("Fairpool")} #ProgPowZ
+    [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2; Version = "0.21.0"; ExcludePoolName = "^Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256csm";  Params = ""; Version = "0.20.6"} #SHA256csm
@@ -112,7 +112,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $Params = "$(if ($Pools.$Algorithm_Norm_0.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm_0.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm_0.CoinSymbol.ToLower()).bin "})$($_.Params)"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")") -and ($Algorithm -notmatch "^blake2b" -or ($Algorithm -eq "blake2b-btcc" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "GLT") -or ($Algorithm -eq "blake2b-glt" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "GLT"))) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and ($Algorithm -notmatch "^blake2b" -or ($Algorithm -eq "blake2b-btcc" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "GLT") -or ($Algorithm -eq "blake2b-glt" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "GLT"))) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

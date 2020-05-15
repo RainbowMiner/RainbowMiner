@@ -23,17 +23,17 @@ $Version = "5.0.1"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; Params = "-A BLAKE2S%CUDA% -coin KDA";     ExtendInterval = 2; Coins = @("KDA"); ExcludePoolName = @("Nicehash")} #Kadena
+    [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; Params = "-A BLAKE2S%CUDA% -coin KDA";     ExtendInterval = 2; Coins = @("KDA"); ExcludePoolName = "^Nicehash"} #Kadena
     #[PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; Params = "-A EAGLESONG%CUDA% -coin CKB";   ExtendInterval = 2} #Eaglesong
-    [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   Params = "-A ETHASH%CUDA%"; ExcludePoolName = @("MiningRigRentals")} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2; ExcludePoolName = @("MiningPoolHub")} #KAWPOW (RVN)
-    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2; ExcludePoolName = @("Nicehash")} #LYRA2V3
+    [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   Params = "-A ETHASH%CUDA%"; ExcludePoolName = "^MiningRigRentals"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2; ExcludePoolName = "^MiningPoolHub"} #KAWPOW (RVN)
+    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   Params = "-A MTP%CUDA% -coin TCR";         ExtendInterval = 2} #MTP-TCR
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin EPIC";    ExtendInterval = 2; Coins = @("EPIC"); ExcludePoolName = @("Nicehash")} #ProgPoW (only EPIC left)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";    ExtendInterval = 2; ExcludePoolName = @("Nicehash")} #ProgPoWSero (SERO)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3;   Params = "-A PROGPOWZ%CUDA%";              ExtendInterval = 2; ExcludePoolName = @("Nicehash")} #ProgPoWZ (ZANO)
-    [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 2.4; Params = "-A UBQHASH%CUDA%";               ExtendInterval = 2; ExcludePoolName = @("Nicehash")} #Ubqhash 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin EPIC";    ExtendInterval = 2; Coins = @("EPIC"); ExcludePoolName = "^Nicehash"} #ProgPoW (only EPIC left)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";    ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (SERO)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3;   Params = "-A PROGPOWZ%CUDA%";              ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWZ (ZANO)
+    [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 2.4; Params = "-A UBQHASH%CUDA%";               ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #Ubqhash 
 )
 
 $CoinSymbols = @("EPIC","SERO","ZANO","ZCOIN","ETC","ETH","CLO","PIRL","MUSIC","EXP","ETP","CKB","KDA","VTC","UBQ","ERE","HANA","TCR","RVN","RVNt","VEIL")
@@ -74,7 +74,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")") -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
+			if ($Pools.$Algorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

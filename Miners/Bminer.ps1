@@ -23,10 +23,10 @@ $Cuda = "9.2"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true; ExcludePoolName = @("Nicehash")} #" -nofee" #Aeternity
-    #[PSCustomObject]@{MainAlgorithm = "beamhash2";    SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = @("Nicehash")} #" -nofee" #BEAM
+    #[PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true; ExcludePoolName = "^Nicehash"} #" -nofee" #Aeternity
+    #[PSCustomObject]@{MainAlgorithm = "beamhash2";    SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #" -nofee" #BEAM
     #[PSCustomObject]@{MainAlgorithm = "bfc";          SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #BFC
-    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29m";  SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; ExcludePoolName = @("EthashPool")} #" -nofee" #Cuckaroom29/GRIN
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29m";  SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; ExcludePoolName = "^EthashPool"} #" -nofee" #Cuckaroom29/GRIN
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo31";   SecondaryAlgorithm = ""; MinMemGb = 8; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo31
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo32";   SecondaryAlgorithm = ""; MinMemGb = 8; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo32
     #[PSCustomObject]@{MainAlgorithm = "equihash1445"; SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
@@ -34,11 +34,11 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "qitmeer";      SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA")} #" -nofee" #QitMeer
     #[PSCustomObject]@{MainAlgorithm = "raven"; SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #KawPOW (RVN)
     #[PSCustomObject]@{MainAlgorithm = "sero"; SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #ProgPOW (SERO)
-    #[PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; ExcludePoolName = @("Nicehash")} #" -nofee" #Bytom
+    #[PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #" -nofee" #Bytom
     ##[PSCustomObject]@{MainAlgorithm = "zhash";        SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Zhash
-    ##[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "eaglesong"; MinMemGb = 3; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2; ExcludePoolName = @("MiningRigRentals")} #Ethash + Eaglesong
-    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "tensority"; MinMemGb = 3; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2; ExcludePoolName = @("MiningRigRentals","Nicehash")} #Ethash + BTM
-    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "handshake"; MinMemGb = 3; Params = ""; DevFee = 1.3; Vendor = @("AMD"); ExtendInterval = 2; ExcludePoolName = @("MiningRigRentals","Nicehash")} #Ethash + HNS
+    ##[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "eaglesong"; MinMemGb = 3; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^MiningRigRentals"} #Ethash + Eaglesong
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "tensority"; MinMemGb = 3; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^(MiningRigRentals|Nicehash)"} #Ethash + BTM
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "handshake"; MinMemGb = 3; Params = ""; DevFee = 1.3; Vendor = @("AMD"); ExtendInterval = 2; ExcludePoolName = "^(MiningRigRentals|Nicehash)"} #Ethash + HNS
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -74,7 +74,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
-				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")")) {
+				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 			            if ($SecondAlgorithm -ne '') {

@@ -58,7 +58,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "aeternity";   MinMemGb = 5; Params = ""; ExcludePoolName = @("Nicehash")} #Aeternity / Cuckoocycle (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
+    #[PSCustomObject]@{MainAlgorithm = "aeternity";   MinMemGb = 5; Params = ""; ExcludePoolName = "^Nicehash"} #Aeternity / Cuckoocycle (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
     #[PSCustomObject]@{MainAlgorithm = "allium";      MinMemGb = 1; Params = ""} #Allium (CD 0.16.0 faster)
     [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; MinMemGb = 1; Params = ""} #Argon2d-Dyn
     [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; MinMemGb = 1; Params = ""} #Argon2d-Nim
@@ -139,7 +139,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                 if ($First) {
 		            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

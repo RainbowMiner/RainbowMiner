@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "keccak"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "mtp"           ; Params = ""; Fee = 0.85; MinMemGb = 6; Vendor = @("AMD")} #mtp
     [PSCustomObject]@{MainAlgorithm = "rainforestv2"  ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #rainforestv2
-    [PSCustomObject]@{MainAlgorithm = "tellor"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName = @("Hashpool")} #Tellor
+    [PSCustomObject]@{MainAlgorithm = "tellor"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName = "^Hashpool"} #Tellor
     [PSCustomObject]@{MainAlgorithm = "yescrypt"      ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #yescrypt
 )
 
@@ -102,7 +102,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch "^$($_.ExcludePoolName -join "|")")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
