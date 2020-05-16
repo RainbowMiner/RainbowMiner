@@ -584,6 +584,9 @@ function Get-Balance {
     }
 
     $Balances = $Global:CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json -ErrorAction Ignore
+    if (-not $Session.Config.ShowWalletBalances) {
+        $Balances = $Balances | Where-Object {$_.BaseName -ne "Wallet"}
+    }
 
     if (-not $Balances) {return}
 
