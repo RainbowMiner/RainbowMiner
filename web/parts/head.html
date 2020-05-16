@@ -22,6 +22,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.15.5/extensions/export/bootstrap-table-export.min.js" integrity="sha384-tEVX4XUbfV4bhT6126PT01Ek133f+d5pEPuMKZKaTKq3hKPxgvky10pBgoFYApOe" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.2/handlebars.min.js" integrity="sha384-r11LwXDT+FAqmjJLLg2EjmzYbSlNCeRywaNcD0DXcBVzhR+7ieOvEc3SDpcujOJu" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" integrity="sha384-QzN1ywg2QLsf72ZkgRHgjkB/cfI4Dqjg6RJYQUqH6Wm8qp/MvmEYn+2NBsLnhLkr" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha384-8CYhPwYlLELodlcQV713V9ZikA3DlCVaXFDpjHfP8Z36gpddf/Vrt47XmKDsCttu" crossorigin="anonymous"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.10.2/js/all.js" integrity="sha384-QMu+Y+eu45Nfr9fmFOlw8EqjiUreChmoQ7k7C1pFNO8hEbGv9yzsszTmz+RzwyCh" crossorigin="anonymous"></script>
     <!-- script src="/js/bootstrap-table-contextmenu.js"></script -->
     <title>RainbowMiner Local Dashboard</title>
@@ -29,13 +30,13 @@
     <script>
         globalconfig = null, nDecimalSeparator = ".", tDecimalSeparator = ",";
         (function conf() {
-            $.getJSON("/info", function (data) {
-                if (!data.Version) { setTimeout(conf, 1000); return }
-                nDecimalSeparator = data.DecSep;
-                tDecimalSeparator = nDecimalSeparator == "." ? "," : "."
-                globalconfig = data
-                setTimeout(conf, 300000);
-            })
+        $.getJSON("/info", function (data) {
+        if (!data.Version) { setTimeout(conf, 1000); return }
+        nDecimalSeparator = data.DecSep;
+        tDecimalSeparator = nDecimalSeparator == "." ? "," : "."
+        globalconfig = data
+        setTimeout(conf, 300000);
+        })
         })();
     </script>
 </head>
@@ -76,6 +77,11 @@
                     <li class="nav-item">
                         <a id="navrates" class="nav-link" href="rates.html">
                             <i class="fas fa-dollar-sign"></i>Rates
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navdonate" class="nav-link" href="donate.html">
+                            <i class="fas fa-donate"></i>Support RBM
                         </a>
                     </li>
                 </ul>
