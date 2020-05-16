@@ -92,7 +92,9 @@
 </div>
 
 <h3 class="mt-4 h-selector" id="h-balanceboxes">Balances <a href="#" id="updatebalance" class="btn btn-primary">Update</a></h3>
-<div id="balanceboxes" class="card-deck"></div>
+<div id="balanceboxes--pools" class="card-deck"></div>
+<div id="balanceboxes--wallets" class="card-deck"></div>
+<div id="balanceboxes--total" class="card-deck"></div>
 
 <!-- End of page scripts -->
 <script id="poolbalance_template" type="text/x-handlebars-template">
@@ -164,9 +166,11 @@
 
     (function updatePoolBalances() {
     $.ajax({
-    url: '/balances?add_total=1&add_btc=1', success: function (result) {
+    url: '/balances?add_total=1&add_wallets=1&add_btc=1', success: function (result) {
     //console.log(result);
-    $("#balanceboxes").empty();
+    $("#balanceboxes--pools").empty();
+    $("#balanceboxes--wallets").empty();
+    $("#balanceboxes--total").empty();
     var boxes = [], boxes_ix = {}, total_earnings = 0;
     $.each(result, function (index, item) {
     var properties = Object.keys(item);
@@ -175,18 +179,22 @@
     var maincur = [];
 
     if (boxes_ix[item.Name] === undefined) {
-    boxes_ix[item.Name] = boxes.length;
-    if (item.Name == "*Total*") {
-    boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: {}, total: true, dark: theme=="dark" });
-    } else {
-    boxes.push({ name: item.Name, balances: {}, digits: {}, earnings: 0, dark: theme == "dark" });
-    }
+        boxes_ix[item.Name] = boxes.length;
+        if (item.BaseName == "Total") {
+            boxes.push({ basename: item.BaseName, name: "Total Balance", balances: {}, digits: {}, total: true, dark: theme=="dark" });
+        } else if (item.BaseName == "TotalPools") {
+            boxes.push({ basename: item.BaseName, name: "Total Balance From Pools", balances: {}, digits: {}, total: true, dark: theme=="dark" });
+        } else if (item.BaseName == "TotalWallets") {
+            boxes.push({ basename: item.BaseName, name: "Total Balance From Wallets", balances: {}, digits: {}, total: true, dark: theme=="dark" });
+        } else {
+            boxes.push({ basename: item.BaseName, name: item.Name, balances: {}, digits: {}, earnings: 0, dark: theme == "dark" });
+        }
     }
 
-    if (item.Name != "*Total*") {
-    var avg_earnings = parseFloat(item.Earnings_Avg_BTC);
-    total_earnings += avg_earnings;
-    boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
+    if (item.BaseName != "Wallet" && item.Name.substr(0,1) != "*") {
+        var avg_earnings = parseFloat(item.Earnings_Avg_BTC);
+        total_earnings += avg_earnings;
+        boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
     }
 
     $.each(currencies, function (cindex, currency) {
@@ -220,7 +228,11 @@
     $.each(boxes, function (index, item) {
     $.each(item["balances"], function (bindex, bitem) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); });
     item.earnings = formatPricesBTC(item.total ? total_earnings : item.earnings).replace('&nbsp;', ' ');
-    $("#balanceboxes").append(template(item));
+    var add_to_id = ""
+    if (item["basename"] == "Wallet" || item["basename"] == "TotalWallets") {add_to_id = "#balanceboxes--wallets"}
+    else if (item["basename"] == "Total") {add_to_id = "#balanceboxes--total"}
+    else {add_to_id = "#balanceboxes--pools"}
+    $(add_to_id).append(template(item));
     });
     window.setTimeout(updatePoolBalances, 60000);
     }

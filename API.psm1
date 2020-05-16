@@ -451,9 +451,14 @@
                 "/balances" {
                     if ($API.Balances) {$Balances = ConvertFrom-Json $API.Balances}
                     if ($API.Rates)    {$LocalRates = ConvertFrom-Json $API.Rates}
-                    $Balances = $Balances | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
+                    $Balances = $Balances | Where-Object {($Parameters.add_total -or $_.Name -notmatch "^\*") -and ($Parameters.add_wallets -or $_.BaseName -ne "Wallet")}
+
+                    if ($Session.Config.ShowWalletBalances -and $Parameters.add_total -and -not $Parameters.add_wallets) {
+                        $Balances = $Balances | Where-Object {$_.BaseName -eq "TotalPools" -or $_.Name -notmatch "^\*"}
+                    }
+
                     if ($Parameters.consolidate) {
-                        $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
+                        $Balances = $Balances | Where-Object {$_.Name -notmatch "^\*"} | Group-Object -Property Name | Foreach-Object {
                             $BalanceGroup = $_.Group | Where-Object {$LocalRates."$($_.Currency)"}
                             [PSCustomObject]@{
                                 Name = $_.Name
@@ -516,7 +521,7 @@
                             }
                         }
                         if ($Parameters.add_total) {
-                            $Balances | Where-Object {$_.Name -ne "*Total*"} | Foreach-Object {
+                            $Balances | Where-Object {$_.Name -notmatch "^\*"} | Foreach-Object {
                                 if ($_.Last_Earnings -ne $null) {$_.PSObject.Properties.Remove("Last_Earnings")}
                                 if ($_.Payouts -ne $null) {$_.PSObject.Properties.Remove("Payouts")}
                             }

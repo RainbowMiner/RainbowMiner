@@ -611,8 +611,22 @@ function Get-Balance {
     }
 
     #Add total of totals
+    $Totals_Pools = [PSCustomObject]@{
+        Name    = "*Total Pools*"
+        BaseName= "TotalPools"
+        Caption = "*Total Pools*"
+    }
+
+    $Totals_Wallets = [PSCustomObject]@{
+        Name    = "*Total Wallets*"
+        BaseName= "TotalWallets"
+        Caption = "*Total Wallets*"
+    }
+
+    #Add total of totals
     $Totals = [PSCustomObject]@{
         Name    = "*Total*"
+        BaseName= "Total"
         Caption = "*Total*"
     }
 
@@ -624,7 +638,19 @@ function Get-Balance {
     $CurrenciesWithBalances | ForEach-Object {
         $Currency = $_.ToUpper()
         $Balances | Where-Object Currency -eq $Currency | Foreach-Object {$_ | Add-Member "Balance ($Currency)" $_.Total -Force}
-        if (($Balances."Balance ($Currency)" | Measure-Object -Sum).sum) {$Totals | Add-Member "Balance ($Currency)" ($Balances."Balance ($Currency)" | Measure-Object -Sum).sum -Force}
+        $Balance_Sum = ($Balances."Balance ($Currency)" | Measure-Object -Sum).Sum
+        if ($Balance_Sum) {
+            $Totals | Add-Member "Balance ($Currency)" $Balance_Sum -Force
+        }
+        if ($Session.Config.ShowWalletBalances) {
+            $Balance_Sum2 = ($Balances | Where-Object {$_.BaseName -ne "Wallet" -and $_."Balance ($Currency)"} | Select-Object -ExpandProperty "Balance ($Currency)" | Measure-Object -Sum).Sum
+            if ($Balance_Sum2) {
+                $Totals_Pools | Add-Member "Balance ($Currency)" $Balance_Sum2 -Force
+            }
+            if ($Balance_Sum -gt $Balance_Sum2) {
+                $Totals_Wallets | Add-Member "Balance ($Currency)" ($Balance_Sum - $Balance_Sum2) -Force
+            }
+        }
     }
 
     #Add converted values
@@ -634,7 +660,19 @@ function Get-Balance {
             $Balance = $_
             $Balance | Add-Member "Value in $Currency" $(if ($RatesAPI.$($Balance.Currency).$Currency -ne $null) {$Balance.Total * $RatesAPI.$($Balance.Currency).$Currency}elseif($RatesAPI.$Currency.$($Balance.Currency)) {$Balance.Total / $RatesAPI.$Currency.$($Balance.Currency)}else{"-"}) -Force
         }
-        if (($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).sum)  {$Totals | Add-Member "Value in $Currency" ($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).sum -Force}
+        $Balance_Sum = ($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).Sum
+        if ($Balance_Sum)  {
+            $Totals | Add-Member "Value in $Currency" $Balance_Sum -Force
+        }
+        if ($Session.Config.ShowWalletBalances) {
+            $Balance_Sum2 = ($Balances | Where-Object {$_.BaseName -ne "Wallet" -and $_."Value in $Currency"} | Select-Object -ExpandProperty "Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).Sum
+            if ($Balance_Sum2)  {
+                $Totals_Pools | Add-Member "Value in $Currency" $Balance_Sum2 -Force
+            }
+            if ($Balance_Sum -gt $Balance_Sum2) {
+                $Totals_Wallets | Add-Member "Value in $Currency" ($Balance_Sum - $Balance_Sum2) -Force
+            }
+        }
     }
 
     if (-not $Details) {
@@ -656,7 +694,11 @@ function Get-Balance {
         }
     }
 
-    $Balances = @($Balances | Where-Object {$_.Total} | Select-Object) + $Totals
+    if ($Session.Config.ShowWalletBalances -and ($Balances | Where-Object {$_.BaseName -eq "Wallet" -and $_.Total} | Measure-Object).Count) {
+        $Balances = @($Balances | Where-Object {$_.BaseName -ne "Wallet" -and $_.Total} | Select-Object) + $Totals_Pools + @($Balances | Where-Object {$_.BaseName -eq "Wallet" -and $_.Total} | Select-Object) + $Totals_Wallets + $Totals
+    } else {
+        $Balances = @($Balances | Where-Object {$_.Total} | Select-Object) + $Totals
+    }
 
     $Balances | Foreach-Object {
         $Balance = $_
@@ -1665,7 +1707,7 @@ function Invoke-Core {
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {
             $BalancesData_DateTime = Get-Date
-            $BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.BaseName -ne "Wallet"} | Foreach-Object {
+            $BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet"} | Foreach-Object {
                 $Balance = $_
                 $Earnings = Set-Balance $Balance -Updated $BalancesData_DateTime
                 $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "^Earnings" -or $_ -eq "Started"} | Foreach-Object {
@@ -1674,8 +1716,8 @@ function Invoke-Core {
             }
             if ($Earnings -ne $null) {Remove-Variable "Earnings"}
             $API.Balances = ConvertTo-Json $BalancesData -Depth 10
-            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
             if ($RefreshBalances) {$Session.ReportTotals = $true}
         }
