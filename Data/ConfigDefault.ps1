@@ -6,6 +6,7 @@
     RemoteAPI = $false 
     ShowPoolBalances = $true
     ShowPoolBalancesDetails = $true
+    ShowWalletBalances = $true
     ShowMinerWindow = $false
     Watchdog = $true 
     UseTimeSync = $false
