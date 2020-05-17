@@ -9,12 +9,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.2-wildrigmulti/wildrig-multi-linux-0.23.2.1.tar.gz"
-    $Version = "0.23.2"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.1-wildrigmulti/wildrig-multi-linux-0.24.1.tar.gz"
+    $Version = "0.24.1"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-wildrigmulti/wildrig-multi-windows-0.24.0.7z"
-    $Version = "0.24.0"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.1-wildrigmulti/wildrig-multi-windows-0.24.1.7z"
+    $Version = "0.24.1"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
