@@ -5,31 +5,23 @@
 
 <h5 class="mt-4 h-selector" id="h-referalboxes">If you plan to sign up for any of the following services, you can support my work by using my referal links plus get some benefit yourself</h5>
 <div id="referals" class="card-deck">
-    <div class="mb-2 card {{if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 440px">
+    <div class="mb-2 card {{if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}">
         <div class="card-header text-center">
             <h5>Crypto.com</h5>
         </div>
         <div class="card-body text-center">
             <p class="card-text">
                 Buy 45+ Coins at True Cost.
-                No fees, No markups
-            </p>
-            <p class="card-text">
+                No fees, No markups<br />
                 Metal Visa Card with
-                up to 5% back on all spending
-            </p>
-            <p class="card-text">
+                up to 5% back on all spending<br />
                 Passive Interest:
-                Earn up to 8% p.a. on your crypto
-            </p>
-            <p class="card-text">
+                Earn up to 8% p.a. on your crypto<br />
                 Credit:
-                Deposit crypto, get an instant loan
-            </p>
-            <p class="card-text">
+                Deposit crypto, get an instant loan<br />
                 Pay and be paid in crypto, anywhere, for free
             </p>
-            <img src="/images/cards-size.png" alt="" border="0" />
+            <a href="https://platinum.crypto.com/r/9f35bdhcx8" title="Use my referal link to sign up at Crypto.com and we both get 50$"><img src="/images/cards-size.png" alt="" border="0" class="img-fluid" /></a>
         </div>
         <div class="card-footer text-center">
             <p class="card-text">
@@ -39,24 +31,44 @@
             </p>
         </div>
     </div>
-    <div class="mb-2 card {{if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 440px">
+</div>
+<div id="referals2" class="card-deck">
+    <div class="mb-2 card {{if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 230px">
         <div class="card-header text-center">
             <h5>MiningRigRentals.com</h5>
         </div>
         <div class="card-body text-center">
             <p class="card-text">
-                Rent hashpower or use RainbowMiner to increase your income by automatically offer your rig for rent.
-            </p>
-            <p class="card-body text-center">
+                Rent hashpower or use RainbowMiner to increase your income by automatically offer your rig for rent.<br />
                 Whether you're new and want to try mining out before you buy equipment or you're a veteran looking for more hash power at a coin launch, MiningRigRentals.com is your one stop website.
             </p>
-            <img src="/images/mrr-logo.png" alt="" border="0" />
+            <a href="https://www.miningrigrentals.com/register?ref=2598069" title="Register now with MiningRigRentals.com"><img src="/images/mrr-logo.png" alt="" border="0" class="img-fluid" /></a>
         </div>
         <div class="card-footer text-center">
             <p class="card-text">
                 <h5><a href="https://www.miningrigrentals.com/register?ref=2598069" title="Register now with MiningRigRentals.com">Register now at MiningRigRentals.com</a></h5>
                 <br />
                 .. if you register using my referal link, I will get a bonus of 0.1% for every transaction.
+            </p>
+        </div>
+    </div>
+    <div class="mb-2 card {{if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 230px">
+        <div class="card-header text-center">
+            <h5>Binance.com</h5>
+        </div>
+        <div class="card-body text-center">
+            <p class="card-text">
+                The World's Leading
+                Cryptocurrency Exchange<br />
+                Trade Bitcoin, BNB, and hundreds of other cryptocurrencies in minutes.
+            </p>
+            <a href="https://www.binance.com/de/register?ref=GAV3FM60" title="Register now with Binance.com with my referal link and get us both 10%"><img src="/images/binance-logo.jpg" alt="" border="0" class="img-fluid" /></a>
+        </div>
+        <div class="card-footer text-center">
+            <p class="card-text">
+                <h5><a href="https://www.binance.com/de/register?ref=GAV3FM60" title="Register now with Binance.com with my referal link and get us both 10%">Register now at Binance.com</a></h5>
+                <br />
+                .. if you register using my referal link, we both will get 10%.
             </p>
         </div>
     </div>
@@ -187,21 +199,21 @@
 </div>
 
 <script>
-$(document).ready(function() {
+    $(document).ready(function() {
     var clipboard = new ClipboardJS('.btn-clipboard');
     clipboard.on('success', function(e) {
-        e.clearSelection();
-        $(e.trigger).trigger('copied', ['Copied!']);
+    e.clearSelection();
+    $(e.trigger).trigger('copied', ['Copied!']);
 
     });
     clipboard.on('error', function(e) {
-        $(e.trigger).trigger('copied', [fallbackMessage(e.action)]);
+    $(e.trigger).trigger('copied', [fallbackMessage(e.action)]);
     });
 
     $('.btn-clipboard').bind('copied', function(e, message) {
-      $(this).attr('data-original-title', message).tooltip('show').attr('data-original-title', "Copy to Clipboard");
+    $(this).attr('data-original-title', message).tooltip('show').attr('data-original-title', "Copy to Clipboard");
     });
-});
+    });
 </script>
 
 <!--#include file="/parts/foot.html" -->
