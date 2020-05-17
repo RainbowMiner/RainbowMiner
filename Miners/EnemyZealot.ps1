@@ -10,25 +10,25 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/z-enemy/z-enemy/releases"
 $Port = "302{0:d2}"
 $DevFee = 1.0
-$Version = "2.6.1"
+$Version = "2.6.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda110-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-cuda101-libcurl4.tar.gz"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda100-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-cuda100-libcurl4.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda92-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-cuda92-libcurl4.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-cuda91.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-cuda91.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -36,19 +36,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda10.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-win-cuda10.1.zip"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda10.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-win-cuda10.0.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda9.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-win-cuda9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.1-zenemy/z-enemy-2.6.1-win-cuda9.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-win-cuda9.1.zip"
             Cuda = "9.1"
         }
     )
@@ -63,7 +63,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} # New in 1.11
     [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5; HashrateDuration = "Day"} #HEX/XDNA, new in 1.15a
     #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
-    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; ; ExcludePoolName = "^(MiningPoolHub|Nicehash)"} #KawPOW/RVN, new in 2.5
+    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3} #KawPOW/RVN, new in 2.5
     #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
     #[PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
