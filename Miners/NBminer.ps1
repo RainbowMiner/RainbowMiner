@@ -173,6 +173,12 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             $Pass = $Pass -replace ":[^:]+~","~"
                         }
 
+                        $Miner_EnvVars = if ($Miner_Vendor -eq "AMD") {"GPU_FORCE_64BIT_PTR=0"}
+                        if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^(KawPow|ProgPow)" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {
+                            if ($Miner_EnvVars -eq $null) {$Miner_EnvVars = @()} else {$Miner_EnvVars = @($Miner_EnvVars)}
+                            $Miner_EnvVars += "LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp"
+                        }
+
 						[PSCustomObject]@{
 							Name           = $Miner_Name
 							DeviceName     = $Miner_Device.Name
@@ -193,7 +199,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             PowerDraw      = 0
                             BaseName       = $Name
                             BaseAlgorithm  = $MainAlgorithm_Norm_0
-                            EnvVars        = if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
+                            EnvVars        = $Miner_EnvVars
 						}
 					} else {
                         $Pool_Port2 = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
