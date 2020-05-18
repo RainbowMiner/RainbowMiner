@@ -110,12 +110,13 @@
             </p>
         </div>
         <div class="card-footer text-center">
-            <p class="card-text">
+            <p class="card-text" style="line-height:80%">
                 <small>
-                    <span>{{invalues_string}}</span>
-                    <br />
-                    <span class="currencyname font-weight-bold">Avg.Earned:</span> <span>{{earnings}}</span>
+                    {{#each invalues_strings}}
+                    {{this}}<br />
+                    {{/each}}
                 </small>
+                <small><span class="currencyname font-weight-bold">Avg.Earned:</span> <span>{{earnings}}</span></small>
             </p>
         </div>
     </div>
@@ -185,13 +186,13 @@ $(function () {
                     if (boxes_ix[item.Name] === undefined) {
                         boxes_ix[item.Name] = boxes.length;
                         if (item.BaseName == "Total") {
-                            boxes.push({ basename: item.BaseName, name: "Total Balance", balances: {}, invalues: {}, digits: {}, total: true, dark: theme=="dark", invalues_string: "" });
+                            boxes.push({ basename: item.BaseName, name: "Total Balance", balances: {}, invalues: {}, digits: {}, total: true, dark: theme == "dark", invalues_strings: [] });
                         } else if (item.BaseName == "TotalPools") {
-                            boxes.push({ basename: item.BaseName, name: "Total Balance From Pools", balances: {}, invalues: {}, digits: {}, total: true, dark: theme=="dark", invalues_string: "" });
+                            boxes.push({ basename: item.BaseName, name: "Total Balance From Pools", balances: {}, invalues: {}, digits: {}, total: true, dark: theme == "dark", invalues_strings: [] });
                         } else if (item.BaseName == "TotalWallets") {
-                            boxes.push({ basename: item.BaseName, name: "Total Balance From Wallets", balances: {}, invalues: {}, digits: {}, total: true, dark: theme=="dark", invalues_string: "" });
+                            boxes.push({ basename: item.BaseName, name: "Total Balance From Wallets", balances: {}, invalues: {}, digits: {}, total: true, dark: theme == "dark", invalues_strings: [] });
                         } else {
-                            boxes.push({ basename: item.BaseName, name: item.Name, balances: {}, invalues: {}, digits: {}, earnings: 0, dark: theme == "dark", invalues_string: "" });
+                            boxes.push({ basename: item.BaseName, name: item.Name, balances: {}, invalues: {}, digits: {}, earnings: 0, dark: theme == "dark", invalues_strings: [] });
                         }
                     }
 
@@ -230,17 +231,12 @@ $(function () {
                 });
                 $.each(boxes, function (index, item) {
                     $.each(item["balances"], function (bindex, bitem) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); });
-                    var invalues = new Array();
                     $.each(item["invalues"], function (bindex, bitem) {
                         if (item["digits"][bindex] != -1) {
                             item["invalues"][bindex] = "" + (bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]));
-                            var curr = bindex;
-                            if (bindex == "EUR") {curr = "€";}
-                            else if (bindex == "USD") {curr = "$";}
-                            invalues.push(item["invalues"][bindex] + (item["invalues"][bindex].split(" ").length == 1? " ":'') + curr);
+                            item.invalues_strings.push(item["invalues"][bindex] + (item["invalues"][bindex].split(" ").length == 1 ? " " : '') + bindex);
                         }
                     });
-                    item.invalues_string = invalues.join(" = ");
                     item.earnings = formatPricesBTC(item.total ? total_earnings : item.earnings).replace('&nbsp;', ' ');
                     var add_to_id = ""
                     if (item["basename"] == "Wallet" || item["basename"] == "TotalWallets") {add_to_id = "#balanceboxes--wallets"}
