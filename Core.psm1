@@ -143,6 +143,39 @@ function Start-Core {
         $Session.PauseMiners = $true
     }
 
+    if ($IsWindows -and ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count) {
+        $Install_NVSMI = $false
+        if (-not (Test-Path "C:\Program Files\NVIDIA Corporation\NVSMI\nvml.dll")) {
+            Write-Log -Level Warn "NVIDIA C:\Program Files\NVIDIA Corporation\NVSMI\nvml.dll is missing"
+            $Install_NVSMI = $true
+        }
+        if (-not (Test-Path "C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe")) {
+            Write-Log -Level Warn "NVIDIA C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe is missing"
+            $Install_NVSMI = $true
+        }
+        if ($Install_NVSMI) {
+            if ($Session.IsAdmin) {
+                Write-Log -Level Warn "RainbowMiner will try to install NVSMI, but the driver version may be wrong!"
+                try {
+                    $NVSMI_Path = "C:\Program Files\NVIDIA Corporation\NVSMI"
+                    if (-not (Test-Path $NVSMI_Path)) {New-Item $NVSMI_Path -ItemType "directory" > $null}
+            
+                    Copy-Item ".\Includes\nvidia-smi.exe" -Destination $NVSMI_Path -Force
+                    Copy-Item ".\Includes\nvml.dll" -Destination $NVSMI_Path -Force
+
+                    Write-Host "NVSMI installed!" -ForegroundColor Green
+                    Write-Log -Level Info "NVSMI installed successfully"
+                    $Install_NVSMI = $false
+                } catch {
+                    Write-Log -Level Warn "Failed to install NVSMI: $($_.Exception.Message)"
+                }
+            }
+            if ($Install_NVSMI) {
+                Write-Log -Level Warn "Please run Install.bat to automatically install NVSMI!"
+            }
+        }
+    }
+
     try {
         Write-Host "Initialize configuration .."
 
