@@ -160,10 +160,10 @@ function Start-Core {
                     $NVSMI_Path = "C:\Program Files\NVIDIA Corporation\NVSMI"
                     if (-not (Test-Path $NVSMI_Path)) {New-Item $NVSMI_Path -ItemType "directory" > $null}
             
-                    Copy-Item ".\Includes\nvidia-smi.exe" -Destination $NVSMI_Path -Force
                     Copy-Item ".\Includes\nvml.dll" -Destination $NVSMI_Path -Force
+                    Copy-Item ".\Includes\nvidia-smi.exe" -Destination $NVSMI_Path -Force
 
-                    Write-Host "NVSMI installed!" -ForegroundColor Green
+                    Write-Host "NVSMI installed successfully!" -ForegroundColor Green
                     Write-Log -Level Info "NVSMI installed successfully"
                     $Install_NVSMI = $false
                 } catch {
