@@ -6366,6 +6366,9 @@ function Set-OsFlags {
         $Global:IsLinux   = -not $IsWindows
         $Global:IsMacOS   = $false
     }
+    if ("$((Get-Culture).NumberFormat.NumberGroupSeparator)$((Get-Culture).NumberFormat.NumberDecimalSeparator)" -notmatch "^[,.]{2}$") {
+        [CultureInfo]::CurrentCulture = 'en-US'
+    }
 }
 
 function Get-RandomFileName
