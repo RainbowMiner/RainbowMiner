@@ -105,21 +105,16 @@ if ($IsWindows -and $GNVIDIA) {
 
     if ($Install_NVSMI) {
         Write-Host "WARNING: RainbowMiner will try to install NVSMI, but the driver version may be wrong!" -ForegroundColor Yellow
-        if (-not (Test-Path "C:\Program Files\NVIDIA Corporation")) { 
-            Write-Host "ERROR: RainbowMiner failed to install NVSMI folder, no NVIDIA Corporation file found in C:\Program Files" -ForegroundColor Red
-        } 
-        else {
-            try {
-                $NVSMI_Path = "C:\Program Files\NVIDIA Corporation\NVSMI"
-                if (-not (Test-Path $NVSMI_Path)) {New-Item $NVSMI_Path -ItemType "directory" > $null}
+        try {
+            $NVSMI_Path = "C:\Program Files\NVIDIA Corporation\NVSMI"
+            if (-not (Test-Path $NVSMI_Path)) {New-Item $NVSMI_Path -ItemType "directory" > $null}
             
-                Copy-Item ".\Includes\nvidia-smi.exe" -Destination $NVSMI_Path -Force
-                Copy-Item ".\Includes\nvml.dll" -Destination $NVSMI_Path -Force
+            Copy-Item ".\Includes\nvidia-smi.exe" -Destination $NVSMI_Path -Force
+            Copy-Item ".\Includes\nvml.dll" -Destination $NVSMI_Path -Force
 
-                Write-Host "NVSMI installed!" -ForegroundColor Green
-            } catch {
-                Write-Host "Failed to install NVSMI" -ForeGroundColor Red
-            }
+            Write-Host "NVSMI installed!" -ForegroundColor Green
+        } catch {
+            Write-Host "Failed to install NVSMI" -ForeGroundColor Red
         }
     }
 }
