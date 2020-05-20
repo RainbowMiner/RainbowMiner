@@ -682,6 +682,8 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **MinerStatusKey** = your unique miner status key (get one at https://rbminer.net, you can reuse MPM keys)
 - **MinerStatusEmail** = if your miningrig goes offline at https://rbminer.net/monitoring, a warning will be sent to this email-address. Leave empty, if you do not want notifications.
 - **PushOverUserKey** = if your miningrig goes offline at https://rbminer.net/monitoring, a notification will be sent via https://pushover.net, using your pushover user key. Leave empty, if you do not want this.
+- **MinerStatusMaxTemp** = maximum allowed GPU temperature, triggers push message, if above [default=90]
+- **MinerStatusMaxCrashesPerHour** = maximum allowed crashes per hour, triggers push message, if above [default=5]
 
 
 #### Select devices ####
