@@ -559,7 +559,7 @@ function Invoke-ReportMinerStatus {
                 End            = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.End
                 Runtime        = $_.Runtime
                 Name           = $_.Name
-                Device         = $_.DeviceModel
+                Device         = $_.Device
                 Algorithm      = $_.Algorithm
                 Pool           = $_.Pool
             }}) -Compress
