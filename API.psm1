@@ -448,6 +448,10 @@
                     $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers -Depth 2} else {"[]"}
                     Break
                 }
+                "/crashcounter" {
+                    $Data = if ($API.CrashCounter) {ConvertTo-Json $API.CrashCounter -Depth 2} else {"[]"}
+                    Break
+                }
                 "/balances" {
                     if ($API.Balances) {$Balances = ConvertFrom-Json $API.Balances}
                     if ($API.Rates)    {$LocalRates = ConvertFrom-Json $API.Rates}

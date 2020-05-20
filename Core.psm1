@@ -2837,6 +2837,7 @@ function Invoke-Core {
     #Update API miner information
     #$RunningMiners = $Global:ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
     $API.WatchdogTimers = $Global:WatchdogTimers.Where({$_})
+    $API.CrashCounter   = $Global:CrashCounter.Where({$_})
     $API.ActiveMiners   = $Global:ActiveMiners.Where({$_.Profit -or $_.IsFocusWalletMiner})
     $API.RunningMiners  = $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running})
     $API.FailedMiners   = $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Failed})

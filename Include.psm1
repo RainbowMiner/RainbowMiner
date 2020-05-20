@@ -406,7 +406,7 @@ Function Write-ActivityLog {
                 Pool           = @($Miner.Pool)
             }
         }
-        $Global:CrashCounter = $Global:CrashCounter.Where({$_.Timestamp -lt $Now.AddHours(-1)})
+        $Global:CrashCounter = $Global:CrashCounter.Where({$_.Timestamp -gt $Now.AddHours(-1)})
 
         $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
 
