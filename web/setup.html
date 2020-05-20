@@ -382,9 +382,18 @@
             <div class="form-group row is--reporting">
                 <label for="inputMinerStatusMaxTemp" class="col-sm-2 col-form-label">Miner Status Max-Temp</label>
                 <div class="input-group col-sm-10">
-                    <input type="number" min="0" max="100" step="1" class="form-control" id="inputMinerStatusMaxTemp" name="MinerStatusMaxTemp" placeholder="Enter interval in seconds" aria-describedby="addto-inputMinerStatusMaxTemp">
+                    <input type="number" min="0" max="100" step="1" class="form-control" id="inputMinerStatusMaxTemp" name="MinerStatusMaxTemp" placeholder="Enter maximum allowed GPU temperature" aria-describedby="addto-inputMinerStatusMaxTemp">
                     <div class="input-group-append">
                         <span class="input-group-text" id="addto-inputMinerStatusMaxTemp">°C</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row is--reporting">
+                <label for="inputMinerStatusMaxCrashesPerHour" class="col-sm-2 col-form-label">Max. allowd crashes per hour</label>
+                <div class="input-group col-sm-10">
+                    <input type="number" min="-1" step="1" class="form-control" id="inputMinerStatusMaxCrashesPerHour" name="MinerStatusMaxCrashesPerHour" placeholder="Enter maximum allowed crashes per hour" aria-describedby="addto-inputMinerStatusMaxTemp">
+                    <div class="input-group-append">
+                        <span class="input-group-text" id="addto-inputMinerStatusMaxCrashesPerHour">cph</span>
                     </div>
                 </div>
             </div>

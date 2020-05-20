@@ -392,6 +392,22 @@ Function Write-ActivityLog {
         if (-not $ActiveStart) {return}
     }
     Process {
+        $Now = Get-Date
+        if ($Crashed) {
+            $Runtime = $Miner.GetRunningTime()
+            $Global:CrashCounter += [PSCustomObject]@{
+                Timestamp      = $Now
+                Start          = $ActiveStart
+                End            = $Miner.GetActiveLast()
+                Runtime        = $Runtime.TotalSeconds
+                Name           = $Miner.BaseName
+                Device         = @($Miner.DeviceModel)
+                Algorithm      = @($Miner.BaseAlgorithm)
+                Pool           = @($Miner.Pool)
+            }
+        }
+        $Global:CrashCounter = $Global:CrashCounter.Where({$_.Timestamp -lt $Now.AddHours(-1)})
+
         $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
 
         $filename = ".\Logs\Activity_$(Get-Date -Format "yyyy-MM-dd").txt"
@@ -6070,7 +6086,7 @@ param(
     [System.Collections.Generic.List[PSCustomObject]]$Global:AutoexecCommands = @()
     foreach($cmd in @(Get-ContentByStreamReader ".\Config\autoexec.txt" -ExpandLines | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
-            if (Test-Path $Matches[1]) {
+            if (Test-Path $Matches[1]) {                
                 try {
                     $Job = Start-SubProcess -FilePath "$($Matches[1])" -ArgumentList "$($Matches[2].Trim())" -WorkingDirectory (Split-Path "$($Matches[1])") -ShowMinerWindow $true -Priority $Priority
                     if ($Job) {
