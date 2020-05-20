@@ -560,7 +560,7 @@ function Invoke-ReportMinerStatus {
 
         $CrashAlert = $null
         if ($Session.Config.MinerStatusMaxCrashesPerHour -ge 0 -and $Global:CrashCounter.Count -gt $Session.Config.MinerStatusMaxCrashesPerHour) {
-            $CrashAlert = $Global:CrashCounter
+            $CrashAlert = ConvertTo-Json $Global:CrashCounter -Compress
         }
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
