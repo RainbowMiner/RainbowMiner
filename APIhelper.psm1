@@ -72,6 +72,7 @@ param (
 		        $PostCommand = $PostCommand -replace("%3C","<")
 		        $PostCommand = $PostCommand -replace("%3E",">")
 		        $PostCommand = $PostCommand -replace("%3F","?")
+                $PostCommand = $PostCommand -replace("%40","@")
 		        $PostCommand = $PostCommand -replace("%5B","[")
 		        $PostCommand = $PostCommand -replace("%5C","\")
 		        $PostCommand = $PostCommand -replace("%5D","]")
