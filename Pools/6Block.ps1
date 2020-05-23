@@ -40,7 +40,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         try {
             $WebRequest = Invoke-RestMethodAsync "https://6block.com/en" -tag $Name -timeout 15 -cycletime 120
             $WebParams = if ($WebRequest -match "}}\(([^\)]+)\)") {$Matches[1] -split ',' | Foreach-Object {$_  -replace '^"' -replace '"$'}} else {@()}
-            $WebIndex  = @{}
+            $WebIndex  = New-Object System.Collections.Hashtable
             if ($WebRequest -match "function\((a,b,c,[^\)]+)\)") {$i=0;$Matches[1] -split ',' | Foreach-Object {$WebIndex["$_"] = $i;$i++}}
             foreach ($c in @("statPool","found24H","activeMiners")) {
                 if ($WebRequest -match "$($c):(.+?)[,}]") {
@@ -51,7 +51,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 } else {
                     $ok = $false
                 }
-            } 
+            }
             $TimeStamp = Get-UnixTimestamp
             if ($WebRequest -match "blocks:[\s\r\n]*\[{(.+?)}") {
                 if ($Matches[1] -match "timestamp:(\d+)") {
