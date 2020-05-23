@@ -2,8 +2,9 @@
     $Config
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+if (-not $Config.ShowWalletBalances) {return}
 
+$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 #
 # Bitcoin Wallet
@@ -45,22 +46,25 @@ if (($Wallets | Measure-Object).Count) {
     }
 }
 
+$Wallets_Data = @(
+    [PSCustomObject]@{symbol = "ETH";  match = "^0x";   rpc = "https://api.ethplorer.io/getAddressInfo/{w}?apiKey=freekey";           address = "address"; balance = "ETH.balance"; received = "";              divisor = 1}
+    [PSCustomObject]@{symbol = "RVN";  match = "^R";    rpc = "https://ravencoin.network/api/addr/{w}/?noTxList=1";                   address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
+    [PSCustomObject]@{symbol = "SAFE"; match = "^R";    rpc = "https://explorer.safecoin.org/api/addr/{w}/?noTxList=1";               address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
+    [PSCustomObject]@{symbol = "XLM";  match = "^G";    rpc = "https://horizon.stellar.org/accounts/{w}";                             address = "id";      balance = "balances";    received = "";              divisor = 1}
+    [PSCustomObject]@{symbol = "XZC";  match = "^[aZ]"; rpc = "https://explorer.zcoin.io/insight-api-zcoin/addr/{w}/?noTxList=1";     address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
+    [PSCustomObject]@{symbol = "ZEC";  match = "^t";    rpc = "https://api.zcha.in/v2/mainnet/accounts/{w}";                          address = "address"; balance = "balance";     received = "totalRecv";     divisor = 1}
+)
 
-#
-# Ethereum Wallet
-#
+foreach ($Wallet_Data in $Wallets_Data) {
+    $Wallet_Symbol  = $Wallet_Data.symbol
 
-$Wallets = @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.ETH} | Foreach-Object {$_.Wallets.ETH}) | Where-Object {$_ -match "^0x"} | Select-Object -Unique | Sort-Object
-
-if (($Wallets | Measure-Object).Count) {
-
-    $Wallets | Foreach-Object {
+    @($Config.Coins.PSObject.Properties | Where-Object {$_.Name -eq $Wallet_Symbol -and $_.Value.Wallet -match $Wallet_Data.match} | Foreach-Object {$_.Value.Wallet}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.$Wallet_Symbol -match $Wallet_Data.match} | Foreach-Object {$_.Wallets.$Wallet_Symbol}) | Select-Object -Unique | Sort-Object | Foreach-Object {
         $Request = [PSCustomObject]@{}
 
         $Success = $true
         try {
-            $Request = Invoke-RestMethodAsync "https://api.ethplorer.io/getAddressInfo/$($_)?apiKey=freekey" -cycletime ($Config.BalanceUpdateMinutes*60)
-            if ($Request.address -ne $_) {$Success = $false}
+            $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$_)" -cycletime ($Config.BalanceUpdateMinutes*60)
+            if ($Request."$($Wallet_Data.address)" -ne $_) {$Success = $false}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -68,144 +72,30 @@ if (($Wallets | Measure-Object).Count) {
         }
 
         if (-not $Success) {
-            Write-Log -Level Warn "ETH Balance API ($Name) for $_ has failed. "
+            Write-Log -Level Verbose "$Wallet_Symbol Balance API ($Name) for $_ has failed. "
             return
         }
 
-        [PSCustomObject]@{
-                Caption     = "$($Name) ETH ($($_))"
-		        BaseName    = $Name
-                Info        = " $($_.Substring(2,3))..$($_.Substring($_.Length-3,3))"
-                Currency    = "ETH"
-                Balance     = [Decimal]$Request.ETH.balance
-                Pending     = 0
-                Total       = [Decimal]$Request.ETH.balance
-                Payouts     = @()
-                LastUpdated = (Get-Date).ToUniversalTime()
-        }
-    }
-}
+        $Wallet_Info = $_ -replace "^0x"
 
-
-#
-# RavenCoin Wallet
-#
-
-$Wallets = @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.RVN} | Foreach-Object {$_.Wallets.RVN}) | Where-Object {$_ -match "^R"} | Select-Object -Unique | Sort-Object
-
-if (($Wallets | Measure-Object).Count) {
-
-    $Wallets | Foreach-Object {
-        $Request = [PSCustomObject]@{}
-
-        $Success = $true
-        try {
-            $Request = Invoke-RestMethodAsync "https://ravencoin.network/api/addr/$_/?noTxList=1" -cycletime ($Config.BalanceUpdateMinutes*60)
-            if ($Request.addrStr -ne $_) {$Success = $false}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $Success=$false
-        }
-
-        if (-not $Success) {
-            Write-Log -Level Warn "RVN Balance API ($Name) for $_ has failed. "
-            return
-        }
+        $Wallet_Balance = [Decimal]$(Switch ($Wallet_Symbol) {
+            "XLM" {
+                ($Request.balances | Where-Object {$_.asset_type -eq "native"} | Select-Object -ExpandProperty balance | Measure-Object -Sum).Sum
+            }
+            default {
+                Invoke-Expression "`$Request.$($Wallet_Data.balance)"
+            }
+        })
 
         [PSCustomObject]@{
-                Caption     = "$($Name) RVN ($($_))"
+                Caption     = "$Name $Wallet_Symbol ($($_))"
 		        BaseName    = $Name
-                Info        = " $($_.Substring(0,3))..$($_.Substring($_.Length-3,3))"
-                Currency    = "RVN"
-                Balance     = [Decimal]$Request.balance
+                Info        = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3))"
+                Currency    = $Wallet_Symbol
+                Balance     = $Wallet_Balance / $Wallet_Data.divisor
                 Pending     = 0
-                Total       = [Decimal]$Request.balance
-                Earned      = [Decimal]$Request.totalReceived
-                Payouts     = @()
-                LastUpdated = (Get-Date).ToUniversalTime()
-        }
-    }
-}
-
-
-#
-# SafeCoin Wallet
-#
-
-$Wallets = @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.SAFE} | Foreach-Object {$_.Wallets.SAFE}) | Where-Object {$_ -match "^R"} | Select-Object -Unique | Sort-Object
-
-if (($Wallets | Measure-Object).Count) {
-
-    $Wallets | Foreach-Object {
-        $Request = [PSCustomObject]@{}
-
-        $Success = $true
-        try {
-            $Request = Invoke-RestMethodAsync "https://explorer.safecoin.org/api/addr/$_/?noTxList=1" -cycletime ($Config.BalanceUpdateMinutes*60)
-            if ($Request.addrStr -ne $_) {$Success = $false}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $Success=$false
-        }
-
-        if (-not $Success) {
-            Write-Log -Level Warn "SAFE Balance API ($Name) for $_ has failed. "
-            return
-        }
-
-        [PSCustomObject]@{
-                Caption     = "$($Name) SAFE ($($_))"
-		        BaseName    = $Name
-                Info        = " $($_.Substring(0,3))..$($_.Substring($_.Length-3,3))"
-                Currency    = "SAFE"
-                Balance     = [Decimal]$Request.balance
-                Pending     = 0
-                Total       = [Decimal]$Request.balance
-                Earned      = [Decimal]$Request.totalReceived
-                Payouts     = @()
-                LastUpdated = (Get-Date).ToUniversalTime()
-        }
-    }
-}
-
-
-#
-# Zcash wallet
-#
-
-$Wallets = @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.ZEC} | Foreach-Object {$_.Wallets.ZEC}) | Where-Object {$_ -match "^t[13]"} | Select-Object -Unique | Sort-Object
-
-if (($Wallets | Measure-Object).Count) {
-
-    $Wallets | Foreach-Object {
-        $Request = [PSCustomObject]@{}
-
-        $Success = $true
-        try {
-            $Request = Invoke-RestMethodAsync "https://api.zcha.in/v2/mainnet/accounts/$_" -cycletime ($Config.BalanceUpdateMinutes*60)
-            if ($Request.address -ne $_) {$Success = $false}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $Success=$false
-        }
-
-        if (-not $Success) {
-            Write-Log -Level Warn "ZEC Balance API ($Name) for $_ has failed. "
-            return
-        }
-
-        [PSCustomObject]@{
-                Caption     = "$($Name) ZEC ($($_))"
-		        BaseName    = $Name
-                Info        = " $($_.Substring(0,3))..$($_.Substring($_.Length-3,3))"
-                Currency    = "ZEC"
-                Balance     = [Decimal]$Request.balance
-                Pending     = 0
-                Total       = [Decimal]$Request.balance
-                Earned      = [Decimal]$Request.totalRecv
+                Total       = $Wallet_Balance / $Wallet_Data.divisor
+                Earned      = if ($Wallet_Data.received) {[Decimal](Invoke-Expression "`$Request.$($Wallet_Data.received)") / $Wallet_Data.divisor} else {$null}
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
         }
