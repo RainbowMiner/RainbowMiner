@@ -11,13 +11,13 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "BLOC";  port = 10430; fee = 0.9; rpc = "bloc"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "CCX";   port = 10360; fee = 0.9; rpc = "conceal"; region = @("fi","de","ca","hk","sg")}
     [PSCustomObject]@{symbol = "DERO";  port = 10125; fee = 0.9; rpc = "dero"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "XEQ";   port = 10600; fee = 0.9; rpc = "equilibria"; region = @("de","hk")}
     [PSCustomObject]@{symbol = "GRFT";  port = 10100; fee = 0.9; rpc = "graft"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "XHV";   port = 10450; fee = 0.9; rpc = "haven"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "IRD";   port = 10670; fee = 0.9; rpc = "iridium"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "LOKI";  port = 10110; fee = 0.9; rpc = "loki"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "MSR";   port = 10150; fee = 0.9; rpc = "masari"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "XMR";   port = 10190; fee = 0.9; rpc = "monero"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "PGO";   port = 10160; fee = 0.9; rpc = "pengolincoin"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "QRL";   port = 10370; fee = 0.9; rpc = "qrl"; region = @("de")}
     [PSCustomObject]@{symbol = "RYO";   port = 10270; fee = 0.9; rpc = "ryo"; region = @("de","fi")}
     [PSCustomObject]@{symbol = "XLA";   port = 10130; fee = 0.9; rpc = "scala"; region = @("de","fi","hk")}
