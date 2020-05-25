@@ -2892,7 +2892,7 @@ function Invoke-Core {
         $Miner_DeviceModel = $_.DeviceModel
         $Miner_DeviceModels = $Miner_DeviceModel -split '-'
         $Miner_ProfitMin = if ($Miner_DeviceModel -match "CPU") {1E-9} else {1E-7}
-        $Miner_DeviceTitle = @($Global:DeviceCache.Devices | Where-Object {$Miner_DeviceModels -icontains $_.Model} | Select-Object -ExpandProperty Model_Name -Unique | Sort-Object | Foreach-Object {"$($_) ($(@($Global:DeviceCache.Devices | Where-Object Model_Name -eq $_ | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
+        $Miner_DeviceTitle = @($Global:DeviceCache.Devices | Where-Object {$Miner_DeviceModels -icontains $_.Model} | Select-Object Model,Model_Name -Unique | Sort-Object -Property Model_Name,Model | Foreach-Object {$Model = $_.Model;"$($_.Model_Name) ($(@($Global:DeviceCache.Devices | Where-Object Model -eq $Model | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
         Write-Host $Miner_DeviceTitle
         Write-Host $("=" * $Miner_DeviceTitle.Length)
 
