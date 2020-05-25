@@ -73,11 +73,18 @@ $Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.
                    "eu-ru01.miningrigrentals.com",
                    "ap-01.miningrigrentals.com")
 
+$Devices_Rented = @()
 foreach ($Worker1 in $Workers) {
 
     if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
 
+    $Rigs_DeviceModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $Worker1} | Select-Object -ExpandProperty Name | Select-Object -Unique)
+    $Rigs_Devices = @($Global:DeviceCache.Devices | Where-Object {($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $Rigs_DeviceModels -contains $_.Model)} | Select-Object -ExpandProperty Name | Select-Object -Unique | Sort-Object)
+
     if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
+        if ($Worker1 -ne $Worker) {
+            $Devices_Rented = @($Devices_Rented + $Rigs_Devices | Select-Object -Unique | Sort-Object)
+        }
         if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and -not $_.status.rented -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) {
             Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" > $null
             $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}
@@ -91,7 +98,8 @@ foreach ($Worker1 in $Workers) {
                 ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
                 ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
                 ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
-                ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm)
+                ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
+                (Compare-Object $Devices_Rented $Rigs_Devices -ExcludeDifferent -IncludeEqual | Measure-Object).Count
                 )) {$Valid_Rigs += $_.id}
         }
 
