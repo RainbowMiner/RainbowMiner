@@ -322,7 +322,7 @@ function Start-Setup {
                                 Write-Host "Please lookup your BTC wallet address. It is easy: copy it to your clipboard and then press the right mouse key in this window to paste" -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -Length 34 -Mandatory -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -MinLength 34 -MaxLength 64 -Mandatory -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
 
                         "addcoins1" {
@@ -371,7 +371,7 @@ function Start-Setup {
                             }
 
                             if ($NicehashWallet -eq "`$Wallet"){$NicehashWallet=$Config.Wallet}
-                            $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash BTC mining wallet address" -Default $NicehashWallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash BTC mining wallet address" -Default $NicehashWallet -MinLength 34 -MaxLength 64 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "nicehash2" {
                             if ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet) {
