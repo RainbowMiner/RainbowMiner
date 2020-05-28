@@ -421,6 +421,21 @@ function Set-MinerStats {
         }
     })
     if ($Watchdog) {-not $Miner_Failed_Total}
+
+    if (-not $Session.Benchmarking -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDonationRun) {
+        if ($Global:DeviceCache.DeviceNames.CPU -ne $null) {
+            $CurrentProfitCPU = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.DeviceModel -eq "CPU" -and $_.Pool -notcontains "MiningRigRentals"}).Profit | Measure-Object -Sum).Sum
+            if ($CurrentProfitCPU -gt 0) {
+                Set-Stat -Name "Profit-CPU" -Value $CurrentProfitCPU -Duration $StatSpan > $null
+            }
+        }
+    
+        $CurrentProfitGPU = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.DeviceModel -ne "CPU" -and $_.Pool -notcontains "MiningRigRentals"}).Profit | Measure-Object -Sum).Sum
+        if ($Session.Config.UsePowerPrice) {$CurrentProfitGPU += ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.DeviceModel -ne "CPU" -and $_.Pool -notcontains "MiningRigRentals"}).Profit_Cost | Measure-Object -Sum).Sum}
+        if ($CurrentProfitGPU -gt 0) {
+            Set-Stat -Name "Profit-GPU" -Value $CurrentProfitGPU -Duration $StatSpan > $null
+        }
+    }
 }
 
 function Invoke-ReportMinerStatus {
@@ -3027,9 +3042,12 @@ function Invoke-Core {
         if ($BalancesData -ne $null) {Remove-Variable "BalancesData"}
     }
 
-    #Display exchange rates
+    #Get worker specific profits without cost
+
     $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit | Measure-Object -Sum).Sum
     if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost;$CurrentProfitWithoutCostTotal += ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit_Cost | Measure-Object -Sum).Sum}
+
+    #Display exchange rates
     [System.Collections.Generic.List[string]]$StatusLine = @()
     foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
             $Miner_Currency_Out = $Miner_Currency
@@ -3354,6 +3372,8 @@ function Invoke-Core {
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
+
+    #Store CPU/GPU statitics
     Set-MinerStats ($Session.Timer - $MinerStart)
 
     #Cleanup stopped miners    
