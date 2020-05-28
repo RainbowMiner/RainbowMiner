@@ -1271,7 +1271,7 @@ function Invoke-Core {
                 $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Foreach-Object {$_ -replace "-.+$"} | Select-Object -Unique -First 1
                 foreach ($p in @($Session.Config.Devices.PSObject.Properties.Name)) {
                     foreach ($q in @("Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName")) {
-                        if ($Session.Config.Devices.$p.$q -is [string]){$Session.Config.Devices.$p.$q = if ($Session.Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Session.Config.Devices.$p.$q.Trim(),"\s*[,;]+\s*")}}
+                        if ($Session.Config.Devices.$p.$q -is [string]){$Session.Config.Devices.$p.$q = @(if ($Session.Config.Devices.$p.$q.Trim() -ne ""){[regex]::split($Session.Config.Devices.$p.$q.Trim(),"\s*[,;]+\s*")})}
                     }
                     $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                     $Session.Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Session.Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
@@ -1283,6 +1283,9 @@ function Invoke-Core {
                         }
                     }
                     $Session.Config.Devices.$p | Add-Member PowerAdjust ([double]($Session.Config.Devices.$p.PowerAdjust -replace "[^0-9`.]+")) -Force
+                    if ($p -eq "CPU" -and -not $Session.Config.Devices.$p.Worker) {
+                        $Session.Config.Devices.$p | Add-Member Worker "$($Session.Config.WorkerName)cpu" -Force
+                    }
                 }
             }
             if ($AllDevices -ne $null) {Remove-Variable "AllDevices"}
