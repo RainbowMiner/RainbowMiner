@@ -1283,8 +1283,8 @@ function Invoke-Core {
                         }
                     }
                     $Session.Config.Devices.$p | Add-Member PowerAdjust ([double]($Session.Config.Devices.$p.PowerAdjust -replace "[^0-9`.]+")) -Force
-                    if ($p -eq "CPU" -and -not $Session.Config.Devices.$p.Worker) {
-                        $Session.Config.Devices.$p | Add-Member Worker "$($Session.Config.WorkerName)cpu" -Force
+                    if (-not $Session.Config.Devices.$p.Worker) {
+                        $Session.Config.Devices.$p | Add-Member Worker "$($Session.Config.WorkerName)$(if ($p -eq "CPU") {"cpu"})" -Force
                     }
                 }
             }
