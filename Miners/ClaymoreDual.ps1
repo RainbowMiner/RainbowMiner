@@ -124,7 +124,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 if ($Miner_Config -and $Miner_Config -notcontains $_.SecondIntensity) {$Miner_Device = $null}
             }
 
-			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
+			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)

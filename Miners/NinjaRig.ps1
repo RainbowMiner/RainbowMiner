@@ -62,12 +62,16 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
                 $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
                 $Miner_Type   = "CPU"
+
+                $All_Algorithms = @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")
             } else {
                 $DeviceParams = ""
                 $Miner_Type   = "GPU"
+
+                $All_Algorithms = @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")
             }
 
-		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
+		    foreach($Algorithm_Norm in $All_Algorithms) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
