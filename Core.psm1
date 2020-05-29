@@ -423,19 +423,27 @@ function Set-MinerStats {
     if ($Watchdog) {-not $Miner_Failed_Total}
 
     if (-not $Session.Benchmarking -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDonationRun) {
-        $CurrentProfitGPU = 0
+        $CurrentProfitGPU   = 0
+        $DeviceNameCountGPU = 0
         foreach ($CurrentModel in $Session.Config.DeviceModel.Where({$_ -notmatch "-"})) {
             $Global:ActiveMiners.Where({$_.Profit -ne $null -and $_.DeviceModel -eq $CurrentModel -and $_.Pool -notcontains "MiningRigRentals"}) | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
                 $CurrentProfit = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost) {$_.Profit_Cost})
                 if ($CurrentProfit -gt 0) {
+                    if ($CurrentModel -ne "CPU") {
+                        $CurrentProfitGPU   += $CurrentProfit
+                        $DeviceNameCountGPU += $_.DeviceName.Count
+                        $CurrentModel        = $Global:DeviceCache.DeviceNames.$CurrentModel -join "-"
+                    }
                     Set-Stat -Name "Profit-$CurrentModel" -Value $CurrentProfit -Duration $StatSpan > $null
-                    if ($CurrentModel -ne "CPU") {$CurrentProfitGPU += $CurrentProfit}
                 }
             }
         }
 
         if ($CurrentProfitGPU -gt 0) {
-            Set-Stat -Name "Profit-GPU" -Value $CurrentProfitGPU -Duration $StatSpan > $null
+            $DeviceNameGPU = @($Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu"}) | Select-Object -ExpandProperty Name | Sort-Object)
+            if ($DeviceNameGPU -and $DeviceNameGPU.Count -gt $DeviceNameCountGPU) {
+                Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" -Value $CurrentProfitGPU -Duration $StatSpan > $null
+            }
         }
     }
 }
