@@ -75,7 +75,6 @@ function Start-Core {
             GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
             Scheduler  = @{Path='';LastWriteTime=0;Healthy=$false}
             Combos     = @{Path='';LastWriteTime=0;Healthy=$false}
-            MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
         [System.Collections.Generic.List[string]]$Session.GetTicker = @()
@@ -433,7 +432,7 @@ function Set-MinerStats {
                         $CurrentProfitGPU   += $CurrentProfit
                         $DeviceNameCountGPU += $_.DeviceName.Count
                     }
-                    Set-Stat -Name "Profit-$($Global:DeviceCache.DeviceNames.$CurrentModel -join "-")" -Value $CurrentProfit -Duration $StatSpan > $null
+                    Set-Stat -Name "Profit-$($Global:DeviceCache.DeviceNames.$CurrentModel -join "-")" -Value $CurrentProfit -Duration $StatSpan -UplimProtection 3 > $null
                 }
             }
         }
@@ -441,7 +440,7 @@ function Set-MinerStats {
         if ($CurrentProfitGPU -gt 0) {
             $DeviceNameGPU = @($Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu"}) | Select-Object -ExpandProperty Name | Sort-Object)
             if ($DeviceNameGPU -and $DeviceNameGPU.Count -gt $DeviceNameCountGPU) {
-                Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" -Value $CurrentProfitGPU -Duration $StatSpan > $null
+                Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" -Value $CurrentProfitGPU -Duration $StatSpan -UplimProtection 3 > $null
             }
         }
     }

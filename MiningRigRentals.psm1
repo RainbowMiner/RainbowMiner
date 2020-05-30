@@ -19,13 +19,8 @@ function Set-MiningRigRentalConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{PriceStrategy="mrr";PriceBTC = "0";PriceFactor = "0";MinPriceStrategy="profit";MinPriceBTC = "0";MinPriceFactor = "30";EnablePriceUpdates = "1";Title="";Description=""}
+            $Default = [PSCustomObject]@{EnableAutoPrice="1";PriceBTC = "0";PriceFactor = "0";MinPriceBTC = "0";EnablePriceUpdates = "1"}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
-
-            #price strategies
-            # profit = use rig's avergage profit as price
-            # static = use PriceBTC/MinPriceBTC as price
-            # mrr    = use MiningRigRental's suggested_price
             
             foreach ($Algorithm_Norm in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Data | Where-Object {$_} | Foreach-Object {Get-MiningRigRentalAlgorithm $_.name}) | Select-Object -Unique)) {
                 if (-not $Preset.$Algorithm_Norm) {$Preset | Add-Member $Algorithm_Norm $(if ($Setup.$Algorithm_Norm) {$Setup.$Algorithm_Norm} else {[PSCustomObject]@{}}) -Force}
@@ -273,21 +268,105 @@ param(
 function Get-MiningRigRentalAlgos {
     $Name = "MiningRigRentals"
 
+    $Pool_Request = [PSCustomObject]@{}
     try {
         $Pool_Request = Invoke-RestMethodAsync "https://www.miningrigrentals.com/api/v2/info/algos" -tag $Name -cycletime 120
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Pool API ($Name) has failed. "
-        return
     }
 
     if (-not $Pool_Request.success) {
-        Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+        Write-Log -Level Warn "Pool API ($Name/info/algos) returned nothing. "
         return
     }
 
     $Pool_Request.data
+}
+
+function Get-MiningRigRentalServers {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $False)]
+    $Region
+)
+
+    $Name = "MiningRigRentals"
+
+    $Pool_Request = [PSCustomObject]@{}
+    try {
+        $Pool_Request = Invoke-RestMethodAsync "https://www.miningrigrentals.com/api/v2/info/servers" -tag $Name -cycletime 86400
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+
+    if (-not $Pool_Request.success) {
+        Write-Log -Level Warn "Pool API ($Name/info/servers) has failed. "
+        $Servers = @(
+            [PSCustomObject]@{
+                id            = 3
+                name          = "us-east01.miningrigrentals.com"
+                region        = "us-east"
+                port          = 3333
+                ethereum_port = 3344
+            }
+            [PSCustomObject]@{
+                id            = 4
+                name          = "us-west01.miningrigrentals.com"
+                region        = "us-west"
+                port          = 3333
+                ethereum_port = 3344
+            }
+            [PSCustomObject]@{
+                id            = 10
+                name          = "eu-de02.miningrigrentals.com"
+                region        = "eu-de"
+                port          = 3333
+                ethereum_port = 3344
+            }
+            [PSCustomObject]@{
+                id            = 5
+                name          = "eu-01.miningrigrentals.com"
+                region        = "eu"
+                port          = 3333
+                ethereum_port = 3344
+            }
+            [PSCustomObject]@{
+                id            = 6
+                name          = "us-central01.miningrigrentals.com"
+                region        = "us-central"
+                port          = 3333
+                ethereum_port = 3344
+            }
+            [PSCustomObject]@{
+                id            = 9
+                name          = "eu-ru01.miningrigrentals.com"
+                region        = "eu-ru"
+                port          = 3333
+                ethereum_port = 3344
+            }
+            [PSCustomObject]@{
+                id            = 2
+                name          = "ap-01.miningrigrentals.com"
+                region        = "ap"
+                port          = 3333
+                ethereum_port = 3344
+            }
+        )
+    } else {
+        $Servers = $Pool_Request.data
+    }
+
+    if (-not $Region) {$Servers.name}
+    else {
+        if ($Region -is [string]) {$Region = @(Get-Region $Region)+@(Get-Region2 $Region)}
+        foreach($Region1 in $Region) {
+            $RigServer = $Servers.Where({$r = Get-Region ($_.region -replace "^eu-");$_.region -ne "eu-de" -and ($r -eq $Region1)}) | Select-Object -ExpandProperty name
+            if ($RigServer) {break}
+        }
+        if ($RigServer) {$RigServer} else {($Servers | Select-Object -First 1).name}
+    }
 }
 
 function Get-MiningRigRentalRigs {
@@ -309,48 +388,6 @@ function Update-MiningRigRentalRigs {
     Write-Host "Not implemented"
 }
 
-function Invoke-MiningRigRentalCreateRigs {
-    Write-Host "Not implemented"
-}
-
 function Invoke-MiningRigRentalUpdatePrices {
     Write-Host "Not implemented"
-    return
-
-    $MRRActual = (Get-ConfigContent "Pools").MiningRigRentals
-    $MRRActual.Worker = $MRRActual.Worker -replace "^\`$.+"
-    if (-not $MRRActual.Worker) {$MRRActual.Worker = $Session.Config.WorkerName}
-
-    if (-not $MRRActual.API_Key -or -not $MRRActual.API_Secret -or -not (Test-Config "Pools" -Health)) {return}
-
-    $MRRActual.PSObject.Properties | Foreach-Object {
-        $Rec = $_
-        if ($Rec.Name -match "^(Allow|Enable)" -and $Rec.Value -isnot [bool]) {
-            $MRRActual | Add-Member $Rec.Name (Get-Yes $Rec.Value) -Force
-        } elseif ($Rec.Name -match "(Algorithm|Coin|Miner|Currencies)" -and $Rec.Value -is [string]) {
-            $MRRActual | Add-Member $Rec.Name (Get-ConfigArray $Rec.Value) -Force
-        } elseif ($Rec.Name -match "^Price" -and $Rec.Value -isnot [double]) {
-            $MRRActual | Add-Member $Rec.Name ([double]$MRRActual.Value) -Force
-        }
-    }
-
-    $AllMRRConfig = Get-ConfigContent "MRR" -UpdateLastWriteTime
-    if (Test-Config "MRR" -Health) {
-        $MRRActual | Add-Member Algorithms ([PSCustomObject]@{}) -Force
-        $AllMRRConfig.PSObject.Properties.Name | Foreach-Object {
-            $m = $_
-            $MRRActual.Algorithms | Add-Member $m $AllMRRConfig.$m -Force
-            $MRRActual.Algorithms.$m | Add-Member EnableAutoCreate ($MRRActual.EnableAutoCreate -and (Get-Yes $MRRActual.Algorithms.$m.EnableAutoCreate)) -Force
-            $MRRActual.Algorithms.$m | Add-Member EnablePriceUpdates ($MRRActual.EnablePriceUpdates -and (Get-Yes $MRRActual.Algorithms.$m.EnablePriceUpdates)) -Force
-            $MRRActual.Algorithms.$m | Add-Member EnableAutoPrice ($MRRActual.EnableAutoPrice -and (Get-Yes $MRRActual.Algorithms.$m.EnableAutoPrice)) -Force
-            $MRRActual.Algorithms.$m | Add-Member EnableMinimumPrice ($MRRActual.EnableMinimumPrice -and (Get-Yes $MRRActual.Algorithms.$m.EnableMinimumPrice)) -Force
-            $MRRActual.Algorithms.$m | Add-Member PriceBTC ([double]$MRRActual.Algorithms.$m.PriceBTC) -Force
-            $MRRActual.Algorithms.$m | Add-Member PriceFactor ([double]$MRRActual.Algorithms.$m.PriceFactor) -Force
-            if (-not $MRRActual.Algorithms.$m.PriceBTC) {$MRRActual.Algorithms.$m.PriceBTC = $MRRActual.PriceBTC}
-            if (-not $MRRActual.Algorithms.$m.PriceFactor) {$MRRActual.Algorithms.$m.PriceFactor = $MRRActual.PriceFactor}
-        }
-    }
-    $Models = Get-Device (Get-ConfigArray $Session.Config.DeviceName) | Select-Object -ExpandProperty Model | Select-Object -Unique | Sort-Object
-
-    $DevicesActual = Get-ConfigContent "Devices"
 }

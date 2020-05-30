@@ -11,10 +11,25 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
-    [Bool]$EnableMining = $false,
+    [String]$User = "",
     [String]$API_Key = "",
     [String]$API_Secret = "",
-    [String]$User = ""
+    [Bool]$EnableMining = $false,
+    [Bool]$EnableAutoCreate = $false,
+    [Bool]$EnableAutoUpdate = $false,
+    [Bool]$EnableAutoPrice = $false,
+    [Bool]$EnableMinimumPrice = $false,
+    [String]$AutoCreateMinProfitPercent = "50",
+    [String]$AutoCreateMinCPUProfitBTC = "0.00001",
+    [String]$AutoCreateMaxMinHours = "24",
+    [String]$AutoPriceModifierPercent = "0",
+    [String]$PriceBTC = "0",
+    [String]$PriceFactor = "1.3",
+    [String]$PriceCurrencies = "BTC",
+    [String]$MinHours = "3",
+    [String]$MaxHours = "168",
+    [String]$Title = "",
+    [String]$Description = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -56,190 +71,386 @@ $Pool_Request = [PSCustomObject]@{}
 
 if (-not ($Pool_Request = Get-MiningRigRentalAlgos)) {return}
 
-$Pool_Request_Tag = Get-MD5Hash "$($Pool_Request.name | Sort-Object)"
-if ($Session.MRRTag -ne $Pool_Request_Tag) {
-    Set-MiningRigRentalConfigDefault -Data $Pool_Request > $null
-    $Session.MRRTag = $Pool_Request_Tag
-}
+if ($AllRigs_Request) {
 
-if (-not $AllRigs_Request) {return}
+    [hashtable]$Pool_RegionsTable = @{}
 
-[hashtable]$Pool_RegionsTable = @{}
+    @("eu","us","asia","ru") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-@("eu","us","asia","ru") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+    $Pool_AllHosts = Get-MiningRigRentalServers
 
-$Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.com","us-central01.miningrigrentals.com",
-                   "eu-01.miningrigrentals.com","eu-de01.miningrigrentals.com","eu-de02.miningrigrentals.com",
-                   "eu-ru01.miningrigrentals.com",
-                   "ap-01.miningrigrentals.com")
+    $Workers_Devices = @{}
+    $Devices_Rented  = @()
+    foreach ($Worker1 in $Workers) {
 
-$Workers_Devices = @{}
-$Devices_Rented  = @()
-foreach ($Worker1 in $Workers) {
+        if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
 
-    if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
+        $Rigs_DeviceModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $Worker1} | Select-Object -ExpandProperty Name | Select-Object -Unique)
+        $Workers_Devices[$Worker1] = @($Global:DeviceCache.Devices | Where-Object {$Rigs_DeviceModels -contains $_.Model} | Select-Object -ExpandProperty Name | Select-Object -Unique | Sort-Object)
 
-    $Rigs_DeviceModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $Worker1} | Select-Object -ExpandProperty Name | Select-Object -Unique)
-    $Workers_Devices[$Worker1] = @($Global:DeviceCache.Devices | Where-Object {($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $Rigs_DeviceModels -contains $_.Model)} | Select-Object -ExpandProperty Name | Select-Object -Unique | Sort-Object)
-
-    if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
-        $Devices_Rented = @($Devices_Rented + $Workers_Devices[$Worker1] | Select-Object -Unique | Sort-Object)
-    }
-}
-
-foreach ($Worker1 in $Workers) {
-
-    if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
-
-    if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
-        if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and -not $_.status.rented -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) {
-            Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" > $null
-            $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}
-            $Disable_Rigs | Foreach-Object {Set-MiningRigRentalStatus $_ -Stop}
+        if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
+            $Devices_Rented = @($Devices_Rented + $Workers_Devices[$Worker1] | Select-Object -Unique | Sort-Object)
         }
-    } else {
-        $Valid_Rigs = @()
-        $Rigs_Request | Select-Object id,type | Foreach-Object {
-            $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
-            if (-not (
-                ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
-                ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
-                ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
-                ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
-                (Compare-Object $Devices_Rented $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count
-                )) {$Valid_Rigs += $_.id}
-        }
-
-        if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available" -and $Valid_Rigs -contains $_.id} | Select-Object -ExpandProperty id | Sort-Object) {
-            Invoke-MiningRigRentalRequest "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" > $null
-            $Rigs_Request | Where-Object {$Enable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="available"}
-        }
-        if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.available_status -eq "available" -and $Valid_Rigs -notcontains $_.id} | Select-Object -ExpandProperty id | Sort-Object) {
-            Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" > $null
-            $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}        
-        }
-        $Rigs_Request | Foreach-Object {Set-MiningRigRentalStatus $_.id -Stop}
     }
 
-    if (-not ($Rigs_Ids = $Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object)) {continue}
+    foreach ($Worker1 in $Workers) {
 
-    $RigInfo_Request = Get-MiningRigInfo -id $Rigs_Ids -key $API_Key -secret $API_Secret
-    if (-not $RigInfo_Request) {
-        Write-Log -Level Warn "Pool API ($Name) rig $Worker1 info request has failed. "
-        return
-    }
+        if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
 
-    $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
-        $Pool_RigId = $_.id
-        $Pool_Algorithm = $_.type
-        $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
-        $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
-
-        if ($false) {
-            $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
-            $Divisor = Get-MiningRigRentalsDivisor $Pool_Price_Data.unit
-            $Pool_Price = $Pool_Price_Data.amount
+        if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
+            if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and -not $_.status.rented -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) {
+                Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" > $null
+                $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}
+                $Disable_Rigs | Foreach-Object {Set-MiningRigRentalStatus $_ -Stop}
+            }
         } else {
-            $Divisor = Get-MiningRigRentalsDivisor $_.price.type
-            $Pool_Price = $_.price.BTC.price
-        }
-
-        if (-not $InfoOnly) {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
-        }
-
-        $Pool_Rig = $RigInfo_Request | Where-Object {$_.rigid -eq $Pool_RigId -and $_.port -ne "error"}
-
-        if ($Pool_Rig) {
-            $Pool_Price = $Stat.$StatAverage
-            if ($_.status.status -eq "rented" -or $_.status.rented) {
-                try {
-                    $Pool_RigRental = Invoke-MiningRigRentalRequest "/rental" $API_Key $API_Secret -params (@{type="owner";"rig"=$Pool_RigId;history=$false;limit=1}) -Cache $([double]$_.status.hours*3600)
-                    if ($Rig_RentalPrice = [Double]$Pool_RigRental.rentals.price.advertised / 1e6) {
-                        $Pool_Price = $Rig_RentalPrice
-                        if ($Pool_RigRental.rentals.price.currency -ne "BTC") {$Pool_Price *= $_.price.BTC.price/$_.price."$($Pool_RigRental.rentals.price.currency)".price}
-                    }
-                } catch {}
+            $Valid_Rigs = @()
+            $Rigs_Request | Select-Object id,type | Foreach-Object {
+                $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
+                if (-not (
+                    ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
+                    ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
+                    ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
+                    ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
+                    (Compare-Object $Devices_Rented $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count
+                    )) {$Valid_Rigs += $_.id}
             }
 
-            $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
-            if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
-                $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
-                $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -notmatch "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2 | Foreach-Object {$Pool_Failover+=$_}
-                if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
+            if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available" -and $Valid_Rigs -contains $_.id} | Select-Object -ExpandProperty id | Sort-Object) {
+                Invoke-MiningRigRentalRequest "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" > $null
+                $Rigs_Request | Where-Object {$Enable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="available"}
+            }
+            if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.available_status -eq "available" -and $Valid_Rigs -notcontains $_.id} | Select-Object -ExpandProperty id | Sort-Object) {
+                Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" > $null
+                $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}        
+            }
+            $Rigs_Request | Foreach-Object {Set-MiningRigRentalStatus $_.id -Stop}
+        }
 
-                $Miner_Server = $Pool_Rig.server
-                $Miner_Port   = $Pool_Rig.port
-                
-                #BEGIN temporary fixes
+        if (-not ($Rigs_Ids = $Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object)) {continue}
 
-                #
-                # hardcoded fixes due to MRR stratum or API failures
-                #
+        $RigInfo_Request = Get-MiningRigInfo -id $Rigs_Ids -key $API_Key -secret $API_Secret
+        if (-not $RigInfo_Request) {
+            Write-Log -Level Warn "Pool API ($Name) rig $Worker1 info request has failed. "
+            return
+        }
 
-                if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
-                    $Miner_Server = $Pool_Failover | Select-Object -First 1
-                    $Miner_Port   = 3333
-                    $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
+        $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
+            $Pool_RigId = $_.id
+            $Pool_Algorithm = $_.type
+            $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
+            $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
+
+            if ($false) {
+                $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
+                $Divisor = Get-MiningRigRentalsDivisor $Pool_Price_Data.unit
+                $Pool_Price = $Pool_Price_Data.amount
+            } else {
+                $Divisor = Get-MiningRigRentalsDivisor $_.price.type
+                $Pool_Price = $_.price.BTC.price
+            }
+
+            if (-not $InfoOnly) {
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
+            }
+
+            $Pool_Rig = $RigInfo_Request | Where-Object {$_.rigid -eq $Pool_RigId -and $_.port -ne "error"}
+
+            if ($Pool_Rig) {
+                $Pool_Price = $Stat.$StatAverage
+                if ($_.status.status -eq "rented" -or $_.status.rented) {
+                    try {
+                        $Pool_RigRental = Invoke-MiningRigRentalRequest "/rental" $API_Key $API_Secret -params (@{type="owner";"rig"=$Pool_RigId;history=$false;limit=1}) -Cache $([double]$_.status.hours*3600)
+                        if ($Rig_RentalPrice = [Double]$Pool_RigRental.rentals.price.advertised / 1e6) {
+                            $Pool_Price = $Rig_RentalPrice
+                            if ($Pool_RigRental.rentals.price.currency -ne "BTC") {$Pool_Price *= $_.price.BTC.price/$_.price."$($Pool_RigRental.rentals.price.currency)".price}
+                        }
+                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                 }
 
-                if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
+                $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
+                if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
+                    $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
+                    $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -notmatch "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2 | Foreach-Object {$Pool_Failover+=$_}
+                    if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
 
-                $Pool_SSL = $Pool_Algorithm_Norm -eq "EquihashR25x5"
+                    $Miner_Server = $Pool_Rig.server
+                    $Miner_Port   = $Pool_Rig.port
+                
+                    #BEGIN temporary fixes
 
-                #END temporary fixes
+                    #
+                    # hardcoded fixes due to MRR stratum or API failures
+                    #
+
+                    if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
+                        $Miner_Server = $Pool_Failover | Select-Object -First 1
+                        $Miner_Port   = 3333
+                        $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
+                    }
+
+                    if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
+
+                    $Pool_SSL = $Pool_Algorithm_Norm -eq "EquihashR25x5"
+
+                    #END temporary fixes
+                    
+                    $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
+
+                    [PSCustomObject]@{
+                        Algorithm     = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
+					    Algorithm0    = $Pool_Algorithm_Norm
+                        CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{if ($Error.Count){$Error.RemoveAt(0)};"$($_.status.hours)h"}} else {""}
+                        CoinSymbol    = $Pool_CoinSymbol
+                        Currency      = "BTC"
+                        Price         = $Pool_Price
+                        StablePrice   = $Stat.Week
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                        Host          = $Miner_Server
+                        Port          = $Miner_Port
+                        User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
+                        Pass          = "x"
+                        Region        = $Pool_RegionsTable."$($_.region)"
+                        SSL           = $Pool_SSL
+                        Updated       = $Stat.Updated
+                        PoolFee       = $Pool_Fee
+                        Exclusive     = ($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable
+                        Idle          = if (($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable) {$false} else {-not $EnableMining}
+                        Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
+                            [PSCustomObject]@{
+                                Protocol = "stratum+tcp"
+                                Host     = $_
+                                Port     = if ($Miner_Port -match "^33\d\d$") {$Miner_Port} else {3333}
+                                User     = "$($User).$($Pool_RigId)"
+                                Pass     = "x"
+                            }
+                        })
+                        EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"qtminer"} else {$null}
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+					    Disabled      = $false
+					    HasMinerExclusions = $false
+					    Price_Bias    = 0.0
+					    Price_Unbias  = 0.0
+                        Wallet        = $Wallets.BTC
+                        Worker        = $Worker1
+                        Email         = $Email
+                    }
+                }
+
+                if (-not $Pool_RigEnable) {
+                    if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -in @(3322,3333,3344)) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented))) {
+                        $Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -eq 3322 -or $Pool_Rig.port -eq 3333 -or $Pool_Rig.port -eq 3344) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented)) {return}}
+                    }
+                }
+            }
+        }
+    }
+
+    Remove-Variable "Workers_Devices"
+    Remove-Variable "Devices_Rented"
+}
+
+#
+# we will check for auto operations every hour but not at startup
+#
+if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDonationRun -and $Session.RoundCounter -and (-not $Session.MRRlastautoperation -or $Session.MRRlastautoperation -lt (Get-Date).AddHours(-1))) {
+
+    foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoPriceModifierPercent","PriceBTC","PriceFactor","MinHours","MaxHours")) {
+        try {
+            $val = "$(Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore)" -replace ",","." -replace "[^0-9\.\-]+"
+            Remove-Variable -Name $fld
+            Set-Variable -Name $fld -Value ([Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {$val[0] + "$($val.Substring(1) -replace "[^0-9\.]")"}))
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Error in MiningRigRentals parameter `"$fld`" in pools.config.txt"
+        }
+    }
+
+    $RigDivisors = @("h","kh","mh","gh","th") | Foreach-Object {[PSCustomObject]@{type=$_;value=(ConvertFrom-Hash "1$_")}}
+    if ($MinHours -lt 3) {$MinHours = 3}
+    if ($MaxHours -lt $MinHours) {$MaxHours = $MinHours}
+    if ($AutoCreateMaxMinHours -lt 3) {$AutoCreateMaxMinHours = 3}
+    $RigModifier = [Math]::Max(0,[Math]::Min(30,$AutoPriceModifierPercent))
+    $PriceCurrencies_Array = @($PriceCurrencies -split "[,; ]+" | Select-Object)
+
+    $RigServer  = ""
+    $Title = $Title.Trim()
+
+    $RigCreated = 0
+    $RigsToUpdate = @()
+
+    $RigRun = @()
+    if ($EnableAutoCreate) {$RigRun += "create"}
+    if ($EnableAutoUpdate) {$RigRun += "update"}
+
+    #Auto create rigs
+
+    foreach($RigRunMode in $RigRun) {
+
+        foreach ($RigName in $Workers) {
+
+            if ($RigRunMode -eq "create" -and $RigCreated -ge 10) {break}
+
+            try {
+                $RigModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
+                $RigDevice = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
+                $RigDeviceProfit = (Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")").Day
+
+                if ($RigDeviceProfit) {
+                    $RigModels = @($RigDevice | Select-Object -ExpandProperty Model -Unique | Sort-Object)
+                    $RigAlreadyCreated = @($AllRigs_Request.Where({$_.description -match "\[$RigName\]" -and ($RigRunMode -eq "create" -or -not $_.status.rented) -and ($RigRunMode -eq "create" -or (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1)}))
+                    $RigProfitBTCLimit = [Math]::Max($RigDeviceProfit * [Math]::Min($AutoCreateMinProfitPercent,100)/100,$(if (($RigModels.Where({$_ -eq "CPU"}) | Measure-Object).Count) {$AutoCreateMinCPUProfitBTC} else {0}))
+                    $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
+                        $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
+                        $RigSpeed  = 0
+                        $RigProfit = 0
+                        foreach ($Model in $RigModels) {
+                            $Global:ActiveMiners.Where({"$($_.BaseAlgorithm -join "-")" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}) | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
+                                $RigSpeed += $_.Speed | Select-Object -First 1
+                                $RigProfit+= $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                            }
+                        }
+
+                        $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
+                        $RigMinPrice    = if ($RigSpeed -gt 0) {$RigDeviceProfit * $PriceFactor / $RigSpeed} else {0}
+                        $RigPrice       = if ($RigSpeed -gt 0 -and $PriceBTC -gt 0) {$PriceBTC / $RigSpeed} else {$RigMinPrice}
+       
+                        if ($RigSpeed -gt 0 -and ($RigRunMode -eq "update" -or $RigProfit -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
+
+                            $RigMinPrice0 = $RigMinPrice
+
+                            $PriceDivisor = 0
+                            while($PriceDivisor -lt $RigDivisors.Count -and $RigMinPrice -lt 1e-3) {
+                                $RigMinPrice *= 1000
+                                $RigPrice    *= 1000
+                                $PriceDivisor++
+                            }
+                            $RigMinPrice = [Decimal][Math]::Round($RigMinPrice,12)
+                            $RigPrice    = [Decimal][Math]::Round($RigPrice,12)
+
+                            $HashDivisor = 0
+                            while ($HashDivisor -lt $RigDivisors.Count -and $RigSpeed -gt 1000) {
+                                $RigSpeed /= 1000
+                                $HashDivisor++
+                            }
+
+                            if ($RigSpeed -lt 1) {$RigSpeed = [Math]::Floor($RigSpeed*100)/100}
+                            elseif ($RigSpeed -lt 10) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
+                            else {$RigSpeed = [Math]::Floor($RigSpeed)}
+
+                            $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
+
+                            $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MinHours * $Multiply / 24 > 0.0001)) {$MinHours} else {[Math]::Ceiling(0.0001*24/($RigMinPrice*$RigSpeed*$Multiply))}
+
+                            #Write-Log -Level Warn "$RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+
+                            if ($RigMinHours -le $AutoCreateMaxMinHours) {
+
+                                $RigMaxHours = [Math]::Max($MinHours,$MaxHours)
+                                $Algorithm_Norm_Mapped = Get-MappedAlgorithm $Algorithm_Norm
+                                if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion) | Select-Object)}
             
-                [PSCustomObject]@{
-                    Algorithm     = "$Pool_Algorithm_Norm$(if ($Worker1 -ne $Worker) {"-$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"})"
-					Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
-                    CoinSymbol    = $Pool_CoinSymbol
-                    Currency      = "BTC"
-                    Price         = $Pool_Price
-                    StablePrice   = $Stat.Week
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                    Host          = $Miner_Server
-                    Port          = $Miner_Port
-                    User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
-                    Pass          = "x"
-                    Region        = $Pool_RegionsTable."$($_.region)"
-                    SSL           = $Pool_SSL
-                    Updated       = $Stat.Updated
-                    PoolFee       = $Pool_Fee
-                    Exclusive     = ($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable
-                    Idle          = if (($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable) {$false} else {-not $EnableMining}
-                    Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
-                        [PSCustomObject]@{
-                            Protocol = "stratum+tcp"
-                            Host     = $_
-                            Port     = if ($Miner_Port -match "^33\d\d$") {$Miner_Port} else {3333}
-                            User     = "$($User).$($Pool_RigId)"
-                            Pass     = "x"
+                                $CreateRig = if ($RigRunMode -eq "create") {
+                                    @{
+                                        name      = "$(if ($Title -match "%algorithm%") {$Title -replace "%algorithm%",$Algorithm_Norm_Mapped} else {"$(if ($Title) {$Title} else {$RigName}) $Algorithm_Norm_Mapped"})"
+                                        description = "$(if ($Description -match "%workername%") {$Description -replace "%workername%","[$RigName]"} else {"$($Description)[$RigName]"})"
+                                        type      = $_.name
+                                        status	  = "disabled"
+                                        server	  = $RigServer
+                                        ndevices  = $RigDevice.Count
+                                    }
+                                } else {
+                                    @{
+                                        ndevices = $RigDevice.Count
+                                    }
+                                }
+
+                                $CreateRig["price"] = @{
+                                    btc = @{
+                                        price     = $RigPrice
+                                        autoprice = $EnableAutoPrice
+                                        minimum	  = if ($EnableMinimumPrice) {$RigMinPrice} else {0}
+                                    }
+                                    ltc = @{
+                                        enabled   =  $PriceCurrencies_Array -contains "LTC"
+                                        autoprice = $true
+                                    }
+                                    eth = @{
+                                        enabled   =  $PriceCurrencies_Array -contains "ETH"
+                                        autoprice = $true
+                                    }
+                                    dash = @{
+                                        enabled   =  $PriceCurrencies_Array -contains "DASH"
+                                        autoprice = $true
+                                    }
+                                    bch = @{
+                                        enabled   =  $PriceCurrencies_Array -contains "BCH"
+                                        autoprice = $true
+                                    }
+                                    type = $RigDivisors[$PriceDivisor].type
+                                }
+
+                                $CreateRig["hash"] = @{
+                                    hash = $RigSpeed
+                                    type = $RigDivisors[$HashDivisor].type
+                                }
+
+                                $CreateRig["minhours"] = $RigMinHours
+                                $CreateRig["maxhours"] = $RigMaxHours
+                            
+                                if ($RigRunMode -eq "create") {
+
+                                    $CreateRig["price"]["btc"]["modifier"] = $RigModifier
+
+                                    try {
+                                        #$Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                        if ($Result.id) {
+                                            Write-Log -Level Info "Create MRR rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
+                                        }
+                                    } catch {
+                                        if ($Error.Count){$Error.RemoveAt(0)}
+                                        Write-Log -Level Warn "Unable to create MRR $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
+                                    }
+                                    $RigCreated++
+                                    if ($RigCreated -ge 10) {return}
+
+                                } elseif ($RigRunMode -eq "update") {
+
+                                    $RigType = $_.name
+                                    $RigAlreadyCreated.Where({$_.type -eq $RigType -and $_.price.BTC.autoprice}).Foreach({
+                                        $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
+                                        $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
+                                        if ($RigSpeed*$RigDivisors[$HashDivisor].value -ne $RigHashCurrent -or -not $RigMinPriceCurrent -or [Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt 0.05) {
+                                            Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
+                                            $CreateRig["id"] = $_.id
+                                            $RigsToUpdate += $CreateRig
+                                        }
+                                    })
+                                }
+                            }
                         }
                     })
-                    EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"qtminer"} else {$null}
-                    Name          = $Name
-                    Penalty       = 0
-                    PenaltyFactor = 1
-					Disabled      = $false
-					HasMinerExclusions = $false
-					Price_Bias    = 0.0
-					Price_Unbias  = 0.0
-                    Wallet        = $Wallets.BTC
-                    Worker        = $Worker1
-                    Email         = $Email
                 }
-            }
-
-            if (-not $Pool_RigEnable) {
-                if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -in @(3322,3333,3344)) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented))) {
-                    $Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -eq 3322 -or $Pool_Rig.port -eq 3333 -or $Pool_Rig.port -eq 3344) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented)) {return}}
-                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "Unable to create MRR rigs for $($RigName): $($_.Exception.Message)"
             }
         }
     }
-}
 
-Remove-Variable "Workers_Devices"
-Remove-Variable "Devices_Rented"
+    if ($RigsToUpdate.Count) {
+
+        try {
+            $Result = Invoke-MiningRigRentalRequest "/rig/batch" $API_Key $API_Secret -params @{"rigs"=$RigsToUpdate} -method "PUT" -Timeout 60
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Unable to update MRR: $($_.Exception.Message)"
+        }
+
+    }
+
+    $Session.MRRlastautoperation = Get-Date    
+}

@@ -776,6 +776,22 @@ try {
         $RemovePoolStats += @("MoneroOcean_*_Profit.txt")
     }
 
+    if ($Version -le (Get-Version "4.5.7.4")) {
+        $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        if ($PoolsActual -and $PoolsActual.MiningRigRentals) {
+            $Changes = 0
+            if ($PoolsActual.MiningRigRentals.EnableAutoCreate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoCreate = "0";$Changes++}
+            if ($PoolsActual.MiningRigRentals.EnableAutoUpdate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoUpdate = "0";$Changes++}
+            if ($PoolsActual.MiningRigRentals.EnablePriceUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnablePriceUpdates");$Changes++}
+            if ($PoolsActual.MiningRigRentals.EnableHashrateUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableHashrateUpdates");$Changes++}
+            if ($PoolsActual.MiningRigRentals.EnableRentalHoursUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableRentalHoursUpdates");$Changes++}
+            if ($Changes) {
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                $ChangesTotal += $Changes
+            }
+        }        
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
