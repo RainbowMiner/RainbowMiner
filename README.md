@@ -1485,6 +1485,37 @@ All rigs will be automatically set to status "online", at [MiningRigRentals](htt
 
 If you want to include [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) into RainbowMiner's profitability checks and switching operation, so that it behaves just like a normal pool, set "EnableMining" to "1". Only do this, if [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) is your only pool, because the mining prices (these are the prices setup at [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069)), will not reflect the real market prices.
 
+RainbowMiner can create and update your MRR rigs fully automatic!
+
+The following are the pool parameters:
+
+- **User**: Enter your MiningRigRentals username [default=]
+- **API_Key**: Enter your MiningRigRentals API key [default=]
+- **API_Secret**: Enter your MiningRigRentals API secret key [default=]
+- **EnableMining**: Enable switching to MiningRigRentals, even it is not rentend (not recommended) [default=0]
+- **EnableAutoCreate**: Automatically create MRR-rigs [default=0]
+- **EnableAutoUpdate**:  [default=0]
+- **AutoCreateMinProfitPercent**: Enter minimum profitability in percent compared to current best profit, for full rigs to be autocreated on MRR [defau
+lt=50]
+- **AutoCreateMinCPUProfitBTC**: Enter minimum one-day revenue in BTC, for a CPU-only rig to be autocreated on MRR [default=0.00001]
+- **AutoCreateMaxMinHours**: Enter the maximum hours for minimum rental time, for a rig to be autocreated on MRR [default=24]
+- **EnableAutoPrice**: Enable MRR automatic prices [default=1]
+- **EnableMinimumPrice**: Set MRR automatic minimum price [default=1]
+- **AutoPriceModifierPercent**: Autoprice modifier in percent (e.g. +10 will increase all suggested prices by 10%) [default=0]
+- **PriceBTC**: Fixed price in BTC (used, if EnableAutoPrice=0) [default=0]
+- **PriceFactor**: Enter profit multiplicator: minimum price = rig's profit x this multiplicator [default=1.75]
+- **MinHours**: Minimum rental time in hours (min. 3) [default=3]
+- **MaxHours**: Maximum rental time in hours (min. 3) [default=168]
+- **PriceCurrencies**: List of accepted currencies (must contain BTC) [default=BTC]
+- **Title**: Title for autocreate, %algorithm% will be substituted with algorithm [default=%algorithm% mining]
+- **Description**: Description for autocreate, %workername% will be substituted with rig's workername [default=Autostart mining with RainbowMiner (http
+s://rbminer.net) on Windows. This rig is idle and will activate itself, as soon, as you rent it. %workername%]
+
+Set "EnableAutoUpdate" to "1", to enable automatic updates of price/hash and minhours
+
+Set "EnableAutoCreate" to "1", to enable automatic creation of profitable rigs on MRR (this feature is not yet activated)
+
+
 ### How can I quickly copy my current configuration to a new rig?
 
 RainbowMiner comes with easy setup configuration. Download a setup.json at http://localhost:4000/setup.json from your current rig, copy it into the new rig's RainbowMiner folder *before first start* (you may easily reset RainbowMiner by simply deleting the complete `".\Config"` folder). Now answer two inputs and off you go.
