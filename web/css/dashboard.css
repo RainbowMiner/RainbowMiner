@@ -10,7 +10,7 @@ pre {
   content: "+";
 }
 
-.svg-inline--fa {
+.nav-item .svg-inline--fa {
   width: 16px;
   height: 16px;
   vertical-align: text-bottom;
@@ -211,3 +211,22 @@ pre {
 .border-top { border-top: 1px solid #e5e5e5; }
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
 
+/*
+ * Editable
+ */
+
+.editable-click, a.editable-click, a.editable-click:hover {
+    color:inherit;
+    border-bottom: none;
+}
+
+.editable-empty, .editable-empty:hover, .editable-empty:focus {
+    font-style: italic;
+    color: inherit;
+    opacity: 0.1;
+}
+
+#accordion button {
+    padding:0;
+    border:none;
+}
