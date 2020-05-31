@@ -244,6 +244,9 @@
         "Ravenminer" = [PSCustomObject]@{
             Currencies=@("RVN")
         }
+        "Ravepool" = [PSCustomObject]@{
+            Currencies=@("XGM")
+        }
         "RPlant" = [PSCustomObject]@{
             Currencies=@("BIN","CPU","MBC")
         }
@@ -252,6 +255,9 @@
         }
         "SparkPool" = [PSCustomObject]@{
             Currencies=@("ETH","GRIN","BEAM","XMR")
+        }
+        "Sunpool" = [PSCustomObject]@{
+            Currencies=@("XGM","BEAM","ATOMI")
         }
         "SuprNova" = [PSCustomObject]@{
             Currencies=@("BTG")
