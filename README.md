@@ -675,7 +675,8 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
 - **UIsorting** = set to "profit" in order to force UI sorting by profit, set to "biased" for internal biased profits [default=biased]
 - **APIport** = enter a free web-interface port localhost:<port> [default=4000]
-- **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
+- **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically [default=1]
+- **EnableUpdateDuringPause** = set to 1 if you want RainbowMiner to be updated automatically, even if it is paused [default=1]
 - **EnableAutoAlgorithmAdd** = set to 1 if Rainbowminer should add all newly added algorithms to your config.txt, during (automatic) update
 - **EnableMinerStatus** = set to 1 to enable central monitoring
 - **MinerStatusURL** = url to central monitoring server [default=https://rbminer.net]

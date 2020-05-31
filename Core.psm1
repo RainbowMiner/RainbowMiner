@@ -1148,7 +1148,7 @@ function Invoke-Core {
     $ConfirmedVersion = Confirm-Version $Session.Version
     $API.Version = $ConfirmedVersion
     $Session.AutoUpdate = $false
-    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Session.PauseMinersByActivity) {
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Session.PauseMinersByActivity -and ($Session.EnableUpdateDuringPause -or -not ($Session.PauseMiners -or $Session.PauseMinersByScheduler -or $Session.PauseMinersByActivity))) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
         if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
             $Last_Autoupdate = [PSCustomObject]@{

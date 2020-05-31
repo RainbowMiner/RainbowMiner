@@ -16,6 +16,7 @@
     EnableOCVoltage = $false
     EnableOCLinuxForcePState = $true
     EnableAutoUpdate = $true
+    EnableUpdateDuringPause = $true
     EnableErrorRatio = $true
     EnableAutoAlgorithmAdd = $true
     EnableAlgorithmMapping = $true
