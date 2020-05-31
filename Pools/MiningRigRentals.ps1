@@ -308,10 +308,10 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                         $RigSpeed  = 0
                         $RigProfit = 0
                         foreach ($Model in $RigModels) {
-                            $Global:ActiveMiners.Where({"$($_.BaseAlgorithm -join "-")" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}) | Select-Object Profit,Profit_Cost,Speed | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
-                                $RigSpeed += $_.Speed | Select-Object -First 1
+                            $Global:ActiveMiners.Where({"$($_.BaseAlgorithm -join "-")" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
+                                $RigSpeed += $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
                                 $RigProfit+= $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
-                            }
+                            })
                         }
 
                         $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
@@ -355,40 +355,40 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
             
                                 $CreateRig = if ($RigRunMode -eq "create") {
                                     @{
-                                        name      = "$(if ($Title -match "%algorithm%") {$Title -replace "%algorithm%",$Algorithm_Norm_Mapped} else {"$(if ($Title) {$Title} else {$RigName}) $Algorithm_Norm_Mapped"})"
+                                        name        = "$(if ($Title -match "%algorithm%") {$Title -replace "%algorithm%",$Algorithm_Norm_Mapped} else {"$(if ($Title) {$Title} else {$RigName}) $Algorithm_Norm_Mapped"})"
                                         description = "$(if ($Description -match "%workername%") {$Description -replace "%workername%","[$RigName]"} else {"$($Description)[$RigName]"})"
-                                        type      = $_.name
-                                        status	  = "disabled"
-                                        server	  = $RigServer
-                                        ndevices  = $RigDevice.Count
+                                        type        = $_.name
+                                        status	    = "disabled"
+                                        server	    = $RigServer
+                                        ndevices    = $RigDevice.Count
                                     }
                                 } else {
                                     @{
-                                        ndevices = $RigDevice.Count
+                                        ndevices    = $RigDevice.Count
                                     }
                                 }
 
                                 $CreateRig["price"] = @{
                                     btc = @{
-                                        price     = $RigPrice
-                                        autoprice = $EnableAutoPrice
-                                        minimum	  = if ($EnableMinimumPrice) {$RigMinPrice} else {0}
+                                        price       = $RigPrice
+                                        autoprice   = $EnableAutoPrice
+                                        minimum	    = if ($EnableMinimumPrice) {$RigMinPrice} else {0}
                                     }
                                     ltc = @{
-                                        enabled   =  $PriceCurrencies_Array -contains "LTC"
-                                        autoprice = $true
+                                        enabled     =  $PriceCurrencies_Array -contains "LTC"
+                                        autoprice   = $true
                                     }
                                     eth = @{
-                                        enabled   =  $PriceCurrencies_Array -contains "ETH"
-                                        autoprice = $true
+                                        enabled     =  $PriceCurrencies_Array -contains "ETH"
+                                        autoprice   = $true
                                     }
                                     dash = @{
-                                        enabled   =  $PriceCurrencies_Array -contains "DASH"
-                                        autoprice = $true
+                                        enabled     =  $PriceCurrencies_Array -contains "DASH"
+                                        autoprice   = $true
                                     }
                                     bch = @{
-                                        enabled   =  $PriceCurrencies_Array -contains "BCH"
-                                        autoprice = $true
+                                        enabled     =  $PriceCurrencies_Array -contains "BCH"
+                                        autoprice   = $true
                                     }
                                     type = $RigDivisors[$PriceDivisor].type
                                 }
