@@ -308,7 +308,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                         $RigSpeed  = 0
                         $RigProfit = 0
                         foreach ($Model in $RigModels) {
-                            $Global:ActiveMiners.Where({"$($_.BaseAlgorithm -join "-")" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}) | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
+                            $Global:ActiveMiners.Where({"$($_.BaseAlgorithm -join "-")" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}) | Select-Object Profit,Profit_Cost,Speed | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
                                 $RigSpeed += $_.Speed | Select-Object -First 1
                                 $RigProfit+= $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
                             }
