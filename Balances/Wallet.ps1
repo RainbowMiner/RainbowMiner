@@ -12,7 +12,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Wallets = @($Config.Wallet) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.BTC} | Foreach-Object {$_.Wallets.BTC}) | Where-Object {$_ -match "^[13]"} | Select-Object -Unique | Sort-Object
 
-if (($Wallets | Measure-Object).Count) {
+if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains "BTC")) {
     $Request = [PSCustomObject]@{}
 
     $Success = $true
@@ -58,46 +58,53 @@ $Wallets_Data = @(
 foreach ($Wallet_Data in $Wallets_Data) {
     $Wallet_Symbol  = $Wallet_Data.symbol
 
-    @($Config.Coins.PSObject.Properties | Where-Object {$_.Name -eq $Wallet_Symbol -and $_.Value.Wallet -match $Wallet_Data.match} | Foreach-Object {$_.Value.Wallet}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.$Wallet_Symbol -match $Wallet_Data.match} | Foreach-Object {$_.Wallets.$Wallet_Symbol}) | Select-Object -Unique | Sort-Object | Foreach-Object {
-        $Request = [PSCustomObject]@{}
+    if (-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains $Wallet_Symbol) {
 
-        $Success = $true
-        try {
-            $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$_)" -cycletime ($Config.BalanceUpdateMinutes*60)
-            if ($Request."$($Wallet_Data.address)" -ne $_) {$Success = $false}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $Success=$false
-        }
+        @($Config.Coins.PSObject.Properties | Where-Object {$_.Name -eq $Wallet_Symbol -and $_.Value.Wallet -match $Wallet_Data.match} | Foreach-Object {$_.Value.Wallet}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.$Wallet_Symbol -match $Wallet_Data.match} | Foreach-Object {$_.Wallets.$Wallet_Symbol}) | Select-Object -Unique | Sort-Object | Foreach-Object {
+            $Request = [PSCustomObject]@{}
 
-        if (-not $Success) {
-            Write-Log -Level Verbose "$Wallet_Symbol Balance API ($Name) for $_ has failed. "
-            return
-        }
-
-        $Wallet_Info = $_ -replace "^0x"
-
-        $Wallet_Balance = [Decimal]$(Switch ($Wallet_Symbol) {
-            "XLM" {
-                ($Request.balances | Where-Object {$_.asset_type -eq "native"} | Select-Object -ExpandProperty balance | Measure-Object -Sum).Sum
+            $Success = $true
+            try {
+                $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$_)" -cycletime ($Config.BalanceUpdateMinutes*60)
+                if ($Request."$($Wallet_Data.address)" -ne $_) {$Success = $false}
             }
-            default {
-                Invoke-Expression "`$Request.$($Wallet_Data.balance)"
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $Success=$false
             }
-        })
 
-        [PSCustomObject]@{
-                Caption     = "$Name $Wallet_Symbol ($($_))"
-		        BaseName    = $Name
-                Info        = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3))"
-                Currency    = $Wallet_Symbol
-                Balance     = $Wallet_Balance / $Wallet_Data.divisor
-                Pending     = 0
-                Total       = $Wallet_Balance / $Wallet_Data.divisor
-                Earned      = if ($Wallet_Data.received) {[Decimal](Invoke-Expression "`$Request.$($Wallet_Data.received)") / $Wallet_Data.divisor} else {$null}
-                Payouts     = @()
-                LastUpdated = (Get-Date).ToUniversalTime()
+            if (-not $Success) {
+                Write-Log -Level Verbose "$Wallet_Symbol Balance API ($Name) for $_ has failed. "
+                return
+            }
+
+            $Wallet_Info = $_ -replace "^0x"
+
+            $Wallet_Balance = [Decimal]$(Switch ($Wallet_Symbol) {
+                "XLM" {
+                    ($Request.balances | Where-Object {$_.asset_type -eq "native"} | Select-Object -ExpandProperty balance | Measure-Object -Sum).Sum
+                }
+                default {
+                    $val = $null
+                    $Wallet_Data.balance -split "\." | Foreach-Object {
+                        $val = if ($val -ne $null) {$val.$_} else {$Request.$_}
+                    }
+                    $val
+                }
+            })
+
+            [PSCustomObject]@{
+                    Caption     = "$Name $Wallet_Symbol ($($_))"
+		            BaseName    = $Name
+                    Info        = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3))"
+                    Currency    = $Wallet_Symbol
+                    Balance     = $Wallet_Balance / $Wallet_Data.divisor
+                    Pending     = 0
+                    Total       = $Wallet_Balance / $Wallet_Data.divisor
+                    Earned      = if ($Wallet_Data.received) {[Decimal](Invoke-Expression "`$Request.$($Wallet_Data.received)") / $Wallet_Data.divisor} else {$null}
+                    Payouts     = @()
+                    LastUpdated = (Get-Date).ToUniversalTime()
+            }
         }
     }
 }
