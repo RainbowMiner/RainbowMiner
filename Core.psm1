@@ -425,7 +425,7 @@ function Set-MinerStats {
         $CurrentProfitGPU   = 0
         $DeviceNameCountGPU = 0
         foreach ($CurrentModel in $Session.Config.DeviceModel.Where({$_ -notmatch "-"})) {
-            $Global:ActiveMiners.Where({$_.Profit -ne $null -and $_.DeviceModel -eq $CurrentModel -and $_.Pool -notcontains "MiningRigRentals"}) | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
+            $Global:ActiveMiners.Where({$_.Profit -ne $null -and $_.DeviceModel -eq $CurrentModel -and $_.Pool -notcontains "MiningRigRentals"}) | Select-Object Profit,Profit_Cost,DeviceName | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
                 $CurrentProfit = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost) {$_.Profit_Cost})
                 if ($CurrentProfit -gt 0) {
                     if ($CurrentModel -ne "CPU") {
@@ -1426,7 +1426,7 @@ function Invoke-Core {
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
     $Scheduler = $null
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).Foreach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
+    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
     $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
 
     if ($Scheduler) {
@@ -1524,7 +1524,7 @@ function Invoke-Core {
 
         #Load information about the devices
         $Global:DeviceCache.Devices = @()
-        if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName).Foreach({$_})}
+        if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName).ForEach({$_})}
         $Global:DeviceCache.DevicesByTypes = [PSCustomObject]@{
             NVIDIA = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"})
             AMD    = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"})
@@ -2096,10 +2096,10 @@ function Invoke-Core {
     if ($Session.Config.MiningMode -eq "combo") {
         if ($AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'})) {
             #Benchmarking is still ongoing - remove device combos from miners and make sure no combo stat is left over
-            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'}).Foreach({
+            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'}).ForEach({
                 $Miner = $_
                 $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
-                $AllMiners.Where({$_.BaseName -eq $Miner.BaseName -and $_.HashRates.PSObject.Properties.Value -notcontains $null -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0}).Foreach({
+                $AllMiners.Where({$_.BaseName -eq $Miner.BaseName -and $_.HashRates.PSObject.Properties.Value -notcontains $null -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0}).ForEach({
                     $Name = $_.Name
                     $ComboAlgos | Foreach-Object {Get-ChildItem ".\Stats\Miners\*-$($Name)_$($_)_HashRate.txt" | Remove-Item -ErrorAction Ignore}
                 })
@@ -2117,7 +2117,7 @@ function Invoke-Core {
             })
 
             #Gather mining statistics for fresh combos
-            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -match '-'}).Foreach({
+            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -match '-'}).ForEach({
                 $Miner = $_
                 $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
                 $AllMiners | 
@@ -2144,7 +2144,7 @@ function Invoke-Core {
     [hashtable]$AllMiners_VersionCheck = @{}
     [hashtable]$AllMiners_VersionDate  = @{}
     [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
-    $AllMiners.Foreach({
+    $AllMiners.ForEach({
         $Miner = $_
 
         $Miner_AlgoNames = @($Miner.HashRates.PSObject.Properties.Name | Select-Object)
@@ -2599,7 +2599,7 @@ function Invoke-Core {
         }
     })
 
-    $Global:ActiveMiners.Where({$_.Profit_Cost_Bias -gt 0}).Foreach({$_.Profit_Bias -= $_.Profit_Cost_Bias})
+    $Global:ActiveMiners.Where({$_.Profit_Cost_Bias -gt 0}).ForEach({$_.Profit_Bias -= $_.Profit_Cost_Bias})
 
     $Session.Profitable = $true
 
@@ -2773,7 +2773,7 @@ function Invoke-Core {
 
     #Kill maroding EthPills
     if ($Session.Config.EthPillEnable -ne "disable") {
-        $Running_ProcessIds = $Global:ActiveMiners.Where({$_.EthPillJob}).Foreach({$_.EthPillJob.ProcessId})
+        $Running_ProcessIds = $Global:ActiveMiners.Where({$_.EthPillJob}).ForEach({$_.EthPillJob.ProcessId})
         if ($IsWindows) {
             @(Get-CIMInstance CIM_Process).Where({$_.ProcessName -eq "OhGodAnETHlargementPill-r2.exe" -and $Running_ProcessIds -notcontains $_.ProcessId}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
         } elseif ($IsLinux) {
@@ -2793,7 +2793,7 @@ function Invoke-Core {
 
             #Set MSI Afterburner profile
             if ($MSIAenabled) {
-                $MSIAplannedprofile = $Global:ActiveMiners | Where-Object {$_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0} | Foreach-Object {$_.MSIAprofile} | Select-Object -Unique
+                $MSIAplannedprofile = $Global:ActiveMiners.Where({$_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0}).ForEach({$_.MSIAprofile}) | Select-Object -Unique
                 if (-not $MSIAplannedprofile.Count) {$MSIAplannedprofile = $Session.Config.MSIAprofile}                
                 else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
                 Start-Process -FilePath "$($Session.Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
