@@ -1499,6 +1499,7 @@ The following are the pool parameters:
 lt=50]
 - **AutoCreateMinCPUProfitBTC**: Enter minimum one-day revenue in BTC, for a CPU-only rig to be autocreated on MRR [default=0.00001]
 - **AutoCreateMaxMinHours**: Enter the maximum hours for minimum rental time, for a rig to be autocreated on MRR [default=24]
+- **AutoCreateAlgorithm**: Algorithms that should always be autocreated on MRR, even if below the other limits [default=]
 - **EnableAutoPrice**: Enable MRR automatic prices [default=1]
 - **EnableMinimumPrice**: Set MRR automatic minimum price [default=1]
 - **AutoPriceModifierPercent**: Autoprice modifier in percent (e.g. +10 will increase all suggested prices by 10%) [default=0]

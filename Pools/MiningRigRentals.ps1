@@ -275,6 +275,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
     if ($AutoCreateMaxMinHours -lt 3) {$AutoCreateMaxMinHours = 3}
     $RigModifier = [Math]::Max(0,[Math]::Min(30,$AutoPriceModifierPercent))
     $PriceCurrencies_Array = @($PriceCurrencies -split "[,; ]+" | Select-Object)
+    $AutoCreateAlgorithm_Array = @($AutoCreateAlgorithm -split "[,; ]+" | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique)
 
     $RigServer  = ""
     $Title = $Title.Trim()
@@ -317,8 +318,9 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                         $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
                         $RigMinPrice    = if ($RigSpeed -gt 0) {$RigDeviceProfit * $PriceFactor / $RigSpeed} else {0}
                         $RigPrice       = if ($RigSpeed -gt 0 -and $PriceBTC -gt 0) {$PriceBTC / $RigSpeed} else {$RigMinPrice}
+                        $IsHandleRig    = ($RigRunMode -eq "update") -or ($AutoCreateAlgorithm_Array -contains $Algorithm_Norm)
        
-                        if ($RigSpeed -gt 0 -and ($RigRunMode -eq "update" -or $RigProfit -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
+                        if ($RigSpeed -gt 0 -and ($IsHandleRig -or $RigProfit -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
 
                             $RigMinPrice0 = $RigMinPrice
 
@@ -347,7 +349,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
                             #Write-Log -Level Warn "$RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
-                            if ($RigMinHours -le $AutoCreateMaxMinHours) {
+                            if ($IsHandleRig -or $RigMinHours -le $AutoCreateMaxMinHours) {
 
                                 $RigMaxHours = [Math]::Max($MinHours,$MaxHours)
                                 $Algorithm_Norm_Mapped = Get-MappedAlgorithm $Algorithm_Norm
