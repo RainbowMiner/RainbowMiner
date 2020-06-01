@@ -19,6 +19,7 @@
     "Equihash21x9":  1,
     "Equihash24x5":  1,
     "Equihash24x7":  1,
+    "EquihashR25x5":  1,
     "Ethash":  1000000,
     "Hex":  1000000,
     "KawPOW":  1000000,
