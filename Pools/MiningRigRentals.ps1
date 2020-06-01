@@ -298,9 +298,11 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
             try {
                 $RigModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
                 $RigDevice = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
-                $RigDeviceProfit = (Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")").Day
+                $RigDeviceStat = Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")"
+                $RigDeviceProfit = $RigDeviceStat.Day
 
-                if ($RigDeviceProfit) {
+                if ($RigDeviceProfit -and $RigDeviceStat.Duration) {
+                    if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
                     $RigModels = @($RigDevice | Select-Object -ExpandProperty Model -Unique | Sort-Object)
                     $RigAlreadyCreated = @($AllRigs_Request.Where({$_.description -match "\[$RigName\]" -and ($RigRunMode -eq "create" -or -not $_.status.rented) -and ($RigRunMode -eq "create" -or (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1)}))
                     $RigProfitBTCLimit = [Math]::Max($RigDeviceProfit * [Math]::Min($AutoCreateMinProfitPercent,100)/100,$(if (($RigModels.Where({$_ -eq "CPU"}) | Measure-Object).Count) {$AutoCreateMinCPUProfitBTC} else {0}))
@@ -438,7 +440,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                 }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Warn "Unable to create MRR rigs for $($RigName): $($_.Exception.Message)"
+                Write-Log -Level Warn "Unable to $($RigRunMode) MRR rigs for $($RigName): $($_.Exception.Message)"
             }
         }
     }
