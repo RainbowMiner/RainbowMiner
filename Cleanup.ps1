@@ -782,6 +782,7 @@ try {
             $Changes = 0
             if ($PoolsActual.MiningRigRentals.EnableAutoCreate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoCreate = "0";$Changes++}
             if ($PoolsActual.MiningRigRentals.EnableAutoUpdate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoUpdate = "0";$Changes++}
+            if ($PoolsActual.MiningRigRentals.PriceFactor -ne $null) {$PoolsActual.MiningRigRentals.PriceFactor = "2.0";$Changes++}
             if ($PoolsActual.MiningRigRentals.EnablePriceUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnablePriceUpdates");$Changes++}
             if ($PoolsActual.MiningRigRentals.EnableHashrateUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableHashrateUpdates");$Changes++}
             if ($PoolsActual.MiningRigRentals.EnableRentalHoursUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableRentalHoursUpdates");$Changes++}
