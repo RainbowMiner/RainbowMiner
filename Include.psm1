@@ -6088,11 +6088,23 @@ param(
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
             if (Test-Path $Matches[1]) {                
                 try {
-                    $Job = Start-SubProcess -FilePath "$($Matches[1])" -ArgumentList "$($Matches[2].Trim())" -WorkingDirectory (Split-Path "$($Matches[1])") -ShowMinerWindow $true -Priority $Priority
+                    $FilePath     = [IO.Path]::GetFullPath("$($Matches[1])")
+                    $FileDir      = Split-Path $FilePath
+                    $FileName     = Split-Path -Leaf $FilePath
+                    $ArgumentList = "$($Matches[2].Trim())"
+                    
+                    # find and kill maroding processes
+                    if ($IsWindows) {
+                        @(Get-CIMInstance CIM_Process).Where({$_.ExecutablePath -and $_.ExecutablePath -like "$(Join-Path $FileDir "*")" -and $_.ProcessName -like $FileName -and (-not $ArgumentList -or $_.CommandLine -like "* $($ArgumentList)")}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
+                    } elseif ($IsLinux) {
+                        @(Get-Process).Where({$_.Path -and $_.Path -like "$(Join-Path $FileDir "*")" -and $_.ProcessName -like $FileName -and (-not $ArgumentList -or $_.CommandLine -like "* $($ArgumentList)")}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+                    }
+
+                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority
                     if ($Job) {
-                        $Job | Add-Member FilePath "$($Matches[1])" -Force
-                        $Job | Add-Member Arguments "$($Matches[2].Trim())" -Force
-                        Write-Log "Autoexec command started: $($Matches[1]) $($Matches[2].Trim())"
+                        $Job | Add-Member FilePath $FilePath -Force
+                        $Job | Add-Member Arguments $ArgumentList -Force
+                        Write-Log "Autoexec command started: $FilePath $ArgumentList"
                         $Global:AutoexecCommands.Add($Job) >$null
                     }
                 } catch {
