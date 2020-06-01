@@ -37,17 +37,12 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
     $Pool_Request  = [PSCustomObject]@{}
-    $Pool_RequestBlocks = [PSCustomObject]@{}
 
     $ok = $true
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).sunpool.top/pool-info.php?miningpoolstats" -tag $Name -timeout 15 -cycletime 120
             if ($Pool_Request.coin -ne $Pool_Currency) {$ok = $false}
-            else {
-                $Pool_RequestBlocks = Invoke-RestMethodAsync "https://$($Pool_RpcPath).sunpool.top/pool-stats.php" -tag $Name -timeout 15 -cycletime 120
-                if (-not $Pool_RequestBlocks) {$ok = $false}
-            }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -61,13 +56,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if ($ok -and -not $InfoOnly) {
         $Pool_Fee = $Pool_Request.feePercent
 
-        $timestamp24h = $Pool_Request.timestampMilliSeconds - 86400000
-        $blocks_measure = (([regex]'timestampToDate\((\d+)\)').Matches($Pool_RequestBlocks)).Foreach({$_.Groups[1].Value}).Where({$_ -ge $timestamp24h}) | Measure-Object -Minimum -Maximum        
-
-        $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
         $Pool_TSL = [Math]::Round(($Pool_Request.timestampMilliSeconds - ($Pool_Request.lastBlocksFound.timestampMilliseconds | Measure-Object -Maximum).Maximum)/1000)
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_Request.blocksFound24H -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
