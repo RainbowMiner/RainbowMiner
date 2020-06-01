@@ -391,3 +391,19 @@ function Update-MiningRigRentalRigs {
 function Invoke-MiningRigRentalUpdatePrices {
     Write-Host "Not implemented"
 }
+
+function Get-MiningRigRentalsRigID {
+[cmdletbinding()]
+Param(   
+    [Parameter(
+        Mandatory = $True,   
+        Position = 0,   
+        ParameterSetName = '',   
+        ValueFromPipeline = $True)]   
+        [string]$worker
+)
+    $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
+    $utf8 = new-object -TypeName System.Text.UTF8Encoding
+    $idstr = [convert]::ToBase64String($md5.ComputeHash($utf8.GetBytes($worker))) -replace "[^a-z0-9]"
+    "$($idstr.substring(0,2))$($idstr.substring($idstr.Length-2,2))"
+}
