@@ -87,7 +87,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                Host          = "$($Pool_HostPath)-$($Region).ravepool.com"
+                Host          = "$($Pool_HostPath)-$($Pool_Region).ravepool.com"
                 Port          = $Pool_Port
                 User          = "$($Pool_Wallet.wallet).{workername:$Worker}"
                 Pass          = "$(if ($Email) {$Email} else {"x"})"
