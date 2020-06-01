@@ -42,7 +42,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).sunpool.top/pool-info.php?miningpoolstats" -tag $Name -timeout 15 -cycletime 120
-            if ($Pool_Request.coin -ne $Pool_Currency) {$ok = $false}
+            if (-not $Pool_Request.coin) {$ok = $false}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
