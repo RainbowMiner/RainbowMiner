@@ -1507,11 +1507,11 @@ lt=50]
 - **EnableMinimumPrice**: Set MRR automatic minimum price [default=1]
 - **AutoPriceModifierPercent**: Autoprice modifier in percent (e.g. +10 will increase all suggested prices by 10%) [default=0]
 - **PriceBTC**: Fixed price in BTC (used, if EnableAutoPrice=0) [default=0]
-- **PriceFactor**: Enter profit multiplicator: minimum price = rig's profit x this multiplicator [default=1.75]
+- **PriceFactor**: Enter profit multiplicator: minimum price = rig's profit x this multiplicator [default=2.0]
 - **MinHours**: Minimum rental time in hours (min. 3) [default=3]
 - **MaxHours**: Maximum rental time in hours (min. 3) [default=168]
 - **PriceCurrencies**: List of accepted currencies (must contain BTC) [default=BTC]
-- **Title**: Title for autocreate, %algorithm% will be substituted with algorithm [default=%algorithm% mining]
+- **Title**: "Title for autocreate, make sure it contains %algorithm% and %rigid% (these values will be substituted like that: %algorithm% with algorithm, %rigid% with an unique rigid, %workername% with the workername)" [default=%algorithm% mining with RainbowMiner rig %rigid%]
 - **Description**: Description for autocreate, %workername% will be substituted with rig's workername [default=Autostart mining with RainbowMiner (http
 s://rbminer.net) on Windows. This rig is idle and will activate itself, as soon, as you rent it. %workername%]
 
