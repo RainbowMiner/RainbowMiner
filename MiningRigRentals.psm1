@@ -185,7 +185,7 @@ param(
             "cuckoocycle"       {"GRIN";Break}
             "cuckoocycle29swap" {"SWAP";Break}
             "equihash1505"      {"BEAM";Break}
-            "equihash1505g"     {"GRIMM";Break}
+            "equihash1505g"     {"XGM";Break}
             default             {""}
     }
 }
