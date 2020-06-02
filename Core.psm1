@@ -75,6 +75,7 @@ function Start-Core {
             GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
             Scheduler  = @{Path='';LastWriteTime=0;Healthy=$false}
             Combos     = @{Path='';LastWriteTime=0;Healthy=$false}
+            MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
         [System.Collections.Generic.List[string]]$Session.GetTicker = @()

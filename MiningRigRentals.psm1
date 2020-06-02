@@ -4,14 +4,12 @@ function Set-MiningRigRentalConfigDefault {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
-        [Switch]$Force = $false,
-        [Parameter(Mandatory = $False)]
-        $Data = $null
+        $Workers = $null
     )
     $ConfigName = "MRR"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or $Data -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MRRConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+    if (-not (Test-Path $PathToFile) -or (Test-Config $ConfigName -LastWriteTime) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MRRConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -19,11 +17,11 @@ function Set-MiningRigRentalConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{EnableAutoPrice="1";PriceBTC = "0";PriceFactor = "0";MinPriceBTC = "0";EnablePriceUpdates = "1"}
+            $Default = [PSCustomObject]@{EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoPrice="";EnableMinimumPrice="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";MinHours="";MaxHours="";PriceCurrencies="";Title = "";Description = ""}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
             
-            foreach ($Algorithm_Norm in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Data | Where-Object {$_} | Foreach-Object {Get-MiningRigRentalAlgorithm $_.name}) | Select-Object -Unique)) {
-                if (-not $Preset.$Algorithm_Norm) {$Preset | Add-Member $Algorithm_Norm $(if ($Setup.$Algorithm_Norm) {$Setup.$Algorithm_Norm} else {[PSCustomObject]@{}}) -Force}
+            foreach ($RigName in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Workers) | Select-Object -Unique)) {
+                if (-not $Preset.$RigName) {$Preset | Add-Member $RigName $(if ($Setup.$RigName) {$Setup.$RigName} else {[PSCustomObject]@{}}) -Force}
             }
 
             $Sorted = [PSCustomObject]@{}
@@ -33,6 +31,7 @@ function Set-MiningRigRentalConfigDefault {
             }
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
             $Session.ConfigFiles[$ConfigName].Healthy = $true
+            Set-ConfigLastWriteTime $ConfigName
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}

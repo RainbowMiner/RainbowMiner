@@ -806,11 +806,15 @@ try {
                 $PoolsActual.MiningRigRentals.Description = "$($PoolsActual.MiningRigRentals.Description -replace "%workername%","[%workername%]")"
                 $Changes++
             }
+            if ($PoolsActual.MiningRigRentals.PriceOffset -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceOffset");$Changes++}
             if ($Changes) {
                 Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
                 $ChangesTotal += $Changes
             }
-        }        
+        }
+        if (Test-Path ".\Config") {
+            Get-ChildItem ".\Config\mrr.*.txt" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        }
     }
 
     if ($OverridePoolPenalties) {
