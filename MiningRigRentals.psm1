@@ -407,3 +407,15 @@ Param(
     $idstr = [convert]::ToBase64String($md5.ComputeHash($utf8.GetBytes($worker))) -replace "[^a-z0-9]"
     "$($idstr.substring(0,2))$($idstr.substring($idstr.Length-2,2))"
 }
+
+function Get-MiningRigRentalsSubst {
+[cmdletbinding()]
+Param(   
+    [Parameter(Mandatory = $True)]
+    [string]$Text,
+    [Parameter(Mandatory = $True)]
+    [hashtable]$Subst
+)
+    foreach ($i in $Subst.Keys) {$Text = $Text -replace "%$i%", $Subst[$i]}
+    "$($Text -replace "[\s+]"," ")"
+}

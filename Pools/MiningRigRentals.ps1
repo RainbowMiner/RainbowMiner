@@ -301,6 +301,16 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                 $RigDeviceStat = Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")"
                 $RigDeviceProfit = $RigDeviceStat.Day
 
+                $RigType ="$($RigDevice | Select-Object -ExpandProperty Type -Unique)".ToUpper()
+
+                $RigSubst = @{
+                    "RigID"      = "$(Get-MiningRigRentalsRigID $RigName)"
+                    "Type"       = $RigType
+                    "TypeCPU"    = "$(if ($RigType -eq "CPU") {"CPU"})"
+                    "TypeGPU"    = "$(if ($RigType -eq "GPU") {"GPU"})"
+                    "Workername" = $RigName
+                }
+                
                 if ($RigDeviceProfit -and $RigDeviceStat.Duration) {
                     if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
                     $RigModels = @($RigDevice | Select-Object -ExpandProperty Model -Unique | Sort-Object)
@@ -353,14 +363,16 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
                             if ($IsHandleRig -or $RigMinHours -le $AutoCreateMaxMinHours) {
 
+                                $RigSubst["Algorithm"] = $Algorithm_Norm_Mapped
+
                                 $RigMaxHours = [Math]::Max($MinHours,$MaxHours)
                                 $Algorithm_Norm_Mapped = Get-MappedAlgorithm $Algorithm_Norm
+
                                 if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion) | Select-Object)}
-            
                                 $CreateRig = if ($RigRunMode -eq "create") {
                                     @{
-                                        name        = "$(if ($Title -match "%algorithm%") {$Title -replace "%algorithm%",$Algorithm_Norm_Mapped} else {"$(if ($Title) {$Title} else {$RigName}) $Algorithm_Norm_Mapped"})"
-                                        description = "$(if ($Description -match "%workername%") {$Description -replace "%workername%","[$RigName]"} else {"$($Description)[$RigName]"})"
+                                        name        = Get-MiningRigRentalsSubst "$(if (-not $Title) {"%algorithm% mining with RainbowMiner rig %rigid%"} elseif ($Title -notmatch "%algorithm%") {"$Algorithm_Norm_Mapped $Title"} else {$Title})" -Subst $RigSubst
+                                        description = Get-MiningRigRentalsSubst "$(if ($Description -notmatch "%workername%") {"$($Description)[$RigName]"} elseif ($Description -notmatch "\[%workername%\]") {$Description -replace "%workername%","[$RigName]"} else {$Description})" -Subst $RigSubst
                                         type        = $_.name
                                         status	    = "disabled"
                                         server	    = $RigServer
@@ -423,8 +435,8 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
                                 } elseif ($RigRunMode -eq "update") {
 
-                                    $RigType = $_.name
-                                    $RigAlreadyCreated.Where({$_.type -eq $RigType -and $_.price.BTC.autoprice}).Foreach({
+                                    $RigMRRid = $_.name
+                                    $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
                                         $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
                                         $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
                                         if ($RigSpeed*$RigDivisors[$HashDivisor].value -ne $RigHashCurrent -or -not $RigMinPriceCurrent -or [Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt 0.05) {

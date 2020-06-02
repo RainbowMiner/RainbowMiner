@@ -801,6 +801,10 @@ try {
                 $PoolsActual.MiningRigRentals.Title = "$($PoolsActual.MiningRigRentals.Title) with RainbowMiner rig %rigid%"
                 $Changes++
             }
+            if ($PoolsActual.MiningRigRentals.Description -ne $null -and $PoolsActual.MiningRigRentals.Description -match "%workername%"  -and $PoolsActual.MiningRigRentals.Description -notmatch "\[%workername%\]" ) {
+                $PoolsActual.MiningRigRentals.Description = "$($PoolsActual.MiningRigRentals.Description -replace "%workername%","[%workername%]")"
+                $Changes++
+            }
             if ($Changes) {
                 Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
                 $ChangesTotal += $Changes
