@@ -917,7 +917,7 @@ function Set-Stat {
                     else {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value.ToString()) is outside fault tolerance $($ToleranceMin.ToString()) to $($ToleranceMax.ToString()). "}
                 }
                 $Stat.Failed += 10
-                if ($Stat.Failed > 30) {$Stat.Failed = 30}
+                if ($Stat.Failed -gt 30) {$Stat.Failed = 30}
             } else {
                 $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
                 $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
