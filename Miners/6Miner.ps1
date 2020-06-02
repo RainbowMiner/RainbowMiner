@@ -43,12 +43,11 @@ if ($InfoOnly) {
 
 foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $First = $true
         $Miner_Model = $_.Model
         $Miner_Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
-
+            $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
             if ($Miner_Vendor -eq "CPU") {
