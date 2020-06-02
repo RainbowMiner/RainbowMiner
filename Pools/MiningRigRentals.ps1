@@ -381,7 +381,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                             foreach ($Model in $RigModels) {
                                 $RigSpeedAdd  = 0
                                 $RigProfitAdd = 0
-                                $Global:ActiveMiners.Where({"$($_.Algorithm | Select-Object -First 1)" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
+                                $Global:ActiveMiners.Where({$_.Speed -ne $null -and "$($_.Algorithm | Select-Object -First 1)" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
                                     $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
                                     if ($ThisSpeed -gt $RigSpeedAdd) {
                                         $RigSpeedAdd  = $ThisSpeed
