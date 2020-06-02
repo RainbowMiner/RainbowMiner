@@ -43,8 +43,8 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol="XRD";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
     [PSCustomObject]@{symbol="NIM";  host=@("nimiq");               region=@("us");           ; fee = 1.25; ssl = $true}
     [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "ProgPow"}
-    [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "RandomX"}
-    [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "CuckooCycle"}
+    [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "RandomEpic"}
+    [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "Cuckatoo31"}
     [PSCustomObject]@{symbol="MWC";  host=@("mwc-us","mwc-eu");     region=@("us","eu");      ; fee = 1; algo = "Cuckarood29"; hashrate = "C29d"}
     [PSCustomObject]@{symbol="MWC";  host=@("mwc-us","mwc-eu");     region=@("us","eu");      ; fee = 1; algo = "Cuckatoo31";  hashrate = "C31"}
     [PSCustomObject]@{symbol="ATOM"; host=@("atom-us");             region=@("us");           ; fee = 0; ssl = $true}
