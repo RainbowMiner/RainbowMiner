@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.4-srbminermulti/SRBMiner-Multi-0-4-4-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.5-srbminermulti/SRBMiner-Multi-0-4-5-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.4-srbminermulti/SRBMiner-Multi-0-4-4-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.5-srbminermulti/SRBMiner-Multi-0-4-5-win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.4.4"
+$Version = "0.4.5"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
@@ -27,6 +27,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "m7mv2"         ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #m7m
     [PSCustomObject]@{MainAlgorithm = "minotaur"      ; Params = ""; Fee = 2.50;               Vendor = @("CPU")} #Minotaur/RING Coin
     [PSCustomObject]@{MainAlgorithm = "randomarq"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomArq
+    [PSCustomObject]@{MainAlgorithm = "randomepic"    ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomEPIC
     [PSCustomObject]@{MainAlgorithm = "randomkeva"    ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomKEVA
     [PSCustomObject]@{MainAlgorithm = "randomsfx"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomSFX
     [PSCustomObject]@{MainAlgorithm = "randomwow"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomWow
@@ -53,7 +54,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight_catalans"; Params = ""; Fee = 0.85;         Vendor = @("AMD","CPU")} #CryptonightCatalans
     [PSCustomObject]@{MainAlgorithm = "cryptonight_talleo";   Params = ""; Fee = 0.85;         Vendor = @("AMD","CPU")} #CryptonightTalleo
     [PSCustomObject]@{MainAlgorithm = "eaglesong"     ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #eaglesong
-    [PSCustomObject]@{MainAlgorithm = "ethash"        ; Params = "--enable-ethash-leak-fix"; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD")} #ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"        ; Params = "--enable-ethash-leak-fix"; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
     [PSCustomObject]@{MainAlgorithm = "ubqhash"       ; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
     [PSCustomObject]@{MainAlgorithm = "k12"           ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
     [PSCustomObject]@{MainAlgorithm = "kadena"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); Coins = @("KDA")} #blake2s / Kadena

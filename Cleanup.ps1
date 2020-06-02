@@ -794,6 +794,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.5.7.6")) {
+        $AddAlgorithm += @("RandomEPIC")
         $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
         if ($PoolsActual -and $PoolsActual.MiningRigRentals) {
             $Changes = 0
