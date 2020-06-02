@@ -379,10 +379,17 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                             $RigSpeed  = 0
                             $RigProfit = 0
                             foreach ($Model in $RigModels) {
-                                $Global:ActiveMiners.Where({"$($_.BaseAlgorithm -join "-")" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
-                                    $RigSpeed += $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
-                                    $RigProfit+= $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                $RigSpeedAdd  = 0
+                                $RigProfitAdd = 0
+                                $Global:ActiveMiners.Where({"$($_.Algorithm | Select-Object -First 1)" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
+                                    $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
+                                    if ($ThisSpeed -gt $RigSpeedAdd) {
+                                        $RigSpeedAdd  = $ThisSpeed
+                                        $RigProfitAdd = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                    }
                                 })
+                                $RigSpeed  += $RigSpeedAdd
+                                $RigProfit += $RigProfitAdd
                             }
 
                             $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
