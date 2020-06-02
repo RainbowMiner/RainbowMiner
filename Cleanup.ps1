@@ -813,7 +813,13 @@ try {
             }
         }
         if (Test-Path ".\Config") {
-            Get-ChildItem ".\Config\mrr.*.txt" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+            Get-ChildItem ".\Config" -Filter "mrr.*.txt" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        }
+        if (Test-Path ".\30") {
+            Get-ChildItem ".\" -Filter "30" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        }
+        if (Test-Path ".\0.0001") {
+            Get-ChildItem ".\" -Filter "0.0001" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
         }
     }
 
