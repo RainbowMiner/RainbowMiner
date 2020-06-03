@@ -505,7 +505,8 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                                         $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
                                             $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
                                             $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
-                                            if ($RigSpeed*$RigDivisors[$HashDivisor].value -ne $RigHashCurrent -or -not $RigMinPriceCurrent -or [Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt 0.05 -or $_.ndevices -ne $CreateRig.ndevices) {
+
+                                            if ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent -or -not $RigMinPriceCurrent -or [Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt 0.05 -or $_.ndevices -ne $CreateRig.ndevices) {
                                                 Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices)"
                                                 $CreateRig["id"] = $_.id
                                                 $RigsToUpdate += $CreateRig
