@@ -749,6 +749,7 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 - **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
 - **ShowPoolBalancesDetails** = set to 0 if coin balances at a pool should be added up to BTC [default=1]
 - **ShowPoolBalancesExcludedPools** = set to 1 to let RainbowMiner try to fetch balances from not used pools in addition to the currently activated pools [default=0]
+- **ExcludeCoinsymbolBalances** = Exclude coinsymbols from balances. Leave empty for none [default=MAX,MUSIC]
 - **ShowWalletBalances** = set to 1 to let RainbowMiner fetch and show available wallet balances [default=1]
 - **WalletBalances** = enter list of which coin's wallets should be listed. Leave empty for all [default=]
 - **PoolDataWindow** = set global default for all pool data windows [default=estimate_current]

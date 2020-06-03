@@ -41,4 +41,5 @@
     ServerConfigName = @("config","coins","pools","algorithms","scheduler")
     ExcludeServerConfigVars = @("APIAuth","APIPassword","APIPort","APIUser","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName")
     EnableServerExcludeList = $false
+    ExcludeCoinsymbolBalances = @("MAX","MUSIC")
 }

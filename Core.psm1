@@ -656,7 +656,7 @@ function Get-Balance {
     param($Config, [Bool]$Refresh = $false, [Bool]$Details = $false)
     
     if (-not (Test-Path Variable:Global:CachedPoolBalances) -or $Refresh) {
-        $Global:CachedPoolBalances = @(Get-BalancesContent -Config $Config | Group-Object -Property Caption | Foreach-Object {
+        $Global:CachedPoolBalances = @(Get-BalancesContent -Config $Config | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Currency} | Group-Object -Property Caption | Foreach-Object {
             if ($_.Count -gt 1){foreach ($p in @("Balance","Pending","Total","Paid","Earned","Payouts")) {if (Get-Member -InputObject $_.Group[0] -Name $p) {if ($p -eq "Payouts") {$_.Group[0].$p = @($_.Group.$p | Select-Object)} else {$_.Group[0].$p = ($_.Group.$p | Measure-Object -Sum).Sum}}}}
             $_.Group[0]
         })
