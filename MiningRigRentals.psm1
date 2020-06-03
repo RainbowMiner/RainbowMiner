@@ -354,7 +354,7 @@ param(
             }
         )
     } else {
-        $Servers = $Pool_Request.data
+        $Servers = @($Pool_Request.data | Foreach-Object {$_})
     }
 
     if (-not $Region) {$Servers.name}
