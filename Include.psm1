@@ -1475,7 +1475,7 @@ function Get-PoolsContent {
 
         foreach($c in @($Content)) {
             if ($PoolName -ne "WhatToMine") {
-                $Penalty = [Double]$Config.Penalty
+                $Penalty = [Double]$Parameters.Penalty
                 if (-not $Parameters.InfoOnly) {
                     $Penalty += [Double]$Session.Config.Algorithms."$($c.Algorithm)".Penalty + [Double]$Session.Config.Coins."$($c.CoinSymbol)".Penalty
                 }
