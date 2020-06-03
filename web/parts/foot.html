@@ -102,6 +102,19 @@ $(function () {
                 $("#profit").attr("btc", result.AllProfitBTC);
                 $("#earnings").attr("btc", result.AllEarnings_Avg);
 
+                var power = parseFloat(result.Power.CPU)+parseFloat(result.Power.GPU);
+                var powerunit = "W";
+                if (power > 1000) {
+                    power /= 1000;
+                    powerunit = "kW";
+                    power = power.toFixed(2);
+                } else {
+                    power = power.toFixed(0);
+                }
+                var poweroffset = parseFloat(result.Power.Offset);
+                    
+                $("#power").html(power + powerunit + (poweroffset>0? "<small>+"+poweroffset.toFixed(0)+"W</small>":''));
+
                 if (globalconfig && globalconfig.Version) {
                     $('.powerprice span').text(result.PowerPrice + (globalconfig.PowerPriceCurrency ? ' ' + globalconfig.PowerPriceCurrency : ''));
                     if (globalconfig.UsePowerPrice) { $('.powerprice').show() } else { $('.powerprice').hide() }

@@ -205,17 +205,51 @@
                     Break
                 }
                 "/loadconfig" {
-                    $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
-                    $ConfigParameters = @{}
-                    $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
-                        $val = $Session.DefaultValues[$_]
-                        if ($ConfigSetup.$_ -ne $null) {$val = $ConfigSetup.$_}
-                        if ($val -is [array]) {$val = $val -join ','}
-                        $ConfigParameters.Add($_ , $val)
+                    $ConfigName = if ($Parameters.ConfigName) {$Parameters.ConfigName} else {"Config"}
+                    if ($ConfigName -eq "Config") {
+                        $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
+                        $ConfigParameters = @{}
+                        $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
+                            $val = $Session.DefaultValues[$_]
+                            if ($ConfigSetup.$_ -ne $null) {$val = $ConfigSetup.$_}
+                            if ($val -is [array]) {$val = $val -join ','}
+                            $ConfigParameters.Add($_ , $val)
+                        }
+                        $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters) -Depth 10
+                        Remove-Variable "ConfigSetup"
+                        Remove-Variable "ConfigParameters"
+                    } else {
+                        $ConfigActual = Get-ConfigContent $ConfigName
+                        if (-not $Session.ConfigFiles[$ConfigName].Healthy) {
+                            $Data = "[]"
+                        } else {
+                            if ($ConfigName -eq "Miners") {
+                                $Data = ConvertTo-Json @($ConfigActual.PSObject.Properties | Foreach-Object {
+                                    $MinerName = $_.Name -replace "-.+$"
+                                    $MinerDevice = $_.Name -replace "^.+?-"
+                                    $_.Value | Foreach-Object {
+                                        [PSCustomObject]@{
+                                            Name               = $MinerName
+                                            Device             = $MinerDevice
+                                            MainAlgorithm      = $_.MainAlgorithm
+                                            SecondaryAlgorithm = $_.SecondaryAlgorithm
+                                            Params             = $_.Params
+                                            MSIAprofile        = $_.MSIAprofile
+                                            OCprofile          = $_.OCprofile
+                                            Difficulty         = $_.Difficulty
+                                            Penalty            = $_.Penalty
+                                            Disable            = $_.Disable
+                                        }
+                                    }
+                                }) -Depth 10
+                            } else {
+                                $Data = ConvertTo-Json $ConfigActual -Depth 10
+                            }
+                        }
+                        if ($ConfigActual -ne $null) {
+                            Remove-Variable "ConfigActual"
+                        }
                     }
-                    $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters) -Depth 10
-                    Remove-Variable "ConfigSetup"
-                    Remove-Variable "ConfigParameters"
                     Break
                 }
                 "/saveconfig" {
@@ -695,7 +729,7 @@
                                                 AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                                 Seconds  = [int64]$Timer.TotalSeconds
                                             }
-                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
+                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Power=$API.CurrentPower;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
                     Remove-Variable "Timer" -ErrorAction Ignore
                     Remove-Variable "Uptime" -ErrorAction Ignore
                     Remove-Variable "SysUptime" -ErrorAction Ignore

@@ -108,7 +108,7 @@ pre {
 }
 
 
-.navbar div#rigstat, .navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime, .hide-on-mobile {
+.navbar div#rigstat, .navbar div#rigpower, .navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime, .hide-on-mobile {
     display: none;
 }
 
@@ -119,6 +119,10 @@ pre {
 }
 
 @media screen and (min-width: 600px) {
+    .navbar div#rigpower {
+        display: block;
+    }
+
     .hide-on-mobile {
         display:inline;
     }

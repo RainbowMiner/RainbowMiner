@@ -3075,6 +3075,12 @@ function Invoke-Core {
     if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:Rates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:Rates.$_} | Sort-Object | ForEach-Object { "$($_) $($Global:Rates.$_)"})  -join ' = ')") > $null}
 
     $API.CurrentProfit = $CurrentProfitTotal
+    $API.CurrentPower = [PSCustomObject]@{
+        CPU = [Math]::Round(($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.DeviceModel -eq "CPU"}).PowerDraw | Measure-Object -Sum).Sum,2)
+        GPU = [Math]::Round(($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.DeviceModel -ne "CPU"}).PowerDraw | Measure-Object -Sum).Sum,2)
+        Offset = 0
+    }
+    $API.CurrentPower.Offset = [Math]::Round(($API.CurrentPower.CPU + $API.CurrentPower.GPU) * ($Session.Config.PowerOffsetPercent/100) + $Session.Config.PowerOffset,2)
 
     if ($Session.Config.UsePowerPrice) {$StatusLine.Add("E-Price = $($Session.Config.PowerPriceCurrency) $([Math]::Round($Session.CurrentPowerPrice,3))") > $null}
 
