@@ -19,6 +19,7 @@ param(
     [Bool]$EnableAutoUpdate = $false,
     [Bool]$EnableAutoPrice = $false,
     [Bool]$EnableMinimumPrice = $false,
+    [Bool]$EnableUpdateTitle = $false,
     [String]$AutoCreateAlgorithm = "",
     [String]$AutoCreateMinProfitPercent = "50",
     [String]$AutoCreateMinCPUProfitBTC = "0.00001",
@@ -278,7 +279,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
         if ($MRRConfig.$RigName -eq $null) {$MRRConfig | Add-Member $RigName ([PSCustomObject]@{}) -Force}
             
-        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice")) {
+        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice","EnableUpdateTitle")) {
             #boolean
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {Get-Yes $MRRConfig.$RigName.$fld} else {Get-Variable $fld -ValueOnly -ErrorAction Ignore}
@@ -437,7 +438,6 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                                     if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion) | Select-Object)}
                                     $CreateRig = if ($RigRunMode -eq "create") {
                                         @{
-                                            name        = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title) {"%algorithm% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%algorithm%") {"$Algorithm_Norm_Mapped $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
                                             description = Get-MiningRigRentalsSubst "$(if ($MRRConfig.$RigName.Description -notmatch "%workername%") {"$($MRRConfig.$RigName.Description)[$RigName]"} elseif ($MRRConfig.$RigName.Description -notmatch "\[%workername%\]") {$MRRConfig.$RigName.Description -replace "%workername%","[$RigName]"} else {$MRRConfig.$RigName.Description})" -Subst $RigSubst
                                             type        = $_.name
                                             status	    = "disabled"
@@ -448,6 +448,10 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                                         @{
                                             ndevices    = $RigDevice.Count
                                         }
+                                    }
+
+                                    if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
+                                        $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithm% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%algorithm%") {"$Algorithm_Norm_Mapped $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
                                     }
 
                                     $CreateRig["price"] = @{
@@ -506,7 +510,12 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                                             $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
                                             $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
 
-                                            if ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent -or -not $RigMinPriceCurrent -or [Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt 0.05 -or $_.ndevices -ne $CreateRig.ndevices) {
+                                            if ( (-not $RigMinPriceCurrent) -or
+                                                 ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
+                                                 ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt 0.05) -or
+                                                 ($_.ndevices -ne $CreateRig.ndevices) -or 
+                                                 ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name)
+                                            ) {
                                                 Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices)"
                                                 $CreateRig["id"] = $_.id
                                                 $RigsToUpdate += $CreateRig
