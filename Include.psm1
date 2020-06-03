@@ -6119,7 +6119,7 @@ param(
 }
 
 function Stop-Autoexec {
-    $Global:AutoexecCommands | Where-Object Process | Foreach-Object {
+    $Global:AutoexecCommands | Where-Object {$_.ProcessId -or $_.Name} | Foreach-Object {
         Stop-SubProcess -Job $_ -Title "Autoexec command" -Name "$($_.FilePath) $($_.Arguments)"
     }
 }
