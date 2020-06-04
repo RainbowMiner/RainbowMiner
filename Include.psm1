@@ -1724,15 +1724,17 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$BashFileName = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$SetAMDEnv = $false
+        [Switch]$SetAMDEnv = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetLDLIBRARYPATH = $false
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
-        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -SetAMDEnv:$SetAMDEnv
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -SetAMDEnv:$SetAMDEnv -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     }
 }
 
@@ -1755,7 +1757,9 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
-        [Int]$MultiProcess = 0
+        [Int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetLDLIBRARYPATH = $false
     )
 
     [int[]]$Running = @()
@@ -1805,7 +1809,9 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
-        [int]$MultiProcess = 0
+        [int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetLDLIBRARYPATH = $false
     )
 
     [int[]]$Running = @()
@@ -1818,8 +1824,8 @@ function Start-SubProcessInConsole {
         $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
     }
 
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
-        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $LinuxDisplay, $CurrentPwd)
+    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH {
+        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $LinuxDisplay, $CurrentPwd, $SetLDLIBRARYPATH)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
@@ -1866,7 +1872,7 @@ function Start-SubProcessInConsole {
                 # Set lib path to local
                 #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
                 if ($LinuxDisplay) {$env:DISPLAY = "$($LinuxDisplay)"}
-                $env:LD_LIBRARY_PATH = "$($LDExportPath)"
+                if ($SetLDLIBRARYPATH) {$env:LD_LIBRARY_PATH = "$($LDExportPath)"}
             }
 
             $Process = Start-Process @ProcessParams
@@ -1935,7 +1941,9 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [String]$BashFileName = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$SetAMDEnv = $false
+        [Switch]$SetAMDEnv = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetLDLIBRARYPATH = $false
     )
 
     $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
@@ -1986,7 +1994,9 @@ function Start-SubProcessInScreen {
 
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff.Add("export $($matches[1])=$($matches[2])") > $null}
 
-    $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+    if ($SetLDLIBRARYPATH) {
+        $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+    }
 
     [System.Collections.Generic.List[string]]$Test  = @()
     $Stuff | Foreach-Object {$Test.Add($_) > $null}
@@ -6100,7 +6110,7 @@ param(
                         @(Get-Process).Where({$_.Path -and $_.Path -like "$(Join-Path $FileDir "*")" -and $_.ProcessName -like $FileName -and (-not $ArgumentList -or $_.CommandLine -like "* $($ArgumentList)")}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
                     }
 
-                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority
+                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH
                     if ($Job) {
                         $Job | Add-Member FilePath $FilePath -Force
                         $Job | Add-Member Arguments $ArgumentList -Force

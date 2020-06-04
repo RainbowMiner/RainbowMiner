@@ -2511,6 +2511,7 @@ function Invoke-Core {
             $ActiveMiner.MiningPriority     = $Miner.MiningPriority
             $ActiveMiner.MiningAffinity     = $Miner.MiningAffinity
             $ActiveMiner.MultiProcess       = [int]$Miner.MultiProcess
+            $ActiveMiner.SetLDLIBRARYPATH   = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
 
             #$Miner.HashRates.PSObject.Properties.Name | Foreach-Object {
             #    $ActiveMiner.DevFee.$_ = $Miner.DevFee.$_
@@ -2577,6 +2578,7 @@ function Invoke-Core {
                 MiningPriority       = $Miner.MiningPriority
                 MiningAffinity       = $Miner.MiningAffinity
                 MultiProcess         = [int]$Miner.MultiProcess
+                SetLDLIBRARYPATH     = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
             }
             #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
             $Global:ActiveMiners.Add($ActiveMiner) > $null

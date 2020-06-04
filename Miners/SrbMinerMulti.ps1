@@ -144,6 +144,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                         PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = $Algorithm_Norm_0
+                        SetLDLIBRARYPATH = $false
 				    }
 			    }
 		    }
