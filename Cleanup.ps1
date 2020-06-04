@@ -823,6 +823,12 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.5.7.9")) {
+        if ($IsLinux) {
+            $RemoveMinerStats += @("*-SrbMinerMulti-*_HashRate.txt")
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
