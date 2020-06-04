@@ -1679,6 +1679,8 @@ class Nanominer : Miner {
             if ($Parameters.Pass)                {$FileC += "rigPassword=$($Parameters.Pass)"}
             if ($Parameters.Email)               {$FileC += "email=$($Parameters.Email)"}
             if ($Parameters.Threads)             {$FileC += "cpuThreads = $($Parameters.Threads)"}
+            if ($Parameters.Coin)                {$FileC += "coin=$($Parameters.Coin)"}
+            if ($Parameters.Protocol)            {$FileC += "protocol=$($Parameters.Protocol)"}
 
             $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
         }

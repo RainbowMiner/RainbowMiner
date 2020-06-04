@@ -23,8 +23,6 @@ $Version = "1.9.5"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "Cuckaroo29";              Params = ""; MinMemGb = 6;    Vendor = @("AMD");          ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
-    #[PSCustomObject]@{MainAlgorithm = "Cuckarood29";             Params = ""; MinMemGb = 6;    Vendor = @("AMD");          ExtendInterval = 2; DevFee = 2.0} #Cuckarood29
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
     [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "^F2Pool"} #Ethash
     [PSCustomObject]@{MainAlgorithm = "KawPow";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 2.0} #KawPOW
@@ -92,6 +90,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
 				    $Arguments = [PSCustomObject]@{
                         Algo      = $_.MainAlgorithm
+                        Coin      = $Pools.$Algorithm_Norm.CoinSymbol
 					    Host      = $Pools.$Algorithm_Norm.Host
 					    Port      = $Pools.$Algorithm_Norm.Port
 					    SSL       = $Pools.$Algorithm_Norm.SSL
@@ -101,7 +100,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Pass      = $Pools.$Algorithm_Norm.Pass
                         Email     = $Pools.$Algorithm_Norm.Email
                         Threads   = if ($Miner_Vendor -eq "CPU") {$CPUThreads} else {$null}
-                        Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Mineable_Index} else {$null} 
+                        Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Mineable_Index} else {$null}
 				    }
 
 				    [PSCustomObject]@{
