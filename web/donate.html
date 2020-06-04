@@ -118,6 +118,21 @@
     </div>
     <div class="mb-2 card {{if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 440px">
         <div class="card-header text-center">
+            <h5>Bitcoin BTC (bech32 native segwit)</h5>
+        </div>
+        <div class="card-body text-center">
+            <div class="input-group">
+                <input type="text" class="form-control" value="bc1q6h7k2ul4a4rtmrlaemlxd9kmhtf89nlg6s4ydu" id="copy-btc-input" readonly>
+                <span class="input-group-btn">
+                    <button class="btn btn-default btn-clipboard" type="button" id="copy-btc" title="Copy to Clipboard" aria-label="Left Align" data-toggle="tooltip" data-clipboard-action="copy" data-clipboard-target="#copy-btc-input">
+                        <span class="fa fa-copy fa-lg" aria-hidden="true"></span>
+                    </button>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="mb-2 card {{if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 440px">
+        <div class="card-header text-center">
             <h5>BitcoinCash BCH</h5>
         </div>
         <div class="card-body text-center">
