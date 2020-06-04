@@ -2031,10 +2031,10 @@ function Start-SubProcessInScreen {
         while ($str) {
             $substr = $str.substring(0,[Math]::Min($str.length,$StringChunkSize))
             if ($str.length -gt $substr.length) {
-                $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$substr`"") > $null
+                $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$($substr -replace '"','\"')`"") > $null
                 $str = $str.substring($substr.length)
             } else {
-                $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$substr\n`"") > $null
+                $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$($substr -replace '"','\"')\n`"") > $null
                 $str = ""
             }
             $Cmd.Add("sleep .1") > $null
