@@ -8,7 +8,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "BTCP";  port = 3032; fee = 1.5; region = @("us")}
 )
 
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
     $Pool_Currency = $_.symbol
 
     $Request = [PSCustomObject]@{}

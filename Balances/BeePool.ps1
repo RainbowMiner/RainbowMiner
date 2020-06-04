@@ -19,7 +19,7 @@ if (-not $ok) {
     return
 }
 
-$Pool_Request.data.data | Where-Object {$Config.Pools.$Name.Wallets."$($_.coin)"} | Foreach-Object {
+$Pool_Request.data.data | Where-Object {$Config.Pools.$Name.Wallets."$($_.coin)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.coin)")} | Foreach-Object {
     $Pool_Currency = "$($_.coin)".ToUpper()
 
     $Request = [PSCustomObject]@{}

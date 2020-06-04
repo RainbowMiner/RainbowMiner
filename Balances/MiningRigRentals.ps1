@@ -15,7 +15,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
     Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
 }
 
-$Request.PSObject.Properties.Name | Foreach-Object {
+$Request.PSObject.Properties.Name | Where-Object {(-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
     [PSCustomObject]@{
         Caption     = "$($Name) ($($_))"
 		BaseName    = $Name

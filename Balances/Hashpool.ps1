@@ -35,7 +35,7 @@ $PoolCoins_Request.data | Foreach-Object {
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {$Pool_Coins.ContainsKey($_.Name)} | Foreach-Object {
+$Payout_Currencies | Where-Object {$Pool_Coins.ContainsKey($_.Name) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     $Pool_Currency   = $_.Name
     $Pool_CoinSymbol = $Pool_Coins.$Pool_Currency
 

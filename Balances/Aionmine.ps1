@@ -26,7 +26,7 @@ catch {
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {@($Pool_Request.pools | Foreach-Object {$_.coin.type} | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {@($Pool_Request.pools | Foreach-Object {$_.coin.type} | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     $id = $Pool_Request.pools | Where-Object {$_.coin.type -eq $_.Name} | Select-Object -ExpandProperty id
     try {
         $Request = Invoke-RestMethodAsync "https://api.aionmine.org/api/pools/aion/miners/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)

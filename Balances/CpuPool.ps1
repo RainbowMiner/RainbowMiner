@@ -21,7 +21,7 @@ catch {
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Value | Select-Object -ExpandProperty symbol -Unique) -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Value | Select-Object -ExpandProperty symbol -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     $Request = [PSCustomObject]@{}
     try {
         $Request = Invoke-RestMethodAsync "http://cpu-pool.com/api/worker_stats?$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)

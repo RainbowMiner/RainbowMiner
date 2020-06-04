@@ -29,7 +29,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XCASH"; port = 10490; fee = 0.9; rpc = "xcash"; region = @("fi","de","ca","hk","sg")}
 )
 
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Config.Pools.$Name.Wallets."$($_.symbol2)")} | Foreach-Object {
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Config.Pools.$Name.Wallets."$($_.symbol2)") -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_Currency2 = $_.symbol2
     $Pool_RpcPath  = $_.rpc

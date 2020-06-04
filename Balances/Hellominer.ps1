@@ -14,7 +14,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XWP";    port = @(9900); fee = 0.0; rpc = ""}
 )
 
-$Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Config.Pools.$Name.Wallets.$Pool_Currency} | Foreach-Object {
+$Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Config.Pools.$Name.Wallets.$Pool_Currency -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Pool_Currency)} | Foreach-Object {
 
     $Request = [PSCustomObject]@{}
 

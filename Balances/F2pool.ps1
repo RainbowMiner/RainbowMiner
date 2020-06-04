@@ -55,7 +55,7 @@ $Pools_Data = [PSCustomObject]@{
     HNS = "handshake/address"
 }
 
-$Payout_Currencies | Where-Object {$Pools_Data.$($_.Name) -ne $null} | Foreach-Object {
+$Payout_Currencies | Where-Object {$Pools_Data."$($_.Name)" -ne $null -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     $Currency = $_
     $Pools_Data."$($Currency.Name)" | Foreach-Object {
         try {

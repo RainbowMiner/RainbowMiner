@@ -30,7 +30,7 @@ if (-not $ok) {
 $Pool_Coins = @($Pool_Request.pools.PSObject.Properties.Value.symbol | Select-Object -Unique)
 
 $Count = 0
-$Payout_Currencies | Where-Object {$Pool_Coins -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {$Pool_Coins -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     $Pool_Currency   = $_.Name
 
     try {

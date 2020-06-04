@@ -51,15 +51,17 @@ $Request.getuserallbalances.data | Where-Object {$_.coin} | Foreach-Object {
         Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "
     }
 
-    [PSCustomObject]@{
-        Caption     = "$($Name) ($($Currency))"
-		BaseName    = $Name
-        Currency    = $Currency
-        Balance     = [Decimal]$_.confirmed
-        Pending     = [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
-        Total       = [Decimal]$_.confirmed + [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
-        Paid        = [Decimal]0
-		Payouts     = @()
-        Lastupdated = (Get-Date).ToUniversalTime()
+    if (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency) {
+        [PSCustomObject]@{
+            Caption     = "$($Name) ($($Currency))"
+		    BaseName    = $Name
+            Currency    = $Currency
+            Balance     = [Decimal]$_.confirmed
+            Pending     = [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
+            Total       = [Decimal]$_.confirmed + [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
+            Paid        = [Decimal]0
+		    Payouts     = @()
+            Lastupdated = (Get-Date).ToUniversalTime()
+        }
     }
 }

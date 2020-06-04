@@ -10,6 +10,8 @@ if (!$PoolConfig.GRIN) {
     return
 }
 
+if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalances -contains "GRIN") {return}
+
 $Request = [PSCustomObject]@{}
 
 try {

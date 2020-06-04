@@ -24,7 +24,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ZANO"; port = 7020; fee = 1.0; rpc = "zano";    user="%wallet%.%worker%"}
 )
 
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_RpcPath = $_.rpc
 

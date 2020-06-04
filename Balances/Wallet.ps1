@@ -58,7 +58,7 @@ $Wallets_Data = @(
 foreach ($Wallet_Data in $Wallets_Data) {
     $Wallet_Symbol  = $Wallet_Data.symbol
 
-    if (-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains $Wallet_Symbol) {
+    if ((-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains $Wallet_Symbol) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Wallet_Symbol)) {
 
         @($Config.Coins.PSObject.Properties | Where-Object {$_.Name -eq $Wallet_Symbol -and $_.Value.Wallet -match $Wallet_Data.match} | Foreach-Object {$_.Value.Wallet}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.$Wallet_Symbol -match $Wallet_Data.match} | Foreach-Object {$_.Wallets.$Wallet_Symbol}) | Select-Object -Unique | Sort-Object | Foreach-Object {
             $Request = [PSCustomObject]@{}

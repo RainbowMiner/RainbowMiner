@@ -13,6 +13,8 @@ if (-not $Payout_Currencies) {
     return
 }
 
+if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalances -contains "CTXC") {return}
+
 $Count = 0
 $Payout_Currencies | Where-Object {$_.Name -eq "CTXC"} | Foreach-Object {
     try {

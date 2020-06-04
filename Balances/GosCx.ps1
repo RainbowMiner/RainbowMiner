@@ -23,7 +23,7 @@ catch {
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties.Name -replace '-.+' | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties.Name -replace '-.+' | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     try {
         $Request = Invoke-RestMethodAsync "https://www.gos.cx/api/wallet?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++

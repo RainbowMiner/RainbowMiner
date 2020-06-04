@@ -10,6 +10,8 @@ if (!$PoolConfig.RVN) {
     return
 }
 
+if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalances -contains "RVN") {return}
+
 $Request = [PSCustomObject]@{}
 
 $Ravenminer_Host = "www.ravenminer.com"
