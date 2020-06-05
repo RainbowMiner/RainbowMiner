@@ -1191,6 +1191,31 @@ function Invoke-Core {
     }
     if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Session.PauseMiners)) {$Session.PauseMiners = $API.Pause = $true}
 
+    #Update defaults for all subfolders, if in Server-mode
+    if ($Session.Config.RunMode -eq "Server") {
+        $ConfigFile = Get-ConfigPath "Config"
+        $ConfigFile_Name = Split-Path $ConfigFile -Leaf
+        $ConfigFile_Path = Split-Path $ConfigFile
+        Get-ChildItem $ConfigFile_Path -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
+            $Folder_Name = $_.Name
+            $Folder_Path = Join-Path $ConfigFile_Path $Folder_Name
+            @($Session.ConfigFiles.Keys | Select-Object) | Foreach-Object {
+                $FolderConfigFile = Join-Path $Folder_Path "$($_.ToLower()).$($ConfigFile_Name)"
+                if (Test-Path $FolderConfigFile) {
+                    if (-not (Test-Config "$Folder_Name/$_") -or $Session.ConfigFiles["$Folder_Name/$_"].Path -ne $FolderConfigFile) {
+                        $Session.ConfigFiles["$Folder_Name/$_"] = @{Path=$FolderConfigFile;LastWriteTime=0;Healthy=$false}
+                    }
+                    $FolderConfigFileNeedsUpdate = ($Session.RoundCounter -eq 0) -or (Test-Config "$Folder_Name/$_" -LastWriteTime)
+                    if (Set-ConfigDefault -ConfigName $_ -Folder $Folder_Name -Force:$FolderConfigFileNeedsUpdate) {
+                        Set-ConfigLastWriteTime "$Folder_Name/$_"
+                    }
+                } elseif (Test-Config "$Folder_Name/$_") {
+                    $Session.ConfigFiles.Remove("$Folder_Name/$_")
+                }
+            }
+        }
+    }
+
     #Check for algorithms config
     if (Set-ConfigDefault "Algorithms") {
         if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {

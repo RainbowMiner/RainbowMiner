@@ -4458,15 +4458,274 @@ function Set-ContentJson {
     return $false
 }
 
+function Set-PresetDefault {
+    if (Test-Path ".\Data\PresetDefault.ps1") {
+        $Setup = Get-ChildItemContent ".\Data\PresetDefault.ps1"
+        $Setup.PSObject.Properties.Name | Foreach-Object {
+            $Session.DefaultValues[$_] = $Setup.$_
+        }
+    }
+}
+
+function Set-AlgorithmsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Algorithms"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile=""}
+            $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1"
+            $AllAlgorithms = Get-Algorithms -Values
+            foreach ($Algorithm in $AllAlgorithms) {
+                if (-not $Preset.$Algorithm) {$Preset | Add-Member $Algorithm $(if ($Setup.$Algorithm) {$Setup.$Algorithm} else {[PSCustomObject]@{}}) -Force}
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $SetupName $Default.$SetupName -Force}}
+            }
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
+function Set-CoinsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Coins"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {            
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
+            $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1"
+            
+            foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
+                if (-not $Preset.$Coin) {$Preset | Add-Member $Coin $(if ($Setup.$Coin) {$Setup.$Coin} else {[PSCustomObject]@{}}) -Force}
+            }
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {                
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
+                $Sorted | Add-Member $_ $Preset.$_ -Force
+            }
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
+function Set-GpuGroupsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "$(if ($Folder) {"$Folder/"})GpuGroups"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile)) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {            
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $GpuNames = Get-Device "nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
+            foreach ($GpuName in $GpuNames) {
+                if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
+                elseif ($Preset.$GpuName -ne "") {$Global:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
+            }
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
+function Set-CombosConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Combos"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile)) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {            
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+
+            $Sorted = [PSCustomObject]@{}
+            Foreach($SubsetType in @("AMD","NVIDIA")) {
+                if ($Preset.$SubsetType -eq $null) {$Preset | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
+                if ($Sorted.$SubsetType -eq $null) {$Sorted | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
+
+                $NewSubsetModels = @()
+
+                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $SubsetType})
+
+                if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
+
+                    # gpugroups never combine against each other, if same gpu. Except full group
+                    $GpuGroups = @()
+                    $FullGpuGroups = $SubsetDevices | Where-Object GpuGroup -ne "" | Group-Object {$_.Model -replace "$($_.GpuGroup)$"} | Where-Object {$_.Count -gt 1} | Foreach-Object {$GpuGroups += $_.Group.Model;($_.Group.Model | Select-Object -Unique | Sort-Object) -join '-'}
+
+                    # count groups
+                    $GpuCount = ($SubsetDevices | Where-Object GpuGroup -eq "" | Select-Object -Property Model -Unique | Measure-Object).Count + $FullGpuGroups.Count
+
+                    # collect full combos for gpu categories
+                    $FullCombosByCategory = @{}
+                    if ($GpuCount -gt 3) {
+                        $SubsetDevices | Group-Object {
+                            $Model = $_.Model
+                            $Mem = [int]($_.OpenCL.GlobalMemSize / 1GB)
+                            Switch ($SubsetType) {
+                                "AMD"    {"$($Model.SubString(0,2))$($Mem)GB";Break}
+                                "NVIDIA" {"$(
+                                    Switch (Get-NvidiaArchitecture $Model) {
+                                        "Pascal" {Switch -Regex ($Model) {"105" {"GTX5";Break};"106" {"GTX6";Break};"(104|107|108)" {"GTX7";Break};default {$Model}};Break}
+                                        "Turing" {"RTX";Break}
+                                        default  {$Model}
+                                    })$(if ($Mem -lt 6) {"$($Mem)GB"})"}
+                            }
+                        } | Foreach-Object {$FullCombosByCategory[$_.Name] = @($_.Group.Model | Select-Object -Unique | Sort-Object | Select-Object)}
+                    }
+
+                    $DisplayWarning = $false
+                    Get-DeviceSubSets $SubsetDevices | Foreach-Object {
+                        $Subset = $_.Model
+                        $SubsetModel= $Subset -join '-'
+                        if ($Preset.$SubsetType.$SubsetModel -eq $null) {
+                            $SubsetDefault = -not $GpuGroups.Count -or ($FullGpuGroups | Where-Object {$SubsetModel -match $_} | Measure-Object).Count -or -not (Compare-Object $GpuGroups $_.Model -ExcludeDifferent -IncludeEqual | Measure-Object).Count
+                            if ($SubsetDefault -and $GpuCount -gt 3) {
+                                if (($FullCombosByCategory.GetEnumerator() | Where-Object {(Compare-Object $Subset $_.Value -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq $_.Value.Count} | Foreach-Object {$_.Value.Count} | Measure-Object -Sum).Sum -ne $Subset.Count) {
+                                    $SubsetDefault = "0"
+                                }
+                                $DisplayWarning = $true
+                            }
+                            $Preset.$SubsetType | Add-Member $SubsetModel "$([int]$SubsetDefault)" -Force
+                        }
+                        $NewSubsetModels += $SubsetModel
+                    }
+
+                    if ($DisplayWarning) {
+                        Write-Log -Level Warn "More than 3 different GPUs will slow down the combo mode significantly. Automatically reducing combinations in combos.config.txt."
+                    }
+
+                    # always allow fullcombomodel
+                    $Preset.$SubsetType.$SubsetModel = "1"
+                }
+
+                $Preset.$SubsetType.PSObject.Properties.Name | Where-Object {$NewSubsetModels -icontains $_} | Sort-Object | Foreach-Object {$Sorted.$SubsetType | Add-Member $_ "$(if (Get-Yes $Preset.$SubsetType.$_) {1} else {0})" -Force}
+            }
+            
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
+function Set-DevicesConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Devices"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {            
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker=""}
+            $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1"
+            $Devices = Get-Device "cpu","nvidia","amd" -IgnoreOpenCL
+            $Devices | Select-Object -Unique Type,Model | Foreach-Object {
+                $DeviceModel = $_.Model
+                $DeviceType  = $_.Type
+                if (-not $Preset.$DeviceModel) {$Preset | Add-Member $DeviceModel $(if ($Setup.$DeviceType) {$Setup.$DeviceType} else {[PSCustomObject]@{}}) -Force}
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName $Default.$SetupName -Force}}
+            }
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
 function Set-MinersConfigDefault {
     [CmdletBinding()]
     param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false,
         [Parameter(Mandatory = $False)]
         [Switch]$UseDefaultParams = $false
     )
-    $ConfigName = "Miners"
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Miners"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
@@ -4588,260 +4847,15 @@ function Set-MinersConfigDefault {
     Test-Config $ConfigName -Exists
 }
 
-function Set-AlgorithmsConfigDefault {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $False)]
-        [Switch]$Force = $false
-    )
-    $ConfigName = "Algorithms"
-    if (-not (Test-Config $ConfigName)) {return}
-    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
-        if (Test-Path $PathToFile) {
-            $Preset = Get-ConfigContent $ConfigName
-            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
-        }
-        try {            
-            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile=""}
-            $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1"
-            $AllAlgorithms = Get-Algorithms -Values
-            foreach ($Algorithm in $AllAlgorithms) {
-                if (-not $Preset.$Algorithm) {$Preset | Add-Member $Algorithm $(if ($Setup.$Algorithm) {$Setup.$Algorithm} else {[PSCustomObject]@{}}) -Force}
-                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $SetupName $Default.$SetupName -Force}}
-            }
-            $Sorted = [PSCustomObject]@{}
-            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
-        }
-        catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
-        }
-    }
-    Test-Config $ConfigName -Exists
-}
-
-function Set-PresetDefault {
-    if (Test-Path ".\Data\PresetDefault.ps1") {
-        $Setup = Get-ChildItemContent ".\Data\PresetDefault.ps1"
-        $Setup.PSObject.Properties.Name | Foreach-Object {
-            $Session.DefaultValues[$_] = $Setup.$_
-        }
-    }
-}
-
-function Set-CoinsConfigDefault {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $False)]
-        [Switch]$Force = $false
-    )
-    $ConfigName = "Coins"
-    if (-not (Test-Config $ConfigName)) {return}
-    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
-        if (Test-Path $PathToFile) {
-            $Preset = Get-ConfigContent $ConfigName
-            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
-        }
-        try {            
-            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
-            $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1"
-            
-            foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
-                if (-not $Preset.$Coin) {$Preset | Add-Member $Coin $(if ($Setup.$Coin) {$Setup.$Coin} else {[PSCustomObject]@{}}) -Force}
-            }
-            $Sorted = [PSCustomObject]@{}
-            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {                
-                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
-                $Sorted | Add-Member $_ $Preset.$_ -Force
-            }
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
-        }
-        catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
-        }
-    }
-    Test-Config $ConfigName -Exists
-}
-
-function Set-GpuGroupsConfigDefault {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $False)]
-        [Switch]$Force = $false
-    )
-    $ConfigName = "GpuGroups"
-    if (-not (Test-Config $ConfigName)) {return}
-    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile)) {
-        if (Test-Path $PathToFile) {
-            $Preset = Get-ConfigContent $ConfigName
-            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
-        }
-        try {            
-            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $GpuNames = Get-Device "nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
-            foreach ($GpuName in $GpuNames) {
-                if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
-                elseif ($Preset.$GpuName -ne "") {$Global:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
-            }
-            $Sorted = [PSCustomObject]@{}
-            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
-        }
-        catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
-        }
-    }
-    Test-Config $ConfigName -Exists
-}
-
-function Set-CombosConfigDefault {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $False)]
-        [Switch]$Force = $false
-    )
-    $ConfigName = "Combos"
-    if (-not (Test-Config $ConfigName)) {return}
-    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile)) {
-        if (Test-Path $PathToFile) {
-            $Preset = Get-ConfigContent $ConfigName
-            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
-        }
-        try {            
-            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
-
-            $Sorted = [PSCustomObject]@{}
-            Foreach($SubsetType in @("AMD","NVIDIA")) {
-                if ($Preset.$SubsetType -eq $null) {$Preset | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
-                if ($Sorted.$SubsetType -eq $null) {$Sorted | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
-
-                $NewSubsetModels = @()
-
-                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $SubsetType})
-
-                if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
-
-                    # gpugroups never combine against each other, if same gpu. Except full group
-                    $GpuGroups = @()
-                    $FullGpuGroups = $SubsetDevices | Where-Object GpuGroup -ne "" | Group-Object {$_.Model -replace "$($_.GpuGroup)$"} | Where-Object {$_.Count -gt 1} | Foreach-Object {$GpuGroups += $_.Group.Model;($_.Group.Model | Select-Object -Unique | Sort-Object) -join '-'}
-
-                    # count groups
-                    $GpuCount = ($SubsetDevices | Where-Object GpuGroup -eq "" | Select-Object -Property Model -Unique | Measure-Object).Count + $FullGpuGroups.Count
-
-                    # collect full combos for gpu categories
-                    $FullCombosByCategory = @{}
-                    if ($GpuCount -gt 3) {
-                        $SubsetDevices | Group-Object {
-                            $Model = $_.Model
-                            $Mem = [int]($_.OpenCL.GlobalMemSize / 1GB)
-                            Switch ($SubsetType) {
-                                "AMD"    {"$($Model.SubString(0,2))$($Mem)GB";Break}
-                                "NVIDIA" {"$(
-                                    Switch (Get-NvidiaArchitecture $Model) {
-                                        "Pascal" {Switch -Regex ($Model) {"105" {"GTX5";Break};"106" {"GTX6";Break};"(104|107|108)" {"GTX7";Break};default {$Model}};Break}
-                                        "Turing" {"RTX";Break}
-                                        default  {$Model}
-                                    })$(if ($Mem -lt 6) {"$($Mem)GB"})"}
-                            }
-                        } | Foreach-Object {$FullCombosByCategory[$_.Name] = @($_.Group.Model | Select-Object -Unique | Sort-Object | Select-Object)}
-                    }
-
-                    $DisplayWarning = $false
-                    Get-DeviceSubSets $SubsetDevices | Foreach-Object {
-                        $Subset = $_.Model
-                        $SubsetModel= $Subset -join '-'
-                        if ($Preset.$SubsetType.$SubsetModel -eq $null) {
-                            $SubsetDefault = -not $GpuGroups.Count -or ($FullGpuGroups | Where-Object {$SubsetModel -match $_} | Measure-Object).Count -or -not (Compare-Object $GpuGroups $_.Model -ExcludeDifferent -IncludeEqual | Measure-Object).Count
-                            if ($SubsetDefault -and $GpuCount -gt 3) {
-                                if (($FullCombosByCategory.GetEnumerator() | Where-Object {(Compare-Object $Subset $_.Value -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq $_.Value.Count} | Foreach-Object {$_.Value.Count} | Measure-Object -Sum).Sum -ne $Subset.Count) {
-                                    $SubsetDefault = "0"
-                                }
-                                $DisplayWarning = $true
-                            }
-                            $Preset.$SubsetType | Add-Member $SubsetModel "$([int]$SubsetDefault)" -Force
-                        }
-                        $NewSubsetModels += $SubsetModel
-                    }
-
-                    if ($DisplayWarning) {
-                        Write-Log -Level Warn "More than 3 different GPUs will slow down the combo mode significantly. Automatically reducing combinations in combos.config.txt."
-                    }
-
-                    # always allow fullcombomodel
-                    $Preset.$SubsetType.$SubsetModel = "1"
-                }
-
-                $Preset.$SubsetType.PSObject.Properties.Name | Where-Object {$NewSubsetModels -icontains $_} | Sort-Object | Foreach-Object {$Sorted.$SubsetType | Add-Member $_ "$(if (Get-Yes $Preset.$SubsetType.$_) {1} else {0})" -Force}
-            }
-            
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
-        }
-        catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
-        }
-    }
-    Test-Config $ConfigName -Exists
-}
-
-function Set-DevicesConfigDefault {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $False)]
-        [Switch]$Force = $false
-    )
-    $ConfigName = "Devices"
-    if (-not (Test-Config $ConfigName)) {return}
-    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
-        if (Test-Path $PathToFile) {
-            $Preset = Get-ConfigContent $ConfigName
-            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
-        }
-        try {            
-            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker=""}
-            $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1"
-            $Devices = Get-Device "cpu","nvidia","amd" -IgnoreOpenCL
-            $Devices | Select-Object -Unique Type,Model | Foreach-Object {
-                $DeviceModel = $_.Model
-                $DeviceType  = $_.Type
-                if (-not $Preset.$DeviceModel) {$Preset | Add-Member $DeviceModel $(if ($Setup.$DeviceType) {$Setup.$DeviceType} else {[PSCustomObject]@{}}) -Force}
-                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName $Default.$SetupName -Force}}
-            }
-            $Sorted = [PSCustomObject]@{}
-            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
-        }
-        catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
-        }
-    }
-    Test-Config $ConfigName -Exists
-}
-
 function Set-PoolsConfigDefault {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
-    $ConfigName = "Pools"
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Pools"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
@@ -4900,9 +4914,11 @@ function Set-OCProfilesConfigDefault {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
-    $ConfigName = "OCProfiles"
+    $ConfigName = "$(if ($Folder) {"$Folder/"})OCProfiles"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
@@ -4951,9 +4967,11 @@ function Set-SchedulerConfigDefault {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
-    $ConfigName = "Scheduler"
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Scheduler"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile)) {
@@ -5025,19 +5043,21 @@ function Set-ConfigDefault {
         [Parameter(Mandatory = $True)]
         [string]$ConfigName,
         [Parameter(Mandatory = $False)]
+        [string]$Folder = "",
+        [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
 
     Switch ($ConfigName) {
-        "Algorithms"  {Set-AlgorithmsConfigDefault -Force:$Force;Break}
-        "Coins"       {Set-CoinsConfigDefault -Force:$Force;Break}
-        "Combos"      {Set-CombosConfigDefault -Force:$Force;Break}
-        "Devices"     {Set-DevicesConfigDefault -Force:$Force;Break}
-        "GpuGroups"   {Set-GpuGroupsConfigDefault -Force:$Force;Break}
-        "Miners"      {Set-MinersConfigDefault -Force:$Force;Break}
-        "OCProfiles"  {Set-OCProfilesConfigDefault -Force:$Force;Break}
-        "Pools"       {Set-PoolsConfigDefault -Force:$Force;Break}
-        "Scheduler"   {Set-SchedulerConfigDefault -Force:$Force;Break}
+        "Algorithms"  {Set-AlgorithmsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Coins"       {Set-CoinsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Combos"      {Set-CombosConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Devices"     {Set-DevicesConfigDefault -Folder $Folder -Force:$Force;Break}
+        "GpuGroups"   {Set-GpuGroupsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Miners"      {Set-MinersConfigDefault -Folder $Folder -Force:$Force;Break}
+        "OCProfiles"  {Set-OCProfilesConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Pools"       {Set-PoolsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Scheduler"   {Set-SchedulerConfigDefault -Folder $Folder -Force:$Force;Break}
     }
 }
 
