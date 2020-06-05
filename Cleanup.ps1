@@ -829,6 +829,21 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.5.8.1")) {
+        $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        if ($PoolsActual -and $PoolsActual.MiningRigRentals) {
+            $Changes = 0
+            if ($PoolsActual.MiningRigRentals.Title -ne $null -and $PoolsActual.MiningRigRentals.Title -match "%algorithm%" -and $PoolsActual.MiningRigRentals.Title -notmatch "%(algorithmex|coininfo|display)%") {
+                $PoolsActual.MiningRigRentals.Title = $PoolsActual.MiningRigRentals.Title -replace "%algorithm%","%algorithmex%"
+                $Changes++
+            }
+            if ($Changes) {
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                $ChangesTotal += $Changes
+            }
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick

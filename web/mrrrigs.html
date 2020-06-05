@@ -5,6 +5,11 @@
 <p>
     "Adv.Price", "Min.Price", "Suggested" and "Last Price" in BTC per day and "Unit" / "Rig Price" in BTC per day
 </p>
+<div class="d-flex align-items-center">
+    <div class="m-2">
+        <a href="#" id="updatemrr" class="btn btn-primary">Run Rig-Updates</a>
+    </div>
+</div>
 
 <table id="mrrrigs" class="table"
         data-toggle="table"
@@ -43,6 +48,17 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
     $(function () {
+        $("#updatemrr").click(function (event) {
+            event.stopPropagation()
+            $.ajax({
+                url: '/updatemrr', success: function (result) {
+                    $('.modal-body').text('MiningRigRental rigs will be automatically created/updated next round.');
+                    $('.modal-title').text('Run Rig-Updates');
+                    $('#myModal').modal({ show: true });
+                }
+            })
+        });
+
         function refreshTable() {
             if (!$("table#mrrrigs tr.detail-view").length) $("table#mrrrigs").bootstrapTable("refresh", { silent: true });
             window.setTimeout(refreshTable, 600000);

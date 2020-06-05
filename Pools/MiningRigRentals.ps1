@@ -260,7 +260,9 @@ if ($AllRigs_Request) {
 #
 # we will check for auto operations every hour but not at startup
 #
-if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDonationRun -and $Session.RoundCounter -and (-not $Session.MRRlastautoperation -or $Session.MRRlastautoperation -lt (Get-Date).AddHours(-1))) {
+if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDonationRun -and $Session.RoundCounter -and ($API.UpdateMRR -or -not $Session.MRRlastautoperation -or $Session.MRRlastautoperation -lt (Get-Date).AddHours(-1))) {
+
+    if ($API.UpdateMRR) {$API.UpdateMRR = $false}
 
     $RigDivisors = @("h","kh","mh","gh","th") | Foreach-Object {[PSCustomObject]@{type=$_;value=(ConvertFrom-Hash "1$_")}}
     $RigServer  = ""
@@ -344,8 +346,8 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
         foreach ($RigName in $Workers) {
 
-            #Write-Log -Level Warn "$RigRunMode $RigName (already created $RigCreated)"
-            
+            Write-Log -Level Info "Start $($RigRunMode) MRR rigs on $($RigName)"
+
             if ($RigRunMode -eq "create" -and $RigCreated -ge 20) {break}
 
             if (($RigRunMode -eq "create" -and $MRRConfig.$RigName.EnableAutoCreate) -or ($RigRunMode -eq "update" -and $MRRConfig.$RigName.EnableAutoUpdate)) {
@@ -431,10 +433,13 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
                                 if ($IsHandleRig -or $RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) {
 
-                                    $RigMaxHours           = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
-                                    $Algorithm_Norm_Mapped = Get-MappedAlgorithm $Algorithm_Norm
-                                    $RigSubst["Algorithm"] = $Algorithm_Norm_Mapped
-
+                                    $RigMaxHours             = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
+                                    $Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Algorithm_Norm
+                                    $RigSubst["Algorithm"]   = $Algorithm_Norm_Mapped
+                                    $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)/$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {$Algorithm_Norm_Mapped}
+                                    $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
+                                    $RigSubst["Display"]     = $_.display
+                                    
                                     if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion) | Select-Object)}
                                     $CreateRig = if ($RigRunMode -eq "create") {
                                         @{
@@ -451,7 +456,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                                     }
 
                                     if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
-                                        $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithm% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%algorithm%") {"$Algorithm_Norm_Mapped $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
+                                        $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithmex% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%(algorithm|algorithmex|display)%") {"%algorithmex% $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
                                     }
 
                                     $CreateRig["price"] = @{

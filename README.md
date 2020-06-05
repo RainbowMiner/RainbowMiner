@@ -1513,7 +1513,7 @@ lt=50]
 - **MinHours**: Minimum rental time in hours (min. 3) [default=3]
 - **MaxHours**: Maximum rental time in hours (min. 3) [default=168]
 - **PriceCurrencies**: List of accepted currencies (must contain BTC) [default=BTC]
-- **Title**: "Title for autocreate, make sure it contains %algorithm% and %rigid% (values will be substituted like that: %algorithm% with algorithm, %rigid% with an unique rigid, %workername% with the workername, %type% with either CPU or GPU, %typecpu% with CPU or empty, %typegpu% with GPU or empty)" [default=%algorithm% mining with RainbowMiner rig %rigid%]
+- **Title**: Title for autocreate, make sure it contains %algorithm% or %algorithmex% or %display%, and %rigid% (values will be substituted like that: %algorithm% with algorithm, %algorithmex% with algorithm plus coin info if needed, %coininfo% with eventual coin info, %display% with MRR specific display title, %rigid% with an unique rigid, %workername% with the workername, %type% with either CPU or GPU, %typecpu% with CPU or empty, %typegpu% with GPU or empty)";Description="Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=%algorithmex% mining with RainbowMiner rig %rigid%]
 - **Description**: Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=Autostart mining with RainbowMiner (https://rbminer.net) on Windows. This rig is idle and will activate itself, as soon, as you rent it. [%workername%]]
 
 Set "EnableAutoUpdate" to "1", to enable automatic updates of price/hash and minhours

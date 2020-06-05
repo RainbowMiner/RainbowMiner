@@ -11,6 +11,7 @@
     $API.Pause       = $false
     $API.Update      = $false
     $API.UpdateBalance = $false
+    $API.UpdateMRR   = $false
     $API.WatchdogReset = $false
     $API.ApplyOC     = $false
     $API.LockMiners  = $false
@@ -763,6 +764,11 @@
                 "/updatebalance" {
                     $API.UpdateBalance = $true
                     $Data = $API.UpdateBalance | ConvertTo-Json
+                    Break
+                }
+                "/updatemrr" {
+                    $API.UpdateMRR = $true
+                    $Data = $API.UpdateMRR | ConvertTo-Json
                     Break
                 }
                 "/watchdogreset" {
