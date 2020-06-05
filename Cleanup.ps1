@@ -844,6 +844,42 @@ try {
         }
     }
 
+
+    if ($Version -le (Get-Version "4.5.8.2")) {
+        if (Test-Path "Config") {
+            Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup" -and (Test-Path (Join-Path $($_.FullName) "pools.config.txt"))} | Foreach-Object {
+                $PoolsActualConfigFile = "$(Join-Path $($_.FullName) "pools.config.txt")"
+                $PoolsActual  = Get-Content $PoolsActualConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                if ($PoolsActual -and $PoolsActual.MiningRigRentals) {
+                    $Changes = 0
+                    if ($PoolsActual.MiningRigRentals.EnableAutoCreate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoCreate = "0";$Changes++}
+                    if ($PoolsActual.MiningRigRentals.EnableAutoUpdate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoUpdate = "0";$Changes++}
+                    if ($PoolsActual.MiningRigRentals.PriceFactor -ne $null) {$PoolsActual.MiningRigRentals.PriceFactor = "2.0";$Changes++}
+                    if ($PoolsActual.MiningRigRentals.EnablePriceUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnablePriceUpdates");$Changes++}
+                    if ($PoolsActual.MiningRigRentals.EnableHashrateUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableHashrateUpdates");$Changes++}
+                    if ($PoolsActual.MiningRigRentals.EnableRentalHoursUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableRentalHoursUpdates");$Changes++}
+                    if ($PoolsActual.MiningRigRentals.Title -ne $null -and $PoolsActual.MiningRigRentals.Title -notmatch "%rigid%") {
+                        $PoolsActual.MiningRigRentals.Title = "$($PoolsActual.MiningRigRentals.Title) with RainbowMiner rig %rigid%"
+                        $Changes++
+                    }
+                    if ($PoolsActual.MiningRigRentals.Description -ne $null -and $PoolsActual.MiningRigRentals.Description -match "%workername%"  -and $PoolsActual.MiningRigRentals.Description -notmatch "\[%workername%\]" ) {
+                        $PoolsActual.MiningRigRentals.Description = "$($PoolsActual.MiningRigRentals.Description -replace "%workername%","[%workername%]")"
+                        $Changes++
+                    }
+                    if ($PoolsActual.MiningRigRentals.PriceOffset -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceOffset");$Changes++}
+                    if ($PoolsActual.MiningRigRentals.Title -ne $null -and $PoolsActual.MiningRigRentals.Title -match "%algorithm%" -and $PoolsActual.MiningRigRentals.Title -notmatch "%(algorithmex|coininfo|display)%") {
+                        $PoolsActual.MiningRigRentals.Title = $PoolsActual.MiningRigRentals.Title -replace "%algorithm%","%algorithmex%"
+                        $Changes++
+                    }
+                    if ($Changes) {
+                        Set-ContentJson -PathToFile $PoolsActualConfigFile -Data $PoolsActual > $null
+                        $ChangesTotal += $Changes
+                    }
+                }
+            }
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
