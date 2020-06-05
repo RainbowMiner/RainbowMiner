@@ -268,6 +268,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
     $RigServer  = ""
     $RigCreated = 0
     $RigsToUpdate = @()
+    $RigMinProfit = 0.00001
 
     #
     # 1. gather config per workername
@@ -427,7 +428,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
                                 $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
 
-                                $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt 0.0001)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling(0.0001*24/($RigMinPrice*$RigSpeed*$Multiply))}
+                                $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply))}
 
                                 #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
