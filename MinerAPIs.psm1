@@ -648,7 +648,10 @@ class Miner {
                     $CardId = $_.CardId
                     $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
                     if ($Id) {
-                        $this.Profiles | Add-Member "$($DeviceModel)[$($Id)]" ([PSCustomObject]@{Index = [System.Collections.Generic.List[int]]@($VendorIndex); CardId = [System.Collections.Generic.List[string]]@($CardId); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
+                        $DeviceModelId = "$($DeviceModel)[$($Id)]"
+                        $this.Profiles | Add-Member $DeviceModelId ([PSCustomObject]@{Index = [System.Collections.Generic.List[int]]@(); CardId = [System.Collections.Generic.List[string]]@(); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
+                        $this.Profiles.$DeviceModelId.Index.Add($VendorIndex) > $null
+                        $this.Profiles.$DeviceModelId.CardId.Add($CardId) > $null
                     } else {
                         $DeviceIds.Add($VendorIndex) > $null
                         $CardIds.Add($CardId) > $null
