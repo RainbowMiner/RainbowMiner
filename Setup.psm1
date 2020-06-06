@@ -218,6 +218,9 @@ function Start-Setup {
             Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
+            if (@(Get-ConfigArray $Config.PoolName) -contains "MiningRigRentals") {
+                Write-Host "- MRR: list and delete rigs at MiningRigRentals" -ForegroundColor Yellow
+            }
             Write-Host "- Network: API and client/server setup for multiple rigs within one network" -ForegroundColor Yellow
             Write-Host "- Scheduler: different power prices and selective pause for timespans" -ForegroundColor Yellow
             Write-Host " "
@@ -228,7 +231,7 @@ function Start-Setup {
                 if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
                 Write-Host " "
             }
-            $SetupType = Read-HostString -Prompt "$(if ($SetupOnly) {"Wi[z]ard, "})[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, $(if ($Config.PoolName -icontains "MiningRigRentals") {"M[r]r, "})[N]etwork, Sc[h]eduler, E[x]it $(if ($SetupOnly) {"setup"} else {"configuration and start mining"})" -Default "X"  -Mandatory -Characters "ZWCESAMPDLIONRHX"
+            $SetupType = Read-HostString -Prompt "$(if ($SetupOnly) {"Wi[z]ard, "})[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, $(if (@(Get-ConfigArray $Config.PoolName) -icontains "MiningRigRentals") {"M[r]r, "})[N]etwork, Sc[h]eduler, E[x]it $(if ($SetupOnly) {"setup"} else {"configuration and start mining"})" -Default "X"  -Mandatory -Characters "ZWCESAMPDLIONRHX"
         }
 
         if ($SetupType -eq "Z") {$IsInitialSetup = $true;$SetupType = "A"}
@@ -520,7 +523,7 @@ function Start-Setup {
                             Write-Host "Choose the region, that is nearest to your rigs (remember: you can always simply accept the default by pressing return): " -ForegroundColor Cyan
                             $p = [console]::ForegroundColor
                             [console]::ForegroundColor = "Cyan"
-                            $Regions.Keys | Foreach-Object {[PSCustomObject]@{Name=$Regions.$_;Value=$_}} | Group-Object -Property Name | Sort-Object Name | Format-Table @{Name="Region";Expression={$_.Name}},@{Name="Valid shortcuts/entries";Expression={"$(($_.Group.Value | Sort-Object) -join ", ")"}}
+                            $Regions.Keys | Foreach-Object {[PSCustomObject]@{Name=$Regions.$_;Value=$_}} | Group-Object -Property Name | Sort-Object Name | Format-Table @{Name="Region";Expression={$_.Name}},@{Name="Valid shortcuts/entries";Expression={"$(($_.Group.Value | Sort-Object) -join ", ")"}} | Out-Host
                             [console]::ForegroundColor = $p
                             Write-Host " "
                             $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid ($Regions.Keys + $Regions.Values | Foreach-Object {$_.ToLower()} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -915,7 +918,7 @@ function Start-Setup {
                                 $CoinsWithWallets | Foreach-Object {
                                     $Currency = $_
                                     [PSCustomObject]@{Currency=$_; "pools without autoexchange"=$(@($CoinsPools | Where-Object {$_.Currencies -icontains $Currency} | Where-Object {-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool"} | Select-Object -ExpandProperty Pool | Sort-Object) -join ",")}
-                                } | Format-Table -Wrap
+                                } | Format-Table -Wrap | Out-Host
                                 [console]::ForegroundColor = $p
                             }
 
@@ -2687,7 +2690,7 @@ function Start-Setup {
                             @{Label="EAP"; Expression={"$(if (Get-Yes $_.Value.EnableAutoPool) {"Y"} else {"N"})"}; Align="center"}
                             @{Label="Wallet"; Expression={if ($_.Value.Wallet.Length -gt 12) {"$($_.Value.Wallet.SubString(0,5))..$($_.Value.Wallet.SubString($_.Value.Wallet.Length-5,5))"} else {"$($_.Value.Wallet)"}}}
                             @{Label="Pools"; Expression={"$($CoinsToPools."$($_.Name)" -join ',')"}}
-                        )
+                        ) | Out-Host
                         [console]::ForegroundColor = $p
 
                         $Coin_Symbol = Read-HostString -Prompt "Which coinsymbol do you want to edit/create/delete? (leave empty to end coin config)" -Characters "`$A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2773,7 +2776,7 @@ function Start-Setup {
                                         $CoinsPoolsNotInUse = @($CoinsPools | Where-Object {$CoinsPoolsInUse -inotcontains $_} | Select-Object)
                                         $p = [console]::ForegroundColor
                                         [console]::ForegroundColor = "Cyan"
-                                        [PSCustomObject]@{"Pools using $Coin_Symbol"=$($CoinsPoolsInUse -join ', ');"Pools not using $Coin_Symbol"=$($CoinsPoolsNotInUse -join ', ')} | Format-Table -Wrap
+                                        [PSCustomObject]@{"Pools using $Coin_Symbol"=$($CoinsPoolsInUse -join ', ');"Pools not using $Coin_Symbol"=$($CoinsPoolsNotInUse -join ', ')} | Format-Table -Wrap | Out-Host
                                         [console]::ForegroundColor = $p
                                         $CoinsPoolsInUse = Read-HostArray -Prompt "Select pools for $Coin_Symbol" -Default $CoinsPoolsInUse -Valid $CoinsPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
                                     }
@@ -2879,7 +2882,7 @@ function Start-Setup {
                             @{Label="Thermal Limit"; Expression={"$(if ($_.Value.ThermalLimit -eq '0'){'*'}else{"$($_.Value.ThermalLimit) °C"})"}; Align="center"}
                             @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.CoreClockBoost) -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
                             @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.MemoryClockBoost) -gt 0){'+'})$($_.Value.MemoryClockBoost)"})"}; Align="center"}                                        
-                        )
+                        ) | Out-Host
 
                         Write-Host "Available devices:"
 
@@ -2887,7 +2890,7 @@ function Start-Setup {
                             @{Label="Name"; Expression={$_.Name}}
                             @{Label="Model"; Expression={$_.Model}}
                             @{Label="PCIBusId"; Expression={$_.OpenCL.PCIBusId}}
-                        )
+                        ) | Out-Host
 
                         [console]::ForegroundColor = $p
 
@@ -3067,7 +3070,7 @@ function Start-Setup {
                         @{Label="Enable"; Expression={"$(if (Get-Yes $_.Enable) {"1"} else {"0"})"};align="center"}
                         @{Label="EnableMHC"; Expression={"$(if ($_.EnableMiningHeatControl -eq '') {'*'} elseif (Get-Yes $_.EnableMiningHeatControl) {"1"} else {"0"})"};align="center"}
                         @{Label="MHC"; Expression={"$(if ($_.MiningHeatControl -eq '') {'*'} else {$_.MiningHeatControl})"};align="right"}
-                    )
+                    ) | Out-Host
                     Write-Host "DayofWeek: *=all $(((0..6) | %{"$($_)=$([DayOfWeek]$_)"}) -join ' ')"
                     Write-Host "EnableMHC = EnableMiningHeatControl, *=default, 0=disable, 1=enable"
                     Write-Host "MHC = MiningHeatControl value 0..5"
@@ -3260,6 +3263,7 @@ function Start-Setup {
 
             do {
                 $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
+                $DevicesActual = Get-Content $ConfigFiles["Devices"].Path | ConvertFrom-Json
                 $Pool_Config = $PoolsActual.MiningRigRentals
 
                 $Run_MRRConfig = $true
@@ -3276,6 +3280,7 @@ function Start-Setup {
                     break
                 }
                 
+                if (-not $DevicesActual.CPU.Worker) {$DevicesActual.CPU.Worker = "$($ConfigActual.WorkerName)cpu"}
                 $Pool_Workers = @($DevicesActual.PSObject.Properties.Value | Where-Object {$_.Worker} | Select-Object -ExpandProperty Worker) + $(if ($Pool_Config.Worker -eq "`$WorkerName") {$ConfigActual.WorkerName} else {$Pool_Config.Worker}) | Select-Object -Unique
 
                 $Pool_Request = Get-MiningRigRentalAlgos
@@ -3293,13 +3298,13 @@ function Start-Setup {
                     @{Label = "Name"; Expression = {$_.name}},
                     @{Label = "Algorithm"; Expression = {Get-MiningRigRentalAlgorithm $_.type}},
                     @{Label = "Worker"; Expression = {$desc = $_.description;$Pool_Workers.Where({$desc -match "\[$_\]"}) -join ","}}
-                )
+                ) | Out-Host
                 Write-Host " "
 
                 [console]::ForegroundColor = $p
 
                 try {
-                    $MRR_Action = Read-HostString "Please choose: [d]elete (enter exit to end MRR config)" -Valid @("d") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                    $MRR_Action = Read-HostString "Please choose: [d]elete some rigs (enter exit to end MRR config)" -Valid @("d") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                     if ($MRR_Action -eq "x") {throw "exit"}
 
                     [System.Collections.ArrayList]$MRRSetupSteps = @()
@@ -3307,7 +3312,7 @@ function Start-Setup {
                     $MRRSetupStepsDone = $false
                     $MRRSetupStep = 0
 
-                    if ($MRR_Action -ne "d") {
+                    if ($MRR_Action -eq "d") {
                         Write-Host " "
                         Write-Host "Narrow down your selection:"
                         Write-Host " "
