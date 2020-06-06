@@ -29,7 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cortex";          MinMemGb = 8;                     Params = "--algo cortex";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $false} #Cortex
     [PSCustomObject]@{MainAlgorithm = "CryptoNightBBC";  MinMemGb = 2;                     Params = "--algo bbc";         Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $true} #CryptonightBBC
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo24";      MinMemGb = 4;                     Params = "--algo cuckoo24";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0} #Equihash Cuckoo29/BFC
-    [PSCustomObject]@{MainAlgorithm = "CuckooBFC";       MinMemGb = 4;                     Params = "--algo bfc";         Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0} #Equihash Cuckoo29/BFC
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29bfc";   MinMemGb = 4;                     Params = "--algo bfc";         Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0} #Equihash Cuckoo29/BFC
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";      MinMemGb = 4;                     Params = "--algo cuckaroo29";  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckaroo29/BitGRIN
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";     MinMemGb = 4;                     Params = "--algo swap";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGb = 8;                     Params = "--algo grin31";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $true} #Cuckatoo31/GRIN31
