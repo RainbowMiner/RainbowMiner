@@ -24,9 +24,11 @@ param(
     [String]$AutoCreateMinProfitPercent = "50",
     [String]$AutoCreateMinCPUProfitBTC = "0.00001",
     [String]$AutoCreateMaxMinHours = "24",
+    [String]$AutoUpdateMinPriceChangePercent = "3",
     [String]$AutoPriceModifierPercent = "0",
     [String]$PriceBTC = "0",
-    [String]$PriceFactor = "1.3",
+    [String]$PriceFactor = "2.0",
+    [String]$PriceCostFactor = "1.0",
     [String]$PriceCurrencies = "BTC",
     [String]$MinHours = "3",
     [String]$MaxHours = "168",
@@ -294,7 +296,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
         }
 
         $AutoCreateMinProfitBTC = "-1"
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoPriceModifierPercent","PriceBTC","PriceFactor","MinHours","MaxHours")) {
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceCostFactor","MinHours","MaxHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -353,10 +355,11 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
             if (($RigRunMode -eq "create" -and $MRRConfig.$RigName.EnableAutoCreate) -or ($RigRunMode -eq "update" -and $MRRConfig.$RigName.EnableAutoUpdate)) {
                 try {
-                    $RigModels       = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
-                    $RigDevice       = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
-                    $RigDeviceStat   = Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")"
-                    $RigDeviceProfit = $RigDeviceStat.Day
+                    $RigModels           = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
+                    $RigDevice           = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
+                    $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")"
+                    $RigDeviceRevenue24h = $RigDeviceStat.Day
+                    $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
 
                     $RigType ="$($RigDevice | Select-Object -ExpandProperty Type -Unique)".ToUpper()
 
@@ -372,38 +375,43 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                         "Workername" = $RigName
                     }
                     
-                    if ($RigDeviceProfit -and $RigDeviceStat.Duration) {
+                    if ($RigDeviceRevenue24h -and $RigDeviceStat.Duration) {
                         if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
                         $RigModels         = @($RigDevice | Select-Object -ExpandProperty Model -Unique | Sort-Object)
                         $RigAlreadyCreated = @($AllRigs_Request.Where({$_.description -match "\[$RigName\]" -and ($RigRunMode -eq "create" -or (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1)}))
-                        $RigProfitBTCLimit = [Math]::Max($RigDeviceProfit * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
+                        $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
                         $RigModifier       = [Math]::Max(0,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
                         $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
                             $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
-                            $RigSpeed  = 0
-                            $RigProfit = 0
+                            $RigPower   = 0
+                            $RigSpeed   = 0
+                            $RigRevenue = 0
                             foreach ($Model in $RigModels) {
-                                $RigSpeedAdd  = 0
-                                $RigProfitAdd = 0
+                                $RigPowerAdd   = 0
+                                $RigSpeedAdd   = 0
+                                $RigRevenueAdd = 0
                                 $Global:ActiveMiners.Where({$_.Speed -ne $null -and "$($_.Algorithm | Select-Object -First 1)" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
                                     $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
                                     if ($ThisSpeed -gt $RigSpeedAdd) {
-                                        $RigSpeedAdd  = $ThisSpeed
-                                        $RigProfitAdd = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                        $RigPowerAdd   = $_.PowerDraw
+                                        $RigSpeedAdd   = $ThisSpeed
+                                        $RigRevenueAdd = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
                                     }
                                 })
-                                $RigSpeed  += $RigSpeedAdd
-                                $RigProfit += $RigProfitAdd
+                                $RigPower   += $RigPowerAdd
+                                $RigSpeed   += $RigSpeedAdd
+                                $RigRevenue += $RigRevenueAdd
                             }
 
                             $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
-                            $RigMinPrice    = if ($RigSpeed -gt 0) {$RigDeviceProfit * $MRRConfig.$RigName.PriceFactor / $RigSpeed} else {0}
+                            $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigSpeed -gt 0 -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.CurrentPowerPriceBTC * $MRRConfig.$RigName.PriceCostFactor} else {0}
+                            $RigMinPrice    = if ($RigSpeed -gt 0) {($RigDeviceRevenue24h * $MRRConfig.$RigName.PriceFactor + $RigPowerDiff) / $RigSpeed} else {0}
                             $RigPrice       = if ($RigSpeed -gt 0 -and $MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
                             $IsHandleRig    = ($RigRunMode -eq "update") -or ($MRRConfig.$RigName.AutoCreateAlgorithm -contains $Algorithm_Norm)
        
-                            if (($RigSpeed -gt 0) -and ($RigProfit -lt 5*$RigDeviceProfit) -and ($IsHandleRig -or $RigProfit -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
+                            if (($RigSpeed -gt 0) -and ($RigRevenue -lt 5*$RigDeviceRevenue24h) -and ($IsHandleRig -or $RigRevenue -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
 
-                                #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Profit=$($RigProfit) > $($RigProfitBTCLimit) $(if ($RigProfit -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+                                #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
                                 $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
 
@@ -518,7 +526,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
 
                                             if ( (-not $RigMinPriceCurrent) -or
                                                  ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
-                                                 ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt 0.05) -or
+                                                 ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
                                                  ($_.ndevices -ne $CreateRig.ndevices) -or 
                                                  ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name)
                                             ) {

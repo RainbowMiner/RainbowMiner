@@ -1754,14 +1754,15 @@ function Invoke-Core {
     $API.ActualRates = $ActualRates
 
     #PowerPrice check
-    [Double]$PowerPriceBTC = 0
+    $Session.CurrentPowerPriceBTC = 0
     if ($Session.CurrentPowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
         if ($Global:Rates."$($Session.Config.PowerPriceCurrency)") {
-            $PowerPriceBTC = [Double]$Session.CurrentPowerPrice/[Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)"
+            $Session.CurrentPowerPriceBTC = [Double]$Session.CurrentPowerPrice/[Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)"
         } else {
             Write-Log -Level Warn "Powerprice currency $($Session.Config.PowerPriceCurreny) not found. Cost of electricity will be ignored."
         }
     }
+    $API.CurrentPowerPriceBTC = $Session.CurrentPowerPriceBTC
 
     #Load the stats
     Write-Log "Loading saved statistics. "
@@ -2325,7 +2326,7 @@ function Invoke-Core {
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Cost   = if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
-                [Double]($Miner.PowerDraw*(100+$Session.Config.PowerOffsetPercent)*24/100000 * $PowerPriceBTC)
+                [Double]($Miner.PowerDraw*(100+$Session.Config.PowerOffsetPercent)*24/100000 * $Session.CurrentPowerPriceBTC)
             }
         }
 
@@ -2731,7 +2732,7 @@ function Invoke-Core {
 
         if (($NewPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
             $PowerOffset_Watt = $Session.Config.PowerOffset
-            $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $PowerPriceBTC)
+            $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $Session.CurrentPowerPriceBTC)
             if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
                 if ($Session.Config.CheckProfitability -and ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner -or $_.IsLocked} | Measure-Object).Count -eq 0) {$Session.Profitable = $false}
                 if (-not $Session.Profitable -or -not $Session.Config.CheckProfitability) {
