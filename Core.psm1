@@ -426,17 +426,19 @@ function Set-MinerStats {
     if ($Watchdog) {-not $Miner_Failed_Total}
 
     if (-not $Session.Benchmarking -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDonationRun) {
-        $CurrentProfitGPU   = 0
-        $DeviceNameCountGPU = 0
+        $CurrentProfitGPU    = 0
+        $CurrentPowerDrawGPU = 0
+        $DeviceNameCountGPU  = 0
         foreach ($CurrentModel in $Session.Config.DeviceModel.Where({$_ -notmatch "-"})) {
             $Global:ActiveMiners.Where({$_.Profit -ne $null -and $_.DeviceModel -eq $CurrentModel -and $_.Pool -notcontains "MiningRigRentals"}) | Select-Object -Property Profit,Profit_Cost,DeviceName | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
                 $CurrentProfit = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost) {$_.Profit_Cost})
                 if ($CurrentProfit -gt 0) {
                     if ($CurrentModel -ne "CPU") {
-                        $CurrentProfitGPU   += $CurrentProfit
-                        $DeviceNameCountGPU += $_.DeviceName.Count
+                        $CurrentProfitGPU    += $CurrentProfit
+                        $CurrentPowerDrawGPU += $_.PowerDraw
+                        $DeviceNameCountGPU  += $_.DeviceName.Count
                     }
-                    Set-Stat -Name "Profit-$($Global:DeviceCache.DeviceNames.$CurrentModel -join "-")" -Value $CurrentProfit -Duration $StatSpan -UplimProtection 3 > $null
+                    Set-Stat -Name "Profit-$($Global:DeviceCache.DeviceNames.$CurrentModel -join "-")" -Value $CurrentProfit -PowerDraw $_.PowerDraw -Duration $StatSpan -UplimProtection 3 > $null
                 }
             }
         }
@@ -444,7 +446,7 @@ function Set-MinerStats {
         if ($CurrentProfitGPU -gt 0) {
             $DeviceNameGPU = @($Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu"}) | Select-Object -ExpandProperty Name | Sort-Object)
             if ($DeviceNameGPU -and $DeviceNameGPU.Count -gt $DeviceNameCountGPU) {
-                Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" -Value $CurrentProfitGPU -Duration $StatSpan -UplimProtection 3 > $null
+                Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" -Value $CurrentProfitGPU -PowerDraw $CurrentPowerDrawGPU -Duration $StatSpan -UplimProtection 3 > $null
             }
         }
     }

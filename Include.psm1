@@ -886,6 +886,10 @@ function Set-Stat {
                         Duration = [TimeSpan]$Stat.Duration
                         Updated = [DateTime]$Stat.Updated
                         Failed = [Int]$Stat.Failed
+
+                        # Profit Part
+                        PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
+                        PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
                     }
                 }
             }
@@ -1011,6 +1015,10 @@ function Set-Stat {
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
                             Failed = [Math]::Max($Stat.Failed-1,0)
+
+                            # Profit part
+                            PowerDraw_Live     = $PowerDraw
+                            PowerDraw_Average  = if ($Stat.PowerDraw_Average -gt 0) {$Stat.PowerDraw_Average + $Span_Week * ($PowerDraw - $Stat.PowerDraw_Average)} else {$PowerDraw}
                         }
                     }
                 }
@@ -1109,6 +1117,10 @@ function Set-Stat {
                     Duration = $Duration
                     Updated = $Updated
                     Failed = 0
+
+                    # Profit part
+                    PowerDraw_Live     = $PowerDraw
+                    PowerDraw_Average  = $PowerDraw
                 }
             }
         }
@@ -1205,6 +1217,10 @@ function Set-Stat {
                     Duration = [String]$Stat.Duration
                     Updated = [DateTime]$Stat.Updated
                     Failed = [Int]$Stat.Failed
+
+                    # Provit part
+                    PowerDraw_Live     = [Decimal]$Stat.PowerDraw_Live
+                    PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
                 }
             }
         }) | ConvertTo-Json | Set-Content $Path
