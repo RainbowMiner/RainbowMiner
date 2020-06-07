@@ -1754,6 +1754,14 @@ function Invoke-Core {
     $API.ActualRates = $ActualRates
 
     #PowerPrice check
+    $Session.PowerPriceBTC = 0
+    if ($Session.Config.PowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
+        if ($Global:Rates."$($Session.Config.PowerPriceCurrency)") {
+            $Session.PowerPriceBTC = [Double]$Session.Config.PowerPrice/[Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)"
+        }
+    }
+    $API.PowerPriceBTC = $Session.PowerPriceBTC
+
     $Session.CurrentPowerPriceBTC = 0
     if ($Session.CurrentPowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
         if ($Global:Rates."$($Session.Config.PowerPriceCurrency)") {

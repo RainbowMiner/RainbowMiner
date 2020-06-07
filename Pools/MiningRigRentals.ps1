@@ -404,7 +404,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                             }
 
                             $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
-                            $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigSpeed -gt 0 -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.CurrentPowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
+                            $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigSpeed -gt 0 -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
                             $RigMinPrice    = if ($RigSpeed -gt 0) {($RigDeviceRevenue24h * $MRRConfig.$RigName.PriceFactor + $RigPowerDiff) / $RigSpeed} else {0}
                             $RigPrice       = if ($RigSpeed -gt 0 -and $MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
                             $IsHandleRig    = ($RigRunMode -eq "update") -or ($MRRConfig.$RigName.AutoCreateAlgorithm -contains $Algorithm_Norm)
