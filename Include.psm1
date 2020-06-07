@@ -1218,7 +1218,7 @@ function Set-Stat {
                     Updated = [DateTime]$Stat.Updated
                     Failed = [Int]$Stat.Failed
 
-                    # Provit part
+                    # Profit part
                     PowerDraw_Live     = [Decimal]$Stat.PowerDraw_Live
                     PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
                 }

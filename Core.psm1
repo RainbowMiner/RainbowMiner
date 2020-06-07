@@ -430,7 +430,7 @@ function Set-MinerStats {
         $CurrentPowerDrawGPU = 0
         $DeviceNameCountGPU  = 0
         foreach ($CurrentModel in $Session.Config.DeviceModel.Where({$_ -notmatch "-"})) {
-            $Global:ActiveMiners.Where({$_.Profit -ne $null -and $_.DeviceModel -eq $CurrentModel -and $_.Pool -notcontains "MiningRigRentals"}) | Select-Object -Property Profit,Profit_Cost,DeviceName | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
+            $Global:ActiveMiners.Where({$_.Profit -ne $null -and $_.DeviceModel -eq $CurrentModel -and $_.Pool -notcontains "MiningRigRentals"}) | Select-Object -Property Profit,Profit_Cost,PowerDraw,DeviceName | Sort-Object -Property Profit | Select-Object -Last 1 | Foreach-Object {
                 $CurrentProfit = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost) {$_.Profit_Cost})
                 if ($CurrentProfit -gt 0) {
                     if ($CurrentModel -ne "CPU") {
