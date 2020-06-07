@@ -404,137 +404,145 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                             }
 
                             $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
-                            $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigSpeed -gt 0 -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
-                            $RigMinPrice    = if ($RigSpeed -gt 0) {($RigDeviceRevenue24h * $MRRConfig.$RigName.PriceFactor + $RigPowerDiff) / $RigSpeed} else {0}
-                            $RigPrice       = if ($RigSpeed -gt 0 -and $MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
                             $IsHandleRig    = ($RigRunMode -eq "update") -or ($MRRConfig.$RigName.AutoCreateAlgorithm -contains $Algorithm_Norm)
+
+                            $RigPowerDiff   = 0
+                            $RigMinPrice    = 0
+                            $RigPrice       = 0
+
+                            if ($RigSpeed -gt 0) {
+
+                                $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
+                                $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $MRRConfig.$RigName.PriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
+                                $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
        
-                            if (($RigSpeed -gt 0) -and ($RigRevenue -lt 5*$RigDeviceRevenue24h) -and ($IsHandleRig -or $RigRevenue -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
+                                if (($RigRevenue -lt 5*$RigDeviceRevenue24h) -and ($IsHandleRig -or $RigRevenue -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
 
-                                #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+                                    #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
-                                $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
+                                    $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
 
-                                $PriceDivisor = 0
-                                while($PriceDivisor -lt $RigDivisors.Count -and $RigMinPrice -lt 1e-3) {
-                                    $RigMinPrice *= 1000
-                                    $RigPrice    *= 1000
-                                    $PriceDivisor++
-                                }
-                                $RigMinPrice = [Decimal][Math]::Round($RigMinPrice,12)
-                                $RigPrice    = [Decimal][Math]::Round($RigPrice,12)
+                                    $PriceDivisor = 0
+                                    while($PriceDivisor -lt $RigDivisors.Count -and $RigMinPrice -lt 1e-3) {
+                                        $RigMinPrice *= 1000
+                                        $RigPrice    *= 1000
+                                        $PriceDivisor++
+                                    }
+                                    $RigMinPrice = [Decimal][Math]::Round($RigMinPrice,12)
+                                    $RigPrice    = [Decimal][Math]::Round($RigPrice,12)
 
-                                $HashDivisor = 0
-                                while ($HashDivisor -lt $RigDivisors.Count -and $RigSpeed -gt 1000) {
-                                    $RigSpeed /= 1000
-                                    $HashDivisor++
-                                }
+                                    $HashDivisor = 0
+                                    while ($HashDivisor -lt $RigDivisors.Count -and $RigSpeed -gt 1000) {
+                                        $RigSpeed /= 1000
+                                        $HashDivisor++
+                                    }
 
-                                if ($RigSpeed -lt 1) {$RigSpeed = [Math]::Floor($RigSpeed*100)/100}
-                                elseif ($RigSpeed -lt 10) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
-                                else {$RigSpeed = [Math]::Floor($RigSpeed)}
+                                    if ($RigSpeed -lt 1) {$RigSpeed = [Math]::Floor($RigSpeed*100)/100}
+                                    elseif ($RigSpeed -lt 10) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
+                                    else {$RigSpeed = [Math]::Floor($RigSpeed)}
 
-                                $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
+                                    $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
 
-                                $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply))}
+                                    $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply))}
 
-                                #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+                                    #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
-                                if ($IsHandleRig -or $RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) {
+                                    if ($IsHandleRig -or $RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) {
 
-                                    $RigMaxHours             = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
-                                    $Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Algorithm_Norm
-                                    $RigSubst["Algorithm"]   = $Algorithm_Norm_Mapped
-                                    $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)/$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {$Algorithm_Norm_Mapped}
-                                    $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
-                                    $RigSubst["Display"]     = $_.display
+                                        $RigMaxHours             = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
+                                        $Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Algorithm_Norm
+                                        $RigSubst["Algorithm"]   = $Algorithm_Norm_Mapped
+                                        $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)/$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {$Algorithm_Norm_Mapped}
+                                        $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
+                                        $RigSubst["Display"]     = $_.display
                                     
-                                    if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion) | Select-Object)}
-                                    $CreateRig = if ($RigRunMode -eq "create") {
-                                        @{
-                                            description = Get-MiningRigRentalsSubst "$(if ($MRRConfig.$RigName.Description -notmatch "%workername%") {"$($MRRConfig.$RigName.Description)[$RigName]"} elseif ($MRRConfig.$RigName.Description -notmatch "\[%workername%\]") {$MRRConfig.$RigName.Description -replace "%workername%","[$RigName]"} else {$MRRConfig.$RigName.Description})" -Subst $RigSubst
-                                            type        = $_.name
-                                            status	    = "disabled"
-                                            server	    = $RigServer
-                                            ndevices    = $RigDevice.Count
+                                        if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion) | Select-Object)}
+                                        $CreateRig = if ($RigRunMode -eq "create") {
+                                            @{
+                                                description = Get-MiningRigRentalsSubst "$(if ($MRRConfig.$RigName.Description -notmatch "%workername%") {"$($MRRConfig.$RigName.Description)[$RigName]"} elseif ($MRRConfig.$RigName.Description -notmatch "\[%workername%\]") {$MRRConfig.$RigName.Description -replace "%workername%","[$RigName]"} else {$MRRConfig.$RigName.Description})" -Subst $RigSubst
+                                                type        = $_.name
+                                                status	    = "disabled"
+                                                server	    = $RigServer
+                                                ndevices    = $RigDevice.Count
+                                            }
+                                        } else {
+                                            @{
+                                                ndevices    = $RigDevice.Count
+                                            }
                                         }
-                                    } else {
-                                        @{
-                                            ndevices    = $RigDevice.Count
-                                        }
-                                    }
 
-                                    if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
-                                        $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithmex% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%(algorithm|algorithmex|display)%") {"%algorithmex% $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
-                                    }
+                                        if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
+                                            $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithmex% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%(algorithm|algorithmex|display)%") {"%algorithmex% $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
+                                        }
 
-                                    $CreateRig["price"] = @{
-                                        btc = @{
-                                            price       = $RigPrice
-                                            autoprice   = $MRRConfig.$RigName.EnableAutoPrice
-                                            minimum	    = if ($MRRConfig.$RigName.EnableMinimumPrice) {$RigMinPrice} else {0}
+                                        $CreateRig["price"] = @{
+                                            btc = @{
+                                                price       = $RigPrice
+                                                autoprice   = $MRRConfig.$RigName.EnableAutoPrice
+                                                minimum	    = if ($MRRConfig.$RigName.EnableMinimumPrice) {$RigMinPrice} else {0}
+                                            }
+                                            ltc = @{
+                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "LTC"
+                                                autoprice   = $true
+                                            }
+                                            eth = @{
+                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "ETH"
+                                                autoprice   = $true
+                                            }
+                                            dash = @{
+                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "DASH"
+                                                autoprice   = $true
+                                            }
+                                            bch = @{
+                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "BCH"
+                                                autoprice   = $true
+                                            }
+                                            type = $RigDivisors[$PriceDivisor].type
                                         }
-                                        ltc = @{
-                                            enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "LTC"
-                                            autoprice   = $true
-                                        }
-                                        eth = @{
-                                            enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "ETH"
-                                            autoprice   = $true
-                                        }
-                                        dash = @{
-                                            enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "DASH"
-                                            autoprice   = $true
-                                        }
-                                        bch = @{
-                                            enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "BCH"
-                                            autoprice   = $true
-                                        }
-                                        type = $RigDivisors[$PriceDivisor].type
-                                    }
 
-                                    $CreateRig["hash"] = @{
-                                        hash = $RigSpeed
-                                        type = $RigDivisors[$HashDivisor].type
-                                    }
+                                        $CreateRig["hash"] = @{
+                                            hash = $RigSpeed
+                                            type = $RigDivisors[$HashDivisor].type
+                                        }
 
-                                    $CreateRig["minhours"] = $RigMinHours
-                                    $CreateRig["maxhours"] = $RigMaxHours
+                                        $CreateRig["minhours"] = $RigMinHours
+                                        $CreateRig["maxhours"] = $RigMaxHours
                             
-                                    if ($RigRunMode -eq "create") {
+                                        if ($RigRunMode -eq "create") {
 
-                                        $CreateRig["price"]["btc"]["modifier"] = $RigModifier
+                                            $CreateRig["price"]["btc"]["modifier"] = $RigModifier
 
-                                        try {
-                                            $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
-                                            if ($Result.id) {
-                                                Write-Log -Level Info "Created MRR rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
+                                            try {
+                                                $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                                if ($Result.id) {
+                                                    Write-Log -Level Info "Created MRR rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
+                                                }
+                                            } catch {
+                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                Write-Log -Level Warn "Unable to create MRR $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
                                             }
-                                        } catch {
-                                            if ($Error.Count){$Error.RemoveAt(0)}
-                                            Write-Log -Level Warn "Unable to create MRR $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
+                                            $RigCreated++
+                                            if ($RigCreated -ge 20) {return}
+
+                                        } elseif ($RigRunMode -eq "update") {
+
+                                            $RigMRRid = $_.name
+                                            $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
+                                                $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
+                                                $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
+
+                                                if ( (-not $RigMinPriceCurrent) -or
+                                                     ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
+                                                     ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
+                                                     ($_.ndevices -ne $CreateRig.ndevices) -or 
+                                                     ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name)
+                                                ) {
+                                                    Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices)"
+                                                    $CreateRig["id"] = $_.id
+                                                    $RigsToUpdate += $CreateRig
+                                                }
+                                            })
                                         }
-                                        $RigCreated++
-                                        if ($RigCreated -ge 20) {return}
-
-                                    } elseif ($RigRunMode -eq "update") {
-
-                                        $RigMRRid = $_.name
-                                        $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
-                                            $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
-                                            $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
-
-                                            if ( (-not $RigMinPriceCurrent) -or
-                                                 ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
-                                                 ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
-                                                 ($_.ndevices -ne $CreateRig.ndevices) -or 
-                                                 ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name)
-                                            ) {
-                                                Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices)"
-                                                $CreateRig["id"] = $_.id
-                                                $RigsToUpdate += $CreateRig
-                                            }
-                                        })
                                     }
                                 }
                             }
