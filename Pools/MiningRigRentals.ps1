@@ -28,7 +28,7 @@ param(
     [String]$AutoPriceModifierPercent = "0",
     [String]$PriceBTC = "0",
     [String]$PriceFactor = "2.0",
-    [String]$PriceCostFactor = "1.0",
+    [String]$PowerDrawFactor = "1.0",
     [String]$PriceCurrencies = "BTC",
     [String]$MinHours = "3",
     [String]$MaxHours = "168",
@@ -296,7 +296,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
         }
 
         $AutoCreateMinProfitBTC = "-1"
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceCostFactor","MinHours","MaxHours")) {
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PowerDrawFactor","MinHours","MaxHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -404,7 +404,7 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                             }
 
                             $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
-                            $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigSpeed -gt 0 -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.CurrentPowerPriceBTC * $MRRConfig.$RigName.PriceCostFactor} else {0}
+                            $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigSpeed -gt 0 -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.CurrentPowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
                             $RigMinPrice    = if ($RigSpeed -gt 0) {($RigDeviceRevenue24h * $MRRConfig.$RigName.PriceFactor + $RigPowerDiff) / $RigSpeed} else {0}
                             $RigPrice       = if ($RigSpeed -gt 0 -and $MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
                             $IsHandleRig    = ($RigRunMode -eq "update") -or ($MRRConfig.$RigName.AutoCreateAlgorithm -contains $Algorithm_Norm)
