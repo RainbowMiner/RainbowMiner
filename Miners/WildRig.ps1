@@ -9,12 +9,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.0-wildrig/wildrig-multi-linux-0.25.0.tar.gz"
-    $Version = "0.25.0"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-wildrigmulti/wildrig-multi-linux-0.25.1.tar.gz"
+    $Version = "0.25.1"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.0-wildrig/wildrig-multi-windows-0.25.0.7z"
-    $Version = "0.25.0"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-wildrigmulti/wildrig-multi-windows-0.25.1.7z"
+    $Version = "0.25.1"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -44,9 +44,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hmq1725";      Vendor = @("AMD");          Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "honeycomb";    Vendor = @("AMD");          Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "kawpow";       Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.22.0"} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "lyra2tdc";     Vendor = @("AMD");          Params = ""} #Lyra2TDC
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3";      Vendor = @("AMD");          Params = ""} #Lyra2RE3
-    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";  Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
+    [PSCustomObject]@{MainAlgorithm = "lyra2tdc";     Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2TDC
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";      Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2RE3
+    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";  Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "mtp";          Vendor = @("AMD");          Params = ""} #MTP, new in v0.20.0 beta
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr";      Vendor = @("AMD");          Params = ""} #MTPTcr, new in v0.20.0 beta, --split-job 4
     [PSCustomObject]@{MainAlgorithm = "phi";          Vendor = @("AMD");          Params = ""} #PHI
@@ -104,8 +104,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
         $DeviceParams = Switch ($Miner_Vendor) {
-            "AMD"    {""}
-            "NVIDIA" {""}
+            "AMD"    {"--opencl-platforms amd"}
+            "NVIDIA" {"--opencl-platforms nvidia"}
         }
 
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or (Compare-Version $Version $_.Version) -ge 0)}).ForEach({
@@ -126,7 +126,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-                        $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
                         $First = $false
                     }
 
@@ -136,7 +135,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--api-port `$mport -a $($Algorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 10 --send-stale --donate-level 1 --multiple-instance --opencl-devices $($DeviceIDsAll) --opencl-platforms $($Miner_PlatformId) --opencl-threads auto --opencl-launch auto $($DeviceParams) $($Params)"
+					    Arguments      = "--api-port `$mport -a $($Algorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 10 --send-stale --donate-level 1 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams) --opencl-threads auto --opencl-launch auto $($Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					    API            = "XMRig"
 					    Port           = $Miner_Port
