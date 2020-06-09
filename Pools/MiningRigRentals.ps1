@@ -362,6 +362,8 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                     $RigDeviceRevenue24h = $RigDeviceStat.Day
                     $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
 
+                    $CurrentlyBenchmarking = @($API.MinersNeedingBenchmark | Foreach-Object {[PSCustomObject]@{Algorithm="$($_.HashRates.PSObject.Properties.Name | Select-Object -First 1)";DeviceModel=$_.DeviceModel}} | Where-Object {$_.Algorithm -notmatch "-"} | Select-Object)
+
                     $RigType ="$($RigDevice | Select-Object -ExpandProperty Type -Unique)".ToUpper()
 
                     if ($MRRConfig.$RigName.AutoCreateMinProfitBTC -lt 0) {
@@ -387,21 +389,24 @@ if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDon
                             $RigPower   = 0
                             $RigSpeed   = 0
                             $RigRevenue = 0
-                            foreach ($Model in $RigModels) {
-                                $RigPowerAdd   = 0
-                                $RigSpeedAdd   = 0
-                                $RigRevenueAdd = 0
-                                $Global:ActiveMiners.Where({$_.Speed -ne $null -and "$($_.Algorithm | Select-Object -First 1)" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
-                                    $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
-                                    if ($ThisSpeed -gt $RigSpeedAdd) {
-                                        $RigPowerAdd   = $_.PowerDraw
-                                        $RigSpeedAdd   = $ThisSpeed
-                                        $RigRevenueAdd = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
-                                    }
-                                })
-                                $RigPower   += $RigPowerAdd
-                                $RigSpeed   += $RigSpeedAdd
-                                $RigRevenue += $RigRevenueAdd
+
+                            if (-not $CurrentlyBenchmarking.Count -or -not $CurrentlyBenchmarking.Where({$_.Algorithm -eq $Algorithm_Norm -and $RigModels -contains $_.DeviceModel}).Count) {
+                                foreach ($Model in $RigModels) {
+                                    $RigPowerAdd   = 0
+                                    $RigSpeedAdd   = 0
+                                    $RigRevenueAdd = 0
+                                    $Global:ActiveMiners.Where({$_.Speed -ne $null -and "$($_.Algorithm | Select-Object -First 1)" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
+                                        $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
+                                        if ($ThisSpeed -gt $RigSpeedAdd) {
+                                            $RigPowerAdd   = $_.PowerDraw
+                                            $RigSpeedAdd   = $ThisSpeed
+                                            $RigRevenueAdd = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                        }
+                                    })
+                                    $RigPower   += $RigPowerAdd
+                                    $RigSpeed   += $RigSpeedAdd
+                                    $RigRevenue += $RigRevenueAdd
+                                }
                             }
 
                             $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
