@@ -263,7 +263,7 @@ if ($AllRigs_Request) {
 #
 # we will check for auto operations every hour but not at startup
 #
-if (-not $InfoOnly -and -not $Session.IsBenchmarkingRun -and -not $Session.IsDonationRun -and $Session.RoundCounter -and ($API.UpdateMRR -or -not $Session.MRRlastautoperation -or $Session.MRRlastautoperation -lt (Get-Date).AddHours(-1))) {
+if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count) -and -not $Session.IsDonationRun -and $Session.RoundCounter -and ($API.UpdateMRR -or -not $Session.MRRlastautoperation -or $Session.MRRlastautoperation -lt (Get-Date).AddHours(-1))) {
 
     if ($API.UpdateMRR) {$API.UpdateMRR = $false}
 
