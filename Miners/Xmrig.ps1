@@ -10,8 +10,24 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.0.1b-xmrig/xmrig-6.0.1b-xenial-cuda10_1-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-xenial-cuda11-x64.7z"
+            Cuda = "11.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-xenial-cuda10_2-x64.7z"
+            Cuda = "10.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-xenial-cuda10_1-x64.7z"
             Cuda = "10.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-xenial-cuda10-x64.7z"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-xenial-cuda9_2-x64.7z"
+            Cuda = "9.2"
         }
     )
 
@@ -21,23 +37,31 @@ if ($IsLinux) {
 } else {
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.0.1b-xmrig/xmrig-6.0.1b-msvc-cuda10_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-msvc-cuda11-win64.7z"
+            Cuda = "11.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-msvc-cuda10_2-win64.7z"
+            Cuda = "10.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-msvc-cuda10_1-win64.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.0.1b-xmrig/xmrig-6.0.1b-msvc-cuda10-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-msvc-cuda10-win64.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.0.1b-xmrig/xmrig-6.0.1b-msvc-cuda9_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-msvc-cuda9_2-win64.7z"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.0.1b-xmrig/xmrig-6.0.1b-msvc-cuda9_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-msvc-cuda9_1-win64.7z"
             Cuda = "9.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.0.1b-xmrig/xmrig-6.0.1b-msvc-cuda9_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.2.0b-xmrig/xmrig-6.2.0b-msvc-cuda9_0-win64.7z"
             Cuda = "9.0"
         }
     )
@@ -48,7 +72,7 @@ if ($IsLinux) {
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
-$Version = "6.0.1-beta"
+$Version = "6.2.0-beta"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -60,6 +84,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "astrobwt";      MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/1";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "cn/2";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/ccx";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/half";       MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn/fast";       MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
