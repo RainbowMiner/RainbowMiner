@@ -459,7 +459,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         $RigMaxHours             = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
                                         $Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Algorithm_Norm
                                         $RigSubst["Algorithm"]   = $Algorithm_Norm_Mapped
-                                        $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)/$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {$Algorithm_Norm_Mapped}
+                                        $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)$(if (Get-Coin $Matches[1]) {"/$($Matches[1].ToUpper())"} elseif ($Matches[1] -ne $Algorithm_Norm_Mapped) {"/$($Matches[1])"})"} else {$Algorithm_Norm_Mapped}
                                         $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
                                         $RigSubst["Display"]     = $_.display
                                     
