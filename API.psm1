@@ -676,7 +676,7 @@
                 }
                 "/activity" {
                     $LimitDays = (Get-Date).ToUniversalTime().AddDays(-[Math]::Max(1,[Math]::Min(7,[int]$Session.Config.MaxActivityDays)))
-                    $Data = Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Foreach-Object {"[$(Get-ContentByStreamReader $_){`"ActiveStart`":`"0001-01-01 00:00:00`"}]" | ConvertFrom-Json -ErrorAction Ignore | Foreach-Object {$_}} | Where-Object ActiveStart -ne "0001-01-01 00:00:00" | Group-Object ActiveStart,Name,Device | Foreach-Object {
+                    $Activities = Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Foreach-Object {"[$(Get-ContentByStreamReader $_){`"ActiveStart`":`"0001-01-01 00:00:00`"}]" | ConvertFrom-Json -ErrorAction Ignore | Foreach-Object {$_}} | Where-Object ActiveStart -ne "0001-01-01 00:00:00" | Group-Object ActiveStart,Name,Device | Foreach-Object {
                         $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
                         $AvgPowerDraw  = ($_.Group | Measure-Object PowerDraw -Average).Average
                         $One           = $_.Group | Sort-Object ActiveLast -Descending | Select-Object -First 1
@@ -700,7 +700,19 @@
                             TotalProfit = ($AvgProfit * $Active / 1440)
                             Active      = $Active
                         }
-                    } | Sort-Object ActiveStart,Name,Device | ConvertTo-Json -Compress
+                    } | Sort-Object ActiveStart,Name,Device
+                    
+                    if ($Parameters.as_csv) {
+                            $Data = $Activities | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore
+                            $Data = $Data -join "`r`n"
+                            $ContentType = "text/csv"
+                            $ContentFileName = "activities_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
+                    } else {
+                        $Data = $Activities | ConvertTo-Json -Compress
+                    }
+                    if ($Activities) {
+                        Remove-Variable "Activities" -ErrorAction Ignore
+                    }
                     Break
                 }
                 "/computerstats" {
