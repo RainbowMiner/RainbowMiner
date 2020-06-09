@@ -697,7 +697,7 @@
                                 Ratio2nd    = [double]$One.Ratio[1]
                                 Crashed     = $One.Crashed
                                 OCmode      = $One.OCmode
-                                OCP         = $One.OCP
+                                OCP         = "$($One.OCP.PSObject.Properties.Foreach({"$($_.Name)=$($_.Value)"}) -join ',')"
 
                                 Profit      = $AvgProfit
                                 PowerDraw   = $AvgPowerDraw
