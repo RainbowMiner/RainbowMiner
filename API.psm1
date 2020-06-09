@@ -681,24 +681,50 @@
                         $AvgPowerDraw  = ($_.Group | Measure-Object PowerDraw -Average).Average
                         $One           = $_.Group | Sort-Object ActiveLast -Descending | Select-Object -First 1
                         $Active        = ((Get-Date $One.ActiveLast)-(Get-Date $One.ActiveStart)).TotalMinutes
-                        [PSCustomObject]@{
-                            ActiveStart = $One.ActiveStart
-                            ActiveLast  = $One.ActiveLast
-                            Name        = $One.Name
-                            Device      = $One.Device
-                            Algorithm   = $One.Algorithm
-                            Pool        = $One.Pool
-                            Speed       = $One.Speed
-                            Ratio       = $One.Ratio
-                            Crashed     = $One.Crashed
-                            OCmode      = $One.OCmode
-                            OCP         = $One.OCP
+                        if ($Parameters.as_csv) {
+                            [PSCustomObject]@{
+                                ActiveStart = $One.ActiveStart
+                                ActiveLast  = $One.ActiveLast
+                                Name        = $One.Name
+                                Device      = $One.Device -join '-'
+                                Algorithm   = $One.Algorithm[0]
+                                Algorithm2nd= "$($One.Algorithm[1])"
+                                Pool        = $One.Pool[0]
+                                Pool2nd     = "$($One.Pool[1])"
+                                Speed       = $One.Speed[0]
+                                Speed2nd    = [double]$One.Speed[1]
+                                Ratio       = $One.Ratio[0]
+                                Ratio2nd    = [double]$One.Ratio[1]
+                                Crashed     = $One.Crashed
+                                OCmode      = $One.OCmode
+                                OCP         = $One.OCP
 
-                            Profit      = $AvgProfit
-                            PowerDraw   = $AvgPowerDraw
-                            TotalPowerDraw = ($AvgPowerDraw * $Active / 60000)
-                            TotalProfit = ($AvgProfit * $Active / 1440)
-                            Active      = $Active
+                                Profit      = $AvgProfit
+                                PowerDraw   = $AvgPowerDraw
+                                TotalPowerDraw = ($AvgPowerDraw * $Active / 60000)
+                                TotalProfit = ($AvgProfit * $Active / 1440)
+                                Active      = $Active
+                            }
+                        } else {
+                            [PSCustomObject]@{
+                                ActiveStart = $One.ActiveStart
+                                ActiveLast  = $One.ActiveLast
+                                Name        = $One.Name
+                                Device      = $One.Device
+                                Algorithm   = $One.Algorithm
+                                Pool        = $One.Pool
+                                Speed       = $One.Speed
+                                Ratio       = $One.Ratio
+                                Crashed     = $One.Crashed
+                                OCmode      = $One.OCmode
+                                OCP         = $One.OCP
+
+                                Profit      = $AvgProfit
+                                PowerDraw   = $AvgPowerDraw
+                                TotalPowerDraw = ($AvgPowerDraw * $Active / 60000)
+                                TotalProfit = ($AvgProfit * $Active / 1440)
+                                Active      = $Active
+                            }
                         }
                     } | Sort-Object ActiveStart,Name,Device
                     
