@@ -754,6 +754,8 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 - **WalletBalances** = enter list of which coin's wallets should be listed. Leave empty for all [default=]
 - **PoolDataWindow** = set global default for all pool data windows [default=estimate_current]
 - **PoolStatAverage** = set global default for all pool moving average price trend
+- **EnableErrorRatio** = Enable yiimp pool price auto-correction [default=1]
+- **MaxErrorRatio** = Maxium error ratio for yiimp pool price auto-correction [default=1.5]
 
 #### Select mining mode ####
 
