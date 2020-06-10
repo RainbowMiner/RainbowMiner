@@ -18,17 +18,12 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us","eu","cn","sg")
+$Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "AION";    port = 3366; fee = 3.0; rpc = "aion"}
-    [PSCustomObject]@{symbol = "GRIN29";  port = 3000; fee = 2.0; rpc = "grin"}
-    [PSCustomObject]@{symbol = "GRIN31";  port = 3000; fee = 2.0; rpc = "grin"}
-    #[PSCustomObject]@{symbol = "LOKI";    port = 9999; fee = 1.0; rpc = "loki"}
-    #[PSCustomObject]@{symbol = "VEIL";    port = 3033; fee = 0.0; rpc = "veil"}
-    [PSCustomObject]@{symbol = "XMR";     port = 8888; fee = 2.0; rpc = "xmr"}
-    #[PSCustomObject]@{symbol = "YEC";     port = 6655; fee = 0.0; rpc = "yec"}
+    [PSCustomObject]@{symbol = "ARRR";    port = 700; fee = 3.0; rpc = "arrr"}
+    [PSCustomObject]@{symbol = "XMR";     port = 700; fee = 2.0; rpc = "xmr"}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User -or $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
@@ -81,7 +76,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+tcp"
-                Host          = "$($Pool_RpcPath)-$(if ($Pool_Region -eq "sg") {"asia"} else {$Pool_Region}).luxor.tech"
+                Host          = "$($Pool_RpcPath).luxor.tech"
                 Port          = $Pool_Port
                 User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "x"
