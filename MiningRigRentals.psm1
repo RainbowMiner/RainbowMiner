@@ -164,11 +164,7 @@ param(
             "x16rt"             {"Veil";Break}
             "x16rtgin"          {"X16rt";Break}
             "cuckoocycle"       {"Cuckarood29";Break}
-            "cuckoocycleo"      {"Cuckaroo29";Break}
-            "cuckoocycle29swap" {"Cuckaroo29s";Break}
-            "cuckoocycle31"     {"Cuckatoo31";Break}
             "equihash1505"      {"EquihashR25x5x3";Break}
-            "hashimotos"        {"Ethash";Break}
             default             {$Name}
         }
     )
