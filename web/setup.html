@@ -481,6 +481,30 @@
                         </div>
                     </div>
                     <div class="form-group row">
+                        <label for="inputPoolSwitchingHysteresis" class="col-sm-2 col-form-label">Pool Switching Hysteresis</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputPoolSwitchingHysteresis" name="PoolSwitchingHysteresis" placeholder="Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable)" aria-describedby="addto-inputPoolSwitchingHysteresis">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="addto-inputPoolSwitchingHysteresis">%</span>
+                                </div>
+                            </div>
+                            <div id="inputPoolSwitchingHysteresis" class="form-text text-muted">Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable)</div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="inputMinerSwitchingHysteresis" class="col-sm-2 col-form-label">Miner Switching Hysteresis</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputMinerSwitchingHysteresis" name="MinerSwitchingHysteresis" placeholder="Prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable)" aria-describedby="addto-inputMinerSwitchingHysteresis">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="addto-inputMinerSwitchingHysteresis">%</span>
+                                </div>
+                            </div>
+                            <div id="inputMinerSwitchingHysteresis" class="form-text text-muted">Prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable)</div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
                         <label for="inputMaxActivityDays" class="col-sm-2 col-form-label">Max. Activity Days</label>
                         <div class="col-sm-10">
                             <input type="number" min="1" step="1" class="form-control" id="inputMaxActivityDays" name="MaxActivityDays" placeholder="History length for activity-list on localhost in days">
