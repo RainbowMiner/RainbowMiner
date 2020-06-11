@@ -4,8 +4,6 @@
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if (-not $Config.Pools.$Name.UserName) {return}
-
 $Payout_Currencies = $Config.Pools.$Name.Wallets.PSObject.Properties | Where-Object {$_.Name -in @("ETC","ETH","PGN","PMEER","RVN","UFO","VDS") -and $_.Value} | Select-Object Name,Value -Unique | Sort-Object Name,Value
 
 if (-not $Payout_Currencies) {
