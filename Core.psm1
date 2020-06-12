@@ -2014,7 +2014,7 @@ function Invoke-Core {
                                     $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * ($Session.Config.PoolAccuracyWeight/100)
                                 }
                             } elseif ($Session.Config.Pools."$($_.Name)".SwitchingHysteresis -ne $null) {
-                                $Price_Cmp *= 1+($Session.Config.Pools."$($_.Name)".SwitchingHysteresis)
+                                $Price_Cmp *= 1+($Session.Config.Pools."$($_.Name)".SwitchingHysteresis/100)
                             } elseif ($Session.Config.PoolSwitchingHystereis) {
                                 $Price_Cmp *= 1+($Session.Config.PoolSwitchingHysteresis/100)
                             }
