@@ -436,7 +436,7 @@ function Set-MinerStats {
                     if ($CurrentModel -ne "CPU") {
                         $CurrentProfitGPU    += $CurrentProfit
                         $CurrentPowerDrawGPU += $_.PowerDraw
-                        $DeviceNameCountGPU  += $_.DeviceName.Count
+                        if ($DeviceNameCountGPU -lt $_.DeviceName.Count) {$DeviceNameCountGPU = $_.DeviceName.Count}
                     }
                     Set-Stat -Name "Profit-$($Global:DeviceCache.DeviceNames.$CurrentModel -join "-")" -Value $CurrentProfit -PowerDraw $_.PowerDraw -Duration $StatSpan -UplimProtection 3 > $null
                 }
