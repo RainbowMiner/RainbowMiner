@@ -12,8 +12,6 @@ param(
     [String]$StatAverage = "Minute_10"
 )
 
-if (-not $InfoOnly -and -not (Compare-Object @("ETH","RVN") $Wallets.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent)) {return}
-
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Region_Default = Get-Region "ca"
