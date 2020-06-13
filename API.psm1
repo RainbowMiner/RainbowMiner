@@ -389,6 +389,10 @@
                     $Data = if ($API.Devices) {ConvertTo-Json $API.Devices -Depth 10} else {"[]"}
                     Break
                 }
+                "/platforms" {
+                    $Data = if (Test-Path ".\Logs\platforms.json") {Get-Content ".\Logs\platforms.json" -Raw}
+                    Break
+                }
                 "/devicecombos" {
                     $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos} else {"[]"}
                     Break
