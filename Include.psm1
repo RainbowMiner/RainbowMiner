@@ -2770,11 +2770,11 @@ function Get-Device {
         $OpenCL_PF = $null
 
         #begin temporary debug insert
-        if ($IsWindows -and (Test-Path ".\Includes\xmrig.exe")) {
+        if ($IsWindows -and (Test-Path ".\Bin\ANY-Xmrig\xmrig.exe")) {
             try {
                 $OpenCL_PF = [OpenCl.Platform]::GetPlatformIDs()
                 $OpenCL_PF_Count = ($OpenCL_PF | Measure-Object).Count
-                $OpenCL_PF_Xmrig = @(Invoke-Exe ".\Includes\xmrig.exe" -ArgumentList "--print-platforms" -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -match "^\s*Vendor\s*:\s*(.+)$"} | Foreach-Object {$Matches[1]} | Select-Object)
+                $OpenCL_PF_Xmrig = @(Invoke-Exe ".\Bin\ANY-Xmrig\xmrig.exe" -ArgumentList "--print-platforms" -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -match "^\s*Vendor\s*:\s*(.+)$"} | Foreach-Object {$Matches[1]} | Select-Object)
                 if (Test-Path ".\Logs") {Set-ContentJson ".\Logs\platforms.json" -Data ([PSCustomObject]@{DefaultDetect=@($OpenCL_PF | Select-Object -ExpandProperty Vendor);XmrigDetect=$OpenCL_PF_Xmrig}) > $null}
                 if ($OpenCL_PF_Count -and $OpenCL_PF_Xmrig -and $OpenCL_PF_Xmrig.Count -eq $OpenCL_PF_Count) {
                     if ("$($OpenCL_PF_Xmrig -join "|")" -ne  "$($OpenCL_PF.Foreach({$_.Vendor}) -join "|")") {
