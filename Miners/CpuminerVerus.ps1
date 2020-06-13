@@ -8,18 +8,18 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-Verus\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.7-ccminerverus/ccminerverus-3.7cpu-linux.7z"
+    $Path = ".\Bin\CPU-CcminerVerus\ccminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8-ccminerverus/ccminerverus22-3.7cpu-linux.7z"
 } else {
-    $Path = ".\Bin\CPU-Verus\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.7-ccminerverus/ccminerverus-3.7cpu-win.7z"
+    $Path = ".\Bin\CPU-CcminerVerus\ccminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8-ccminerverus/ccminerverus22-3.7cpu-win.7z"
 }
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "535{0:d2}"
 $DevFee = 0.0
 $Version = "3.7"
 
-if ((-not $Global:DeviceCache.DevicesByTypes.CPU -or -not $Global:GlobalCPUInfo.Features.avx) -and -not $InfoOnly) {return} # No CPU present in system
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "verus"; Params = ""} #VerusHash
