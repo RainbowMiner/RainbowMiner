@@ -30,6 +30,7 @@ $Pool_Regions = @("ru","eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = [PSCustomObject]@{
+    "BNODE" = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
     "BELL"  = [PSCustomObject]@{port = 3342; region = $Pool_Regions}
     "BIN"   = [PSCustomObject]@{port = 3334; region = $Pool_Regions}
     "BCX"   = [PSCustomObject]@{port = 7045; region = $Pool_Regions}
@@ -42,16 +43,18 @@ $Pools_Data = [PSCustomObject]@{
     "IOTS"  = [PSCustomObject]@{port = 7028; region = $Pool_Regions}
     "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
     "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
+    "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
-    "QRL"   = [PSCustomObject]@{port = 3355; region = $Pool_Regions}
+    "OBV"   = [PSCustomObject]@{port = 7057; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
     "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
+    "ROI"   = [PSCustomObject]@{port = 7056; region = $Pool_Regions}
     "RTID"  = [PSCustomObject]@{port = 7048; region = $Pool_Regions}
     "SSC"   = [PSCustomObject]@{port = 7046; region = $Pool_Regions}
     "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
     "SWAMP" = [PSCustomObject]@{port = 7023; region = $Pool_Regions}
-    "TDC"   = [PSCustomObject]@{port = 7017; region = @("ru")}
+    "TDC"   = [PSCustomObject]@{port = 7017; region = $Pool_Regions}
     "THOR"  = [PSCustomObject]@{port = 7031; region = $Pool_Regions}
     "URX"   = [PSCustomObject]@{port = 3361; region = $Pool_Regions}
     "VECO"  = [PSCustomObject]@{port = 3351; region = $Pool_Regions}
