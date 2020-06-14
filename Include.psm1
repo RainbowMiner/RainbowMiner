@@ -2767,42 +2767,9 @@ function Get-Device {
             $WDDM_Devices = @($WDDM_Devices | Sort-Object -Property Bus)
         }
 
-        $OpenCL_PF = $null
-
-        #begin temporary debug insert
-        if ($IsWindows -and (Test-Path ".\Bin\ANY-Xmrig\xmrig.exe")) {
-            try {
-                $OpenCL_PF = [OpenCl.Platform]::GetPlatformIDs()
-                $OpenCL_PF_Count = ($OpenCL_PF | Measure-Object).Count
-                $OpenCL_PF_Xmrig = @(Invoke-Exe ".\Bin\ANY-Xmrig\xmrig.exe" -ArgumentList "--print-platforms" -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -match "^\s*Vendor\s*:\s*(.+)$"} | Foreach-Object {$Matches[1]} | Select-Object)
-                if (Test-Path ".\Logs") {Set-ContentJson ".\Logs\platforms.json" -Data ([PSCustomObject]@{DefaultDetect=@($OpenCL_PF | Select-Object -ExpandProperty Vendor);XmrigDetect=$OpenCL_PF_Xmrig}) > $null}
-                if ($OpenCL_PF_Count -and $OpenCL_PF_Xmrig -and $OpenCL_PF_Xmrig.Count -eq $OpenCL_PF_Count) {
-                    if ("$($OpenCL_PF_Xmrig -join "|")" -ne  "$($OpenCL_PF.Foreach({$_.Vendor}) -join "|")") {
-                        $OpenCL_PF = $OpenCL_PF_Xmrig.Foreach({
-                            $Vendor = $_
-                            $OpenCL_PF.Where({$_.Vendor -eq $Vendor},'first',1)
-                        })
-                        $OpenCL_Fix_Message = "OpenCL Platforms mixup! Applying automatic fix .. "
-                        if ($OpenCL_PF_Count -ne $OpenCL_PF.Count) {
-                            $OpenCL_Fix_Message += "failed."
-                            $OpenCL_PF = $null
-                        } else {
-                            $OpenCL_Fix_Message += "success!"
-                        }
-                        Write-Log -Level Warn $OpenCL_Fix_Message
-                    }
-                }
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                $OpenCL_PF = $null
-            }
-        }
-        #end temporary debug insert
-
         [System.Collections.Generic.List[string]]$AllPlatforms = @()
         $Platform_Devices = try {
-            if ($OpenCL_PF -eq $null) {$OpenCL_PF = [OpenCl.Platform]::GetPlatformIDs()}
-            $OpenCL_PF | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
+            [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
                 $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
                 $Device_Index = 0
                 [PSCustomObject]@{
