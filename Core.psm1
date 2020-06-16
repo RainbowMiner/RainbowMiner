@@ -1234,6 +1234,8 @@ function Invoke-Core {
                     $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Algorithms.$_.MaxTimeToFind) -Force
                     $Session.Config.Algorithms.$_ | Add-Member MSIAprofile ([int]$Session.Config.Algorithms.$_.MSIAprofile) -Force
                     $Session.Config.Algorithms.$_ | Add-Member MinBLKRate $(if ($Session.Config.Algorithms.$_.MaxTimeToFind) {86400/$Session.Config.Algorithms.$_.MaxTimeToFind} else {0}) -Force
+                    $MRRPriceModifierPercent = "$($Session.Config.Algorithms.$_.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
+                    $Session.Config.Algorithms.$_ | Add-Member MRRPriceModifierPercent $(if ($MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$MRRPriceModifierPercent,2)))} else {$null}) -Force
                 }
             }
             if ($AllAlgorithms -ne $null) {Remove-Variable "AllAlgorithms"}

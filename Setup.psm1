@@ -2563,7 +2563,7 @@ function Start-Setup {
                         $AlgorithmConfig = $AlgorithmsActual.$Algorithm_Name.PSObject.Copy()
                         foreach($SetupName in $AlgorithmsDefault.PSObject.Properties.Name) {if ($AlgorithmConfig.$SetupName -eq $null){$AlgorithmConfig | Add-Member $SetupName $AlgorithmsDefault.$SetupName -Force}}
 
-                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","ocprofile","msiaprofile")) > $null
+                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","ocprofile","msiaprofile","mrrpricemodifierpercent")) > $null
                         $AlgorithmSetupSteps.Add("save") > $null
 
                         do {
@@ -2599,6 +2599,10 @@ function Start-Setup {
                                             $AlgorithmSetupStepStore = $true
                                         }
                                     }
+                                    "mrrpricemodifierpercent" {
+                                        $AlgorithmConfig.MRRPriceModifierPercent = Read-HostString -Prompt "MiningRigRentals autoprice modifier in percent (e.g. +10 will increase suggested prices by 10%, valid range is -30 .. 30, $(if ($AlgorithmConfig.MRRPriceModifierPercent) {"clear"} else {"leave empty"}) to use global value AutoPriceModifierPercent in pools.config.txt)" -Default $AlgorithmConfig.MRRPriceModifierPercent | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MRRPriceModifierPercent = "$($AlgorithmConfig.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
+                                    }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -2608,6 +2612,7 @@ function Start-Setup {
                                         $AlgorithmConfig | Add-Member MinWorkers $AlgorithmConfig.MinWorkers -Force
                                         $AlgorithmConfig | Add-Member OCprofile $AlgorithmConfig.OCprofile -Force
                                         $AlgorithmConfig | Add-Member MSIAprofile $AlgorithmConfig.MSIAprofile -Force
+                                        $AlgorithmConfig | Add-Member MRRPriceModifierPercent $AlgorithmConfig.MRRPriceModifierPercent -Force
 
                                         $AlgorithmsActual | Add-Member $Algorithm_Name $AlgorithmConfig -Force
                                         $AlgorithmsActualSave = [PSCustomObject]@{}

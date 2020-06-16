@@ -1273,7 +1273,8 @@ Example:
           "MinWorkers": "300",
           "MaxTimeToFind": "1.5h",
           "MSIAprofile": 4,
-          "OCprofile": "Profile4"
+          "OCprofile": "Profile4",
+          "MRRPriceModifierPercent": "-10"
         }
     }
 
@@ -1286,6 +1287,7 @@ This configuration would:
 - set the overclocking profile to "Profile4" (if the RainbowMiner oc is used)
 - the overclocking profiles define the default for a specific algorithm
 - the OCprofile hierarchy: miners.config.txt over algorithms.config.txt over devices.config.txt
+- if pool MiningRigRentals is in use, the X17 mining rig will use a price modifier of -10% (relative to suggested price)
 
 
 ### Config\coins.config.txt
@@ -1511,7 +1513,8 @@ lt=50]
 - **EnableAutoPrice**: Enable MRR automatic prices [default=1]
 - **EnableMinimumPrice**: Set MRR automatic minimum price [default=1]
 - **EnableUpdateTitle**: Enable automatic updating of rig titles (disable, if you prefer to edit your rig titles online at MRR) [default=1]
-- **AutoPriceModifierPercent**: Autoprice modifier in percent (e.g. +10 will increase all suggested prices by 10%) [default=0]
+- **EnableUpdatePriceModifier**: Enable automatic update of price modifier (disable, if you prefer to edit your modifiers online at MRR). Can be set globally in pools.config.txt (parameter **AutoPriceModifierPercent**) and specific for each algorithm in algorithms.config.txt (parameter **MRRPriceModifierPercent**) [default=0]
+- **AutoPriceModifierPercent**: Autoprice modifier in percent (e.g. +10 will increase all suggested prices by 10%, valid range is -30 .. 30) [default=0]
 - **PriceBTC**: Fixed price in BTC (used, if EnableAutoPrice=0 or if the value is greater than the PriceFactor x revenue) [default=0]
 - **PriceFactor**: Enter profit multiplicator: minimum price = rig's average revenue x this multiplicator [default=2.0]
 - **PowerDrawFactor**: Enter powerdraw multiplicator (only if UsePowerPrice is enabled): minimum price = minimum price + (miner's power draw - rig's average power draw) 24 / 1000 x powerdrawprice x this multiplicator [default=1.0]

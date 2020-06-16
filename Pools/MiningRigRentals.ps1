@@ -20,6 +20,7 @@ param(
     [Bool]$EnableAutoPrice = $false,
     [Bool]$EnableMinimumPrice = $false,
     [Bool]$EnableUpdateTitle = $false,
+    [Bool]$EnableUpdatePriceModifier = $false,
     [Bool]$EnablePowerDrawAddOnly = $false,
     [String]$AutoCreateAlgorithm = "",
     [String]$AutoCreateMinProfitPercent = "50",
@@ -285,7 +286,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         if ($MRRConfig.$RigName -eq $null) {$MRRConfig | Add-Member $RigName ([PSCustomObject]@{}) -Force}
             
-        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice","EnableUpdateTitle","EnablePowerDrawAddOnly")) {
+        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice","EnableUpdateTitle","EnableUpdatePriceModifier","EnablePowerDrawAddOnly")) {
             #boolean
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {Get-Yes $MRRConfig.$RigName.$fld} else {Get-Variable $fld -ValueOnly -ErrorAction Ignore}
@@ -346,6 +347,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 2. Auto create/update rigs
     #
 
+    $RigGPUModels = $Session.Config.DeviceModel.Where({$_ -ne "CPU"})
+
     foreach($RigRunMode in @("create","update")) {
 
         foreach ($RigName in $Workers) {
@@ -383,7 +386,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         $RigModels         = @($RigDevice | Select-Object -ExpandProperty Model -Unique | Sort-Object)
                         $RigAlreadyCreated = @($AllRigs_Request.Where({$_.description -match "\[$RigName\]" -and ($RigRunMode -eq "create" -or (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1)}))
                         $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
-                        $RigModifier       = [Math]::Max(0,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
+                        $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
                         $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
                             $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
                             $RigPower   = 0
@@ -514,11 +517,12 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                         $CreateRig["minhours"] = $RigMinHours
                                         $CreateRig["maxhours"] = $RigMaxHours
+
+                                        if ($RigRunMode -eq "create" -or $EnableUpdatePriceModifier) {
+                                            $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent -ne $null) {$Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent} else {$RigModifier}
+                                        }
                             
                                         if ($RigRunMode -eq "create") {
-
-                                            $CreateRig["price"]["btc"]["modifier"] = $RigModifier
-
                                             try {
                                                 $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
                                                 if ($Result.id) {
