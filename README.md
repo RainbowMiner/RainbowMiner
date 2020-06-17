@@ -1501,6 +1501,8 @@ The following are the pool parameters:
 - **User**: Enter your MiningRigRentals username [default=]
 - **API_Key**: Enter your MiningRigRentals API key [default=]
 - **API_Secret**: Enter your MiningRigRentals API secret key [default=]
+- **UseWorkerName**: Enter list of workernames that should be explicitly used for MRR (leave empty for all) [default=]
+- **ExcludeWorkerName**: Enter list of workernames that should explicitly excluded from the use with MRR (leave empty for none) [default=]
 - **EnableMining**: Enable switching to MiningRigRentals, even it is not rentend (not recommended) [default=0]
 - **EnableAutoCreate**: Automatically create MRR-rigs [default=0]
 - **EnableAutoUpdate**:  [default=0]
