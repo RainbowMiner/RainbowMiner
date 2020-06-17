@@ -14,7 +14,7 @@ param(
     [String]$User = "",
     [String]$API_Key = "",
     [String]$API_Secret = "",
-    [String]$AllowWorkerName = "",
+    [String]$UseWorkerName = "",
     [String]$ExcludeWorkerName = "",
     [Bool]$EnableMining = $false,
     [Bool]$EnableAutoCreate = $false,
@@ -73,11 +73,11 @@ if (-not $API_Key -or -not $API_Secret) {return}
 
 $Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Worker | Select-Object -Unique
 
-$AllowWorkerName_Array   = @($AllowWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
+$UseWorkerName_Array     = @($UseWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 
-if ($AllowWorkerName_Array -or $ExcludeWorkerName_Array) {
-    $Workers = $Workers.Where({(-not $AllowWorkerName_Array.Count -or $AllowWorkerName_Array -contains $_) -and (-not $ExcludeWorkerName_Array.Count -or $ExcludeWorkerName_Array -notcontains $_)})
+if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
+    $Workers = $Workers.Where({($UseWorkerName_Array.Count -eq 0 -or $UseWorkerName_Array -contains $_) -and ($ExcludeWorkerName_Array.Count -eq 0 -or $ExcludeWorkerName_Array -notcontains $_)})
 }
 
 if (-not $Workers.Count) {return}
@@ -328,7 +328,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 if ($fld -match "Algorithm") {
                     $val = @($val -split "[,; ]+" | Where-Object {$_} | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique)
                 } else {
-                    $val = @($val -split "[,; ]+" | Select-Object)
+                    $val = @($val -split "[,; ]+" | Where-Object {$_} | Select-Object)
                 }
                 $MRRConfig.$RigName | Add-Member $fld $val -Force
             } catch {
