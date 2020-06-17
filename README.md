@@ -1531,6 +1531,11 @@ Set "EnableAutoUpdate" to "1", to enable automatic updates of price/hash and min
 
 Set "EnableAutoCreate" to "1", to enable automatic creation of profitable rigs on MRR (this feature is not yet activated)
 
+Remark: 
+- to (dis-)allow the CPU rigs: add `<yourrigworkername>cpu`, e.g. if your workername is "RainbowMiner", use "RainbowMinercpu"
+- to (dis-)allow the all-GPU rig: add `<yourrigworkername>`, e.g. if your workername is "RainbowMiner", use it :)
+- to (dis-)allow device groups: add the workername(s), that you have given your device groups in devices.config.txt (parameter `"Worker"`)
+
 
 ### How can I quickly copy my current configuration to a new rig?
 
