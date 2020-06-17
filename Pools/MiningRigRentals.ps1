@@ -14,6 +14,8 @@ param(
     [String]$User = "",
     [String]$API_Key = "",
     [String]$API_Secret = "",
+    [String]$AllowWorkerName = "",
+    [String]$ExcludeWorkerName = "",
     [Bool]$EnableMining = $false,
     [Bool]$EnableAutoCreate = $false,
     [Bool]$EnableAutoUpdate = $false,
@@ -70,6 +72,15 @@ if ($InfoOnly) {
 if (-not $API_Key -or -not $API_Secret) {return}
 
 $Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Worker | Select-Object -Unique
+
+$AllowWorkerName_Array   = @($AllowWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
+$ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
+
+if ($AllowWorkerName_Array -or $ExcludeWorkerName_Array) {
+    $Workers = $Workers.Where({(-not $AllowWorkerName_Array.Count -or $AllowWorkerName_Array -contains $_) -and (-not $ExcludeWorkerName_Array.Count -or $ExcludeWorkerName_Array -notcontains $_)})
+}
+
+if (-not $Workers.Count) {return}
 
 $AllRigs_Request = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
 

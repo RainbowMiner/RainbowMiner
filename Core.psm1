@@ -65,17 +65,17 @@ function Start-Core {
 
         #Setup session variables
         [hashtable]$Session.ConfigFiles = @{
-            Config     = @{Path='';LastWriteTime=0;Healthy=$false}
-            Devices    = @{Path='';LastWriteTime=0;Healthy=$false}
-            Miners     = @{Path='';LastWriteTime=0;Healthy=$false}
-            OCProfiles = @{Path='';LastWriteTime=0;Healthy=$false}
-            Pools      = @{Path='';LastWriteTime=0;Healthy=$false}
-            Algorithms = @{Path='';LastWriteTime=0;Healthy=$false}
-            Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
-            GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
-            Scheduler  = @{Path='';LastWriteTime=0;Healthy=$false}
-            Combos     = @{Path='';LastWriteTime=0;Healthy=$false}
-            MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
+            Config        = @{Path='';LastWriteTime=0;Healthy=$false}
+            Devices       = @{Path='';LastWriteTime=0;Healthy=$false}
+            Miners        = @{Path='';LastWriteTime=0;Healthy=$false}
+            OCProfiles    = @{Path='';LastWriteTime=0;Healthy=$false}
+            Pools         = @{Path='';LastWriteTime=0;Healthy=$false}
+            Algorithms    = @{Path='';LastWriteTime=0;Healthy=$false}
+            Coins         = @{Path='';LastWriteTime=0;Healthy=$false}
+            GpuGroups     = @{Path='';LastWriteTime=0;Healthy=$false}
+            Scheduler     = @{Path='';LastWriteTime=0;Healthy=$false}
+            Combos        = @{Path='';LastWriteTime=0;Healthy=$false}
+            MRR           = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
         [System.Collections.Generic.List[string]]$Session.GetTicker = @()
