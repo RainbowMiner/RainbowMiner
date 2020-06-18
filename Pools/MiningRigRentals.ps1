@@ -571,7 +571,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     $CreateRig["id"] = $_.id
                                                     $RigUpdated = $false
                                                     if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
-                                                        if ($RigCreated -lt $MaxAPICalls) {
+                                                        if ($false -and ($RigCreated -lt $MaxAPICalls)) { #currently disabled, no way to update description
                                                             $RigUpdated = $true
                                                             try {
                                                                 $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
