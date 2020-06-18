@@ -210,8 +210,8 @@ if ($AllRigs_Request) {
                             if ($AutoExtendMaximumPercent_Value -gt 0) {
                                 $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value,$ExtendBy)
                             }
-                            $ExtendBy = [Math]::Round($ExtendBy,1)
-                            if ($ExtendBy -gt 0.25) {
+                            $ExtendBy = [Math]::Round($ExtendBy,2)
+                            if ($ExtendBy -ge (1/6)) {
                                 $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$Pool_RigId/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
                                 if ($Extend_Result.success) {
                                     Write-Log -Level Info "Extended MRR rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1 for $ExtendBy hours."
