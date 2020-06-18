@@ -17,7 +17,7 @@ function Set-MiningRigRentalConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{UseWorkerName="";ExcludeWorkerName="";EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoPrice="";EnableMinimumPrice="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PowerDrawFactor="";MinHours="";MaxHours="";PriceCurrencies="";Title = "";Description = ""}
+            $Default = [PSCustomObject]@{UseWorkerName="";ExcludeWorkerName="";EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoExtend="";AutoExtendTargetPercent="";AutoExtendMaximumPercent="";EnableAutoPrice="";EnableMinimumPrice="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PowerDrawFactor="";MinHours="";MaxHours="";PriceCurrencies="";Title = "";Description = ""}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
             
             foreach ($RigName in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Workers) | Select-Object -Unique)) {
@@ -236,6 +236,18 @@ param(
     }
 }
 
+function Get-MiningRigRentalStatus {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [Int]$RigId
+)
+    if (Test-Path Variable:Global:MRRStatus) {
+        $RigKey = "$RigId"
+        $Global:MRRStatus[$RigKey]
+    }
+}
+
 function Set-MiningRigRentalStatus {
 [cmdletbinding()]   
 param(
@@ -244,6 +256,8 @@ param(
     [Parameter(Mandatory = $False)]
     [Switch]$Stop,
     [Parameter(Mandatory = $False)]
+    [Switch]$Extend,
+    [Parameter(Mandatory = $False)]
     [String]$Status = ""
 )
     if (-not (Test-Path Variable:Global:MRRStatus)) {[hashtable]$Global:MRRStatus = @{}}
@@ -251,12 +265,14 @@ param(
     $RigKey = "$RigId"
     if ($Global:MRRStatus.ContainsKey($RigKey)) {
         if ($Stop) {$Global:MRRStatus.Remove($RigKey)}
+        elseif ($Extend) {$Global:MRRStatus[$RigKey].extend = $true}
         elseif ($Status -eq "online") {$Global:MRRStatus[$RigKey].next = $time;$Global:MRRStatus[$RigKey].wait = $false;$Global:MRRStatus[$RigKey].enable = $true}
         elseif ($time -ge $Global:MRRStatus[$RigKey].next) {
             if ($Global:MRRStatus[$RigKey].wait) {$Global:MRRStatus[$RigKey].next = $time.AddMinutes(15);$Global:MRRStatus[$RigKey].wait = $Global:MRRStatus[$RigKey].enable = $false}
             else {$Global:MRRStatus[$RigKey].next = $time.AddMinutes(3);$Global:MRRStatus[$RigKey].wait = $Global:MRRStatus[$RigKey].enable = $true}
         }
-    } else {$Global:MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
+    } else {$Global:MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true; extend = $false}}
+    
     if (-not $Stop) {$Global:MRRStatus[$RigKey].enable}
 }
 

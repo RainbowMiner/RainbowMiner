@@ -1505,7 +1505,10 @@ The following are the pool parameters:
 - **ExcludeWorkerName**: Enter list of workernames that should explicitly excluded from the use with MRR (leave empty for none) [default=]
 - **EnableMining**: Enable switching to MiningRigRentals, even it is not rentend (not recommended) [default=0]
 - **EnableAutoCreate**: Automatically create MRR-rigs [default=0]
-- **EnableAutoUpdate**:  [default=0]
+- **EnableAutoUpdate**: Automatically update MRR-rigs [default=0]
+- **EnableAutoExtend**: Automatically extend MRR rentals, when low average hashrate [default=0]
+- **AutoExtendTargetPercent**: Extend rentals time, so that the total average hashrate is near this value in percent of advertised hashrate [default=100]
+- **AutoExtendMaximumPercent**: Extend rentals maximum to this value in percent of the rental time [default=100]
 - **AutoCreateMinProfitPercent**: Enter minimum profitability in percent compared to current best profit, for full rigs to be autocreated on MRR [defau
 lt=50]
 - **AutoCreateMinCPUProfitBTC**: Enter minimum one-day revenue in BTC, for a CPU-only rig to be autocreated on MRR [default=0.00001]

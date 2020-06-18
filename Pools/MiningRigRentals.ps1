@@ -19,6 +19,7 @@ param(
     [Bool]$EnableMining = $false,
     [Bool]$EnableAutoCreate = $false,
     [Bool]$EnableAutoUpdate = $false,
+    [Bool]$EnableAutoExtend = $false,
     [Bool]$EnableAutoPrice = $false,
     [Bool]$EnableMinimumPrice = $false,
     [Bool]$EnableUpdateTitle = $false,
@@ -29,6 +30,8 @@ param(
     [String]$AutoCreateMinProfitPercent = "50",
     [String]$AutoCreateMinCPUProfitBTC = "0.00001",
     [String]$AutoCreateMaxMinHours = "24",
+    [String]$AutoExtendTargetPercent = "100",
+    [String]$AutoExtendMaximumPercent = "30",
     [String]$AutoUpdateMinPriceChangePercent = "3",
     [String]$AutoPriceModifierPercent = "0",
     [String]$PriceBTC = "0",
@@ -189,6 +192,39 @@ if ($AllRigs_Request) {
                 }
 
                 $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
+
+                if (($_.status.status -eq "rented" -or $_.status.rented) -and (Get-Yes $EnableAutoExtend) -and ([double]$_.status.hours -lt 0.25) -and -not (Get-MiningRigRentalStatus $Pool_RigId).extend) {
+                    try {
+                        $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60
+                        $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
+                        $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
+                        if ($Rental_AvgHashrate -and $Rental_AdvHashrate -and $Rental_AvgHashrate -lt $Rental_AdvHashrate) {
+                            $MRRConfig = Get-ConfigContent "MRR"
+                            if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+                            $AutoExtendTargetPercent_Value = if ($MRRConfig.$Worker1.AutoExtendTargetPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendTargetPercent -ne "") {$MRRConfig.$Worker1.AutoExtendTargetPercent} else {$AutoExtendTargetPercent}
+                            $AutoExtendTargetPercent_Value = [Double]("$($AutoExtendTargetPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
+                            $AutoExtendMaximumPercent_Value = if ($MRRConfig.$Worker1.AutoExtendMaximumPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendMaximumPercent -ne "") {$MRRConfig.$Worker1.AutoExtendMaximumPercent} else {$AutoExtendMaximumPercent}
+                            $AutoExtendMaximumPercent_Value = [Double]("$($AutoExtendMaximumPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
+
+                            $ExtendBy = ([double]$Rental_Result.length + [double]$Rental_Result.extended) * ($AutoExtendTargetPercent_Value / ($Rental_AvgHashrate / $Rental_AdvHashrate) - 1)
+                            if ($AutoExtendMaximumPercent_Value -gt 0) {
+                                $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value,$ExtendBy)
+                            }
+                            $ExtendBy = [Math]::Round($ExtendBy,1)
+                            if ($ExtendBy -gt 0.25) {
+                                $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$Pool_RigId/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
+                                if ($Extend_Result.success) {
+                                    Write-Log -Level Info "Extended MRR rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1 for $ExtendBy hours."
+                                    Set-MiningRigRentalStatus $Pool_RigId -Extend > $null
+                                }
+                            }
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "Unable to get rental #$($_.rental_id) from MRR: $($_.Exception.Message)"
+                    }
+                }
+
                 if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
                     $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
                     $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -notmatch "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2 | Foreach-Object {$Pool_Failover+=$_}
@@ -290,9 +326,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 1. gather config per workername
     #
 
-    $MRRConfig = Get-ConfigContent "MRR"
-
-    if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+    if ($MRRConfig -eq $null) {
+        $MRRConfig = Get-ConfigContent "MRR"
+        if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+    }
 
     foreach ($RigName in $Workers) {
 
