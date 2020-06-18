@@ -359,6 +359,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 2. Auto create/update rigs
     #
 
+    $MaxAPICalls = 20
+
     $RigGPUModels = $Session.Config.DeviceModel.Where({$_ -ne "CPU"})
 
     foreach($RigRunMode in @("create","update")) {
@@ -367,7 +369,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
             Write-Log -Level Info "Start $($RigRunMode) MRR rigs on $($RigName)"
 
-            if ($RigRunMode -eq "create" -and $RigCreated -ge 20) {break}
+            if ($RigRunMode -eq "create" -and $RigCreated -ge $MaxAPICalls) {break}
 
             if (($RigRunMode -eq "create" -and $MRRConfig.$RigName.EnableAutoCreate) -or ($RigRunMode -eq "update" -and $MRRConfig.$RigName.EnableAutoUpdate)) {
                 try {
@@ -549,7 +551,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 Write-Log -Level Warn "Unable to create MRR $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
                                             }
                                             $RigCreated++
-                                            if ($RigCreated -ge 20) {return}
+                                            if ($RigCreated -ge $MaxAPICalls) {return}
 
                                         } elseif ($RigRunMode -eq "update") {
 
@@ -566,9 +568,26 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                      ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
                                                      ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier)
                                                 ) {
-                                                    Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), modifier=$($CreateRig.price.btc.modifier)"
                                                     $CreateRig["id"] = $_.id
-                                                    $RigsToUpdate += $CreateRig
+                                                    $RigUpdated = $false
+                                                    if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
+                                                        if ($RigCreated -lt $MaxAPICalls) {
+                                                            $RigUpdated = $true
+                                                            try {
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                                            } catch {
+                                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                                Write-Log -Level Warn "Unable to update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                            }
+                                                            $RigCreated++
+                                                        }
+                                                    } else {
+                                                        $RigUpdated = $true
+                                                        $RigsToUpdate += $CreateRig
+                                                    }
+                                                    if ($RigUpdated) {
+                                                        Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), modifier=$($CreateRig.price.btc.modifier)"
+                                                    }
                                                 }
                                             })
                                         }
