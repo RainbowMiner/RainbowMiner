@@ -571,10 +571,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     $CreateRig["id"] = $_.id
                                                     $RigUpdated = $false
                                                     if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
-                                                        if ($false -and ($RigCreated -lt $MaxAPICalls)) { #currently disabled, no way to update description
+                                                        if ($RigCreated -lt $MaxAPICalls) {
                                                             $RigUpdated = $true
                                                             try {
-                                                                $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($_.id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
                                                             } catch {
                                                                 if ($Error.Count){$Error.RemoveAt(0)}
                                                                 Write-Log -Level Warn "Unable to update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
