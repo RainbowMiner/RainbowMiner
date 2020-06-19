@@ -873,7 +873,7 @@ class Ccminer : Miner {
         }
 
         $HashRate_Name = $this.Algorithm[0]
-        $HashRate_Value = if ($Data.HS -ne $null) {[Double]$Data.HS} else {[Double]$Data.KHS * 1000}
+        $HashRate_Value = if ($Data.HS -ne $null -and [Double]$Data.HS -gt [Double]$Data.KHS) {[Double]$Data.HS} else {[Double]$Data.KHS * 1000}
 
         $Difficulty_Value = [Double]$Data.DIFF
 
