@@ -9,12 +9,12 @@ if ((-not $IsWindows -or -not $Session.IsWin10) -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BMiner\bminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.2.0-bminer/bminer-v16.2.0-d0b21b5-amd64.tar.xz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.2.2-bminer/bminer-v16.2.2-f4789e0-amd64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-BMiner\bminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.2.0-bminer/bminer-lite-v16.2.0-d0b21b5-amd64.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.2.2-bminer/bminer-lite-v16.2.2-f4789e0-amd64.zip"
 }
-$Version = "16.2.0"
+$Version = "16.2.2"
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
 $DevFee = 2.0
