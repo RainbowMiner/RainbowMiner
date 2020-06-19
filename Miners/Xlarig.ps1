@@ -9,22 +9,23 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Xlarig\xlarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-xlarig/XLArig-v5.0.1-linux-x86_64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.1.0-xlarig/XLArig-v5.1.0-linux-x86_64.zip"
     $DevFee = 0.0
 } else {
     $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-xlarig/XLArig-v5.0.1-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.1.0-xlarig/XLArig-v5.1.0-win64.zip"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/scala-network/XLArig/releases"
 $Port = "541{0:d2}"
-$Version = "5.0.1"
+$Version = "5.1.0"
 
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "defyx"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "panthera"; Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
