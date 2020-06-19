@@ -75,7 +75,7 @@ if ($InfoOnly) {
 
 if (-not $API_Key -or -not $API_Secret) {return}
 
-$Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Worker | Select-Object -Unique
+$Workers     = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Worker | Select-Object -Unique
 
 $UseWorkerName_Array     = @($UseWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
@@ -206,7 +206,7 @@ if ($AllRigs_Request) {
                             $AutoExtendMaximumPercent_Value = if ($MRRConfig.$Worker1.AutoExtendMaximumPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendMaximumPercent -ne "") {$MRRConfig.$Worker1.AutoExtendMaximumPercent} else {$AutoExtendMaximumPercent}
                             $AutoExtendMaximumPercent_Value = [Double]("$($AutoExtendMaximumPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
 
-                            $ExtendBy = ([double]$Rental_Result.length + [double]$Rental_Result.extended) * ($AutoExtendTargetPercent_Value / ($Rental_AvgHashrate / $Rental_AdvHashrate) - 1)
+                            $ExtendBy = ([double]$Rental_Result.length + [double]$Rental_Result.extended) * ($AutoExtendTargetPercent_Value * $Rental_AdvHashrate / $Rental_AvgHashrate - 1)
                             if ($AutoExtendMaximumPercent_Value -gt 0) {
                                 $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value,$ExtendBy)
                             }
