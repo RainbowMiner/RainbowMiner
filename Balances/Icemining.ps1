@@ -33,15 +33,15 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Fo
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
             [PSCustomObject]@{
-                Caption     = "$($Name) ($($Request.currency))"
+                Caption     = "$($Name) ($($_.Name))"
 				BaseName    = $Name
-                Currency    = $Request.currency
+                Currency    = $_.Name
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold
                 Total       = [Decimal]$Request.total_unpaid
                 Paid        = [Decimal]$Request.total_paid
                 Earned      = [Decimal]$Request.total_earned
-                Payouts     = @(Get-BalancesPayouts $Request.payouts | Select-Object)
+                Payouts     = @(Get-BalancesPayouts $Request.user_payments | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }
