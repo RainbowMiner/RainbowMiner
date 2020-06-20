@@ -109,6 +109,8 @@
 356	6Miner
 357	ProgPOWEthercoreNvidia
 358	KawPOWNvidia
+359	EnemyZealot25
+360	NoncerProNvidia
 
 400	Sgminer
 401	SgminerBitcore
@@ -127,6 +129,7 @@
 414	ProgPOWSeroAMD
 415	ProgPOWEthercoreAMD
 416	KawPOWAmd
+417	NoncerProAMD
 
 500	CpuminerJayddee
 501	CpuminerJayddeeAessse42
