@@ -1840,6 +1840,42 @@ class Nheq : Miner {
     }
 }
 
+class NoncerPro : Miner {
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "localhost"
+        $Timeout = 10 #seconds
+
+        $Response = ""
+
+        $HashRate   = [PSCustomObject]@{}
+
+        try {
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+        }
+        catch {
+            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            return
+        }
+
+        $HashRate_Name = $this.Algorithm[0]
+        $HashRate_Value = [Double]$Data.totalHashrate
+
+        $Rejected_Shares = [Int64]$Data.invalidShares
+        $Accepted_Shares = [Int64]$Data.totalShares - $Rejected_Shares
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData($Response,$HashRate)
+
+        $this.CleanupMinerData()
+    }
+}
 
 class Prospector : Miner {
     [Void]UpdateMinerData () {
