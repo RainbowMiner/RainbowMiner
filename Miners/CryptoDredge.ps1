@@ -61,7 +61,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "aeternity";   MinMemGb = 5; Params = ""; ExcludePoolName = "^Nicehash"} #Aeternity / Cuckoocycle (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
     #[PSCustomObject]@{MainAlgorithm = "allium";      MinMemGb = 1; Params = ""} #Allium (CD 0.16.0 faster)
     [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; MinMemGb = 1; Params = ""} #Argon2d-Dyn
-    [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; MinMemGb = 1; Params = ""} #Argon2d-Nim
+    [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; MinMemGb = 1; Params = ""; ExcludePoolName = "^Icemining"} #Argon2d-Nim
     [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 1; Params = ""} #Argon2d250
     [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 3.3; Params = ""} #Argon2d4096
     #[PSCustomObject]@{MainAlgorithm = "bcd";         MinMemGb = 1; Params = ""} #BCD (trex faster)
