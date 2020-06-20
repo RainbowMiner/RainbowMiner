@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6-teamred/teamredminer-v0.7.6-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6.2-teamred/teamredminer-v0.7.6.2-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6-teamred/teamredminer-v0.7.6-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6.2-teamred/teamredminer-v0.7.6.2-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.7.6"
+$Version = "0.7.6.2"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -40,6 +40,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";           MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "mtp";              MinMemGb = 5;   Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "nimiq";            MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "phi2";             MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";      MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "x16r";             MinMemGb = 3.3; Params = ""; DevFee = 2.5; ExtendInterval = 2}
@@ -90,12 +91,23 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $DeviceIDsAll = $Device.Type_Vendor_Index -join ','
+
+                    $Pool_Host = $Pools.$Algorithm_Norm_0.Host
+                    $Pool_User = $Pools.$Algorithm_Norm_0.User
+
                     $AdditionalParams = @()
                     if ($Pools.$Algorithm_Norm_0.Name -match "^bsod" -and $Algorithm_Norm_0 -eq "x16rt") {
                         $AdditionalParams += "--no_ntime_roll"
                     }
                     if ($IsLinux -and $Algorithm_Norm_0 -match "^cn") {
                         $AdditionalParams += "--allow_large_alloc"
+                    }
+                    if ($_.MainAlgorithm -eq "nimiq") {
+                        $Pool_User = $Pools.$Algorithm_Norm_0.Wallet
+                        $AdditionalParams += "--nimiq_worker=$($Pools.$Algorithm_Norm_0.Worker)"
+                        if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
+                            $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
+                        }
                     }
                     $First = $False
                 }
@@ -107,7 +119,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) --opencl_order -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) --opencl_order -o $($Pools.$Algorithm_Norm.Protocol)://$($Pool_Host):$($Pool_Port) -u $($Pool_User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Xgminer"
 					Port           = $Miner_Port
