@@ -396,9 +396,21 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 2. Auto create/update rigs
     #
 
-    $MaxAPICalls = 20
+    $MaxAPICalls = 40
 
     $RigGPUModels = $Session.Config.DeviceModel.Where({$_ -ne "CPU"})
+
+    $RigPools = [hashtable]@{}
+    if ($AllRigs_Request) {
+        try {
+            (Invoke-MiningRigRentalRequest "/rig/$(@($AllRigs_Request | Select-Object -ExpandProperty id) -join ";")/pool" $API_Key $API_Secret -Timeout 60) | Foreach-Object {$RigPools[[int]$_.rigid] = $_.pools}
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Unable to get MRR pools for $($RigName): $($_.Exception.Message)"
+        }
+    }
+
+    $PoolsData = Get-MiningRigRentalsPoolsData
 
     foreach($RigRunMode in @("create","update")) {
 
@@ -577,11 +589,24 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
                                         }
                             
+                                        $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
                                         if ($RigRunMode -eq "create") {
                                             try {
                                                 $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
                                                 if ($Result.id) {
                                                     Write-Log -Level Info "Created MRR rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
+                                                    if ($RigPool) {
+                                                        try {
+                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($Result.id)/pool" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
+                                                            if ($Result.success) {
+                                                                $RigCreated++
+                                                                Write-Log -Level Info "Update pools of MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            }
+                                                        } catch {
+                                                            if ($Error.Count){$Error.RemoveAt(0)}
+                                                            Write-Log -Level Warn "Unable to add pools to MRR $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
+                                                        }
+                                                    }
                                                 }
                                             } catch {
                                                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -626,6 +651,32 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     }
                                                     if ($RigUpdated) {
                                                         Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region)"
+                                                    }
+                                                }
+
+                                                if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
+                                                    $RigPoolCurrent = $RigPools[[int]$_.id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"} | Select-Object -First 1
+                                                    if ((-not $RigPoolCurrent -and ($RigPools[[int]$_.id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
+                                                        try {
+                                                            $RigPriority = [int]$(if ($RigPoolCurrent) {
+                                                                $RigPoolCurrent.priority
+                                                            } else {
+                                                                foreach($i in 0..4) {
+                                                                    if (-not ($RigPools[[int]$_.id] | Where-Object {$_.priority -eq $i})) {
+                                                                        $i
+                                                                        break
+                                                                    }
+                                                                }
+                                                            })
+                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($_.id)/pool/$($RigPriority)" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
+                                                            if ($Result.success) {
+                                                                $RigCreated++
+                                                                Write-Log -Level Info "Update pools of MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            }
+                                                        } catch {
+                                                            if ($Error.Count){$Error.RemoveAt(0)}
+                                                            Write-Log -Level Warn "Unable to update pools MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                        }                                                        
                                                     }
                                                 }
                                             })
