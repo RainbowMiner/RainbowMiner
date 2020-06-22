@@ -1,16 +1,21 @@
 {
 	"Asia": ["HongKong", "SoutheastAsia", "Taiwan", "Japan"],
     "Australia": ["SoutheastAsia", "US", "HongKong", "Japan"],
-	"Canada": ["US", "USEast", "USWest"],
-	"Europe": ["US", "Canada", "USWest", "USEast", "SoutheastAsia"],
-    "Finland": ["Europe", "US", "USWest", "Canada", "SoutheastAsia"],
+	"Canada": ["US", "USEast", "USCentral", "USNorthWest", "USWest"],
+	"Europe": ["Germany", "UK", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
+    "Finland": ["Europe", "UK", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
+    "Germany": ["Europe", "UK", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
 	"Japan": ["Korea","Taiwan", "HongKong", "Asia", "SoutheastAsia"],
     "Korea": ["Japan","Taiwan", "HongKong", "Asia", "SoutheastAsia"],
 	"Russia": ["Europe", "Asia", "SoutheastAsia"],
-	"SouthAmerica": ["US", "USEast", "USWest", "Canada"],
+	"SouthAmerica": ["USSouth", "US", "USEast", "USCentral", "USWest", "Canada", "USNorthWest"],
 	"SoutheastAsia": ["HongKong","Japan","Asia"],
     "Taiwan": ["HongKong","SoutheastAsia","Asia"],
-    "US": ["Canada", "USWest","USEast"],
-	"USEast": ["US", "Canada", "USWest"],
-	"USWest": ["US", "Canada", "USEast"]
+    "UK": ["Europe", "Germany", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
+    "US": ["USCentral", "USWest", "USNorthWest", "USEast", "Canada"],
+    "USCentral": ["US", "USEast", "USWest", "USNorthWest", "Canada"],
+	"USEast": ["US", "Canada", "USCentral", "USWest", "USNorthWest"],
+    "USNorthWest": ["USWest", "US", "USCentral", "USEast", "Canada"],
+    "USSouth": ["US", "USCentral", "USEast", "USWest", "SouthAmerica", "USNorthWest", "Canada"],
+	"USWest": ["USNorthWest", "US", "USCentral", "USEast", "Canada"]
 }
