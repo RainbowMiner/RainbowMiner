@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6.2-teamred/teamredminer-v0.7.6.2-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6.3-teamred/teamredminer-v0.7.6.3-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6.2-teamred/teamredminer-v0.7.6.2-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.6.3-teamred/teamredminer-v0.7.6.3-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.7.6.2"
+$Version = "0.7.6.3"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -105,9 +105,9 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                     if ($_.MainAlgorithm -eq "nimiq") {
                         $Pool_User = $Pools.$Algorithm_Norm_0.Wallet
                         $AdditionalParams += "--nimiq_worker=$($Pools.$Algorithm_Norm_0.Worker)"
-                        if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
-                            $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
-                        }
+                        #if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
+                        #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
+                        #}
                     }
                     $First = $False
                 }
