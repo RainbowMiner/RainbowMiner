@@ -600,7 +600,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             $Result = Invoke-MiningRigRentalRequest "/rig/$($Result.id)/pool" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
                                                             if ($Result.success) {
                                                                 $RigCreated++
-                                                                Write-Log -Level Info "Update pools of MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                                Write-Log -Level Info "Update pools of MRR rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                             }
                                                         } catch {
                                                             if ($Error.Count){$Error.RemoveAt(0)}
