@@ -3293,24 +3293,27 @@ function Start-Setup {
                     break
                 }
                 
-                if (-not $DevicesActual.CPU.Worker) {$DevicesActual.CPU.Worker = "$($ConfigActual.WorkerName)cpu"}
-                $Pool_Workers = @($DevicesActual.PSObject.Properties.Value | Where-Object {$_.Worker} | Select-Object -ExpandProperty Worker) + $(if ($Pool_Config.Worker -eq "`$WorkerName") {$ConfigActual.WorkerName} else {$Pool_Config.Worker}) | Select-Object -Unique
-
                 $Pool_Request = Get-MiningRigRentalAlgos
-                $Pool_Rigs = Get-MiningRigRentalRigs -key $Pool_Config.API_Key -secret $Pool_Config.API_Secret -workers $Pool_Workers
+
+                if (-not $DevicesActual.CPU.Worker) {$DevicesActual.CPU.Worker = "$($ConfigActual.WorkerName)cpu"}
+                $Pool_Workers_Local = @($DevicesActual.PSObject.Properties.Value | Where-Object {$_.Worker} | Select-Object -ExpandProperty Worker) + $(if ($Pool_Config.Worker -eq "`$WorkerName") {$ConfigActual.WorkerName} else {$Pool_Config.Worker}) | Select-Object -Unique
+
+                $Pool_Rigs = Get-MiningRigRentalRigs -key $Pool_Config.API_Key -secret $Pool_Config.API_Secret -workers @("[^\]]+")
+                $Pool_Workers = @($Pool_Rigs | Foreach-Object {([regex]'(?smi)\[([^\]]+)\]').Matches($_.description) | Foreach-Object {$_.Groups[1].Value}} | Select-Object -Unique | Sort-Object)
 
                 Write-Host " "
 
                 $p = [console]::ForegroundColor
                 [console]::ForegroundColor = "Cyan"
-                Write-Host "The following rigs are currently connected to this rig:"
+                Write-Host "The following rigs are currently created:"
                 Write-Host " "
 
                 $Pool_Rigs | Sort-Object -Property name | Format-Table (
                     @{Label = "Id"; Expression = {$_.id}},
                     @{Label = "Name"; Expression = {$_.name}},
                     @{Label = "Algorithm"; Expression = {Get-MiningRigRentalAlgorithm $_.type}},
-                    @{Label = "Worker"; Expression = {$desc = $_.description;$Pool_Workers.Where({$desc -match "\[$_\]"}) -join ","}}
+                    @{Label = "Worker"; Expression = {(([regex]'(?smi)\[([^\]]+)\]').Matches($_.description) | Foreach-Object {$_.Groups[1].Value}) -join ","}},
+                    @{Label = "X"; Expression = {if (Compare-Object @(([regex]'(?smi)\[([^\]]+)\]').Matches($_.description) | Foreach-Object {$_.Groups[1].Value} | Select-Object -Unique | Sort-Object) $Pool_Workers_Local -IncludeEqual -ExcludeDifferent) {"X"} else {""}}}
                 ) | Out-Host
                 Write-Host " "
 
