@@ -98,9 +98,9 @@ if ($AllRigs_Request) {
 
     [hashtable]$Pool_RegionsTable = @{}
 
-    @("eu","us","asia","ru") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-
     $Pool_AllHosts = Get-MiningRigRentalServers
+
+    $Pool_AllHosts.Foreach({$Pool_RegionsTable[$_.region] = Get-Region "$($_.region -replace "^eu-")"})
 
     $Workers_Devices = @{}
     $Devices_Rented  = @()
@@ -226,9 +226,8 @@ if ($AllRigs_Request) {
                 }
 
                 if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
-                    $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
-                    $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -notmatch "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2 | Foreach-Object {$Pool_Failover+=$_}
-                    if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
+                    $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Pool_Rig.server.SubString(0,2))"} | Select-Object -First 2}
+                    if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^eu"} | Select-Object -First 1)}
 
                     $Miner_Server = $Pool_Rig.server
                     $Miner_Port   = $Pool_Rig.port
@@ -240,7 +239,7 @@ if ($AllRigs_Request) {
                     #
 
                     if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
-                        $Miner_Server = $Pool_Failover | Select-Object -First 1
+                        $Miner_Server = ($Pool_Failover | Select-Object -First 1).name
                         $Miner_Port   = 3333
                         $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
                     }
@@ -273,7 +272,7 @@ if ($AllRigs_Request) {
                         PoolFee       = $Pool_Fee
                         Exclusive     = ($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable
                         Idle          = if (($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable) {$false} else {-not $EnableMining}
-                        Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
+                        Failover      = @($Pool_Failover | Select-Object -ExpandProperty name | Foreach-Object {
                             [PSCustomObject]@{
                                 Protocol = "stratum+tcp"
                                 Host     = $_
@@ -298,7 +297,7 @@ if ($AllRigs_Request) {
 
                 if (-not $Pool_RigEnable) {
                     if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -in @(3322,3333,3344)) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented))) {
-                        $Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -eq 3322 -or $Pool_Rig.port -eq 3333 -or $Pool_Rig.port -eq 3344) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented)) {return}}
+                        $Pool_Failover | Select-Object -ExpandProperty name | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -eq 3322 -or $Pool_Rig.port -eq 3333 -or $Pool_Rig.port -eq 3344) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented)) {return}}
                     }
                 }
             }
@@ -517,7 +516,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
                                         $RigSubst["Display"]     = $_.display
                                     
-                                        if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion) | Select-Object)}
+                                        if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + $Session.Config.DefaultPoolRegion.Where({$_ -ne $Session.Config.Region}) | Select-Object)}
                                         $CreateRig = if ($RigRunMode -eq "create") {
                                             @{
                                                 type        = $_.name
@@ -603,7 +602,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                      ($_.ndevices -ne $CreateRig.ndevices) -or 
                                                      ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
                                                      ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
-                                                     ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier)
+                                                     ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
+                                                     ($CreateRig.server -ne $RigSever)
                                                 ) {
                                                     $CreateRig["id"] = $_.id
                                                     $RigUpdated = $false

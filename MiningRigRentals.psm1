@@ -314,66 +314,21 @@ param(
 
     if (-not $Pool_Request.success) {
         Write-Log -Level Warn "Pool API ($Name/info/servers) has failed. "
-        $Servers = @(
-            [PSCustomObject]@{
-                id            = 3
-                name          = "us-east01.miningrigrentals.com"
-                region        = "us-east"
-                port          = 3333
-                ethereum_port = 3344
-            }
-            [PSCustomObject]@{
-                id            = 4
-                name          = "us-west01.miningrigrentals.com"
-                region        = "us-west"
-                port          = 3333
-                ethereum_port = 3344
-            }
-            [PSCustomObject]@{
-                id            = 10
-                name          = "eu-de02.miningrigrentals.com"
-                region        = "eu-de"
-                port          = 3333
-                ethereum_port = 3344
-            }
-            [PSCustomObject]@{
-                id            = 5
-                name          = "eu-01.miningrigrentals.com"
-                region        = "eu"
-                port          = 3333
-                ethereum_port = 3344
-            }
-            [PSCustomObject]@{
-                id            = 6
-                name          = "us-central01.miningrigrentals.com"
-                region        = "us-central"
-                port          = 3333
-                ethereum_port = 3344
-            }
-            [PSCustomObject]@{
-                id            = 9
-                name          = "eu-ru01.miningrigrentals.com"
-                region        = "eu-ru"
-                port          = 3333
-                ethereum_port = 3344
-            }
-            [PSCustomObject]@{
-                id            = 2
-                name          = "ap-01.miningrigrentals.com"
-                region        = "ap"
-                port          = 3333
-                ethereum_port = 3344
-            }
-        )
+        try {
+            $Servers = Get-Content ".\Data\mrrservers.json" -Raw | ConvertFrom-Json
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "mrrservers.json missing in Data folder! Cannot run MiningRigRentals"
+        }
     } else {
         $Servers = @($Pool_Request.data | Foreach-Object {$_})
     }
 
-    if (-not $Region) {$Servers.name}
+    if (-not $Region) {$Servers}
     else {
-        if ($Region -is [string]) {$Region = @(Get-Region $Region)+@(Get-Region2 $Region)}
+        if ($Region -is [string]) {$Region = @(Get-Region $Region)+@(Get-Region2 (Get-Region $Region))}
         foreach($Region1 in $Region) {
-            $RigServer = $Servers.Where({$r = Get-Region ($_.region -replace "^eu-");$_.region -ne "eu-de" -and ($r -eq $Region1)}) | Select-Object -ExpandProperty name
+            $RigServer = $Servers.Where({$r = Get-Region ($_.region -replace "^eu-");($r -eq $Region1)}) | Select-Object -ExpandProperty name
             if ($RigServer) {break}
         }
         if ($RigServer) {$RigServer} else {($Servers | Select-Object -First 1).name}
