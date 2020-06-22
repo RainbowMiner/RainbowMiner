@@ -226,8 +226,9 @@ if ($AllRigs_Request) {
                 }
 
                 if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
-                    $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Pool_Rig.server.SubString(0,2))"} | Select-Object -First 2}
-                    if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^eu"} | Select-Object -First 1)}
+                    $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Pool_Rig.server.SubString(0,2))"},{100-$_.id} | Select-Object -First 2}
+                    if (-not $Pool_Failover) {$Pool_FailOver = @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^eu"} | Select-Object -First 1)}
+                    $Pool_FailOver += $Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $Pool_FailOver -notcontains $_} | Select-Object -First 1
 
                     $Miner_Server = $Pool_Rig.server
                     $Miner_Port   = $Pool_Rig.port
