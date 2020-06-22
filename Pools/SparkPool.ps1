@@ -39,6 +39,7 @@ $Pools_Data = @(
     [PSCustomObject]@{id = "ckb";    symbol = "CKB";      port = 8888;  fee = 1; ssl = $false; region = @("cn","eu")}
     [PSCustomObject]@{id = "grin";   symbol = "GRIN_29";  port = 6666;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
     [PSCustomObject]@{id = "grin";   symbol = "GRIN_31";  port = 6667;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
+    [PSCustomObject]@{id = "grin";   symbol = "GRIN_32";  port = 6665;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnly} | ForEach-Object {
