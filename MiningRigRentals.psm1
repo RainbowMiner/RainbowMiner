@@ -312,26 +312,26 @@ param(
         if ($Error.Count){$Error.RemoveAt(0)}
     }
 
-    if (-not $Pool_Request.success) {
-        Write-Log -Level Warn "Pool API ($Name/info/servers) has failed. "
-        try {
-            $Servers = Get-Content ".\Data\mrrservers.json" -Raw | ConvertFrom-Json
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "mrrservers.json missing in Data folder! Cannot run MiningRigRentals"
-        }
-    } else {
+    try {
+        $Servers = Get-Content ".\Data\mrrservers.json" -Raw | ConvertFrom-Json
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "mrrservers.json missing in Data folder! Cannot run MiningRigRentals"
+    }
+
+    if ($Pool_Request.success -and ((Compare-Object @($Pool_Request.data | Select-Object -ExpandProperty name) @($Servers | Select-Object -ExpandProperty name)) -or -not (Test-Path ".\Data\mrrservers.json"))) {
+        Set-ContentJson ".\Data\mrrservers.json" -Data $Pool_Request.data > $null
         $Servers = @($Pool_Request.data | Foreach-Object {$_})
     }
 
     if (-not $Region) {$Servers}
     else {
-        if ($Region -is [string]) {$Region = @(Get-Region $Region)+@(Get-Region2 (Get-Region $Region))}
+        if ($Region -is [string]) {$Region = @(Get-Region $Region)+@(Get-Region2 "$(Get-Region $Region)")}
         foreach($Region1 in $Region) {
-            $RigServer = $Servers.Where({$r = Get-Region ($_.region -replace "^eu-");($r -eq $Region1)}) | Select-Object -ExpandProperty name
+            $RigServer = $Servers.Where({$Region1 -eq "$(Get-Region ($_.region -replace "^eu-"))"},'First',1)
             if ($RigServer) {break}
         }
-        if ($RigServer) {$RigServer} else {($Servers | Select-Object -First 1).name}
+        if ($RigServer) {$RigServer | Select-Object -First 1} else {$Servers | Select-Object -First 1}
     }
 }
 

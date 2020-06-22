@@ -316,7 +316,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     if ($API.UpdateMRR) {$API.UpdateMRR = $false}
 
     $RigDivisors = @("h","kh","mh","gh","th") | Foreach-Object {[PSCustomObject]@{type=$_;value=(ConvertFrom-Hash "1$_")}}
-    $RigServer  = ""
+    $RigServer  = $null
     $RigCreated = 0
     $RigsToUpdate = @()
     $RigMinProfit = 0.00001
@@ -521,7 +521,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             @{
                                                 type        = $_.name
                                                 status	    = "disabled"
-                                                server	    = $RigServer
+                                                server	    = $RigServer.name
                                                 ndevices    = $RigDevice.Count
                                             }
                                         } else {
@@ -603,9 +603,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                      ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
                                                      ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
                                                      ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
-                                                     ($CreateRig.server -ne $RigSever)
+                                                     ($RigServer -and ($_.region -ne $RigServer.region))
                                                 ) {
                                                     $CreateRig["id"] = $_.id
+                                                    if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
                                                     $RigUpdated = $false
                                                     if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
                                                         if ($RigCreated -lt $MaxAPICalls) {
@@ -623,7 +624,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         $RigsToUpdate += $CreateRig
                                                     }
                                                     if ($RigUpdated) {
-                                                        Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), modifier=$($CreateRig.price.btc.modifier)"
+                                                        Write-Log -Level Info "Update MRR rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region)"
                                                     }
                                                 }
                                             })
