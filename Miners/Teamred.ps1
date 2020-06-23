@@ -86,7 +86,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         }
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.MainAlgorithm -ne "nimiq" -or -not $Pools.$Algorithm_Norm.SSL)) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                 if ($First) {
 				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -94,6 +94,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
                     $Pool_Host = $Pools.$Algorithm_Norm_0.Host
                     $Pool_User = $Pools.$Algorithm_Norm_0.User
+                    $Pool_Protocol = $Pools.$Algorithm_Norm_0.Protocol
 
                     $AdditionalParams = @()
                     if ($Pools.$Algorithm_Norm_0.Name -match "^bsod" -and $Algorithm_Norm_0 -eq "x16rt") {
@@ -104,6 +105,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                     }
                     if ($_.MainAlgorithm -eq "nimiq") {
                         $Pool_User = $Pools.$Algorithm_Norm_0.Wallet
+                        $Pool_Protocol = "stratum+tcp"
                         $AdditionalParams += "--nimiq_worker=$($Pools.$Algorithm_Norm_0.Worker)"
                         #if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
                         #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
@@ -119,7 +121,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) --opencl_order -o $($Pools.$Algorithm_Norm.Protocol)://$($Pool_Host):$($Pool_Port) -u $($Pool_User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host):$($Pool_Port) -u $($Pool_User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Xgminer"
 					Port           = $Miner_Port
