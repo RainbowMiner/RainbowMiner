@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-NBMiner\nbminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v30.2-nbminer/NBMiner_30.2_Linux.tgz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v31.1-nbminer/NBMiner_31.1_Linux.tgz"
 } else {
     $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v30.2-nbminer/NBMiner_30.2_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v31.1-nbminer/NBMiner_31.1_Win.zip"
 }
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
-$Version = "30.2"
+$Version = "31.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -31,14 +31,15 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";  SecondaryAlgorithm = ""; Params = "-a cuckarood --cuckoo-intensity $CuckooIntensity";     NH = $true;  MinMemGb = 5; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckarood29/GRIN
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  SecondaryAlgorithm = ""; Params = "-a cuckaroo_swap --cuckoo-intensity $CuckooIntensity"; NH = $true;  MinMemGb = 5; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   SecondaryAlgorithm = ""; Params = "-a cuckatoo --cuckoo-intensity $CuckooIntensity";      NH = $true;  MinMemGb = 8; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckatoo31
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";   SecondaryAlgorithm = ""; Params = "-a cuckatoo32 --cuckoo-intensity $CuckooIntensity";      NH = $true;  MinMemGb = 8; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckatoo31
     [PSCustomObject]@{MainAlgorithm = "Eaglesong";    SecondaryAlgorithm = ""; Params = "-a eaglesong";     NH = $true; MinMemGb = 4; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #CKB
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 1;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 2;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 3;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 4;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 5;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 6;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 7;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 6;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 7;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 8;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 9;  Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Eaglesong"; Intensity = 10; Params = "-a eaglesong_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + CKB
@@ -50,8 +51,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 3;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 4;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
     #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 5;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 6;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 7;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 6;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 7;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 8;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 9;  Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tensority"; Intensity = 10; Params = "-a tensority_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
@@ -59,13 +60,13 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 1;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 2;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 3;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 4;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 5;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 6;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 7;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 8;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 9;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 10; Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 4;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 5;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 6;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 7;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 8;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 9;  Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Blake2bSHA3"; Intensity = 10; Params = "-a hns_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + HNS
     [PSCustomObject]@{MainAlgorithm = "Blake2bSHA3";  SecondaryAlgorithm = ""; Params = "-a hns";     NH = $true; MinMemGb = 0.1;  DevFee = 2.0;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #HNS
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 1;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = "Tellor"; Intensity = 2;  Params = "-a trb_ethash"; NH = $true; MinMemGb = 3; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + TRB
