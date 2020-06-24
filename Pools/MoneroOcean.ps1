@@ -29,6 +29,11 @@ catch {
 
 $Pool_PoolFee = 0.68 # cost for exchange
 
+$Pool_CPUPort_Test = $Global:GlobalCPUInfo.Cores * ($Global:GlobalCPUInfo.MaxClockSpeed * 20 / 1000) * 5
+$Pool_CPUPort_Base = if ($Pool_CPUPort_Test -gt 0) {[Math]::Min([Math]::Pow(2,1+[Math]::Floor([Math]::Log($Pool_CPUPort_Test / 50,2))),8192)} else {1}
+$Pool_GPUPost_Test = $Global:DeviceCache.Devices.Where({$_.type -eq "gpu"}).Count
+$Pool_GPUPort_Base = if ($Pool_GPUPost_Test -ge 8) {256} elseif ($Pool_GPUPost_Test -ge 4) {128} else {64}
+
 $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashrate -gt 0)) -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
     $Pool_CoinSymbol = $_.coin
@@ -41,7 +46,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
     }
 
     foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
-        $Port = if ($Pool_Protocol -match "ssl") {20001} else {10001}
+        $Port = if ($Pool_Protocol -match "ssl") {20000} else {10000}
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
 			Algorithm0    = $Pool_Algorithm_Norm
@@ -53,8 +58,8 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = $Pool_Protocol
             Host          = "gulf.moneroocean.stream"
-            Port          = $Port
-            Ports         = [PSCustomObject]@{CPU=$Port; GPU=$Port+1; RIG=$Port+31}
+            Port          = $Port+$Pool_CPUPort_Base
+            Ports         = [PSCustomObject]@{CPU=$Port+$Pool_CPUPort_Base; GPU=$Port+$Pool_GPUPort_Base; RIG=$Port+8192}
             User          = "$($Wallets.XMR)"
             Pass          = "{workername:$Worker}:$($Password)~$($_.algo)"
             Region        = Get-Region "US"
