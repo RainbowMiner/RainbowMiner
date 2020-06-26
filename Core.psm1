@@ -895,13 +895,13 @@ function Invoke-Core {
     if (Test-Path ".\Data\coinsdb-fork.json“) {
         $Fork_Meets_Target = $false
         try {
-            if ($true) {
+            if ($false) {
                 #DateTime target
                 $Fork_Meets_Target = (Get-Date).ToUniversalTime() -ge [datetime]"2020-05-06 18:00:00"
             } else {
                 #Blockchain target
-                $Request = Invoke-GetUrlAsync "https://explorer.dero.io/" -Timeout 15 -tag "fork"
-                if ("$Request" -match "<font.+>4550555<") {
+                $Request = Invoke-RestMethodAsync "https://mainnet-explorer.beam.mw/explorer/status/?format=json" -Timeout 15 -tag "fork"
+                if ([int64]$Request.height -ge 777777) {
                     $Fork_Meets_Target = $true
                 }
             }
