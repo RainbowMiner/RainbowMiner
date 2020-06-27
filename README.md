@@ -1539,8 +1539,11 @@ lt=50]
 - the price adjust % can be set per algorithm in algorithms.config.txt `"MRRPriceModifierPercent": "-10",`
 - the MRR minimum price will be automatically set, if `"EnableMinimumPrice": "1",` (recommended!)
 - if MRR suggested prices are disabled (`"EnableAutoPrice": "0",`)
-  - the rig's will set to your rig's average profit x `"PriceFactor"`, exactly
-  - if `"PriceBTC"` is set to a value greater than 0, the rig's price will be set to exactly this value.
+  - either the rig's price will set to your rig's average profit x `"PriceFactor"`
+  - or the rig's price will be set to `"PriceBTC"`, if it is greater than 0
+- if MRR suggested prices are enabled (`"EnableAutoPrice": "1",`)
+  - either the rig's minimum price will be set to your rig's average profit x `"PriceFactor"`
+  - or the rig's minimum price will be set to `"PriceBTC"`, if it is greater than your rig's average profit x `"PriceFactor"`
 
 ##### Remark: 
 - to (dis-)allow the CPU rigs: add `<yourrigworkername>cpu`, e.g. if your workername is "RainbowMiner", use "RainbowMinercpu"
