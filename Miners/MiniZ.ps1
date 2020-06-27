@@ -37,7 +37,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "BeamHash3";       MinMemGB = 6; Params = "--par=beam";     ExtendInterval = 3; AutoPers = $false} #BeamHash3 (BEAM)
+    [PSCustomObject]@{MainAlgorithm = "BeamHash3";       MinMemGB = 5; Params = "--par=144,5s";   ExtendInterval = 3; AutoPers = $false} #BeamHash3 (BEAM)
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 1; Params = "--par=96,5";     ExtendInterval = 2; AutoPers = $true} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2; Params = "--par=144,5";    ExtendInterval = 2; AutoPers = $true} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2; Params = "--par=192,7";    ExtendInterval = 2; AutoPers = $true} #Equihash 192,7 
