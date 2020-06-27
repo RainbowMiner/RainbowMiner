@@ -1531,14 +1531,22 @@ lt=50]
 - **Title**: Title for autocreate, make sure it contains %algorithm% or %algorithmex% or %display%, and %rigid% (values will be substituted like that: %algorithm% with algorithm, %algorithmex% with algorithm plus coin info if needed, %coininfo% with eventual coin info, %display% with MRR specific display title, %rigid% with an unique rigid, %workername% with the workername, %type% with either CPU or GPU, %typecpu% with CPU or empty, %typegpu% with GPU or empty)";Description="Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=%algorithmex% mining with RainbowMiner rig %rigid%]
 - **Description**: Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=Autostart mining with RainbowMiner (https://rbminer.net) on Windows. This rig is idle and will activate itself, as soon, as you rent it. [%workername%]]
 
-Set "EnableAutoUpdate" to "1", to enable automatic updates of price/hash and minhours
+##### Hints:
+- set `"EnableAutoUpdate": "1",`, to enable automatic updates of price/hash and minhours
+- set `"EnableAutoCreate": "1",`, to enable automatic creation of profitable rigs on MRR
+- the MRR suggested prices will be enabled, if `"EnableAutoPrice": "1",`
+- the MRR adjust % value is set by `"AutoPriceModifierPercent": "-10",`, (in this example it's -10%)
+- the price adjust % can be set per algorithm in algorithms.config.txt `"MRRPriceModifierPercent": "-10",`
+- the MRR minimum price will be automatically set, if `"EnableMinimumPrice": "1",` (recommended!)
+- if MRR suggested prices are disabled (`"EnableAutoPrice": "0",`)
+  - the rig's will set to your rig's average profit x `"PriceFactor"`, exactly
+  - if `"PriceBTC"` is set to a value greater than 0, the rig's price will be set to exactly this value.
 
-Set "EnableAutoCreate" to "1", to enable automatic creation of profitable rigs on MRR (this feature is not yet activated)
-
-Remark: 
+##### Remark: 
 - to (dis-)allow the CPU rigs: add `<yourrigworkername>cpu`, e.g. if your workername is "RainbowMiner", use "RainbowMinercpu"
 - to (dis-)allow the all-GPU rig: add `<yourrigworkername>`, e.g. if your workername is "RainbowMiner", use it :)
 - to (dis-)allow device groups: add the workername(s), that you have given your device groups in devices.config.txt (parameter `"Worker"`)
+- to avoid miners crashing at the end of a rental, the MRR pools will be preset with my default donation pools. These will be used for some seconds at the end of the rentals, when the renter's pool finally goes offline, before the current RainbowMiner round is finished. You may change these to your likes, or leave them like they are and support my work with some seconds of your rig's time.
 
 
 ### How can I quickly copy my current configuration to a new rig?
