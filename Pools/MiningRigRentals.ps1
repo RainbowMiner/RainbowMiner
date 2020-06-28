@@ -32,6 +32,8 @@ param(
     [String]$AutoCreateMaxMinHours = "24",
     [String]$AutoExtendTargetPercent = "100",
     [String]$AutoExtendMaximumPercent = "30",
+    [String]$AutoBonusExtendForHours = "0",
+    [String]$AutoBonusExtendByHours = "0",
     [String]$AutoUpdateMinPriceChangePercent = "3",
     [String]$AutoPriceModifierPercent = "0",
     [String]$PriceBTC = "0",
@@ -347,7 +349,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         }
 
         $AutoCreateMinProfitBTC = "-1"
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PowerDrawFactor","MinHours","MaxHours")) {
+
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PowerDrawFactor","MinHours","MaxHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -393,7 +396,34 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     }
 
     #
-    # 2. Auto create/update rigs
+    # 2. Auto extend rented rigs, if bonus applicable
+    #
+
+    $RentalIDs = @($AllRigs_Request.Where({$_.status.status -eq "rented" -and $_.description -match "\[$($Workers -join "|")\]" -and (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1}) | Select-Object -ExpandProperty rental_id)
+    
+    if ($RentalIDs) {
+        $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($RentalIDs -join ";")" $API_Key $API_Secret -method "GET" -Timeout 60
+        foreach ($RigName in $Workers) {
+            if (-not $MRRConfig.$RigName.AutoBonusExtendForHours -or -not $MRRConfig.$RigName.AutoBonusExtendByHours) {continue}
+            $Rental_Result | Where-Object {$_.rig.description -match "\[$RigName\]"} | Foreach-Object {
+                $ExtendBy = [Math]::Floor([double]$_.length/$MRRConfig.$RigName.AutoBonusExtendForHours) * $MRRConfig.$RigName.AutoBonusExtendByHours - [double]$_.extended
+                if ($ExtendBy -gt 0) {
+                    try {                    
+                        $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$($_.rig.id)/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
+                        if ($Extend_Result.success) {
+                            Write-Log -Level Info "Extended MRR rental #$($_.id) for $(Get-MiningRigRentalAlgorithm $_.rig.type) on $($RigName) for $ExtendBy bonus-hours."
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "Unable to extend MRR rental #$($_.id) $(Get-MiningRigRentalAlgorithm $_.rig.type) on $($RigName) for $ExtendBy bonus-hours: $($_.Exception.Message)"
+                    }
+                }
+            }
+        }
+    }
+
+    #
+    # 3. Auto create/update rigs
     #
 
     $MaxAPICalls = 40
@@ -406,7 +436,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             (Invoke-MiningRigRentalRequest "/rig/$(@($AllRigs_Request | Select-Object -ExpandProperty id) -join ";")/pool" $API_Key $API_Secret -Timeout 60) | Foreach-Object {$RigPools[[int]$_.rigid] = $_.pools}
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Unable to get MRR pools for $($RigName): $($_.Exception.Message)"
+            Write-Log -Level Warn "Unable to get MRR pools: $($_.Exception.Message)"
         }
     }
 
