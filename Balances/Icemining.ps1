@@ -30,7 +30,7 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Fo
         $Request = Invoke-RestMethodAsync "https://icemining.ca/api/wallet/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
+            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned $(if ($Request -is [string] -and $Request.Length -lt 200) {$Request} else {"nothing"}). "
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"

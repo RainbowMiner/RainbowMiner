@@ -47,7 +47,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol="EPIC"; host=@("epic");                region=@("us");           ; fee = 2; algo = "Cuckatoo31"}
     [PSCustomObject]@{symbol="MWC";  host=@("mwc-us","mwc-eu");     region=@("us","eu");      ; fee = 1; algo = "Cuckarood29"; hashrate = "C29d"}
     [PSCustomObject]@{symbol="MWC";  host=@("mwc-us","mwc-eu");     region=@("us","eu");      ; fee = 1; algo = "Cuckatoo31";  hashrate = "C31"}
-    [PSCustomObject]@{symbol="ATOM"; host=@("atom-us");             region=@("us");           ; fee = 0; ssl = $true}
+    [PSCustomObject]@{symbol="ATOM"; host=@("atom-us");             region=@("us");           ; fee = 0; ssl = $true; altsymbol = "ATOMI"}
     [PSCustomObject]@{symbol="ARW";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
 
     #[PSCustomObject]@{symbol="BITC"; host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
@@ -57,7 +57,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{symbol="ZMY";  host=@("stratum","eu","asia"); region=@("us","eu","asia"); fee = 1}
 )
 
-$Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
+$Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly)} | ForEach-Object {
     $Pool_Coin           = Get-Coin "$Pool_Currency$(if ($_.algo) {"-$($_.algo)"})"
 
     if ($Pool_Coin) {
@@ -83,6 +83,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool
         "$($Wallets.$Pool_Currency).{workername:$Worker}"
     }
 
+    if (-not $Pool_User -and -not $InfoOnly -and $_.altsymbol) {
+        $Pool_User = "$($Wallets."$($_.altsymbol)").{workername:$Worker}"
+    }
+
     $Pool_Pass = if ($Pool_Currency -eq "MWC") {
         "$(if ($Pool_Params) {$Pool_Params} else {"x"})"
     } else {
@@ -95,8 +99,8 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool
             Algorithm     = $Pool_Algorithm_Norm
 			Algorithm0    = $Pool_Algorithm_Norm
             CoinName      = $Pool_CoinName
-            CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
+            CoinSymbol    = if ($_.altsymbol) {$_.altsymbol} else {$Pool_Currency}
+            Currency      = if ($_.altsymbol) {$_.altsymbol} else {$Pool_Currency}
             Price         = 0
             StablePrice   = 0
             MarginOfError = 0

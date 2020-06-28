@@ -5,19 +5,21 @@
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ATOMI"; port = 3334; fee = 1.0; rpc = "atomi"; region = @("eu")}
+    [PSCustomObject]@{symbol = "ATOMI"; port = 3334; fee = 1.0; rpc = "atomi"; region = @("eu"); altsymbol = "ATOM"}
     [PSCustomObject]@{symbol = "BEAM";  port = 3334; fee = 1.0; rpc = "beam"; region = @("eu")}
     [PSCustomObject]@{symbol = "XGM";   port = 3334; fee = 1.0; rpc = "grimm"; region = @("eu")}
 )
 
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
+$Pools_Data | Where-Object {($Config.Pools.$Name.Wallets."$($_.symbol)" -or ($_.altsymbol -and $Config.Pools.$Name.Wallets."$($_.altsymbol)")) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_RpcPath  = $_.rpc
+
+    $Pool_Wallet   = if ($Config.Pools.$Name.Wallets.$Pool_Currency) {$Config.Pools.$Name.Wallets.$Pool_Currency} else {$Config.Pools.$Name.Wallets."$($_.altsymbol)"}
 
     $Request = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).sunpool.top/api.php?query=miner-balances&miner=$($Config.Pools.$Name.Wallets."$($_.symbol)")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).sunpool.top/api.php?query=miner-balances&miner=$($Pool_Wallet)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
         if ($Request.status -ne "OK") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
