@@ -179,7 +179,7 @@ param(
     Switch ($Name) {
             "cuckoocycle"       {"GRIN";Break}
             "cuckoocycle29swap" {"SWAP";Break}
-            #"equihash1505"      {"BEAM";Break}
+            "equihash1505"      {"ATOMI";Break}
             "equihash1505g"     {"XGM";Break}
             default             {""}
     }
