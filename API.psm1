@@ -868,7 +868,7 @@
                 }
                 "/getconfig" {
                     $Status = $false
-                    if ($API.IsServer -and -not (Compare-Version $API.Version.Version $Parameters.version -revs 1)) {
+                    if ($API.IsServer) {
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
