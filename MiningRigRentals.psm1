@@ -164,7 +164,7 @@ param(
             "x16rt"             {"Veil";Break}
             "x16rtgin"          {"X16rt";Break}
             "cuckoocycle"       {"Cuckarood29";Break}
-            "equihash1505"      {"EquihashR25x5x3";Break}
+            "equihash1505"      {"BeamHash3";Break}
             default             {$Name}
         }
     )
@@ -179,7 +179,7 @@ param(
     Switch ($Name) {
             "cuckoocycle"       {"GRIN";Break}
             "cuckoocycle29swap" {"SWAP";Break}
-            "equihash1505"      {"ATOMI";Break}
+            "equihash1505"      {"BEAM";Break}
             "equihash1505g"     {"XGM";Break}
             default             {""}
     }
