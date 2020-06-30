@@ -17,17 +17,21 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 try {
     $Request = (((Invoke-RestMethodAsync "https://www.666pool.cn/pool/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
     $Pools_Data = $Request -replace '<!--.+?-->' -split '<tr>' | Foreach-Object {
-        if ($Data = ([regex]'(?si)coin=(\w+?)[^\w].+?(\w+?).666pool.cn:(\d+)<').Matches($_)) {
+        if ($Data = ([regex]'(?si)coin=([-\w]+?)[^-\w].+?(\w+?).666pool.cn:(\d+)<').Matches($_)) {
             $Columns = $_ -replace '</td>' -split '[\s\r\n]*<td[^>]*>[\s\r\n]*'
             if ($Data[0].Groups.Count -gt 3 -and $Columns.Count -ge 6) {
-                [PSCustomObject]@{
-                    symbol   = $Data[0].Groups[1].value
-                    rpc      = $Data[0].Groups[2].Value
-                    port     = $Data[0].Groups[3].Value
-                    hashrate = ConvertFrom-Hash "$($Columns[3])"
-                    workers  = [int]"$($Columns[4])"
-                    profit   = "$(if ($Columns[5] -match "([\d\.]+)[\s\w\/]+(\w)") {[double]$Matches[1]/(ConvertFrom-Hash "1$($Matches[2])")} else {$null})"
-                    fee      = [double]"$(if ($Columns[6] -match "(\d+)%$") {$Matches[1]})"
+                $Symbol = $Data[0].Groups[1].Value -replace "-.+$"
+                $Algo   = "$($Data[0].Groups[1].value -replace "^.+-")"
+                if ($Symbol -ne "PM" -or $Algo -ne "KecK") {
+                    [PSCustomObject]@{
+                        symbol   = "$(if ($Symbol -eq "PM") {"PMEER"} else {$Symbol})"
+                        rpc      = $Data[0].Groups[2].Value
+                        port     = $Data[0].Groups[3].Value
+                        hashrate = ConvertFrom-Hash "$($Columns[3])"
+                        workers  = [int]"$($Columns[4])"
+                        profit   = "$(if ($Columns[5] -match "([\d\.]+)[\s\w\/]+(\w)") {[double]$Matches[1]/(ConvertFrom-Hash "1$($Matches[2])")} else {$null})"
+                        fee      = [double]"$(if ($Columns[6] -match "(\d+)%$") {$Matches[1]})"
+                    }
                 }
             }
         }
