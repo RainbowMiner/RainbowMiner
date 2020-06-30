@@ -1788,9 +1788,9 @@ function Start-SubProcessInBackground {
     $ScriptBlock = "Set-Location `"$($WorkingDirectory -replace '"','``"')`"; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
     $ScriptBlock += "& `"$($FilePath -replace '"','``"')`""
     if ($ArgumentList) {
-        $ArgumentListToBlock = $ArgumentList
-        ([regex]"(\w+,[,=\w]+)").Matches($ArgumentList) | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace $_.Value,"'$($_.Value)'"}
-        $ScriptBlock += " $ArgumentListToBlock"
+        $ArgumentListToBlock = " $ArgumentList"
+        ([regex]"\s-+\w+[\s=]+(\w[=\w]*,[,=\w]+)").Matches($ArgumentListToBlock) | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value)'"}
+        $ScriptBlock += "$ArgumentListToBlock"
     }
     $ScriptBlock += " *>&1"
     $ScriptBlock += " | Write-Output"
