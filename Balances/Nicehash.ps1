@@ -5,7 +5,7 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $PoolConfig = $Config.Pools.$Name
 
-if (!$PoolConfig.BTC) {
+if (-not $PoolConfig.BTC) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
     return
 }
