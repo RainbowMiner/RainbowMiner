@@ -113,7 +113,7 @@ if ($AllRigs_Request) {
 
         $Rigs_DeviceModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $Worker1} | Select-Object -ExpandProperty Name | Select-Object -Unique)
         $Rigs_Devices = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)))})
-        $Workers_Devices[$Worker1] = @($Rigs_Devices | Select-Object -ExpandProperty Name | Select-Object -Unique | Sort-Object)
+        $Workers_Devices[$Worker1] = @($Rigs_Devices | Select-Object -ExpandProperty Name -Unique)
         $Workers_Models[$Worker1]  = @($Rigs_Devices | Select-Object -ExpandProperty Model -Unique)
 
         if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
