@@ -112,8 +112,9 @@ if ($AllRigs_Request) {
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
 
         $Rigs_DeviceModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $Worker1} | Select-Object -ExpandProperty Name | Select-Object -Unique)
-        $Workers_Devices[$Worker1] = @($Global:DeviceCache.Devices | Where-Object {$Rigs_DeviceModels -contains $_.Model} | Select-Object -ExpandProperty Name | Select-Object -Unique | Sort-Object)
-        $Workers_Models[$Worker1]  = @($Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)))}) | Select-Object -ExpandProperty Model -Unique)
+        $Rigs_Devices = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)))})
+        $Workers_Devices[$Worker1] = @($Rigs_Devices | Select-Object -ExpandProperty Name | Select-Object -Unique | Sort-Object)
+        $Workers_Models[$Worker1]  = @($Rigs_Devices | Select-Object -ExpandProperty Model -Unique)
 
         if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
             $Devices_Rented = @($Devices_Rented + $Workers_Devices[$Worker1] | Select-Object -Unique | Sort-Object)
