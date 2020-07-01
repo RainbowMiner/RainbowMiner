@@ -20,16 +20,17 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ATOMI"; port = 3334; fee = 1.0; rpc = "atomi"; region = @("eu")}
     [PSCustomObject]@{symbol = "BEAM";  port = 3334; fee = 1.0; rpc = "beam"; region = @("eu")}
-    [PSCustomObject]@{symbol = "XGM";   port = 3334; fee = 1.0; rpc = "grimm"; region = @("eu")}
+    [PSCustomObject]@{symbol = "GRIMM"; port = 3334; fee = 1.0; rpc = "grimm"; region = @("eu"); altsymbol = "XGM"}
 )
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Currency  = $_.symbol
     $Pool_Fee       = $_.fee
     $Pool_Port      = $_.port
     $Pool_RpcPath   = $_.rpc
     $Pool_Regions   = $_.region
+    $Pool_Wallet    = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$Wallets."$($_.altsymbol)"}
 
     $Pool_Divisor   = if ($_.divisor) {$_.divisor} else {1}
     $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
@@ -77,7 +78,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$($Pool_HostPath).sunpool.top"
                 Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "$(if ($Email) {$Email} else {"x"})"
                 Region        = $Pool_RegionsTable[$Pool_Region]
                 SSL           = $Pool_SSL
@@ -95,7 +96,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 				HasMinerExclusions = $false
 				Price_Bias    = 0.0
 				Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
+                Wallet        = $Pool_Wallet
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
