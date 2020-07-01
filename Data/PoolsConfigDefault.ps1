@@ -248,7 +248,7 @@
             Currencies=@("RVN")
         }
         "Ravepool" = [PSCustomObject]@{
-            Currencies=@("XGM")
+            Currencies=@("GRIMM")
         }
         "RPlant" = [PSCustomObject]@{
             Currencies=@("BIN","CPU","MBC")
@@ -260,7 +260,7 @@
             Currencies=@("ETH","GRIN","BEAM","XMR")
         }
         "Sunpool" = [PSCustomObject]@{
-            Currencies=@("XGM","BEAM","ATOMI")
+            Currencies=@("GRIMM","BEAM","ATOMI")
         }
         "SuprNova" = [PSCustomObject]@{
             Currencies=@("BTG")
