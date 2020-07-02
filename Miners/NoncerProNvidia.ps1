@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-NoncerPro\noncerpro"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.0-noncerpro/noncerpro-cuda-linux-3.3.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.1-noncerpro/noncerpro-cuda-linux-3.3.1.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-NoncerPro\noncerpro.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.0-noncerpro/noncerpro-cuda-win64-3.3.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.1-noncerpro/noncerpro-cuda-win64-3.3.1.zip"
 }
 $ManualUri = "https://github.com/NoncerPro/noncerpro-nimiq-cuda/releases"
 $Port = "360{0:d2}"
 $DevFee = 2.0
 $Cuda = "10.0"
-$Version = "3.3.0"
+$Version = "3.3.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
