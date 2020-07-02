@@ -7,8 +7,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ATOMI"; port = 3334; fee = 1.0; rpc = "atomi"; region = @("eu"); altsymbol = "ATOM"}
     [PSCustomObject]@{symbol = "BEAM";  port = 3334; fee = 1.0; rpc = "beam"; region = @("eu")}
-    [PSCustomObject]@{symbol = "DEFIS";  port = 3334; fee = 1.0; rpc = "defis"; region = @("eu")}
-    [PSCustomObject]@{symbol = "GRIMM";   port = 3334; fee = 1.0; rpc = "grimm"; region = @("eu"); altsymbol = "XGM"}
+    [PSCustomObject]@{symbol = "GRIMM"; port = 3334; fee = 1.0; rpc = "grimm"; region = @("eu")}
+    [PSCustomObject]@{symbol = "XGM";   port = 3334; fee = 1.0; rpc = "defis"; region = @("eu"); altsymbol = "DEFIS"}
 )
 
 $Pools_Data | Where-Object {($Config.Pools.$Name.Wallets."$($_.symbol)" -or ($_.altsymbol -and $Config.Pools.$Name.Wallets."$($_.altsymbol)")) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
