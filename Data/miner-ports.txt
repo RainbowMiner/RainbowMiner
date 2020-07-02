@@ -111,6 +111,7 @@
 358	KawPOWNvidia
 359	EnemyZealot25
 360	NoncerProNvidia
+361	Nqminer
 
 400	Sgminer
 401	SgminerBitcore
