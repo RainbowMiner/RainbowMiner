@@ -67,7 +67,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--devices=$($DeviceIDsAll) --address=`"$($Pools.$Algorithm_Norm.Wallet)`" --name=`"$($Pools.$Algorithm_Norm.Worker)`" --server=$($Pools.$Algorithm_Norm.Host) --port=$($Pool_Port) --api --apiport=$($Miner_Port) --mode=dumb"
+					Arguments      = "--devices=$($DeviceIDsAll) --address=$($Pools.$Algorithm_Norm.Wallet -replace "\s+") --name=$($Pools.$Algorithm_Norm.Worker) --server=$($Pools.$Algorithm_Norm.Host) --port=$($Pool_Port) --api --apiport=$($Miner_Port) --mode=dumb"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "NoncerPro"
 					Port           = $Miner_Port
