@@ -18,6 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
+    [PSCustomObject]@{symbol = "DEFIS";   port = 3333; fee = 1.0; rpc = "defis"; region = @("us")}
     [PSCustomObject]@{symbol = "GRIMM";   port = 3333; fee = 1.0; rpc = "grimm"; region = @("us"); altsymbol = "XGM"}
 )
 
