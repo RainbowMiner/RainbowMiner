@@ -75,7 +75,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "$($DeviceParams) -d $($DeviceIDsAll) -a `"$($Pools.$Algorithm_Norm.Wallet)`" -n `"$($Pools.$Algorithm_Norm.Worker)`" -p $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --api $($Miner_Port) --mode dumb"
+					    Arguments      = "$($DeviceParams) -d $($DeviceIDsAll) -a $($Pools.$Algorithm_Norm.Wallet -replace "\s+") -n $($Pools.$Algorithm_Norm.Worker) -p $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --api $($Miner_Port) --mode dumb"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					    API            = "Nqminer"
 					    Port           = $Miner_Port
