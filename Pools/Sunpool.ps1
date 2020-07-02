@@ -20,7 +20,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ATOMI"; port = 3334; fee = 1.0; rpc = "atomi"; region = @("eu")}
     [PSCustomObject]@{symbol = "BEAM";  port = 3334; fee = 1.0; rpc = "beam"; region = @("eu")}
-    [PSCustomObject]@{symbol = "GRIMM"; port = 3334; fee = 1.0; rpc = "grimm"; region = @("eu"); altsymbol = "XGM"}
+    [PSCustomObject]@{symbol = "DEFIS"; port = 3334; fee = 1.0; rpc = "defis"; region = @("eu")}
+    [PSCustomObject]@{symbol = "GRIMM"; port = 3334; fee = 1.0; rpc = "grimm"; region = @("eu"); altymbol = "XGM"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
