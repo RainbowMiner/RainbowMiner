@@ -4790,18 +4790,38 @@ function Set-MinersConfigDefault {
             if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1"}
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
             $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -Parameters @{InfoOnly = $true})}
+
+            $MiningMode = $Session.Config.MiningMode
+            if ($MiningMode -eq $null) {
+                try {
+                    $MiningMode = (Get-Content $Session.ConfigFiles["Config"].Path -Raw | ConvertFrom-Json -ErrorAction Stop).MiningMode
+                    if ($MiningMode -eq "`$MiningMode") {
+                        $MiningMode = $Session.DefaultValues["MiningMode"]
+                    }
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Set-MinersConfigDefault: Problem reading MiningMode from config (assuming combo)"
+                    $MiningMode = $null
+                }
+            }
+            if (-not $MiningMode) {
+                $MiningMode = "combo"
+            }
+
             foreach ($a in @("CPU","NVIDIA","AMD")) {
                 if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
                 else {
                     $Devices = @($AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
                     [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
-                    if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
+                    if ($SetupDevices.Count -gt 1 -and $MiningMode -eq "combo") {
+                        Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}
+                    }
                 }
                 
                 [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
                 [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
-                    foreach ($SetupDevice in $SetupDevices) {                        
+                    foreach ($SetupDevice in $SetupDevices) {
                         $Done | Add-Member "$($Miner.Name)-$($SetupDevice)" @(
                             [System.Collections.ArrayList]$MinerCheck = @()
                             foreach($cmd in $Miner.Commands) {

@@ -211,13 +211,12 @@ function Start-Core {
                 Get-ChildItem "$($ConfigFile_Path)\Backup" -Filter "*" | Where-Object {$_.BaseName -match "^(\d{14})" -and $Matches[1] -le $BackupDateDelete} | Remove-Item -Force -ErrorAction Ignore
             }
 
-            $Session.ConfigFiles.Keys | Foreach-Object {
+            $Session.ConfigFiles.Keys | Sort-Object -Descending {$_ -eq "Config"} | Foreach-Object {
                 $FNtmp   = "$(if ($_ -ne "Config") {"$($_.ToLower())."})$ConfigFile_Name"
                 $Session.ConfigFiles[$_].Path = Join-Path $ConfigFile_Path $FNtmp
                 if (-not $psISE -and (Test-Path $Session.ConfigFiles[$_].Path)) {Copy-Item $Session.ConfigFiles[$_].Path -Destination (Join-Path (Join-Path $ConfigFile_Path "Backup") "$($BackupDate)_$($FNtmp)")}
                 Set-ConfigDefault $_ -Force > $null
                 if (Test-Path $Session.ConfigFiles[$_].Path) {$Session.ConfigFiles[$_].Path = $Session.ConfigFiles[$_].Path | Resolve-Path -Relative}
-
             }
 
             if ($false -and $MPHLegacyUpdate -and ($PoolsPath = Get-ConfigPath "pools")) {
