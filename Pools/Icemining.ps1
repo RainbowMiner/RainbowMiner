@@ -70,8 +70,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
-    $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
-
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$(if ($_.algo) {"-$Pool_Algorithm_Norm"})_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_Currency -eq "EPIC") {10} elseif ($_.hashrate) {$PoolCoins_Request.$Pool_Currency.hashrate."$($_.hashrate)"} else {$PoolCoins_Request.$Pool_Currency.hashrate}) -BlockRate $PoolCoins_Request.$Pool_Currency."24h_blocks" -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
@@ -87,10 +85,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol; $PoolCoins_Request.$Pool
         $Pool_User = "$($Wallets."$($_.altsymbol)").{workername:$Worker}"
     }
 
-    $Pool_Pass = if ($Pool_Currency -eq "MWC") {
-        "$(if ($Pool_Params) {$Pool_Params} else {"x"})"
+    $Pool_Pass = if ($Pool_Currency -eq "SIN") {
+        "c=$Pool_Currency{diff:,d=`$difficulty}$(if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"})"
     } else {
-        "c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+        "$(if ($Params.$Pool_Currency) {$Params.$Pool_Currency} else {"x"})"
     }
 
     $i = 0
