@@ -724,10 +724,14 @@ function Get-Balance {
 
     $CurrenciesWithBalances | ForEach-Object {
         $Currency = $_.ToUpper()
-        $Balances | Where-Object Currency -eq $Currency | Foreach-Object {$_ | Add-Member "Balance ($Currency)" $_.Total -Force}
+        $Balances | Where-Object Currency -eq $Currency | Foreach-Object {$_ | Add-Member "Balance ($Currency)" $_.Total -Force;$_ | Add-Member "Pending ($Currency)" $_.Pending -Force}
         $Balance_Sum = ($Balances."Balance ($Currency)" | Measure-Object -Sum).Sum
+        $Pending_Sum = ($Balances."Pending ($Currency)" | Measure-Object -Sum).Sum
         if ($Balance_Sum) {
             $Totals | Add-Member "Balance ($Currency)" $Balance_Sum -Force
+        }
+        if ($Pending_Sum) {
+            $Totals | Add-Member "Pending ($Currency)" $Pending_Sum -Force
         }
         if ($Session.Config.ShowWalletBalances) {
             $Balance_Sum2 = ($Balances | Where-Object {$_.BaseName -ne "Wallet" -and $_."Balance ($Currency)"} | Select-Object -ExpandProperty "Balance ($Currency)" | Measure-Object -Sum).Sum
@@ -789,7 +793,7 @@ function Get-Balance {
 
     $Balances | Foreach-Object {
         $Balance = $_
-        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($n = if ($Balance.$_ -ge 10 -and $Digits[$Matches[2]] -eq 8) {[Math]::Min([Math]::Ceiling([Math]::Log10($Balance.$_)),8)} else {1};$Digits[$Matches[2]]-$n+1)}" -f $Balance.$_}
+        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \(|Pending \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($n = if ($Balance.$_ -ge 10 -and $Digits[$Matches[2]] -eq 8) {[Math]::Min([Math]::Ceiling([Math]::Log10($Balance.$_)),8)} else {1};$Digits[$Matches[2]]-$n+1)}" -f $Balance.$_}
     }
     
     $Balances
@@ -836,7 +840,7 @@ function Update-Rates {
             if (-not $RatesAPI.status) {
                 Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
             } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
-                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Global:Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
+                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Global:Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}
             }
         }
         catch {
@@ -3089,6 +3093,7 @@ function Invoke-Core {
         if (($BalancesData.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
             $ColumnFormat.Add(@{Name = "Sym"; Expression = {if ($_.BaseName -ne "Wallet" -and $_.Currency -and (-not $Session.Config.Pools."$($_.Name)".AECurrency -or $Session.Config.Pools."$($_.Name)".AECurrency -eq $_.Currency)) {$ColumnMark -replace "{value}","$($_.Currency)"} else {$_.Currency}}}) > $null
             $ColumnFormat.Add(@{Name = "Balance"; Expression = {$_."Balance ($($_.Currency))"}}) > $null
+            $ColumnFormat.Add(@{Name = "Pending"; Expression = {if ($_.Pending) {$_."Pending ($($_.Currency))"} else {"-"}}}) > $null
         }
         $BalancesData | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique | Foreach-Object {$Value = $_;$ColumnFormat.Add(@{Name = "$($Value -replace "Value in\s+")"; Expression = [ScriptBlock]::Create("`$(if (`$_.Name -match `"^\*`") {`$ColumnMark -replace `"{value}`",`$_.`"$Value`"} else {`$_.`"$Value`"})"); Align = "right"}) > $null}
         $BalancesData | Format-Table -Wrap -Property $ColumnFormat | Out-Host
