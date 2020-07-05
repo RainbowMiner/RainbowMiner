@@ -767,6 +767,7 @@ class BMiner : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -775,7 +776,9 @@ class BMiner : Miner {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status/stratum" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data | Add-member stratums ($Response | ConvertFrom-Json -ErrorAction Stop).stratums
         }
-        catch {}
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
         $Global:ProgressPreference = $oldProgressPreference
 
         $Index = 0
@@ -827,6 +830,7 @@ class Cast : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -868,6 +872,7 @@ class Ccminer : Miner {
             $Data = $Response -split ";" | ConvertFrom-StringData -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -911,6 +916,7 @@ class Claymore : Miner {
             if (-not $Data -or -not $Data.result -or -not $Data.result[2]) {throw}
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -973,6 +979,7 @@ class CryptoDredge : Miner {
             $Data = $Response -split ";" | ConvertFrom-StringData -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1012,6 +1019,7 @@ class Dstm : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1054,6 +1062,7 @@ class Eminer : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1097,6 +1106,7 @@ class EnemyZ : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1209,6 +1219,7 @@ class Fireice : Miner {
                 try {
                     Get-Content $HwConfigFile -Raw | ConvertFrom-Json -ErrorAction Stop
                 } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
                     Write-Log -Level Warn "Bad json file found ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) - creating a new one"
                     Remove-Item $HwConfigFile -ErrorAction Ignore -Force
                 }
@@ -1256,6 +1267,7 @@ class Fireice : Miner {
             }
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
@@ -1281,6 +1293,7 @@ class Fireice : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1328,6 +1341,7 @@ class Gminer : Miner {
             $Data = $Response.Content | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1432,6 +1446,7 @@ class GrinPro : Miner {
             $Data = $Response.Content | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1504,6 +1519,7 @@ class Jceminer : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1552,6 +1568,7 @@ class Lol : Miner {
             $Data = $Response.Content | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1592,6 +1609,7 @@ class Luk : Miner {
             if ($Response -match 'LOG:') {$Data = $Response -replace 'LOG:' | ConvertFrom-StringData}
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1631,6 +1649,7 @@ class MiniZ : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1707,6 +1726,7 @@ class Nanominer : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1752,6 +1772,7 @@ class NBminer : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1818,6 +1839,7 @@ class Nheq : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1851,14 +1873,18 @@ class NoncerPro : Miner {
 
         $HashRate   = [PSCustomObject]@{}
 
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         try {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
+        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.totalHashrate
@@ -1888,14 +1914,18 @@ class Nqminer : Miner {
 
         $HashRate   = [PSCustomObject]@{}
 
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         try {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
+        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.totalHashrate
@@ -1933,6 +1963,7 @@ class Prospector : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -1973,6 +2004,7 @@ class RH : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -2125,6 +2157,7 @@ class SrbMiner : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -2250,6 +2283,7 @@ class Xgminer : Miner {
             $Data = $Response.Substring($Response.IndexOf("{"), $Response.LastIndexOf("}") - $Response.IndexOf("{") + 1) -replace " ", "_" | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -2358,6 +2392,7 @@ class Xmrig : Miner {
             }
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
@@ -2383,6 +2418,7 @@ class Xmrig : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
@@ -2509,6 +2545,7 @@ class Xmrig3 : Miner {
             }
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
@@ -2534,6 +2571,7 @@ class Xmrig3 : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
