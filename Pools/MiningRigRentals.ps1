@@ -146,7 +146,7 @@ if ($AllRigs_Request) {
                     ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
                     (Compare-Object $Devices_Rented $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count -or
                     ($DeviceAlgorithm.Count -and $DeviceAlgorithm -inotcontains $Pool_Algorithm_Norm) -or
-                    ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $DeviceExcludeAlgorithm)
+                    ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $Pool_Algorithm_Norm)
                     )) {$Valid_Rigs += $_.id}
             }
 
