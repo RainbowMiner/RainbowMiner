@@ -892,6 +892,10 @@ try {
         $RemoveMinerStats += @("*-MiniZ-*_BeamHash3_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.6.0.4")) {
+        $AddAlgorithm += @("Cuckaroo29b")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick

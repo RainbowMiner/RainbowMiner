@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14-gminer/gminer_2_14_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.15-gminer/gminer_2_15_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14-gminer/gminer_2_14_windows64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.15-gminer/gminer_2_15_windows64.7z"
 }
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "2.14"
+$Version = "2.15"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -30,6 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cortex";          MinMemGb = 8;                     Params = "--algo cortex";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $false; Fee = 5.0} #Cortex
     [PSCustomObject]@{MainAlgorithm = "CryptoNightBBC";  MinMemGb = 2;                     Params = "--algo bbc";         Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $true;  Fee = 5.0} #CryptonightBBC
     [PSCustomObject]@{MainAlgorithm = "Cuckoo24";        MinMemGb = 4;                     Params = "--algo cuckoo24";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Equihash Cuckoo29/BFC
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";     MinMemGb = 4;                     Params = "--algo cuckaroo29b"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckaroo29b/TUBE (from July 29th 2020)
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29bfc";   MinMemGb = 4;                     Params = "--algo bfc";         Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0} #Equihash Cuckoo29/BFC
     #[PSCustomObject]@{MainAlgorithm = "Cuckaroo29";      MinMemGb = 4;                     Params = "--algo cuckaroo29";  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckaroo29/BitGRIN, currently disabled, see https://github.com/develsoftware/GMinerRelease/issues/80
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";     MinMemGb = 4;                     Params = "--algo swap";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckaroo29s/SWAP
