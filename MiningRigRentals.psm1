@@ -163,7 +163,7 @@ param(
     Get-Algorithm $(Switch ($Name) {
             "x16rt"             {"Veil";Break}
             "x16rtgin"          {"X16rt";Break}
-            "cuckoocycle"       {"Cuckarood29";Break}
+            "cuckoocycle"       {"grin29";Break}
             "equihash1505"      {"BeamHash3";Break}
             default             {$Name}
         }
