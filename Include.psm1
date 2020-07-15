@@ -3868,9 +3868,11 @@ function Get-Algorithms {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false,
         [Parameter(Mandatory = $false)]
+        [Switch]$Force = $false,
+        [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
+    if ($Force -or -not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
         [hashtable]$Global:GlobalAlgorithms = @{}
         (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
         $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()

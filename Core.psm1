@@ -895,7 +895,7 @@ function Invoke-Core {
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
     #Fork detection
-    if (Test-Path ".\Data\coinsdb-fork.json“) {
+    if ((Test-Path ".\Data\coinsdb-fork.json“) -or (Test-Path ".\Data\algorithms-fork.json“)) {
         $Fork_Meets_Target = $false
         try {
             if ($false) {
@@ -903,8 +903,14 @@ function Invoke-Core {
                 $Fork_Meets_Target = (Get-Date).ToUniversalTime() -ge [datetime]"2020-05-06 18:00:00"
             } else {
                 #Blockchain target
-                $Request = Invoke-RestMethodAsync "https://mainnet-explorer.beam.mw/explorer/status/?format=json" -Timeout 15 -tag "fork"
-                if ([int64]$Request.height -ge 777777) {
+
+                #$Request = Invoke-RestMethodAsync "https://mainnet-explorer.beam.mw/explorer/status/?format=json" -Timeout 15 -tag "fork"
+                #if ([int64]$Request.height -ge 777777) {
+                #    $Fork_Meets_Target = $true
+                #}
+
+                $Request = Invoke-RestMethodAsync "https://api.grinmint.com/v2/networkStats" -Timeout 15 -tag "fork"
+                if ([int64]$Request.height -ge 786240) {
                     $Fork_Meets_Target = $true
                 }
             }
@@ -913,9 +919,16 @@ function Invoke-Core {
 
         if ($Fork_Meets_Target) {
             try {
-                Remove-Item “.\Data\coinsdb.json" -Force
-                Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
-                Get-CoinsDB -Silent -Force
+                if (Test-Path ".\Data\coinsdb-fork.json“) {
+                    Remove-Item “.\Data\coinsdb.json" -Force
+                    Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
+                    Get-CoinsDB -Silent -Force
+                }
+                if (Test-Path ".\Data\algorithms-fork.json“) {
+                    Remove-Item “.\Data\algorithms.json" -Force
+                    Rename-Item ".\Data\algorithms-fork.json" "algorithms.json"
+                    Get-Algorithms -Silent -Force
+                }
                 Stop-AsyncJob "fork"
             }
             catch {}
