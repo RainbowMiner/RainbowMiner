@@ -46,6 +46,8 @@ $Pool_PoolFee = 2.0
 
 $Pool_EthDAGSize = Get-EthDAGSize "ETH"
 
+$Grin29_Algorithm = (Get-Coin "GRIN").algo
+
 $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
@@ -56,15 +58,15 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
-        "BeamHash3"       {"BEAM"}
-        "CuckooCycle"     {"AE"}
-        "Cuckaroo29"      {"XBG"}
-        "Cuckarood29"     {"MWC"}
-        "Cuckaroom29"     {"GRIN"}
-        "Eaglesong"       {"CKB"}
-        "EquihashR25x5x3" {"BEAM"}
-        "Lbry"            {"LBC"}
-        "RandomX"         {"XMR"}
+        "BeamHash3"         {"BEAM"}
+        "CuckooCycle"       {"AE"}
+        "Cuckaroo29"        {"XBG"}
+        "Cuckarood29"       {"MWC"}
+        "$Grin29_Algorithm" {"GRIN"}
+        "Eaglesong"         {"CKB"}
+        "EquihashR25x5x3"   {"BEAM"}
+        "Lbry"              {"LBC"}
+        "RandomX"           {"XMR"}
     }
     
     $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
