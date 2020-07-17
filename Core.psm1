@@ -900,7 +900,8 @@ function Invoke-Core {
         try {
             if ($false) {
                 #DateTime target
-                $Fork_Meets_Target = (Get-Date).ToUniversalTime() -ge [datetime]"2020-05-06 18:00:00"
+
+                #$Fork_Meets_Target = (Get-Date).ToUniversalTime() -ge [datetime]"2020-05-06 18:00:00"
             } else {
                 #Blockchain target
 
@@ -909,10 +910,10 @@ function Invoke-Core {
                 #    $Fork_Meets_Target = $true
                 #}
 
-                $Request = Invoke-RestMethodAsync "https://api.grinmint.com/v2/networkStats" -Timeout 15 -tag "fork"
-                if ([int64]$Request.height -ge 786240) {
-                    $Fork_Meets_Target = $true
-                }
+                #$Request = Invoke-RestMethodAsync "https://api.grinmint.com/v2/networkStats" -Timeout 15 -tag "fork"
+                #if ([int64]$Request.height -ge 786240) {
+                #    $Fork_Meets_Target = $true
+                #}
             }
         }
         catch {}
