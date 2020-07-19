@@ -560,7 +560,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                     }
 
                                     if ($RigSpeed -lt 1) {$RigSpeed = [Math]::Floor($RigSpeed*100)/100}
-                                    elseif ($RigSpeed -lt 10) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
+                                    elseif ($RigSpeed -lt 100) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
                                     else {$RigSpeed = [Math]::Floor($RigSpeed)}
 
                                     $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
