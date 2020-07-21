@@ -5,7 +5,7 @@
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $PoolConfig = $Config.Pools.$Name
 
-if(!$PoolConfig.API_Key) {
+if(-not $PoolConfig.API_Key) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no API key specified. "
     return
 }
