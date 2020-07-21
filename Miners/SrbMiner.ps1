@@ -8,11 +8,11 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.3-srbminer/SRBMiner-CN-V1-9-3.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.4-srbminer/SRBMiner-CN-V1-9-4.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
-$Version = "1.9.3"
+$Version = "1.9.4"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
