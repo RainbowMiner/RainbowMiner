@@ -15,7 +15,7 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 try {
-    $Request = (((Invoke-RestMethodAsync "https://www.666pool.cn/pool/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
+    $Request = (((Invoke-RestMethodAsync "https://www.666pool.cn/pool2/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
     $Pools_Data = $Request -replace '<!--.+?-->' -split '<tr>' | Foreach-Object {
         if ($Data = ([regex]'(?si)coin=([-\w]+?)[^-\w].+?(\w+?).666pool.cn:(\d+)<').Matches($_)) {
             $Columns = $_ -replace '</td>' -split '[\s\r\n]*<td[^>]*>[\s\r\n]*'
