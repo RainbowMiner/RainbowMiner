@@ -13,7 +13,7 @@ $DevFee = 2.0
 $Version = "1.6v4"
 
 if ($IsLinux) {
-    $Path = ".\Bin\Equihash-MiniZ\miniZ"
+    $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6v4-miniz/miniZ_v1.6v4_cuda10_linux-x64.tar.gz"
@@ -25,7 +25,7 @@ if ($IsLinux) {
         }
     )
 } else {
-    $Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
+    $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6v4-miniz/miniZ_v1.6v4_cuda10_win-x64.7z"
