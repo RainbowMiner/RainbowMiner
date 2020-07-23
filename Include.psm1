@@ -429,6 +429,7 @@ Function Write-ActivityLog {
                 Crashed        = $Crashed
                 OCmode         = $ocmode
                 OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
+                Donation       = $Session.IsDonationRun
             } | ConvertTo-Json -Compress)," | Out-File $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }

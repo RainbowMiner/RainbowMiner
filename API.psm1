@@ -708,6 +708,7 @@
                                 TotalPowerDraw = ($AvgPowerDraw * $Active / 60000)
                                 TotalProfit = ($AvgProfit * $Active / 1440)
                                 Active      = $Active
+                                Mined       = "$(if ($One.Donation) {"for dev"} else {"for you"})"
                             }
                         } else {
                             [PSCustomObject]@{
@@ -728,6 +729,7 @@
                                 TotalPowerDraw = ($AvgPowerDraw * $Active / 60000)
                                 TotalProfit = ($AvgProfit * $Active / 1440)
                                 Active      = $Active
+                                Donation    = $One.Donation
                             }
                         }
                     } | Sort-Object ActiveStart,Name,Device
