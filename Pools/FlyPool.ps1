@@ -18,9 +18,10 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-beam.flypool.org";  rpc = "api-beam.flypool.org";  symbol = "BEAM"; port = @(3333,3443); fee = 1; divisor = 1}
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-zcash.flypool.org"; rpc = "api-zcash.flypool.org"; symbol = "ZEC";  port = @(3333,3443); fee = 1; divisor = 1}
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-ycash.flypool.org"; rpc = "api-ycash.flypool.org"; symbol = "YEC";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-beam.flypool.org";      rpc = "api-beam.flypool.org";      symbol = "BEAM"; port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-zcash.flypool.org";     rpc = "api-zcash.flypool.org";     symbol = "ZEC";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-ycash.flypool.org";     rpc = "api-ycash.flypool.org";     symbol = "YEC";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("stratum");        host = "-ravencoin.flypool.org";  rpc = "api-ravencoin.flypool.org"; symbol = "RVN";  port = @(3333,3443); fee = 1; divisor = 1}
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
@@ -67,7 +68,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Port          = $Pool_Port
                     User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                     Pass          = "x"
-                    Region        = $Pool_RegionsTable.$Pool_Region
+                    Region        = $Pool_RegionsTable."$(if ($Pool_Region -eq "stratum") {"eu"} else {$Pool_Region})"
                     SSL           = $Pool_Ssl
                     Updated       = (Get-Date).ToUniversalTime()
                     PoolFee       = $_.fee
