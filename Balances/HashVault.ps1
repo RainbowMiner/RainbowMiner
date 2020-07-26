@@ -34,7 +34,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         $Pool_Request = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/stats" -tag $Name -timeout 15 -cycletime 120
         $coinUnits    = [decimal]$Pool_Request.config.sigDivisor
 
-        $Request = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/miner/$(Get-UrlEncode (Get-WalletWithPaymentId ($Config.Pools.$Name.Wallets.$Pool_Currency) -pidchar '.'))/stats" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
+        $Request = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/wallet/$(Get-UrlEncode (Get-WalletWithPaymentId ($Config.Pools.$Name.Wallets.$Pool_Currency) -pidchar '.'))/stats?chart=false&poolType=false&workers=false" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
 
         if (-not $Request -or -not $coinUnits) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
