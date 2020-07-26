@@ -17,10 +17,10 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "LTHN"; port = 6070; fee = 1.0; rpc = "lethean"; user="%wallet%+%worker%"}
+    #[PSCustomObject]@{symbol = "LTHN"; port = 6070; fee = 1.0; rpc = "lethean"; user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "LOKI"; port = 5577; fee = 1.0; rpc = "loki";    user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "MSR";  port = 6060; fee = 1.0; rpc = "msr";     user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "QRL";  port = 7000; fee = 1.0; rpc = "qrl";     user="%wallet%+%worker%"}
+    #[PSCustomObject]@{symbol = "QRL";  port = 7000; fee = 1.0; rpc = "qrl";     user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "RYO";  port = 5555; fee = 1.0; rpc = "ryo";     user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "TUBE"; port = 6040; fee = 1.0; rpc = "tube";    user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "XWP";  port = 6080; fee = 1.0; rpc = "xfh";     user="%wallet%+%worker%"; divisor = 32}
