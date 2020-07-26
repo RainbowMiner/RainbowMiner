@@ -18,21 +18,22 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "AEON";  port = 5555;  fee = 0.9; rpc = "aeon"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "TUBE";  port = 5555;  fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
+    [PSCustomObject]@{symbol = "AEON";  port = 30112; fee = 0.9; rpc = "aeon"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "TUBE";  port = 5555;  fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg"); algo = "CryptoNightHeavyTube"}
+    [PSCustomObject]@{symbol = "TUBE";  port = 30212; fee = 0.9; rpc = "bittubecash"; regions = @("eu"); algo = "Cuckaroo29b"}
     #[PSCustomObject]@{symbol = "BBR";   port = 5555;  fee = 0.9; rpc = "boolberry"; regions = @("eu"); scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
     [PSCustomObject]@{symbol = "CCX";   port = 10126; fee = 0.9; rpc = "conceal"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "DERO";  port = 5555;  fee = 0.9; rpc = "dero";   regions = @("eu","sg")}
-    [PSCustomObject]@{symbol = "GRFT";  port = 5005;  fee = 0.9; rpc = "graft"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "DERO";  port = 30182; fee = 0.9; rpc = "dero";   regions = @("eu","sg")}
+    #[PSCustomObject]@{symbol = "GRFT";  port = 5005;  fee = 0.9; rpc = "graft"; regions = @("eu")}
     [PSCustomObject]@{symbol = "XHV";   port = 4005;  fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
     [PSCustomObject]@{symbol = "XTA";   port = 30042; fee = 0.9; rpc = "italo"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "LOKI";  port = 5005;  fee = 0.9; rpc = "loki"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "MSR";   port = 5005;  fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
-    [PSCustomObject]@{symbol = "XMR";   port = 5555;  fee = 0.9; rpc = "monero"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "RYO";   port = 5555;  fee = 1.2; rpc = "ryo"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "XLA";   port = 5005;  fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
-    [PSCustomObject]@{symbol = "SUMO";  port = 4005;  fee = 0.9; rpc = "sumokoin"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "TRTL";  port = 5005;  fee = 0.9; rpc = "turtle"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "LOKI";  port = 30122; fee = 0.9; rpc = "loki"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "MSR";   port = 30162; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
+    #[PSCustomObject]@{symbol = "XMR";   port = 5555;  fee = 0.9; rpc = "monero"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "RYO";   port = 30172; fee = 1.2; rpc = "ryo"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "XLA";   port = 30092; fee = 0.9; rpc = "stellite"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "SUMO";  port = 30152; fee = 0.9; rpc = "sumokoin"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "TRTL";  port = 30132; fee = 0.9; rpc = "turtle"; regions = @("eu")}
     [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"; regions = @("eu")}
     [PSCustomObject]@{symbol = "XCASH"; port = 30062;  fee = 0.9; rpc = "xcash"; regions = @("eu")}
 )
@@ -60,8 +61,9 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     $Pool_Request2 = [PSCustomObject]@{}
     $Pool_Ports    = @([PSCustomObject]@{})
 
-    $ok = $true
-    if (-not $InfoOnly) {
+    $ok = -not $_.algo -or ($_.algo -eq $Pool_Algorithm_Norm)
+
+    if ($ok -and -not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats" -tag $Name -cycletime 120
             $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "low" -mGPU "modern" -mRIG "farm" -mAvoid "PPS"
