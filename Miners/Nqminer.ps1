@@ -42,8 +42,6 @@ if ($InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
-
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
