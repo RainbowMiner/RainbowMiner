@@ -915,10 +915,10 @@ function Invoke-Core {
                 #    $Fork_Meets_Target = $true
                 #}
 
-                $Request = Invoke-RestMethodAsync "https://mining.bittube.app:8120/stats" -tag "fork" -timeout 15 -cycletime 120
-                if ([int64]$Request.network.height -ge 654000) {
-                    $Fork_Meets_Target = $true
-                }
+                #$Request = Invoke-RestMethodAsync "https://mining.bittube.app:8120/stats" -tag "fork" -timeout 15 -cycletime 120
+                #if ([int64]$Request.network.height -ge 654000) {
+                #    $Fork_Meets_Target = $true
+                #}
             }
         }
         catch {}
