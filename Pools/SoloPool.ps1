@@ -33,7 +33,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 [hashtable]$Pool_Algorithms = @{}
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_.ToUpper();$Pool_Wallet = $Wallets.$Pool_CoinSymbol;$Pool_Wallet -or $InfoOnly} | ForEach-Object {
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_.ToUpper();$Pool_Wallet = $Wallets.$Pool_CoinSymbol;($Pool_Wallet -or $InfoOnly) -and $_ -notmatch "^dgb-"} | ForEach-Object {
 
     $Pool_Coin      = Get-Coin $Pool_CoinSymbol
 
