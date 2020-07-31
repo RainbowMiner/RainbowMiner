@@ -27,6 +27,9 @@ catch {
 $Pools_Request       = [PSCustomObject]@{}
 try {
     $Pools_Request = Invoke-RestMethodAsync "http://cpu-pool.com/api/stats" -tag $Name -timeout 15 -cycletime 120
+    if ($Pools_Request -is [string]) {
+        $Pools_Request = ConvertFrom-Json "$($Pools_Request -replace '"workers":{".+?}},')" -ErrorAction Stop
+    }
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
