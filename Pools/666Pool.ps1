@@ -29,7 +29,7 @@ try {
                         port     = $Data[0].Groups[3].Value
                         hashrate = ConvertFrom-Hash "$($Columns[3])"
                         workers  = [int]"$($Columns[4])"
-                        profit   = "$(if ($Columns[5] -match "([\d\.]+)[\s\w\/]+(\w)") {[double]$Matches[1]/(ConvertFrom-Hash "1$($Matches[2])")} else {$null})"
+                        profit   = "$(if (($Columns[5] -replace "&nbsp;"," ") -match "([\d\.]+)[\s\w\/]+(\w)") {[double]$Matches[1]/(ConvertFrom-Hash "1$($Matches[2])")} else {$null})"
                         fee      = [double]"$(if ($Columns[6] -match "(\d+)%$") {$Matches[1]})"
                     }
                 }
