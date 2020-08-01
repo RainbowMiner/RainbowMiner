@@ -545,6 +545,7 @@
     "nscrypt": "ScryptN11",
     "nscryptv": "ScryptN2",
     "padihash": "GLTPadiHash",
+    "panthera": "Panthera",
     "pascal": "Pascal",
     "pawelhash": "GLTPawelHash",
     "pentablake": "PentaBlake",
