@@ -24,6 +24,7 @@ try {
                 $Algo   = "$($Data[0].Groups[1].value -replace "^.+-")"
                 if ($Symbol -ne "PM" -or $Algo -ne "KecK") {
                     [PSCustomObject]@{
+                        id       = "$($Data[0].Groups[1].Value)"
                         symbol   = "$(if ($Symbol -eq "PM") {"PMEER"} else {$Symbol})"
                         rpc      = $Data[0].Groups[2].Value
                         port     = $Data[0].Groups[3].Value
@@ -71,7 +72,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://www.666pool.cn/pool/block.php?coin=$($Pool_Currency)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
+            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://www.666pool.cn/pool2/block.php?coin=$($_.id)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
             if ($Pool_BlocksRequest.Count -ne 3) {$ok = $false}
             else {
                 $Pool_BLK = [int]"$(if ($Pool_BlocksRequest[0] -match "green[^>]+>(\d+)<") {$Matches[1]} else {0})"
