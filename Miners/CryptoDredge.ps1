@@ -10,47 +10,31 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/technobyl/CryptoDredge/releases"
 $Port = "313{0:d2}"
 $DevFee = 1.0
-$Version = "0.23.0"
+$Version = "0.24.0"
 $Enable_Logfile = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_10.1_linux.tar.gz"
-            Cuda = "10.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_10.2_linux.tar.gz"
+            Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_10.0_linux.tar.gz"
-            Cuda = "10.0"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_9.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_9.2_linux.tar.gz"
             Cuda = "9.2"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_9.1_linux.tar.gz"
-            Cuda = "9.1"
         }
     )
 } else {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_10.1_windows.zip"
-            Cuda = "10.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_10.2_windows.zip"
+            Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_10.0_windows.zip"
-            Cuda = "10.0"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_9.2_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_9.2_windows.zip"
             Cuda = "9.2"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.23.0-cryptodredge/CryptoDredge_0.23.0_cuda_9.1_windows.zip"
-            Cuda = "9.1"
         }
     )
 }
@@ -61,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "aeternity";   MinMemGb = 5; Params = ""; ExcludePoolName = "^Nicehash"} #Aeternity / Cuckoocycle (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
     #[PSCustomObject]@{MainAlgorithm = "allium";      MinMemGb = 1; Params = ""} #Allium (CD 0.16.0 faster)
     [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; MinMemGb = 1; Params = ""} #Argon2d-Dyn
-    [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; MinMemGb = 1; Params = ""; ExcludePoolName = "^Icemining"} #Argon2d-Nim
+    [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; MinMemGb = 1; Params = ""} #Argon2d-Nim
     [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 1; Params = ""} #Argon2d250
     [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 3.3; Params = ""} #Argon2d4096
     #[PSCustomObject]@{MainAlgorithm = "bcd";         MinMemGb = 1; Params = ""} #BCD (trex faster)
@@ -74,10 +58,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnhaven";     MinMemGb = 3.3; Params = ""} #Cryptonighthaven
     [PSCustomObject]@{MainAlgorithm = "cnheavy";     MinMemGb = 3.3; Params = ""} #Cryptonightheavy
     [PSCustomObject]@{MainAlgorithm = "cnsaber";     MinMemGb = 3.3; Params = ""} #Cryptonightheavytube
+    [PSCustomObject]@{MainAlgorithm = "cntlo";       MinMemGb = 3.3; Params = ""; Version = "0.24.0"} #CryptonightTLO, new with v0.24.0
     [PSCustomObject]@{MainAlgorithm = "cnturtle";    MinMemGb = 3.3; Params = ""} #Cryptonightturtle
     [PSCustomObject]@{MainAlgorithm = "cnupx2";      MinMemGb = 1.5; Params = ""} #CryptoNightLiteUpx2, new with v0.23.0
     [PSCustomObject]@{MainAlgorithm = "cnzls";       MinMemGb = 3.3; Params = ""} #CryptonightZelerius, new with v0.23.0
-    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 3.3; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN (bad rounding, see https://github.com/technobyl/CryptoDredge/issues/62)
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 3.3; Params = ""; ExtendInterval = 2} #Cuckaroo29
     [PSCustomObject]@{MainAlgorithm = "hmq1725";     MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lux";         MinMemGb = 1; Params = ""; Algorithm = "phi2"} #Lux/PHI2
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";     MinMemGb = 1; Params = ""} #Lyra2Re3
@@ -89,6 +74,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "neoscrypt";   MinMemGb = 1; Params = ""} #Neoscrypt
     #[PSCustomObject]@{MainAlgorithm = "phi2";        MinMemGb = 1; Params = ""} #PHI2 (CD 0.16.0 faster)
     [PSCustomObject]@{MainAlgorithm = "pipe";        MinMemGb = 1; Params = ""} #Pipe
+    [PSCustomObject]@{MainAlgorithm = "sha256csm";   MinMemGb = 1; Params = ""; Version = "0.24.0"} #Sha256csm, new with v0.24.0
     [PSCustomObject]@{MainAlgorithm = "skunk";       MinMemGb = 1; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "tribus";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     [PSCustomObject]@{MainAlgorithm = "veil";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
@@ -122,6 +108,9 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
         $Uri = $UriCuda[$i].Uri
         $Cuda= $UriCuda[$i].Cuda
+        if ($UriCuda[$i].Version) {
+            $Version = $UriCuda[$i].Version
+        }
     }
 }
 if (-not $Uri) {return}
@@ -130,7 +119,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
     $Miner_Model = $_.Model
     $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-    $Commands.ForEach({
+    $Commands.Where({-not $_.Version -or (Compare-Version $Version $_.Version) -ge 0}).ForEach({
         $First = $true
         $MinMemGb = $_.MinMemGb
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
@@ -144,8 +133,19 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 		            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 		            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-                    $Hashrate = if ($Algorithm -eq "argon2d-nim") {($Miner_Device | Foreach-Object {Get-NimqHashrate $_.Model} | Measure-Object -Sum).Sum}
+                    #$Hashrate = if ($Algorithm -eq "argon2d-nim") {($Miner_Device | Foreach-Object {Get-NimqHashrate $_.Model} | Measure-Object -Sum).Sum}
                     $First = $false
+                }
+                if ($Algorithm -eq "argon2d-nim" -and $Pools.$Algorithm_Norm.Name -eq "Icemining") {
+                    $Pool_Proto = "wss"
+                    $Pool_User  = $Pools.$Algorithm_Norm.Wallet
+                    if ($Pool_User -match "^([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})$") {
+                        $Pool_User = @(1..9 | Foreach-Object {$Matches[$_]}) -join " "
+                    }
+                    $Pool_UserAndPassword = "-u `"$Pool_User`" -p $($Pools.$Algorithm_Norm.Worker)"
+                } else {
+                    $Pool_Proto = $Pools.$Algorithm_Norm.Protocol
+                    $Pool_UserAndPassword = "-u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})"
                 }
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
@@ -153,7 +153,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-r 10 -R 1 -b 127.0.0.1:`$mport -d $($DeviceIDsAll) -a $($Algorithm) --no-watchdog -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Hashrate) {" --hashrate $($hashrate)"})$(if ($Enable_Logfile) {" --log log_`$mport.txt"}) --no-nvml $($_.Params)" # --no-nvml"
+					Arguments      = "-r 10 -R 1 -b 127.0.0.1:`$mport -d $($DeviceIDsAll) -a $($Algorithm) --no-watchdog -o $($Pool_Proto)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $($Pool_UserAndPassword)$(if ($Hashrate) {" --hashrate $($hashrate)"})$(if ($Enable_Logfile) {" --log log_`$mport.txt"}) --no-nvml $($_.Params)" # --no-nvml"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Ccminer"
 					Port           = $Miner_Port
