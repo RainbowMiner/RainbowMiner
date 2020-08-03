@@ -262,6 +262,9 @@
         "Sunpool" = [PSCustomObject]@{
             Currencies=@("GRIMM","BEAM","ATOMI")
         }
+        "SupportXmr" = [PSCustomObject]@{
+            Currencies=@("XMR")
+        }
         "SuprNova" = [PSCustomObject]@{
             Currencies=@("BTG")
         }
