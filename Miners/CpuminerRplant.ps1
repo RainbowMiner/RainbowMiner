@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes -and $false){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.11-rplant/cpuminer-rplant-4.5.11-linux.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.11-rplant/cpuminer-rplant-4.5.11-linux.7z"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.11-rplant/cpuminer-rplant-4.5.11-win.zip"
