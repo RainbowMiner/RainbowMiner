@@ -9,23 +9,23 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.6-nanominer/nanominer-linux-1.9.6.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.10.0-nanominer/nanominer-linux-1.10.0.tar.gz"
 } else {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.6-nanominer/nanominer-windows-1.9.6.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.10.0-nanominer/nanominer-windows-1.10.0.zip"
 }
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
-$Cuda = "8.0"
+$Cuda = "10.0"
 $DevFee = 3.0
-$Version = "1.9.6"
+$Version = "1.10.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
     [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "^F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "KawPow";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 2.0} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 5.0} #RandomHash2/PASCcoin, RHminerCpu is more than 350% faster
     [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0} #RandomX
     [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "^F2Pool"} #UbqHash
