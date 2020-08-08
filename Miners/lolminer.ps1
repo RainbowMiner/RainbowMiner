@@ -9,20 +9,22 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.05-lolminer/lolMiner_v1.05_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.06-lolminer/lolMiner_v1.06_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.05-lolminer/lolMiner_v1.05_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.06-lolminer/lolMiner_v1.06_Win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.05"
+$Version = "1.06"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";     MinMemGB = 6;   Params = "--algo CR29-40";   Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29b
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";     MinMemGB = 6;   Params = "--algo CR29-32";   Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";       MinMemGB = 3;   Params = "--algo BEAM-III";  Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #BeamHash III
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";      MinMemGB = 7.6; Params = "--algo C30CTX";    Pers=$false; Fee=2.5; ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo30
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 6;   Params = "--algo C29D";      Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckarood29
