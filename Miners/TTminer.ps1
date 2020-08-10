@@ -25,17 +25,17 @@ $Cuda = "9.2"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; Params = "-A BLAKE2S%CUDA% -coin KDA";     ExtendInterval = 2; Coins = @("KDA"); ExcludePoolName = "^Nicehash"} #Kadena
-    #[PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; Params = "-A EAGLESONG%CUDA% -coin CKB";   ExtendInterval = 2} #Eaglesong
-    [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   Params = "-A ETHASH%CUDA%"; ExcludePoolName = "^MiningRigRentals"} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin RVN";     ExtendInterval = 2; ExcludePoolName = "^MiningPoolHub"} #KAWPOW (RVN)
-    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; Params = "-A LYRA2V3%CUDA%";               ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #LYRA2V3
-    [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   Params = "-A MTP%CUDA%";                   ExtendInterval = 2} #MTP
-    [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   Params = "-A MTP%CUDA% -coin TCR";         ExtendInterval = 2} #MTP-TCR
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin EPIC";    ExtendInterval = 2; Coins = @("EPIC"); ExcludePoolName = "^Nicehash"} #ProgPoW (only EPIC left)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";    ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (SERO)
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3;   Params = "-A PROGPOWZ%CUDA%";              ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWZ (ZANO)
-    [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 2.4; Params = "-A UBQHASH%CUDA%";               ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #Ubqhash 
+    [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 2.4; Params = "-A BLAKE2S%CUDA% -coin KDA";        ExtendInterval = 2; Coins = @("KDA"); ExcludePoolName = "^Nicehash"} #Kadena
+    #[PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 0.1; Params = "-A EAGLESONG%CUDA% -coin CKB";      ExtendInterval = 2} #Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 3;   Params = "-A ETHASH%CUDA%";                   ExtendInterval = 2; ExcludePoolName = "^MiningRigRentals"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "KAWPOW"        ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin RVN";        ExtendInterval = 2; ExcludePoolName = "^MiningPoolHub"} #KAWPOW (RVN)
+    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 1.5; Params = "-A LYRA2V3%CUDA%";                  ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #LYRA2V3
+    [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 5;   Params = "-A MTP%CUDA%";                      ExtendInterval = 2} #MTP
+    [PSCustomObject]@{MainAlgorithm = "MTP-TCR"       ; MinMemGB = 5;   Params = "-A MTP%CUDA% -coin TCR";            ExtendInterval = 2} #MTP-TCR
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin EPIC";       ExtendInterval = 2; Coins = @("EPIC"); ExcludePoolName = "^Nicehash"} #ProgPoW (only EPIC left)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (SERO)
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 3;   Params = "-A PROGPOWZ%CUDA%";                 ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWZ (ZANO)
+    [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 2.4; Params = "-A UBQHASH%CUDA%";                  ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #Ubqhash 
 )
 
 $CoinSymbols = @("EPIC","SERO","ZANO","ZCOIN","ETC","ETH","CLO","PIRL","MUSIC","EXP","ETP","CKB","KDA","VTC","UBQ","ERE","HANA","TCR","RVN","RVNt","VEIL")
@@ -96,7 +96,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll) -P $($Miner_Protocol)$($Pools.$Algorithm_Norm.User)$(if ($Pass) {":$Pass"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -PRHRI 1 -nui $($_.Params -replace '%CUDA%',$Cuda)$(if ($_.Params -notmatch "-coin" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -coin $($Pools.$Algorithm_Norm.CoinSymbol)"})"
+					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll) -P $($Miner_Protocol)$($Pools.$Algorithm_Norm.User)$(if ($Pass) {":$Pass"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -PRHRI 1 -nui $($_.Params -replace '%CUDA%',$Cuda)$(if ($_.Params -notmatch "-coin" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -coin $($Pools.$Algorithm_Norm.CoinSymbol)"}) -work-timeout 500000"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					API            = "Claymore"
 					Port           = $Miner_Port                
