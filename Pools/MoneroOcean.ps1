@@ -45,6 +45,9 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $_.profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.diff -HashRate $_.hashrate -BlockRate $_.blk24h -Quiet
     }
 
+    $CPUPort_Base = if ($Pool_Algorithm_Norm -match "^Cucka") {1} else {$Pool_CPUPort_Base}
+    $GPUPort_Base = if ($Pool_Algorithm_Norm -match "^Cucka") {1} else {$Pool_GPUPort_Base}
+
     foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
         $Port = if ($Pool_Protocol -match "ssl") {20000} else {10000}
         [PSCustomObject]@{
@@ -59,7 +62,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
             Protocol      = $Pool_Protocol
             Host          = "gulf.moneroocean.stream"
             Port          = $Port+$Pool_CPUPort_Base
-            Ports         = [PSCustomObject]@{CPU=$Port+$Pool_CPUPort_Base; GPU=$Port+$Pool_GPUPort_Base; RIG=$Port+8192}
+            Ports         = [PSCustomObject]@{CPU=$Port+$CPUPort_Base; GPU=$Port+$GPUPort_Base; RIG=$Port+8192}
             User          = "$($Wallets.XMR)"
             Pass          = "{workername:$Worker}:$($Password)~$($_.algo)"
             Region        = Get-Region "US"
