@@ -33,7 +33,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{symbol = "PGO";   port = 10160; fee = 0.9; rpc = "pengolincoin"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "QRL";   port = 10370; fee = 0.9; rpc = "qrl"; region = @("de")}
     [PSCustomObject]@{symbol = "RYO";   port = 10270; fee = 0.9; rpc = "ryo"; region = @("de","fi")}
-    [PSCustomObject]@{symbol = "XLA";   port = 10130; fee = 0.9; rpc = "scala"; region = @("de","fi","hk")}
+    [PSCustomObject]@{symbol = "XLA";   port = 10130; fee = 0.9; rpc = "scala"; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "SUMO";  port = 10610; fee = 0.9; rpc = "sumo"; region = @("de","fi")}
     [PSCustomObject]@{symbol = "XWP";   port = 10440; fee = 0.9; rpc = "swap"; divisor = 32; region = @("de","fi","ca","hk","sg")}
     [PSCustomObject]@{symbol = "TRTL";  port = 10380; fee = 0.9; rpc = "turtlecoin"; region = @("de","fi","ca","hk","sg")}
