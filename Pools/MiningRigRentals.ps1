@@ -192,12 +192,16 @@ if ($AllRigs_Request) {
 
             if ($Pool_Rig) {
                 $Pool_Price = $Stat.$StatAverage
+                $Pool_Currency = "BTC"
                 if ($_.status.status -eq "rented" -or $_.status.rented) {
                     try {
                         $Pool_RigRental = Invoke-MiningRigRentalRequest "/rental" $API_Key $API_Secret -params (@{type="owner";"rig"=$Pool_RigId;history=$false;limit=1}) -Cache $([double]$_.status.hours*3600)
                         if ($Rig_RentalPrice = [Double]$Pool_RigRental.rentals.price.advertised / 1e6) {
                             $Pool_Price = $Rig_RentalPrice
-                            if ($Pool_RigRental.rentals.price.currency -ne "BTC") {$Pool_Price *= $_.price.BTC.price/$_.price."$($Pool_RigRental.rentals.price.currency)".price}
+                            if ($Pool_RigRental.rentals.price.currency -ne "BTC") {
+                                $Pool_Currency = $Pool_RigRental.rentals.price.currency
+                                $Pool_Price *= $_.price.BTC.price/$_.price."$($Pool_RigRental.rentals.price.currency)".price
+                            }
                         }
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                 }
@@ -269,7 +273,7 @@ if ($AllRigs_Request) {
 					    Algorithm0    = $Pool_Algorithm_Norm
                         CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{if ($Error.Count){$Error.RemoveAt(0)};"$($_.status.hours)h"}} else {""}
                         CoinSymbol    = $Pool_CoinSymbol
-                        Currency      = "BTC"
+                        Currency      = $Pool_Currency
                         Price         = $Pool_Price
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
