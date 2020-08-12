@@ -896,6 +896,10 @@ try {
         $AddAlgorithm += @("Cuckaroo29b")
     }
 
+    if ($Version -le (Get-Version "4.6.1.3")) {
+        $AddAlgorithm += @("Panthera")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
