@@ -35,10 +35,10 @@ catch {
 
 $Pools_Data = @(
     [PSCustomObject]@{id = "beam";   symbol = "BEAM";     port = 2222;  fee = 1; ssl = $true;  region = @("cn","asia","eu","us")}
-    [PSCustomObject]@{id = "";       symbol = "ETH";      port = 3333;  fee = 1; ssl = $false; region = @("cn","asia","tw","kr","jp")}
-    [PSCustomObject]@{id = "ckb";    symbol = "CKB";      port = 8888;  fee = 1; ssl = $false; region = @("cn","eu")}
+    [PSCustomObject]@{id = "";       symbol = "ETH";      port = 3333;  fee = 1; ssl = $false; region = @("cn","asia","kr","jp")}
+    [PSCustomObject]@{id = "ckb";    symbol = "CKB";      port = 8888;  fee = 1; ssl = $false; region = @("cn","asia","eu")}
     [PSCustomObject]@{id = "grin";   symbol = "GRIN_29";  port = 6666;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
-    [PSCustomObject]@{id = "grin";   symbol = "GRIN_31";  port = 6667;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
+    #[PSCustomObject]@{id = "grin";   symbol = "GRIN_31";  port = 6667;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
     [PSCustomObject]@{id = "grin";   symbol = "GRIN_32";  port = 6665;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
 )
 
