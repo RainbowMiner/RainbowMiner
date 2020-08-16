@@ -57,7 +57,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
         if (-not $InfoOnly) {
             $Pool_Rates = $Global:Rates.$Pool_Currency
             if (-not $Pool_Rates -and $_.usd -and $Global:Rates.USD) {$Pool_Rates = $Global:Rates.USD / $_.usd}
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol)_Profit" -Value $(if ($Pool_Rates) {$_.income / $_.incomeHashrate / $Pool_Rates} else {0}) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
+            $NewStat = -not (Test-Path "Stats\Pools\$($Name)_$($Pool_Symbol)_Profit.txt")
+            $Income = if ($NewStat -and $_.meanIncome24h) {$_.meanIncome24h} else {$_.income}
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol)_Profit" -Value $(if ($Pool_Rates) {$Income / $_.incomeHashrate / $Pool_Rates} else {0}) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
 
