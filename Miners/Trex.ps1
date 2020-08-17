@@ -10,21 +10,25 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.15.8"
+$Version = "0.16.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.8-trex/t-rex-0.15.8-linux-cuda10.0.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda11.0.tar.gz"
+            Cuda = "11.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda10.0.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.8-trex/t-rex-0.15.8-linux-cuda9.2.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda9.2.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.8-trex/t-rex-0.15.8-linux-cuda9.1.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda9.1.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -32,15 +36,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.8-trex/t-rex-0.15.8-win-cuda10.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda11.0.zip"
+            Cuda = "11.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda10.0.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.8-trex/t-rex-0.15.8-win-cuda9.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.8-trex/t-rex-0.15.8-win-cuda9.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda9.1.zip"
             Cuda = "9.1"
         }
     )
