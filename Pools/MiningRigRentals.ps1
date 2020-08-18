@@ -96,6 +96,9 @@ if (-not ($Pool_Request = Get-MiningRigRentalAlgos)) {return}
 
 Set-MiningRigRentalConfigDefault -Workers $Workers > $null
 
+$Devices_Benchmarking = @($API.MinersNeedingBenchmark | Select-Object -ExpandProperty DeviceName | Select-Object -Unique)
+if ($Session.MRRBenchmarkStatus -eq $null) {$Session.MRRBenchmarkStatus = @{}}
+
 if ($AllRigs_Request) {
 
     [hashtable]$Pool_RegionsTable = @{}
@@ -107,6 +110,7 @@ if ($AllRigs_Request) {
     $Workers_Devices = @{}
     $Workers_Models  = @{}
     $Devices_Rented  = @()
+
     foreach ($Worker1 in $Workers) {
 
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
@@ -119,6 +123,8 @@ if ($AllRigs_Request) {
         if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
             $Devices_Rented = @($Devices_Rented + $Workers_Devices[$Worker1] | Select-Object -Unique | Sort-Object)
         }
+
+        if (-not $Session.MRRBenchmarkStatus.ContainsKey($Worker1)) {$Session.MRRBenchmarkStatus[$Worker1] = $false}
     }
 
     foreach ($Worker1 in $Workers) {
@@ -134,20 +140,27 @@ if ($AllRigs_Request) {
         } else {
             $Valid_Rigs = @()
 
-            $DeviceAlgorithm        = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
-            $DeviceExcludeAlgorithm = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
+            if ((Compare-Object $Devices_Benchmarking $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count) {
+                $Session.MRRBenchmarkStatus[$Worker1] = $true
+            } elseif ($Session.MRRBenchmarkStatus[$Worker1]) {
+                $API.UpdateMRR = $true
+                $Session.MRRBenchmarkStatus[$Worker1] = $false
+            } else {
+                $DeviceAlgorithm        = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
+                $DeviceExcludeAlgorithm = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
-            $Rigs_Request | Select-Object id,type | Foreach-Object {
-                $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
-                if ((Get-Yes $Session.Config.Algorithms.$Pool_Algorithm_Norm.MRREnable) -and -not (
-                    ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
-                    ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
-                    ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
-                    ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
-                    (Compare-Object $Devices_Rented $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count -or
-                    ($DeviceAlgorithm.Count -and $DeviceAlgorithm -inotcontains $Pool_Algorithm_Norm) -or
-                    ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $Pool_Algorithm_Norm)
-                    )) {$Valid_Rigs += $_.id}
+                $Rigs_Request | Select-Object id,type | Foreach-Object {
+                    $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
+                    if ((Get-Yes $Session.Config.Algorithms.$Pool_Algorithm_Norm.MRREnable) -and -not (
+                        ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
+                        ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
+                        ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
+                        ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
+                        (Compare-Object $Devices_Rented $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count -or
+                        ($DeviceAlgorithm.Count -and $DeviceAlgorithm -inotcontains $Pool_Algorithm_Norm) -or
+                        ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $Pool_Algorithm_Norm)
+                        )) {$Valid_Rigs += $_.id}
+                }
             }
 
             if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available" -and $Valid_Rigs -contains $_.id} | Select-Object -ExpandProperty id | Sort-Object) {
@@ -241,6 +254,7 @@ if ($AllRigs_Request) {
                 }
 
                 if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
+
                     $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Pool_Rig.server.SubString(0,2))"},{100-$_.id} | Select-Object -First 2}
                     if (-not $Pool_Failover) {$Pool_FailOver = @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^eu"} | Select-Object -First 1)}
                     $Pool_FailOver += $Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $Pool_FailOver -notcontains $_} | Select-Object -First 1
