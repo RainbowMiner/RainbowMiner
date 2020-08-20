@@ -9,28 +9,30 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.06-lolminer/lolMiner_v1.06_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.07-lolminer/lolMiner_v1.07_Lin64.7z"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.06-lolminer/lolMiner_v1.06_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.07-lolminer/lolMiner_v1.07_Win64.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.06"
+$Version = "1.07"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";     MinMemGB = 6;   Params = "--algo CR29-40";   Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29b
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";     MinMemGB = 6;   Params = "--algo CR29-32";   Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";       MinMemGB = 3;   Params = "--algo BEAM-III";  Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #BeamHash III
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";     MinMemGB = 6;   Params = "--algo CR29-40";   Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29b
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29i";     MinMemGB = 6;   Params = "--algo CR29-48";   Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29i
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";     MinMemGB = 6;   Params = "--algo CR29-32";   Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";      MinMemGB = 7.6; Params = "--algo C30CTX";    Pers=$false; Fee=2.5; ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo30
-    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 6;   Params = "--algo C29D";      Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckarood29
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGB = 6;   Params = "--algo C29M";      Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroom29
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGB = 4;   Params = "--algo C31";       Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckatoo31
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";      MinMemGB = 4;   Params = "--algo C32";       Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckatoo32
+    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 6;   Params = "--algo C29D";      Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckarood29
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGB = 6;   Params = "--algo C29M";      Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroom29
+    [PSCustomObject]@{MainAlgorithm = "CuckooCycle";     MinMemGB = 6;   Params = "--algo C29AE";     Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #CuckooCycle/AEternity
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 1;   Params = "--algo EQUI210_9"; Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD"); ExcludePoolName = "^Nicehash"} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2;   Params = "--algo EQUI144_5"; ParamsAutoPers = "--coin AUTO144_5"; Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD"); ExcludePoolName = "^Nicehash"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 3;   Params = "--algo EQUI192_7"; ParamsAutoPers = "--coin AUTO192_7"; Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD"); ExcludePoolName = "^Nicehash"} #Equihash 192,7

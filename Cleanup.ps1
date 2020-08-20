@@ -897,7 +897,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.6.1.3")) {
-        $AddAlgorithm += @("Panthera")
+        $AddAlgorithm += @("Cuckaroo29i","Panthera")
     }
 
     if ($OverridePoolPenalties) {
