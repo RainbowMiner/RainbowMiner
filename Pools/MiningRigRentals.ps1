@@ -556,7 +556,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $MRRConfig.$RigName.PriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
                                 $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
        
-                                if (($RigRevenue -lt 5*$RigDeviceRevenue24h) -and ($IsHandleRig -or $RigRevenue -gt $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
+                                if (($RigRevenue -lt 5*$RigDeviceRevenue24h) -and ($IsHandleRig -or $RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice)) {
 
                                     #Write-Log -Level Warn "$RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
