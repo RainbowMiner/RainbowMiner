@@ -275,6 +275,7 @@ if ($AllRigs_Request) {
                     }
 
                     if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
+                    if ($Pool_Algorithm_Norm -eq "Tensority") {$Miner_Port = 3333}
 
                     $Pool_SSL = $Pool_Algorithm_Norm -eq "EquihashR25x5"
 
@@ -346,10 +347,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     if ($API.UpdateMRR) {$API.UpdateMRR = $false}
 
     $RigDivisors = @("h","kh","mh","gh","th") | Foreach-Object {[PSCustomObject]@{type=$_;value=(ConvertFrom-Hash "1$_")}}
-    $RigServer  = $null
     $RigCreated = 0
     $RigsToUpdate = @()
     $RigMinProfit = 0.00001
+    $RigServer = $null
 
     #
     # 1. gather config per workername

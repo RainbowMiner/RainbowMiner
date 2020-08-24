@@ -322,7 +322,7 @@ param(
     }
 
     if ($Pool_Request.success -and ((Compare-Object @($Pool_Request.data | Select-Object -ExpandProperty name) @($Servers | Select-Object -ExpandProperty name)) -or -not (Test-Path ".\Data\mrrservers.json"))) {
-        Set-ContentJson ".\Data\mrrservers.json" -Data $Pool_Request.data > $null
+        Set-ContentJson ".\Data\mrrservers.json" -Data @($Pool_Request.data | Sort-Object @{Expression={$_.region -match "^(eu|us)"};Descending=$true},@{Expression={$_.name};Descending=$false}) > $null
         $Servers = @($Pool_Request.data | Foreach-Object {$_})
     }
 

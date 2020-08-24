@@ -1,26 +1,5 @@
 ﻿[
     {
-        "id":  "3",
-        "name":  "us-east01.miningrigrentals.com",
-        "region":  "us-east",
-        "port":  "3333",
-        "ethereum_port":  "3344"
-    },
-    {
-        "id":  "4",
-        "name":  "us-west01.miningrigrentals.com",
-        "region":  "us-west",
-        "port":  "3333",
-        "ethereum_port":  "3344"
-    },
-    {
-        "id":  "10",
-        "name":  "eu-de02.miningrigrentals.com",
-        "region":  "eu-de",
-        "port":  "3333",
-        "ethereum_port":  "3344"
-    },
-    {
         "id":  "5",
         "name":  "eu-01.miningrigrentals.com",
         "region":  "eu",
@@ -28,15 +7,15 @@
         "ethereum_port":  "3344"
     },
     {
-        "id":  "6",
-        "name":  "us-central01.miningrigrentals.com",
-        "region":  "us-central",
+        "id":  "7",
+        "name":  "eu-de01.miningrigrentals.com",
+        "region":  "eu-de",
         "port":  "3333",
         "ethereum_port":  "3344"
     },
     {
-        "id":  "7",
-        "name":  "eu-de01.miningrigrentals.com",
+        "id":  "10",
+        "name":  "eu-de02.miningrigrentals.com",
         "region":  "eu-de",
         "port":  "3333",
         "ethereum_port":  "3344"
@@ -49,23 +28,23 @@
         "ethereum_port":  "3344"
     },
     {
-        "id":  "12",
-        "name":  "jp-01.miningrigrentals.com",
-        "region":  "jp",
+        "id":  "18",
+        "name":  "eu-uk01.miningrigrentals.com",
+        "region":  "eu-uk",
         "port":  "3333",
         "ethereum_port":  "3344"
     },
     {
-        "id":  "15",
-        "name":  "ca-tor01.miningrigrentals.com",
-        "region":  "ca",
+        "id":  "6",
+        "name":  "us-central01.miningrigrentals.com",
+        "region":  "us-central",
         "port":  "3333",
         "ethereum_port":  "3344"
     },
     {
-        "id":  "16",
-        "name":  "au-01.miningrigrentals.com",
-        "region":  "au",
+        "id":  "3",
+        "name":  "us-east01.miningrigrentals.com",
+        "region":  "us-east",
         "port":  "3333",
         "ethereum_port":  "3344"
     },
@@ -77,13 +56,6 @@
         "ethereum_port":  "3344"
     },
     {
-        "id":  "18",
-        "name":  "eu-uk01.miningrigrentals.com",
-        "region":  "eu-uk",
-        "port":  "3333",
-        "ethereum_port":  "3344"
-    },
-    {
         "id":  "19",
         "name":  "us-south01.miningrigrentals.com",
         "region":  "us-south",
@@ -91,9 +63,37 @@
         "ethereum_port":  "3344"
     },
     {
+        "id":  "4",
+        "name":  "us-west01.miningrigrentals.com",
+        "region":  "us-west",
+        "port":  "3333",
+        "ethereum_port":  "3344"
+    },
+    {
         "id":  "2",
         "name":  "ap-01.miningrigrentals.com",
         "region":  "ap",
+        "port":  "3333",
+        "ethereum_port":  "3344"
+    },
+    {
+        "id":  "16",
+        "name":  "au-01.miningrigrentals.com",
+        "region":  "au",
+        "port":  "3333",
+        "ethereum_port":  "3344"
+    },
+    {
+        "id":  "15",
+        "name":  "ca-tor01.miningrigrentals.com",
+        "region":  "ca",
+        "port":  "3333",
+        "ethereum_port":  "3344"
+    },
+    {
+        "id":  "12",
+        "name":  "jp-01.miningrigrentals.com",
+        "region":  "jp",
         "port":  "3333",
         "ethereum_port":  "3344"
     }
