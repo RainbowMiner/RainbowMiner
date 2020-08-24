@@ -11,6 +11,9 @@
         "6Block" = [PSCustomObject]@{
             Currencies=@("HNS")
         }
+        "Acepool" = [PSCustomObject]@{
+            Currencies=@("BEAM","XGM")
+        }
         "AHashPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=22}
             Currencies=@("BTC")
