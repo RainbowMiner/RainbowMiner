@@ -551,12 +551,12 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 if ($RigSpeed -gt 0) {
                                     if (-not $RigNameStat.$RigModelsKey) {$RigNameStat | Add-Member $RigModelsKey ([PSCustomObject]@{}) -Force}
                                     $RigNameStat.$RigModelsKey | Add-Member $Algorithm_Norm ([PSCustomObject]@{Power=$RigPower;Speed=$RigSpeed;Revenue=$RigRevenue}) -Force
-                                } else {
+                                } elseif ($RigRunMode -eq "update") {
                                     if ($RigNameStat.$RigModelsKey.$Algorithm_Norm) {
                                         $RigPower   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Power
                                         $RigSpeed   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Speed
                                         $RigRevenue = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Revenue
-                                    } elseif ($RigRunMode -eq "update") {
+                                    } else {
                                         $RigPower   = $RigDevicePowerDraw
                                         $RigRevenue = 0
                                         $RigMRRid   = $_.name
