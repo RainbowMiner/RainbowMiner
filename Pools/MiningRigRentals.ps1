@@ -474,6 +474,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         foreach ($RigName in $Workers) {
 
+            $RigNameStat = Get-MiningRigStat $RigName
+            if (-not $RigNameStat) {
+                $RigNameStat = [PSCustomObject]@{}
+            }
+
             Write-Log -Level Info "Start $($RigRunMode) MRR rigs on $($RigName)"
 
             if ($RigRunMode -eq "create" -and $RigCreated -ge $MaxAPICalls) {break}
@@ -541,6 +546,24 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                     $RigPower   += $RigPowerAdd
                                     $RigSpeed   += $RigSpeedAdd
                                     $RigRevenue += $RigRevenueAdd
+                                }
+                                $RigModelsKey = "$($RigModels -join "-")"
+                                if ($RigSpeed -gt 0) {
+                                    if (-not $RigNameStat.$RigModelsKey) {$RigNameStat | Add-Member $RigModelsKey ([PSCustomObject]@{}) -Force}
+                                    $RigNameStat.$RigModelsKey | Add-Member $Algorithm_Norm ([PSCustomObject]@{Power=$RigPower;Speed=$RigSpeed;Revenue=$RigRevenue}) -Force
+                                } else {
+                                    if ($RigNameStat.$RigModelsKey.$Algorithm_Norm) {
+                                        $RigPower   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Power
+                                        $RigSpeed   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Speed
+                                        $RigRevenue = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Revenue
+                                    } elseif ($RigRunMode -eq "update") {
+                                        $RigPower   = $RigDevicePowerDraw
+                                        $RigRevenue = 0
+                                        $RigMRRid   = $_.name
+                                        $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
+                                            $RigSpeed = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
+                                        })
+                                    }
                                 }
                             }
 
@@ -759,6 +782,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                     Write-Log -Level Warn "Unable to $($RigRunMode) MRR rigs for $($RigName): $($_.Exception.Message)"
                 }
             }
+
+            Set-MiningRigStat -Name $RigName -Data $RigNameStat > $null
         }
     }
 

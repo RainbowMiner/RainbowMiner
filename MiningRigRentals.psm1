@@ -187,6 +187,65 @@ param(
     }
 }
 
+function Get-MiningRigStat {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name
+    )
+
+    $Path   = "Stats\MRR"
+
+    if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+
+    $Path = "$($Path)\$($Name).txt"
+
+    try {
+        $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        if (Test-Path $Path) {
+            Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is corrupt and will be removed. "
+            Remove-Item -Path $Path -Force -Confirm:$false
+        }
+    }
+    $Stat
+}
+
+function Set-MiningRigStat {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Data
+    )
+
+    $Path = "Stats\MRR"
+
+    if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+
+    $Path = "$($Path)\$($Name).txt"
+
+    $DataSorted = [PSCustomObject]@{}
+    $Data.PSObject.Properties.Name | Sort-Object | Foreach-Object {
+        $DeviceName = $_
+        $AlgoSorted = [PSCustomObject]@{}
+        $Data.$DeviceName.PSObject.Properties.Name | Sort-Object | Foreach-Object {
+            $AlgoName = $_
+            $AlgoSorted | Add-Member $AlgoName $Data.$DeviceName.$AlgoName -Force
+        }
+        $DataSorted | Add-Member $DeviceName $AlgoSorted -Force
+    }
+
+    try {
+        $DataSorted | ConvertTo-Json -ErrorAction Stop | Set-Content $Path
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Could not write MRR stat file for worker $Name"
+    }
+}
+
 function Get-MiningRigInfo {
 [cmdletbinding()]   
 param(
