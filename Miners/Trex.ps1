@@ -11,45 +11,50 @@ $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "316{0:d2}"
 $DevFee = 1.0
 $Version = "0.16.1"
+$AllowTuring = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda11.0.tar.gz"
-            Cuda = "11.0"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda11.0.tar.gz"
+            Cuda   = "11.0"
+            Turing = $true
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda10.0.tar.gz"
-            Cuda = "10.0"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda10.0.tar.gz"
+            Cuda   = "10.0"
+            Turing = $true
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda9.2.tar.gz"
-            Cuda = "9.2"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda9.2.tar.gz"
+            Cuda   = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda9.1.tar.gz"
-            Cuda = "9.1"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda9.1.tar.gz"
+            Cuda   = "9.1"
         }
     )
 } else {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda11.0.zip"
-            Cuda = "11.0"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda11.0.zip"
+            Cuda   = "11.0"
+            Turing = $true
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda10.0.zip"
-            Cuda = "10.0"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda10.0.zip"
+            Cuda   = "10.0"
+            Turing = $true
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda9.2.zip"
-            Cuda = "9.2"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda9.2.zip"
+            Cuda   = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda9.1.zip"
-            Cuda = "9.1"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda9.1.zip"
+            Cuda   = "9.1"
         }
     )
 }
@@ -117,6 +122,7 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
         $Uri = $UriCuda[$i].Uri
         $Cuda= $UriCuda[$i].Cuda
+        if ($UriCuda[$i].Turing -ne $null) {$AllowTuring = $UriCuda[$i].Turing}
     }
 }
 if (-not $Uri) {return}
@@ -131,8 +137,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         
         $MinMemGB     = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
-        #$Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($Cuda -match "^10" -or (Get-NvidiaArchitecture $_.Model) -ne "Turing")}
-        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($AllowTuring -or $Cuda -match "^10" -or (Get-NvidiaArchitecture $_.Model) -ne "Turing")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
