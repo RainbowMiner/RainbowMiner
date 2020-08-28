@@ -16,11 +16,11 @@ $AllowTuring = $false
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
-        [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda11.0.tar.gz"
-            Cuda   = "11.0"
-            Turing = $true
-        },
+        #[PSCustomObject]@{
+        #    Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda11.0.tar.gz"
+        #    Cuda   = "11.0"
+        #    Turing = $true
+        #},
         [PSCustomObject]@{
             Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-linux-cuda10.0.tar.gz"
             Cuda   = "10.0"
@@ -38,11 +38,11 @@ if ($IsLinux) {
 } else {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
-        [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda11.0.zip"
-            Cuda   = "11.0"
-            Turing = $true
-        },
+        #[PSCustomObject]@{
+        #    Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda11.0.zip"
+        #    Cuda   = "11.0"
+        #    Turing = $true
+        #},
         [PSCustomObject]@{
             Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-trex/t-rex-0.16.1-win-cuda10.0.zip"
             Cuda   = "10.0"
