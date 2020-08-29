@@ -10,18 +10,18 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/technobyl/CryptoDredge/releases"
 $Port = "313{0:d2}"
 $DevFee = 1.0
-$Version = "0.24.0"
+$Version = "0.25.1"
 $Enable_Logfile = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_10.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-cryptodredge/CryptoDredge_0.25.1_cuda_10.2_linux.tar.gz"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_9.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-cryptodredge/CryptoDredge_0.25.1_cuda_9.2_linux.tar.gz"
             Cuda = "9.2"
         }
     )
@@ -29,11 +29,11 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_10.2_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-cryptodredge/CryptoDredge_0.25.1_cuda_10.2_windows.zip"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.0-cryptodredge/CryptoDredge_0.24.0_cuda_9.2_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-cryptodredge/CryptoDredge_0.25.1_cuda_9.2_windows.zip"
             Cuda = "9.2"
         }
     )
