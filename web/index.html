@@ -404,7 +404,7 @@ function detailFormatterRemoteMiners(index, row) {
         html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
         html.push('<td>' + formatHashRate(value.EstimatedSpeed) + '</td>');
         html.push('<td>' + Math.round(parseFloat(value.PowerDraw)) + ' W</td>');
-        html.push('<td>' + value.Active + '</td>');
+        html.push('<td>' + value.Active.replace(/\s+Days/i,"d").replace(/\s+Hours\s+/i,":").replace(/\s+Minutes/i,"") + '</td>');
         html.push('<td>' + (value.Donator? "for dev":"for you") + '</td>');
         html.push('</tr>');
     });
