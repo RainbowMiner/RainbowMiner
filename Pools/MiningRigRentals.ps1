@@ -277,7 +277,7 @@ if ($AllRigs_Request) {
                     if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
                     if ($Pool_Algorithm_Norm -eq "Tensority") {$Miner_Port = 3333}
 
-                    $Pool_SSL = $Pool_Algorithm_Norm -eq "EquihashR25x5"
+                    $Pool_SSL = $Pool_Algorithm_Norm -in @("EquihashR25x5","EquihashR25x5x3")
 
                     #END temporary fixes
                     
