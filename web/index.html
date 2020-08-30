@@ -368,7 +368,7 @@ function formatRemoteMiners(data) {
                 $.each(item.data, function (dix, ditem) {
                     if (ditem.Benchmarking) { item.status = "Benchmarking" }
                     $.each(ditem.Devices, function (dvix,dvitem) {
-                      if (dvitem.Temp !== undefined && parseFloat(dvitem.Temp) > maxtemp) {
+                      if (typeof dvitem.Temp !== "undefined" && parseFloat(dvitem.Temp) > maxtemp) {
                         maxtemp = parseFloat(dvitem.Temp)
                       }
                     })
