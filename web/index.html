@@ -57,6 +57,7 @@
                 <th data-field="tversion" data-sortable="true">Version</th>
                 <th data-field="profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
                 <th data-field="tpowerdraw" data-align="right" data-sortable="true">Power</th>
+                <th data-field="tmaxtemp" data-align="right" data-sortable="true "data-title-tooltip="Maximum temperature in °C">max °C</th>
             </tr>
         </thead>
     </table>
@@ -274,6 +275,14 @@ $(function () {
     }
     window.setTimeout(refreshTableRemoteMiners, 60000);
 
+
+    const $table = $('table#remoteminers');
+    $table.on('post-body.bs.table', (e) => {
+      const $trs = $(e.currentTarget).find('tbody tr')
+      $.each($trs, function (key, tr) {
+      	$table.bootstrapTable('expandRow', $(tr).data('index'));  
+    	})
+    })
 });
 
 function formatRunningMiners(data) {
@@ -351,17 +360,24 @@ function formatRemoteMiners(data) {
         item.tuptime = item.uptime && parseInt(item.uptime) > 0 ? formatUptime(item.uptime) : '-';
         var vb = item.version.split(" ");
         item.tversion = vb.length > 1 ? vb[1] : item.version
+        var maxtemp = 0;
 
         if (item.status == "Running") {
             if (!item.online || ((now - new Date(item.lastseen * 1000)) / 1000) > 10 * 60) { item.status = "Offline" }
             else {
                 $.each(item.data, function (dix, ditem) {
                     if (ditem.Benchmarking) { item.status = "Benchmarking" }
+                    $.each(ditem.Devices, function (dvix,dvitem) {
+                      if (dvitem.Temp !== undefined && parseFloat(dvitem.Temp) > maxtemp) {
+                        maxtemp = parseFloat(dvitem.Temp)
+                      }
+                    })
                 })
             }
         }
 
         item.tpowerdraw = Math.round(parseFloat(item.powerdraw)) + ' W';
+        item.tmaxtemp   = maxtemp>0? maxtemp + ' °C' : '-';
     });
     return data;
 }
@@ -371,8 +387,9 @@ function colorStatus(row, index) {
 }
 
 function detailFormatterRemoteMiners(index, row) {
+    //console.log(row);
     var html = [];
-    html.push("<strong>Running Miners</strong>");
+    html.push("<strong>Running Miners on "+row.worker+"</strong>");
     html.push("<table class='table table-responsive table-details"+(theme=="dark"? " table-dark":'')+"'>");
     html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Coin</div></th><th><div class='th-inner'>Currency</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th><th><div class='th-inner'>Active</div></th><th><div class='th-inner'>Mines</div></th></tr></thead>");
     jQuery.each(row.data, function (key, value) {
