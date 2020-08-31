@@ -29,6 +29,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium";      MinMemGb = 1; Params = ""} #Allium
+    [PSCustomObject]@{MainAlgorithm = "bitcore";     MinMemGb = 1; Params = ""} #BitCore
     #[PSCustomObject]@{MainAlgorithm = "exosis";      MinMemGb = 1; Params = ""} #Exosis (EXO is x16r)
     #[PSCustomObject]@{MainAlgorithm = "hmq1725";     MinMemGb = 1; Params = ""} #HMQ1725 (CD 0.23.0 faster)
     #[PSCustomObject]@{MainAlgorithm = "lyra2v3";     MinMemGb = 1; Params = ""} #Lyra2Re3 (CD 0.22.0 faster)
