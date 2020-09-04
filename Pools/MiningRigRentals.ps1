@@ -42,6 +42,7 @@ param(
     [String]$PriceCurrencies = "BTC",
     [String]$MinHours = "3",
     [String]$MaxHours = "168",
+    [String]$ProfitAverageTime = "Day",
     [String]$Title = "",
     [String]$Description = ""
 )
@@ -406,7 +407,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             }
         }
 
-        foreach ($fld in @("Title","Description")) {
+        foreach ($fld in @("Title","Description","ProfitAverageTime")) {
             #string
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable $fld -ValueOnly -ErrorAction Ignore}
@@ -421,6 +422,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         if ($MRRConfig.$RigName.MinHours -lt 3) {$MRRConfig.$RigName.MinHours = 3}
         if ($MRRConfig.$RigName.MaxHours -lt $MRRConfig.$RigName.MinHours) {$MRRConfig.$RigName.MaxHours = $MRRConfig.$RigName.MinHours}
         if ($MRRConfig.$RigName.AutoCreateMaxMinHours -lt 3) {$MRRConfig.$RigName.AutoCreateMaxMinHours = 3}
+        if ($MRRConfig.$RigName.ProfitAverageTime -notin @("Minute","Minute_5","Minute_10","Hour","Day","ThreeDay","Week")) {$MRRConfig.$RigName.ProfitAverageTime = "Day"}
     }
 
     #
@@ -488,7 +490,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                     $RigModels           = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
                     $RigDevice           = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
                     $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")"
-                    $RigDeviceRevenue24h = $RigDeviceStat.Day
+                    $RigDeviceRevenue24h = $RigDeviceStat."$($MRRConfig.$RigName.ProfitAverageTime)"
                     $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
 
                     $CurrentlyBenchmarking = @($API.MinersNeedingBenchmark | Foreach-Object {[PSCustomObject]@{Algorithm="$($_.HashRates.PSObject.Properties.Name | Select-Object -First 1)";DeviceModel=$_.DeviceModel}} | Where-Object {$_.Algorithm -notmatch "-"} | Select-Object)
