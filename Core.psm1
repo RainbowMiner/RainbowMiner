@@ -2778,7 +2778,7 @@ function Invoke-Core {
             }
         }
 
-        if ($Session.PauseMinersByScheduler -and ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner} | Measure-Object).Count) {$Session.PauseMinersByScheduler = $false}
+        if ($Session.PauseMinersByScheduler -and (($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner} | Measure-Object).Count -or $Session.IsExclusiveRun)) {$Session.PauseMinersByScheduler = $false}
 
         if (-not $Session.PauseMiners -and -not $Session.PauseMinersByScheduler -and -not $Session.AutoUpdate -and $Session.Profitable) {
             $BestMiners_Combo | ForEach-Object {$_.Best = $true}
