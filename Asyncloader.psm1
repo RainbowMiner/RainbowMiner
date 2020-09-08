@@ -18,7 +18,7 @@ Param(
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
-    $AsyncLoader.Verbose    = $true
+    $AsyncLoader.Verbose    = $false
     $AsyncLoader.Debug      = $Session.LogLevel -eq "Debug"
 
      # Setup runspace to launch the AsyncLoader in a separate thread
