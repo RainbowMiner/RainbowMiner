@@ -277,6 +277,9 @@
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
+        "ZelLabs" = [PSCustomObject]@{
+            Currencies=@("TCR","ZEL")
+        }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=12}
             Currencies=@("BTC")
