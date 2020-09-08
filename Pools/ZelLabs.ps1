@@ -35,8 +35,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_Wallet        = $Wallets."$($_.symbol)"
 
-    $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
-
     $Pool_Regions       = $_.regions
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
@@ -45,7 +43,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_BLK      = $null
     $Pool_TSL      = $null
 
-    $ok = -not $_.algo -or ($_.algo -eq $Pool_Algorithm_Norm)
+    $ok = $true
 
     if ($ok -and -not $InfoOnly) {
         try {
@@ -55,7 +53,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             else {
                 $timestamp      = Get-UnixTimestamp
                 $timestamp24h   = ($timestamp - 24*3600)*1000
-                $blocks         = @($Pool_Request.pools.zel.block.blocktable.pendingblocks | Foreach-Object {($_ -split ":")[4]} | Where-Object {$_ -ge $timestamp24h}) + @($Pool_Request.pools.zel.block.blocktable.confirmedblocks | Foreach-Object {($_ -split ":")[4]} | Where-Object {$_ -ge $timestamp24h}) | Sort-Object -Descending
+                $blocks         = @($Pool_Request.pools.$Pool_Name.block.blocktable.pendingblocks | Foreach-Object {($_ -split ":")[4]} | Where-Object {$_ -ge $timestamp24h}) + @($Pool_Request.pools.$Pool_Name.block.blocktable.confirmedblocks | Foreach-Object {($_ -split ":")[4]} | Where-Object {$_ -ge $timestamp24h}) | Sort-Object -Descending
                 $blocks_measure = $blocks | Measure-Object -Minimum -Maximum
                 $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {24*3600000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
                 $Pool_TSL = if ($blocks.Count) {[int]($timestamp - $blocks[0]/1000)}
