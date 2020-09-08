@@ -31,11 +31,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Fee           = $_.fee
     $Pool_Port          = $_.port
     $Pool_RpcPath       = $_.rpc
+    $Pool_Name          = $Pool_RpcPath
 
     $Pool_Wallet        = $Wallets."$($_.symbol)"
 
     $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
-    $Pool_HostPath      = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
     $Pool_Regions       = $_.regions
 
@@ -50,7 +50,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if ($ok -and -not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).zellabs.net/api/homestats" -tag $Name -cycletime 120
-            if (-not $Pool_Request.pools.$Pool_RpcPath) {$ok = $false}
+            $Pool_Name    = "$($Pool_Request.pools.PSObject.Properties.Name | Select-Object -First 1)"
+            if (-not $Pool_Request.pools.$Pool_Name) {$ok = $false}
             else {
                 $timestamp      = Get-UnixTimestamp
                 $timestamp24h   = ($timestamp - 24*3600)*1000
@@ -70,7 +71,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
 
     if ($ok -and -not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.pools.$Pool_RpcPath.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.pools.$Pool_Name.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -86,7 +87,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+tcp"
-                Host          = "$($Pool_Region)-$($Pool_HostPath).zellabs.net"
+                Host          = "$($Pool_Region)-$($Pool_RpcPath).zellabs.net"
                 Port          = $Pool_Port
                 User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "x"
@@ -94,7 +95,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
-                Workers       = $Pool_Request.pools.$Pool_RpcPath.workerCount
+                Workers       = $Pool_Request.pools.$Pool_Name.workerCount
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
