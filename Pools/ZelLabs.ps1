@@ -48,9 +48,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if ($ok -and -not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).zellabs.net/api/homestats" -tag $Name -cycletime 120
-            $Pool_Name    = "$($Pool_Request.pools.PSObject.Properties.Name | Select-Object -First 1)"
-            if (-not $Pool_Request.pools.$Pool_Name) {$ok = $false}
+            if (-not ($Pool_Request.pools.PSObject.Properties.Name | Measure-Object).Count) {$ok = $false}
             else {
+                $Pool_Name      = "$($Pool_Request.pools.PSObject.Properties.Name | Select-Object -First 1)"
                 $timestamp      = Get-UnixTimestamp
                 $timestamp24h   = ($timestamp - 24*3600)*1000
                 $blocks         = @($Pool_Request.pools.$Pool_Name.block.blocktable.pendingblocks | Foreach-Object {($_ -split ":")[4]} | Where-Object {$_ -ge $timestamp24h}) + @($Pool_Request.pools.$Pool_Name.block.blocktable.confirmedblocks | Foreach-Object {($_ -split ":")[4]} | Where-Object {$_ -ge $timestamp24h}) | Sort-Object -Descending
@@ -69,7 +69,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
 
     if ($ok -and -not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.pools.$Pool_Name.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Pool_Hashrate = if ($Pool_Request.pools.$Pool_Name.hashrate -ne $null) {$Pool_Request.pools.$Pool_Name.hashrate} else {ConvertFrom-Hash "$($Pool_Request.pools.$Pool_Name.hashrateString)"}
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate ([double]$Pool_Hashrate) -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
