@@ -53,8 +53,9 @@ Param(
             $StopWatch.Restart()
             $Cycle++
 
-            if (-not $AsyncLoader.Pause) {
-                foreach ($JobKey in @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)) {
+            if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
+                $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
+                foreach ($JobKey in $JobKeys) {
                     $Job = $AsyncLoader.Jobs.$JobKey
                     if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
                     if (-not $AsyncLoader.Pause -and $Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
