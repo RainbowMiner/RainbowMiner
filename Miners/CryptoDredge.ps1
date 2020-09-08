@@ -69,7 +69,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z";      MinMemGb = 1; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "lyra2zz";     MinMemGb = 1; Params = ""} #Lyra2zz
     [PSCustomObject]@{MainAlgorithm = "mtp";         MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
-    [PSCustomObject]@{MainAlgorithm = "mtp-tcr";     MinMemGb = 5; Params = ""; ExtendInterval = 2} #MTP-TCR
+    #[PSCustomObject]@{MainAlgorithm = "mtp-tcr";     MinMemGb = 5; Params = ""; ExtendInterval = 2} #MTP-TCR
     [PSCustomObject]@{MainAlgorithm = "neoscrypt";   MinMemGb = 1; Params = ""} #Neoscrypt
     #[PSCustomObject]@{MainAlgorithm = "phi2";        MinMemGb = 1; Params = ""} #PHI2 (CD 0.16.0 faster)
     [PSCustomObject]@{MainAlgorithm = "pipe";        MinMemGb = 1; Params = ""} #Pipe
