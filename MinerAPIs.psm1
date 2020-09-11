@@ -2181,6 +2181,50 @@ class SrbMiner : Miner {
     }
 }
 
+class SrbMinerMulti : Miner {
+
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "localhost"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate = [PSCustomObject]@{}
+
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
+        try {
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.Algorithm[0]}
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            return
+        }
+        $Global:ProgressPreference = $oldProgressPreference
+
+        $Accepted_Shares = [Int64]$Data.shares.accepted
+        $Rejected_Shares = [Int64]$Data.shares.rejected
+
+        $HashRate_Name = [String]$this.Algorithm[0]
+        $HashRate_Value = [double]$Data.hashrate."5min"
+        if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.hashrate.now}
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData($Response,$HashRate)
+
+        $this.CleanupMinerData()
+    }
+}
 
 class SwapminerWrapper : Miner {
 

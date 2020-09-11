@@ -900,6 +900,10 @@ try {
         $AddAlgorithm += @("Cuckaroo29i","Panthera")
     }
 
+    if ($Version -le (Get-Version "4.6.1.9")) {
+        $RemoveMinerStats += @("*-SrbMinerMulti-*_HashRate.txt")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
