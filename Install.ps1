@@ -46,22 +46,34 @@ if ($IsLinux) {
 }
 
 if ($IsWindows) {
-    $EnvBits = if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}
+    if ($Session.IsCore) {
+        Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
+        Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
+        Import-Module NetTCPIP -ErrorAction Ignore -SkipEditionCheck
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore -SkipEditionCheck
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore -SkipEditionCheck
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetTCPIP\NetTCPIP.psd1" -ErrorAction Ignore -SkipEditionCheck
+    } else {
+        Import-Module NetSecurity -ErrorAction Ignore
+        Import-Module Defender -ErrorAction Ignore
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
+    }
 
-    Write-Host "Install Microsoft Visual C++ 2013 .."
-    if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
-    Expand-WebRequest "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
-
-    Write-Host "Install Microsoft Visual C++ 2015/2017/2019 .."
-    if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
-    Expand-WebRequest "https://aka.ms/vs/16/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
+    if ((Get-Command "Get-MpPreference" -ErrorAction Ignore) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
+        try {
+            Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs -WindowStyle Hidden
+        } catch {
+            Write-Host "WARNING: The RainbowMiner path ($(Convert-Path .)) could not be added to MS Defender's exclusion list. Please do this by hand!" -ForegroundColor Yellow
+        }
+    }
 
     Invoke-Expression ".\Includes\pci\lspci.exe" | Select-String "VGA compatible controller" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-Null
 }
 
 Write-Host "Detecting GPUs .."
-$GNVIDIA = ($lspci -match "NVIDIA" -notmatch "nForce" | Measure-Object).Count
-$GAMD    = ($lspci -match "Advanced Micro Devices" -notmatch "RS880" -notmatch "Stoney" | Measure-Object).Count
+$GNVIDIA = ($lspci | Where-Object {$_ -match "NVIDIA" -and $_ -notmatch "nForce"} | Measure-Object).Count
+$GAMD    = ($lspci | Where-Object {$_ -match "Advanced Micro Devices" -and $_ -notmatch "RS880" -and $_ -notmatch "Stoney"} | Measure-Object).Count
 
 if ($GNVIDIA) {
     try {
@@ -120,6 +132,23 @@ if ($IsWindows -and $GNVIDIA) {
 }
 
 Write-Host " "
+
+if ($IsWindows) {
+    $EnvBits = if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}
+
+    Write-Host "Checking for Microsoft Visual C++ Runtimes."
+    Write-Host " "
+    Write-Host "It is possible, that your PC will be automatically rebooted, after these installs. RainbowMiner will be ready to go, after such an reboot!" -BackgroundColor Yellow -ForegroundColor Black
+    Write-Host " "
+
+    Write-Host "Check/Install Microsoft Visual C++ 2013 .."
+    if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
+    Expand-WebRequest "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
+
+    Write-Host "Check/Install Microsoft Visual C++ 2015/2017/2019 .."
+    if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
+    Expand-WebRequest "https://aka.ms/vs/16/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
+}
 
 Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green
 
