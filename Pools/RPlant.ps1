@@ -30,35 +30,35 @@ $Pool_Regions = @("ru","eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = [PSCustomObject]@{
-    "BNODE" = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
+    "ALTEX" = [PSCustomObject]@{port = 7070; region = $Pool_Regions}
     "BELL"  = [PSCustomObject]@{port = 3342; region = $Pool_Regions}
-    "BIN"   = [PSCustomObject]@{port = 3334; region = $Pool_Regions}
     "BCX"   = [PSCustomObject]@{port = 7045; region = $Pool_Regions}
-    "CICO"  = [PSCustomObject]@{port = 3385; region = $Pool_Regions}
+    "BSF"   = [PSCustomObject]@{port = 7065; region = $Pool_Regions}
+    "ZNY"   = [PSCustomObject]@{port = 7054; region = $Pool_Regions}
     "CPU"   = [PSCustomObject]@{port = 7029; region = $Pool_Regions}
     "CRP"   = [PSCustomObject]@{port = 3335; region = $Pool_Regions}
-    "CSM"   = [PSCustomObject]@{port = 7044; region = $Pool_Regions}
     "DMS"   = [PSCustomObject]@{port = 7047; region = $Pool_Regions}
+    "GOLD"  = [PSCustomObject]@{port = 7057; region = $Pool_Regions}
     "GXX"   = [PSCustomObject]@{port = 7025; region = $Pool_Regions}
-    "IOTS"  = [PSCustomObject]@{port = 7028; region = $Pool_Regions}
     "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
+    "KVA"   = [PSCustomObject]@{port = 7061; region = @("us"); stratum = "randomx"}
+    "KLA"   = [PSCustomObject]@{port = 3355; region = @("us"); stratum = "randomx"}
     "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
-    "OBV"   = [PSCustomObject]@{port = 7057; region = $Pool_Regions}
+    "NAD"   = [PSCustomObject]@{port = 7064; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
     "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
-    "ROI"   = [PSCustomObject]@{port = 7056; region = $Pool_Regions}
-    "RTID"  = [PSCustomObject]@{port = 7048; region = $Pool_Regions}
-    "SSC"   = [PSCustomObject]@{port = 7046; region = $Pool_Regions}
+    "SPRX"  = [PSCustomObject]@{port = 7052; region = $Pool_Regions}
     "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
     "SWAMP" = [PSCustomObject]@{port = 7023; region = $Pool_Regions}
     "TDC"   = [PSCustomObject]@{port = 7017; region = $Pool_Regions}
-    "THOR"  = [PSCustomObject]@{port = 7031; region = $Pool_Regions}
     "URX"   = [PSCustomObject]@{port = 3361; region = $Pool_Regions}
     "VECO"  = [PSCustomObject]@{port = 3351; region = $Pool_Regions}
+    "XOL"   = [PSCustomObject]@{port = 7068; region = @("us"); stratum = "randomx"}
     "YTN"   = [PSCustomObject]@{port = 3382; region = $Pool_Regions}
+    "ZELS"  = [PSCustomObject]@{port = 7060; region = $Pool_Regions}
 }
 
 $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $Pools_Data."$($_.Name)") -or $InfoOnly} | ForEach-Object {
@@ -68,6 +68,7 @@ $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets."$($_.Name)"
     $Pool_Data           = $Pools_Data.$Pool_Currency
+    $Pool_Stratum        = if ($Pool_Data.stratum) {$Pool_Data.stratum} else {"stratum-%region%"}
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.Value.hashrate) -BlockRate ([double]$_.Value."24h_blocks") -Quiet
@@ -86,7 +87,7 @@ $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+$(if ($SSL) {"ssl"} else {"tcp"})"
-                Host          = "stratum-$($Pool_Region).rplant.xyz"
+                Host          = "$($Pool_Stratum -replace "%region%",$Pool_Region).rplant.xyz"
                 Port          = if ($SSL) {$Pool_Data.port+10000} else {$Pool_Data.port}
                 User          = "$($Pool_User).{workername:$Worker}"
                 Pass          = "x"
