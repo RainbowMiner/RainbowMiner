@@ -904,6 +904,10 @@ try {
         $RemoveMinerStats += @("*-SrbMinerMulti-*_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.6.2.0")) {
+        $AddAlgorithm += @("MegaBTX","MegaMEC")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
