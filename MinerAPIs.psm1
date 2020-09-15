@@ -2199,7 +2199,7 @@ class SrbMinerMulti : Miner {
         try {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-            $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.Algorithm[0]}
+            $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
