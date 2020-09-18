@@ -437,7 +437,7 @@ function Set-MinerStats {
                         $CurrentPowerDrawGPU += $_.PowerDraw
                         if ($DeviceNameCountGPU -lt $_.DeviceName.Count) {$DeviceNameCountGPU = $_.DeviceName.Count}
                     }
-                    Set-Stat -Name "Profit-$($Global:DeviceCache.DeviceNames.$CurrentModel -join "-")" -Value $CurrentProfit -PowerDraw $_.PowerDraw -Duration $StatSpan -UplimProtection 3 > $null
+                    Set-Stat -Name "Profit-$($Global:DeviceCache.DeviceNames.$CurrentModel -join "-")" -Value $CurrentProfit -PowerDraw $_.PowerDraw -Duration $StatSpan -UplimProtection 8 > $null
                 }
             }
         }
@@ -445,7 +445,7 @@ function Set-MinerStats {
         if ($CurrentProfitGPU -gt 0) {
             $DeviceNameGPU = @($Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu"}) | Select-Object -ExpandProperty Name | Sort-Object)
             if ($DeviceNameGPU -and $DeviceNameGPU.Count -gt $DeviceNameCountGPU) {
-                Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" -Value $CurrentProfitGPU -PowerDraw $CurrentPowerDrawGPU -Duration $StatSpan -UplimProtection 3 > $null
+                Set-Stat -Name "Profit-$($DeviceNameGPU -join "-")" -Value $CurrentProfitGPU -PowerDraw $CurrentPowerDrawGPU -Duration $StatSpan -UplimProtection 8 > $null
             }
         }
     }
