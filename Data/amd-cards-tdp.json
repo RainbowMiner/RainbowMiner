@@ -27,5 +27,19 @@
     "Radeon RX 570": 150,
     "Radeon RX 580": 185,
     "Radeon Vega 56": 210,
-    "Radeon Vega 64": 295
+    "Radeon Vega 64": 295,
+    "Radeon VII": 295,
+    "Radeon RX 5300": 100,
+    "Radeon RX 5300 XT": 100,
+    "Radeon RX 5300M": 85,
+    "Radeon RX 5500": 110,
+    "Radeon RX 5500 XT": 130,
+    "Radeon RX 5500M": 85,
+    "Radeon RX 5600": 150,
+    "Radeon RX 5600 XT": 150,
+    "Radeon RX 5600M": 150,
+    "Radeon RX 5700": 180,
+    "Radeon RX 5700 XT": 225,
+    "Radeon RX 5700M": 180,
+    "Radeon RX 6900 XT": 300
 }
