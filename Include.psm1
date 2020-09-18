@@ -3525,46 +3525,37 @@ function Update-DeviceInformation {
                                 $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
                             }
                         } else {
-                            $DeviceId = 0
+                            $AdlStats = $null
 
-                            $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+                            try {
+                                $AdlResult = Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd
+                                if ($AdlResult -notmatch "Failed") {
+                                    $AdlStats = $AdlResult | ConvertFrom-Json -ErrorAction Stop
+                                }
+                            } catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                            }
+                        
+                            if ($AdlStats -and $AdlStats.Count) {
 
-                            if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                                $DeviceId = 0
 
-                            if ($null -ne $AdlResult) {
-                                $AdlResult | ForEach-Object {
-                                    [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
-                                    $i=0
-                                    foreach($v in @($_ -split ',')) {
-                                        if ($i -ge $AdlResultSplit.Count) {break}
-                                        if ($i -eq 0) {
-                                            $AdlResultSplit[0] = $v
-                                        } elseif ($i -lt 8) {
-                                            $v = $v -replace "[^\-\d\.]"
-                                            if ($v -match "^-?(\d+|\.\d+|\d+\.\d+)$") {
-                                                $ibak = $AdlResultSplit[$i]
-                                                try {
-                                                    if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
-                                                } catch {
-                                                    if ($Error.Count){$Error.RemoveAt(0)}
-                                                    $AdlResultSplit[$i] = $ibak
-                                                }
-                                            }
-                                        }
-                                        $i++
-                                    }
-                                    if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
+                                $AdlStats | Foreach-Object {
+
+                                    $Data = $_
 
                                     $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                                        $_.Data.AdapterId         = $AdlResultSplit[0]
-                                        $_.Data.FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
-                                        $_.Data.Clock             = [int]($AdlResultSplit[3] / 100)
-                                        $_.Data.ClockMem          = [int]($AdlResultSplit[4] / 100)
-                                        $_.Data.Utilization       = [int]$AdlResultSplit[5]
-                                        $_.Data.Temperature       = [int]$AdlResultSplit[6] / 1000
-                                        $_.Data.PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                        $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
-                                        $_.Data.Method            = "tdp"
+
+                                        $CPstateMax = [Math]::max([int]($Data."Core P_States")-1,0)
+                                        $MPstateMax = [Math]::max([int]($Data."Memory P_States")-1,0)
+
+                                        $_.Data.AdapterId         = ''
+                                        $_.Data.FanSpeed          = [int]($Data."Fan Speed %")
+                                        $_.Data.Clock             = [int]($Data."Clock Defaults"."Clock P_State $CPstatemax")
+                                        $_.Data.ClockMem          = [int]($Data."Memory Defaults"."Clock P_State $MPstatemax")
+                                        $_.Data.Temperature       = [int]($Data.Temperature)
+                                        $_.Data.PowerDraw         = [int]($Data.Wattage)
+                                        $_.Data.Method            = "odvii8"
 
                                         $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
                                         $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
@@ -3572,8 +3563,61 @@ function Update-DeviceInformation {
                                         $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
                                         $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
                                     }
+
+                                    $DeviceId++
                                 }
-                                $DeviceId++
+                            } else {
+
+                                $DeviceId = 0
+
+                                $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+
+                                if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+
+                                if ($null -ne $AdlResult) {
+                                    $AdlResult | ForEach-Object {
+                                        [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
+                                        $i=0
+                                        foreach($v in @($_ -split ',')) {
+                                            if ($i -ge $AdlResultSplit.Count) {break}
+                                            if ($i -eq 0) {
+                                                $AdlResultSplit[0] = $v
+                                            } elseif ($i -lt 8) {
+                                                $v = $v -replace "[^\-\d\.]"
+                                                if ($v -match "^-?(\d+|\.\d+|\d+\.\d+)$") {
+                                                    $ibak = $AdlResultSplit[$i]
+                                                    try {
+                                                        if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
+                                                    } catch {
+                                                        if ($Error.Count){$Error.RemoveAt(0)}
+                                                        $AdlResultSplit[$i] = $ibak
+                                                    }
+                                                }
+                                            }
+                                            $i++
+                                        }
+                                        if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
+
+                                        $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
+                                            $_.Data.AdapterId         = $AdlResultSplit[0]
+                                            $_.Data.FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
+                                            $_.Data.Clock             = [int]($AdlResultSplit[3] / 100)
+                                            $_.Data.ClockMem          = [int]($AdlResultSplit[4] / 100)
+                                            $_.Data.Utilization       = [int]$AdlResultSplit[5]
+                                            $_.Data.Temperature       = [int]$AdlResultSplit[6] / 1000
+                                            $_.Data.PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
+                                            $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
+                                            $_.Data.Method            = "tdp"
+
+                                            $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                                            $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                                            $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                                            $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                            $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                        }
+                                    }
+                                    $DeviceId++
+                                }
                             }
                         }
                     }
