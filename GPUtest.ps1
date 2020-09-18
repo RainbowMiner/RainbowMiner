@@ -77,6 +77,13 @@ if ($IsWindows) {
    $Arguments = @('s')
    Invoke-Exe ".\Includes\odvii.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
 
+    "8. OdVII 2" | Out-File $TestFileName -Append
+    "-"*80 | Out-File $TestFileName -Append
+    " " | Out-File $TestFileName -Append
+   
+   $Arguments = @('s')
+   Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+
 }
 
 if ($IsLinux) {
