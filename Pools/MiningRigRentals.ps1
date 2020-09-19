@@ -21,6 +21,7 @@ param(
     [Bool]$EnableAutoUpdate = $false,
     [Bool]$EnableAutoExtend = $false,
     [Bool]$EnableAutoPrice = $false,
+    [Bool]$EnableAutoBenchmark = $false,
     [Bool]$EnableMinimumPrice = $false,
     [Bool]$EnableUpdateTitle = $false,
     [Bool]$EnableUpdateDescription = $false,
@@ -482,7 +483,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         }
     }
 
-    $PoolsData = Get-MiningRigRentalsPoolsData
+    $PoolsData = Get-MiningRigRentalsPoolsData -UpdateLocalCopy
 
     foreach($RigRunMode in @("create","update")) {
 
@@ -813,4 +814,53 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     }
 
     $Session.MRRlastautoperation = Get-Date    
+}
+
+#
+# auto benchmark missing algorithms
+#
+if ($EnableAutoBenchmark -and $Global:AllPools) {
+
+    if (-not $PoolsData) {
+        $PoolsData = Get-MiningRigRentalsPoolsData
+    }
+
+    if ($PoolsData) {
+        if ($PoolsData -isnot [array]) {$PoolsData = @($PoolsData)}
+       
+        $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals"}) | Select-Object -ExpandProperty Algorithm0 -Unique)
+
+        $PoolsData.Where({$_.Algorithm -notin $ActiveAlgorithms}).Foreach({
+            [PSCustomObject]@{
+                Algorithm     = $_.Algorithm
+			    Algorithm0    = $_.Algorithm
+                CoinName      = $_.CoinName
+                CoinSymbol    = $_.CoinSymbol
+                Currency      = $_.Currency
+                Price         = 1E-20
+                StablePrice   = 1E-20
+                MarginOfError = 0
+                Protocol      = $_.Protocol
+                Host          = $_.Host
+                Port          = $_.Port
+                User          = $_.User
+                Pass          = $_.Pass
+                Region        = $_.Region
+                SSL           = $_.SSL
+                Updated       = (Get-Date).ToUniversalTime()
+                PoolFee       = 0
+                EthMode       = $_.EthMode
+                Name          = $Name
+                Penalty       = 99
+                PenaltyFactor = 0.01
+			    Disabled      = $false
+			    HasMinerExclusions = $false
+			    Price_Bias    = 0.0
+			    Price_Unbias  = 0.0
+                Wallet        = $_.Wallet
+                Worker        = $_.Worker
+                Email         = ""
+            }
+        })
+    }
 }
