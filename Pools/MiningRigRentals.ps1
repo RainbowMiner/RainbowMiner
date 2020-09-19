@@ -825,8 +825,7 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
         $PoolsData = Get-MiningRigRentalsPoolsData
     }
 
-    if ($PoolsData) {
-        if ($PoolsData -isnot [array]) {$PoolsData = @($PoolsData)}
+    if ($PoolsData -is [array]) {
        
         $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals"}) | Select-Object -ExpandProperty Algorithm0 -Unique)
 
