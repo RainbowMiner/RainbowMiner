@@ -533,6 +533,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         $DeviceExcludeAlgorithm = @($RigModels | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
                         $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
+                            $RigMRRProfit = [double]$_.stats.prices.last.amount / $(ConvertFrom-Hash "1$($_.stats.prices.last.currency)")
                             $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
                             $RigPower   = 0
                             $RigSpeed   = 0
@@ -555,7 +556,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         if ($ThisSpeed -gt $RigSpeedAdd) {
                                             $RigPowerAdd   = $_.PowerDraw
                                             $RigSpeedAdd   = $ThisSpeed
-                                            $RigRevenueAdd = $_.Profit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                            $RigRevenueAdd = $(if ($_.Pool -contains "MiningRigRentals") {$RigMRRProfit * $ThisSpeed} else {$_.Profit}) + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
                                         }
                                     })
                                     $RigPower   += $RigPowerAdd
