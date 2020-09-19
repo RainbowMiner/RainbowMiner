@@ -533,11 +533,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         $DeviceExcludeAlgorithm = @($RigModels | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
                         $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
-                            $RigMRRProfit = [double]$_.stats.prices.last.amount / $(ConvertFrom-Hash "1$($_.stats.prices.last.currency)")
+
                             $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
                             $RigPower   = 0
                             $RigSpeed   = 0
                             $RigRevenue = 0
+
+                            $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
 
                             if ((Get-Yes $Session.Config.Algorithms.$Algorithm_Norm.MRREnable) -and -not (
                                     ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Algorithm_Norm) -or
@@ -556,7 +558,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         if ($ThisSpeed -gt $RigSpeedAdd) {
                                             $RigPowerAdd   = $_.PowerDraw
                                             $RigSpeedAdd   = $ThisSpeed
-                                            $RigRevenueAdd = $(if ($_.Pool -contains "MiningRigRentals") {$RigMRRProfit * $ThisSpeed} else {$_.Profit}) + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                            $RigRevenueAdd = $(if ($_.Pool -contains "MiningRigRentals") {$SuggestedPrice * $ThisSpeed} else {$_.Profit}) + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
                                         }
                                     })
                                     $RigPower   += $RigPowerAdd
@@ -583,7 +585,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 }
                             }
 
-                            $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
                             $IsHandleRig    = ($RigRunMode -eq "update") -or ($MRRConfig.$RigName.AutoCreateAlgorithm -contains $Algorithm_Norm)
 
                             $RigPowerDiff   = 0
