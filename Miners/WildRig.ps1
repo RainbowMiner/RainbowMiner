@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.26.0-wildrigmulti/wildrig-multi-linux-0.26.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.0-wildrigmulti/wildrig-multi-linux-0.27.0.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.26.0-wildrigmulti/wildrig-multi-windows-0.26.0.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.0-wildrigmulti/wildrig-multi-windows-0.27.0.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.26.0"
+$Version = "0.27.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -54,6 +54,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi";          Vendor = @("AMD");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowEthercore
     [PSCustomObject]@{MainAlgorithm = "progpow-sero"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.23.0"; ExcludePoolName = "^Beepool"} #ProgPowSero
+    [PSCustomObject]@{MainAlgorithm = "progpow-veriblock"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #vProgPoW
     [PSCustomObject]@{MainAlgorithm = "progpowz";     Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"; ExcludePoolName = "^Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest";   Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";      Vendor = @("AMD");          Params = ""} #Renesis
@@ -72,8 +73,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16rv2";       Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
     [PSCustomObject]@{MainAlgorithm = "x16s";         Vendor = @("AMD");          Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";          Vendor = @("AMD");          Params = ""} #X17
-    [PSCustomObject]@{MainAlgorithm = "x17r";         Vendor = @("AMD");          Params = ""} #X17r
-    [PSCustomObject]@{MainAlgorithm = "x17r-protocol2"; Vendor = @("AMD");        Params = ""} #X17r-protocol2
+    [PSCustomObject]@{MainAlgorithm = "x17r";         Vendor = @("AMD");          Params = "--protocol ufo2"} #X17r
     [PSCustomObject]@{MainAlgorithm = "x18";          Vendor = @("AMD");          Params = ""} #X18
     [PSCustomObject]@{MainAlgorithm = "x20r";         Vendor = @("AMD");          Params = ""} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";         Vendor = @("AMD");          Params = ""} #X21s
