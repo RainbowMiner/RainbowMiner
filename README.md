@@ -835,6 +835,7 @@ For Server (Runmode=server) setup:
 - **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=20]
 - **HashrateWeightStrength** = adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square) [default=50]
 - **PoolAccuracyWeight** = adjust weight of pool accuracy on the profit comparison in % (0..100, 0=disable) [default=15]
+- **ProfitSpikeProtection** = prevent profit files to be updated, if the actual value is greater than the avg. profit x this factor (0 to disable) [default=0]
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
@@ -862,7 +863,6 @@ For Server (Runmode=server) setup:
 - **EnablePauseOnActivity** = set to 1 to automatically send RainbowMiner into pause mode, if user input is detected (also see **ResumeOnInactivitySeconds**)
 - **ResumeOnInactivitySeconds** = seconds of no user input, until RainbowMiner leaves pause-on-activity mode (0 = never, default = 300)
 - **EnableMinersAsRoot** = set to 0, if you do not want to run miners as root, using the OCDaemon (linux only) [default=1]
-
 
 #### Maintenance ####
 - **MaxLogfileDays** = max. days to keep logfiles in Logs folder [default=5]
@@ -1509,6 +1509,7 @@ The following are the pool parameters:
 - **EnableAutoCreate**: Automatically create MRR-rigs [default=0]
 - **EnableAutoUpdate**: Automatically update MRR-rigs [default=0]
 - **EnableAutoExtend**: Automatically extend MRR rentals, when low average hashrate [default=0]
+- **EnableAutoBenchmark**: Enable benchmark of missing algorithms (it will mine to RainbowMiner wallets during benchmark, only) [default=0]
 - **AutoExtendTargetPercent**: Extend rentals time, so that the total average hashrate is near this value in percent of advertised hashrate [default=100]
 - **AutoExtendMaximumPercent**: Extend rentals maximum to this value in percent of the rental time [default=100]
 - **AutoBonusExtendForHours**: Enter amount of hours, that you want to be rewarded by an automatic bonus extension of AutoBonusExtendByHours (e.g. 24) [default=0]
