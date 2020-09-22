@@ -16,10 +16,13 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "BBR";   port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
-    [PSCustomObject]@{symbol = "RYO";   port = 7777; fee = 0.9; rpc = "ryo"; region = @("eu")}
+    [PSCustomObject]@{symbol = "TUBE";  port = 5577; fee = 0.9; rpc = "tube4"; divisor = 32; region = @("eu")}
+    [PSCustomObject]@{symbol = "VBK";   port = 9501; fee = 1.0; rpc = "veriblock"; region = @("eu")}
     [PSCustomObject]@{symbol = "XCASH"; port = 4477; fee = 0.9; rpc = "xcash"; region = @("eu")}
+    [PSCustomObject]@{symbol = "XLA";   port = 6677; fee = 0.9; rpc = "scala"; region = @("eu")}
     [PSCustomObject]@{symbol = "XWP";   port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
     [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano"; region = @("eu")}
+    [PSCustomObject]@{symbol = "ZELS";  port = 4502; fee = 0.9; rpc = "zelantus"; region = @("eu")}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -97,7 +100,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         TSL           = $Pool_Data.TSL
                         BLK           = $Stat.BlockRate_Average
                         ScratchPadUrl = if ($Pool_ScratchPadUrl) {$Pool_ScratchPadUrl -replace "#region",$Pool_Region} else {$null}
-                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
+                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|vProgPow)") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1
