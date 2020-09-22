@@ -23,14 +23,16 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "BTX"   ; rpc = "btx"      ; port = 3629}
     [PSCustomObject]@{symbol = "BSD"   ; rpc = "bsd"      ; port = 8686}
     [PSCustomObject]@{symbol = "DYN"   ; rpc = "dyn"      ; port = 5960}
+    [PSCustomObject]@{symbol = "ERC"   ; rpc = "erc"      ; port = 7674}
     [PSCustomObject]@{symbol = "GRLC"  ; rpc = "grlc"     ; port = 8600}
     [PSCustomObject]@{symbol = "HODL"  ; rpc = "hodl"     ; port = 4693}
+    [PSCustomObject]@{symbol = "MNX"   ; rpc = "mnx"      ; port = 7077}
     [PSCustomObject]@{symbol = "ROI"   ; rpc = "roi"      ; port = 4699}
     [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 8888}
     [pscustomobject]@{symbol = "VEIL"  ; rpc = "veil"     ; port = 7220}
     [pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17"  ; port = 7477}
     [PSCustomObject]@{symbol = "VTC"   ; rpc = "vtc"      ; port = 5778}
-    [PSCustomObject]@{symbol = "XDNA"  ; rpc = "xdna"     ; port = 4919}
+    [PSCustomObject]@{symbol = "YTN"   ; rpc = "ytn"      ; port = 4932}
     [PSCustomObject]@{symbol = "ZER"   ; rpc = "zero"     ; port = 6568}
 )
 
