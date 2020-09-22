@@ -54,7 +54,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi";          Vendor = @("AMD");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowEthercore
     [PSCustomObject]@{MainAlgorithm = "progpow-sero"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.23.0"; ExcludePoolName = "^Beepool"} #ProgPowSero
-    [PSCustomObject]@{MainAlgorithm = "progpow-veriblock"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #vProgPoW
     [PSCustomObject]@{MainAlgorithm = "progpowz";     Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"; ExcludePoolName = "^Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest";   Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";      Vendor = @("AMD");          Params = ""} #Renesis
@@ -67,6 +66,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel";   Vendor = @("AMD");          Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";       Vendor = @("AMD");          Params = ""} #Tribus
     [PSCustomObject]@{MainAlgorithm = "veil";         Vendor = @("AMD");          Params = ""; Algorithm = "x16rt"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt-VEIL
+    [PSCustomObject]@{MainAlgorithm = "vprogpow";     Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #vProgPoW
     [PSCustomObject]@{MainAlgorithm = "wildkeccak";   Vendor = @("AMD");          Params = ""; ExtendInterval = 3; DevFee = 2.0} #Wildkeccak
     [PSCustomObject]@{MainAlgorithm = "x16r";         Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16rt";        Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
