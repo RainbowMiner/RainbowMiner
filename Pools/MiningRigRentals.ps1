@@ -270,6 +270,9 @@ if ($AllRigs_Request) {
 
                                         if ($AutoBonusExtendForHours_Value -gt 0 -and $AutoBonusExtendByHours_Value -gt 0) {
                                             $Rental_ExtendedBonus = [Math]::Floor([double]$Rental_Result.length/$AutoBonusExtendForHours_Value) * $AutoBonusExtendByHours_Value
+                                            if ($Rental_ExtendedBonus -gt $Rental_Extended) {
+                                                $Rental_ExtendedBonus = 0
+                                            }
                                         }
                                     }
 
