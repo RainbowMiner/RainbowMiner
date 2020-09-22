@@ -913,7 +913,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.6.2.3")) {
-        $AddAlgorithm += @("vProgPoW","X11k")
+        $AddAlgorithm += @("vProgPoW","X11k","X33")
     }
 
     if ($OverridePoolPenalties) {
