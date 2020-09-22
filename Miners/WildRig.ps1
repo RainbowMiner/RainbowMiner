@@ -43,12 +43,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hmq1725";      Vendor = @("AMD");          Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "honeycomb";    Vendor = @("AMD");          Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "kawpow";       Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.22.0"} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "lyra2tdc";     Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2TDC
+    [PSCustomObject]@{MainAlgorithm = "lyra2tdc";     Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";      Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";  Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2vc0ban
-    [PSCustomObject]@{MainAlgorithm = "megabtx";      Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
+    [PSCustomObject]@{MainAlgorithm = "megabtx";      Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "megamec";      Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
-    [PSCustomObject]@{MainAlgorithm = "minotaur";     Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
+    [PSCustomObject]@{MainAlgorithm = "minotaur";     Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 5.0} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "mtp";          Vendor = @("AMD");          Params = ""} #MTP, new in v0.20.0 beta
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr";      Vendor = @("AMD");          Params = ""} #MTPTcr, new in v0.20.0 beta, --split-job 4
     [PSCustomObject]@{MainAlgorithm = "phi";          Vendor = @("AMD");          Params = ""} #PHI
@@ -57,7 +57,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpowz";     Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"; ExcludePoolName = "^Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest";   Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";      Vendor = @("AMD");          Params = ""} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "sha256csm";    Vendor = @("AMD","NVIDIA"); Params = ""; Version = "0.20.6"} #SHA256csm
+    [PSCustomObject]@{MainAlgorithm = "sha256csm";    Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0; Version = "0.20.6"} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";      Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";      Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256t
     [PSCustomObject]@{MainAlgorithm = "skein2";       Vendor = @("AMD","NVIDIA"); Params = ""} #Skein2
@@ -73,7 +73,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16rv2";       Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
     [PSCustomObject]@{MainAlgorithm = "x16s";         Vendor = @("AMD");          Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";          Vendor = @("AMD");          Params = ""} #X17
-    [PSCustomObject]@{MainAlgorithm = "x17r";         Vendor = @("AMD");          Params = "--protocol ufo2"} #X17r
+    [PSCustomObject]@{MainAlgorithm = "x17r";         Vendor = @("AMD");          Params = "--protocol ufo2"; DevFee = 2.0} #X17r
     [PSCustomObject]@{MainAlgorithm = "x18";          Vendor = @("AMD");          Params = ""} #X18
     [PSCustomObject]@{MainAlgorithm = "x20r";         Vendor = @("AMD");          Params = ""} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";         Vendor = @("AMD");          Params = ""} #X21s
