@@ -173,7 +173,7 @@ if ($AllRigs_Request) {
                             )) {$Valid_Rigs += $_.id}
                     }
                 } else {
-                    Write-Log -Level Info "$($Name): Wait $($PauseBetweenRentals_Seconds - $NotRentedSince_Seconds) seconds for $($Worker1) rigs to be re-enabled."
+                    Write-Log -Level Warn "$($Name): Wait $([Math]::Round(($PauseBetweenRentals_Seconds - $NotRentedSince_Seconds)/60,1)) minutes for $($Worker1) rigs to be re-enabled."
                 }
             }
 
