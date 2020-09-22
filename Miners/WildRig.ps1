@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.0-wildrigmulti/wildrig-multi-linux-0.27.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.1-wildrigmulti/wildrig-multi-linux-0.27.1.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.0-wildrigmulti/wildrig-multi-windows-0.27.0.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.1-wildrigmulti/wildrig-multi-windows-0.27.1.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.27.0"
+$Version = "0.27.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -116,7 +116,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-            $MinMemGB = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
+            $MinMemGB = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow|vProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
 
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
