@@ -743,13 +743,15 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             $Result = Invoke-MiningRigRentalRequest "/rig/$($Result.id)/pool" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
                                                             if ($Result.success) {
                                                                 $RigCreated++
-                                                                Write-Log -Level Info "$($Name): Update pools of rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                             }
+                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to add"}) pools of rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                         } catch {
                                                             if ($Error.Count){$Error.RemoveAt(0)}
                                                             Write-Log -Level Warn "$($Name): Unable to add pools to $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
                                                         }
                                                     }
+                                                } else {
+                                                    Write-Log -Level Warn "$($Name): Unable to create $($Algorithm_Norm) rig for $($RigName)"
                                                 }
                                             } catch {
                                                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -814,8 +816,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             $Result = Invoke-MiningRigRentalRequest "/rig/$($_.id)/pool/$($RigPriority)" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
                                                             if ($Result.success) {
                                                                 $RigCreated++
-                                                                Write-Log -Level Info "$($Name): Update pools of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                             }
+                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) pools of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                         } catch {
                                                             if ($Error.Count){$Error.RemoveAt(0)}
                                                             Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
