@@ -36,7 +36,6 @@ catch {
 }
 
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | Foreach-Object {
-    
     $ok = $true
     if (-not $InfoOnly) {
         $Pool_BlocksRequest = @()

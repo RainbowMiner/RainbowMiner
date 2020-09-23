@@ -113,8 +113,8 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = "$(if (-not $First) {"$($Pool_Region)."})$($Pool_HostPath).miner.rocks"
-                        Port          = $Pool_Port.CPU
-                        Ports         = $Pool_Port
+                        Port          = if ($Pool_Port.CPU -ne $null) {$Pool_Port.CPU} else {$_.port}
+                        Ports         = if ($Pool_Port.CPU -ne $null) {$Pool_Port} else {$null}
                         User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
                         Pass          = "w={workername:$Worker}$(if ($Pool_Currency2) {";mm=$(Get-WalletWithPaymentId $Wallets.$Pool_Currency2 -pidchar '.')"})"
                         Region        = $Pool_RegionsTable.$Pool_Region
