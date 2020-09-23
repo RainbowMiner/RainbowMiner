@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.2-wildrigmulti/wildrig-multi-linux-0.27.2.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.3-wildrigmulti/wildrig-multi-linux-0.27.3.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.2-wildrigmulti/wildrig-multi-windows-0.27.2.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.3-wildrigmulti/wildrig-multi-windows-0.27.3.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.27.2"
+$Version = "0.27.3"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -34,18 +34,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dedal";        Vendor = @("AMD");          Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";       Vendor = @("AMD");          Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";         Vendor = @("AMD");          Params = ""} #Geek
-    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Vendor = @("AMD"); Params = ""} #GLT-AstralHash
-    [PSCustomObject]@{MainAlgorithm = "glt-globalhash"; Vendor = @("AMD"); Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
-    [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";  Vendor = @("AMD"); Params = ""} #GLT-JeongHash
-    [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Vendor = @("AMD"); Params = ""} #GLT-PadiHash
-    [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Vendor = @("AMD"); Params = ""} #GLT-PawelHash
+    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Vendor = @("AMD");        Params = ""} #GLT-AstralHash
+    [PSCustomObject]@{MainAlgorithm = "glt-globalhash"; Vendor = @("AMD");        Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
+    [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";  Vendor = @("AMD");        Params = ""} #GLT-JeongHash
+    [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Vendor = @("AMD");        Params = ""} #GLT-PadiHash
+    [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Vendor = @("AMD");        Params = ""} #GLT-PawelHash
     [PSCustomObject]@{MainAlgorithm = "hex";          Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";      Vendor = @("AMD");          Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "honeycomb";    Vendor = @("AMD");          Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "kawpow";       Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.22.0"} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "lyra2tdc";     Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #Lyra2TDC
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3";      Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2RE3
-    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";  Vendor = @("AMD","NVIDIA"); Params = ""} #Lyra2vc0ban
+    [PSCustomObject]@{MainAlgorithm = "lyra2tdc";     Vendor = @("AMD");          Params = ""; DevFee = 2.0} #Lyra2TDC
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";      Vendor = @("AMD");          Params = ""} #Lyra2RE3
+    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";  Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "megabtx";      Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "megamec";      Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "minotaur";     Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 5.0} #, new in v0.26.0
@@ -79,6 +79,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x21s";         Vendor = @("AMD");          Params = ""} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i";         Vendor = @("AMD");          Params = ""} #X22i
     [PSCustomObject]@{MainAlgorithm = "x25x";         Vendor = @("AMD");          Params = ""} #X25x
+    [PSCustomObject]@{MainAlgorithm = "x33";          Vendor = @("AMD","NVIDIA"); Params = ""} #X33
     [PSCustomObject]@{MainAlgorithm = "xevan";        Vendor = @("AMD");          Params = ""} #Xevan
 )
 
