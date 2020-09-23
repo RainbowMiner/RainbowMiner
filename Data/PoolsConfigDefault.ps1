@@ -68,9 +68,6 @@
         "BtcPrivate" = [PSCustomObject]@{
             Currencies=@("BTCP")
         }
-        "CoinFoundry" = [PSCustomObject]@{
-            Currencies=@("BCD")
-        }
         "Cortexmint" = [PSCustomObject]@{
             Currencies=@("CTXC")
         }
