@@ -6,7 +6,6 @@ param(
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
-    [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
@@ -178,7 +177,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 HasMinerExclusions = $false
                 Price_Bias    = 0.0
                 Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
+                Wallet        = $Wallets.$Pool_ExCurrency
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
