@@ -1515,7 +1515,6 @@ function Get-PoolsContent {
                     if ($Session.Config.MaxTimeSinceLastBlock -gt 0 -and $_.TSL -ne $null -and $_.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
                         $Penalty += [Math]::Exp(($_.TSL - $Session.Config.MaxTimeSinceLastBlock)/120)-1
                     }
-                    $Penalty = [Math]::Min($Penalty,100)
                 }
 
                 $Pool_Factor = [Math]::Max(1-$Penalty/100,0)
