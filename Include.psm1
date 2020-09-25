@@ -1503,7 +1503,7 @@ function Get-PoolsContent {
                     if ($Session.Config.MaxAllowedLuck -gt 0 -and $c.TSL -ne $null -and $c.BLK -ne $null) {
                         $Luck = $c.TSL / $(if ($c.BLK -gt 0) {86400/$_.BLK} else {86400})
                         if ($Luck -gt $Session.Config.MaxAllowedLuck) {
-                            $Penalty += [Math]::Exp(($Luck - $Session.Config.MaxAllowedLuck)/8)-1
+                            $Penalty += [Math]::Exp(($Luck - $Session.Config.MaxAllowedLuck)*12)-1
                         }
                     }
                     if ($Session.Config.MaxTimeSinceLastBlock -gt 0 -and $_.TSL -ne $null -and $_.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
