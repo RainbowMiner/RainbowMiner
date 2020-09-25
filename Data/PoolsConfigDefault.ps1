@@ -323,4 +323,11 @@
             Autoexchange=$true
             Yiimp=$true
         }
+        "ZpoolCoins" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AECurrency="";Penalty=16}
+            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
+            Currencies=@("BTC")
+            Autoexchange=$true
+            Yiimp=$true
+        }
 }
