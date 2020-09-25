@@ -2050,15 +2050,15 @@ function Invoke-Core {
                         if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
                             $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm0)-$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100)) * ($Session.Config.HashrateWeight/100)
                         }
-                        if ($_.TSL -ne $null -and $_.BLK -ne $null -and $Session.Config.MaxAllowedLuck -gt 0) {
-                            $Luck = $_.TSL / $(if ($_.BLK -gt 0) {86400/$_.BLK} else {86400})
-                            if ($Luck -gt $Session.Config.MaxAllowedLuck) {
-                                $Price_Cmp /= $Luck - $Session.Config.MaxAllowedLuck + 1
-                            }
-                        }
-                        if ($_.TSL -ne $null -and $Session.Config.MaxTimeSinceLastBlock -gt 0 -and $_.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
-                            $Price_Cmp /= ($_.TSL - $Session.Config.MaxTimeSinceLastBlock)/3600 + 1
-                        }
+                        #if ($_.TSL -ne $null -and $_.BLK -ne $null -and $Session.Config.MaxAllowedLuck -gt 0) {
+                        #    $Luck = $_.TSL / $(if ($_.BLK -gt 0) {86400/$_.BLK} else {86400})
+                        #    if ($Luck -gt $Session.Config.MaxAllowedLuck) {
+                        #        $Price_Cmp /= $Luck - $Session.Config.MaxAllowedLuck + 1
+                        #    }
+                        #}
+                        #if ($_.TSL -ne $null -and $Session.Config.MaxTimeSinceLastBlock -gt 0 -and $_.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
+                        #    $Price_Cmp /= ($_.TSL - $Session.Config.MaxTimeSinceLastBlock)/3600 + 1
+                        #}
                     }
                 }
                 $Pools_PriceCmp[$Pool_Ix] = $Price_Cmp

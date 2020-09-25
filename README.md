@@ -834,6 +834,7 @@ For Server (Runmode=server) setup:
 - **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=20]
 - **HashrateWeightStrength** = adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square) [default=50]
 - **PoolAccuracyWeight** = adjust weight of pool accuracy on the profit comparison in % (0..100, 0=disable) [default=15]
+- **MaxAllowedLuck** = if luck (=timesincelast/timetofind) is greater than that number, adjust profit comparison by multiplying it with 1/(luck-MaxAllowedLuck+1) (0=disable) [default=0]
 - **ProfitSpikeProtection** = prevent profit files to be updated, if the actual value is greater than the avg. profit x this factor (0 to disable) [default=0]
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]

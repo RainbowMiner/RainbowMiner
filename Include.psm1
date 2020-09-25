@@ -1500,16 +1500,33 @@ function Get-PoolsContent {
                 $Penalty = [Double]$Parameters.Penalty
                 if (-not $Parameters.InfoOnly) {
                     $Penalty += [Double]$Session.Config.Algorithms."$($c.Algorithm)".Penalty + [Double]$Session.Config.Coins."$($c.CoinSymbol)".Penalty
+                    if ($Session.Config.MaxAllowedLuck -gt 0 -and $c.TSL -ne $null -and $c.BLK -ne $null) {
+                        $Luck = $c.TSL / $(if ($c.BLK -gt 0) {86400/$_.BLK} else {86400})
+                        if ($Luck -gt $Session.Config.MaxAllowedLuck) {
+                            $Penalty += [Math]::Exp(($Luck - $Session.Config.MaxAllowedLuck)/8)-1
+                        }
+                    }
+                    if ($Session.Config.MaxTimeSinceLastBlock -gt 0 -and $_.TSL -ne $null -and $_.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
+                        $Penalty += [Math]::Exp(($_.TSL - $Session.Config.MaxTimeSinceLastBlock)/120)-1
+                    }
+                    $Penalty = [Math]::Min($Penalty,100)
                 }
-                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $Parameters.InfoOnly -and -not $Session.Config.IgnoreFees){$c.PoolFee}) )/100
+
+                $c.Penalty = $Penalty
+
+                if (-not $Parameters.InfoOnly -and -not $Session.Config.IgnoreFees -and $c.PoolFee) {$Penalty += $c.PoolFee}
+
+                $Pool_Factor = [Math]::Max(1-$Penalty/100,0)
+
                 if ($EnableErrorRatio -and $c.ErrorRatio) {$Pool_Factor *= $c.ErrorRatio}
-                if ($Pool_Factor -lt 0)       {$Pool_Factor = 0}
+
                 if ($c.Price -eq $null)       {$c.Price = 0}
                 if ($c.StablePrice -eq $null) {$c.StablePrice = 0}
+
                 $c.Price        *= $Pool_Factor
                 $c.StablePrice  *= $Pool_Factor
-                $c.Penalty       = $Penalty
                 $c.PenaltyFactor = $Pool_Factor
+
                 if ($Disabled -and $Disabled.ContainsKey("$($PoolName)_$(if ($c.CoinSymbol) {$c.CoinSymbol} else {$c.Algorithm})_Profit")) {
                     $c.Disabled = $true
                 }
