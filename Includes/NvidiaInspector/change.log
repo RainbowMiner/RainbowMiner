@@ -2,6 +2,14 @@
 ###       NVIDIA INSPECTOR - CHANGELOG      ###
 ###############################################
 
+NVIDIA Inspector - Version 1.9.8.1 Beta (.NET Framework 2 or above)
+
+- added support for HBM1, HBM2, SDDR4, GDDR6, GDDR6X memory
+- added DCH detection
+- added foundry info to GPU
+- fixed some crashes
+
+
 NVIDIA Inspector - Version 1.9.7.8 (.NET Framework 2 or above)
 
 - added "dpiAware" flag to support win8+ dpi scaling
