@@ -1500,6 +1500,12 @@ function Get-PoolsContent {
                 $Penalty = [Double]$Parameters.Penalty
                 if (-not $Parameters.InfoOnly) {
                     $Penalty += [Double]$Session.Config.Algorithms."$($c.Algorithm)".Penalty + [Double]$Session.Config.Coins."$($c.CoinSymbol)".Penalty
+                }
+
+                $c.Penalty = $Penalty
+
+                if (-not $Parameters.InfoOnly) {
+                    if (-not $Session.Config.IgnoreFees -and $c.PoolFee) {$Penalty += $c.PoolFee}
                     if ($Session.Config.MaxAllowedLuck -gt 0 -and $c.TSL -ne $null -and $c.BLK -ne $null) {
                         $Luck = $c.TSL / $(if ($c.BLK -gt 0) {86400/$_.BLK} else {86400})
                         if ($Luck -gt $Session.Config.MaxAllowedLuck) {
@@ -1511,10 +1517,6 @@ function Get-PoolsContent {
                     }
                     $Penalty = [Math]::Min($Penalty,100)
                 }
-
-                $c.Penalty = $Penalty
-
-                if (-not $Parameters.InfoOnly -and -not $Session.Config.IgnoreFees -and $c.PoolFee) {$Penalty += $c.PoolFee}
 
                 $Pool_Factor = [Math]::Max(1-$Penalty/100,0)
 
