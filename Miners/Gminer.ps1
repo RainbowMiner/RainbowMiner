@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.23-gminer/gminer_2_23_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.24-gminer/gminer_2_24_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.23-gminer/gminer_2_23_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.24-gminer/gminer_2_24_windows64.zip"
 }
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "2.23"
+$Version = "2.24"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -28,7 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Blake2bSHA3";     MinMemGb = 1;                     Params = "--algo handshake";   Vendor = @("NVIDIA");       ExtendInterval = 2} #Blake2bSHA3/HNS
     [PSCustomObject]@{MainAlgorithm = "Blake2s";         MinMemGb = 2;                     Params = "--algo blake2s";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $false; CoinSymbol = @("KDA"); ExcludePoolName = "^Nicehash"} #Blake2s
     [PSCustomObject]@{MainAlgorithm = "Cortex";          MinMemGb = 8;                     Params = "--algo cortex";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $false; Fee = 5.0} #Cortex
-    [PSCustomObject]@{MainAlgorithm = "CryptoNightBBC";  MinMemGb = 2;                     Params = "--algo bbc";         Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $true;  Fee = 5.0} #CryptonightBBC
+    #[PSCustomObject]@{MainAlgorithm = "CryptoNightBBC";  MinMemGb = 2;                     Params = "--algo bbc";         Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $true;  Fee = 5.0} #CryptonightBBC
     [PSCustomObject]@{MainAlgorithm = "Cuckoo24";        MinMemGb = 4;                     Params = "--algo cuckoo24";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Equihash Cuckoo29/BFC
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";     MinMemGb = 4;                     Params = "--algo cuckaroo29b"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 4.0} #Cuckaroo29b/TUBE (from July 29th 2020)
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29bfc";   MinMemGb = 4;                     Params = "--algo bfc";         Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0} #Equihash Cuckoo29/BFC
@@ -39,7 +39,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGb = 4;                     Params = "--algo cuckarood29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckarood29 upto 01/16/2020
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29v";    MinMemGb = 4;                     Params = "--algo cuckarood29v";Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckarood29v/MoneroV
     [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGb = 4;                     Params = "--algo cuckaroom29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0; ExcludeCoinSymbol = @("PMEER")} #Cuckaroom29 from 01/16/2020
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGb = 4;                     Params = "--algo cuckaroom29_qitmeer"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true; Fee = 3.0; CoinSymbol = @("PMEER")} #Cuckaroom29/PMEER from 07/05/2020
+    #[PSCustomObject]@{MainAlgorithm = "Cuckaroom29";     MinMemGb = 4;                     Params = "--algo cuckaroom29_qitmeer"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true; Fee = 3.0; CoinSymbol = @("PMEER")} #Cuckaroom29/PMEER from 07/05/2020
     [PSCustomObject]@{MainAlgorithm = "Cuckarooz29";     MinMemGb = 4;                     Params = "--algo cuckarooz29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0; ExcludeCoinSymbol = @("PMEER")} #Cuckarooz29/GRIN from 07/16/2020
     [PSCustomObject]@{MainAlgorithm = "Eaglesong";       MinMemGb = 2;                     Params = "--algo eaglesong";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $false} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGb = 2;                     Params = "--algo 96_5";        Vendor = @("NVIDIA");       ExtendInterval = 2; AutoPers = $false; ExcludePoolName = "^Zpool"} #Equihash 96,5
