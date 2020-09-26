@@ -10,10 +10,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-YesCrypt\ccminer"
     $UriCuda = @(
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10-ccmineryescrypt/ccminerv821-fix-bionic-cuda11.7z"
-            Cuda = "11.0"
-        }
+        #[PSCustomObject]@{
+        #    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10-ccmineryescrypt/ccminerv821-fix-bionic-cuda11.7z"
+        #    Cuda = "11.0"
+        #}
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10-ccmineryescrypt/ccminerv821-fix-bionic-cuda10.7z"
             Cuda = "10.0"
