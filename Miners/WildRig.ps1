@@ -79,7 +79,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x21s";         Vendor = @("AMD");          Params = ""} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i";         Vendor = @("AMD");          Params = ""} #X22i
     [PSCustomObject]@{MainAlgorithm = "x25x";         Vendor = @("AMD");          Params = ""} #X25x
-    [PSCustomObject]@{MainAlgorithm = "x33";          Vendor = @("AMD","NVIDIA"); Params = ""} #X33
+    [PSCustomObject]@{MainAlgorithm = "x33";          Vendor = @("AMD");          Params = ""} #X33
     [PSCustomObject]@{MainAlgorithm = "xevan";        Vendor = @("AMD");          Params = ""} #Xevan
 )
 
