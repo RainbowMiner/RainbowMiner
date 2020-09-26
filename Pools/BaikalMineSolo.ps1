@@ -87,6 +87,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Hashrate      = (Get-Date).ToUniversalTime()
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
+                SoloMining    = $true
                 WTM           = $true
                 EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
                 Name          = $Name

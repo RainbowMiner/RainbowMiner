@@ -96,6 +96,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
             Hashrate      = $Stat.HashRate_Live
             BLK           = $null
             TSL           = $null
+            SoloMining    = $true
             WTM           = $true
             EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
             Name          = $Name

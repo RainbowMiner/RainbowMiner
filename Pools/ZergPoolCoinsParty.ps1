@@ -168,6 +168,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                SoloMining    = $true
                 EthMode       = if ($Pool_Algorithm_Norm -eq "Ethash") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(ProgPow|KawPOW)") {"stratum"} else {$null}
                 ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
