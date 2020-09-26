@@ -970,6 +970,21 @@ If you feel like a pool tends to exagerate it's results, you can set a penalty i
 
 This would reduce the hashrate-results from the pool Ravenminer by 5%
 
+#### Override default dynamic penalties
+
+All pool's penalties will be adjusted upwards, if either the current luck is greater than "MaxAllowedLuck" or the actual time to find a block is greater than "MaxTimeSinceLastBlock". Both values are defined in the global config.txt.
+If you want to override the defaults for a specific pool, give the corresponding parameters a value.
+
+    "Zpool": {
+        "BTC": "<YOUR_BTC_ADDRESS>",
+        "Worker": "$WorkerName",
+        "MaxAllowedLuck": "2",
+        "MaxTimeSinceLastBlock": "2h"
+    }
+
+This would set the MaxAllowedLuck to 2 (=200% luck) and 2h (=7200 seconds).
+Leaving the parameter(s) empty (as ""), will have this pool using the default values in config.txt
+Set the parameter(s) to "0", to disable the feature(s) for that pool.
 
 #### Change a pool's time frame (data window)
 

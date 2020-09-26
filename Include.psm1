@@ -1507,14 +1507,16 @@ function Get-PoolsContent {
                 if (-not $Parameters.InfoOnly) {
                     if (-not $Session.Config.IgnoreFees -and $c.PoolFee) {$Penalty += $c.PoolFee}
                     if (-not $c.SoloMining) {
-                        if ($Session.Config.MaxAllowedLuck -gt 0 -and $c.TSL -ne $null -and $c.BLK -ne $null) {
+                        $Pool_MaxAllowedLuck = if ($Parameters.MaxAllowedLuck -ne $null) {$Parameters.MaxAllowedLuck} else {$Session.Config.MaxAllowedLuck}
+                        if ($Pool_MaxAllowedLuck -gt 0 -and $c.TSL -ne $null -and $c.BLK -ne $null) {
                             $Luck = $c.TSL / $(if ($c.BLK -gt 0) {86400/$c.BLK} else {86400})
-                            if ($Luck -gt $Session.Config.MaxAllowedLuck) {
-                                $Penalty += [Math]::Exp([Math]::Min($Luck - $Session.Config.MaxAllowedLuck,0.385)*12)-1
+                            if ($Luck -gt $Pool_MaxAllowedLuck) {
+                                $Penalty += [Math]::Exp([Math]::Min($Luck - $Pool_MaxAllowedLuck,0.385)*12)-1
                             }
                         }
-                        if ($Session.Config.MaxTimeSinceLastBlock -gt 0 -and $c.TSL -ne $null -and $c.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
-                            $Penalty += [Math]::Exp([Math]::Min($c.TSL - $Session.Config.MaxTimeSinceLastBlock,554)/120)-1
+                        $Pool_MaxTimeSinceLastBlock = if ($Parameters.MaxTimeSinceLastBlock -ne $null) {$Parameters.MaxTimeSinceLastBlock} else {$Session.Config.MaxTimeSinceLastBlock}
+                        if ($Pool_MaxTimeSinceLastBlock -gt 0 -and $c.TSL -ne $null -and $c.TSL -gt $Pool_MaxTimeSinceLastBlock) {
+                            $Penalty += [Math]::Exp([Math]::Min($c.TSL - $Pool_MaxTimeSinceLastBlock,554)/120)-1
                         }
                     }
                 }
@@ -4983,7 +4985,7 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique

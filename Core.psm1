@@ -1469,9 +1469,13 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
             $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
             $Session.Config.Pools.$p | Add-Member MaxMarginOfError ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)) -Force
-            $Pool_SwHyst = $Session.Config.Pools.$p.SwitchingHysteresis -replace "[^\d\.\-]+"
-            $Session.Config.Pools.$p | Add-Member SwitchingHysteresis $(if ("$Pool_SwHyst") {[Math]::Max([Math]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null}) -Force
+            $Pool_SwHyst = "$($Session.Config.Pools.$p.SwitchingHysteresis -replace "[^\d\.\-]+")"
+            $Session.Config.Pools.$p | Add-Member SwitchingHysteresis $(if ($Pool_SwHyst) {[Math]::Max([Math]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null}) -Force
             $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
+            $Pool_MaxAllowedLuck = "$($Session.Config.Pools.$p.MaxAllowedLuck -replace "[^\d\.]+")"
+            $Session.Config.Pools.$p | Add-Member MaxAllowedLuck $(if ($Pool_MaxAllowedLuck) {[Math]::Max([double]$Pool_MaxAllowedLuck,0.0)} else {$null}) -Force
+            $Pool_MaxTimeSinceLastBlock = "$($Session.Config.Pools.$p.MaxTimeSinceLastBlock -replace "[^\d\.mhdw]+")"
+            $Session.Config.Pools.$p | Add-Member MaxTimeSinceLastBlock $(if ($Pool_MaxTimeSinceLastBlock) {ConvertFrom-Time $Pool_MaxTimeSinceLastBlock} else {$null}) -Force
         }
     }
 
