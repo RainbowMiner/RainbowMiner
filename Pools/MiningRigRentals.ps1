@@ -778,7 +778,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                      ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
                                                      ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
                                                      ($RigServer -and ($_.region -ne $RigServer.region)) -or
-                                                     ($false -and ($_.extensions -ne $CreateRig.extensions)) #currently disabled, wait for merc to fix this
+                                                     ($_.extensions -ne $CreateRig.extensions)
                                                 ) {
                                                     $CreateRig["id"] = $_.id
                                                     if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
