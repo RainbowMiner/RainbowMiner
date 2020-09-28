@@ -298,7 +298,7 @@ if ($AllRigs_Request) {
                             Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     } elseif (([double]$_.status.hours -gt 0.25) -and $Pool_RigExtended) {
-                        Set-MiningRigRentalStatus $Pool_Rig -Status "notextended" > $null
+                        Set-MiningRigRentalStatus $Pool_RigId -Status "notextended" > $null
                     }
                 }
 
