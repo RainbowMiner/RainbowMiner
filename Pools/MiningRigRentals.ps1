@@ -369,7 +369,7 @@ if ($AllRigs_Request) {
 					    HasMinerExclusions = $false
 					    Price_Bias    = 0.0
 					    Price_Unbias  = 0.0
-                        Wallet        = $Wallets.BTC
+                        Wallet        = ""
                         Worker        = $Worker1
                         Email         = $Email
                     }
