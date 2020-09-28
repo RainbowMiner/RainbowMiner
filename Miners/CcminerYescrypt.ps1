@@ -10,15 +10,13 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-YesCrypt\ccminer"
     $UriCuda = @(
-        #[PSCustomObject]@{
-        #    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10-ccmineryescrypt/ccminerv821-fix-bionic-cuda11.7z"
-        #    Cuda = "11.0"
-        #}
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10-ccmineryescrypt/ccminerv821-fix-bionic-cuda10.7z"
-            Cuda = "10.0"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.25-klaust/ccminer-825-yescrypt-cuda101-linux.7z"
+            Cuda = "10.1"
         }
     )
+    $Version = "8.25-yescrypt"
+    $ManualUri = "https://github.com/KlausT/ccminer/releases"
 } else {
     $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
     $UriCuda = @(
@@ -27,11 +25,11 @@ if ($IsLinux) {
             Cuda = "10.0"
         }        
     )
+    $Version = "8.21-r18v10"
+    $ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 }
-$ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 $Port = "129{0:d2}"
 $DevFee = 0.0
-$Version = "8.21-r18v10"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
