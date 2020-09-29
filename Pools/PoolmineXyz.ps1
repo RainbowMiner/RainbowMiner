@@ -59,7 +59,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
-    $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
+    $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast_shares
     $Pool_BLK = $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks"
 
     if (-not $InfoOnly) {
