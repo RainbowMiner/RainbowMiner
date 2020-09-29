@@ -5,6 +5,10 @@
         "2MinersSolo" = [PSCustomObject]@{
             Currencies=@("XZC")
         }
+        "572133Club" = [PSCustomObject]@{
+            Currencies=@("KYAN")
+            Yiimp=$true
+        }
         "666Pool" = [PSCustomObject]@{
             Currencies=@("PMEER")
         }
