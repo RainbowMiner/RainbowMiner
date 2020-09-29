@@ -2883,8 +2883,10 @@ function Get-Device {
                         if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
                             if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
                             elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
-                        } elseif ($Device_Name -eq "gfx906") {
+                        } elseif ($Device_Name -eq "gfx906" -or $Device_Name -eq "gfx907") {
                             $Device_Name = "Radeon VII"
+                        } elseif ($Device_Name -eq "gfx1010") {
+                            $Device_Name = "Radeon RX 5700 XT"
                         }
                         if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
                     } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
@@ -3317,19 +3319,21 @@ function Get-NormalizedDeviceName {
     )
     if ($Vendor -ne "AMD") {return $DeviceName}
 
-    $DeviceName = $($DeviceName `
+    $DeviceName = "$($DeviceName `
             -replace 'ASUS' `
             -replace 'AMD' `
             -replace '\(?TM\)?' `
             -replace 'Series' `
             -replace 'Graphics' `
             -replace "\s+", ' '
-    ).Trim()
+    )".Trim()
 
-    $DeviceName = $DeviceName -replace '.*Radeon.*([4-5]\d0).*', 'Radeon RX $1'     # RX 400/500 series
-    $DeviceName = $DeviceName -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
-    $DeviceName = $DeviceName -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
-    $DeviceName -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'                       # HD series
+    if ($DeviceName -match '.*Radeon.*(5[567]00.*)') {"Radeon RX $($Matches[1])"}             # RX 5000 series
+    elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
+    elseif ($DeviceName -match '.*\s(Vega).*(56|64).*') {"Radeon Vega $($Matches[2])"}        # Vega series
+    elseif ($DeviceName -match '.*\s(R\d)\s(\w+).*') {"Radeon $($Matches[1]) $($Matches[2])"} # R3/R5/R7/R9 series
+    elseif ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}             # HD series
+    else {$DeviceName}
 }
 
 function Get-DeviceName {
@@ -3366,23 +3370,53 @@ function Get-DeviceName {
             }
         } else {
             if ($IsWindows -and $Vendor -eq 'AMD') {
-                $DeviceId = 0
-                
-                $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
-                $AdlResult | Foreach-Object {
-                    $AdlResultSplit = @($_ -split ',' | Select-Object)
-                    if ($AdlResultSplit.Count -ge 9) {
-                        $DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
-                        $SubId = if ($AdlResultSplit.Count -ge 10 -and $AdlResultSplit[9] -match "&DEV_([0-9A-F]+?)&") {$Matches[1]} else {"noid"}
-                        if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
+
+                $AdlStats = $null
+
+                try {
+                    $AdlResult = Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd
+                    if ($AdlResult -notmatch "Failed") {
+                        $AdlStats = $AdlResult | ConvertFrom-Json -ErrorAction Stop
+                    }
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+                        
+                if ($AdlStats -and $AdlStats.Count) {
+
+                    $DeviceId = 0
+
+                    $AdlStats | Foreach-Object {
+                        $DeviceName = Get-NormalizedDeviceName $_."Adatper Name" -Vendor $Vendor
                         [PSCustomObject]@{
                             Index = $DeviceId
                             DeviceName = $DeviceName
-                            InstanceId = $AdlResultSplit[9]
-                            SubId = $SubId
+                            SubId = 'noid'
+                            PCIBusId = if ($_."Bus Id" -match "^([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
                             CardId = -1
                         }
                         $DeviceId++
+                    }
+                } else {
+
+                    $DeviceId = 0
+                
+                    $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+                    $AdlResult | Foreach-Object {
+                        $AdlResultSplit = @($_ -split ',' | Select-Object)
+                        if ($AdlResultSplit.Count -ge 9) {
+                            $DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
+                            $SubId = if ($AdlResultSplit.Count -ge 10 -and $AdlResultSplit[9] -match "&DEV_([0-9A-F]+?)&") {$Matches[1]} else {"noid"}
+                            if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
+                            [PSCustomObject]@{
+                                Index = $DeviceId
+                                DeviceName = $DeviceName
+                                InstanceId = $AdlResultSplit[9]
+                                SubId = $SubId
+                                CardId = -1
+                            }
+                            $DeviceId++
+                        }
                     }
                 }
             }
