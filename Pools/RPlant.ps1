@@ -43,7 +43,7 @@ $Pools_Data = [PSCustomObject]@{
     "GXX"   = [PSCustomObject]@{port = 7025; region = $Pool_Regions}
     "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
     "KVA"   = [PSCustomObject]@{port = 7061; region = @("us"); stratum = "randomx"}
-    "KLA"   = [PSCustomObject]@{port = 3355; region = @("us"); stratum = "randomx"}
+    "KLR"   = [PSCustomObject]@{port = 3355; region = @("us"); stratum = "randomx"}
     "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
@@ -69,7 +69,10 @@ $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets."$($_.Name)"
-    $Pool_Data           = $Pools_Data.$Pool_Currency
+    if (-not ($Pool_Data = $Pools_Data.$Pool_Currency)) {
+        Write-Log -Level Warn "Pool $($Name) missing port for $($Pool_Currency)"
+        return
+    }
     $Pool_Stratum        = if ($Pool_Data.stratum) {$Pool_Data.stratum} else {"stratum-%region%"}
 
     if (-not $InfoOnly) {
