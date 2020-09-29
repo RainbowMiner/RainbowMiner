@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.4-wildrigmulti/wildrig-multi-linux-0.27.4.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.5-wildrigmulti/wildrig-multi-linux-0.27.5.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.4-wildrigmulti/wildrig-multi-windows-0.27.4.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.5-wildrigmulti/wildrig-multi-windows-0.27.5.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.27.4"
+$Version = "0.27.5"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sha256csm";    Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0; Version = "0.20.6"} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";      Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";      Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256t
-    [PSCustomObject]@{MainAlgorithm = "skein2";       Vendor = @("AMD");          Params = ""} #Skein2
+    [PSCustomObject]@{MainAlgorithm = "skein2";       Vendor = @("AMD","NVIDIA"); Params = ""} #Skein2
     [PSCustomObject]@{MainAlgorithm = "skunkhash";    Vendor = @("AMD");          Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa";        Vendor = @("AMD");          Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel";   Vendor = @("AMD");          Params = ""} #Timetravel
