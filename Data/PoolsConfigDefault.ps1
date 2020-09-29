@@ -241,6 +241,15 @@
             SetupFields=[PSCustomObject]@{API_Key="Enter your poolium.win API-Key";Password="Enter your poolium.win password"}
             Currencies=@("VRM")
         }
+        "PoolmineXyz" = [PSCustomObject]@{
+            Currencies=@("KYAN")
+            Yiimp=$true
+        }
+        "PoolmineXyzSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1"}
+            Currencies=@("KYAN")
+            Yiimp=$true
+        }
         "PoolSexy" = [PSCustomObject]@{
             Currencies=@("DBIX")
         }
