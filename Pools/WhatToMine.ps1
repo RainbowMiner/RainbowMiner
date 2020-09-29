@@ -42,7 +42,7 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
         $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
         if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.coins.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.coins.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
         } else {
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.coins.$_.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
         }
@@ -105,7 +105,7 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
             $btc_revenue24 = $btc_revenue
 
             if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
             } else {
                 $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
             }
@@ -155,7 +155,7 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin} | Foreach-Object {
             $lastSatPrice = if ($Global:Rates.USD -and $_.price -gt 0) {$_.price / $Global:Rates.USD * 1e8} else {0}
         }
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($_.reward * $lastSatPrice / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($_.reward * $lastSatPrice / 1e8) -Duration $StatSpan -ChangeDetection $false -Quiet
 
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
