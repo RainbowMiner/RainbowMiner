@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.3-wildrigmulti/wildrig-multi-linux-0.27.3.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.4-wildrigmulti/wildrig-multi-linux-0.27.4.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.3-wildrigmulti/wildrig-multi-windows-0.27.3.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.4-wildrigmulti/wildrig-multi-windows-0.27.4.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.27.3"
+$Version = "0.27.4"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sha256csm";    Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0; Version = "0.20.6"} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";      Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";      Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256t
-    [PSCustomObject]@{MainAlgorithm = "skein2";       Vendor = @("AMD","NVIDIA"); Params = ""} #Skein2
+    [PSCustomObject]@{MainAlgorithm = "skein2";       Vendor = @("AMD");          Params = ""} #Skein2
     [PSCustomObject]@{MainAlgorithm = "skunkhash";    Vendor = @("AMD");          Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa";        Vendor = @("AMD");          Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel";   Vendor = @("AMD");          Params = ""} #Timetravel
@@ -68,6 +68,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "veil";         Vendor = @("AMD");          Params = ""; Algorithm = "x16rt"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt-VEIL
     [PSCustomObject]@{MainAlgorithm = "vprogpow";     Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #vProgPoW
     [PSCustomObject]@{MainAlgorithm = "wildkeccak";   Vendor = @("AMD");          Params = ""; ExtendInterval = 3; DevFee = 2.0} #Wildkeccak
+    [PSCustomObject]@{MainAlgorithm = "x11k";         Vendor = @("AMD","NVIDIA"); Params = ""} #X11k
     [PSCustomObject]@{MainAlgorithm = "x16r";         Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16rt";        Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16rv2";       Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
