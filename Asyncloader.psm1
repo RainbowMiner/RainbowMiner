@@ -58,7 +58,7 @@ Param(
                 foreach ($JobKey in $JobKeys) {
                     $Job = $AsyncLoader.Jobs.$JobKey
                     if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
-                    if (-not $AsyncLoader.Pause -and $Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
+                    if (-not $AsyncLoader.Pause -and $Job -and -not $Job.Running -and -not $Job.Paused -and (-not $Job.LastCacheWrite -or ($Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) -or (($Job.LastCacheWrite -lt $Job.LastRequest) -and ($Job.LastCacheWrite -lt (Get-Date).ToUniversalTime().AddMinutes(-10))))) {
                         if ($AsyncLoader.Verbose) {
                             Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                         }

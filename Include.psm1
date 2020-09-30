@@ -276,23 +276,36 @@ function Write-ToFile {
         [Parameter(Mandatory = $False)]
         [switch]$Append = $false,
         [Parameter(Mandatory = $False)]
-        [switch]$Timestamp = $false
+        [switch]$Timestamp = $false,
+        [Parameter(Mandatory = $False)]
+        [switch]$NoCR = $false,
+        [Parameter(Mandatory = $False)]
+        [switch]$ThrowError = $false
     )
     Begin {
+        $Error = ""
         try {
             $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
             $file = New-Object System.IO.StreamWriter($FilePath, $Append, [System.Text.Encoding]::UTF8)
-        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        } catch {if ($Error.Count){$Error.RemoveAt(0)};$Error = "$($_.Exception.Message)"}
     }
     Process {
         if ($file) {
             try {
                 if ($Timestamp) {
-                    $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
+                    if ($NoCR) {
+                        $file.Write("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
+                    } else {
+                        $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
+                    }
                 } else {
-                    $file.WriteLine($Message)
+                    if ($NoCR) {
+                        $file.Write($Message)
+                    } else {
+                        $file.WriteLine($Message)
+                    }
                 }
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)};$Error = "$($_.Exception.Message)"}
         }
     }
     End {
@@ -300,8 +313,9 @@ function Write-ToFile {
             try {
                 $file.Close()
                 $file.Dispose()
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)};$Error = "$($_.Exception.Message)"}
         }
+        if ($ThrowError -and $Error -ne "") {throw $Error}
     }
 }
 
@@ -5924,12 +5938,13 @@ Param(
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Start-Sleep -Milliseconds $delay}
         Invoke-GetUrl -JobData $JobData -JobKey $JobKey
+        $JobData.LastCacheWrite = (Get-Date).ToUniversalTime()
         return
     }
     
@@ -5951,7 +5966,7 @@ Param(
             #Write-Log -Level Info "New job $($Jobkey): $($JobData.Url)" 
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
-            $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
+            $AsyncLoader.Jobs.$JobKey.LastRequest=(Get-Date).ToUniversalTime()
             $AsyncLoader.Jobs.$Jobkey.Paused=$false
         }
 
@@ -5990,7 +6005,7 @@ Param(
             if (-not $Quickstart) {$AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()}
 
             $retry--
-            if ($retry) {
+            if ($retry -gt 0) {
                 if (-not $RequestError) {$retry = 0}
                 else {
                     $Passed = $StopWatch.ElapsedMilliseconds
@@ -6003,17 +6018,45 @@ Param(
 
         $StopWatch.Stop()
 
+        if (-not $Quickstart -and -not $RequestError -and $Request) {
+            if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
+                try {
+                    $Request = $Request | ConvertTo-Json -Compress -Depth 10 -ErrorAction Stop
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $RequestError = "$($_.Exception.Message)"
+                } finally {
+                    if ($RequestError) {$RequestError = "JSON problem: $($RequestError)"}
+                }
+            }
+        }
+
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
         } elseif (-not $Quickstart) {
-            if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
-                $Request | ConvertTo-Json -Compress -Depth 10 -ErrorAction Ignore | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
-            } else {
-                $Request | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
-            }
+            $retry = 3
+            do {
+                $RequestError = $null
+                try {
+                    Write-ToFile -FilePath ".\Cache\$($Jobkey).asy" -Message $Request -NoCR -ThrowError
+                    $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $RequestError = "$($_.Exception.Message)"                
+                }
+                $retry--
+                if ($retry -gt 0) {
+                    if (-not $RequestError) {$retry = 0}
+                    else {
+                        Start-Sleep -Milliseconds 500
+                    }
+                }
+            } until ($retry -le 0)
         }
-        if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null}
+        if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
+            try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
         $Error.Clear()
