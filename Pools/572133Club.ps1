@@ -34,7 +34,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://pool.572133.club/api/status" -delay 500 -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://pool.572133.club/api/status" -delay 2000 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
