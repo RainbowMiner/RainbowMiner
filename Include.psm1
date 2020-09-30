@@ -315,7 +315,7 @@ function Write-ToFile {
                 $file.Dispose()
             } catch {if ($Error.Count){$Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
         }
-        if ($ThrowError -and $ErrorMessage) {throw $Error}
+        if ($ThrowError -and $ErrorMessage) {throw $ErrorMessage}
     }
 }
 
