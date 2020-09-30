@@ -283,11 +283,11 @@ function Write-ToFile {
         [switch]$ThrowError = $false
     )
     Begin {
-        $Error = ""
+        $ErrorMessage = $null
         try {
             $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
             $file = New-Object System.IO.StreamWriter($FilePath, $Append, [System.Text.Encoding]::UTF8)
-        } catch {if ($Error.Count){$Error.RemoveAt(0)};$Error = "$($_.Exception.Message)"}
+        } catch {if ($Error.Count){$Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
     }
     Process {
         if ($file) {
@@ -305,7 +305,7 @@ function Write-ToFile {
                         $file.WriteLine($Message)
                     }
                 }
-            } catch {if ($Error.Count){$Error.RemoveAt(0)};$Error = "$($_.Exception.Message)"}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
         }
     }
     End {
@@ -313,9 +313,9 @@ function Write-ToFile {
             try {
                 $file.Close()
                 $file.Dispose()
-            } catch {if ($Error.Count){$Error.RemoveAt(0)};$Error = "$($_.Exception.Message)"}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
         }
-        if ($ThrowError -and $Error -ne "") {throw $Error}
+        if ($ThrowError -and $ErrorMessage) {throw $Error}
     }
 }
 
