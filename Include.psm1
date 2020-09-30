@@ -1455,12 +1455,19 @@ function Get-ContentByStreamReader {
         [Parameter(Mandatory = $true, ValueFromPipeline = $True)]
         [String]$FilePath,
         [Parameter(Mandatory = $false)]
-        [Switch]$ExpandLines = $false
+        [Switch]$ExpandLines = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ThrowError = $false
     )
+    $ErrorString = $null
     try {
         if (-not (Test-Path $FilePath)) {return}
         $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-        $reader = New-Object System.IO.StreamReader($FilePath)
+        $FileMode = [System.IO.FileMode]::Open
+        $FileAccess = [System.IO.FileAccess]::Read
+        $FileShare = [System.IO.FileShare]::ReadWrite
+        $FileStream = New-Object System.IO.FileStream $FilePath, $FileMode, $FileAccess, $FileShare
+        $reader = New-Object System.IO.StreamReader($FileStream)
         if ($ExpandLines) {
             while (-not $reader.EndOfStream) {$reader.ReadLine()}
         } else {
@@ -1469,10 +1476,12 @@ function Get-ContentByStreamReader {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
+        $ErrorString = "$($_.Exception.Message)"
     }
     finally {
         if ($reader) {$reader.Close();$reader.Dispose()}
     }
+    if ($ThrowError -and $ErrorString) {throw $ErrorString}
 }
 
 function Get-PoolsData {
