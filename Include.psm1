@@ -6031,16 +6031,20 @@ Param(
             }
         }
 
+        $CacheWriteOk = $false
+
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
-        } elseif (-not $Quickstart) {
+        } elseif ($Quickstart) {
+            $CacheWriteOk = $true
+        } else {
             $retry = 3
             do {
                 $RequestError = $null
                 try {
                     Write-ToFile -FilePath ".\Cache\$($Jobkey).asy" -Message $Request -NoCR -ThrowError
-                    $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()
+                    $CacheWriteOk = $true
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
                     $RequestError = "$($_.Exception.Message)"                
@@ -6054,6 +6058,9 @@ Param(
                 }
             } until ($retry -le 0)
         }
+
+        if ($CacheWriteOk) {$AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()}
+
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
             try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
