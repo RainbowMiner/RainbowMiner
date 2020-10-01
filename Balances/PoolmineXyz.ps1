@@ -15,7 +15,7 @@ if (-not $Payout_Currencies) {
 
 $PoolCoins_Request = [PSCustomObject]@{}
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://poolmine.xyz/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://poolmine.xyz/api/currencies" -tag $Name -cycletime 120 -retry 3 -retrywait 1000
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -26,7 +26,7 @@ catch {
 $Count = 0
 $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     try {
-        $Request = Invoke-RestMethodAsync "https://poolmine.xyz/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://poolmine.xyz/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 3 -retrywait 1000
         if ($Request -is [string] -and $Request.Trim() -match "^{.*}$") {
             $Request = ConvertFrom-Json "$($Request -replace '":\s*([,}])','": 0$1')" -ErrorAction Ignore
         }
