@@ -28,7 +28,7 @@ catch {
     return
 }
 
-if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -lt 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
