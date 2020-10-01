@@ -5988,7 +5988,9 @@ Param(
             try {                
                 if ($Quickstart) {
                     if (-not ($Request = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy")) {
-                        Remove-Item ".\Cache\$($Jobkey).asy" -Force
+                        if (Test-Path ".\Cache\$($Jobkey).asy") {
+                            try {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        }
                         $Quickstart = $false
                         if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Start-Sleep -Milliseconds $delay}
                     }
