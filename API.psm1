@@ -158,7 +158,18 @@
                     Break
                 }
                 "/remoteminers" {
-                    $Data = if ($API.RemoteMiners) {ConvertTo-Json $API.RemoteMiners -Depth 10} else {"[]"}
+                    if ($Parameters.Mode -eq "miners") {
+                        $AllMiners = @($API.RemoteMiners | Where-Object {$_.online} | Foreach-Object {
+                            $Worker = $_.worker
+                            $_.data | Foreach-Object {
+                                $Data = ConvertTo-Json $_ -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                                $Data | Add-Member Worker $Worker -Force -PassThru
+                            }
+                        } | Select-Object)
+                        $Data = if ($AllMiners) {ConvertTo-Json $AllMiners -Depth 10} else {"[]"}
+                    } else {
+                        $Data = if ($API.RemoteMiners) {ConvertTo-Json $API.RemoteMiners -Depth 10} else {"[]"}
+                    }
                     Break
                 }
                 "/minersneedingbenchmark" {

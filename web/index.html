@@ -34,19 +34,19 @@
     </thead>
 </table>
 
-<div id="remoteworkers">
-    <h3 class="mt-4 h-selector" id="h-remoteminers">Remote Workers</h3>
-    <table id="remoteminers" class="table mb-4"
+<div id="remoteworkersandminers">
+    <h3 class="mt-4 h-selector" id="h-remoteworkers">Remote Workers</h3>
+    <table id="remoteworkers" class="table mb-4"
            data-toggle="table"
            data-url="/remoteminers"
-           data-response-handler="formatRemoteMiners"
+           data-response-handler="formatRemoteWorkers"
            data-sort-order="desc"
            data-sort-name="Profit"
            data-cache="false"
            data-icons-prefix="fa"
            data-icons="icons"
            data-detail-view="true"
-           data-detail-formatter="detailFormatterRemoteMiners"
+           data-detail-formatter="detailFormatterRemoteWorkers"
            data-row-style="colorStatus">
         <thead>
             <tr>
@@ -57,10 +57,43 @@
                 <th data-field="tversion" data-sortable="true">Version</th>
                 <th data-field="profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
                 <th data-field="tpowerdraw" data-align="right" data-sortable="true">Power</th>
-                <th data-field="tmaxtemp" data-align="right" data-sortable="true "data-title-tooltip="Maximum temperature in °C">max °C</th>
+                <th data-field="tmaxtemp" data-align="right" data-sortable="true " data-title-tooltip="Maximum temperature in °C">max °C</th>
             </tr>
         </thead>
     </table>
+
+    <h3 id="h-remoteminers" class="mt-4 h-selector">Remote Miners</h3>
+    <table id="remoteminers" class="table mb-4"
+           data-toggle="table"
+           data-url="/remoteminers?mode=miners"
+           data-response-handler="formatRemoteMiners"
+           data-sort-order="asc"
+           data-sort-name="Worker"
+           data-cache="false"
+           data-icons-prefix="fa"
+           data-icons="icons"
+           data-detail-view="true"
+           data-detail-formatter="detailFormatter"
+           data-row-style="colorStatus">
+        <thead>
+            <tr>
+                <th data-field="Worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Worker</th>
+                <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
+                <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
+                <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
+                <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Currency</th>
+                <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+                <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
+                <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+                <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
+                <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+                <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+                <th data-field="tActive" data-align="right" data-sortable="true">Active</th>
+                <th data-field="tDonator" data-sortable="true">Mines</th>
+            </tr>
+        </thead>
+    </table>
+
 </div>
 
 <div id="devicestatus">
@@ -308,20 +341,22 @@ $(function () {
         window.setTimeout(refreshTable, 10000);
     }
     window.setTimeout(refreshTable, 10000);
-    function refreshTableRemoteMiners() {
-        $("table#remoteminers").bootstrapTable("refresh", { silent: true });
-        window.setTimeout(refreshTableRemoteMiners, 60000);
+    function refreshTableRemoteWorkers() {
+        $("table#remoteworkers").bootstrapTable("refresh", { silent: true });
+        window.setTimeout(refreshTableRemoteWorkers, 60000);
     }
-    window.setTimeout(refreshTableRemoteMiners, 60000);
+    window.setTimeout(refreshTableRemoteWorkers, 60000);
 
 
-    const $table = $('table#remoteminers');
+    /*
+    const $table = $('table#remoteworkers');
     $table.on('post-body.bs.table', (e) => {
       const $trs = $(e.currentTarget).find('tbody tr')
       $.each($trs, function (key, tr) {
       	$table.bootstrapTable('expandRow', $(tr).data('index'));  
     	})
     })
+    */
 });
 
 function formatRunningMiners(data) {
@@ -385,11 +420,11 @@ function formatRunningMiners(data) {
     return data;
 }
 
-function formatRemoteMiners(data) {
+function formatRemoteWorkers(data) {
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
-    if (data && data.length) $("div#remoteworkers").show()
-    else $("div#remoteworkers").hide()
+    if (data && data.length) $("div#remoteworkersandminers").show()
+    else $("div#remoteworkersandminers").hide()
     now = new Date();
     $.each(data, function (index, item) {
         // Format the type(s)
@@ -421,11 +456,64 @@ function formatRemoteMiners(data) {
     return data;
 }
 
+function formatRemoteMiners(data) {
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+        // Format the type(s)
+        //console.log(data);
+        //console.log(item);
+        item.tDevices = item.Type.toString();
+        item.Name = item.Name.split(/\-/)[0];
+
+        // Format the algorithms and hashrates
+
+        // Algorithm is always an array, sometimes has 2 elements
+        item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
+        try { item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]); } catch (error) { /* ignore */ }
+
+        // Speed is an array if there are multiple algorithms, or a single number otherwise
+        if (Array.isArray(item.EstimatedSpeed)) {
+            item.tPrimaryHashRate = item.EstimatedSpeed[0];
+            item.tSecondaryHashRate = item.EstimatedSpeed[1];
+        } else {
+            item.tPrimaryHashRate = item.EstimatedSpeed;
+        }
+
+        if (Array.isArray(item.CurrentSpeed)) {
+            item.tPrimaryHashRateLive = item.CurrentSpeed[0];
+            item.tSecondaryHashRateLive = item.CurrentSpeed[1];
+        } else {
+            item.tPrimaryHashRateLive = item.CurrentSpeed;
+        }
+        item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
+
+        item.tDonator = item.Donator ? "for dev" : "for you";
+
+        item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== "" ? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== "" ? item.CoinName : '-')
+
+        if (!item.Benchmarking && !item.tPrimaryHashRateLive && !item.PowerDraw) {
+            item.status = "Offline"
+        }
+
+        var active_data = item.Active.split(/\s+/)
+        if (active_data.length >= 6) {
+            var days = parseInt(active_data[0]);
+            var hours= parseInt(active_data[2]);
+            var mins = parseInt(active_data[4]);
+            item.tActive = (days ? days + '.' : '') + active_data[2] + ':' + active_data[4]
+        } else {
+            item.tActive = '--:--:--'
+        }
+    });
+    return data;
+}
+
 function colorStatus(row, index) {
     return { classes: row.status };
 }
 
-function detailFormatterRemoteMiners(index, row) {
+function detailFormatterRemoteWorkers(index, row) {
     //console.log(row);
     var html = [];
     html.push("<strong>Running Miners on "+row.worker+"</strong>");
