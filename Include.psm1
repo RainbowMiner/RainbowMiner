@@ -6858,6 +6858,47 @@ function Get-Uptime {
     if ($ts) {$ts} else {New-TimeSpan -Seconds 0}
 }
 
+function Get-SysInfo {
+    if ($IsWindows) {
+        try {
+            $CPULoad = (Get-CimInstance -Class CIM_Processor -ErrorAction Ignore | Foreach-Object {$_.LoadPercentage} | Measure-Object -Average).Average
+            $OSData  = Get-CimInstance -Class Win32_OperatingSystem -ErrorAction Ignore
+            $HDData  = Get-CimInstance -class Win32_LogicalDisk -namespace "root\CIMV2" -ErrorAction Ignore
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+
+        [PSCustomObject]@{
+            CpuLoad = $CPULoad
+            Memory  = [PSCustomObject]@{
+                TotalGB = [Math]::round($OSData.TotalVisibleMemorySize/1MB,1)
+                UsedGB  = [Math]::round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
+                UsedPercent = [Math]::round((($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)*100)/ $OSData.TotalVisibleMemorySize,2)
+            }
+            Disks   = @(
+                $HDData | Where-Object {$_.Size -gt 0} | Foreach-Object {             
+                    $size = [math]::round($_.Size/1GB, 1)
+                    $free = [math]::round($_.FreeSpace/1GB, 1)
+                    [PSCustomObject]@{ 
+                        Drive = $_.Name 
+                        Name = $_.VolumeName 
+                        TotalGB = $size
+                        UsedGB  = $size-$free
+                        UsedPercent = [math]::round(($size-$free)/$size*100,2)
+                    }
+                } | Select-Object
+            )
+        }
+    } elseif ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
+        Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo.sh" -File | Foreach-Object {
+            try {
+                & chmod +x "$($_.FullName)" > $null
+                Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
+    }
+}
+
 function Get-ReadableHex32 {
 [CmdletBinding()]
 param (

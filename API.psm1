@@ -121,6 +121,10 @@
                     $Data = $API.Info
                     break
                 }
+                "/sysinfo" {
+                    $Data = if ($Session.SysInfo) {ConvertTo-Json $Session.SysInfo -ErrorAction Ignore} else {"{}"}
+                    break
+                }
                 "/uptime" {
                     $Timer = Get-UpTime
                     $Data = ConvertTo-Json ([PSCustomObject]@{

@@ -1155,6 +1155,8 @@ function Invoke-Core {
         $API.MachineName = $Session.MachineName
     }
 
+    if (-not (Test-Path Variable:Global:Asyncloader)) {$Session.SysInfo = Get-SysInfo}
+
     if ($CheckConfig) {Update-WatchdogLevels -Reset}
 
     #Cleanup

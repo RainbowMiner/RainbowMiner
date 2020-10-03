@@ -53,6 +53,8 @@ Param(
             $StopWatch.Restart()
             $Cycle++
 
+            if (-not ($Cycle % 3)) {$Session.SysInfo = Get-SysInfo}
+
             if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
                 $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
                 foreach ($JobKey in $JobKeys) {
