@@ -6873,7 +6873,7 @@ function Get-SysInfo {
             Memory  = [PSCustomObject]@{
                 TotalGB = [Math]::round($OSData.TotalVisibleMemorySize/1MB,1)
                 UsedGB  = [Math]::round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
-                UsedPercent = [Math]::round((($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)*100)/ $OSData.TotalVisibleMemorySize,2)
+                UsedPercent = if ($OSData.TotalVisibleMemorySize -gt 0) {[Math]::round((($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)*100)/ $OSData.TotalVisibleMemorySize,2)} else {0}
             }
             Disks   = @(
                 $HDData | Where-Object {$_.Size -gt 0} | Foreach-Object {             
@@ -6884,7 +6884,7 @@ function Get-SysInfo {
                         Name = $_.VolumeName 
                         TotalGB = $size
                         UsedGB  = $size-$free
-                        UsedPercent = [math]::round(($size-$free)/$size*100,2)
+                        UsedPercent = if ($size -gt 0) {[math]::round(($size-$free)/$size*100,2)} else {0}
                     }
                 } | Select-Object
             )
