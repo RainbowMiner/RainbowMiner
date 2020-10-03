@@ -92,10 +92,19 @@
     </table>
 </div>
 
-<h3 class="mt-4 h-selector" id="h-balanceboxes">Balances <a href="#" id="updatebalance" class="btn btn-primary">Update</a></h3>
-<div id="balanceboxes--pools" class="card-deck"></div>
-<div id="balanceboxes--wallets" class="card-deck"></div>
-<div id="balanceboxes--total" class="card-deck"></div>
+<div id="sysinfo">
+    <h3 class="mt-4 h-selector" id="h-sysinfoboxes">System Information</h3>
+    <div id="sysinfoboxes" class="card-deck"></div>
+</div>
+
+<div id="balances">
+    <h3 class="mt-4 h-selector" id="h-balanceboxes">Balances <a href="#" id="updatebalance" class="btn btn-primary">Update</a></h3>
+    <div id="balanceboxes">
+        <div id="balanceboxes--pools" class="card-deck"></div>
+        <div id="balanceboxes--wallets" class="card-deck"></div>
+        <div id="balanceboxes--total" class="card-deck"></div>
+    </div>
+</div>
 
 <!-- End of page scripts -->
 <script id="poolbalance_template" type="text/x-handlebars-template">
@@ -123,9 +132,20 @@
     </div>
 </script>
 
+<script id="sysinfo_template" type="text/x-handlebars-template">
+    <div class="mb-2 card {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 200px">
+        <div class="card-body text-center">
+            <p class="card-text currencies">
+                <span class="currencyname font-weight-bold">{{name}}</span> <span>{{value}}</span>
+            </p>
+        </div>
+    </div>
+</script>
+
 <script type="text/javascript">
 $(function () {
     var template = Handlebars.compile($("#poolbalance_template").html());
+    var sysinfo_template = Handlebars.compile($("#sysinfo_template").html());
     $("#pauseminers").click(function (event) {
         event.stopPropagation()
         $.ajax({
@@ -260,6 +280,25 @@ $(function () {
                     $("#lockminers").show()
                 }
                 window.setTimeout(updateStatus, 10000);
+            }
+        });
+    })();
+    (function updateSysinfo() {
+        $.ajax({
+            url: '/sysinfo', success: function (result) {
+                $("#sysinfoboxes").empty();
+                if (typeof result.CpuLoad !== "undefined") {
+                    $("#sysinfoboxes").append(sysinfo_template({name: "CPU-Load:", value: result.CpuLoad, dark: theme == "dark"}));
+                }
+                if (typeof result.Memory !== "undefined") {
+                    $("#sysinfoboxes").append(sysinfo_template({name: "RAM:", value: result.Memory.UsedGB + '/' + result.Memory.TotalGB + ' GB (' + result.Memory.UsedPercent + '%)', dark: theme == "dark"}));
+                }
+                if (typeof result.Disks !== "undefined") {
+                    $.each(result.Disks, function (index, item) {
+                        $("#sysinfoboxes").append(sysinfo_template({name: item.Drive, value: item.UsedGB + '/' + item.TotalGB + ' GB (' + item.UsedPercent + '%)', dark: theme == "dark"}));
+                    })
+                }
+                window.setTimeout(updateSysinfo, 30000);
             }
         });
     })();
