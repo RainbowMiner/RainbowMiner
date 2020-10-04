@@ -341,7 +341,7 @@ Write-Log "Starting RainbowMiner v$($Session.Version)"
 #Set process priority to BelowNormal to avoid hash rate drops on systems with weak CPUs
 if (-not $psISE) {(Get-Process -Id $PID).PriorityClass = "BelowNormal"}
 
-if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File -ErrorAction Ignore}
+if ($IsWindows -and (Get-Command "Unblock-File" -ErrorAction SilentlyContinue)) {Get-ChildItem . -Recurse | Unblock-File -ErrorAction Ignore}
 
 [hashtable]$Session.DefaultValues = @{}
 
