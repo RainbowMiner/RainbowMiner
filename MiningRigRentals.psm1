@@ -76,7 +76,7 @@ param(
 
        if ($nonce -le 0) {$nonce = Get-UnixTimestamp -Milliseconds}
 
-       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2)) {
             $serverbody = @{
                 endpoint  = $endpoint
                 key       = $key

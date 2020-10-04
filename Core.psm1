@@ -3168,7 +3168,7 @@ function Invoke-Core {
 
     #Check if server is up
     if ($Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort) {
-        $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1
+        $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2
         if ($ServerConnected) {            
             Write-Host "[Client-Mode] Connected to $($Session.Config.ServerName):$($Session.Config.ServerPort)" -ForegroundColor Green
         } else {
@@ -3180,6 +3180,15 @@ function Invoke-Core {
     if ($Session.Config.RunMode -eq "Server") {
         if ($API.RemoteAPI) {
             Write-Host "[Server-Mode] Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($Session.Config.APIport) " -ForegroundColor Green
+            if ($API.Clients) {
+                Write-Host " "
+                Write-Host "Clients: " -NoNewLine
+                $API.Clients | Foreach-Object {
+                    $lastseen = [Math]::Round((Get-UnixTimestamp)-$_.timestamp,0)
+                    Write-Host "[$($_.workername)@$(if ($_.machinename) {$_.machinename} else {$_.machineip})]" -ForegroundColor "$(if ($lastseen -gt 300) {"Red"} else {"Green"}) " -NoNewline
+                }
+                Write-Host " "
+            }
         } else {
             Write-Host "[Server-Mode] Server has not been started. Run RainbowMiner with admin privileges." -ForegroundColor Red
         }

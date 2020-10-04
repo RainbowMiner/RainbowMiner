@@ -5726,7 +5726,7 @@ Param(
         [switch]$AsJob
 )
     if ($JobKey -and $JobData) {
-        if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+        if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2)) {
             $serverbody = @{
                 url       = $JobData.url
                 method    = $JobData.method
@@ -5743,7 +5743,9 @@ Param(
                 machinename = $Session.MachineName
                 myip      = $Session.MyIP
             }
+            #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
             $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
+            #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
             if ($Result.Status) {return $Result.Content}
         }
 
@@ -6949,7 +6951,7 @@ param(
 
        $Remote = $false
 
-       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2)) {
             $serverbody = @{
                 endpoint  = $endpoint
                 key       = $key
