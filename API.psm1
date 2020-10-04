@@ -1249,6 +1249,7 @@
 		    PowerShell = $newPS 
         }) > $null
     }
+    Write-Log -Level Info "Started $($MaxThreads) API threads on port $($API.APIport)"
 }
 
 Function Stop-APIServer {
