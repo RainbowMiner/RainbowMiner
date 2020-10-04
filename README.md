@@ -681,7 +681,8 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **Region** = your region, [default=US]
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
 - **UIsorting** = set to "profit" in order to force UI sorting by profit, set to "biased" for internal biased profits [default=biased]
-- **APIport** = enter a free web-interface port localhost:<port> [default=4000]
+- **APIPort** = enter a free web-interface port localhost:<port> [default=4000]
+- **APIThreads** = Enter number of possible, parallel API threads (0=automatic, see notes) [default=0]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically [default=1]
 - **EnableUpdateDuringPause** = set to 1 if you want RainbowMiner to be updated automatically, even if it is paused [default=1]
 - **EnableAutoAlgorithmAdd** = set to 1 if Rainbowminer should add all newly added algorithms to your config.txt, during (automatic) update
@@ -693,6 +694,9 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **MinerStatusMaxTemp** = maximum allowed GPU temperature, triggers push message, if above [default=90]
 - **MinerStatusMaxCrashesPerHour** = maximum allowed crashes per hour, triggers push message, if above [default=5]
 
+Notes for the automatic values for **APIThreads**:
+- if the **RunMode** is set to "Server", the thread count will be set to the number of CPU threads (with a maximum of 8)
+- otherwise, the thread count will be set to the number of CPU cores (with a maximum of 2)
 
 #### Select devices ####
 
