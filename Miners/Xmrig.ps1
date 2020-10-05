@@ -8,6 +8,9 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
+
+    if ($Session.LibCVersion -and $Session.LibCVersion -lt (Get-Version "2.25")) {return}
+
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.3.5-xmrig/xmrig-6.3.5-bionic-cuda11_0-x64.7z"

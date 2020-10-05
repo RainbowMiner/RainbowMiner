@@ -12,6 +12,15 @@ function Initialize-Session {
         if ($IsWindows) {
             $Session.WindowsVersion = [System.Environment]::OSVersion.Version
             $Session.IsWin10        = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0")
+        } elseif ($IsLinux) {
+            try {
+                Get-ChildItem ".\IncludesLinux\bin\libc_version" -File -ErrorAction Stop | Foreach-Object {
+                    & chmod +x "$($_.FullName)" > $null
+                    $Session.LibCVersion = Get-Version "$(& $_.FullName)"
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
         }
         $Session.IsAdmin            = Test-IsElevated
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")

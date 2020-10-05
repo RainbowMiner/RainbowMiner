@@ -13,6 +13,9 @@ $Port = "301{0:d2}"
 $DevFee = 0.0
 
 if ($IsLinux) {
+
+    if ($Session.LibCVersion -and $Session.LibCVersion -lt (Get-Version "2.25")) {return}
+
     $Path = ".\Bin\Ethash-Ethminer\ethminer"
     $UriCuda = @(
         [PSCustomObject]@{

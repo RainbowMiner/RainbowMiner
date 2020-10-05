@@ -13,6 +13,9 @@ $DevFee = 0.0
 $Version = "1.2.3"
 
 if ($IsLinux) {
+
+    if ($Session.LibCVersion -and $Session.LibCVersion -lt (Get-Version "2.25")) {return}
+
     $Path = ".\Bin\GPU-KawPOWMiner\kawpowminer"
     $UriCuda = @(
         [PSCustomObject]@{
