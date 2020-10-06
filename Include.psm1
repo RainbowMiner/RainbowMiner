@@ -6882,20 +6882,18 @@ function Get-SysInfo {
         [PSCustomObject]@{
             CpuLoad = $CPULoad
             Memory  = [PSCustomObject]@{
-                TotalGB = [Math]::round($OSData.TotalVisibleMemorySize/1MB,1)
-                UsedGB  = [Math]::round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
-                UsedPercent = if ($OSData.TotalVisibleMemorySize -gt 0) {[Math]::round((($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)*100)/ $OSData.TotalVisibleMemorySize,2)} else {0}
+                TotalGB = [decimal][Math]::Round($OSData.TotalVisibleMemorySize/1MB,1)
+                UsedGB  = [decimal][Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
+                UsedPercent = if ($OSData.TotalVisibleMemorySize -gt 0) {[Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/$OSData.TotalVisibleMemorySize * 100,2)} else {0}
             }
             Disks   = @(
                 $HDData | Where-Object {$_.Size -gt 0} | Foreach-Object {             
-                    $size = [math]::round($_.Size/1GB, 1)
-                    $free = [math]::round($_.FreeSpace/1GB, 1)
                     [PSCustomObject]@{ 
                         Drive = $_.Name 
                         Name = $_.VolumeName 
-                        TotalGB = $size
-                        UsedGB  = $size-$free
-                        UsedPercent = if ($size -gt 0) {[math]::round(($size-$free)/$size*100,2)} else {0}
+                        TotalGB = [decimal][Math]::Round($_.Size/1GB,1)
+                        UsedGB  = [decimal][Math]::Round(($_.Size-$_.FreeSpace)/1GB,1)
+                        UsedPercent = if ($_.Size -gt 0) {[decimal][Math]::Round(($_.Size-$_.FreeSpace)/$_.Size * 100,2)} else {0}
                     }
                 } | Select-Object
             )
