@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.6-wildrigmulti/wildrig-multi-linux-0.27.6.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.0-wildrigmulti/wildrig-multi-linux-0.28.0.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.27.6-wildrigmulti/wildrig-multi-windows-0.27.6.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.0-wildrigmulti/wildrig-multi-windows-0.28.0.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.27.6"
+$Version = "0.28.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -54,6 +54,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi";          Vendor = @("AMD");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowEthercore
     [PSCustomObject]@{MainAlgorithm = "progpow-sero"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.23.0"; ExcludePoolName = "^Beepool"} #ProgPowSero
+    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.28.0"; ExcludePoolName = "^Beepool"} #ProgPowVeil
     [PSCustomObject]@{MainAlgorithm = "progpowz";     Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"; ExcludePoolName = "^Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest";   Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";      Vendor = @("AMD");          Params = ""} #Renesis

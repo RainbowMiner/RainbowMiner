@@ -71,7 +71,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #x22i
     [PSCustomObject]@{MainAlgorithm = "x25x"; Params = ""} #x25x
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #yescryptr16, CpuminerOptBF faster
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #yescryptr16, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #yescryptr32, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #yescryptr8, CpuminerOptBF faster
     [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""} #yescryptr8g, KOTO
