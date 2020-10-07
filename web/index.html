@@ -52,6 +52,7 @@
             <tr>
                 <th data-field="worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                 <th data-field="status" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
+                <th data-field="tmachine" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Machine</th>
                 <th data-field="tlastseen" data-sortable="true">Last seen</th>
                 <th data-field="tuptime" data-sortable="true">Uptime</th>
                 <th data-field="tversion" data-sortable="true">Version</th>
@@ -430,6 +431,7 @@ function formatRemoteWorkers(data) {
         // Format the type(s)
         //console.log(data);
         //console.log(item);
+        item.tmachine = item.machinename + '<span class="small font-weight-lighter"><br />'+item.machineip+'</span>';
         item.tlastseen = timeSince(new Date(item.lastseen * 1000));
         item.tuptime = item.uptime && parseInt(item.uptime) > 0 ? formatUptime(item.uptime) : '-';
         var vb = item.version.split(" ");
