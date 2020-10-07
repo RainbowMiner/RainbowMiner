@@ -1360,42 +1360,66 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
         "ThermalLimit": 0,
         "MemoryClockBoost": "0",
         "CoreClockBoost": "0",
-        "LockVoltagePoint": "*"
+        "LockVoltagePoint": "*",
+        "PreCmd": "",
+        "PreCmdArguments": "",
+        "PostCmd": "",
+        "PostCmdArguments": ""
       },
       "Profile2-GTX1070": {
         "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "400",
         "CoreClockBoost": "100",
-        "LockVoltagePoint": "*"
+        "LockVoltagePoint": "*",
+        "PreCmd": "",
+        "PreCmdArguments": "",
+        "PostCmd": "",
+        "PostCmdArguments": ""
       },
       "Profile3-GTX1070": {
         "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "200",
         "CoreClockBoost": "100",
-        "LockVoltagePoint": "*"
+        "LockVoltagePoint": "*",
+        "PreCmd": "",
+        "PreCmdArguments": "",
+        "PostCmd": "",
+        "PostCmdArguments": ""
       },
       "Profile4-GTX1070": {
         "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "-500",
         "CoreClockBoost": "100",
-        "LockVoltagePoint": "*"
+        "LockVoltagePoint": "*",
+        "PreCmd": "",
+        "PreCmdArguments": "",
+        "PostCmd": "",
+        "PostCmdArguments": ""
       },
       "Profile5-GTX1070": {
         "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "350",
         "CoreClockBoost": "100",
-        "LockVoltagePoint": "*"
+        "LockVoltagePoint": "*",
+        "PreCmd": "",
+        "PreCmdArguments": "",
+        "PostCmd": "",
+        "PostCmdArguments": ""
       },
       "Profile2-GPU#02": {
         "PowerLimit": 85,
         "ThermalLimit": 0,
         "MemoryClockBoost": "500",
         "CoreClockBoost": "150",
-        "LockVoltagePoint": "*"
+        "LockVoltagePoint": "*",
+        "PreCmd": "",
+        "PreCmdArguments": "",
+        "PostCmd": "",
+        "PostCmdArguments": ""
       }      
     }
 
@@ -1404,6 +1428,8 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
 - LockVoltagePoint: in µV set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- PreCmd/PreCmdArguments: define a command to be executed before the miner starts. PreCmd is the path to the binary, PreCmdArguments are optional arguments for that command.
+- PostCmd/PostCmdArguments: define a command to be executed after the miner has finished. PostCmd is the path to the binary, PostCmdArguments are optional arguments for that command.
 
 Note the last entry: "Profile-GPU#02"
 Imagine a rig with multiple GTX1070 from the same manufacturer, except GPU#02, which is from a different manufacturer. This one GPU might need slightly different overclocking for Profile2. 

@@ -607,6 +607,7 @@ class Miner {
         [System.Collections.Generic.List[string]]$applied = @()
         [System.Collections.Generic.List[string]]$NvCmd = @()
         [System.Collections.Generic.List[string]]$AmdCmd = @()
+        [System.Collections.Generic.List[object]]$RunCmd = @()
 
         $Vendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
@@ -669,6 +670,9 @@ class Miner {
         foreach ($DeviceModel in @($this.Profiles.PSObject.Properties.Name | Select-Object)) {
             if (-not $Config) {
                 $Profile = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "0";CoreClockBoost = "0";LockVoltagePoint = "*"}
+                if ($this.Profiles.$DeviceModel.Profile.PostCmd) {
+                    $RunCmd.Add([PSCustomObject]@{FilePath = $this.Profiles.$DeviceModel.Profile.PostCmd;ArgumentList=$this.Profiles.$DeviceModel.Profile.PostCmdArguments}) > $null
+                }
             } else {
                 $Profile = $this.Profiles.$DeviceModel.Profile
 
@@ -676,6 +680,10 @@ class Miner {
                 $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
                 $Profile.LockVoltagePoint = $Profile.LockVoltagePoint -replace '[^0-9]+'
                 if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = ''}
+
+                if ($Profile.PreCmd) {
+                    $RunCmd.Add([PSCustomObject]@{FilePath = $Profile.PreCmd;ArgumentList=$Profile.PreCmdArguments}) > $null
+                }
             }
 
             $applied_any = $false
@@ -723,6 +731,25 @@ class Miner {
                 }
             }
             if ($applied_any) {$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})") > $null}
+        }
+
+        if ($RunCmd.Count) {
+            $CmdInfo = "$(if ($Config) {"prerun"} else {"postrun"})"
+            foreach($Cmd in $RunCmd) {
+                Write-Log -Level Info "Miner $($this.Name) $($CmdInfo): $($Cmd.FilePath) $($Cmd.ArgumentList)"
+                $CmdJob = Start-SubProcess -FilePath $Cmd.FilePath -ArgumentList $Cmd.ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -ShowMinerWindow $true -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+                $MJob = if ($CmdJob -and $CmdJob.Name) {Get-Job -Name $CmdJob.Name -ErrorAction Ignore} else {$null}
+                if ($MJob) {
+                    $wait = 0
+                    While ($wait -lt 300) {
+                        Start-Sleep -Milliseconds 100
+                        $CmdProcess = $CmdJob.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
+                        if ((-not $CmdProcess -and $MJob.State -eq "Running") -or ($CmdProcess -and ($CmdProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
+                    }
+                }
+                Stop-SubProcess -Job $CmdJob -Title "Miner $($this.Name) ($($CmdInfo))"
+                Remove-Variable "CmdJob"
+            }
         }
 
         if ($applied.Count) {
