@@ -431,7 +431,7 @@ function formatRemoteWorkers(data) {
         // Format the type(s)
         //console.log(data);
         //console.log(item);
-        item.tmachine = item.machinename + '<span class="small font-weight-lighter"><br />'+item.machineip+'</span>';
+        item.tmachine = '<div style="line-height:1">'+item.machinename + '<span class="small font-weight-lighter"><br />'+item.machineip+'</span></div>';
         item.tlastseen = timeSince(new Date(item.lastseen * 1000));
         item.tuptime = item.uptime && parseInt(item.uptime) > 0 ? formatUptime(item.uptime) : '-';
         var vb = item.version.split(" ");
