@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.26-gminer/gminer_2_26_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-gminer/gminer_2_27_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.26-gminer/gminer_2_26_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-gminer/gminer_2_27_windows64.zip"
 }
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "2.26"
+$Version = "2.27"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -85,7 +85,9 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 9;    Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; ExcludePoolName = "^ZergPool"} #Ethash+Blake2bSHA3
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 10;   Params = "--algo ethash+handshake";      Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 3.00; SecondaryAlgorithm = "Blake2bSHA3"; ExcludePoolName = "^ZergPool"} #Ethash+Blake2bSHA3
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          MinMemGb = 3;                     Params = "--algo kawpow";                Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = "^(MiningPoolHub|MiningRigRentals|Nicehash)"} #KawPOW
-    [PSCustomObject]@{MainAlgorithm = "ProgPoWSero";     MinMemGb = 3;                     Params = "--algo sero";                  Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPowSERO
+    [PSCustomObject]@{MainAlgorithm = "ProgPoWSero";     MinMemGb = 3;                     Params = "--algo sero";                  Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPow Sero
+    [PSCustomObject]@{MainAlgorithm = "ProgPoWZ";        MinMemGb = 3;                     Params = "--algo progpowz";              Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPow Zano
+    [PSCustomObject]@{MainAlgorithm = "vProgPoW";        MinMemGb = 3;                     Params = "--algo vprogpow";              Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPow Veriblock
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
