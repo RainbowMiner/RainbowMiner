@@ -10,28 +10,28 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.17.3"
+$Version = "0.18.1"
 $AllowTuring = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-linux-cuda11.1.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-linux-cuda11.1.tar.gz"
             Cuda   = "11.1"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-linux-cuda10.0.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-linux-cuda10.0.tar.gz"
             Cuda   = "10.0"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-linux-cuda9.2.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-linux-cuda9.2.tar.gz"
             Cuda   = "9.2"
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-linux-cuda9.1.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-linux-cuda9.1.tar.gz"
             Cuda   = "9.1"
         }
     )
@@ -39,21 +39,21 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-win-cuda11.1.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-win-cuda11.1.zip"
             Cuda   = "11.1"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-win-cuda10.0.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-win-cuda10.0.zip"
             Cuda   = "10.0"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-win-cuda9.2.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-win-cuda9.2.zip"
             Cuda   = "9.2"
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.3-trex/t-rex-0.17.3-win-cuda9.1.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v18.1-trex/t-rex-0.18.1-win-cuda9.1.zip"
             Cuda   = "9.1"
         }
     )
@@ -76,12 +76,15 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = ""; ExtendInterval = 2} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "megabtx"; Params = ""} #MegaBTX (Bitcore) (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP-TCR (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "padihash"; Params = ""} #GLTPadiHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "pawelhash"; Params = ""} #GLTPawelHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; Params = ""; ExtendInterval = 2} #ProgPowVeil (new with v0.18.1)
+    [PSCustomObject]@{MainAlgorithm = "progpow-veriblock"; Params = ""; ExtendInterval = 2} #vProgPow (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "progpowsero"; Params = "--coin sero"; ExtendInterval = 2; Algorithm = "progpow"} #ProgPow  (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2} #ProgpowZ (new with v0.17.2)
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
