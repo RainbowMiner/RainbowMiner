@@ -31,7 +31,7 @@ try {
     exit
 }
 
-$ConfigSetup  = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
+$ConfigSetup  = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
 
 $Config | Add-Member RunMode $(if ($Config.RunMode -eq "`$RunMode") {"Standalone"} else {$Config.RunMode}) -Force
 $Config | Add-Member APIport $(if ($Config.APIport -eq "`$APIport" -or -not $Config.APIport) {4000} else {[int]$Config.APIport}) -Force
