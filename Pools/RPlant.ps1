@@ -39,6 +39,7 @@ $Pools_Data = [PSCustomObject]@{
     "CPU"   = [PSCustomObject]@{port = 7029; region = $Pool_Regions}
     "CRP"   = [PSCustomObject]@{port = 3335; region = $Pool_Regions}
     "DMS"   = [PSCustomObject]@{port = 7047; region = $Pool_Regions}
+    "GLEEC" = [PSCustomObject]@{port = 7051; region = $Pool_Regions}
     "GOLD"  = [PSCustomObject]@{port = 7057; region = $Pool_Regions}
     "GXX"   = [PSCustomObject]@{port = 7025; region = $Pool_Regions}
     "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
@@ -47,6 +48,7 @@ $Pools_Data = [PSCustomObject]@{
     "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
+    "LRA"   = [PSCustomObject]@{port = 7050; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
     "NAD"   = [PSCustomObject]@{port = 7064; region = $Pool_Regions}
     "QRN"   = [PSCustomObject]@{port = 7067; region = $Pool_Regions}
