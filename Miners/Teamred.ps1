@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.13-teamred/teamredminer-v0.7.13-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.14-teamred/teamredminer-v0.7.14-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.13-teamred/teamredminer-v0.7.13-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.14-teamred/teamredminer-v0.7.14-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.7.13"
+$Version = "0.7.14"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -35,7 +35,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cuckarood29_grin"; MinMemGb = 6;   Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";  MinMemGb = 8;   Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 3.3; Params = ""; DevFee = 0.75}
+    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 2;   Params = ""; DevFee = 0.75}
     [PSCustomObject]@{MainAlgorithm = "kawpow";           MinMemGb = 3;   Params = ""; DevFee = 2.0}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";           MinMemGb = 1.5; Params = ""; DevFee = 3.0}
@@ -78,6 +78,11 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $MinMemGB = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
 
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+
+        #Zombie-mode since v0.7.14
+        if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGB) {
+            $MinMemGB = $_.MinMemGB
+        }
 
         $Miner_DevFee = $_.DevFee
 
