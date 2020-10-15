@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.10-lolminer/lolMiner_v1.10_Lin64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-lolminer/lolMiner_v1.11_Lin64.7z"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.10-lolminer/lolMiner_v1.10_Win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-lolminer/lolMiner_v1.11_Win64.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.10"
+$Version = "1.11"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -71,6 +71,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
             $MinMemGB = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
+
+            #Zombie-Mode since v1.11
+            if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGb) {
+                $MinMemGB = $_.MinMemGb
+            }
 
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
