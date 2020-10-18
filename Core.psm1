@@ -1175,27 +1175,8 @@ function Invoke-Core {
         }) > $null
     }
 
-    #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
     $API.Version = $ConfirmedVersion
-    $Session.AutoUpdate = $false
-    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Session.PauseMinersByActivity -and ($Session.EnableUpdateDuringPause -or -not ($Session.PauseMiners -or $Session.PauseMinersByScheduler -or $Session.PauseMinersByActivity))) {
-        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
-        if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
-            $Last_Autoupdate = [PSCustomObject]@{
-                                    RemoteVersion = $ConfirmedVersion.RemoteVersion.ToString()
-                                    Version = $ConfirmedVersion.Version.ToString()
-                                    Timestamp = (Get-Date).ToUniversalTime().ToString()
-                                    Attempts = 0
-                                }
-        }
-        if ($Last_Autoupdate.Attempts -lt 3) {
-            $Last_Autoupdate.Timestamp = (Get-Date).ToUniversalTime().ToString()
-            $Last_Autoupdate.Attempts++
-            Set-ContentJson -PathToFile ".\Logs\autoupdate.txt" -Data $Last_Autoupdate > $null
-            $Session.AutoUpdate = $true
-        }
-    }
 
     $MSIAenabled = $IsWindows -and -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
     $Session.OCmode = if ($MSIAenabled) {"msia"} elseif ($Session.Config.EnableOCProfiles) {"ocp"} else {"off"}
@@ -1322,6 +1303,7 @@ function Invoke-Core {
                     $_ | Add-Member PowerPrice $($_.PowerPrice -replace ",","." -replace "[^0-9\.]+") -Force
                     $_ | Add-Member Enable $(Get-Yes $_.Enable) -Force
                     $_ | Add-Member Pause  $(Get-Yes $_.Pause)  -Force
+                    $_ | Add-Member EnableUpdate  $(Get-Yes $_.EnableUpdate)  -Force
                     $_ | Add-Member EnableMiningHeatControl $(if ($_.EnableMiningHeatControl -eq "") {$Session.Config.EnableMiningHeatControl} else {Get-Yes $_.EnableMiningHeatControl}) -Force
                     $_ | Add-Member MiningHeatControl "$($_.MiningHeatControl -replace ",","." -replace "[^0-9\.]+")" -Force
 
@@ -1504,6 +1486,26 @@ function Invoke-Core {
     $API.CurrentPowerPrice                  = $Session.CurrentPowerPrice
     $API.CurrentEnableMiningHeatControl     = $Session.CurrentEnableMiningHeatControl
     $API.CurrentMiningHeatControl           = $Session.CurrentMiningHeatControl
+
+    #Versioncheck for automatic updates
+    $Session.AutoUpdate = $false
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Session.PauseMinersByActivity -and (-not $Session.Config.EnableUpdateWhenScheduled -or $Scheduler.EnableUpdate) -and ($Session.Config.EnableUpdateDuringPause -or -not ($Session.PauseMiners -or $Session.PauseMinersByScheduler -or $Session.PauseMinersByActivity))) {
+        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
+        if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
+            $Last_Autoupdate = [PSCustomObject]@{
+                                    RemoteVersion = $ConfirmedVersion.RemoteVersion.ToString()
+                                    Version = $ConfirmedVersion.Version.ToString()
+                                    Timestamp = (Get-Date).ToUniversalTime().ToString()
+                                    Attempts = 0
+                                }
+        }
+        if ($Last_Autoupdate.Attempts -lt 3) {
+            $Last_Autoupdate.Timestamp = (Get-Date).ToUniversalTime().ToString()
+            $Last_Autoupdate.Attempts++
+            Set-ContentJson -PathToFile ".\Logs\autoupdate.txt" -Data $Last_Autoupdate > $null
+            $Session.AutoUpdate = $true
+        }
+    }
 
     #Activate or deactivate donation  
     $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}

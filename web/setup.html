@@ -286,31 +286,31 @@
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="inputAPIAuth" class="col-sm-2 col-form-label">Enable Auth</label>
+                        <label for="inputAPIauth" class="col-sm-2 col-form-label">Enable Auth</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputAPIAuth" name="APIAuth">
+                            <select class="form-control mr-sm-2" id="inputAPIauth" name="APIauth">
                                 <option value="0">disable</option>
                                 <option value="1">enable</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group row is--auth">
-                        <label for="inputAPIUser" class="col-sm-2 col-form-label">Machine's Username</label>
+                        <label for="inputAPIuser" class="col-sm-2 col-form-label">Machine's Username</label>
                         <div class="input-group col-sm-10">
-                            <input type="text" class="form-control" id="inputAPIUser" name="MinerAPIUser" placeholder="Enter an API username">
+                            <input type="text" class="form-control" id="inputAPIuser" name="MinerAPIuser" placeholder="Enter an API username">
                         </div>
                     </div>
                     <div class="form-group row is--auth">
-                        <label for="inputAPIPassword" class="col-sm-2 col-form-label">Machine's Password</label>
+                        <label for="inputAPIpassword" class="col-sm-2 col-form-label">Machine's Password</label>
                         <div class="input-group col-sm-10">
-                            <input type="password" class="form-control" id="inputAPIPassword" name="APIPassword">
+                            <input type="password" class="form-control" id="inputAPIpassword" name="APIpassword">
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="inputAPIThreads" class="col-sm-2 col-form-label">Parallel API Threads</label>
+                        <label for="inputAPIthreads" class="col-sm-2 col-form-label">Parallel API Threads</label>
                         <div class="input-group col-sm-10">
-                            <input type="number" min="0" max="100" step="1" class="form-control" id="inputAPIThreads" name="APIThreads" placeholder="Maximum number of parallel API threads (0=automatic)">
-                            <div id="inputAPIThreadsHelp" class="form-text text-muted">Enter the maximum parallel API threads (or set to 0 for automatic)</div>
+                            <input type="number" min="0" max="100" step="1" class="form-control" id="inputAPIthreads" name="APIthreads" placeholder="Maximum number of parallel API threads (0=automatic)">
+                            <div id="inputAPIthreadsHelp" class="form-text text-muted">Enter the maximum parallel API threads (or set to 0 for automatic)</div>
                         </div>
                     </div>
                 </div>
@@ -434,8 +434,44 @@
             </div>
         </div>
         <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine"><div class="card-header" id="headingNine"><h5>Technical</h5></div></button>
+            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine"><div class="card-header" id="headingNine"><h5>Automatic Updates</h5></div></button>
             <div id="collapseNine" class="collapse" aria-labelledby="headingNine" data-parent="#accordion">
+                <div class="card-body">
+                    <div class="form-group row">
+                        <label for="inputEnableAutoUpdate" class="col-sm-2 col-form-label">Enable automatic update</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableAutoUpdate" name="EnableAutoUpdate">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="inputEnableUpdateDuringPause" class="col-sm-2 col-form-label">Updates during Pause</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableUpdateDuringPause" name="EnableUpdateDuringPause">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputEnableUpdateDuringPauseHelp" class="form-text text-muted">Allow automatic updates, even if RainbowMiner is paused</div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="inputEnableUpdateWhenScheduled" class="col-sm-2 col-form-label">Scheduled Updates</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableUpdateWhenScheduled" name="EnableUpdateWhenScheduled">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputEnableUpdateWhenScheduledHelp" class="form-text text-muted">Restrict automatic updates to when scheduler allows (set EnableUpdate to "1" in scheduler.config.txt)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseTen" aria-expanded="false" aria-controls="collapseTen"><div class="card-header" id="headingTen"><h5>Technical</h5></div></button>
+            <div id="collapseTen" class="collapse" aria-labelledby="headingTen" data-parent="#accordion">
                 <div class="card-body">
                     <div class="form-group row">
                         <label for="inputInterval" class="col-sm-2 col-form-label">Interval</label>
@@ -629,7 +665,7 @@
               })
               $("#serverconfigname").html(serverconfigname.join(''));
 
-              $("#inputAPIAuth").change(function() {
+              $("#inputAPIauth").change(function() {
                 if ($(this).val()=="1") {
                     $(".is--auth").show();
                 } else {
@@ -665,7 +701,7 @@
                 }
               });
 
-              $("#inputAPIAuth").trigger("change");
+              $("#inputAPIauth").trigger("change");
               $("#inputRunMode").trigger("change");
               $("#inputEnableServerConfig").trigger("change");
               $("#inputEnableMinerStatus").trigger("change");

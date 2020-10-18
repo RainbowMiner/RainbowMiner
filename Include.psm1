@@ -1449,7 +1449,12 @@ function Get-ChildItemContent {
         }
         if ($Force -and $Content) {
             foreach ($k in $Parameters.Keys) {
-                if (-not (Get-Member -InputObject $Content -Name $k -Membertype Properties)) {
+                if ($Member = Get-Member -InputObject $Content -Name $k -Membertype Properties) {
+                    if ($Member.Name -and ($Member.Name -cne $k)) {
+                        $Value = $Content.$k
+                        $Content | Add-Member $k $Value -Force
+                    }
+                } else {
                     $Content | Add-Member $k $Parameters.$k -Force 
                 }
             }

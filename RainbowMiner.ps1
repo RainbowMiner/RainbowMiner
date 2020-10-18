@@ -107,15 +107,15 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$DisableDualMining = $false,
     [Parameter(Mandatory = $false)]
-    [int]$APIPort = 4000,
+    [int]$APIport = 4000,
     [Parameter(Mandatory = $false)]
-    [String]$APIUser = "",
+    [String]$APIuser = "",
     [Parameter(Mandatory = $false)]
-    [String]$APIPassword = "",
+    [String]$APIpassword = "",
     [Parameter(Mandatory = $false)]
-    [Bool]$APIAuth = $false,
+    [Bool]$APIauth = $false,
     [Parameter(Mandatory = $false)]
-    [int]$APIThreads = 0,
+    [int]$APIthreads = 0,
     [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config\config.txt", # Path to config file
     [Parameter(Mandatory = $false)]
@@ -241,6 +241,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$EnableUpdateDuringPause = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$EnableUpdateWhenScheduled = $false,
+    [Parameter(Mandatory = $false)]
     [int]$ResumeOnInactivitySeconds = 300, #resume after 5 minutes
     [Parameter(Mandatory = $false)]
     [Int]$MinimumMiningIntervals = 1, #minimum mining intervals, before the regular interval time is used
@@ -261,7 +263,7 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$GroupName = "", # client group name for shared server config
     [Parameter(Mandatory = $false)]
-    [Array]$ExcludeServerConfigVars = @("APIAuth","APIPassword","APIPort","APIUser","APIThreads","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName"), # do not copy these vars from the server's config.txt
+    [Array]$ExcludeServerConfigVars = @("APIauth","APIpassword","APIport","APIuser","APIthreads","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName"), # do not copy these vars from the server's config.txt
     [Parameter(Mandatory = $false)]
     [Switch]$EnableServerExcludeList = $false,
     [Parameter(Mandatory = $false)]
@@ -291,7 +293,7 @@ $EnableMinerStatus = $true
 
 Initialize-Session
 
-$Session.Version         = "4.6.3.3"
+$Session.Version         = "4.6.3.4"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
@@ -346,7 +348,7 @@ if ($IsWindows -and (Get-Command "Unblock-File" -ErrorAction SilentlyContinue)) 
 [hashtable]$Session.DefaultValues = @{}
 
 if (-not $psISE) {$MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}}
-if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","WorkerName","Interval","Region","DefaultPoolRegion","SSL","DeviceName","ExcludeDeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","MinerStatusMaxTemp","MinerStatusMaxCrashesPerHour","SwitchingPrevention","PoolSwitchingHysteresis","MinerSwitchingHysteresis","MaxRejectedShareRatio","MaxAllowedLuck","MaxTimeSinceLastBlock","MinComboOverSingleRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","DisableUnprofitableAlgolist","EnableCheckMiningConflict","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","ExcludeCoinsymbolBalances","ShowWalletBalances","WalletBalances","DisableDualMining","APIPort","APIUser","APIPassword","APIAuth","APIThreads","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UIsorting","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","PowerOffsetPercent","CheckProfitability","DisableExtendInterval","EthPillEnable","EthPillEnableMTP","EnableOCProfiles","EnableOCVoltage","EnableOCLinuxSetAllPStates","EnableOCLinuxForcePState","EnableLinuxHeadless","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","EnableAutoAdjustAffinity","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","ForceStablePrice","EnableMinersAsRoot","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","BalanceUpdateMinutes","ProfitSpikeProtection","Quickstart","PoolDataWindow","PoolStatAverage","EnableErrorRatio","MaxErrorRatio","EnableAutoAlgorithmAdd","EnableAlgorithmMapping","EnableResetVega","EnableMiningHeatControl","MiningHeatControl","MaxActivityDays","MaxLogfileDays","MaxDownloadfileDays","MaxCachefileDays","StartPaused","EnableUpdateDuringPause","EnablePauseOnActivity","ResumeOnInactivitySeconds","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","GroupName","ExcludeServerConfigVars","EnableServerExcludeList","EnableMinerBackups","EnableKeepDownloads","RunMode","SetupOnly","EnableRestartComputer","RestartComputerHours","LinuxDisplay","LinuxXAuthority","LogLevel")}
+if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","WorkerName","Interval","Region","DefaultPoolRegion","SSL","DeviceName","ExcludeDeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","MinerStatusMaxTemp","MinerStatusMaxCrashesPerHour","SwitchingPrevention","PoolSwitchingHysteresis","MinerSwitchingHysteresis","MaxRejectedShareRatio","MaxAllowedLuck","MaxTimeSinceLastBlock","MinComboOverSingleRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","DisableUnprofitableAlgolist","EnableCheckMiningConflict","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","ExcludeCoinsymbolBalances","ShowWalletBalances","WalletBalances","DisableDualMining","APIport","APIuser","APIpassword","APIauth","APIthreads","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UIsorting","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","PowerOffsetPercent","CheckProfitability","DisableExtendInterval","EthPillEnable","EthPillEnableMTP","EnableOCProfiles","EnableOCVoltage","EnableOCLinuxSetAllPStates","EnableOCLinuxForcePState","EnableLinuxHeadless","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","EnableAutoAdjustAffinity","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","ForceStablePrice","EnableMinersAsRoot","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","BalanceUpdateMinutes","ProfitSpikeProtection","Quickstart","PoolDataWindow","PoolStatAverage","EnableErrorRatio","MaxErrorRatio","EnableAutoAlgorithmAdd","EnableAlgorithmMapping","EnableResetVega","EnableMiningHeatControl","MiningHeatControl","MaxActivityDays","MaxLogfileDays","MaxDownloadfileDays","MaxCachefileDays","StartPaused","EnableUpdateDuringPause","EnableUpdateWhenScheduled","EnablePauseOnActivity","ResumeOnInactivitySeconds","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","GroupName","ExcludeServerConfigVars","EnableServerExcludeList","EnableMinerBackups","EnableKeepDownloads","RunMode","SetupOnly","EnableRestartComputer","RestartComputerHours","LinuxDisplay","LinuxXAuthority","LogLevel")}
 $MyCommandParameters | Where-Object {Get-Variable $_ -ErrorAction Ignore} | Foreach-Object {$Session.DefaultValues[$_] = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
 if ($IsWindows -and $Session.IsAdmin) {

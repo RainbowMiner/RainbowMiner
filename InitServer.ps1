@@ -35,7 +35,7 @@ $Config | Add-Member RunMode $(if ($Config.RunMode -eq "`$RunMode") {"Standalone
 $Config | Add-Member APIport $(if ($Config.APIport -eq "`$APIport" -or -not $Config.APIport) {4000} else {[int]$Config.APIport}) -Force
 $Config | Add-Member APIauth $(if ($Config.APIauth -eq "`$APIauth") {$false} else {Get-Yes $Config.APIauth}) -Force
 $Config | Add-Member APIuser $(if ($Config.APIuser -eq "`$APIuser") {""} else {$Config.APIuser}) -Force
-$Config | Add-Member APIpassword $(if ($Config.APIpassword -eq "`$APIPassword") {""} else {$Config.APIpassword}) -Force
+$Config | Add-Member APIpassword $(if ($Config.APIpassword -eq "`$APIpassword") {""} else {$Config.APIpassword}) -Force
 $Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
 
 do {

@@ -685,6 +685,7 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **APIThreads** = Enter number of possible, parallel API threads (0=automatic, see notes) [default=0]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically [default=1]
 - **EnableUpdateDuringPause** = set to 1 if you want RainbowMiner to be updated automatically, even if it is paused [default=1]
+- **EnableUpdateWhenScheduled** = set to 1 if the automatic updates should be scheduled: set EnableUpdate to 1 for a schedule in scheduler.config.txt (also, EnableAutoUpdate must be set to 1) [default=0]
 - **EnableAutoAlgorithmAdd** = set to 1 if Rainbowminer should add all newly added algorithms to your config.txt, during (automatic) update
 - **EnableMinerStatus** = set to 1 to enable central monitoring
 - **MinerStatusURL** = url to central monitoring server [default=https://rbminer.net]
@@ -1445,6 +1446,13 @@ Define different power prices and/or pause miners for different timespans.
 - PowerPrice: power price for this timespan, leave empty for default powerprice
 - Pause: if set to "1", miners will be paused during this timespan
 - Enable: if set to "1", this timespan will be used
+- EnableUpdate: set to "1" to allow automatic updates during this timespan (and if EnableUpdateWhenScheduled is set to 1 in config.txt) [default=0]
+- EnableMiningHeatControl: set to "1" to allow mining heat control during this timespan (and if EnableMiningHeatControl is set to 1 in config.txt) [default=0]
+- MiningHeatControl: set specific mining heat control value, during that timespan
+- Algorithm: restrict mining to specific algorithms, during that timespan
+- ExcludeAlgorithm: disallow mining to specific algorithms, during that timespan
+- CoinSymbol: restrict mining to specific coin symbols, during that timespan
+- ExcludeCoinSymbol: disallow mining to specific coin symbols, during that timespan
 
 Example
 

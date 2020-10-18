@@ -253,7 +253,7 @@ function Start-Setup {
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","uisorting","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","usepowerprice","checkprofitability","quickstart","startpaused","enableupdateduringpause","enablepauseonactivity","resumeoninactivityseconds","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","enabledebugmode","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","uisorting","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","usepowerprice","checkprofitability","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","enabledebugmode","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null
 
@@ -602,15 +602,15 @@ function Start-Setup {
                                     Write-Host " "
                                 }
                                 Write-Host "RainbowMiner can be monitored using your webbrowser via API:" -Foreground Cyan
-                                Write-Host "- on this machine: http://localhost:$($Config.APIPort)" -ForegroundColor Cyan
-                                Write-Host "- on most devices in the network: http://$($Session.MachineName):$($Config.APIPort)" -ForegroundColor Cyan
-                                Write-Host "- on any other device in the network: http://$($Session.MyIP):$($Config.APIPort)" -ForegroundColor Cyan
+                                Write-Host "- on this machine: http://localhost:$($Config.APIport)" -ForegroundColor Cyan
+                                Write-Host "- on most devices in the network: http://$($Session.MachineName):$($Config.APIport)" -ForegroundColor Cyan
+                                Write-Host "- on any other device in the network: http://$($Session.MyIP):$($Config.APIport)" -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $Config.APIport = Read-HostInt -Prompt "If needed, choose a different API port" -Default $Config.APIPort -Mandatory -Min 1000 -Max 9999 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.APIport = Read-HostInt -Prompt "If needed, choose a different API port" -Default $Config.APIport -Mandatory -Min 1000 -Max 9999 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "apiinit" {
-                            if (-not (Test-APIServer -Port $Config.APIPort)) {
+                            if (-not (Test-APIServer -Port $Config.APIport)) {
                                 Write-Host " "
                                 Write-Host "Warning: the API is currently visible locally, on http://localhost:$($Config.APIport), only." -ForegroundColor Yellow
                                 Write-Host " "
@@ -629,14 +629,14 @@ function Start-Setup {
                         }
                         "apiuser" {
                             if (Get-Yes $Config.APIauth) {
-                                $Config.APIUser = Read-HostString -Prompt "Enter an API username ($(if ($Config.APIUser) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIUser -Characters "A-Z0-9" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.APIuser = Read-HostString -Prompt "Enter an API username ($(if ($Config.APIuser) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIuser -Characters "A-Z0-9" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "apipassword" {
                             if (Get-Yes $Config.APIauth) {
-                                $Config.APIPassword = Read-HostString -Prompt "Enter an API password ($(if ($Config.APIpassword) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIpassword -Characters "" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.APIpassword = Read-HostString -Prompt "Enter an API password ($(if ($Config.APIpassword) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIpassword -Characters "" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1535,6 +1535,9 @@ function Start-Setup {
                         "enableupdateduringpause" {
                             $Config.EnableUpdateDuringPause = Read-HostBool -Prompt "Allow automatic updates when RainbowMiner is paused" -Default $Config.EnableUpdateDuringPause | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
+                        "enableupdatewhenscheduled" {
+                            $Config.EnableUpdateWhenScheduled = Read-HostBool -Prompt "Do scheduled automatic updates, only (if EnableUpdate is set to 1, in scheduler.config.txt)" -Default $Config.EnableUpdateWhenScheduled | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                        }
                         "enablepauseonactivity" {
                             $Config.EnablePauseOnActivity = Read-HostBool -Prompt "Send RainbowMiner into pause mode, if user input is detected" -Default $Config.EnablePauseOnActivity | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
@@ -1648,8 +1651,9 @@ function Start-Setup {
                             $ConfigActual | Add-Member LinuxDisplay $Config.LinuxDisplay -Force
                             $ConfigActual | Add-Member LinuxXAuthority $Config.LinuxXAuthority -Force
                             $ConfigActual | Add-Member EnableMinersAsRoot $(if (Get-Yes $Config.EnableMinersAsRoot){"1"}else{"0"}) -Force
-                            $ConfigActual | Add-Member EnableAutoupdate $(if (Get-Yes $Config.EnableAutoupdate){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member EnableAutoUpdate $(if (Get-Yes $Config.EnableAutoUpdate){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableUpdateDuringPause $(if (Get-Yes $Config.EnableUpdateDuringPause){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member EnableUpdateWhenScheduled $(if (Get-Yes $Config.EnableUpdateWhenScheduled){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableAutoAlgorithmAdd $(if (Get-Yes $Config.EnableAutoAlgorithmAdd){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableAutoBenchmark $(if (Get-Yes $Config.EnableAutoBenchmark){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableResetVega $(if (Get-Yes $Config.EnableResetVega){"1"}else{"0"}) -Force
@@ -3089,6 +3093,7 @@ function Start-Setup {
                         @{Label="To"; Expression={"$((Get-HourMinStr $_.To -To).SubString(0,5))"}}
                         @{Label="Pause"; Expression={"$(if (Get-Yes $_.Pause) {"1"} else {"0"})"};align="center"}
                         @{Label="Enable"; Expression={"$(if (Get-Yes $_.Enable) {"1"} else {"0"})"};align="center"}
+                        @{Label="Update"; Expression={"$(if (Get-Yes $_.Update) {"1"} else {"0"})"};align="center"}
                         @{Label="EnableMHC"; Expression={"$(if ($_.EnableMiningHeatControl -eq '') {'*'} elseif (Get-Yes $_.EnableMiningHeatControl) {"1"} else {"0"})"};align="center"}
                         @{Label="MHC"; Expression={"$(if ($_.MiningHeatControl -eq '') {'*'} else {$_.MiningHeatControl})"};align="right"}
                     ) | Out-Host
@@ -3110,6 +3115,7 @@ function Start-Setup {
                         PowerPrice = ""
                         Enable = "0"
                         Pause = "0"
+                        Update = "0"
                         EnableMiningHeatControl = ""
                         MiningHeatControl = ""
                         Algorithm = ""
@@ -3132,7 +3138,7 @@ function Start-Setup {
                     $SchedulerSetupStep = 0
 
                     if ($Scheduler_Action -ne "d") {
-                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableminingheatcontrol","miningheatcontrol","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol")) > $null
+                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableupdate","enableminingheatcontrol","miningheatcontrol","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol")) > $null
                     }
                     $SchedulerSetupSteps.Add("save") > $null
 
@@ -3168,6 +3174,9 @@ function Start-Setup {
                                 }
                                 "enable" {
                                     $Schedule.Enable = Read-HostBool -Prompt "Enable this schedule?" -Default $Schedule.Enable | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "enableupdate" {
+                                    $Schedule.EnableUpdate = Read-HostBool -Prompt "Enable automatic updates? (if EnableUpdateWhenScheduled is set to 1 in config.txt)" -Default $Schedule.EnableUpdate | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "enableminingheatcontrol" {
                                     $Schedule.EnableMiningHeatControl = Read-HostString -Prompt "Enable mining heat control (0=off, 1=on, $(if ($Schedule.EnableMiningHeatControl -ne '') {"clear"} else {"leave empty"}) for global default)" -Default $Schedule.EnableMiningHeatControl -Valid @("0","1") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -3216,6 +3225,7 @@ function Start-Setup {
                                             PowerPrice = "$($_.PowerPrice)"
                                             Pause      = if (Get-Yes $_.Pause) {"1"} else {"0"}
                                             Enable     = if (Get-Yes $_.Enable) {"1"} else {"0"}
+                                            EnableUpdate = if (Get-Yes $_.EnableUpdate) {"1"} else {"0"}
                                             EnableMiningHeatControl = "$($_.EnableMiningHeatControl)"
                                             MiningHeatControl = "$($_.MiningHeatControl)"
                                             Algorithm  = "$($_.Algorithm -join ",")"

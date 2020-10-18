@@ -99,7 +99,7 @@
             $StatusCode      = [System.Net.HttpStatusCode]::OK
             $ContentFileName = ""
 
-            if ($Path -match $API.RandTag) {$Path = "/stop";$API.APIAuth = $false}
+            if ($Path -match $API.RandTag) {$Path = "/stop";$API.APIauth = $false}
             
             if($API.RemoteAPI -and $API.APIauth -and (-not $Context.User.Identity.IsAuthenticated -or $Context.User.Identity.Name -ne $API.APIuser -or $Context.User.Identity.Password -ne $API.APIpassword)) {
                 $Data        = "Access denied"
@@ -1278,9 +1278,9 @@ Function Stop-APIServer {
 }
 
 function Set-APICredentials {
-    $API.APIAuth     = $Session.Config.APIAuth -and $Session.Config.APIUser -and $Session.Config.APIPassword
-    $API.APIUser     = $Session.Config.APIUser
-    $API.APIPassword = $Session.Config.APIPassword
+    $API.APIauth     = $Session.Config.APIauth -and $Session.Config.APIuser -and $Session.Config.APIpassword
+    $API.APIuser     = $Session.Config.APIuser
+    $API.APIpassword = $Session.Config.APIpassword
 }
 
 function Get-APIServerName {
