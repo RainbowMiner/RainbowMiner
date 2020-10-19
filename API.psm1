@@ -27,7 +27,7 @@
 
     # API kernel script
     $APIScript = {
-        param([int]$ThreadID)
+        param([int]$ThreadID,$APIHttpListener)
 
         if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
@@ -1235,7 +1235,6 @@
     $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
     $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
     $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
-    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIHttpListener', $APIHttpListener, $null))
     $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
 
     $MinThreads = 1
@@ -1246,7 +1245,7 @@
     $Global:APIRunspacePool.Open()
 
     for($ThreadID = 0; $ThreadID -lt $MaxThreads; $ThreadID++) {
-        $newPS = [PowerShell]::Create().AddScript($APIScript).AddParameters(@{'ThreadID'=$ThreadID})
+        $newPS = [PowerShell]::Create().AddScript($APIScript).AddParameters(@{'ThreadID'=$ThreadID;'APIHttpListener'=$Global:APIHttpListener})
         $newPS.RunspacePool = $Global:APIRunspacePool
 
         $Global:APIListeners.Add([PSCustomObject]@{
@@ -1279,7 +1278,7 @@ Function Stop-APIServer {
     $Global:APIRunspacePool = $null
     $Global:APIHttpListener = $null
 
-    Remove-Variable "API" -Scope Global -Force    
+    Remove-Variable "API" -Scope Global -Force
 }
 
 function Set-APICredentials {
