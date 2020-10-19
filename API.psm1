@@ -22,26 +22,12 @@
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
     $API.MachineName = $Session.MachineName
     $API.Debug       = $Session.LogLevel -eq "Debug"
-    $API.Clients     = [System.Collections.ArrayList]@()
-
-    # Setup global variables for server handling
-    $Global:APIListeners   = [System.Collections.ArrayList]@()
 
     Set-APICredentials
 
-    # Setup the listener
-    $Global:APIHttpListener = New-Object System.Net.HttpListener
-    if ($API.RemoteAPI) {
-        $Global:APIHttpListener.Prefixes.Add("http://+:$($API.APIport)/")
-        # Require authentication when listening remotely
-        $Global:APIHttpListener.AuthenticationSchemes = if ($API.APIauth) {[System.Net.AuthenticationSchemes]::Basic} else {[System.Net.AuthenticationSchemes]::Anonymous}
-    } else {
-        $Global:APIHttpListener.Prefixes.Add("http://localhost:$($API.APIport)/")
-    }
-    $Global:APIHttpListener.Start()
-
+    # API kernel script
     $APIScript = {
-        param([int]$ThreadID,$APIHttpListener)
+        param([int]$ThreadID)
 
         if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
@@ -835,7 +821,7 @@
                     Break
                 }
                 "/clients" {
-                    $Data = ConvertTo-Json $API.Clients
+                    $Data = ConvertTo-Json $APIClients
                     Break
                 }
                 "/action/toggleminer" {
@@ -882,12 +868,12 @@
                     $Status = $false
                     if ($API.IsServer) {
                         if ($Parameters.workername -and $Parameters.machinename) {
-                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$API.Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                            else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
@@ -917,12 +903,12 @@
                     if ($API.IsServer) {
                         $Status = $false
                         if ($Parameters.workername -and $Parameters.machinename) {
-                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$API.Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                            else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = $null
                         try {
@@ -964,12 +950,12 @@
                     if ($API.IsServer) {
                         $Status = $false
                         if ($Parameters.workername -and $Parameters.machinename) {
-                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$API.Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                            else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = $null
                         try {
@@ -996,12 +982,12 @@
                     if ($API.IsServer) {
                         $Status = $false
                         if ($Parameters.workername -and $Parameters.machinename) {
-                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$API.Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                            else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = $null
                         try {
@@ -1229,19 +1215,38 @@
         if ($API.Debug) {Stop-Transcript}
     } #end of $APIScript
 
+    # Setup the global HTTP listener
+    $Global:APIHttpListener = New-Object System.Net.HttpListener
+    if ($API.RemoteAPI) {
+        $Global:APIHttpListener.Prefixes.Add("http://+:$($API.APIport)/")
+        # Require authentication when listening remotely
+        $Global:APIHttpListener.AuthenticationSchemes = if ($API.APIauth) {[System.Net.AuthenticationSchemes]::Basic} else {[System.Net.AuthenticationSchemes]::Anonymous}
+    } else {
+        $Global:APIHttpListener.Prefixes.Add("http://localhost:$($API.APIport)/")
+    }
+    $Global:APIHttpListener.Start()
+
+    # Setup additional, global variables for server handling
+    $Global:APIClients = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
+    $Global:APIListeners   = [System.Collections.ArrayList]@()
+
     # Setup runspacepool to launch the API webserver in separate threads
     $APIVars = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
     $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
     $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
     $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
+    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIHttpListener', $APIHttpListener, $null))
+    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
 
-    $MaxThreads = if ($Session.Config.APIthreads) {$Session.Config.APIthreads} elseif ($API.IsServer) {[Math]::Min($Global:GlobalCPUInfo.Threads,8)} else {[Math]::Min($Global:GlobalCPUInfo.Cores,2)}
+    $MinThreads = 1
+    $MaxThreads = if ($Session.Config.APIthreads) {$Session.Config.APIthreads} elseif ($API.IsServer) {$MinThreads = 2;[Math]::Min($Global:GlobalCPUInfo.Threads,8)} else {[Math]::Min($Global:GlobalCPUInfo.Cores,2)}
+    $MaxThreads = [Math]::Max($MinThreads,$MaxThreads)
 
     $Global:APIRunspacePool = [RunspaceFactory]::CreateRunspacePool(1, $MaxThreads, $APIVars, $Host)
     $Global:APIRunspacePool.Open()
 
     for($ThreadID = 0; $ThreadID -lt $MaxThreads; $ThreadID++) {
-        $newPS = [PowerShell]::Create().AddScript($APIScript).AddParameters(@{'ThreadID'=$ThreadID;'APIHttpListener'=$Global:APIHttpListener})
+        $newPS = [PowerShell]::Create().AddScript($APIScript).AddParameters(@{'ThreadID'=$ThreadID})
         $newPS.RunspacePool = $Global:APIRunspacePool
 
         $Global:APIListeners.Add([PSCustomObject]@{

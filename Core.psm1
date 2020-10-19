@@ -1134,7 +1134,7 @@ function Invoke-Core {
     if (($Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
     if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart}
     if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor)) {Start-Afterburner}
-    if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.APIport -ne $ConfigBackup.APIport -or $Session.Config.APIauth -ne $ConfigBackup.APIauth -or $Session.Config.APIuser -ne $ConfigBackup.APIuser -or $Session.Config.APIpassword -ne $ConfigBackup.APIpassword) -and (Test-Path Variable:Global:API) -and -not $API.IsVirtual) {Stop-APIServer}
+    if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.APIport -ne $ConfigBackup.APIport -or $Session.Config.APIauth -ne $ConfigBackup.APIauth -or $Session.Config.APIuser -ne $ConfigBackup.APIuser -or $Session.Config.APIpassword -ne $ConfigBackup.APIpassword -or $Session.Config.APIthreads -ne $ConfigBackup.Config.APIthreads) -and (Test-Path Variable:Global:API) -and -not $API.IsVirtual) {Stop-APIServer}
     if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {Start-APIServer}
     if($psISE -or -not (Test-Path Variable:Global:API)) {
         $Global:API = [hashtable]@{}
@@ -3182,10 +3182,10 @@ function Invoke-Core {
     if ($Session.Config.RunMode -eq "Server") {
         if ($API.RemoteAPI) {
             Write-Host "[Server-Mode] Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($Session.Config.APIport) " -ForegroundColor Green
-            if ($API.Clients) {
+            if ($APIClients) {
                 Write-Host " "
                 Write-Host "Clients: " -NoNewLine
-                $API.Clients | Foreach-Object {
+                $APIClients | Foreach-Object {
                     $lastseen = [Math]::Round((Get-UnixTimestamp)-$_.timestamp,0)
                     Write-Host "[$($_.workername)@$(if ($_.machinename) {$_.machinename} else {$_.machineip})]" -ForegroundColor "$(if ($lastseen -gt 300) {"Red"} else {"Green"}) " -NoNewline
                 }
