@@ -3097,12 +3097,6 @@ function Get-Device {
                         if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
 
                         $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.Cores
-
-                        if ($Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
-                            $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
-                            $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
-                            $Global:GlobalCPUInfo.PhysicalCPUs = 1
-                        }
                     } else {
                         Write-Log -Level Warn "lscpu CPU detection has failed. Falling back to /proc/cpuinfo"
                         $Data = Get-Content "/proc/cpuinfo"
@@ -3115,9 +3109,16 @@ function Get-Device {
                             $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
                             $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
                             $Global:GlobalCPUInfo | Add-Member Features      @{}
+
                             "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+
                             if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
                         }
+                    }
+                    if ($Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
+                        $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
+                        $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
+                        $Global:GlobalCPUInfo.PhysicalCPUs = 1
                     }
                 }
 
