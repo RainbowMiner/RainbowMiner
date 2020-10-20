@@ -3100,7 +3100,7 @@ function Get-Device {
                         Write-Log -Level Warn "lscpu parsing failed: $($_.Exception)"
                         $Data = $null
                     }
-                    if (-not $Data -or -not $Global:GlobalCPUInfo.PhysicalCPUs -or -not $Global:GlobalCPUInfo.Cores -or -not $Global:GlobalCPUInfo.Threads -or -not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer) {
+                    if (-not $Data -or -not $Global:GlobalCPUInfo.PhysicalCPUs -or -not $Global:GlobalCPUInfo.Cores -or -not $Global:GlobalCPUInfo.Threads -or -not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer -or -not $Global:GlobalCPUInfo.Features.Count) {
                         $Global:GlobalCPUInfo = [PSCustomObject]@{}
                         $Data = Get-Content "/proc/cpuinfo"
                         if ($Data) {
