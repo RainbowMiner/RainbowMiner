@@ -345,6 +345,10 @@
                         $API.UserConfig -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
+                    @(".\Data\lscpu.txt", ".\Data\gpu-count.txt") | Where-Object {Test-Path $_} | Foreach-Object {
+                        Copy-Item $_ $DebugPath -ErrorAction Ignore
+                    }
+
                     if ($IsLinux) {
                         $Params = @{
                             FilePath     = "7z"
