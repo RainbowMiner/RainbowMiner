@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.0-wildrigmulti/wildrig-multi-linux-0.28.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.1-wildrigmulti/wildrig-multi-linux-0.28.1.tar.gz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.0-wildrigmulti/wildrig-multi-windows-0.28.0.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.1-wildrigmulti/wildrig-multi-windows-0.28.1.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.28.0"
+$Version = "0.28.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -46,7 +46,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2tdc";     Vendor = @("AMD");          Params = ""; DevFee = 2.0} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";      Vendor = @("AMD");          Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";  Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
-    [PSCustomObject]@{MainAlgorithm = "megabtx";      Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #, new in v0.26.0
+    [PSCustomObject]@{MainAlgorithm = "megabtx";      Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "megamec";      Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "minotaur";     Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 5.0} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "mtp";          Vendor = @("AMD");          Params = ""} #MTP, new in v0.20.0 beta
