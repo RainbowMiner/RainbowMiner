@@ -3077,7 +3077,9 @@ function Get-Device {
                     #}
                 } elseif ($IsLinux) {
                     try {
-                        $Data = "$(Invoke-Exe "lscpu")" -replace ":","=" | ConvertFrom-StringData -ErrorAction Stop
+                        $lscpu_result = "$(Invoke-Exe "lscpu")"
+                        Write-ToFile -FilePath ".\Data\lscpu.txt" -Message $lscpu_result -NoCR > $null
+                        $Data = $lscpu_result -replace ":","=" | ConvertFrom-StringData -ErrorAction Stop
                         if ($Data) {
                             $MaxClockSpeed = "$(if ($Data.'CPU max MHz') {$Data.'CPU max MHz'} else {$Data.'CPU MHz'})" -replace "[^\d\.]+"
                             $Global:GlobalCPUInfo | Add-Member Name          $Data.'Model name'
