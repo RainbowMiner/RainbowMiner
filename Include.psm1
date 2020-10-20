@@ -3078,27 +3078,30 @@ function Get-Device {
                 } elseif ($IsLinux) {
                     try {
                         $Data = "$(Invoke-Exe "lscpu")" -replace ":","=" | ConvertFrom-StringData -ErrorAction Stop
+                        if ($Data) {
+                            $MaxClockSpeed = "$(if ($Data.'CPU max MHz') {$Data.'CPU max MHz'} else {$Data.'CPU MHz'})" -replace "[^\d\.]+"
+                            $Global:GlobalCPUInfo | Add-Member Name          $Data.'Model name'
+                            $Global:GlobalCPUInfo | Add-Member Manufacturer  $Data.'Vendor ID'
+                            $Global:GlobalCPUInfo | Add-Member Cores         ([int]$Data.'Core(s) per socket')
+                            $Global:GlobalCPUInfo | Add-Member Threads       ([int]$Data.'Thread(s) per core')
+                            $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$Data.'Socket(s)')
+                            $Global:GlobalCPUInfo | Add-Member L3CacheSize   ((ConvertFrom-Bytes $Data.'L3 cache')/1024)
+                            $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$MaxClockSpeed)
+                            $Global:GlobalCPUInfo | Add-Member Features      @{}
+
+                            "$($Data.'Flags')".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+
+                            if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
+
+                            $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.Cores
+                        }
                     } catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "lscpu parsing failed: $($_.Exception)"
                         $Data = $null
                     }
-                    if ($Data) {
-                        $Global:GlobalCPUInfo | Add-Member Name          $Data.'Model name'
-                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $Data.'Vendor ID'
-                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]$Data.'Core(s) per socket')
-                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]$Data.'Thread(s) per core')
-                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$Data.'Socket(s)')
-                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ((ConvertFrom-Bytes $Data.'L3 cache')/1024)
-                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$(if ($Data.'CPU max MHz') {$Data.'CPU max MHz'} else {$Data.'CPU MHz'}))
-                        $Global:GlobalCPUInfo | Add-Member Features      @{}
-
-                        "$($Data.'Flags')".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
-
-                        if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
-
-                        $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.Cores
-                    } else {
-                        Write-Log -Level Warn "lscpu CPU detection has failed. Falling back to /proc/cpuinfo"
+                    if (-not $Data -or -not $Global:GlobalCPUInfo.PhysicalCPUs -or -not $Global:GlobalCPUInfo.Cores -or -not $Global:GlobalCPUInfo.Threads -or -not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer) {
+                        $Global:GlobalCPUInfo = [PSCustomObject]@{}
                         $Data = Get-Content "/proc/cpuinfo"
                         if ($Data) {
                             $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
@@ -3122,11 +3125,13 @@ function Get-Device {
                     }
                 }
 
-                $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ($Global:GlobalCPUInfo.Manufacturer) {
+                $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
                             "(AMD|Advanced Micro Devices)" {"AMD"}
                             "Intel" {"INTEL"}
-                            default {$Global:GlobalCPUInfo.Manufacturer.ToUpper() -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                            default {"$($Global:GlobalCPUInfo.Manufacturer)".ToUpper() -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
                         })
+
+                if (-not $Global:GlobalCPUInfo.Vendor) {$Global:GlobalCPUInfo.Vendor = "OTHER"}
 
                 $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
                 if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
