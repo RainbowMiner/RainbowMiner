@@ -919,6 +919,12 @@ function Invoke-Core {
                 #if ([int64]$Request.network.height -ge 654000) {
                 #    $Fork_Meets_Target = $true
                 #}
+
+                $Request = Invoke-RestMethodAsync "https://blockapi.turtlepay.io/block/header/top" -tag "fork" -timeout 15 -cycletime 120
+                if ([int64]$Request.height -ge 3000000) {
+                    $Fork_Meets_Target = $true
+                }
+
             }
         }
         catch {}
