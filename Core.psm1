@@ -113,6 +113,7 @@ function Start-Core {
         $Session.ReportTotals = $false
         $Session.ReportMinerData = $false
         $Session.ReportPoolsData = $false
+        $Session.ReportDeviceData = $false
         $Session.TimeDiff = 0
 
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
@@ -298,6 +299,7 @@ function Start-Core {
         TimeDiff = 0
         MinerSave = if (Test-Path ".\Data\minerdata.json") {Get-ChildItem ".\Data\minerdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
         PoolsSave = if (Test-Path ".\Data\poolsdata.json") {Get-ChildItem ".\Data\poolsdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
+        ReportDeviceData = 0
     }
 
     $true
@@ -464,6 +466,7 @@ function Invoke-ReportMinerStatus {
     if ($Session.ReportTotals)    {$Including_Strings.Add("totals") > $null}
     if ($Session.ReportMinerData) {$Including_Strings.Add("minerdata") > $null}
     if ($Session.ReportPoolsData) {$Including_Strings.Add("poolsdata") > $null}
+    if ($Session.ReportDeviceData){$Including_Strings.Add("devicedata") > $null}
     Write-Log -Level Info "Pinging monitoring server$(if ($Including_Strings.Count) {" (including $($Including_Strings -join ", "))"}). "
 
     $Profit = 0.0
@@ -599,6 +602,18 @@ function Invoke-ReportMinerStatus {
 
     $CrashAlert = if ($Session.Config.MinerStatusMaxCrashesPerHour -ge 0 -and $Global:CrashCounter.Count -gt $Session.Config.MinerStatusMaxCrashesPerHour) {$Global:CrashCounter.Count} else {0}
 
+    $DeviceData = "$(
+        if ($Session.ReportDeviceData) {
+            try {
+                ConvertTo-Json $Global:GlobalCachedDevices -Compress
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Info "Miner Status $($ReportUrl) failed to create device data. "
+            }
+            $Session.ReportDeviceData = $false
+        }
+    )"
+
     # Send the request
     try {
         $ReportUrl = $Session.Config.MinerStatusURL
@@ -609,7 +624,7 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-ContentByStreamReader ".\Data\minerdata.json"};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-ContentByStreamReader ".\Data\poolsdata.json"};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $ReportRates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; maxcrashes = "$($Session.Config.MinerStatusMaxCrashesPerHour)"; crashalert=$CrashAlert; crashdata=$CrashData; data = $minerreport}
+            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-ContentByStreamReader ".\Data\minerdata.json"};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-ContentByStreamReader ".\Data\poolsdata.json"};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $ReportRates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; maxcrashes = "$($Session.Config.MinerStatusMaxCrashesPerHour)"; crashalert=$CrashAlert; crashdata=$CrashData; devices=$DeviceData; data = $minerreport}
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | Select-Object -first 1}
             else {
                 $ReportStatus = $Response.Status
@@ -1856,6 +1871,13 @@ function Invoke-Core {
         $Session.Updatetracker.PoolsSave = Get-Date
         Set-ContentJson ".\Data\poolsdata.json" @($NewPools | Select-Object Name,Algorithm,CoinSymbol,Price,StablePrice,PenaltyFactor,ErrorRatio -Unique) -Compress > $null
         $Session.ReportPoolsData = $true
+    }
+
+    #Report devices
+
+    if (-not $Session.Updatetracker.ReportDeviceData -or $Session.Updatetracker.ReportDeviceData -lt (Get-Date).AddDays(-1)) {
+        $Session.Updatetracker.ReportDeviceData = Get-Date
+        $Session.ReportDeviceData = $true
     }
 
     #Update the pool balances every "BalanceUpdateMinutes" minutes

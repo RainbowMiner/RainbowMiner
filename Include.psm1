@@ -2861,16 +2861,17 @@ function Get-Device {
                     PlatformId=$PlatformId
                     Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
                         [PSCustomObject]@{
-                            DeviceIndex     = $Device_Index
-                            Name            = $_.Name
-                            Type            = $_.Type
-                            Vendor          = $_.Vendor
-                            GlobalMemSize   = $_.GlobalMemSize
-                            MaxComputeUnits = $_.MaxComputeUnits
-                            PlatformVersion = $_.Platform.Version
-                            DriverVersion   = $_.DriverVersion
-                            PCIBusId        = if ($_.Vendor -match "NVIDIA") {"{0:X2}:{1:X2}" -f [int]$_.PCIBusId,[int]$_.PCISlotId} else {$_.PCITopology}
-                            CardId          = -1
+                            DeviceIndex      = $Device_Index
+                            Name             = $_.Name
+                            BoardName        = $_.BoardName
+                            Type             = $_.Type
+                            Vendor           = $_.Vendor
+                            GlobalMemSize    = $_.GlobalMemSize
+                            MaxComputeUnits  = $_.MaxComputeUnits
+                            PlatformVersion  = $_.Platform.Version
+                            DriverVersion    = $_.DriverVersion
+                            PCIBusId         = $_.PCIBusId
+                            CardId           = -1
                         }
                         $Device_Index++
                     }
