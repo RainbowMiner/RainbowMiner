@@ -2940,7 +2940,24 @@ function Get-Device {
                                 $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
                             }
                         }
-                        $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId; $PCIBusId = $_.PCIBusId; $CardId = $_.CardId}
+
+                        $GPUDeviceNameFound = $null
+                        if ($Device_OpenCL.PCIBusId -match "[A-F0-9]+:[A-F0-9]+$") {
+                            $GPUDeviceNameFound = $GPUDeviceNames[$Vendor_Name] | Where-Object PCIBusId -eq $Device_OpenCL.PCIBusId | Select-Object -First 1
+                        }
+                        if (-not $GPUDeviceNameFound) {
+                            $GPUDeviceNameFound = $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Select-Object -First 1
+                        }
+                        
+                        if ($GPUDeviceNameFound) {
+                            $Device_Name = $GPUDeviceNameFound.DeviceName
+                            $InstanceId  = $GPUDeviceNameFound.InstanceId
+                            $SubId       = $GPUDeviceNameFound.SubId
+                            $PCIBusId    = $GPUDeviceNameFound.PCIBusId
+                            $CardId      = $GPUDeviceNameFound.CardId
+                        }
+
+                        # fix some AMD names
                         if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
                             if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
                             elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
@@ -2949,6 +2966,8 @@ function Get-Device {
                         } elseif ($Device_Name -eq "gfx1010") {
                             $Device_Name = "Radeon RX 5700 XT"
                         }
+
+                        # fix PCIBusId
                         if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
                     }
 
