@@ -2871,6 +2871,7 @@ function Get-Device {
                             PlatformVersion  = $_.Platform.Version
                             DriverVersion    = $_.DriverVersion
                             PCIBusId         = $_.PCIBusId
+                            DeviceCapability = $_.DeviceCapability
                             CardId           = -1
                         }
                         $Device_Index++
@@ -2908,17 +2909,23 @@ function Get-Device {
                 $_.Devices | Foreach-Object {    
                     $Device_OpenCL = $_
 
-                    $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
                     $Vendor_Name = [String]$Device_OpenCL.Vendor
-                    $InstanceId  = ''
-                    $SubId = ''
-                    $PCIBusId = $null
-                    $CardId = -1
 
                     if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
                         $Vendor_Name = "NVIDIA"
                     } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
                         $Vendor_Name = "AMD"
+                    } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
+                        $Vendor_Name = "INTEL"
+                    }
+
+                    $Device_Name = Get-NormalizedDeviceName $Device_OpenCL.BoardName -Vendor $Vendor_Name
+                    $InstanceId  = ''
+                    $SubId = ''
+                    $PCIBusId = $null
+                    $CardId = -1
+
+                    if ($Vendor_Name -eq "AMD") {
                         if (-not $GPUDeviceNames[$Vendor_Name]) {
                             $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
                                 if ((Test-OCDaemon) -or (Test-IsElevated)) {
@@ -2943,8 +2950,6 @@ function Get-Device {
                             $Device_Name = "Radeon RX 5700 XT"
                         }
                         if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
-                    } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
-                        $Vendor_Name = "INTEL"
                     }
 
                     $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
@@ -3036,7 +3041,7 @@ function Get-Device {
                 $Global:GlobalCachedDevices | Where-Object Model -eq $Model | Foreach-Object {
                     $AmdGb = "$([int]($_.OpenCL.GlobalMemSize / 1GB))GB"
                     $_.Model = "$($_.Model)$AmdGb"
-                    $_.Model_Base = "$($_.Model)$AmdGb"
+                    $_.Model_Base = "$($_.Model_Base)$AmdGb"
                     $_.Model_Name = "$($_.Model_Name) $AmdGb"
                 }
             }
@@ -3388,22 +3393,27 @@ function Get-NormalizedDeviceName {
         [Parameter(Mandatory = $false)]
         [String]$Vendor = "AMD"
     )
+
+    $DeviceName = "$($DeviceName -replace '\(TM\)|\(R\)')"
+
     if ($Vendor -ne "AMD") {return $DeviceName}
 
     $DeviceName = "$($DeviceName `
             -replace 'ASUS' `
             -replace 'AMD' `
-            -replace '\(?TM\)?' `
+            -replace '\([A-Z0-9 ]+\)?' `
             -replace 'Series' `
             -replace 'Graphics' `
+            -replace 'Adapter' `
+            -replace '\d+GB$' `
             -replace "\s+", ' '
     )".Trim()
 
-    if ($DeviceName -match '.*Radeon.*(5[567]00.*)') {"Radeon RX $($Matches[1])"}             # RX 5000 series
-    elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
+    if ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}                 # HD series
     elseif ($DeviceName -match '.*\s(Vega).*(56|64).*') {"Radeon Vega $($Matches[2])"}        # Vega series
     elseif ($DeviceName -match '.*\s(R\d)\s(\w+).*') {"Radeon $($Matches[1]) $($Matches[2])"} # R3/R5/R7/R9 series
-    elseif ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}             # HD series
+    elseif ($DeviceName -match '.*Radeon.*(5[567]00.*)') {"Radeon RX $($Matches[1])"}         # RX 5000 series
+    elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
     else {$DeviceName}
 }
 
