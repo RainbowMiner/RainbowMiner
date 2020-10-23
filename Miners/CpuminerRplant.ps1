@@ -9,18 +9,18 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes -and $false){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.11-rplant/cpuminer-rplant-4.5.11-linux.7z"
-    #$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.17-rplant/cpuminer-rplant-4.5.17-linux.7z"
+    #$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.11-rplant/cpuminer-rplant-4.5.11-linux.7z"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.18-rplant/cpuminer-rplant-4.5.18-linux.7z"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.11-rplant/cpuminer-rplant-4.5.11-win.zip"
-    #$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.17-rplant/cpuminer-rplant-4.5.17-win.zip"
+    #$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.11-rplant/cpuminer-rplant-4.5.11-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.18-rplant/cpuminer-rplant-4.5.18-win.zip"
 }
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
-$Version = "4.5.11"
-#$Version = "4.5.17"
+#$Version = "4.5.11"
+$Version = "4.5.18"
 
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
@@ -43,10 +43,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
     #[PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b, Jayddee faster
-    ###[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
-	#[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; LinuxOnly = $false} #ScryptN2, CpuminerVerium faster
+    [PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
+	[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; LinuxOnly = $false} #ScryptN2, CpuminerVerium faster
 	[PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
-    ###[PSCustomObject]@{MainAlgorithm = "x33"; Params = ""} #X33 (QRN) from v4.5.16 on
+    [PSCustomObject]@{MainAlgorithm = "x33"; Params = ""} #X33 (QRN) from v4.5.16 on
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
     [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
     [PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
