@@ -2863,7 +2863,7 @@ function Get-Device {
                         [PSCustomObject]@{
                             DeviceIndex      = $Device_Index
                             Name             = $_.Name
-                            BoardName        = $_.BoardName
+                            Architecture     = $_.Architecture
                             Type             = $_.Type
                             Vendor           = $_.Vendor
                             GlobalMemSize    = $_.GlobalMemSize
@@ -2887,6 +2887,7 @@ function Get-Device {
                     [PSCustomObject]@{
                         DeviceIndex     = $_.index
                         Name            = $_.gpu_name
+                        Architecture    = $_.gpu_name
                         Type            = "Gpu"
                         Vendor          = "NVIDIA Corporation"
                         GlobalMemSize   = 1MB * [int64]$_.memory_total
@@ -2919,7 +2920,7 @@ function Get-Device {
                         $Vendor_Name = "INTEL"
                     }
 
-                    $Device_Name = Get-NormalizedDeviceName $Device_OpenCL.BoardName -Vendor $Vendor_Name
+                    $Device_Name = Get-NormalizedDeviceName $Device_OpenCL.Name -Vendor $Vendor_Name
                     $InstanceId  = ''
                     $SubId = ''
                     $PCIBusId = $null

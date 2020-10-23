@@ -314,12 +314,12 @@ namespace OpenCl
             }
         }
 
-        public string Name
+        public string Architecture
         {
             get { return Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_NAME); }
         }
 
-        public string BoardName
+        public string Name
         {
             get {
                 string Vendor = Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_VENDOR);
