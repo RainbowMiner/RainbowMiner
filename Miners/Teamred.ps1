@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.15-teamred/teamredminer-v0.7.15-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.16b-teamred/teamredminer-v0.7.16b-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.15-teamred/teamredminer-v0.7.15-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.16b-teamred/teamredminer-v0.7.16b-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.7.15"
+$Version = "0.7.16b"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -43,6 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "nimiq";            MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "phi2";             MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";      MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "trtl_chukwa2";     MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeArchitecture = @("gfx1010","gfx1011","gfx1012","gfx1030","gfx1031","gfx1032")}
     [PSCustomObject]@{MainAlgorithm = "x16r";             MinMemGb = 3.3; Params = ""; DevFee = 2.5; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "x16rt";            MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "x16rv2";           MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExtendInterval = 2}
@@ -77,7 +78,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
         $MinMemGB = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
 
-        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $_.ExcludeArchitecture -or $_.OpenCL.Architecture -notin $_.ExcludeArchitecture)}
 
         #Zombie-mode since v0.7.14
         if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGB) {
