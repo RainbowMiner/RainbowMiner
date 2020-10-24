@@ -12,7 +12,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpuminerverium/cpuminer_1.4_linux_x64_O2_GCC7.zip"
 } else {
     $Path = ".\Bin\CPU-Verium\cpuminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpuminerverium/cpuminer_1.4_windows_x64_O2_GCC7$($f = $Global:GlobalCPUInfo.Features;if($f.avx2 -and $f.sha -and $f.aes){'_RYZEN'}).zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpuminerverium/cpuminer_1.4_windows_x64_O2_GCC7$(if($Global:GlobalCPUInfo.IsRyzen){'_RYZEN'}).zip"
 }
 $ManualUri = "https://github.com/fireworm71/veriumMiner/releases"
 $Port = "544{0:d2}"
@@ -22,7 +22,7 @@ $Version = "1.4"
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "scryptn2"; Params = ""} #Scryptn2/Verium
+    [PSCustomObject]@{MainAlgorithm = "scryptn2"; Params = "$(if ($Global:GlobalCPUInfo.IsRyzen) {"--ryzen"})"} #Scryptn2/Verium
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
