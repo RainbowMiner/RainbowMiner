@@ -7,11 +7,15 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+$f=$Global:GlobalCPUInfo.Features
+
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'} elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
+    $Path_AVX = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'avx'} elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.15.0-jayddee/cpuminer-opt-3.15.0-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.vaes) {'avx512-sha-vaes'}elseif($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
+    $Path_AVX = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.15.0-jayddee/cpuminer-opt-3.15.0-windows.zip"
 }
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
@@ -50,11 +54,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""} #pluck
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = "--param-n 2048 --param-r 32 --param-key `"Now I am become Death, the destroyer of worlds`""; Algorithm = "yespower-b2b"} #power2b
-    [PSCustomObject]@{MainAlgorithm = "scryptn2"; Params = "--param-n 1048576"; Algorithm = "scrypt"} #ScryptN2
-    #[PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""} #ScryptN11, CpuminerMulti faster
-    [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; Params = ""} #Scrypt8k
-    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""} #ScryptJane16
-    [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
+    [PSCustomObject]@{MainAlgorithm = "scryptn2"; Params = "--param-n 1048576"; Algorithm = "scrypt"; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #ScryptN2
+    #[PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #ScryptN11, CpuminerMulti faster
+    [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #Scrypt8k
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #ScryptJane16
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #sha256q
     [PSCustomObject]@{MainAlgorithm = "sha3d"; Params = ""} #sha3d, BSHA3
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #shavite3
@@ -159,7 +163,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
         $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
         $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
 
-        $DeviceParams = " --hash-meter$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
+        $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
@@ -172,7 +176,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 					Name           = $Miner_Name
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
-					Path           = $Path
+					Path           = if ($_.Path) {$_.Path} else {$Path}
 					Arguments      = "-b 127.0.0.1:`$mport -a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParams) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Ccminer"

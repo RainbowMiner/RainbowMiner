@@ -3149,6 +3149,7 @@ function Get-Device {
                 $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
                 if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
             }
+            $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Vendor -eq "AMD" -and $Global:GlobalCPUInfo.Name -match "Ryzen")
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
