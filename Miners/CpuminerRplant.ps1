@@ -44,7 +44,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
     #[PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b, Jayddee faster
     ####[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
-	[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; LinuxOnly = $false} #ScryptN2, CpuminerVerium faster
+	#[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium and CpuminerJayddee faster
 	[PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
     ####[PSCustomObject]@{MainAlgorithm = "x33"; Params = ""} #X33 (QRN) from v4.5.16 on
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
