@@ -3861,7 +3861,7 @@ function Update-DeviceInformation {
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
             if ($IsWindows) {
-                if (-not $Session.SysInfo.Cpus) {Get-SysInfo > $null}
+                if (-not $Session.SysInfo.Cpus) {$Session.SysInfo = Get-SysInfo}
                 $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
@@ -6920,9 +6920,9 @@ function Get-SysInfo {
     if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
     if ($IsWindows) {
 
-        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
+        $CIM_CPU = $null
 
-        $CPUs = @($CIM_CPU | Foreach-Object {
+        $CPUs = @(1..$Session.PhysicalCPUs | Foreach-Object {
             [PSCustomObject]@{
                     Clock       = 0
                     Utilization = 0
@@ -6960,6 +6960,9 @@ function Get-SysInfo {
                 }
 
                 if (-not $CPU.PowerDraw) {
+                    if (-not $CIM_CPU) {
+                        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
+                    }
                     $CPU.Method = "cim"
                     $CIM_CPU | Select-Object -Index $Index | Foreach-Object {
                         if (-not $CPU.Clock)       {$CPU.Clock = $_.MaxClockSpeed}

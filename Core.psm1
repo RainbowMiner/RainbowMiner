@@ -115,6 +115,7 @@ function Start-Core {
         $Session.ReportPoolsData = $false
         $Session.ReportDeviceData = $false
         $Session.TimeDiff = 0
+        $Session.PhysicalCPUs = 0
 
         $Session.SysInfo = Get-SysInfo
 
@@ -140,6 +141,7 @@ function Start-Core {
     try {
         Write-Host "Detecting devices .."
         $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL).Where({$_})
+        $Session.PhysicalCPUs = $Global:GlobalCPUInfo.PhysicalCPUs
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
