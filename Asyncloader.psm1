@@ -53,9 +53,16 @@ Param(
             $StopWatch.Restart()
             $Cycle++
 
-            if (-not ($Cycle % 3)) {$Session.SysInfo = Get-SysInfo}
+            if ($AsyncLoader.Verbose) {
+                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start cycle" -Append -Timestamp
+            }
+
+            if (-not ($Cycle % 3)) {
+                $Session.SysInfo = Get-SysInfo
+            }
 
             if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
+
                 $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
                 foreach ($JobKey in $JobKeys) {
                     $Job = $AsyncLoader.Jobs.$JobKey
@@ -81,7 +88,13 @@ Param(
                 }
             }
             if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Error.Clear()}
+
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
+
+            if ($AsyncLoader.Verbose) {
+                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End cycle $(if ($Delta -gt 0) {"(wait $Delta s)"})" -Append -Timestamp
+            }
+
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
         if ($AsyncLoader.Debug) {Stop-Transcript}

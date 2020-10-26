@@ -3174,9 +3174,9 @@ function Get-Device {
                     Model_Name = $Global:GlobalCPUInfo.Name
                     Features = $Global:GlobalCPUInfo.Features.Keys
                     Data = [PSCustomObject]@{
-                                Cores       = 0
-                                Threads     = 0
-                                CacheL3     = 0
+                                Cores       = [int]($Global:GlobalCPUInfo.Cores / $Global:GlobalCPUInfo.PhysicalCPUs)
+                                Threads     = [int]($Global:GlobalCPUInfo.Threads / $Global:GlobalCPUInfo.PhysicalCPUs)
+                                CacheL3     = $Global:GlobalCPUInfo.L3CacheSize
                                 Clock       = 0
                                 Utilization = 0
                                 PowerDraw   = 0
@@ -3187,6 +3187,7 @@ function Get-Device {
                                 Clock       = 0
                                 Utilization = 0
                                 PowerDraw   = 0
+                                Temperature = 0
                     }
                 }
 
@@ -3859,66 +3860,42 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             if ($IsWindows) {
+                if (-not $Session.SysInfo.Cpus) {Get-SysInfo > $null}
                 $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
-                if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
-                    $CIM_CPU | Select-Object -Index $Device.Type_Index | ForEach-Object {
-                        if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
-                            if ($Script:abMonitor -and $abReload) {$Script:abMonitor.ReloadAll();$abReload=$false}
-                            $CpuData = @{                            
-                                Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
-                                Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
-                                PowerDraw   = $($Script:abMonitor.Entries | Where-Object SrcName -eq 'CPU power').Data
-                                Temperature = $($Script:abMonitor.Entries | Where-Object SrcName -match "^(CPU\d* )temperature" | Measure-Object -Property Data -Maximum).Maximum
-                                Method      = "ab"
-                            }
-                        } else {
-                            $CpuData = @{Clock=0;Utilization=0;PowerDraw=0;Temperature=0;Method="tdp"}
-                        }
-                        if (-not $CpuData.Clock)       {$CpuData.Clock = $_.MaxClockSpeed}                
-                        if (-not $CpuData.Utilization) {$CpuData.Utilization = $_.LoadPercentage}
-                        if (-not $CpuData.Utilization) {$CpuData.Utilization = 100}
-                        if (-not $CpuData.PowerDraw) {
-                            $CpuName = "$($_.Name.Trim()) "
-                            if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
-                            $CpuData.PowerDraw = $CPU_tdp * ($CpuData.Utilization / 100) * ($PowerAdjust[$Device.Model] / 100)
-                        }
 
-                        $Device.Data.Cores       = [int]$_.NumberOfCores
-                        $Device.Data.Threads     = [int]$_.NumberOfLogicalProcessors
-                        $Device.Data.CacheL3     = [int]($_.L3CacheSize / 1024)
-                        $Device.Data.Clock       = [int]$CpuData.Clock
-                        $Device.Data.Utilization = [int]$CpuData.Utilization
-                        $Device.Data.PowerDraw   = [int]$CpuData.PowerDraw
-                        $Device.Data.Temperature = [int]$CpuData.Temperature
-                        $Device.Data.Method      = $CpuData.Method
+                    $Session.SysInfo.Cpus | Select-Object -Index $Device.Type_Index | Foreach-Object {
+                        $Device.Data.Clock       = [int]$_.Clock
+                        $Device.Data.Utilization = [int]$_.Utilization
+                        $Device.Data.PowerDraw   = [int]$_.PowerDraw
+                        $Device.Data.Temperature = [int]$_.Temperature
+                        $Device.Data.Method      = $_.Method
                     }
                 }
-            } 
+            }
             elseif ($IsLinux) {
+                if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
                     if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
-                    $_.Data.Cores       = [int]$Global:GlobalCPUInfo.Cores
-                    $_.Data.Threads     = [int]$Global:GlobalCPUInfo.Threads
-                    $_.Data.CacheL3     = [int]($Global:GlobalCPUInfo.L3CacheSize / 1024)
                     $_.Data.Clock       = [int]$Global:GlobalCPUInfo.MaxClockSpeed
                     $_.Data.Utilization = [int]$Utilization
                     $_.Data.PowerDraw   = [int]($CPU_tdp * $Utilization / 100)
+                    $_.Data.Temperature = 0
                     $_.Data.Method      = "tdp"
                 }
             }
-
             $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
                 $_.DataMax.Utilization = [Math]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
                 $_.DataMax.PowerDraw   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
             }
         }
     } catch {
@@ -6940,9 +6917,71 @@ function Get-Uptime {
 }
 
 function Get-SysInfo {
+    if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
     if ($IsWindows) {
+
+        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
+
+        $CPUs = @($CIM_CPU | Foreach-Object {
+            [PSCustomObject]@{
+                    Clock       = 0
+                    Utilization = 0
+                    PowerDraw   = 0
+                    Temperature = 0
+                    Method      = "ohm"
+            }            
+        } | Select-Object)
+        
+        if ((Test-IsElevated) -and (Test-Path ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorReport.exe")) {
+            try {
+                $OHM_Result = Invoke-Exe ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorReport.exe" -ArgumentList "ReportToConsole --IgnoreMonitorFanController --IgnoreMonitorGPU --IgnoreMonitorHDD --IgnoreMonitorMainboard --IgnoreMonitorRAM" -ExpandLines
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
+
         try {
-            $CPULoad = (Get-CimInstance -Class CIM_Processor -ErrorAction Ignore | Foreach-Object {$_.LoadPercentage} | Measure-Object -Average).Average
+            $Index = 0
+            $CPUs | Foreach-Object {
+                $CPU = $_
+                if ($OHM_Result) {
+                    $Clock_Count = 0
+                    $OHM_Result | Where-Object {$_ -match "CPU\s+(\w+).+\s+([\d\.]+)\s+[\d\.]+\s+[\d\.]+\s+.+cpu/$Index/(clock|temperature|load|power)/(\d+)"} | Foreach-Object {
+                        $Value = [decimal]$Matches[2];
+                        $CpuId = [int]$Matches[4];
+                        Switch($Matches[3]) {
+                            "clock"       {$CPU.Clock += $Value;$Clock_Count++} 
+                            "temperature" {if ($Matches[1] -eq "Package") {$CPU.Temperature = $Value}}
+                            "load"        {if ($Matches[1] -eq "Total")   {$CPU.Utilization = $Value}}
+                            "power"       {if ($Matches[1] -eq "Package") {$CPU.PowerDraw = $Value}}
+                        }
+                    }
+                    if ($Clock_Count -gt 1) {$CPU.Clock /= $Clock_Count}
+                }
+
+                if (-not $CPU.PowerDraw) {
+                    $CPU.Method = "cim"
+                    $CIM_CPU | Select-Object -Index $Index | Foreach-Object {
+                        if (-not $CPU.Clock)       {$CPU.Clock = $_.MaxClockSpeed}
+                        if (-not $CPU.Utilization) {$CPU.Utilization = $_.LoadPercentage}
+                        if (-not $CPU.Utilization) {$CPU.Utilization = 100}
+                        if (-not $CPU.PowerDraw) {
+                            $CpuName = "$($_.Name.Trim()) "
+                            if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                            $CPU.PowerDraw = $CPU_tdp * ($CPU.Utilization / 100)
+                            $CPU.Method = "tdp"
+                        }
+                    }
+                }
+
+                $Index++
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+
+        try {
+            $CPULoad = ($CPUs | Measure-Object -Property Utilization -Average).Average
             $OSData  = Get-CimInstance -Class Win32_OperatingSystem -ErrorAction Ignore
             $HDData  = Get-CimInstance -class Win32_LogicalDisk -namespace "root\CIMV2" -ErrorAction Ignore
         } catch {
@@ -6951,6 +6990,7 @@ function Get-SysInfo {
 
         [PSCustomObject]@{
             CpuLoad = $CPULoad
+            Cpus    = $CPUs
             Memory  = [PSCustomObject]@{
                 TotalGB = [decimal][Math]::Round($OSData.TotalVisibleMemorySize/1MB,1)
                 UsedGB  = [decimal][Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
