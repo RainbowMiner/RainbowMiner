@@ -917,10 +917,10 @@ function Invoke-Core {
     if ((Test-Path ".\Data\coinsdb-fork.json“) -or (Test-Path ".\Data\algorithms-fork.json“)) {
         $Fork_Meets_Target = $false
         try {
-            if ($false) {
+            if ($true) {
                 #DateTime target
 
-                #$Fork_Meets_Target = (Get-Date).ToUniversalTime() -ge [datetime]"2020-05-06 18:00:00"
+                $Fork_Meets_Target = (Get-Date) -ge [datetime]"October 31, 2020 5:00 PM GMT"
             } else {
                 #Blockchain target
 
