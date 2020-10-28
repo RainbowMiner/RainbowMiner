@@ -925,6 +925,9 @@ try {
         $AddAlgorithm += @("ProgPowVeil")
     }
 
+    if ($Version -le (Get-Version "4.6.3.9")) {
+        $AddAlgorithm += @("Octopus")
+    }
 
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
