@@ -117,8 +117,6 @@ function Start-Core {
         $Session.TimeDiff = 0
         $Session.PhysicalCPUs = 0
 
-        $Session.SysInfo = Get-SysInfo
-
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
 
         if ($Session.IsAdmin) {Write-Log "Run as administrator"}
