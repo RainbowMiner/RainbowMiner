@@ -6929,14 +6929,24 @@ function Get-SysInfo {
                     PowerDraw   = 0
                     Temperature = 0
                     Method      = "ohm"
-            }            
+            }
         } | Select-Object)
         
-        if ((Test-IsElevated) -and (Test-Path ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorReport.exe")) {
+        if ((Test-IsElevated) -and (Test-Path ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorLib.dll")) {
             try {
-                $OHM_Result = Invoke-Exe ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorReport.exe" -ArgumentList "ReportToConsole --IgnoreMonitorFanController --IgnoreMonitorGPU --IgnoreMonitorHDD --IgnoreMonitorMainboard --IgnoreMonitorRAM" -ExpandLines
+                if (-not (Test-Path "Variables:Script:ohMonitor")) {
+                    Add-Type -Path ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorLib.dll"
+                    $Script:ohMonitor = [OpenHardwareMonitor.Hardware.Computer]::New()
+                    $Script:ohMonitor.CPUEnabled = $true
+                }
+
+                $Script:ohMonitor.Open()
+                foreach($Hardware in $Script:ohMonitor.Hardware) {
+                    $Hardware.Update()
+                }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
+                $Script:ohMonitor = $false
             }
         }
 
@@ -6944,19 +6954,13 @@ function Get-SysInfo {
             $Index = 0
             $CPUs | Foreach-Object {
                 $CPU = $_
-                if ($OHM_Result) {
-                    $Clock_Count = 0
-                    $OHM_Result | Where-Object {$_ -match "CPU\s+(\w+).+\s+([\d\.]+)\s+[\d\.]+\s+[\d\.]+\s+.+cpu/$Index/(clock|temperature|load|power)/(\d+)"} | Foreach-Object {
-                        $Value = [decimal]$Matches[2];
-                        $CpuId = [int]$Matches[4];
-                        Switch($Matches[3]) {
-                            "clock"       {$CPU.Clock += $Value;$Clock_Count++} 
-                            "temperature" {if ($Matches[1] -eq "Package") {$CPU.Temperature = $Value}}
-                            "load"        {if ($Matches[1] -eq "Total")   {$CPU.Utilization = $Value}}
-                            "power"       {if ($Matches[1] -eq "Package") {$CPU.PowerDraw = $Value}}
-                        }
+                if ($Script:ohMonitor) {
+                    $Script:ohMonitor.Hardware | Where-Object {$_.HardwareType -eq "CPU" -and $_.Identifier -match "/$Index$"} | Foreach-Object {
+                        $CPU.PowerDraw   = (($_.Sensors | Where-Object {$_.SensorType -eq "Power" -and $_.Name -match "Package"}).Value | Measure-Object -Sum).Sum
+                        $CPU.Temperature = (($_.Sensors | Where-Object {$_.SensorType -eq "Temperature" -and $_.Name -match "Package"}).Value | Measure-Object -Average).Average
+                        $CPU.Clock       = (($_.Sensors | Where-Object {$_.SensorType -eq "Clock" -and $_.Name -match "CPU"}).Value | Measure-Object -Average).Average
+                        $CPU.Utilization = (($_.Sensors | Where-Object {$_.SensorType -eq "Load" -and $_.Name -match "Total"}).Value | Measure-Object -Average).Average
                     }
-                    if ($Clock_Count -gt 1) {$CPU.Clock /= $Clock_Count}
                 }
 
                 if (-not $CPU.PowerDraw) {
@@ -6981,6 +6985,10 @@ function Get-SysInfo {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
+        } finally {
+            if ($Script:ohMonitor) {
+                $Script:ohMonitor.Close()
+            }
         }
 
         try {
