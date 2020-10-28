@@ -163,9 +163,6 @@
             SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable automatic Catalyst mining"}
             Currencies=@("XMR")
         }
-        "MinerMore" = [PSCustomObject]@{
-            Currencies=@("RVN","SIN","YEC")
-        }
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("XMR")
         }
