@@ -68,7 +68,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "dedal"; Params = ""} #Dedal (re-added with v0.13.0)
-    [PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""; MinMemGB = 2; ExtendInterval = 3; ExcludePoolName = "^MiningRigRentals$"} #Ethash (new with v0.17.2)
+    ###[PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""; MinMemGB = 2; ExtendInterval = 3; ExcludePoolName = "^MiningRigRentals$"} #Ethash (new with v0.17.2, broken in v0.18.3)
     [PSCustomObject]@{MainAlgorithm = "geek"; Params = ""} #Geek (new with v0.7.5)
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725 (new with v0.6.4)
     [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb (new with v0.12.0)
