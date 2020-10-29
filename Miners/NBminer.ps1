@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-NBMiner\nbminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v33.0-nbminer/NBMiner_33.0_Linux.tgz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v33.1-nbminer/NBMiner_33.1_Linux.tgz"
 } else {
     $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v33.0-nbminer/NBMiner_33.0_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v33.1-nbminer/NBMiner_33.1_Win.zip"
 }
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
-$Version = "33.0"
+$Version = "33.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -192,7 +192,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pass) {":$Pass"})$EthCoin$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog --no-nvml $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pass) {":$Pass"})$EthCoin$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog --no-nvml --share-check 0 $($_.Params)"
 							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
 							API            = "NBminer"
 							Port           = $Miner_Port
