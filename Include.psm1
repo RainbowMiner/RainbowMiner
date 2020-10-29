@@ -6005,7 +6005,7 @@ Param(
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
@@ -6128,7 +6128,9 @@ Param(
             } until ($retry -le 0)
         }
 
-        if ($CacheWriteOk) {$AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()}
+        if ($CacheWriteOk) {
+            $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()
+        }
 
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
             try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
