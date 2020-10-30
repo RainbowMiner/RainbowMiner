@@ -1867,7 +1867,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","intensity","affinity","threads")) > $null
+                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","intensity","affinity","threads","sharecheck")) > $null
                 $MinerSetupSteps.Add("save") > $null                         
 
                 do { 
@@ -1920,6 +1920,7 @@ function Start-Setup {
                                     Penalty = ""
                                     Difficulty = ""
                                     Disable = "0"
+                                    ShareCheck = ""
                                 }
                                 if ($EditSecondaryAlgorithm) {
                                     $EditMinerConfig | Add-Member Intensity "" -Force
@@ -2000,6 +2001,10 @@ function Start-Setup {
                                 } else {
                                     $MinerSetupStepStore = $false
                                 }
+                            }
+                            "sharecheck" {
+                                $EditMinerConfig.ShareCheck = Read-HostString "If set, the miner will restart, if the last found share is older than that (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $EditMinerConfig.ShareCheck -Characters "0-9smhdw`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $EditMinerConfig.ShareCheck = $EditMinerConfig.ShareCheck -replace "([A-Z])[A-Z]+","`$1"
                             }
                             "save" {
                                 Write-Host " "

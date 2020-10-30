@@ -56,6 +56,7 @@ class Miner {
     [double]$MaxRejectedShareRatio = 0.3
     [int]$MiningPriority
     [int]$MiningAffinity
+    [int]$ShareCheck = 0
     [string]$ManualUri
     [Double[]]$RejectedShareRatio
     [String]$EthPillEnable = "disable"
@@ -65,6 +66,7 @@ class Miner {
     [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1;"CPUAffinity"=0}
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
+    [Bool]$Restart = $false
     [Bool]$IsFocusWalletMiner = $false
     [Bool]$IsExclusiveMiner = $false
     [Bool]$IsLocked = $false
@@ -216,7 +218,7 @@ class Miner {
 
     hidden StartMiningPreProcess() {
         $this.Stratum = @()
-        while ($this.Stratum.Count -lt $this.Algorithm.Count) {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
+        while ($this.Stratum.Count -lt $this.Algorithm.Count) {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0;LastAcceptedTime=$null;LastRejectedTime=$null}}
         $this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count
         $this.ActiveLast = Get-Date
     }
@@ -379,6 +381,8 @@ class Miner {
     }
 
     UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected) {
+        if ($this.Stratum[$Index].Accepted -ne $Accepted) {$this.Stratum[$Index].LastAcceptedTime = Get-Date}
+        if ($this.Stratum[$Index].Rejected -ne $Rejected) {$this.Stratum[$Index].LastRejectedTime = Get-Date}
         $this.Stratum[$Index].Accepted = $Accepted
         $this.Stratum[$Index].Rejected = $Rejected
         if ($Accepted + $Rejected) {
@@ -405,6 +409,13 @@ class Miner {
 
     [Bool]CheckShareRatio() {
         return $this.MaxRejectedShareRatio -le 0 -or $this.GetMaxRejectedShareRatio() -le $this.MaxRejectedShareRatio
+    }
+
+    [Int]GetLastAcceptedSeconds() {
+        if ($this.Stratum[0].LastAcceptedTime) {
+            return ((Get-Date) - $this.Stratum[0].LastAcceptedTime).TotalSeconds
+        }
+        return 0
     }
 
     [Void]UpdateMinerData () {

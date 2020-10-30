@@ -5013,9 +5013,9 @@ function Set-MinersConfigDefault {
                                 $k = "$m-$s"                                
                                 if (-not $MinerCheck.Contains($k)) {
                                     if ($SetupDevice -eq "CPU") {
-                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";Affinity = "";Threads = ""}
+                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";Affinity = "";Threads = "";ShareCheck = ""}
                                     } else {
-                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0"}
+                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";ShareCheck = ""}
                                     }
                                     $MinerCheck.Add($k)>$null
                                 }
