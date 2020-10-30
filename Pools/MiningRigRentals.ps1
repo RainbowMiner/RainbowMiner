@@ -47,7 +47,8 @@ param(
     [String]$ProfitAverageTime = "Day",
     [String]$PauseBetweenRentals = "0",
     [String]$Title = "",
-    [String]$Description = ""
+    [String]$Description = "",
+    [String]$UseHost = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -305,12 +306,17 @@ if ($AllRigs_Request) {
 
                 if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
 
-                    $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Pool_Rig.server.SubString(0,2))"},{100-$_.id} | Select-Object -First 2}
-                    if (-not $Pool_Failover) {$Pool_FailOver = @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $_.region -match "^eu"} | Select-Object -First 1)}
-                    $Pool_FailOver += $Pool_AllHosts | Where-Object {$_.name -ne $Pool_Rig.server -and $Pool_FailOver -notcontains $_} | Select-Object -First 1
-
                     $Miner_Server = $Pool_Rig.server
                     $Miner_Port   = $Pool_Rig.port
+
+                    if ($UseHost -and $Pool_RigEnable -and ($Host_Rig = $Pool_AllHosts | Where-Object name -like "$UseHost.*" | Select-Object -First 1)) {
+                        $Miner_Server = $Host_Rig.name
+                        $Miner_Port   = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {$Host_Rig.ethereum_port} else {$Host_Rig.port}
+                    }
+
+                    $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Miner_Server.SubString(0,2))"},{100-$_.id} | Select-Object -First 2}
+                    if (-not $Pool_Failover) {$Pool_FailOver = @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^eu"} | Select-Object -First 1)}
+                    $Pool_FailOver += $Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $Pool_FailOver -notcontains $_} | Select-Object -First 1
                 
                     #BEGIN temporary fixes
 
@@ -362,7 +368,7 @@ if ($AllRigs_Request) {
                                 Pass     = "x"
                             }
                         })
-                        EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"qtminer"} else {$null}
+                        EthMode       = if ($Miner_Port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"qtminer"} else {$null}
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1
