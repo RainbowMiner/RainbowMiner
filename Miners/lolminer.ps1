@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-lolminer/lolMiner_v1.11_Lin64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.12-lolminer/lolMiner_v1.12_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-lolminer/lolMiner_v1.11_Win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.12-lolminer/lolMiner_v1.12_Win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.11"
+$Version = "1.12"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -40,6 +40,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3;   Params = "--algo BEAM-I";    Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3;   Params = "--algo BEAM-II";   Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5,3
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGB = 2;   Params = "--algo ETHASH";    Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD")} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";         MinMemGB = 2;   Params = "--algo ETCHASH";   Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD")} #Etchash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -89,7 +90,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $PersCoin = if ($_.Pers) {Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"}
 
                     $EthStratum = if ($Algorithm_Norm -match "^Ethash") {
-                        $EthStratum = Switch ($Pools.$Algorithm_Norm.EthMode) {
+                        Switch ($Pools.$Algorithm_Norm.EthMode) {
                             "ethproxy" {"ETHPROXY"}
                             default {"ETHV1"}
                         }
@@ -102,7 +103,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						    DeviceName     = $Miner_Device.Name
 						    DeviceModel    = $Miner_Model
 						    Path           = $Path
-						    Arguments      = "--pool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --devices $($Miner_Device.Type_Mineable_Index -join ',') --apiport `$mport --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
+						    Arguments      = "--pool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Worker) {" --worker $($Pools.$Algorithm_Norm.Worker)"}) --devices $($Miner_Device.Type_Mineable_Index -join ',') --apiport `$mport --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
 						    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 						    API            = "Lol"
 						    Port           = $Miner_Port
