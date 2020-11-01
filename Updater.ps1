@@ -25,13 +25,7 @@ if (Test-Path "Start.bat.saved") {
     if (Test-Path "start.sh.saved") {Remove-Item "start.sh.saved" -Force}
 }
 
-if ($IsWindows -eq $null) {
-    if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
-        $Global:IsWindows = $true
-        $Global:IsLinux = $false
-        $Global:IsMacOS = $false
-    }
-}
+Set-OsFlags
 
 $RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" | ConvertFrom-Json).Version -Force -Silent
 

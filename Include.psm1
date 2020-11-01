@@ -1876,7 +1876,7 @@ function Start-SubProcessInBackground {
     $ScriptBlock += " | Write-Output"
     if ($LogPath) {$ScriptBlock += " | Tee-Object `"$($LogPath -replace '"','``"')`""}
 
-    $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
+    $Job = Start-ThreadJob ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
     
     [int[]]$ProcessIds = @()
     
@@ -1928,7 +1928,7 @@ function Start-SubProcessInConsole {
         $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
     }
 
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH {
+    $Job = Start-ThreadJob -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH {
         param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $LinuxDisplay, $CurrentPwd, $SetLDLIBRARYPATH)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
@@ -2157,7 +2157,7 @@ function Start-SubProcessInScreen {
     (Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru).WaitForExit() > $null
     (Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru).WaitForExit() > $null
 
-    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
+    $Job = Start-ThreadJob -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
         param($ControllerProcessID, $WorkingDirectory, $FilePath, $OCDaemonPrefix, $EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
 
         Import-Module "$(Join-Path $CurrentPwd "OCDaemon.psm1")"
@@ -5851,11 +5851,7 @@ Param(
             [PSCustomObject]@{Data = $Data}
         }
 
-        if (Get-Command "Start-ThreadJob" -ErrorAction Ignore) {
-            $Job = Start-ThreadJob -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
-        } else {
-            $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
-        }
+        $Job = Start-ThreadJob -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
 
         if ($Job) {
             $Job | Wait-Job -Timeout ($timeout*2) > $null
@@ -6437,7 +6433,7 @@ function Start-Wrapper {
     )
     if (-not $ProcessId -or -not $LogPath) {return}
 
-    Start-Job -ArgumentList $PID, $ProcessId, $LogPath {
+    Start-ThreadJob -ArgumentList $PID, $ProcessId, $LogPath {
         param($ControllerProcessID, $ProcessId, $LogPath)
 
         $ControllerProcess = Get-Process -Id $ControllerProcessID
@@ -6456,7 +6452,7 @@ function Start-Wrapper {
         $StopWatch.Stop()
 
         if (Test-Path $LogPath) {
-            $TailJob = Start-Job([ScriptBlock]::Create("Get-Content '$LogPath' -Tail 30 -Wait *>&1 | Write-Output"))
+            $TailJob = Start-ThreadJob([ScriptBlock]::Create("Get-Content '$LogPath' -Tail 30 -Wait *>&1 | Write-Output"))
 
             if ($TailJob) {
                 do {
@@ -6700,6 +6696,7 @@ function Set-OsFlags {
     if ("$((Get-Culture).NumberFormat.NumberGroupSeparator)$((Get-Culture).NumberFormat.NumberDecimalSeparator)" -notmatch "^[,.]{2}$") {
         [CultureInfo]::CurrentCulture = 'en-US'
     }
+    if (-not (Get-Command "Start-ThreadJob" -ErrorAction SilentlyContinue)) {Set-Alias Start-ThreadJob Start-Job}
 }
 
 function Get-RandomFileName

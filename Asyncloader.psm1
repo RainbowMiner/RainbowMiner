@@ -21,21 +21,14 @@ Param(
     $AsyncLoader.Verbose    = $false
     $AsyncLoader.Debug      = $Session.LogLevel -eq "Debug"
 
-     # Setup runspace to launch the AsyncLoader in a separate thread
-    $newRunspace = [runspacefactory]::CreateRunspace()
-    $newRunspace.Open()
-    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
-    $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
-    $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
+    $AsyncLoaderScript = {
+        param($CurrentPath)
 
-    $AsyncLoader.Loader = [PowerShell]::Create().AddScript({
+        Set-Location $CurrentPath
 
         if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\AsyncLoader_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
         $ProgressPreference = "SilentlyContinue"
-
-        # Set the starting directory
-        if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
         Import-Module ".\Include.psm1"
 
@@ -111,17 +104,39 @@ Param(
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
         if ($AsyncLoader.Debug) {Stop-Transcript}
-    });
-    $AsyncLoader.Loader.Runspace = $newRunspace
-    $AsyncLoader.Handle = $AsyncLoader.Loader.BeginInvoke()
+    }
+
+    # Setup additional, global variables for server handling
+    $Global:AsyncLoaderListeners   = [System.Collections.ArrayList]@()
+
+     # Setup runspace to launch the AsyncLoader in a separate thread
+    $newRunspace = [runspacefactory]::CreateRunspace()
+    $newRunspace.Open()
+    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
+    $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
+    $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
+
+    $newPS = [PowerShell]::Create().AddScript($AsyncLoaderScript).AddParameters(@{'CurrentPath'=$PWD})
+    $newPS.Runspace = $newRunspace
+
+    $Global:AsyncLoaderListeners.Add([PSCustomObject]@{
+        Runspace   = $newPS.BeginInvoke()
+		PowerShell = $newPS 
+    }) > $null
 }
 
 function Stop-AsyncLoader {
     if (-not (Test-Path Variable:Global:Asyncloader)) {return}
     $Global:AsyncLoader.Stop = $true
-    if ($Global:AsyncLoader.Loader) {$Global:AsyncLoader.Loader.dispose()}
-    $Global:AsyncLoader.Loader = $null
-    $Global:AsyncLoader.Handle = $null
+
+    if ($Global:AsyncLoaderListeners) {
+        foreach ($Listener in $Global:AsyncLoaderListeners.ToArray()) {
+			$Listener.PowerShell.Dispose()
+			$Global:AsyncLoaderListeners.Remove($Listener)
+		}
+    }
+    $Global:AsyncLoaderListeners.Clear()
+
     Remove-Variable "AsyncLoader" -Scope Global -Force
 }
 

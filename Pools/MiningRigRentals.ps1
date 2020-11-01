@@ -402,10 +402,8 @@ if ($AllRigs_Request) {
     }
 
     if ($MRR_Pings.Count) {
-        Write-Log -Level Warn "Start Ping job: $($MRR_Pings.Count)"
-        $Mx = Get-Date
-        $MRR_Job = Start-Job -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location('$($PWD)')")) {
-            Import-Module ".\Modules\Networking.psm1"
+        $MRR_Job = Start-ThreadJob -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) {
+            Import-Module ".\Include.psm1"
             $args.Where({$_.Data.Server}).Foreach({
                 $Data = $_.Data
                 if (-not (Invoke-PingStratum @Data)) {
@@ -417,7 +415,6 @@ if ($AllRigs_Request) {
             })
         }
         $MRR_Pings.Clear()
-        Write-Log -Level Warn "It took me $(((Get-Date) - $Mx).TotalSeconds) seconds"
     }
 
     Remove-Variable "MRR_Pings"

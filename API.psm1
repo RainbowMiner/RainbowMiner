@@ -1261,14 +1261,13 @@
 }
 
 Function Stop-APIServer {
+    if (-not (Test-Path Variable:Global:API)) {return}
     $Global:API.Stop = $true
 
     if ($Global:APIListeners) {
         foreach ($Listener in $Global:APIListeners.ToArray()) {
-    		if (-not $Listener.Runspace.IsCompleted) {
-			    $Listener.PowerShell.Dispose()
-			    $Global:APIListeners.Remove($Listener)
-            }
+			$Listener.PowerShell.Dispose()
+			$Global:APIListeners.Remove($Listener)
 		}
     }
     $Global:APIListeners.Clear()
