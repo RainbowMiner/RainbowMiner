@@ -922,7 +922,7 @@ function Invoke-Core {
             if ($true) {
                 #DateTime target
 
-                $Fork_Meets_Target = (Get-Date) -ge [datetime]"October 31, 2020 5:00 PM GMT"
+                #$Fork_Meets_Target = (Get-Date) -ge [datetime]"October 31, 2020 5:00 PM GMT"
             } else {
                 #Blockchain target
 
