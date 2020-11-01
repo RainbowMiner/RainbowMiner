@@ -402,17 +402,31 @@ if ($AllRigs_Request) {
     }
 
     if ($MRR_Pings.Count) {
-        $MRR_Job = Start-ThreadJob -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) {
-            Import-Module ".\Include.psm1"
-            $args.Where({$_.Data.Server}).Foreach({
-                $Data = $_.Data
-                if (-not (Invoke-PingStratum @Data)) {
-                    $_.Failover.Foreach({
-                        $Data.Server = $_
-                        if (Invoke-PingStratum @Data) {return}
-                    })
+        try {
+            if ($MRR_Job = Get-Job -Name MRRPing -ErrorAction Ignore) {
+                if ($MRR_Job.State -ne "Running") {
+                    if ($MRR_Job.HasMoreData) {$MRR_Job | Receive-Job > $null}
+                    $MRR_Job | Remove-Job -Force
+                    $MRR_Job = $null
                 }
-            })
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}    
+        }
+
+        if (-not $MRR_Job) {
+            $MRR_Job = Start-ThreadJob -Name MRRPing -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) {
+                Import-Module ".\Include.psm1"
+                $args.Where({$_.Data.Server}).Foreach({
+                    $Data = $_.Data
+                    if (-not (Invoke-PingStratum @Data)) {
+                        $_.Failover.Foreach({
+                            $Data.Server = $_
+                            if (Invoke-PingStratum @Data) {return}
+                        })
+                    }
+                })
+            }
         }
         $MRR_Pings.Clear()
     }
