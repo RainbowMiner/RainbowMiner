@@ -118,6 +118,7 @@ if ($AllRigs_Request) {
     $Workers_Devices = @{}
     $Workers_Models  = @{}
     $Devices_Rented  = @()
+    $MRR_Pings       = [System.Collections.Generic.List[object]]::new()
 
     foreach ($Worker1 in $Workers) {
 
@@ -383,14 +384,43 @@ if ($AllRigs_Request) {
                 }
 
                 if (-not $Pool_RigEnable) {
-                    if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -in @(3322,3333,3344)) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented))) {
-                        $Pool_Failover | Select-Object -ExpandProperty name | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -eq 3322 -or $Pool_Rig.port -eq 3333 -or $Pool_Rig.port -eq 3344) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented" -or $_.status.rented)) {return}}
-                    }
+                    $MRR_Pings.Add([PSCustomObject]@{
+                                        Data = @{
+                                            Server = $Pool_Rig.server
+                                            Port   = $Pool_Rig.port
+                                            User   = "$($User).$($Pool_RigId)"
+                                            Pass   = "x"
+                                            Worker = $Worker1
+                                            Method = if ($Pool_Rig.port -in @(3322,3333,3344)) {"EthProxy"} else {"Stratum"}
+                                            WaitForResponse = $_.status.status -eq "rented" -or $_.status.rented
+                                        }
+                                        Failover = @($Pool_Failover | Select-Object -ExpandProperty name)
+                    }) > $null
                 }
             }
         }
     }
 
+    if ($MRR_Pings.Count) {
+        Write-Log -Level Warn "Start Ping job: $($MRR_Pings.Count)"
+        $Mx = Get-Date
+        $MRR_Job = Start-Job -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location('$($PWD)')")) {
+            Import-Module ".\Modules\Networking.psm1"
+            $args.Where({$_.Data.Server}).Foreach({
+                $Data = $_.Data
+                if (-not (Invoke-PingStratum @Data)) {
+                    $_.Failover.Foreach({
+                        $Data.Server = $_
+                        if (Invoke-PingStratum @Data) {return}
+                    })
+                }
+            })
+        }
+        $MRR_Pings.Clear()
+        Write-Log -Level Warn "It took me $(((Get-Date) - $Mx).TotalSeconds) seconds"
+    }
+
+    Remove-Variable "MRR_Pings"
     Remove-Variable "Workers_Devices"
     Remove-Variable "Devices_Rented"
 }
