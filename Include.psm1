@@ -6696,7 +6696,7 @@ function Set-OsFlags {
     if ("$((Get-Culture).NumberFormat.NumberGroupSeparator)$((Get-Culture).NumberFormat.NumberDecimalSeparator)" -notmatch "^[,.]{2}$") {
         [CultureInfo]::CurrentCulture = 'en-US'
     }
-    if (-not (Get-Command "Start-ThreadJob" -ErrorAction SilentlyContinue)) {Set-Alias Start-ThreadJob Start-Job}
+    if (-not (Get-Command "Start-ThreadJob" -ErrorAction SilentlyContinue)) {Set-Alias -Scope Global Start-ThreadJob Start-Job}
 }
 
 function Get-RandomFileName
