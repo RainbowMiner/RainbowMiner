@@ -415,7 +415,7 @@ if ($AllRigs_Request) {
         }
 
         if (-not $MRR_Job) {
-            $MRR_Job = Start-ThreadJob -Name MRRPing -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) {
+            $MRR_Job = Start-Job -Name MRRPing -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) {
                 Import-Module ".\Include.psm1"
                 $args.Where({$_.Data.Server}).Foreach({
                     $Data = $_.Data

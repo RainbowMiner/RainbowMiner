@@ -2469,7 +2469,7 @@ function Invoke-Core {
             Clear-Host
             Write-Log "Starting download of $($Miners_DownloadList.Count) files."
             if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) files) .."}
-            $Global:Downloader = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
+            $Global:Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
         }
         $Session.StartDownloader = $false
     }
