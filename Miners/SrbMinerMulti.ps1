@@ -52,7 +52,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa
     [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa2"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa2
     [PSCustomObject]@{MainAlgorithm = "bl2bsha3"       ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2b+sha3/HNS
-    [PSCustomObject]@{MainAlgorithm = "blake2b"        ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #blake2b
+    [PSCustomObject]@{MainAlgorithm = "blake2b"        ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD"); CoinSymbols = @("TNET")} #blake2b
     #[PSCustomObject]@{MainAlgorithm = "blake2s"       ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2s
     [PSCustomObject]@{MainAlgorithm = "cryptonight_bbc"; Params = ""; Fee = 2.0;                Vendor = @("AMD","CPU")} #CryptonightBBC
     [PSCustomObject]@{MainAlgorithm = "cryptonight_catalans"; Params = ""; Fee = 0.00;          Vendor = @("AMD","CPU")} #CryptonightCatalans
@@ -67,7 +67,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash"         ; Params = "--enable-ethash-leak-fix"; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
     [PSCustomObject]@{MainAlgorithm = "ubqhash"        ; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
     [PSCustomObject]@{MainAlgorithm = "k12"            ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
-    [PSCustomObject]@{MainAlgorithm = "kadena"         ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); Coins = @("KDA")} #blake2s / Kadena
+    [PSCustomObject]@{MainAlgorithm = "kadena"         ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); CoinSymbols = @("KDA")} #blake2s / Kadena
     [PSCustomObject]@{MainAlgorithm = "keccak"         ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "rainforestv2"   ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #rainforestv2
     [PSCustomObject]@{MainAlgorithm = "tellor"         ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName = "^Hashpool"} #Tellor
@@ -115,7 +115,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
 		    foreach($Algorithm_Norm in $All_Algorithms) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
