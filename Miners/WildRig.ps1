@@ -27,8 +27,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "anime";        Vendor = @("AMD");          Params = ""} #Anime
     [PSCustomObject]@{MainAlgorithm = "bcd";          Vendor = @("AMD");          Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";      Vendor = @("AMD");          Params = ""} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "blake2b-btcc"; Vendor = @("AMD","NVIDIA"); Params = ""} #Blake2b
-    [PSCustomObject]@{MainAlgorithm = "blake2b-glt";  Vendor = @("AMD","NVIDIA"); Params = ""} #Blake2b-GLT
+    [PSCustomObject]@{MainAlgorithm = "blake2b-btcc"; Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("TNET")} #Blake2b-TNET/BTCC
+    [PSCustomObject]@{MainAlgorithm = "blake2b-glt";  Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("GLT")} #Blake2b-GLT
     [PSCustomObject]@{MainAlgorithm = "bmw512";       Vendor = @("AMD","NVIDIA"); Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";          Vendor = @("AMD");          Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "dedal";        Vendor = @("AMD");          Params = ""} #Dedal
@@ -126,7 +126,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Params = "$(if ($Pools.$Algorithm_Norm_0.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm_0.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm_0.CoinSymbol.ToLower()).bin "})$($_.Params)"
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and ($Algorithm -notmatch "^blake2b" -or ($Algorithm -eq "blake2b-btcc" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "GLT") -or ($Algorithm -eq "blake2b-glt" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "GLT"))) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
