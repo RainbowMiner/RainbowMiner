@@ -5485,7 +5485,7 @@ function ConvertFrom-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [switch]$ToInt
     )
-    try {$AffinityInt = [Convert]::ToInt32($Affinity,16)}catch{if ($Error.Count){$Error.RemoveAt(0)};$AffinityInt=0}
+    try {$AffinityInt = [System.Numerics.BigInteger]::Parse($Affinity -replace "^0x", 'AllowHexSpecifier')}catch{if ($Error.Count){$Error.RemoveAt(0)};$AffinityInt=[bigint]0}
     if ($ToInt) {$AffinityInt}
     else {@(for($a=0;$AffinityInt -gt 0;$a++) {if ($AffinityInt -band 1){$a};$AffinityInt=$AffinityInt -shr 1})}
 }
@@ -5498,8 +5498,11 @@ function ConvertTo-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [switch]$ToHex
     )
-    $a=0;foreach($b in $Threads){$a+=1 -shl $b};
-    if ($ToHex) {"0x{0:x$(if($a -lt 65536){4}else{8})}" -f $a}else{$a}
+    [bigint]$a=0;foreach($b in $Threads){$a+=[bigint]1 -shl $b};
+    if ($ToHex) {
+        if ($a -gt 0) {"0x$($a.ToString("x") -replace "^0")"}
+        else {"0x00"}
+    }else{$a}
 }
 
 function Get-CPUAffinity {

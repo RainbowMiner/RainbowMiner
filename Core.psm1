@@ -1149,7 +1149,7 @@ function Invoke-Core {
                 $CPUAffinityInt = Get-CPUAffinity ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2))) -ToInt
                 Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "All threads selected for CPU mining! This will overload your system, auto-adjusting affinity to $("0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt)"
             }
-            $Session.Config.CPUMiningAffinity = "0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt
+            $Session.Config.CPUMiningAffinity = if ($CPUAffinityInt -gt 0) {"0x$(([bigint]$CPUAffinityInt).ToString("x") -replace "^0")"} else {"0x00"}
             $Session.Config.CPUMiningThreads  = @(ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity).Count
         }
     }
