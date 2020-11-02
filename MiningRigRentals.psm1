@@ -164,7 +164,6 @@ param(
             "cuckaroo24"        {"Cuckaroom29";Break}
             "cuckoocycle"       {"Cuckarood29";Break}
             "equihash1505"      {"BeamHash3";Break}
-            "blake2b"           {"Blake2bSIA";Break}
             "x16rt"             {"Veil";Break}
             "x16rtgin"          {"X16rt";Break}
             default             {$Name}
@@ -184,6 +183,7 @@ param(
             "cuckoocycle29swap" {"SWAP";Break}
             "equihash1505"      {"BEAM";Break}
             "equihash1505g"     {"GRIMM";Break}
+            "blake2b"           {"TNET";Break}
             default             {""}
     }
 }
