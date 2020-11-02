@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Verium\cpuminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpuminerverium/cpuminer_1.4_linux_x64_O2_GCC7.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpuminerverium/cpuminerverium_1.4_linux_x64_GCC7.7z"
 } else {
     $Path = ".\Bin\CPU-Verium\cpuminer.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpuminerverium/cpuminer_1.4_windows_x64_O2_GCC7$(if($Global:GlobalCPUInfo.IsRyzen){'_RYZEN'}).zip"
