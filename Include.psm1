@@ -6683,10 +6683,14 @@ function Wait-FileToBePresent
 
 function Test-IsElevated
 {
-    if ($IsWindows) {
-        ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+    if ($Session.IsAdmin -ne $null) {
+        $Session.IsAdmin
     } else {
-        (whoami) -match "root"
+        if ($IsWindows) {
+            ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+        } else {
+            (whoami) -match "root"
+        }
     }
 }
 
@@ -6940,11 +6944,13 @@ function Get-SysInfo {
                     Add-Type -Path ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorLib.dll"
                     $Script:ohMonitor = [OpenHardwareMonitor.Hardware.Computer]::New()
                     $Script:ohMonitor.CPUEnabled = $true
+                    $Script:ohMonitor.Open()
                 }
 
-                $Script:ohMonitor.Open()
-                foreach($Hardware in $Script:ohMonitor.Hardware) {
-                    $Hardware.Update()
+                if ($Script:ohMonitor) {
+                    foreach($Hardware in $Script:ohMonitor.Hardware) {
+                        $Hardware.Update()
+                    }
                 }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -6987,10 +6993,6 @@ function Get-SysInfo {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-        } finally {
-            if ($Script:ohMonitor) {
-                $Script:ohMonitor.Close()
-            }
         }
 
         try {
