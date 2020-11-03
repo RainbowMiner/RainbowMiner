@@ -259,20 +259,6 @@ function Get-WhatToMineFactor {
     }
 }
 
-function Update-WatchdogLevels {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $false)]
-        [Switch]$Reset = $false,
-        [Parameter(Mandatory = $false)]
-        [Int]$Interval = 0
-    )
-    if ($Interval -lt $Session.Config.BenchmarkInterval) {$Interval = $Session.Config.BenchmarkInterval}
-    if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
-    $Session.WatchdogInterval    = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
-    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
-}
-
 function Write-ToFile {
     [CmdletBinding()]
     param (
