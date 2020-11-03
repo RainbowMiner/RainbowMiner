@@ -1,5 +1,4 @@
-﻿using module ..\Include.psm1
-using module ..\MiningRigRentals.psm1
+﻿using module ..\MiningRigRentals.psm1
 
 param(
     [PSCustomObject]$Wallets,
