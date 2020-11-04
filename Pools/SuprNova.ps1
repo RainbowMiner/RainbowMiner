@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Include.psm1
+
+param(
     [PSCustomObject]$Wallets,
     [alias("WorkerName")]
     [String]$Worker, 

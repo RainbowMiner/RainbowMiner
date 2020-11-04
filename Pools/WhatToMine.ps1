@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Include.psm1
+
+param(
     $Pools,
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false

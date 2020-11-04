@@ -1,4 +1,5 @@
-﻿using module ..\MiningRigRentals.psm1
+﻿using module ..\Include.psm1
+using module ..\MiningRigRentals.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -117,7 +118,7 @@ if ($AllRigs_Request) {
     $Workers_Devices = @{}
     $Workers_Models  = @{}
     $Devices_Rented  = @()
-    $MRR_Pings       = [System.Collections.Generic.List[object]]::new()
+    $MRR_Pings       = $null
 
     foreach ($Worker1 in $Workers) {
 
@@ -383,6 +384,9 @@ if ($AllRigs_Request) {
                 }
 
                 if (-not $Pool_RigEnable) {
+                    if ($MRR_Pings -eq $null) {
+                        [System.Collections.ArrayList]$MRR_Pings = @()
+                    }
                     $MRR_Pings.Add([PSCustomObject]@{
                                         Data = @{
                                             Server = $Pool_Rig.server
@@ -400,7 +404,7 @@ if ($AllRigs_Request) {
         }
     }
 
-    if ($MRR_Pings.Count) {
+    if ($MRR_Pings) {
         try {
             if ($MRR_Job = Get-Job -Name MRRPing -ErrorAction Ignore) {
                 if ($MRR_Job.State -ne "Running") {
@@ -426,11 +430,12 @@ if ($AllRigs_Request) {
                     }
                 })
             }
+            if ($MRR_Job) {Remove-Variable "MRR_Job"}
         }
         $MRR_Pings.Clear()
+        Remove-Variable "MRR_Pings"
     }
 
-    Remove-Variable "MRR_Pings"
     Remove-Variable "Workers_Devices"
     Remove-Variable "Devices_Rented"
 }
