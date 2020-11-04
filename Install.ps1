@@ -4,6 +4,8 @@ Initialize-Session
 
 if ($MyInvocation.MyCommand.Path) {$Dir = (Split-Path $script:MyInvocation.MyCommand.Path);Set-Location $Dir}
 
+Add-Type -Path .\DotNet\OpenCL\*.cs
+
 if (-not (Test-IsElevated)) {
     Write-Host "Exiting without installation"
     Write-Host " "

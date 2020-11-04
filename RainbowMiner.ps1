@@ -300,6 +300,9 @@ $Session.LogLevel        = $LogLevel
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
+Add-Type -Path .\DotNet\OpenCL\*.cs
+#Add-Type -Path .\DotNet\Tools\RBMTools.cs
+
 if ($IsWindows) {
     if ($Session.IsCore) {
         Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
@@ -321,10 +324,6 @@ Import-Module .\Asyncloader.psm1
 Import-Module .\Core.psm1
 if ($IsLinux) {
     Import-Module .\OCDaemon.psm1
-}
-
-if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
-    [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
 }
 
 if ($UseTimeSync) {Test-TimeSync}

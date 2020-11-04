@@ -1,9 +1,4 @@
-﻿Set-Location (Split-Path $MyInvocation.MyCommand.Path)
-
-Add-Type -Path .\DotNet\OpenCL\*.cs
-Add-Type -Path .\DotNet\Tools\RBMTools.cs
-
-function Initialize-Session {
+﻿function Initialize-Session {
 
     Set-OsFlags
 
@@ -6071,6 +6066,7 @@ Param(
         } until ($retry -le 0)
 
         $StopWatch.Stop()
+        $StopWatch = $null
 
         if (-not $Quickstart -and -not $RequestError -and $Request) {
             if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
@@ -6122,7 +6118,6 @@ Param(
         }
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
-        $Error.Clear()
     }
     if (-not $quiet) {
         if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0 -and -not (Test-Path ".\Cache\$($Jobkey).asy")) {throw $AsyncLoader.Jobs.$Jobkey.Error}
@@ -6686,10 +6681,16 @@ function Set-OsFlags {
         $Global:IsLinux   = -not $IsWindows
         $Global:IsMacOS   = $false
     }
+
     if ("$((Get-Culture).NumberFormat.NumberGroupSeparator)$((Get-Culture).NumberFormat.NumberDecimalSeparator)" -notmatch "^[,.]{2}$") {
         [CultureInfo]::CurrentCulture = 'en-US'
     }
+
     if (-not (Get-Command "Start-ThreadJob" -ErrorAction SilentlyContinue)) {Set-Alias -Scope Global Start-ThreadJob Start-Job}
+
+    if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
+       [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+    }
 }
 
 function Get-RandomFileName

@@ -413,7 +413,7 @@ class Miner {
 
     [Int]GetLastAcceptedSeconds() {
         if ($this.Stratum[0].LastAcceptedTime) {
-            return ((Get-Date) - $this.Stratum[0].LastAcceptedTime).TotalSeconds
+            return [int]((Get-Date) - $this.Stratum[0].LastAcceptedTime).TotalSeconds
         }
         return 0
     }

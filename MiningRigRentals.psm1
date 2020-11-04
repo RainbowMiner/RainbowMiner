@@ -1,6 +1,4 @@
-﻿Set-Location (Split-Path $MyInvocation.MyCommand.Path)
-
-function Set-MiningRigRentalConfigDefault {
+﻿function Set-MiningRigRentalConfigDefault {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]

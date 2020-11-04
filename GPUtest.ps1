@@ -2,6 +2,8 @@
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
+Add-Type -Path .\DotNet\OpenCL\*.cs
+
 $TestFileName = "gputestresult.txt"
 
 if ($IsWindows -eq $null) {

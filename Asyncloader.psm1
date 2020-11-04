@@ -34,10 +34,6 @@ Param(
 
         Set-OsFlags
 
-        if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
-            [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
-        }
-
         $Cycle = -1
 
         $StopWatch = [System.Diagnostics.StopWatch]::New()
