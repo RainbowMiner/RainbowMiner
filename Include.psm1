@@ -1843,7 +1843,7 @@ function Start-SubProcessInBackground {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $ScriptBlock = "Set-Location `"$($WorkingDirectory -replace '"','``"')`"; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
+    $ScriptBlock = "Set-Location `"$($WorkingDirectory -replace '"','``"')`"; `$proc = Get-Process -Id `$PID; `$proc.PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
     $ScriptBlock += "& `"$($FilePath -replace '"','``"')`""
     if ($ArgumentList) {
         $ArgumentListToBlock = $ArgumentList
@@ -2275,8 +2275,8 @@ function Get-SubProcessRunningIds {
         [Parameter(Mandatory = $true)]
         [String]$FilePath
     )
-    if ($IsWindows) {Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath} | Select-Object -ExpandProperty ProcessId}
-    elseif ($IsLinux) {Get-Process | Where-Object {$_.Path -eq $FilePath} | Select-Object -ExpandProperty Id}
+    if ($IsWindows) {(Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath}).ProcessId}
+    elseif ($IsLinux) {(Get-Process | Where-Object {$_.Path -eq $FilePath}).Id}
 }
 
 function Get-SubProcessIds {
@@ -5835,7 +5835,7 @@ Param(
             [PSCustomObject]@{Data = $Data}
         }
 
-        $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
+        $Job = Start-ThreadJob -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
 
         if ($Job) {
             $Job | Wait-Job -Timeout ($timeout*2) > $null
@@ -6935,6 +6935,7 @@ function Get-SysInfo {
                 }
 
                 if ($Script:ohMonitor) {
+                    $Script:ohMonitor.Reset()
                     foreach($Hardware in $Script:ohMonitor.Hardware) {
                         $Hardware.Update()
                     }
