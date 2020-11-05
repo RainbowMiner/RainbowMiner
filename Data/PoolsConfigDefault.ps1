@@ -147,7 +147,7 @@
             Currencies=@("XWP")
         }
         "Hiveon" = [PSCustomObject]@{
-            Currencies=@("ETH")
+            Currencies=@("ETH","ETC")
         }
         "Icemining" = [PSCustomObject]@{
             Currencies=@("SIN","MWC")
