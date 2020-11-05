@@ -1628,7 +1628,7 @@ function Get-BalancesPayouts {
             [PSCustomObject]@{
                 Date     = $(if ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
                 Amount   = [Double]$_.amount / $Divisor
-                Txid     = "$(if ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash})"
+                Txid     = "$(if ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash} elseif ($_.transactionId) {$_.transactionId})"
             }
         }
     }
@@ -1952,7 +1952,8 @@ function Start-SubProcessInConsole {
                 $ProcessParams.RedirectStandardError  = $LogPath -replace ".txt","-err.txt"
 
                 # Fix executable permissions
-                (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
+                $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
+                $Chmod_Process.WaitForExit() > $null
 
                 # Set lib path to local
                 #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
@@ -2131,17 +2132,21 @@ function Start-SubProcessInScreen {
 
     if ($Session.Config.EnableDebugMode -and (Test-Path $PIDBash)) {
         Copy-Item -Path $PIDBash -Destination $PIDDebug -ErrorAction Ignore
-        (Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru).WaitForExit() > $null
+        $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru
+        $Chmod_Process.WaitForExit() > $null
     }
 
-    (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
-    (Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru).WaitForExit() > $null
-    (Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru).WaitForExit() > $null
+    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
+    $Chmod_Process.WaitForExit() > $null
+    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru
+    $Chmod_Process.WaitForExit() > $null
+    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
+    $Chmod_Process.WaitForExit() > $null
 
     $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
         param($ControllerProcessID, $WorkingDirectory, $FilePath, $OCDaemonPrefix, $EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
 
-        Import-Module "$(Join-Path $CurrentPwd "OCDaemon.psm1")"
+        Import-Module "$(Join-Path "$(Join-Path $CurrentPwd "Modules")" "OCDaemon.psm1")"
 
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}
@@ -2211,7 +2216,8 @@ function Start-SubProcessInScreen {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                     $OCDcount++
                 } else {
-                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
+                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                    $Screen_Process.WaitForExit(5000) > $null
                 }
 
                 $StopWatch.Restart()
@@ -2225,7 +2231,8 @@ function Start-SubProcessInScreen {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
-                        (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit(10000) > $null
+                        $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
+                        $StartStopDaemon_Process.WaitForExit(10000) > $null
                     }
                 }
                 
@@ -2244,7 +2251,8 @@ function Start-SubProcessInScreen {
                         Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
                         $OCDcount++
                     } else {
-                        (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
+                        $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                        $Screen_Process.WaitForExit(5000) > $null
                     }
                 }
             }
@@ -2363,7 +2371,8 @@ function Stop-SubProcess {
                                 $Msg = Invoke-OCDaemon -Cmd $Cmd
                                 if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                             } else {
-                                (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
+                                $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                                $Screen_Process.WaitForExit(5000) > $null
                             }
 
                             $StopWatch.Restart()
@@ -2384,7 +2393,8 @@ function Stop-SubProcess {
                                         $Msg = Invoke-OCDaemon -Cmd $Cmd
                                         if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
                                     } else {
-                                        (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
+                                        $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
+                                        $StartStopDaemon_Process.WaitForExit() > $null
                                     }
                                 }
                                 if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
@@ -2420,7 +2430,8 @@ function Stop-SubProcess {
                                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                                     if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
                                 } else {
-                                    (Start-Process "screen" -ArgumentList $ArgumentList -PassThru).WaitForExit(5000) > $null
+                                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                                    $Screen_Process.WaitForExit(5000) > $null
                                 }
                             }
                         } catch {
@@ -2496,7 +2507,8 @@ function Expand-WebRequest {
     if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
 
     if (".msi", ".exe" -contains ([IO.FileInfo](Split-Path $Uri -Leaf)).Extension) {
-        (Start-Process $FileName $ArgumentList -PassThru).WaitForExit()>$null
+        $Run_Process = Start-Process $FileName $ArgumentList -PassThru
+        $Run_Process.WaitForExit()>$null
     }
     else {
         $Path_Old = (Join-Path (Split-Path $Path) ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName)
@@ -2536,7 +2548,8 @@ function Expand-WebRequest {
         }
 
         $Params.PassThru = $true
-        (Start-Process @Params).WaitForExit()>$null
+        $Extract_Process = Start-Process @Params
+        $Extract_Process.WaitForExit()>$null
 
         if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
         if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
@@ -6907,6 +6920,13 @@ function Get-Uptime {
         }
     }
     if ($ts) {$ts} else {New-TimeSpan -Seconds 0}
+}
+
+function Stop-OpenHardwareMonitor {
+    if (-not (Test-Path "Variables:Script:ohMonitor")) {
+        $Script:ohMonitor.Close()
+        Remove-Variable "ohMonitor" -ErrorAction Ignore
+    }
 }
 
 function Get-SysInfo {

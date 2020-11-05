@@ -27,19 +27,19 @@
 
     # API kernel script
     $APIScript = {
-        param([int]$ThreadID,$APIHttpListener)
+        param([int]$ThreadID,$APIHttpListener,$CurrentPwd)
 
         if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
         $ProgressPreference = "SilentlyContinue"
 
         # Set the starting directory
-        if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
+        Set-Location $CurrentPwd
 
-        Import-Module ".\Include.psm1"
-        Import-Module ".\MiningRigRentals.psm1"
-        Import-Module ".\APIhelper.psm1"
-        Import-Module ".\MinerAPIs.psm1"
+        Import-Module ".\Modules\Include.psm1"
+        Import-Module ".\Modules\MiningRigRentals.psm1"
+        Import-Module ".\Modules\APIhelper.psm1"
+        Import-Module ".\Modules\MinerAPIs.psm1"
 
         $BasePath = Join-Path $PWD "web"
 
@@ -1245,7 +1245,7 @@
     $Global:APIRunspacePool.Open()
 
     for($ThreadID = 0; $ThreadID -lt $MaxThreads; $ThreadID++) {
-        $newPS = [PowerShell]::Create().AddScript($APIScript).AddParameters(@{'ThreadID'=$ThreadID;'APIHttpListener'=$Global:APIHttpListener})
+        $newPS = [PowerShell]::Create().AddScript($APIScript).AddParameters(@{'ThreadID'=$ThreadID;'APIHttpListener'=$Global:APIHttpListener;'CurrentPwd'=$PWD})
         $newPS.RunspacePool = $Global:APIRunspacePool
 
         $Global:APIListeners.Add([PSCustomObject]@{

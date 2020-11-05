@@ -3285,7 +3285,7 @@ function Start-Setup {
         }
         elseif ($SetupType -eq "R") {
 
-            Import-Module ".\MiningRigRentals.psm1"
+            Import-Module ".\Modules\MiningRigRentals.psm1"
 
             Clear-Host
 

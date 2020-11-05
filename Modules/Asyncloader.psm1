@@ -22,15 +22,15 @@ Param(
     $AsyncLoader.Debug      = $Session.LogLevel -eq "Debug"
 
     $AsyncLoaderScript = {
-        param($CurrentPath)
+        param($CurrentPwd)
 
-        Set-Location $CurrentPath
+        Set-Location $CurrentPwd
 
         if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\AsyncLoader_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
         $ProgressPreference = "SilentlyContinue"
 
-        Import-Module ".\Include.psm1"
+        Import-Module ".\Modules\Include.psm1"
 
         Set-OsFlags
 
@@ -99,6 +99,9 @@ Param(
 
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
+
+        Stop-OpenHardwareMonitor
+
         if ($AsyncLoader.Debug) {Stop-Transcript}
     }
 
@@ -112,7 +115,7 @@ Param(
     $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
 
-    $newPS = [PowerShell]::Create().AddScript($AsyncLoaderScript).AddParameters(@{'CurrentPath'=$PWD})
+    $newPS = [PowerShell]::Create().AddScript($AsyncLoaderScript).AddParameters(@{'CurrentPwd'=$PWD})
     $newPS.Runspace = $newRunspace
 
     $Global:AsyncLoaderListeners.Add([PSCustomObject]@{

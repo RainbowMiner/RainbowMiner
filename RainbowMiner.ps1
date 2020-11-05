@@ -1,4 +1,4 @@
-﻿using module .\Include.psm1
+﻿using module .\Modules\Include.psm1
 
 [CmdletBinding()]
 param(
@@ -293,7 +293,7 @@ $EnableMinerStatus = $true
 
 Initialize-Session
 
-$Session.Version         = "4.6.4.1"
+$Session.Version         = "4.6.4.2"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
@@ -319,11 +319,11 @@ if ($IsWindows) {
     }
 }
 
-Import-Module .\API.psm1
-Import-Module .\Asyncloader.psm1
-Import-Module .\Core.psm1
+Import-Module .\Modules\API.psm1
+Import-Module .\Modules\Asyncloader.psm1
+Import-Module .\Modules\Core.psm1
 if ($IsLinux) {
-    Import-Module .\OCDaemon.psm1
+    Import-Module .\Modules\OCDaemon.psm1
 }
 
 if ($UseTimeSync) {Test-TimeSync}

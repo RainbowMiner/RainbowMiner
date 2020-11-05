@@ -429,7 +429,7 @@ function Invoke-Core {
 
                 $ReReadConfig = $false
                 if ($Session.RunSetup) {
-                    Import-Module .\Setup.psm1
+                    Import-Module .\Modules\Setup.psm1
                     Start-Setup -Config $Session.Config -ConfigFiles $Session.ConfigFiles -SetupOnly:$Session.SetupOnly
                     Remove-Module "Setup" -ErrorAction Ignore
                     $Session.RestartMiners = $true
@@ -2951,7 +2951,7 @@ function Invoke-Core {
                     if ($StartCommand -notmatch "-quickstart") {$StartCommand = $StartCommand -replace "rainbowminer.ps1","rainbowminer.ps1 -quickstart"}
                     Write-Log "Restarting $($StartWindowState) $($StartCommand)"
                     Set-LastStartTime
-                    $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
+                    $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=$PWD.Path;ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
                     if ($NewKid -and $NewKid.ReturnValue -eq 0) {
                         Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
                         $wait = 0;while ((-not $NewKid.ProcessId -or -not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop)) -and $wait -lt 20) {Write-Host -NoNewline "."; Start-Sleep -Milliseconds 500;$wait++}
@@ -3052,6 +3052,7 @@ function Stop-Core {
             Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X quit" > $null
         }
     }
+    Stop-OpenHardwareMonitor
     Stop-Autoexec
     [console]::TreatControlCAsInput = $false
 }

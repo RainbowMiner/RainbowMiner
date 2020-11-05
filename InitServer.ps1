@@ -1,4 +1,4 @@
-﻿using module .\Include.psm1
+﻿using module .\Modules\Include.psm1
 
 Initialize-Session
 
@@ -17,7 +17,7 @@ if ($IsWindows) {
         Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
     }
 }
-Import-Module .\API.psm1
+Import-Module .\Modules\API.psm1
 
 if (-not (Test-Path ".\Config\config.txt")) {
     Write-Host "No config file found. Please start RainbowMiner first."
