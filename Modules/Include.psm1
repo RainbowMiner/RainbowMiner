@@ -5470,7 +5470,6 @@ function Get-ServerConfig {
     $rv
 }
 
-
 function ConvertFrom-CPUAffinity {
     [CmdletBinding()]
     param(

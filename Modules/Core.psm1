@@ -556,14 +556,18 @@ function Invoke-Core {
 
         #crosscheck for invalid cpu mining parameters to avoid system overload
         if ($Session.Config.DeviceName -match "^CPU") {
-            $CPUAffinityInt = (ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
-            if (-not $CPUAffinityInt) {$CPUAffinityInt = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToInt}
-            if ($Session.Config.EnableAutoAdjustAffinity -and $Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
-                $CPUAffinityInt = Get-CPUAffinity ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2))) -ToInt
-                Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "All threads selected for CPU mining! This will overload your system, auto-adjusting affinity to $("0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt)"
+            $CPUAffinityInt = (ConvertFrom-CPUAffinity "$($Session.Config.CPUMiningAffinity -replace "[^0-9A-Fx]" -replace "^.*x")" -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
+            if ($CPUAffinityInt -eq 0) {
+                $CPUAffinityInt = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToInt
+                Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "Parameter CPUMiningAffinity (config.txt) is empty or contains errors. Falling back to $(Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToHex)"
             }
-            $Session.Config.CPUMiningAffinity = if ($CPUAffinityInt) {"0x$(([bigint]$CPUAffinityInt).ToString("x") -replace "^0")"} else {"0x00"}
-            $Session.Config.CPUMiningThreads  = @(ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity).Count
+            if ($Session.Config.EnableAutoAdjustAffinity -and $Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
+                $CPUThreads = ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2)))
+                $CPUAffinityInt = Get-CPUAffinity $CPUThreads -ToInt
+                Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "All threads selected for CPU mining! This will overload your system, auto-adjusting affinity to $(Get-CPUAffinity $CPUThreads -ToHex))"
+            }
+            $Session.Config.CPUMiningAffinity = "0x$(([bigint]$CPUAffinityInt).ToString("x") -replace "^0")"
+            $Session.Config.CPUMiningThreads  = [Math]::Max(@(ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity).Count,1)
         }
     }
 
