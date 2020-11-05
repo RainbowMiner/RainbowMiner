@@ -1569,7 +1569,7 @@ The following are the pool parameters:
 - **EnableAutoBenchmark**: Enable benchmark of missing algorithms (it will mine to RainbowMiner wallets during benchmark, only) [default=0]
 - **AutoExtendTargetPercent**: Extend rentals time, so that the total average hashrate is near this value in percent of advertised hashrate [default=100]
 - **AutoExtendMaximumPercent**: Extend rentals maximum to this value in percent of the rental time [default=100]
-- **AutoBonusExtendForHours**: Enter amount of hours, that you want to be rewarded by an automatic bonus extension of AutoBonusExtendByHours (e.g. 24) [default=0]
+- **AutoBonusExtendForHours**: Enter amount of hours, that you want to reward with an automatic bonus extension (e.g. 24) [default=0]
 - **AutoBonusExtendByHours**: Enter bonus extension in hours per each fully rented AutoBonusExtendForHours (e.g. 1) [default=0]
 - **AutoCreateMinProfitPercent**: Enter minimum profitability in percent compared to current best profit, for full rigs to be autocreated on MRR [defau
 lt=50]
