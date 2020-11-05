@@ -6923,7 +6923,7 @@ function Get-Uptime {
 }
 
 function Stop-OpenHardwareMonitor {
-    if (-not (Test-Path "Variables:Script:ohMonitor")) {
+    if (Test-Path "Variables:Script:ohMonitor") {
         $Script:ohMonitor.Close()
         Remove-Variable "ohMonitor" -ErrorAction Ignore
     }
