@@ -556,7 +556,7 @@ function Invoke-Core {
 
         #crosscheck for invalid cpu mining parameters to avoid system overload
         if ($Session.Config.DeviceName -match "^CPU") {
-            $CPUAffinityInt = (ConvertFrom-CPUAffinity "$($Session.Config.CPUMiningAffinity -replace "[^0-9A-Fx]" -replace "^.*x")" -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
+            $CPUAffinityInt = (ConvertFrom-CPUAffinity "$($Session.Config.CPUMiningAffinity)" -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
             if ($CPUAffinityInt -eq 0) {
                 $CPUAffinityInt = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToInt
                 Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "Parameter CPUMiningAffinity (config.txt) is empty or contains errors. Falling back to $(Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToHex)"

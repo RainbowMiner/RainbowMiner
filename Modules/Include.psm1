@@ -5478,7 +5478,7 @@ function ConvertFrom-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [switch]$ToInt
     )
-    try {$AffinityInt = [System.Numerics.BigInteger]::Parse("0$($Affinity -replace "^[0x]+")", 'AllowHexSpecifier')}catch{if ($Error.Count){$Error.RemoveAt(0)};$AffinityInt=[bigint]0}
+    try {$AffinityInt = [System.Numerics.BigInteger]::Parse("0$($Affinity -replace "[^0-9A-Fx]" -replace "^[0x]+")", 'AllowHexSpecifier')}catch{if ($Error.Count){$Error.RemoveAt(0)};$AffinityInt=[bigint]0}
     if ($ToInt) {$AffinityInt}
     else {@(for($a=0;$AffinityInt -gt 0;$a++) {if (($AffinityInt -band 1) -eq 1){$a};$AffinityInt=$AffinityInt -shr 1})}
 }
