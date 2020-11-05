@@ -85,7 +85,7 @@
             Currencies=@("ZEC")
         }
         "EthashPool" = [PSCustomObject]@{
-            Currencies=@("ETC","ETH","ETP","GRIN")
+            Currencies=@("ETC","ETH","ETP")
         }
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
@@ -145,6 +145,9 @@
         }
         "HeroMiners" = [PSCustomObject]@{
             Currencies=@("XWP")
+        }
+        "Hiveon" = [PSCustomObject]@{
+            Currencies=@("ETH")
         }
         "Icemining" = [PSCustomObject]@{
             Currencies=@("SIN","MWC")
