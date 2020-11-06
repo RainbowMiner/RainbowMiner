@@ -642,7 +642,7 @@ function Start-Setup {
                             }
                         }
                         "apithreads" {
-                            $Config.APIthreads = Read-HostInt -Prompt "Enter number of possible, parallel API threads (0=automatic)" -Default $Config.APIthreads -Mandatory -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.APIthreads = Read-HostInt -Prompt "Enter number of possible, parallel API threads (0=automatic)" -Default $Config.APIthreads -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "runmode" {
                             $Config.RunMode = Read-HostString -Prompt "Select the operation mode of this rig (standalone,server,client)" -Default $Config.RunMode -Valid @("standalone","server","client") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
