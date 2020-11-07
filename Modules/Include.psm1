@@ -5847,7 +5847,7 @@ Param(
             [PSCustomObject]@{Data = $Data}
         }
 
-        $Job = Start-ThreadJob -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
+        $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
 
         if ($Job) {
             $Job | Wait-Job -Timeout ($timeout*2) > $null

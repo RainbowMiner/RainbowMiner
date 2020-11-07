@@ -418,18 +418,7 @@ if ($AllRigs_Request) {
         }
 
         if (-not $MRR_Job) {
-            $MRR_Job = Start-ThreadJob -Name MRRPing -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) {
-                Import-Module ".\Modules\Include.psm1"
-                $args.Where({$_.Data.Server}).Foreach({
-                    $Data = $_.Data
-                    if (-not (Invoke-PingStratum @Data)) {
-                        $_.Failover.Foreach({
-                            $Data.Server = $_
-                            if (Invoke-PingStratum @Data) {return}
-                        })
-                    }
-                })
-            }
+            $MRR_Job = Start-Job -Name MRRPing -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\PingMRR.ps1
             if ($MRR_Job) {Remove-Variable "MRR_Job"}
         }
         $MRR_Pings.Clear()
