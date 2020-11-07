@@ -1,7 +1,5 @@
 ﻿param([String]$Log = ".\.txt", [String]$Sort = "", [Switch]$QuickStart)
 
-if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
-
 $Active = @{}
 
 while ($true) {
