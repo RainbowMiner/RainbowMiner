@@ -237,22 +237,29 @@ function Start-Core {
 
         try {
             #cleanup legacy data
-            if ((Test-Path ".\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
+            if ((Test-Path ".\Scripts\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
                 $LastVersion = (Get-ContentByStreamReader ".\Data\version.json" | ConvertFrom-Json -ErrorAction Ignore).Version
                 if ($RunCleanup -and $LastVersion -and (Compare-Version $LastVersion $Session.Version) -lt 0) {
                     Write-Host "Cleanup legacy data .."
-                    [hashtable]$Cleanup_Parameters = @{
-                        AllDevices = $Global:DeviceCache.AllDevices
+                    $Cleanup_Parameters = [PSCustomObject]@{
+                        AllDevices          = $Global:DeviceCache.AllDevices
                         MyCommandParameters = $Session.DefaultValues.Keys
-                        Version = $LastVersion
+                        Version             = $LastVersion
+                        ConfigFile          = $Session.ConfigFiles
                     }
-                    $Session.ConfigFiles.Keys | Foreach-Object {$Cleanup_Parameters["$(if ($_ -ne "Config") {$_})ConfigFile"] = $Session.ConfigFiles[$_].Path}
-                    Get-Item ".\Cleanup.ps1" | Foreach-Object {
-                        $Cleanup_Result = & {
-                            foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
-                            & $_.FullName @Cleanup_Parameters
+                    $Cleanup_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\Cleanup.ps1 -InputObject $Cleanup_Parameters
+                    if ($Cleanup_Job) {
+                        $Cleanup_Job | Wait-Job -Timeout 60 > $null
+                        if ($Cleanup_Job.State -eq 'Running') {
+                            Write-Log -Level Warn "Time-out while loading .\Scripts\Cleanup.ps1"
+                            try {$Cleanup_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        } else {
+                            try {
+                                $Cleanup_Result = Receive-Job -Job $Cleanup_Job
+                                if ($Cleanup_Result) {Write-Host $Cleanup_Result}
+                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                         }
-                        if ($Cleanup_Result) {Write-Host $Cleanup_Result}
+                        try {Remove-Job $Cleanup_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
                     }
                 }
             }

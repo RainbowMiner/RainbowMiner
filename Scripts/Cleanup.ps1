@@ -1,8 +1,13 @@
 ﻿using module .\Modules\Include.psm1
 
+$Version             = $input.Version
+$ConfigFiles         = $input.ConfigFiles
+$AllDevices          = $input.AllDevices
+$MyCommandParameters = $input.MyCommandParameters
+
 $Version = Get-Version $Version
 
-if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
+$ConfigFiles.Keys | Foreach-Object {Set-Variable "$(if ($_ -ne "Config") {$_})ConfigFile" $ConfigFiles[$_].Path}
 
 $SavedFiles = @("Start.bat")
 
