@@ -247,7 +247,7 @@ function Start-Core {
                         Version             = $LastVersion
                         ConfigFiles         = $Session.ConfigFiles
                     }
-                    $Cleanup_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\Cleanup.ps1 -InputObject $Cleanup_Parameters
+                    $Cleanup_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\Cleanup.ps1 -ArgumentList $Cleanup_Parameters.AllDevices,$Cleanup_Parameters.Version,$Cleanup_Parameters.MyCommandParameters,$Cleanup_Parameters.ConfigFiles
                     if ($Cleanup_Job) {
                         $Cleanup_Job | Wait-Job -Timeout 60 > $null
                         if ($Cleanup_Job.State -eq 'Running') {

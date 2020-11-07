@@ -1,9 +1,11 @@
 ﻿using module .\Modules\Include.psm1
 
-$Version             = $input.Version
-$ConfigFiles         = $input.ConfigFiles
-$AllDevices          = $input.AllDevices
-$MyCommandParameters = $input.MyCommandParameters
+param(
+$AllDevices,
+$Version,
+$MyCommandParameters,
+$ConfigFiles
+)
 
 $Version = Get-Version $Version
 
@@ -934,8 +936,11 @@ try {
         $AddAlgorithm += @("Octopus")
     }
 
-    if ($Version -le (Get-Version "4.6.4.3")) {
+    if ($Version -le (Get-Version "4.6.4.4")) {
         Get-ChildItem "*.psm1" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        Get-ChildItem "Scripts" -Filter "*.ps1" -ErrorAction Ignore | Foreach-Object {
+            Get-ChildItem ".\$($_.Name)" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        }
     }
 
     # remove mrrpools.json from cache
