@@ -245,7 +245,7 @@ function Start-Core {
                         AllDevices          = $Global:DeviceCache.AllDevices
                         MyCommandParameters = $Session.DefaultValues.Keys
                         Version             = $LastVersion
-                        ConfigFile          = $Session.ConfigFiles
+                        ConfigFiles         = $Session.ConfigFiles
                     }
                     $Cleanup_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\Cleanup.ps1 -InputObject $Cleanup_Parameters
                     if ($Cleanup_Job) {
