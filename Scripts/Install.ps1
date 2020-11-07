@@ -1,8 +1,6 @@
-﻿using module .\Modules\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 Initialize-Session
-
-if ($MyInvocation.MyCommand.Path) {$Dir = (Split-Path $script:MyInvocation.MyCommand.Path);Set-Location $Dir}
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 

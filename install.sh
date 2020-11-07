@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-command="& {./Install.ps1; exit \$lastexitcode}"
+command="& {./Scripts/Install.ps1; exit \$lastexitcode}"
 
 if ! [ -x "$(command -v pwsh)" ]; then
 wget https://github.com/PowerShell/PowerShell/releases/download/v7.0.3/powershell-7.0.3-linux-x64.tar.gz -O /tmp/powershell.tar.gz
