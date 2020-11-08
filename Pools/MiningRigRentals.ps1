@@ -729,7 +729,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         }
 
                                         if ($RigType -eq "GPU") {
-                                            $CreateRig["device_memory"] = ($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsizeGB} | Measure-Object -Minimum).Minimum
+                                            $CreateRig["device_memory"] = [int]($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsizeGB} | Measure-Object -Minimum).Minimum
                                         }
 
                                         if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
