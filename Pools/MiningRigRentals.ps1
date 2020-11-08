@@ -779,7 +779,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent -ne $null) {$Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent} else {$RigModifier}
                                             $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
                                         }
-                            
+
                                         $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
                                         if ($RigRunMode -eq "create") {
                                             try {
@@ -845,7 +845,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         $RigsToUpdate += $CreateRig
                                                     }
                                                     if ($RigUpdated) {
-                                                        Write-Log -Level Info "$($Name): Update rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
+                                                        Write-Log -Level Info "$($Name): Update rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_memory=$($CreateRig.device_memory), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
                                                     }
                                                 }
 
