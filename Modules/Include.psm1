@@ -2861,6 +2861,7 @@ function Get-Device {
                             Type             = $_.Type
                             Vendor           = $_.Vendor
                             GlobalMemSize    = $_.GlobalMemSize
+                            GlobalMemSizeGB  = [int]($_.GlobalMemSize/1GB)
                             MaxComputeUnits  = $_.MaxComputeUnits
                             PlatformVersion  = $_.Platform.Version
                             DriverVersion    = $_.DriverVersion
@@ -2885,6 +2886,7 @@ function Get-Device {
                         Type            = "Gpu"
                         Vendor          = "NVIDIA Corporation"
                         GlobalMemSize   = 1MB * [int64]$_.memory_total
+                        GlobalMemSizeGB = [int]($_.memory_total/1kB)
                         PlatformVersion = "CUDA $Cuda"
                         PCIBusId        = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
                         CardId          = -1
@@ -3018,7 +3020,7 @@ function Get-Device {
                         $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
                         $Global:GlobalCachedDevices += $Device
                         if ($AmdModelsEx -notcontains $Device.Model) {
-                            $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
+                            $AmdGb = $Device.OpenCL.GlobalMemSizeGB
                             if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx.Add($Device.Model) > $null}
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
@@ -3053,7 +3055,7 @@ function Get-Device {
             $AmdModelsEx | Foreach-Object {
                 $Model = $_
                 $Global:GlobalCachedDevices | Where-Object Model -eq $Model | Foreach-Object {
-                    $AmdGb = "$([int]($_.OpenCL.GlobalMemSize / 1GB))GB"
+                    $AmdGb = "$($_.OpenCL.GlobalMemSizeGB)GB"
                     $_.Model = "$($_.Model)$AmdGb"
                     $_.Model_Base = "$($_.Model_Base)$AmdGb"
                     $_.Model_Name = "$($_.Model_Name) $AmdGb"
@@ -4148,9 +4150,9 @@ function Test-VRAM {
     )
     $MinMemGB *= 0.965
     if ($IsWindows -and $Session.IsWin10) {
-        $Device.OpenCL.GlobalMemsize*0.835 -ge ($MinMemGB * 1gb)
+        $Device.OpenCL.GlobalMemsizeGB*0.835 -ge $MinMemGB
     } else {
-        $Device.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)
+        $Device.OpenCL.GlobalMemsizeGB -ge $MinMemGB
     }
 }
 
@@ -4829,7 +4831,7 @@ function Set-CombosConfigDefault {
                     if ($GpuCount -gt 3) {
                         $SubsetDevices | Group-Object {
                             $Model = $_.Model
-                            $Mem = [int]($_.OpenCL.GlobalMemSize / 1GB)
+                            $Mem = $_.OpenCL.GlobalMemSizeGB
                             Switch ($SubsetType) {
                                 "AMD"    {"$($Model.SubString(0,2))$($Mem)GB";Break}
                                 "NVIDIA" {"$(
