@@ -39,7 +39,10 @@ param(
     [String]$AutoUpdateMinPriceChangePercent = "3",
     [String]$AutoPriceModifierPercent = "0",
     [String]$PriceBTC = "0",
-    [String]$PriceFactor = "2.0",
+    [String]$PriceFactor = "1.8",
+    [String]$PriceFactorMin = "1.1",
+    [String]$PriceFactorDecayPercent = "10",
+    [String]$PriceFactorDecayHours = "4",
     [String]$PowerDrawFactor = "1.0",
     [String]$PriceCurrencies = "BTC",
     [String]$MinHours = "3",
@@ -479,6 +482,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $RigMinProfit = 0.00001
     $RigServer = $null
 
+    $UniqueRigs_Request = $AllRigs_Request.Where({(([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1})
+
     #
     # 1. gather config per workername
     #
@@ -505,7 +510,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         $AutoCreateMinProfitBTC = "-1"
 
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PowerDrawFactor","MinHours","MaxHours")) {
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceFactorDecayHours","PowerDrawFactor","MinHours","MaxHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -555,7 +560,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 2. Auto extend rented rigs, if bonus applicable
     #
 
-    $RentalIDs = @($AllRigs_Request.Where({($_.status.status -eq "rented" -or $_.status.rented) -and (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1}) | Select-Object -ExpandProperty rental_id)
+    $RentalIDs = @($UniqueRigs_Request.Where({$_.status.status -eq "rented" -or $_.status.rented}).rental_id | Select-Object)
     
     if ($RentalIDs) {
         $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($RentalIDs -join ";")" $API_Key $API_Secret -method "GET" -Timeout 60
@@ -579,7 +584,45 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     }
 
     #
-    # 3. Auto create/update rigs
+    # 3. Load control data
+    #
+
+    $MRRRigControl_Data = $null
+    if (Test-Path ".\Data\mrrcontrol.json") {
+        try {
+            $MRRRigControl_Data = Get-Content ".\Data\mrrcontrol.json" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "$($Name): mrrcontrol database is corrupt and will be reset. "
+            $MRRRigControl_Data = $null
+        }
+    }
+
+    $MRRRigControl = @($UniqueRigs_Request.ForEach({
+        $m = ([regex]"\[([\w\-]+)\]").Matches($_.description)
+        if (($m.Groups | Measure-Object).Count -eq 2) {
+            $RigName = $m.Groups[1].Value
+            $RigControlId = "$($RigName)-$($_.type)"
+            $RigUpdated = (Get-Date).ToUniversalTime()
+            $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
+            $MRRRigControl_Data | Where-Object {$_.Id -eq $RigControlId} | Foreach-Object {
+                $RigUpdated = [DateTime]$_.LastReset
+                $RigPriceFactor = [Double]$_.PriceFactor
+            }
+            [PSCustomObject]@{
+                Id           = $RigControlId
+                PriceFactor  = $RigPriceFactor
+                LastReset    = $RigUpdated
+            }
+        }
+    }) | Select-Object)
+
+    if (Test-Path Variable:MRRRigControl_Data) {
+        Remove-Variable "MRRRigControl_Data"
+    }
+
+    #
+    # 4. Auto create/update rigs
     #
 
     $MaxAPICalls = 40
@@ -647,7 +690,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                     if ($RigDeviceRevenue24h -and $RigDeviceStat.Duration) {
                         if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
                         $RigModels         = @($RigDevice | Select-Object -ExpandProperty Model -Unique | Sort-Object)
-                        $RigAlreadyCreated = @($AllRigs_Request.Where({$_.description -match "\[$RigName\]" -and ($RigRunMode -eq "create" -or (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1)}))
+                        $RigAlreadyCreated = @($UniqueRigs_Request.Where({$_.description -match "\[$RigName\]"}))
                         $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
                         $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
 
@@ -714,9 +757,26 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             $RigPrice       = 0
 
                             if ($RigSpeed -gt 0) {
+
+                                $RigControlId = "$($RigName)-$($_.name)"
+
+                                $RigControl_Data = $null
+
+                                $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
+
+                                if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayHours -gt 0) {
+                                    if ($RigControl_Data = $MRRRigControl | Where-Object {$_.Id -eq $RigControlId}) {
+                                        $TimeC = [Math]::Floor(((Get-Date).ToUniversalTime() - $RigControl_Data.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayHours)
+                                        While ($TimeC -gt 0) {
+                                            $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
+                                            $TimeC--
+                                        }
+                                        $MRRRigControl_Data.PriceFactor = $RigPriceFactor
+                                    }
+                                }
                                 $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
                                 if ($RigPowerDiff -lt 0 -and $MRRConfig.$RigName.EnablePowerDrawAddOnly) {$RigPowerDiff = 0}
-                                $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $MRRConfig.$RigName.PriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
+                                $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
                                 $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
        
                                 if ($IsHandleRig -or (($RigRevenue -lt 5*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
@@ -857,6 +917,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                             $RigMRRid = $_.name
                                             $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
+
+                                                if ($RigControl_Data -and ($_.status.status -eq "rented" -or $_.status.rented)) {
+                                                    $RigControl_Data.LastReset = (Get-Date).ToUniversalTime()
+                                                }
                                                 $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
                                                 $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
 
@@ -945,6 +1009,12 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             Write-Log -Level Warn "$($Name): Unable to update: $($_.Exception.Message)"
         }
 
+    }
+
+    Set-ContentJson ".\Data\mrrcontrol.json" -Data $MRRRigControl > $null
+
+    if (Test-Path Variable:MRRRigControl) {
+        Remove-Variable "MRRRigControl"
     }
 
     $Session.MRRlastautoperation = Get-Date    
