@@ -81,7 +81,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $_.ExcludeArchitecture -or $_.OpenCL.Architecture -notin $_.ExcludeArchitecture)}
 
         #Zombie-mode since v0.7.14
-        if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGB) {
+        if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
             $MinMemGB = $_.MinMemGB
         }
 

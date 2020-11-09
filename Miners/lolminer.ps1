@@ -74,7 +74,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $MinMemGB = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
 
             #Zombie-Mode since v1.11
-            if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGb) {
+            if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGb -and $Session.Config.EnableEthashZombieMode) {
                 $MinMemGB = $_.MinMemGb
             }
 

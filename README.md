@@ -760,6 +760,8 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 - **MinerName** = list of miner, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
 - **ExcludeMinerName** = list of miner names, you want to exclude from mining
 - **ExcludeMinersWithFee** = exclude all miners, that have a developer fee build-in [default=0]
+- **EnableCheckMiningConflict** = Enable conflict check if running CPU hungry GPU miners (for weak CPUs) [default=0]
+- **EnableEthashZombieMode** = Enable Ethash mining with slower hashrate, even if the current DAG size doesn't fit into the GPU memory [default=0]
 - **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]
 - **IgnoreFees** = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
 - **ShowMinerWindow** = show (1) or do not show (0) miner windows. Note: excavator will always run in an extra window [default=0]

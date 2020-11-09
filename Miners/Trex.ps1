@@ -145,7 +145,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $MinMemGB     = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
 
         #Zombie-mode since v0.18.3
-        if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGB) {
+        if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
             $MinMemGB = $_.MinMemGB
         }
 
