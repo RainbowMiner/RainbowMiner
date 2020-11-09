@@ -926,6 +926,7 @@ try {
                 Remove-Item $_.FullName -Force -ErrorAction Ignore
             }
         }
+        $RemoveMinerStats += @("*-Xmrig-*_HashRate.txt")
     }
 
     if ($Version -le (Get-Version "4.6.3.2")) {
@@ -941,6 +942,7 @@ try {
         Get-ChildItem "Scripts" -Filter "*.ps1" -ErrorAction Ignore | Foreach-Object {
             Get-ChildItem ".\$($_.Name)" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
         }
+
     }
 
     # remove mrrpools.json from cache
