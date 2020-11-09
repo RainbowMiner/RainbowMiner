@@ -48,6 +48,8 @@ param(
     [String]$PauseBetweenRentals = "0",
     [String]$Title = "",
     [String]$Description = "",
+    [String]$ExtensionMessage = "",
+    [String]$ExtensionMessageTime = "",
     [String]$UseHost = ""
 )
 
@@ -87,6 +89,8 @@ $Workers     = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Dev
 $UseWorkerName_Array     = @($UseWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 
+$ExtensionMessage = "$ExtensionMessage".Trim()
+
 if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
     $Workers = $Workers.Where({($UseWorkerName_Array.Count -eq 0 -or $UseWorkerName_Array -contains $_) -and ($ExcludeWorkerName_Array.Count -eq 0 -or $ExcludeWorkerName_Array -notcontains $_)})
 }
@@ -106,6 +110,7 @@ if ($Session.MRRBenchmarkStatus -eq $null) {$Session.MRRBenchmarkStatus = @{}}
 if ($Session.MRRRentalTimestamp -eq $null) {$Session.MRRRentalTimestamp = @{}}
 
 $PauseBetweenRentals_Seconds = ConvertFrom-Time "$PauseBetweenRentals"
+$ExtensionMessageTime_Hours  = (ConvertFrom-Time "$ExtensionMessageTime") / 3600
 
 if ($AllRigs_Request) {
 
@@ -238,71 +243,103 @@ if ($AllRigs_Request) {
 
                 $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
 
-                if (($_.status.status -eq "rented" -or $_.status.rented) -and (Get-Yes $EnableAutoExtend)) {
+                if ($_.status.status -eq "rented" -or $_.status.rented) {
 
-                    $Pool_RigExtended = (Get-MiningRigRentalStatus $Pool_RigId).extended
+                    $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
+                    $Rental_Result  = $null
 
-                    if (([double]$_.status.hours -lt 0.25) -and -not $Pool_RigExtended) {
-                        try {
-                            $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60
-                            $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
-                            $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
+                    if (Get-Yes $EnableAutoExtend) {
+                        if (([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended) {
+                            try {
+                                $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60
+                                $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
+                                $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
 
-                            $Rental_SetStatus = $true
+                                $Rental_SetStatus = $true
 
-                            if ($Rental_AvgHashrate -and $Rental_AdvHashrate -and $Rental_AvgHashrate -lt $Rental_AdvHashrate) {
-                                $MRRConfig = Get-ConfigContent "MRR"
-                                if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
-                                $AutoExtendTargetPercent_Value  = if ($MRRConfig.$Worker1.AutoExtendTargetPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendTargetPercent -ne "") {$MRRConfig.$Worker1.AutoExtendTargetPercent} else {$AutoExtendTargetPercent}
-                                $AutoExtendTargetPercent_Value  = [Double]("$($AutoExtendTargetPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
-                                $AutoExtendMaximumPercent_Value = if ($MRRConfig.$Worker1.AutoExtendMaximumPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendMaximumPercent -ne "") {$MRRConfig.$Worker1.AutoExtendMaximumPercent} else {$AutoExtendMaximumPercent}
-                                $AutoExtendMaximumPercent_Value = [Double]("$($AutoExtendMaximumPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
+                                if ($Rental_AvgHashrate -and $Rental_AdvHashrate -and $Rental_AvgHashrate -lt $Rental_AdvHashrate) {
+                                    $MRRConfig = Get-ConfigContent "MRR"
+                                    if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+                                    $AutoExtendTargetPercent_Value  = if ($MRRConfig.$Worker1.AutoExtendTargetPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendTargetPercent -ne "") {$MRRConfig.$Worker1.AutoExtendTargetPercent} else {$AutoExtendTargetPercent}
+                                    $AutoExtendTargetPercent_Value  = [Double]("$($AutoExtendTargetPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
+                                    $AutoExtendMaximumPercent_Value = if ($MRRConfig.$Worker1.AutoExtendMaximumPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendMaximumPercent -ne "") {$MRRConfig.$Worker1.AutoExtendMaximumPercent} else {$AutoExtendMaximumPercent}
+                                    $AutoExtendMaximumPercent_Value = [Double]("$($AutoExtendMaximumPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
 
-                                $Rental_Extended = [double]$Rental_Result.extended
+                                    $Rental_Extended = [double]$Rental_Result.extended
 
-                                $ExtendBy = ([double]$Rental_Result.length + $Rental_Extended) * ($AutoExtendTargetPercent_Value * $Rental_AdvHashrate / $Rental_AvgHashrate - 1)
+                                    $ExtendBy = ([double]$Rental_Result.length + $Rental_Extended) * ($AutoExtendTargetPercent_Value * $Rental_AdvHashrate / $Rental_AvgHashrate - 1)
 
-                                if ($ExtendBy -gt 0 -and $AutoExtendMaximumPercent_Value -gt 0) {
+                                    if ($ExtendBy -gt 0 -and $AutoExtendMaximumPercent_Value -gt 0) {
 
-                                    $Rental_ExtendedBonus = 0
-                                    if ($Rental_Extended -gt 0) {
-                                        $AutoBonusExtendForHours_Value = if ($MRRConfig.$Worker1.AutoBonusExtendForHours -ne $null -and $MRRConfig.$Worker1.AutoBonusExtendForHours -ne "") {$MRRConfig.$Worker1.AutoBonusExtendForHours} else {$AutoBonusExtendForHours}
-                                        $AutoBonusExtendForHours_Value = [Double]("$($AutoBonusExtendForHours_Value)" -replace ",","." -replace "[^0-9\.]+")
-                                        $AutoBonusExtendByHours_Value  = if ($MRRConfig.$Worker1.AutoBonusExtendByHours -ne $null -and $MRRConfig.$Worker1.AutoBonusExtendByHours -ne "") {$MRRConfig.$Worker1.AutoBonusExtendByHours} else {$AutoBonusExtendByHours}
-                                        $AutoBonusExtendByHours_Value  = [Double]("$($AutoBonusExtendByHours_Value)" -replace ",","." -replace "[^0-9\.]+")
+                                        $Rental_ExtendedBonus = 0
+                                        if ($Rental_Extended -gt 0) {
+                                            $AutoBonusExtendForHours_Value = if ($MRRConfig.$Worker1.AutoBonusExtendForHours -ne $null -and $MRRConfig.$Worker1.AutoBonusExtendForHours -ne "") {$MRRConfig.$Worker1.AutoBonusExtendForHours} else {$AutoBonusExtendForHours}
+                                            $AutoBonusExtendForHours_Value = [Double]("$($AutoBonusExtendForHours_Value)" -replace ",","." -replace "[^0-9\.]+")
+                                            $AutoBonusExtendByHours_Value  = if ($MRRConfig.$Worker1.AutoBonusExtendByHours -ne $null -and $MRRConfig.$Worker1.AutoBonusExtendByHours -ne "") {$MRRConfig.$Worker1.AutoBonusExtendByHours} else {$AutoBonusExtendByHours}
+                                            $AutoBonusExtendByHours_Value  = [Double]("$($AutoBonusExtendByHours_Value)" -replace ",","." -replace "[^0-9\.]+")
 
-                                        if ($AutoBonusExtendForHours_Value -gt 0 -and $AutoBonusExtendByHours_Value -gt 0) {
-                                            $Rental_ExtendedBonus = [Math]::Floor([double]$Rental_Result.length/$AutoBonusExtendForHours_Value) * $AutoBonusExtendByHours_Value
-                                            if ($Rental_ExtendedBonus -gt $Rental_Extended) {
-                                                $Rental_ExtendedBonus = 0
+                                            if ($AutoBonusExtendForHours_Value -gt 0 -and $AutoBonusExtendByHours_Value -gt 0) {
+                                                $Rental_ExtendedBonus = [Math]::Floor([double]$Rental_Result.length/$AutoBonusExtendForHours_Value) * $AutoBonusExtendByHours_Value
+                                                if ($Rental_ExtendedBonus -gt $Rental_Extended) {
+                                                    $Rental_ExtendedBonus = 0
+                                                }
                                             }
                                         }
+
+                                        $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value - $Rental_Extended + $Rental_ExtendedBonus,$ExtendBy)
                                     }
 
-                                    $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value - $Rental_Extended + $Rental_ExtendedBonus,$ExtendBy)
-                                }
+                                    $ExtendBy = [Math]::Round($ExtendBy,2)
 
-                                $ExtendBy = [Math]::Round($ExtendBy,2)
-
-                                if ($ExtendBy -ge (1/6)) {
-                                    $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$Pool_RigId/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
-                                    if ($Extend_Result.success) {
-                                        Write-Log -Level Info "$($Name): Extended rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1 for $ExtendBy hours."
-                                    } else {
-                                        $Rental_SetStatus = $false
+                                    if ($ExtendBy -ge (1/6)) {
+                                        $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$Pool_RigId/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
+                                        if ($Extend_Result.success) {
+                                            Write-Log -Level Info "$($Name): Extended rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1 for $ExtendBy hours."
+                                        } else {
+                                            $Rental_SetStatus = $false
+                                        }
                                     }
                                 }
+                                if ($Rental_SetStatus) {
+                                    Set-MiningRigRentalStatus $Pool_RigId -Status "extended" > $null
+                                }
+                            } catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                                Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
                             }
-                            if ($Rental_SetStatus) {
-                                Set-MiningRigRentalStatus $Pool_RigId -Status "extended" > $null
-                            }
-                        } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
-                            Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
+                        } elseif (([double]$_.status.hours -gt 0.25) -and $Pool_RigStatus.extended) {
+                            Set-MiningRigRentalStatus $Pool_RigId -Status "notextended" > $null
                         }
-                    } elseif (([double]$_.status.hours -gt 0.25) -and $Pool_RigExtended) {
-                        Set-MiningRigRentalStatus $Pool_RigId -Status "notextended" > $null
                     }
+
+                    if ($ExtensionMessageTime_Hours -gt 0 -and $ExtensionMessage.Length -gt 3) {
+                        if (([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent) {
+                            try {
+                                if (-not $Rental_Result) {
+                                    $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60
+                                    $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
+                                    $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
+                                }
+                                $Rental_AdvProfit = $Rental_AdvHashrate * ([double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)"))
+                                $Rental_AvgProfit = $Rental_AvgHashrate * ([double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)"))
+                                $Rental_RigProfit = ([double]$_.hashrate.advertised.hash * (ConvertFrom-Hash "1$($_.hashrate.advertised.type)")) * ([double]$_.price.BTC.price / (ConvertFrom-Hash "1$($_.price.type)"))
+
+                                $ExtMessage_Result = $null
+                                if (($Rental_AdvProfit - [Math]::Abs($Rental_AdvProfit - $Rental_AvgProfit)) -ge $Rental_RigProfit) {
+                                    $ExtMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$ExtensionMessage} -method "PUT" -Timeout 60
+                                }
+
+                                Write-Log -Level Info "$($Name): Extension message $(if (-not $ExtMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+
+                                Set-MiningRigRentalStatus $Pool_RigId -Status "extensionmessagesent" > $null
+                            } catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                                Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
+                            }
+                        }
+                    }
+
+                    $Pool_RigStatus = $null
                 }
 
                 if ($_.status.status -eq "rented" -or $_.status.rented -or $_.poolstatus -eq "online" -or $EnableMining) {
