@@ -112,7 +112,6 @@ param(
             $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
             try {
                 $body = Switch($method) {
-                    "POST" {$params | ConvertTo-Json -Depth 10;Break}
                     "PUT" {$params | ConvertTo-Json -Depth 10;Break}
                     "GET" {if ($params.Count) {$params} else {$null};Break}
                 }
