@@ -729,7 +729,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         }
 
                                         if ($RigType -eq "GPU") {
-                                            $CreateRig["device_memory"] = [int]($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsizeGB} | Measure-Object -Minimum).Minimum
+                                            $CreateRig["device_ram"] = [int]($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsizeGB} | Measure-Object -Minimum).Minimum
                                         }
 
                                         if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
@@ -819,7 +819,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                      ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
                                                      ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
                                                      ($_.ndevices -ne $CreateRig.ndevices) -or 
-                                                     ($CreateRig.device_memory -and $_.device_memory -ne $null -and ($_.device_memory -ne $CreateRig.device_memory)) -or
+                                                     ($CreateRig.device_ram -and ($_.device_ram -ne $CreateRig.device_ram)) -or
                                                      ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
                                                      ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
                                                      ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
