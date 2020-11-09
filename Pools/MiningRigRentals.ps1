@@ -518,7 +518,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 2. Auto extend rented rigs, if bonus applicable
     #
 
-    $RentalIDs = @($AllRigs_Request.Where({($_.status.status -eq "rented" -or $_.status.rented) -and $_.description -match "\[$($Workers -join "|")\]" -and (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1}) | Select-Object -ExpandProperty rental_id)
+    $RentalIDs = @($AllRigs_Request.Where({($_.status.status -eq "rented" -or $_.status.rented) -and (([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1}) | Select-Object -ExpandProperty rental_id)
     
     if ($RentalIDs) {
         $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($RentalIDs -join ";")" $API_Key $API_Secret -method "GET" -Timeout 60
@@ -582,10 +582,18 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                     $RigDeviceRevenue24h = $RigDeviceStat."$($MRRConfig.$RigName.ProfitAverageTime)"
                     $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
 
+                    $RigType ="$($RigDevice | Select-Object -ExpandProperty Type -Unique)".ToUpper()
+
+                    if ($RigType -eq "GPU") {
+                        $RigDeviceRam = ($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsize} | Measure-Object -Minimum).Minimum / 1GB
+                        if ($IsWindows -and $Session.IsWin10 -and -not $Session.Config.EnableEthashZombieMode) {
+                            $RigDeviceRam *= 0.8652
+                        }
+                        $RigDeviceRam = [Math]::Round($RigDeviceRam,3)
+                    }
+
                     if (-not $API.MinersNeedingBenchmark) {$CurrentlyBenchmarking = @()}
                     else {$CurrentlyBenchmarking = @($API.MinersNeedingBenchmark | Foreach-Object {[PSCustomObject]@{Algorithm="$($_.HashRates.PSObject.Properties.Name | Select-Object -First 1)";DeviceModel=$_.DeviceModel}} | Where-Object {$_.Algorithm -notmatch "-"} | Select-Object)}
-
-                    $RigType ="$($RigDevice | Select-Object -ExpandProperty Type -Unique)".ToUpper()
 
                     if ($MRRConfig.$RigName.AutoCreateMinProfitBTC -lt 0) {
                         $MRRConfig.$RigName.AutoCreateMinProfitBTC = if ($RigType -eq "CPU") {$MRRConfig.$RigName.AutoCreateMinCPUProfitBTC} else {0}
@@ -729,7 +737,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         }
 
                                         if ($RigType -eq "GPU") {
-                                            $CreateRig["device_ram"] = [int]($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsizeGB} | Measure-Object -Minimum).Minimum
+                                            $CreateRig["device_ram"] = $RigDeviceRam
                                         }
 
                                         if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
