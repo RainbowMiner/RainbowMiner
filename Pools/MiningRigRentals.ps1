@@ -599,27 +599,23 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     }
 
     $RigNow = (Get-Date).ToUniversalTime()
-    $MRRRigControl = @($UniqueRigs_Request.ForEach({
-        $m = ([regex]"\[([\w\-]+)\]").Matches($_.description)
-        if (($m.Groups | Measure-Object).Count -eq 2) {
-            $RigName = $m.Groups[1].Value
-            $RigControlId = "$($RigName)-$($_.type)"
-            $RigUpdated = $RigNow
-            $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
+    $MRRRigControl = @($Workers.ForEach({
+        $RigName = $_
+        $RigUpdated = $RigNow
+        $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
 
-            $MRRRigControl_Data | Where-Object {$_.Id -eq $RigControlId} | Foreach-Object {
-                $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayHours)
-                While ($TimeC -gt 0) {
-                    $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
-                    $TimeC--
-                }
-                $RigUpdated = [DateTime]$_.LastReset
+        $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
+            $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayHours)
+            While ($TimeC -gt 0) {
+                $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
+                $TimeC--
             }
-            [PSCustomObject]@{
-                Id           = $RigControlId
-                PriceFactor  = $RigPriceFactor
-                LastReset    = $RigUpdated
-            }
+            $RigUpdated = [DateTime]$_.LastReset
+        }
+        [PSCustomObject]@{
+            Name         = $RigName
+            PriceFactor  = $RigPriceFactor
+            LastReset    = $RigUpdated
         }
     }) | Select-Object)
 
@@ -700,6 +696,17 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
                         $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
 
+                        $RigPriceFactor    = $MRRConfig.$RigName.PriceFactor
+
+                        $RigControl_Data   = $null
+
+                        if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayHours -gt 0) {
+                            if ($RigControl_Data = $MRRRigControl | Where-Object {$_.Name -eq $RigName}) {
+                                $RigPriceFactor = $RigControl_Data.PriceFactor
+                            }
+                        }
+
+
                         $DeviceAlgorithm        = @($RigModels | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
                         $DeviceExcludeAlgorithm = @($RigModels | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
@@ -763,18 +770,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             $RigPrice       = 0
 
                             if ($RigSpeed -gt 0) {
-
-                                $RigControl_Data = $null
-
-                                $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
-
-                                if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayHours -gt 0) {
-                                    $RigControlId = "$($RigName)-$($_.name)"
-                                    if ($RigControl_Data = $MRRRigControl | Where-Object {$_.Id -eq $RigControlId}) {
-                                        $RigPriceFactor = $RigControl_Data.PriceFactor
-                                    }
-                                }
-
                                 $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
                                 if ($RigPowerDiff -lt 0 -and $MRRConfig.$RigName.EnablePowerDrawAddOnly) {$RigPowerDiff = 0}
                                 $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
