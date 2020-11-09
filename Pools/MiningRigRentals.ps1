@@ -598,12 +598,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         }
     }
 
+    $RigNow = (Get-Date).ToUniversalTime()
     $MRRRigControl = @($UniqueRigs_Request.ForEach({
         $m = ([regex]"\[([\w\-]+)\]").Matches($_.description)
         if (($m.Groups | Measure-Object).Count -eq 2) {
             $RigName = $m.Groups[1].Value
             $RigControlId = "$($RigName)-$($_.type)"
-            $RigUpdated = (Get-Date).ToUniversalTime()
+            $RigUpdated = $RigNow
             $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
             $MRRRigControl_Data | Where-Object {$_.Id -eq $RigControlId} | Foreach-Object {
                 $RigUpdated = [DateTime]$_.LastReset
