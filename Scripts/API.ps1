@@ -1,11 +1,10 @@
 ﻿param([int]$ThreadID,$APIHttpListener,$CurrentPwd)
 
+Set-Location $CurrentPwd
+
 if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
 $ProgressPreference = "SilentlyContinue"
-
-# Set the starting directory
-Set-Location $CurrentPwd
 
 Import-Module ".\Modules\Include.psm1"
 Import-Module ".\Modules\MiningRigRentals.psm1"
