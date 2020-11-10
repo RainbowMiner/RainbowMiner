@@ -67,8 +67,8 @@ param(
     [switch]$Raw
 )
     $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
-    if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
-    if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].request -or -not $Global:MRRCache[$keystr].request.success -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if ($Session.MRRCache -eq $null) {[hashtable]$Session.MRRCache = @{}}
+    if (-not $Cache -or -not $Session.MRRCache[$keystr] -or -not $Session.MRRCache[$keystr].request -or -not $Session.MRRCache[$keystr].request.success -or $Session.MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
        $Remote = $false
 
@@ -130,21 +130,21 @@ param(
             Write-Log -Level Warn "MiningRigRental error: $(if ($Request.data.message) {$Request.data.message} else {"unknown"})"
         }
 
-        if (-not $Global:MRRCache[$keystr] -or ($Request -and $Request.success)) {
-            $Global:MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
+        if (-not $Session.MRRCache[$keystr] -or ($Request -and $Request.success)) {
+            $Session.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
         }
     }
-    if ($Raw) {$Global:MRRCache[$keystr].request}
+    if ($Raw) {$Session.MRRCache[$keystr].request}
     else {
-        if ($Global:MRRCache[$keystr].request -and $Global:MRRCache[$keystr].request.success) {$Global:MRRCache[$keystr].request.data}
+        if ($Session.MRRCache[$keystr].request -and $Session.MRRCache[$keystr].request.success) {$Session.MRRCache[$keystr].request.data}
     }
 
     try {
-        if ($Global:MRRCacheLastCleanup -eq $null -or $Global:MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            if ($RemoveKeys = $Global:MRRCache.Keys | Where-Object {$_ -ne $keystr -and $Global:MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Global:MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
-                $RemoveKeys | Foreach-Object {$Global:MRRCache[$_] = $null; $Global:MRRCache.Remove($_)}
+        if ($Session.MRRCacheLastCleanup -eq $null -or $Session.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
+            if ($RemoveKeys = $Session.MRRCache.Keys | Where-Object {$_ -ne $keystr -and $Session.MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Session.MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
+                $RemoveKeys | Foreach-Object {$Session.MRRCache[$_] = $null; $Session.MRRCache.Remove($_)}
             }
-            $Global:MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
+            $Session.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -257,8 +257,8 @@ param(
 )
     if (-not $id) {return}
 
-    if (-not (Test-Path Variable:Global:MRRInfoCache)) {
-        [hashtable]$Global:MRRInfoCache = @{}
+    if ($Session.MRRInfoCache -eq $null) {
+        [hashtable]$Session.MRRInfoCache = @{}
         if (Test-Path ".\Data\mrrinfo.json") {
             try {
                 $MrrInfo = Get-Content ".\Data\mrrinfo.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -266,19 +266,19 @@ param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $MrrInfo = @()
             }
-            $MrrInfo | Foreach-Object {$Global:MRRInfoCache["$($_.rigid)"] = $_}
+            $MrrInfo | Foreach-Object {$Session.MRRInfoCache["$($_.rigid)"] = $_}
         }
     }
 
-    if ($Rigs_Ids = $id | Where-Object {-not $Global:MRRInfoCache.ContainsKey("$_")-or $Global:MRRInfoCache."$_".port -eq "error" -or $Global:MRRInfoCache."$_".updated -lt (Get-Date).AddHours(-24).ToUniversalTime()} | Sort-Object) {
+    if ($Rigs_Ids = $id | Where-Object {-not $Session.MRRInfoCache.ContainsKey("$_")-or $Session.MRRInfoCache."$_".port -eq "error" -or $Session.MRRInfoCache."$_".updated -lt (Get-Date).AddHours(-24).ToUniversalTime()} | Sort-Object) {
         $Updated = 0
         @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids -join ";")/port" $key $secret -Timeout 60 | Select-Object) | Foreach-Object {
-            $Global:MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
+            $Session.MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
             $Updated++
         }
-        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $Global:MRRInfoCache.Values -Compress > $null}
+        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $Session.MRRInfoCache.Values -Compress > $null}
     }
-    $id | Where-Object {$Global:MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$Global:MRRInfoCache."$_"}
+    $id | Where-Object {$Session.MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$Session.MRRInfoCache."$_"}
 }
 
 function Get-MiningRigRentalsDivisor {
@@ -302,9 +302,9 @@ param(
     [Parameter(Mandatory = $True)]
     [Int]$RigId
 )
-    if (Test-Path Variable:Global:MRRStatus) {
+    if ($Session.MRRStatus -ne $null) {
         $RigKey = "$RigId"
-        $Global:MRRStatus[$RigKey]
+        $Session.MRRStatus[$RigKey]
     }
 }
 
@@ -318,22 +318,22 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Status = ""
 )
-    if (-not (Test-Path Variable:Global:MRRStatus)) {[hashtable]$Global:MRRStatus = @{}}
+    if ($Session.MRRStatus -eq $null) {[hashtable]$Session.MRRStatus = @{}}
     $time = (Get-Date).ToUniversalTime()
     $RigKey = "$RigId"
-    if ($Global:MRRStatus.ContainsKey($RigKey)) {
-        if ($Stop) {$Global:MRRStatus.Remove($RigKey)}
-        elseif ($Status -eq "extended") {$Global:MRRStatus[$RigKey].extended = $true}
-        elseif ($Status -eq "notextended") {$Global:MRRStatus[$RigKey].extended = $false}
-        elseif ($Status -eq "extensionmessagesent") {$Global:MRRStatus[$RigKey].extensionmessagesent = $true}
-        elseif ($Status -eq "online") {$Global:MRRStatus[$RigKey].next = $time;$Global:MRRStatus[$RigKey].wait = $false;$Global:MRRStatus[$RigKey].enable = $true}
-        elseif ($time -ge $Global:MRRStatus[$RigKey].next) {
-            if ($Global:MRRStatus[$RigKey].wait) {$Global:MRRStatus[$RigKey].next = $time.AddMinutes(15);$Global:MRRStatus[$RigKey].wait = $Global:MRRStatus[$RigKey].enable = $false}
-            else {$Global:MRRStatus[$RigKey].next = $time.AddMinutes(3);$Global:MRRStatus[$RigKey].wait = $Global:MRRStatus[$RigKey].enable = $true}
+    if ($Session.MRRStatus.ContainsKey($RigKey)) {
+        if ($Stop) {$Session.MRRStatus.Remove($RigKey)}
+        elseif ($Status -eq "extended") {$Session.MRRStatus[$RigKey].extended = $true}
+        elseif ($Status -eq "notextended") {$Session.MRRStatus[$RigKey].extended = $false}
+        elseif ($Status -eq "extensionmessagesent") {$Session.MRRStatus[$RigKey].extensionmessagesent = $true}
+        elseif ($Status -eq "online") {$Session.MRRStatus[$RigKey].next = $time;$Session.MRRStatus[$RigKey].wait = $false;$Session.MRRStatus[$RigKey].enable = $true}
+        elseif ($time -ge $Session.MRRStatus[$RigKey].next) {
+            if ($Session.MRRStatus[$RigKey].wait) {$Session.MRRStatus[$RigKey].next = $time.AddMinutes(15);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $false}
+            else {$Session.MRRStatus[$RigKey].next = $time.AddMinutes(3);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $true}
         }
-    } else {$Global:MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true; extended = $(if ($Status -eq "extended") {$true} else {$false}); extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false})}}
+    } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true; extended = $(if ($Status -eq "extended") {$true} else {$false}); extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false})}}
     
-    if (-not $Stop) {$Global:MRRStatus[$RigKey].enable}
+    if (-not $Stop) {$Session.MRRStatus[$RigKey].enable}
 }
 
 function Get-MiningRigRentalAlgos {
