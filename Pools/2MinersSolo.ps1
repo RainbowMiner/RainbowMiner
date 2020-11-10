@@ -50,8 +50,10 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN29";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN32";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN29";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN32";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
+    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC29"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC31"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
     [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
@@ -112,13 +114,13 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
         $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
         $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
         $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
-        $reward         = $(if ($blocks) {($blocks | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
+        $reward         = $(if ($blocks) {($blocks | Where-Object reward | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
         $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
         if ($_.cycles) {
-            $PBR  = (86400 / $_.cycles) * ($(if ($_.primary) {$Pool_Request.nodes.primaryWeight} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
-            $btcRewardLive   = $PBR * $reward * $btcPrice
             $addName         = $_.symbol -replace "[^\d]"
+            $PBR  = (86400 / $_.cycles) * ($(if ($_.primary) {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
+            $btcRewardLive   = $PBR * $reward * $btcPrice
             $Divisor         = 1
             $Hashrate        = $Pool_Request.hashrates.$addName
         } else {
