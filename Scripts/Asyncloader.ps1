@@ -52,9 +52,9 @@ while (-not $AsyncLoader.Stop) {
                 }
                 try {
                     if ($Job.Tag -eq "MiningRigRentals" -and $Job.endpoint) {
-                        Invoke-MiningRigRentalRequestAsync -Jobkey $Jobkey -force -quiet
+                        Invoke-MiningRigRentalRequestAsync -Jobkey $Jobkey -force -quiet > $null
                     } else {
-                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
+                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet > $null
                     }
                     if ($AsyncLoader.Jobs.$Jobkey.Error) {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($AsyncLoader.Jobs.$Jobkey.Error)" -Append -Timestamp}
                 }
