@@ -7,7 +7,6 @@ if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {St
 $ProgressPreference = "SilentlyContinue"
 
 Import-Module ".\Modules\Include.psm1"
-Import-Module ".\Modules\MiningRigRentals.psm1"
 
 Set-OsFlags
 
