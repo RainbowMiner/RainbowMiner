@@ -231,33 +231,38 @@ if ($AllRigs_Request) {
             if ($Pool_Rig) {
                 $Pool_Price = $Stat.$StatAverage
                 $Pool_Currency = "BTC"
-                if ($_.status.status -eq "rented" -or $_.status.rented) {
-                    try {
-                        $Pool_RigRental = Invoke-MiningRigRentalRequest "/rental" $API_Key $API_Secret -params (@{type="owner";"rig"=$Pool_RigId;history=$false;limit=1}) -Cache $([double]$_.status.hours*3600)
-                        if ($Rig_RentalPrice = [Double]$Pool_RigRental.rentals.price.advertised / 1e6) {
-                            $Pool_Price = $Rig_RentalPrice
-                            if ($Pool_RigRental.rentals.price.currency -ne "BTC") {
-                                $Pool_Currency = $Pool_RigRental.rentals.price.currency
-                                $Pool_Price *= $_.price.BTC.price/$_.price."$($Pool_RigRental.rentals.price.currency)".price
-                            }
-                        }
-                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                }
 
                 $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
 
                 if ($_.status.status -eq "rented" -or $_.status.rented) {
 
                     $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
+
                     $Rental_Result  = $null
 
-                    if (Get-Yes $EnableAutoExtend) {
-                        if (([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended) {
-                            try {
-                                $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60
-                                $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
-                                $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
+                    $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
+                    $Rental_CheckForExtensionMessage = ($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
 
+                    $Rental_Check = ($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage
+
+                    try {
+                        $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60 -Cache $(if ($Rental_Check) {0} else {[double]$_.status.hours*3600})
+                        if ($Rig_RentalPrice = [Double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)")) {
+                            $Pool_Price = $Rig_RentalPrice
+                            if ($Rental_Result.price_converted.currency -ne "BTC") {
+                                $Pool_Currency = $Rental_Result.price_converted.currency
+                                $Pool_Price *= $_.price.BTC.price/$_.price."$($Rental_Result.price.currency)".price
+                            }
+                        }
+                        if ($Rental_Check) {
+                            $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
+                            $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
+                        }
+                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+
+                    if ($EnableAutoExtend) {
+                        if ($Rental_CheckForAutoExtend) {
+                            try {
                                 $Rental_SetStatus = $true
 
                                 if ($Rental_AvgHashrate -and $Rental_AdvHashrate -and $Rental_AvgHashrate -lt $Rental_AdvHashrate) {
@@ -315,30 +320,23 @@ if ($AllRigs_Request) {
                         }
                     }
 
-                    if ($ExtensionMessageTime_Hours -gt 0 -and $ExtensionMessage.Length -gt 3) {
-                        if (([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent) {
-                            try {
-                                if (-not $Rental_Result) {
-                                    $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60
-                                    $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
-                                    $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
-                                }
-                                $Rental_AdvProfit = $Rental_AdvHashrate * ([double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)"))
-                                $Rental_AvgProfit = $Rental_AvgHashrate * ([double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)"))
-                                $Rental_RigProfit = ([double]$_.hashrate.advertised.hash * (ConvertFrom-Hash "1$($_.hashrate.advertised.type)")) * ([double]$_.price.BTC.price / (ConvertFrom-Hash "1$($_.price.type)"))
+                    if ($Rental_CheckForExtensionMessage) {
+                        try {
+                            $Rental_AdvProfit   = $Rental_AdvHashrate * $Rig_RentalPrice
+                            $Rental_AvgProfit   = $Rental_AvgHashrate * $Rig_RentalPrice
+                            $Rental_RigProfit   = ([double]$_.hashrate.advertised.hash * (ConvertFrom-Hash "1$($_.hashrate.advertised.type)")) * ([double]$_.price.BTC.price / (ConvertFrom-Hash "1$($_.price.type)"))
 
-                                $ExtMessage_Result = $null
-                                if (($Rental_AdvProfit - [Math]::Abs($Rental_AdvProfit - $Rental_AvgProfit)) -ge $Rental_RigProfit) {
-                                    $ExtMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$ExtensionMessage} -method "PUT" -Timeout 60
-                                }
-
-                                Write-Log -Level Info "$($Name): Extension message $(if (-not $ExtMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
-
-                                Set-MiningRigRentalStatus $Pool_RigId -Status "extensionmessagesent" > $null
-                            } catch {
-                                if ($Error.Count){$Error.RemoveAt(0)}
-                                Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
+                            $ExtMessage_Result = $null
+                            if (($Rental_AdvProfit - [Math]::Abs($Rental_AdvProfit - $Rental_AvgProfit)) -ge $Rental_RigProfit) {
+                                $ExtMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$ExtensionMessage} -method "PUT" -Timeout 60
                             }
+
+                            Write-Log -Level Info "$($Name): Extension message $(if (-not $ExtMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+
+                            Set-MiningRigRentalStatus $Pool_RigId -Status "extensionmessagesent" > $null
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
 

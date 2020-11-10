@@ -43,14 +43,14 @@
 function Invoke-MiningRigRentalRequest {
 [cmdletbinding()]   
 param(    
-    [Parameter(Mandatory = $True)]
-    [String]$endpoint,
-    [Parameter(Mandatory = $True)]
-    [String]$key,
-    [Parameter(Mandatory = $True)]
-    [String]$secret,
     [Parameter(Mandatory = $False)]
-    $params = @{},
+    [String]$endpoint = "",
+    [Parameter(Mandatory = $False)]
+    [String]$key = "",
+    [Parameter(Mandatory = $False)]
+    [String]$secret = "",
+    [Parameter(Mandatory = $False)]
+    [hashtable]$params,
     [Parameter(Mandatory = $False)]
     [String]$method = "GET",
     [Parameter(Mandatory = $False)]
@@ -62,24 +62,48 @@ param(
     [Parameter(Mandatory = $False)]
     [int64]$nonce = 0,
     [Parameter(Mandatory = $False)]
+    [string]$useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36",
+    [Parameter(Mandatory = $False)]
+    $JobData,
+    [Parameter(Mandatory = $False)]
+    [string]$JobKey = "",
+    [Parameter(Mandatory = $False)]
     [switch]$ForceLocal,
     [Parameter(Mandatory = $False)]
     [switch]$Raw
 )
-    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
+
+    if ($JobKey -and $JobData) {
+        $endpoint  = $JobData.endpoint
+        $key       = $JobData.key
+        $secret    = $JobData.secret
+        $params    = $JobData.params
+        $method    = $JobData.method
+        $base      = $JobData.base
+        $Timeout   = $JobData.timeout
+        $Cache     = $JobData.cache
+        $ForceLocal= $JobData.forcelocal
+        $Raw       = $JobData.raw
+    } else {
+        $JobKey = Get-MD5Hash "$($method)$($endpoint)$(Get-HashtableAsJson $params)"
+    }
+
     if ($Session.MRRCache -eq $null) {[hashtable]$Session.MRRCache = @{}}
-    if (-not $Cache -or -not $Session.MRRCache[$keystr] -or -not $Session.MRRCache[$keystr].request -or -not $Session.MRRCache[$keystr].request.success -or $Session.MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if (-not $Cache -or -not $Session.MRRCache[$JobKey] -or -not $Session.MRRCache[$JobKey].request -or -not $Session.MRRCache[$JobKey].request.success -or $Session.MRRCache[$JobKey].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
        $Remote = $false
 
        if ($nonce -le 0) {$nonce = Get-UnixTimestamp -Milliseconds}
+
+        $params_local = @{}
+        if ($params) {$params.Keys | Foreach-Object {$params_local[$_] = $params[$_]}}
 
        if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2)) {
             $serverbody = @{
                 endpoint  = $endpoint
                 key       = $key
                 secret    = $secret
-                params    = $params | ConvertTo-Json -Depth 10 -Compress
+                params    = $params_local | ConvertTo-Json -Depth 10 -Compress
                 method    = $method
                 base      = $base
                 timeout   = $timeout
@@ -109,15 +133,14 @@ param(
 	            'x-api-nonce'= $nonce
                 'Cache-Control' = 'no-cache'
             }
-            $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
             try {
                 $body = Switch($method) {
-                    "PUT" {$params | ConvertTo-Json -Depth 10;Break}
-                    "GET" {if ($params.Count) {$params} else {$null};Break}
+                    "PUT" {$params_local | ConvertTo-Json -Depth 10;Break}
+                    "GET" {if ($params_local.Count) {$params_local} else {$null};Break}
                 }
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
                 $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
-                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
                 #$Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -130,18 +153,18 @@ param(
             Write-Log -Level Warn "MiningRigRental error: $(if ($Request.data.message) {$Request.data.message} else {"unknown"})"
         }
 
-        if (-not $Session.MRRCache[$keystr] -or ($Request -and $Request.success)) {
-            $Session.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
+        if (-not $Session.MRRCache[$JobKey] -or ($Request -and $Request.success)) {
+            $Session.MRRCache[$JobKey] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
         }
     }
-    if ($Raw) {$Session.MRRCache[$keystr].request}
+    if ($Raw) {$Session.MRRCache[$JobKey].request}
     else {
-        if ($Session.MRRCache[$keystr].request -and $Session.MRRCache[$keystr].request.success) {$Session.MRRCache[$keystr].request.data}
+        if ($Session.MRRCache[$JobKey].request -and $Session.MRRCache[$JobKey].request.success) {$Session.MRRCache[$JobKey].request.data}
     }
 
     try {
         if ($Session.MRRCacheLastCleanup -eq $null -or $Session.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            if ($RemoveKeys = $Session.MRRCache.Keys | Where-Object {$_ -ne $keystr -and $Session.MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Session.MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
+            if ($RemoveKeys = $Session.MRRCache.Keys | Where-Object {$_ -ne $JobKey -and $Session.MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Session.MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
                 $RemoveKeys | Foreach-Object {$Session.MRRCache[$_] = $null; $Session.MRRCache.Remove($_)}
             }
             $Session.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
@@ -149,6 +172,132 @@ param(
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Info "MiningRigRental cache cleanup: $($_.Exception.Message)"
+    }
+}
+
+function Invoke-MiningRigRentalRequestAsync {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $False)]
+    [String]$endpoint = "",
+    [Parameter(Mandatory = $False)]
+    [String]$key = "",
+    [Parameter(Mandatory = $False)]
+    [String]$secret = "",
+    [Parameter(Mandatory = $False)]
+    [hashtable]$params,
+    [Parameter(Mandatory = $False)]
+    [String]$method = "GET",
+    [Parameter(Mandatory = $False)]
+    [String]$base = "https://www.miningrigrentals.com/api/v2",
+    [Parameter(Mandatory = $False)]
+    [int]$Timeout = 15,
+    [Parameter(Mandatory = $False)]
+    [int]$Cache = 0,
+    [Parameter(Mandatory = $False)]
+    [int64]$nonce = 0,
+    [Parameter(Mandatory = $False)]
+    [string]$JobKey = "",
+    [Parameter(Mandatory = $False)]
+    [switch]$ForceLocal,
+    [Parameter(Mandatory = $False)]
+    [switch]$Raw,
+    [Parameter(Mandatory = $False)]   
+    [int]$cycletime = 0,
+    [Parameter(Mandatory = $False)]   
+    [switch]$force = $false,
+    [Parameter(Mandatory = $False)]   
+    [switch]$quiet = $false
+)
+    if (-not $endpoint -and -not $Jobkey) {return}
+
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($method)$($endpoint)$(Get-HashtableAsJson $params)";$StaticJobKey = $false} else {$StaticJobKey = $true}
+
+    if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
+        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=$cache;forcelocal=$ForceLocal;raw=$Raw;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag="MiningRigRentals";Timeout=$timeout;Index=0}
+    }
+
+    if (-not (Test-Path Variable:Global:Asyncloader)) {
+        Invoke-MiningRigRentalRequest -JobData $JobData -JobKey $JobKey
+        $JobData.LastCacheWrite = (Get-Date).ToUniversalTime()
+        return
+    }
+    
+    if ($StaticJobKey -and $endpoint -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.endpoint -ne $endpoint -or $AsyncLoader.Jobs.$Jobkey.key -ne $key -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.params) -ne (Get-HashtableAsJson $params))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.endpoint = $endpoint;$AsyncLoader.Jobs.$Jobkey.key = $key;$AsyncLoader.Jobs.$Jobkey.secret = $secret;$AsyncLoader.Jobs.$Jobkey.params = $params}
+
+    if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not $Session.MRRCache -or -not $Session.MRRCache[$JobKey]) {
+        if (-not $AsyncLoader.Jobs.$Jobkey) {
+            $AsyncLoader.Jobs.$Jobkey = $JobData
+            $AsyncLoader.Jobs.$Jobkey.Index = $AsyncLoader.Jobs.Count
+        } else {
+            $AsyncLoader.Jobs.$Jobkey.Running=$true
+            $AsyncLoader.Jobs.$JobKey.LastRequest=(Get-Date).ToUniversalTime()
+            $AsyncLoader.Jobs.$Jobkey.Paused=$false
+        }
+
+        $retry = $AsyncLoader.Jobs.$Jobkey.Retry + 1
+
+        $StopWatch = [System.Diagnostics.Stopwatch]::New()
+        do {
+            $Request = $RequestError = $null
+            $StopWatch.Restart()
+            try {                
+                $Request = Invoke-MiningRigRentalRequest -JobData $AsyncLoader.Jobs.$Jobkey -JobKey $JobKey
+                if ($Request) {
+                    $AsyncLoader.Jobs.$Jobkey.Success++
+                    $AsyncLoader.Jobs.$Jobkey.Prefail=0
+                } else {
+                    $RequestError = "Empty request"
+                }
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $RequestError = "$($_.Exception.Message)"
+            } finally {
+                if ($RequestError) {$RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($RequestError)"}
+            }
+
+            $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
+
+            $retry--
+            if ($retry -gt 0) {
+                if (-not $RequestError) {$retry = 0}
+                else {
+                    $Passed = $StopWatch.ElapsedMilliseconds
+                    if ($AsyncLoader.Jobs.$Jobkey.RetryWait -gt $Passed) {
+                        Start-Sleep -Milliseconds ($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed)
+                    }
+                }
+            }
+        } until ($retry -le 0)
+
+        $StopWatch.Stop()
+        $StopWatch = $null
+
+        $CacheWriteOk = $false
+
+        if ($RequestError -or -not $Request) {
+            $AsyncLoader.Jobs.$Jobkey.Prefail++
+            if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
+        } elseif ($Session.MRRCache[$JobKey]) {
+            $CacheWriteOk = $true
+        }
+
+        if ($CacheWriteOk) {
+            $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()
+        }
+
+        $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
+        $AsyncLoader.Jobs.$Jobkey.Running = $false
+    }
+    if (-not $quiet) {
+        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0 -and -not $Session.MRRCache[$JobKey]) {throw $AsyncLoader.Jobs.$Jobkey.Error}
+        if ($Session.MRRCache -and $Session.MRRCache[$JobKey]) {
+            if ($Raw) {$Session.MRRCache[$JobKey].request}
+            else {
+                if ($Session.MRRCache[$JobKey].request -and $Session.MRRCache[$JobKey].request.success) {$Session.MRRCache[$JobKey].request.data}
+            }
+        }
     }
 }
 
@@ -407,7 +556,7 @@ param(
     [Parameter(Mandatory = $False)]
     [Int]$Cache = 0
 )
-    Invoke-MiningRigRentalRequest "/rig/mine" $key $secret -Cache $Cache | Where-Object description -match "\[($($workers -join '|'))\]"
+    Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -Cache $Cache -cycletime $Session.Config.Interval | Where-Object description -match "\[($($workers -join '|'))\]"
 }
 
 function Update-MiningRigRentalRigs {

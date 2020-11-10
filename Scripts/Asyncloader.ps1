@@ -7,6 +7,7 @@ if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {St
 $ProgressPreference = "SilentlyContinue"
 
 Import-Module ".\Modules\Include.psm1"
+Import-Module ".\Modules\MiningRigRentals.psm1"
 
 Set-OsFlags
 
@@ -50,7 +51,11 @@ while (-not $AsyncLoader.Stop) {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                 }
                 try {
-                    Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
+                    if ($Job.Tag -eq "MiningRigRentals" -and $Job.endpoint) {
+                        Invoke-MiningRigRentalRequestAsync -Jobkey $Jobkey -force -quiet
+                    } else {
+                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
+                    }
                     if ($AsyncLoader.Jobs.$Jobkey.Error) {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($AsyncLoader.Jobs.$Jobkey.Error)" -Append -Timestamp}
                 }
                 catch {
