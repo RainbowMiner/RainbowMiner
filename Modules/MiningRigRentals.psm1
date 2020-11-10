@@ -274,17 +274,11 @@ param(
         $StopWatch.Stop()
         $StopWatch = $null
 
-        $CacheWriteOk = $false
-
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
         } elseif ($Session.MRRCache[$JobKey]) {
-            $CacheWriteOk = $true
-        }
-
-        if ($CacheWriteOk) {
-            $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()
+            $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=$Session.MRRCache[$JobKey].last
         }
 
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
