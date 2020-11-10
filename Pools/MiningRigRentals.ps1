@@ -458,7 +458,7 @@ if ($AllRigs_Request) {
         }
 
         if (-not $MRR_Job) {
-            $MRR_Job = Start-Job -Name MRRPing -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\PingMRR.ps1
+            $MRR_Job = Start-Job -Name MRRPing  -FilePath .\Scripts\StartJobPingMRR.ps1 -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`""))
             if ($MRR_Job) {Remove-Variable "MRR_Job"}
         }
         $MRR_Pings.Clear()

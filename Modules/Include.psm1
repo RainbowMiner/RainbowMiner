@@ -1909,77 +1909,7 @@ function Start-SubProcessInConsole {
         $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
     }
 
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH {
-        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $LinuxDisplay, $CurrentPwd, $SetLDLIBRARYPATH)
-
-        $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
-
-        $ControllerProcess = Get-Process -Id $ControllerProcessID
-        if ($ControllerProcess -eq $null) {return}
-
-        if ($StartWithoutTakingFocus) {
-            Add-Type -Path $CreateProcessPath
-            $lpApplicationName = $FilePath;
-            $lpCommandLine = '"' + $FilePath + '"' #Windows paths cannot contain ", so there is no need to escape
-            if ($ArgumentList -ne "") {$lpCommandLine += " " + $ArgumentList}
-            $lpProcessAttributes = New-Object SECURITY_ATTRIBUTES
-            $lpProcessAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpProcessAttributes)
-            $lpThreadAttributes = New-Object SECURITY_ATTRIBUTES
-            $lpThreadAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpThreadAttributes)
-            $bInheritHandles = $false
-            $dwCreationFlags = [CreationFlags]::CREATE_NEW_CONSOLE
-            $lpEnvironment = [IntPtr]::Zero
-            if ($WorkingDirectory -ne "") {$lpCurrentDirectory = $WorkingDirectory} else {$lpCurrentDirectory = $using:pwd}
-            $lpStartupInfo = New-Object STARTUPINFO
-            $lpStartupInfo.cb = [System.Runtime.InteropServices.Marshal]::SizeOf($lpStartupInfo)
-            $lpStartupInfo.wShowWindow = [ShowWindow]::SW_SHOWMINNOACTIVE
-            $lpStartupInfo.dwFlags = [STARTF]::STARTF_USESHOWWINDOW
-            $lpProcessInformation = New-Object PROCESS_INFORMATION
-
-            [Kernel32]::CreateProcess($lpApplicationName, $lpCommandLine, [ref] $lpProcessAttributes, [ref] $lpThreadAttributes, $bInheritHandles, $dwCreationFlags, $lpEnvironment, $lpCurrentDirectory, [ref] $lpStartupInfo, [ref] $lpProcessInformation)
-            $Process = Get-Process -Id $lpProcessInformation.dwProcessID
-        } else {
-            $ProcessParams = @{
-                FilePath         = $FilePath
-                ArgumentList     = $ArgumentList
-                WorkingDirectory = $WorkingDirectory
-                PassThru         = $true
-            }
-
-            if ($IsLinux) {
-                # Linux requires output redirection, otherwise Receive-Job fails
-                $ProcessParams.RedirectStandardOutput = $LogPath
-                $ProcessParams.RedirectStandardError  = $LogPath -replace ".txt","-err.txt"
-
-                # Fix executable permissions
-                $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
-                $Chmod_Process.WaitForExit() > $null
-
-                # Set lib path to local
-                #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
-                if ($LinuxDisplay) {$env:DISPLAY = "$($LinuxDisplay)"}
-                if ($SetLDLIBRARYPATH) {$env:LD_LIBRARY_PATH = "$($LDExportPath)"}
-            }
-
-            $Process = Start-Process @ProcessParams
-        }
-        if ($Process -eq $null) {
-            [PSCustomObject]@{ProcessId = $null}
-            return
-        }
-
-        [PSCustomObject]@{ProcessId = $Process.Id}
-
-        $ControllerProcess.Handle >$null
-        $Process.Handle >$null
-
-        do {
-            if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow()>$null}
-            if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
-            $Error.Clear()
-        }
-        while ($Process.HasExited -eq $false)
-    }
+    $Job = Start-Job -FilePath .\Scripts\StartJobInConsole.ps1 -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH
 
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
     while ($JobOutput -eq $null)
@@ -2143,124 +2073,7 @@ function Start-SubProcessInScreen {
     $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
     $Chmod_Process.WaitForExit() > $null
 
-    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
-        param($ControllerProcessID, $WorkingDirectory, $FilePath, $OCDaemonPrefix, $EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
-
-        Import-Module "$(Join-Path "$(Join-Path $CurrentPwd "Modules")" "OCDaemon.psm1")"
-
-        $ControllerProcess = Get-Process -Id $ControllerProcessID
-        if ($ControllerProcess -eq $null) {return}
-
-        $StopWatch = [System.Diagnostics.Stopwatch]::New()
-
-        $Process  = $null
-        $BashProc = $null
-        $started  = $false
-        $OCDcount = 0
-        $ScreenProcessId = 0
-        $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
-
-        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -FilePath $PIDBash -Move -Quiet
-            $OCDcount++
-        } else {
-            $ProcessParams = @{
-                FilePath         = $PIDBash
-                ArgumentList     = ""
-                WorkingDirectory = $WorkingDirectory
-                PassThru         = $true
-            }
-            if ($null -ne ($BashProc = Start-Process @ProcessParams)) {
-                $started = $BashProc.WaitForExit(60000)
-            }
-        }
-        if ($started) {
-            [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
-            $MinerExecutable = Split-Path $FilePath -Leaf
-
-            $StopWatch.Restart()
-            do {
-                Start-Sleep -Milliseconds 500
-                if ($StartStopDaemon) {
-                    if (Test-Path $PIDPath) {
-                        $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
-                        if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
-                    }
-                } else {
-                    $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $($_.Parent).Parent.Id -eq $ScreenProcessId}
-                    if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
-                }
-            } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
-            $StopWatch.Stop()
-        }
-
-        if (-not $Process) {
-            [PSCustomObject]@{ProcessId = $null}
-            return
-        }
-
-        [PSCustomObject]@{ProcessId = $Process.Id}
-
-        $ControllerProcess.Handle >$null
-        $Process.Handle >$null
-        $ProcessName = $Process.Name
-
-        do {
-            if ($ControllerProcess.WaitForExit(1000)) {
-                $ToKill = @()
-                $ToKill += $Process
-                $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
-
-                $ArgumentList = "-S $($ScreenName) -X stuff `^C"
-                if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-                    Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
-                    $OCDcount++
-                } else {
-                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                    $Screen_Process.WaitForExit(5000) > $null
-                }
-
-                $StopWatch.Restart()
-                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
-                    Start-Sleep -Milliseconds 500
-                }
-
-                if (-not $Process.HasExited -and $StartStopDaemon) {
-                    $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
-                    if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
-                        $OCDcount++
-                    } else {
-                        $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
-                        $StartStopDaemon_Process.WaitForExit(10000) > $null
-                    }
-                }
-                
-                $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-                    if (Test-OCDaemon) {
-                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "kill -9 $($_.Id)" -Quiet > $null
-                        $OCDcount++
-                    } else {
-                        $_.Kill()
-                    }
-                }
-
-                if ($ScreenProcessId) {
-                    $ArgumentList = "-S $($ScreenName) -X quit"
-                    if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-                        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
-                        $OCDcount++
-                    } else {
-                        $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                        $Screen_Process.WaitForExit(5000) > $null
-                    }
-                }
-            }
-            if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
-            $Error.Clear()
-        }
-        while ($Process.HasExited -eq $false)
-    }
+    $Job = Start-Job -FilePath .\Scripts\StartJobInScreen.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin
 
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
     while ($JobOutput -eq $null)
@@ -5821,35 +5634,7 @@ Param(
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
     if ($AsJob) {
-        $ScriptBlock = {
-            param($RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body)
-
-            if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
-                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
-            }
-        
-            try {
-                if ($method -eq "REST") {
-                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
-                    $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-                } else {
-                    $oldProgressPreference = $Global:ProgressPreference
-                    $Global:ProgressPreference = "SilentlyContinue"
-                    $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-                    $Global:ProgressPreference = $oldProgressPreference
-                }
-                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                $Data = [PSCustomObject]@{ErrorMessage="$($_.Exception.Message)"}
-            } finally {
-                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
-            }
-
-            [PSCustomObject]@{Data = $Data}
-        }
-
-        $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
+        $Job = Start-Job -FilePath .\Scripts\StartJobGetUrl.ps1 -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body
 
         if ($Job) {
             $Job | Wait-Job -Timeout ($timeout*2) > $null
@@ -6431,38 +6216,7 @@ function Start-Wrapper {
     )
     if (-not $ProcessId -or -not $LogPath) {return}
 
-    Start-Job -ArgumentList $PID, $ProcessId, $LogPath {
-        param($ControllerProcessID, $ProcessId, $LogPath)
-
-        $ControllerProcess = Get-Process -Id $ControllerProcessID
-        if ($ControllerProcess -eq $null) {return}
-
-        $ControllerProcess.Handle >$null
-
-        $LogPath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($LogPath)
-
-        # Wait 30 seconds for logfile to appear
-        $StopWatch = [System.Diagnostics.Stopwatch]::New()
-        $StopWatch.Restart()
-        do {
-            Start-Sleep -Milliseconds 500
-        } while (-not (Test-Path $LogPath) -and $StopWatch.ElapsedMilliseconds -lt 30000)
-        $StopWatch.Stop()
-
-        if (Test-Path $LogPath) {
-            $TailJob = Start-Job([ScriptBlock]::Create("Get-Content '$LogPath' -Tail 30 -Wait *>&1 | Write-Output"))
-
-            if ($TailJob) {
-                do {
-                    $Process = Get-Process -Id $ProcessId
-                    if ($TailJob.HasMoreData) {$TailJob | Receive-Job | ForEach-Object {$Line = $_ -replace "`n|`r", "";$Line -replace "\x1B\[[0-?]*[ -/]*[@-~]"}}
-                }
-                while (-not $ControllerProcess.WaitForExit(10000) -and $Process -and -not $Process.HasExited -and $TailJob.State -eq "Running")
-                if ($TailJob.State -eq "Running") {$TailJob | Stop-Job}
-                $TailJob | Remove-Job -Force
-            }
-        }
-    }
+    Start-Job -FilePath .\Scripts\StartJobWrapper.ps1 -ArgumentList $PID, $ProcessId, $LogPath
 }
 
 function Invoke-PingStratum {
