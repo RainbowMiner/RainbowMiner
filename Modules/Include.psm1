@@ -1909,7 +1909,7 @@ function Start-SubProcessInConsole {
         $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
     }
 
-    $Job = Start-Job -FilePath .\Scripts\StartJobInConsole.ps1 -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH
+    $Job = Start-Job -FilePath .\Scripts\StartInConsole.ps1 -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH
 
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
     while ($JobOutput -eq $null)
@@ -2073,7 +2073,7 @@ function Start-SubProcessInScreen {
     $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
     $Chmod_Process.WaitForExit() > $null
 
-    $Job = Start-Job -FilePath .\Scripts\StartJobInScreen.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin
+    $Job = Start-Job -FilePath .\Scripts\StartInScreen.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin
 
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
     while ($JobOutput -eq $null)
@@ -5634,7 +5634,7 @@ Param(
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
     if ($AsJob) {
-        $Job = Start-Job -FilePath .\Scripts\StartJobGetUrl.ps1 -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body
+        $Job = Start-Job -FilePath .\Scripts\GetUrl.ps1 -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body
 
         if ($Job) {
             $Job | Wait-Job -Timeout ($timeout*2) > $null
@@ -6216,7 +6216,7 @@ function Start-Wrapper {
     )
     if (-not $ProcessId -or -not $LogPath) {return}
 
-    Start-Job -FilePath .\Scripts\StartJobWrapper.ps1 -ArgumentList $PID, $ProcessId, $LogPath
+    Start-Job -FilePath .\Scripts\Wrapper.ps1 -ArgumentList $PID, $ProcessId, $LogPath
 }
 
 function Invoke-PingStratum {
