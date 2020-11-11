@@ -942,8 +942,48 @@ try {
         Get-ChildItem "Scripts" -Filter "*.ps1" -ErrorAction Ignore | Foreach-Object {
             Get-ChildItem ".\$($_.Name)" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
         }
-
     }
+
+    if ($Version -le (Get-Version "4.6.4.5")) {
+        $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        if ($PoolsActual -and $PoolsActual.MiningRigRentals) {
+            $Changes = 0
+            if ($PoolsActual.MiningRigRentals.PriceFactorDecayHours -ne $null) {
+                $hh = [int]$PoolsActual.MiningRigRentals.PriceFactorDecayHours
+                $PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceFactorDecayHours")
+                if ($hh -gt 0 -and ($PoolsActual.MiningRigRentals.PriceFactorDecayTime -eq $null)) {
+                    $PoolsActual | Add-Member PriceFactorDecayTime "$($hh)h" -Force
+                    $Changes++
+                }
+                $Changes++
+            }
+            if ($Changes) {
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                $ChangesTotal += $Changes
+            }
+        }
+        $MRRActual  = Get-Content "$MRRConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        if ($MRRActual) {
+            $Changes = 0
+            $MRRActual.PSObject.Properties.Name | Foreach-Object {
+                if ($MRRActual.$_.PriceFactorDecayHours -ne $null) {
+                    $hh = "$($MRRActual.$_.PriceFactorDecayHours)".Trim()
+                    $MRRActual.$_.PSObject.Properties.Remove("PriceFactorDecayHours")
+                    if ($hh -ne "" -and ($MRRActual.$_.PriceFactorDecayTime -eq $null)) {
+                        $hh = [int]$hh
+                        $MRRActual.$_ | Add-Member PriceFactorDecayTime "$($hh)h" -Force
+                        $Changes++
+                    }
+                    $Changes++
+                }
+            }
+            if ($Changes) {
+                Set-ContentJson -PathToFile $MRRConfigFile -Data $MRRActual > $null
+                $ChangesTotal += $Changes
+            }
+        }
+    }
+
 
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
