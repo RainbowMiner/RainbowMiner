@@ -38,11 +38,12 @@ param(
     [String]$AutoBonusExtendByHours = "0",
     [String]$AutoUpdateMinPriceChangePercent = "3",
     [String]$AutoPriceModifierPercent = "0",
+    [String]$UpdateInterval = "1h",
     [String]$PriceBTC = "0",
     [String]$PriceFactor = "1.8",
     [String]$PriceFactorMin = "1.1",
     [String]$PriceFactorDecayPercent = "10",
-    [String]$PriceFactorDecayHours = "4",
+    [String]$PriceFactorDecayTime = "4h",
     [String]$PowerDrawFactor = "1.0",
     [String]$PriceCurrencies = "BTC",
     [String]$MinHours = "3",
@@ -112,8 +113,12 @@ $Devices_Benchmarking = @($API.MinersNeedingBenchmark | Select-Object -ExpandPro
 if ($Session.MRRBenchmarkStatus -eq $null) {$Session.MRRBenchmarkStatus = @{}}
 if ($Session.MRRRentalTimestamp -eq $null) {$Session.MRRRentalTimestamp = @{}}
 
+$UpdateInterval_Seconds      = ConvertFrom-Time "$UpdateInterval"
 $PauseBetweenRentals_Seconds = ConvertFrom-Time "$PauseBetweenRentals"
 $ExtensionMessageTime_Hours  = (ConvertFrom-Time "$ExtensionMessageTime") / 3600
+
+if (-not $UpdateInterval_Seconds) {$UpdateInterval_Seconds = 3600}
+elseif ($UpdateInterval_Seconds -lt 600) {$UpdateInterval_Seconds = 600}
 
 if ($AllRigs_Request) {
 
@@ -470,7 +475,7 @@ if ($AllRigs_Request) {
 #
 # we will check for auto operations every hour but not at startup
 #
-if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count) -and -not $Session.IsDonationRun -and $Session.RoundCounter -and ($API.UpdateMRR -or -not $Session.MRRlastautoperation -or $Session.MRRlastautoperation -lt (Get-Date).AddHours(-1))) {
+if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count) -and -not $Session.IsDonationRun -and $Session.RoundCounter -and ($API.UpdateMRR -or -not $Session.MRRlastautoperation -or $Session.MRRlastautoperation -lt (Get-Date).AddSeconds(-$UpdateInterval_Seconds))) {
 
     if ($API.UpdateMRR) {$API.UpdateMRR = $false}
 
@@ -508,7 +513,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         $AutoCreateMinProfitBTC = "-1"
 
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceFactorDecayHours","PowerDrawFactor","MinHours","MaxHours")) {
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PowerDrawFactor","MinHours","MaxHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -536,7 +541,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             }
         }
 
-        foreach ($fld in @("Title","Description","ProfitAverageTime")) {
+        foreach ($fld in @("Title","Description","ProfitAverageTime","PriceFactorDecayTime")) {
             #string
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable $fld -ValueOnly -ErrorAction Ignore}
@@ -552,6 +557,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         if ($MRRConfig.$RigName.MaxHours -lt $MRRConfig.$RigName.MinHours) {$MRRConfig.$RigName.MaxHours = $MRRConfig.$RigName.MinHours}
         if ($MRRConfig.$RigName.AutoCreateMaxMinHours -lt 3) {$MRRConfig.$RigName.AutoCreateMaxMinHours = 3}
         if ($MRRConfig.$RigName.ProfitAverageTime -notin @("Minute","Minute_5","Minute_10","Hour","Day","ThreeDay","Week")) {$MRRConfig.$RigName.ProfitAverageTime = "Day"}
+        $MRRConfig.$RigName.PriceFactorDecayTime = [Math]::Max((ConvertFrom-Time "$($MRRConfig.$RigName.PriceFactorDecayTime)"),$UpdateInterval_Seconds) / 3600
     }
 
     #
@@ -603,7 +609,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
 
         $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
-            $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayHours)
+            $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)
             While ($TimeC -gt 0) {
                 $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
                 $TimeC--
@@ -698,7 +704,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                         $RigControl_Data   = $null
 
-                        if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayHours -gt 0) {
+                        if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
                             if ($RigControl_Data = $MRRRigControl | Where-Object {$_.Name -eq $RigName}) {
                                 $RigPriceFactor = $RigControl_Data.PriceFactor
                             }
