@@ -66,7 +66,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sonoa";        Vendor = @("AMD");          Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel";   Vendor = @("AMD");          Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";       Vendor = @("AMD");          Params = ""} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "veil";         Vendor = @("AMD");          Params = ""; Algorithm = "x16rt"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt-VEIL
+    #[PSCustomObject]@{MainAlgorithm = "veil";         Vendor = @("AMD");          Params = ""; Algorithm = "x16rt"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt-VEIL
     [PSCustomObject]@{MainAlgorithm = "vprogpow";     Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #vProgPoW
     [PSCustomObject]@{MainAlgorithm = "wildkeccak";   Vendor = @("AMD");          Params = ""; ExtendInterval = 3; DevFee = 2.0} #Wildkeccak
     [PSCustomObject]@{MainAlgorithm = "x11k";         Vendor = @("AMD","NVIDIA"); Params = ""} #X11k
