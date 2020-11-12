@@ -48,7 +48,7 @@ $Pool_EthDAGSize = Get-EthDAGSize "ETH"
 
 $Grin29_Algorithm = (Get-Coin "GRIN").algo
 
-$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
+$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and [Double]$_.speed -gt 0) -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
     $Pool_Port = $Pool_Data.port
