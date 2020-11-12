@@ -204,9 +204,26 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                     Disable            = $_.Disable
                                 }
                             }
-                        }) -Depth 10
+                        }) -Depth 10 -Compress
+                    } elseif ($ConfigName -eq "Pools") {
+                        $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
+                        if ($Parameters.PoolName) {
+                            $Data = ConvertTo-Json ([PSCustomObject]@{
+                                PoolName = $Parameters.PoolName
+                                Config = $ConfigActual."$($Parameters.PoolName)"
+                                Setup  = $PoolSetup."$($Parameters.PoolName)"
+                            }) -Depth 10 -Compress
+                        } else {
+                            $Data = ConvertTo-Json ([PSCustomObject]@{
+                                Pools = $ConfigActual
+                                Setup = $PoolSetup
+                            }) -Depth 10 -Compress
+                        }
+                    } elseif ($ConfigName -eq "PoolNames") {
+                        $RealConfig = if ($Session.UserConfig) {ConvertFrom-Json $Session.UserConfig} else {$Session.Config}
+                        $Data = ConvertTo-Json @($ConfigActual.PSObject.Properties.Name | Sort-Object -Descending {$_ -in $RealConfig.PoolName})
                     } else {
-                        $Data = ConvertTo-Json $ConfigActual -Depth 10
+                        $Data = ConvertTo-Json $ConfigActual -Depth 10 -Compress
                     }
                 }
                 if ($ConfigActual -ne $null) {
@@ -216,32 +233,41 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/saveconfig" {
-            $ConfigActual = Get-ConfigContent "Config"
+            $ConfigName = if ($Parameters.ConfigName) {$Parameters.ConfigName} else {"Config"}
+
+            $ConfigActual = Get-ConfigContent $ConfigName
+
             $DataSaved = [hashtable]@{}
+
             $ConfigChanged = 0
-            $Parameters.PSObject.Properties.Name | Where-Object {$ConfigActual.$_ -ne $null} | Foreach-Object {
-                $DataSaved[$_] = "$(if ($Parameters.$_ -is [System.Collections.ArrayList]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
-                if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
-                    $ConfigChanged++
-                }
-                $ConfigActual.$_ = $DataSaved[$_]
-            }
 
-            if ($ConfigActual.MinerStatusKey -eq "new") {
-                $ConfigActual.MinerStatusKey = Get-MinerStatusKey
-                $ConfigChanged++
-            }
-
-            #reset checkbox-arrays
-            @("ExcludePoolName","ExcludeDeviceName") | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
-                $DataSaved[$_] = ""
-                if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
-                    $ConfigChanged++
+            if ($ConfigName -eq "Config") {
+                $Parameters.PSObject.Properties.Name | Where-Object {$ConfigActual.$_ -ne $null} | Foreach-Object {
+                    $DataSaved[$_] = "$(if ($Parameters.$_ -is [System.Collections.ArrayList]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
+                    if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
+                        $ConfigChanged++
+                    }
                     $ConfigActual.$_ = $DataSaved[$_]
                 }
+
+                if ($ConfigActual.MinerStatusKey -eq "new") {
+                    $ConfigActual.MinerStatusKey = Get-MinerStatusKey
+                    $ConfigChanged++
+                }
+
+                #reset checkbox-arrays
+                @("ExcludePoolName","ExcludeDeviceName") | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
+                    $DataSaved[$_] = ""
+                    if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
+                        $ConfigChanged++
+                        $ConfigActual.$_ = $DataSaved[$_]
+                    }
+                }
+            } elseif ($ConfigName -eq "Pools") {
+
             }
 
-            if ($ConfigChanged -and ($ConfigPath = Get-ConfigPath "Config")) {
+            if ($ConfigChanged -and ($ConfigPath = Get-ConfigPath $ConfigName)) {
                 Set-ContentJson -PathToFile $ConfigPath -Data $ConfigActual > $null
                 $Data = ConvertTo-Json ([PSCustomObject]@{Success=$true;Data=$DataSaved}) -Depth 10
             } else {
