@@ -20,17 +20,17 @@ $Pool_Region_Default = "asia"
 @("asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
+    [PSCustomObject]@{symbol = "CFX";  port = @(9555,9556); fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "ETH";  port = @(9530);      fee = 1.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "ETC";  port = @(9518);      fee = 1.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "AE";   port = @(9505);      fee = 1.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "SERO"; port = @(9515);      fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "BEAM"; port = @(9507);      fee = 2.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "GRIN29"; port = @(9510);    fee = 2.0}
-    [PSCustomObject]@{symbol = "GRIN31"; port = @(9510);    fee = 2.0}
-    [PSCustomObject]@{symbol = "GRIN32"; port = @(9510);    fee = 2.0}
+    #[PSCustomObject]@{symbol = "GRIN29"; port = @(9510);    fee = 2.0}
+    #[PSCustomObject]@{symbol = "GRIN31"; port = @(9510);    fee = 2.0}
+    #[PSCustomObject]@{symbol = "GRIN32"; port = @(9510);    fee = 2.0}
     [PSCustomObject]@{symbol = "RVN";  port = @(9531);      fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "PGN";  port = @(9560);      fee = 2.0; fee_pplns = 1.0}
-    #[PSCustomObject]@{symbol = "CKB";  port = @(9550,9551); fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "MOAC"; port = @(9540);      fee = 1.0; fee_pplns = 1.0}
 )
 
