@@ -305,7 +305,7 @@ param(
             "cuckaroo24"        {"Cuckaroom29";Break}
             "cuckoocycle"       {"Cuckarood29";Break}
             "equihash1505"      {"BeamHash3";Break}
-            "x16rt"             {"Veil";Break}
+            "x16rt"             {"X16rtVeil";Break}
             "x16rtgin"          {"X16rt";Break}
             default             {$Name}
         }
