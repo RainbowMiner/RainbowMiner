@@ -43,7 +43,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $Path = $Request.Url.LocalPath
 
     if ($API.Debug) {
-        Write-ToFile -FilePath "Logs\requests_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$Path $($Parameters | ConvertTo-Json -Compress)" -Append -Timestamp
+        Write-ToFile -FilePath "Logs\requests_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$Path $($Parameters | ConvertTo-Json -Depth 10 -Compress)" -Append -Timestamp
     }
 
     # Create the defaults for associated settings
@@ -61,7 +61,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         # Set the proper content type, status code and data for each resource
         Switch($Path) {
         "/version" {
-            $Data = ConvertTo-Json $API.Version -ErrorAction Ignore
+            $Data = ConvertTo-Json $API.Version -ErrorAction Ignore -Depth 10
             break
         }
         "/info" {
@@ -69,7 +69,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             break
         }
         "/sysinfo" {
-            $Data = if ($Session.SysInfo) {ConvertTo-Json $Session.SysInfo -ErrorAction Ignore} else {"{}"}
+            $Data = if ($Session.SysInfo) {ConvertTo-Json $Session.SysInfo -ErrorAction Ignore -Depth 10} else {"{}"}
             break
         }
         "/uptime" {
@@ -77,7 +77,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = ConvertTo-Json ([PSCustomObject]@{
                                         AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                         Seconds  = [int64]$Timer.TotalSeconds
-                                    })
+                                    }) -Depth 10
             break
         }
         "/systemuptime" {
@@ -85,23 +85,23 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = ConvertTo-Json ([PSCustomObject]@{
                                         AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                         Seconds  = [int64]$Timer.TotalSeconds
-                                    })
+                                    }) -Depth 10
             break
         }
         "/isserver" {
-            $Data = [PSCustomObject]@{Status=$API.IsServer} | ConvertTo-Json
+            $Data = [PSCustomObject]@{Status=$API.IsServer} | ConvertTo-Json -Depth 10
             break
         }
         "/activeminers" {
-            $Data = if ($API.ActiveMiners) {ConvertTo-Json $API.ActiveMiners -Depth 2} else {"[]"}
+            $Data = if ($API.ActiveMiners) {ConvertTo-Json $API.ActiveMiners -Depth 2 -WarningAction Ignore} else {"[]"}
             break
         }
         "/runningminers" {
-            $Data = if ($API.RunningMiners) {ConvertTo-Json $API.RunningMiners -Depth 2} else {"[]"}
+            $Data = if ($API.RunningMiners) {ConvertTo-Json $API.RunningMiners -Depth 2 -WarningAction Ignore} else {"[]"}
             Break
         }
         "/failedminers" {
-            $Data = if ($API.FailedMiners) {ConvertTo-Json $API.FailedMiners -Depth 2} else {"[]"}
+            $Data = if ($API.FailedMiners) {ConvertTo-Json $API.FailedMiners -Depth 2 -WarningAction Ignore} else {"[]"}
             Break
         }
         "/remoteminers" {
@@ -109,7 +109,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $AllMiners = @($API.RemoteMiners | Where-Object {$_.online} | Foreach-Object {
                     $Worker = $_.worker
                     $_.data | Foreach-Object {
-                        $Data = ConvertTo-Json $_ -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                        $Data = ConvertTo-Json $_ -ErrorAction Ignore -Depth 10 | ConvertFrom-Json -ErrorAction Ignore
                         $Data | Add-Member Worker $Worker -Force -PassThru
                     }
                 } | Select-Object)
@@ -120,35 +120,35 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/minersneedingbenchmark" {
-            $Data = if ($API.MinersNeedingBenchmark) {ConvertTo-Json $API.MinersNeedingBenchmark -Depth 2} else {"[]"}
+            $Data = if ($API.MinersNeedingBenchmark) {ConvertTo-Json $API.MinersNeedingBenchmark -Depth 2 -WarningAction Ignore} else {"[]"}
             Break
         }
         "/minerinfo" {
-            $Data = if ($API.MinerInfo) {ConvertTo-Json $API.MinerInfo} else {"{}"}
+            $Data = if ($API.MinerInfo) {ConvertTo-Json $API.MinerInfo -Depth 10} else {"{}"}
             Break
         }
         "/pools" {
-            $Data = if ($API.Pools) {ConvertTo-Json $API.Pools} else {"[]"}
+            $Data = if ($API.Pools) {ConvertTo-Json $API.Pools -Depth 10} else {"[]"}
             Break
         }
         "/allpools" {
-            $Data = if ($API.AllPools) {ConvertTo-Json $API.AllPools} else {"[]"}
+            $Data = if ($API.AllPools) {ConvertTo-Json $API.AllPools -Depth 10} else {"[]"}
             Break
         }
         "/algorithms" {
-            $Data = if ($API.Algorithms) {ConvertTo-Json $API.Algorithms} else {"[]"}
+            $Data = if ($API.Algorithms) {ConvertTo-Json $API.Algorithms -Depth 10} else {"[]"}
             Break
         }
         "/miners" {
-            $Data = if ($API.Miners) {ConvertTo-Json $API.Miners} else {"[]"}
+            $Data = if ($API.Miners) {ConvertTo-Json $API.Miners -Depth 10} else {"[]"}
             Break
         }
         "/fastestminers" {
-            $Data = if ($API.FastestMiners) {ConvertTo-Json $API.FastestMiners} else {"[]"}
+            $Data = if ($API.FastestMiners) {ConvertTo-Json $API.FastestMiners -Depth 10} else {"[]"}
             Break
         }
         "/disabled" {
-            $Data = ConvertTo-Json @((Get-Stat -Disabled).Keys | Select-Object)
+            $Data = ConvertTo-Json @((Get-Stat -Disabled).Keys | Select-Object) -Depth 10
             Break
         }
         "/getwtmurls" {
@@ -160,7 +160,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Group = $_.Group
                 $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
             }
-            $Data = ConvertTo-Json $WTMdata_result
+            $Data = ConvertTo-Json $WTMdata_result -Depth 10
             Remove-Variable "WTMdata"
             Remove-Variable "WTMdata_algos"
             Remove-Variable "WTMdata_result"
@@ -243,9 +243,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             if ($ConfigChanged -and ($ConfigPath = Get-ConfigPath "Config")) {
                 Set-ContentJson -PathToFile $ConfigPath -Data $ConfigActual > $null
-                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$true;Data=$DataSaved})
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$true;Data=$DataSaved}) -Depth 10
             } else {
-                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false})
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
             }
             Remove-Variable "ConfigActual"
             Remove-Variable "DataSaved"
@@ -270,11 +270,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             CoreClockBoost   = $_.Value.CoreClockBoost
                             LockVoltagePoint = $_.Value.LockVoltagePoint
                         }
-                    })
+                    }) -Depth 10
             Break
         }
         "/downloadlist" {
-            $Data = ConvertTo-Json @($API.DownloadList | Select-Object)
+            $Data = ConvertTo-Json @($API.DownloadList | Select-Object) -Depth 10
             Break
         }
         "/debug" {
@@ -360,22 +360,22 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/devicecombos" {
-            $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos} else {"[]"}
+            $Data = if ($API.DeviceCombos) {ConvertTo-Json $API.DeviceCombos -Depth 10} else {"[]"}
             Break
         }
         "/getdeviceconfig" {
             $Data = if ($API.AllDevices) {
                 $GPUDevices = $API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","NVIDIA")}
-                @(@("CPU") + @($GPUDevices.Vendor | Select-Object -Unique | Sort-Object) + @($GPUDevices.Model | Select-Object -Unique | Sort-Object) + @($GPUDevices.Name | Select-Object -Unique | Sort-Object) | Foreach-Object {[PSCustomObject]@{Name=$_;Selected=$($_ -in $Session.Config.DeviceName);Excluded=$($_ -in $Session.Config.ExcludeDeviceName)}}) | ConvertTo-Json
+                @(@("CPU") + @($GPUDevices.Vendor | Select-Object -Unique | Sort-Object) + @($GPUDevices.Model | Select-Object -Unique | Sort-Object) + @($GPUDevices.Name | Select-Object -Unique | Sort-Object) | Foreach-Object {[PSCustomObject]@{Name=$_;Selected=$($_ -in $Session.Config.DeviceName);Excluded=$($_ -in $Session.Config.ExcludeDeviceName)}}) | ConvertTo-Json -Depth 10
             } else {"[]"}
             Break
         }
         "/stats" {
-            $Data = if ($API.Stats) {ConvertTo-Json $API.Stats} else {""}
+            $Data = if ($API.Stats) {ConvertTo-Json $API.Stats -Depth 10} else {""}
             Break
         }
         "/totals" {
-            $Data = ConvertTo-Json @((Get-Stat -Totals).Values | Select-Object)
+            $Data = ConvertTo-Json @((Get-Stat -Totals).Values | Select-Object) -Depth 10
             Break
         }
         "/totalscsv" {
@@ -437,7 +437,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         "/sessionvars" {           
             $SessionVars = [hashtable]@{}
             $Session.Keys | Where-Object {$Session[$_] -isnot [hashtable] -and $Session[$_] -isnot [array] -and $Session[$_] -isnot [pscustomobject] -and $Session[$_] -isnot [System.Collections.ArrayList] -and $Session[$_] -ne $null} | Sort-Object | Foreach-Object {$SessionVars[$_] = $Session[$_]}
-            $Data = ConvertTo-Json $SessionVars
+            $Data = ConvertTo-Json $SessionVars -Depth 10
             Remove-Variable "SessionVars"
             Break
         }
@@ -450,11 +450,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/watchdogtimers" {
-            $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers -Depth 2} else {"[]"}
+            $Data = if ($API.WatchdogTimers) {ConvertTo-Json $API.WatchdogTimers -Depth 2 -WarningAction Ignore} else {"[]"}
             Break
         }
         "/crashcounter" {
-            $Data = if ($API.CrashCounter) {ConvertTo-Json $API.CrashCounter -Depth 2} else {"[]"}
+            $Data = if ($API.CrashCounter) {ConvertTo-Json $API.CrashCounter -Depth 2 -WarningAction Ignore} else {"[]"}
             Break
         }
         "/balances" {
@@ -556,7 +556,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         Txid     = $_.Txid
                     }
                 }
-            } | Sort-Object Date,Name,Currency | Select-Object)
+            } | Sort-Object Date,Name,Currency | Select-Object) -Depth 10
             if ($Balances -ne $null) {Remove-Variable "Balances"}
             Break
         }
@@ -572,7 +572,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $CurrentRates | Foreach-Object {$val | Add-Member "rate$($_.symbol)" $($LocalRates."$($_.symbol)" / $rate)}
                     $val
                 }
-                $Data = ConvertTo-Json @($Data)
+                $Data = ConvertTo-Json @($Data) -Depth 10
                 if ($LocalRates) {Remove-Variable "LocalRates"}
                 if ($CurrentRates) {Remove-Variable "CurrentRates"}
             } else {
@@ -581,11 +581,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/asyncloaderjobs" {
-            $Data = ConvertTo-Json @($Asyncloader.Jobs).Where({$_})
+            $Data = ConvertTo-Json @($Asyncloader.Jobs).Where({$_}) -Depth 10
             Break
         }
         "/decsep" {
-            $Data = (Get-Culture).NumberFormat.NumberDecimalSeparator | ConvertTo-Json
+            $Data = (Get-Culture).NumberFormat.NumberDecimalSeparator | ConvertTo-Json -Depth 10
             Break
         }
         "/minerstats" {
@@ -635,7 +635,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     }
                 }
             }
-            $Data = ConvertTo-Json @($Out)
+            $Data = ConvertTo-Json @($Out) -Depth 10
             $Out.Clear()
             $JsonUri_Dates.Clear()
             $Miners_List.Clear()
@@ -706,7 +706,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $ContentType = "text/csv"
                     $ContentFileName = "activities_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
             } else {
-                $Data = $Activities | ConvertTo-Json -Compress
+                $Data = $Activities | ConvertTo-Json -Compress -Depth 10
             }
             if ($Activities) {
                 Remove-Variable "Activities" -ErrorAction Ignore
@@ -740,7 +740,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                         AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                         Seconds  = [int64]$Timer.TotalSeconds
                                     }
-            $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Power=$API.CurrentPower;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
+            $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Power=$API.CurrentPower;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json -Depth 10
             Remove-Variable "Timer" -ErrorAction Ignore
             Remove-Variable "Uptime" -ErrorAction Ignore
             Remove-Variable "SysUptime" -ErrorAction Ignore
@@ -787,7 +787,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/status" {
-            $Data = [PSCustomObject]@{Pause=$API.Pause;LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json
+            $Data = [PSCustomObject]@{Pause=$API.Pause;LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json -Depth 10
             Break
         }
         "/clients" {
@@ -814,7 +814,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     }
                 }
             }
-            $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}})
+            $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}}) -Depth 10
             Break
         }
         "/action/togglepool" {
@@ -831,7 +831,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $disabled = $true
                 }
             }
-            $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}})
+            $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}}) -Depth 10
             Break
         }
         "/getconfig" {

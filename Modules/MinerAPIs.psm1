@@ -1047,7 +1047,7 @@ class Dstm : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = @{id = 1; method = "getstat"} | ConvertTo-Json -Compress
+        $Request = @{id = 1; method = "getstat"} | ConvertTo-Json -Depth 10 -Compress
         $Response = ""
 
         $HashRate = [PSCustomObject]@{}
@@ -1293,7 +1293,7 @@ class Fireice : Miner {
                 $ThreadsConfigJson = Get-Content $HwConfigFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
                 if ($Miner_Vendor -eq "CPU") {
                     if ($Parameters.Affinity -ne $null) {
-                        $FirstCpu = $ThreadsConfigJson.cpu_threads_conf | Select-Object -First 1 | ConvertTo-Json -Compress
+                        $FirstCpu = $ThreadsConfigJson.cpu_threads_conf | Select-Object -First 1 | ConvertTo-Json -Depth 10 -Compress
                         $ThreadsConfigJson | Add-Member cpu_threads_conf ([Array]($Parameters.Affinity | Foreach-Object {$FirstCpu | ConvertFrom-Json | Add-Member affine_to_cpu $_ -Force -PassThru}) * $Parameters.Threads) -Force
                     } else {
                         $ThreadsConfigJson | Add-Member cpu_threads_conf ([Array]$ThreadsConfigJson.cpu_threads_conf * $Parameters.Threads) -Force
@@ -1754,7 +1754,7 @@ class Nanominer : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = @{id = 1; jsonrpc = "2.0"; method = "miner_getstat1"} | ConvertTo-Json -Compress
+        $Request = @{id = 1; jsonrpc = "2.0"; method = "miner_getstat1"} | ConvertTo-Json -Depth 10 -Compress
         $Response = ""
 
         $HashRate = [PSCustomObject]@{}
@@ -2354,7 +2354,7 @@ class Xgminer : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = @{command = "summary"; parameter = ""} | ConvertTo-Json -Compress
+        $Request = @{command = "summary"; parameter = ""} | ConvertTo-Json -Depth 10 -Compress
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}

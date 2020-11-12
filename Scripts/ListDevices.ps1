@@ -53,7 +53,7 @@ function Get-DeviceDebug {
     try {
         [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {
             [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | ForEach-Object {
-                $Device_OpenCL = $_ | ConvertTo-Json | ConvertFrom-Json
+                $Device_OpenCL = $_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json
 
                 $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
                 $Vendor_Name = [String]$Device_OpenCL.Vendor
@@ -143,7 +143,7 @@ function Get-DeviceDebug {
 
         foreach ($CPURealCore in @($CPURealCores)) {
             # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
-            $CIM = $Global:GlobalGetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json | ConvertFrom-Json
+            $CIM = $Global:GlobalGetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json -Depth 10 | ConvertFrom-Json
 
             $Device = [PSCustomObject]@{
                 Index = [Int]$Index
@@ -156,7 +156,7 @@ function Get-DeviceDebug {
                 CPU_Thread = $CPURealCore
                 CPU_Affinity = 1 -shl $CPURealCore
                 CPU_Features = $CPUFeatures
-                CIM = $Global:GlobalGetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json | ConvertFrom-Json
+                CIM = $Global:GlobalGetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json -Depth 10 | ConvertFrom-Json
                 Model = "CPU"
                 Model_Name = $CIM.Name
             }

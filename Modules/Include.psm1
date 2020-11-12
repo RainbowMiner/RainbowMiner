@@ -435,7 +435,7 @@ Function Write-ActivityLog {
                 OCmode         = $ocmode
                 OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
                 Donation       = $Session.IsDonationRun
-            } | ConvertTo-Json -Compress)," | Out-File $filename -Append -Encoding utf8
+            } | ConvertTo-Json -Depth 10 -Compress)," | Out-File $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
         else {
@@ -527,7 +527,7 @@ function Set-Total {
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-    $Stat | ConvertTo-Json | Set-Content $Path
+    $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
 }
 
 function Set-TotalsAvg {
@@ -1233,7 +1233,7 @@ function Set-Stat {
                     PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
                 }
             }
-        }) | ConvertTo-Json | Set-Content $Path
+        }) | ConvertTo-Json -Depth 10 | Set-Content $Path
     }
 
     if ($Cached) {$Global:StatsCache[$Name] = $Stat}
@@ -4435,7 +4435,7 @@ function Get-ContentDataMD5hash {
         $Data
     )
     if ($Data -eq $null) {$Data = ''}
-    Get-MD5Hash ($Data | ConvertTo-Json -Compress)
+    Get-MD5Hash ($Data | ConvertTo-Json -Depth 10 -Compress)
 }
 
 function Set-ContentJson {
@@ -5022,7 +5022,7 @@ function Set-SchedulerConfigDefault {
         try {
             $Default = Get-ChildItemContent ".\Data\SchedulerConfigDefault.ps1"
             if ($Preset -is [string] -or $Preset -eq $null) {
-                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
+                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
             }
             $ChangeTag = Get-ContentDataMD5hash($Preset)
 
@@ -5742,7 +5742,7 @@ Param(
     [Parameter(Mandatory = $False)]
     [hashtable]$hashtable = @{}
 )
-    "{$(@($hashtable.Keys | Sort-Object | Foreach-Object {"$($_):$(if ($hashtable.$_ -is [hashtable]) {Get-HashtableAsJson $hashtable.$_} else {ConvertTo-Json $hashtable.$_})"}) -join ",")}"
+    "{$(@($hashtable.Keys | Sort-Object | Foreach-Object {"$($_):$(if ($hashtable.$_ -is [hashtable]) {Get-HashtableAsJson $hashtable.$_} else {ConvertTo-Json $hashtable.$_ -Depth 10})"}) -join ",")}"
 }
 
 function Invoke-GetUrlAsync {

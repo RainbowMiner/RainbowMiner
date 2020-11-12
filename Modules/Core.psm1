@@ -1238,7 +1238,7 @@ function Invoke-Core {
     Write-Log "Updating exchange rates. "
     Update-Rates
 
-    $API.Rates = ConvertTo-Json $Global:Rates
+    $API.Rates = ConvertTo-Json $Global:Rates -Depth 10
     $ActualRates = [PSCustomObject]@{}
     $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Global:Rates.$_}
     $API.ActualRates = $ActualRates
@@ -1910,7 +1910,7 @@ function Invoke-Core {
         if ($IsWindows -and (Get-Command "Get-MpPreference" -ErrorAction Ignore)) {
             if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
                 if ($Global:MinerFirewalls -eq $null) {$Global:MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
-                $OpenFirewallFor = "$(@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Global:MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ConvertTo-Json -Compress)"
+                $OpenFirewallFor = "$(@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Global:MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ConvertTo-Json -Depth 10 -Compress)"
                 if ($OpenFirewallFor -ne "") {
                     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); ('$OpenFirewallFor' | ConvertFrom-Json -ErrorAction Ignore) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
                     $Global:MinerFirewalls = $null
@@ -3491,7 +3491,7 @@ function Invoke-ReportMinerStatus {
                 Device         = $_.Device
                 Algorithm      = $_.Algorithm
                 Pool           = $_.Pool
-            }}) -Compress
+            }}) -Depth 10 -Compress
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Miner Status $($ReportUrl) failed to create crash alerts. "
@@ -3503,7 +3503,7 @@ function Invoke-ReportMinerStatus {
     $DeviceData = "$(
         if ($Session.ReportDeviceData) {
             try {
-                ConvertTo-Json $Global:GlobalCachedDevices -Compress
+                ConvertTo-Json $Global:GlobalCachedDevices -Depth 10 -Compress
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "Miner Status $($ReportUrl) failed to create device data. "
@@ -3522,7 +3522,7 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)"; cputemp = "$(($Session.SysInfo.Cpus.Temperature | Measure-Object -Average).Average)"; cpuload = "$($Session.SysInfo.CpuLoad)"; cpupower = "$(($Session.SysInfo.Cpus.PowerDraw | Measure-Object -Sum).Sum)"; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-ContentByStreamReader ".\Data\minerdata.json"};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-ContentByStreamReader ".\Data\poolsdata.json"};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $ReportRates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; maxcrashes = "$($Session.Config.MinerStatusMaxCrashesPerHour)"; crashalert=$CrashAlert; crashdata=$CrashData; devices=$DeviceData; data = $minerreport}
+            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)"; cputemp = "$(($Session.SysInfo.Cpus.Temperature | Measure-Object -Average).Average)"; cpuload = "$($Session.SysInfo.CpuLoad)"; cpupower = "$(($Session.SysInfo.Cpus.PowerDraw | Measure-Object -Sum).Sum)"; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Depth 10 -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-ContentByStreamReader ".\Data\minerdata.json"};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-ContentByStreamReader ".\Data\poolsdata.json"};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $ReportRates -Depth 10 -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; maxcrashes = "$($Session.Config.MinerStatusMaxCrashesPerHour)"; crashalert=$CrashAlert; crashdata=$CrashData; devices=$DeviceData; data = $minerreport}
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | Select-Object -first 1}
             else {
                 $ReportStatus = $Response.Status
@@ -3552,7 +3552,7 @@ function Invoke-ReportMinerStatus {
                     $API.RemoteMinersEarnings_1d  = $Earnings_1d
                 }
                 if ($Response.Compare -ne $null) {
-                    $API.CompareMiners = ConvertTo-Json @($Response.Compare | Select-Object)
+                    $API.CompareMiners = ConvertTo-Json @($Response.Compare | Select-Object) -Depth 10
                 }
             }
             $ReportDone = $true

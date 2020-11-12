@@ -72,7 +72,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
             else {
                 Expand-WebRequest $URI $(if ($IsMiner) {Get-MinerInstPath $Path} else {Split-Path $Path}) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop -EnableMinerBackups:$DownloaderConfig.EnableMinerBackups -EnableKeepDownloads:$DownloaderConfig.EnableKeepDownloads
             }
-            if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
+            if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json -Depth 10 | Set-Content $UriJson -Encoding UTF8}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -98,6 +98,6 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
         }
         $Global:ProgressPreference = $oldProgressPreference
     } elseif ($IsMiner -and -not (Test-Path $UriJson)) {
-        [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
+        [PSCustomObject]@{URI = $URI} | ConvertTo-Json -Depth 10 | Set-Content $UriJson -Encoding UTF8
     }
 }

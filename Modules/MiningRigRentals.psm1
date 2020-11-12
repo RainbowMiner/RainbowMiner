@@ -381,7 +381,7 @@ function Set-MiningRigStat {
     }
 
     try {
-        $DataSorted | ConvertTo-Json -ErrorAction Stop | Set-Content $Path
+        $DataSorted | ConvertTo-Json -Depth 10 -ErrorAction Stop | Set-Content $Path
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Could not write MRR stat file for worker $Name"

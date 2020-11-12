@@ -35,7 +35,7 @@ try {
             if ($PoolsActual.ZergPool.DataWindow -and (Get-YiiMPDataWindow $PoolsActual.ZergPool.DataWindow) -eq (Get-YiiMPDataWindow "minimum")) {$PoolsActual.ZergPool.DataWindow = "";$Changes++}
             if ($PoolsActual.ZergPoolCoins.DataWindow -and (Get-YiiMPDataWindow $PoolsActual.ZergPoolCoins.DataWindow) -eq (Get-YiiMPDataWindow "minimum")) {$PoolsActual.ZergPoolCoins.DataWindow = "";$Changes++}
             if ($Changes) {
-                $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding UTF8
+                $PoolsActual | ConvertTo-Json -Depth 10 | Set-Content $PoolsConfigFile -Encoding UTF8
                 $ChangesTotal += $Changes
             }
         }
@@ -64,7 +64,7 @@ try {
 
             $MinersActualSave = [PSCustomObject]@{}
             $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
-            $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+            $MinersActualSave | ConvertTo-Json -Depth 10 | Set-Content $MinersConfigFile -Encoding Utf8
         }
     }
     if ($Version -le (Get-Version "3.8.4.4") -and $IsWindows) {
@@ -77,7 +77,7 @@ try {
         }
         $MinersActualSave = [PSCustomObject]@{}
         $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
-        $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+        $MinersActualSave | ConvertTo-Json -Depth 10 | Set-Content $MinersConfigFile -Encoding Utf8
 
         $DevicesSave = [PSCustomObject]@{}
         $DevicesActual = Get-Content "$DevicesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -86,7 +86,7 @@ try {
         }
         $DevicesActualSave = [PSCustomObject]@{}
         $DevicesSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ $DevicesSave.$_}
-        $DevicesActualSave | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding Utf8
+        $DevicesActualSave | ConvertTo-Json -Depth 10 | Set-Content $DevicesConfigFile -Encoding Utf8
 
         $OCprofilesActual = Get-Content "$OCprofilesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $OCprofilesActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {
@@ -94,7 +94,7 @@ try {
         }
         $OCprofilesActualSave = [PSCustomObject]@{}
         $OCprofilesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$OCprofilesActualSave | Add-Member $_ $OCprofilesActual.$_}
-        $OCprofilesActualSave | ConvertTo-Json | Set-Content $OCprofilesConfigFile -Encoding Utf8
+        $OCprofilesActualSave | ConvertTo-Json -Depth 10 | Set-Content $OCprofilesConfigFile -Encoding Utf8
     }
     if ($Version -le (Get-Version "3.8.5.5")) {
         if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
@@ -138,7 +138,7 @@ try {
         }
 
         if ($Changes) {       
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
         }
     }
@@ -180,7 +180,7 @@ try {
                 } else {
                     $UriNew = $_.URI
                 }
-                $ChangesTotal++;$StatTouch += $_.Name;[PSCustomObject]@{URI = $UriNew} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
+                $ChangesTotal++;$StatTouch += $_.Name;[PSCustomObject]@{URI = $UriNew} | ConvertTo-Json -Depth 10 | Set-Content $UriJson -Encoding UTF8
             }
         }
         $StatTouch | Foreach-Object {Get-ChildItem "Stats\Miners\*-$($_)-*_HashRate.txt" | Foreach-Object {$_.LastWriteTime = Get-Date}}
@@ -212,7 +212,7 @@ try {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $ConfigActual.MinerName = $ConfigActual.MinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
         $ConfigActual.ExcludeMinerName = $ConfigActual.ExcludeMinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
-        $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+        $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
         $ChangesTotal++
 
         $MinersSave = [PSCustomObject]@{}
@@ -224,7 +224,7 @@ try {
         }        
         $MinersActualSave = [PSCustomObject]@{}
         $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
-        $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+        $MinersActualSave | ConvertTo-Json -Depth 10 | Set-Content $MinersConfigFile -Encoding Utf8
         $ChangesTotal++
 
         $DevicesSave = [PSCustomObject]@{}
@@ -236,7 +236,7 @@ try {
         }
         $DevicesActualSave = [PSCustomObject]@{}
         $DevicesSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ $DevicesSave.$_}
-        $DevicesActualSave | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding Utf8
+        $DevicesActualSave | ConvertTo-Json -Depth 10 | Set-Content $DevicesConfigFile -Encoding Utf8
         $ChangesTotal++
     }
 
@@ -264,7 +264,7 @@ try {
         if ($Algorithms -is [string]) {$Algorithms = $Algorithms.Trim(); $Algorithms = @(if ($Algorithms -ne ''){@([regex]::split($Algorithms.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
         if ($Algorithms -and $Algorithms.Count -le 7 -and (-not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s")) -or -not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s","x20r")))) {
             $ConfigActual.Algorithm = ""
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal++
         }
         $AddAlgorithm += @("x20r")
@@ -276,7 +276,7 @@ try {
         if ($Algorithms -is [string]) {$Algorithms = $Algorithms.Trim(); $Algorithms = @(if ($Algorithms -ne ''){@([regex]::split($Algorithms.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
         if ($Algorithms -and $Algorithms.Count -le 7 -and (-not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s")) -or -not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s","x20r")))) {
             $ConfigActual.Algorithm = ""
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal++
         }
     }
@@ -292,7 +292,7 @@ try {
         if ($Algorithms | Where-Object {$_ -eq "System.Object[]"}) {
             $Algorithms = $Algorithms | Where-Object {$_ -ne "System.Object[]"}
             $ConfigActual.Algorithm = $Algorithms -join ','
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal++
         }
     }
@@ -490,7 +490,7 @@ try {
             $Changes++;
         }
         if ($Changes) {       
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
         }
     }
@@ -508,7 +508,7 @@ try {
             $Changes++;
         }
         if ($Changes) {       
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
         }
     }
@@ -628,7 +628,7 @@ try {
             $Changes++;
         }
         if ($Changes) {
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
         }
     }
@@ -649,8 +649,8 @@ try {
             $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             if ($SelectedPools -inotcontains "NiceHash") {
                 if ($PoolsActual.NiceHashV2 -ne $null) {
-                    $PoolsActual | Add-Member NiceHash ($PoolsActual.NiceHashV2 | ConvertTo-Json | ConvertFrom-Json) -Force
-                    $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding UTF8
+                    $PoolsActual | Add-Member NiceHash ($PoolsActual.NiceHashV2 | ConvertTo-Json -Depth 10 | ConvertFrom-Json) -Force
+                    $PoolsActual | ConvertTo-Json -Depth 10 | Set-Content $PoolsConfigFile -Encoding UTF8
                 }
                 $SelectedPools += "NiceHash"
                 $Changes++
@@ -659,7 +659,7 @@ try {
             $Changes++
         }
         if ($Changes) {
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
         }
     }
@@ -757,7 +757,7 @@ try {
             $Changes++;
         }
         if ($Changes) {
-            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
         }
     }
@@ -1039,7 +1039,7 @@ try {
                 $AddAlgorithm | Where-Object {-not $Algorithms_Hash.ContainsKey($(Get-Algorithm $_))} | Foreach-Object {$Algorithms += $_;$Algorithms_Hash[$(Get-Algorithm $_)] = $true;$Changes++}
                 if ($Changes -gt 0) {
                     $ConfigActual.Algorithm = ($Algorithms | Sort-Object) -join ","
-                    $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+                    $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
                     $ChangesTotal+=$Changes
                 }
             }

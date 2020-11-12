@@ -342,7 +342,7 @@ function Start-Setup {
                                 $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
                                 $addcoin = Read-HostString -Prompt "Which currency do you want to add/edit (leave empty for none) " -Default "" -Valid (Get-PoolsInfo "Currency") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 if (-not $CoinsActual.$addcoin) {
-                                    $CoinsActual | Add-Member $addcoin ($CoinsDefault | ConvertTo-Json | ConvertFrom-Json) -Force
+                                    $CoinsActual | Add-Member $addcoin ($CoinsDefault | ConvertTo-Json -Depth 10 | ConvertFrom-Json) -Force
                                 }
                             } else {
                                 $GlobalSetupStepStore = $false
@@ -1716,7 +1716,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableDebugMode $(if (Get-Yes $Config.EnableDebugMode){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member RestartComputerHours $Config.RestartComputerHours -Force
 
-                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8
+                            $ConfigActual | ConvertTo-Json -Depth 10 | Out-File $ConfigFiles["Config"].Path -Encoding utf8
 
                             if ($DownloadServerNow) {
                                 $GlobalSetupStepStore = $false
@@ -1802,7 +1802,7 @@ function Start-Setup {
                                 }
                             }
 
-                            $PoolsActual  | ConvertTo-Json | Out-File $ConfigFiles["Pools"].Path -Encoding utf8
+                            $PoolsActual  | ConvertTo-Json -Depth 10 | Out-File $ConfigFiles["Pools"].Path -Encoding utf8
 
                             if ($IsInitialSetup) {
                                 $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") > $null
@@ -2571,7 +2571,7 @@ function Start-Setup {
                     if ($Algorithm_Name -eq '') {throw}
 
                     if (-not $AlgorithmsActual.$Algorithm_Name) {
-                        $AlgorithmsActual | Add-Member $Algorithm_Name ($AlgorithmsDefault | ConvertTo-Json | ConvertFrom-Json) -Force
+                        $AlgorithmsActual | Add-Member $Algorithm_Name ($AlgorithmsDefault | ConvertTo-Json -Depth 10 | ConvertFrom-Json) -Force
                         Set-ContentJson -PathToFile $ConfigFiles["Algorithms"].Path -Data $AlgorithmsActual > $null
                     }
 
@@ -2734,7 +2734,7 @@ function Start-Setup {
 
                         if (-not $CoinsActual.$Coin_Symbol) {
                             if (Read-HostBool "Do you want to add a new coin `"$($Coin_Symbol)`"?" -Default $true) {
-                                $CoinsActual | Add-Member $Coin_Symbol ($CoinsDefault | ConvertTo-Json | ConvertFrom-Json) -Force
+                                $CoinsActual | Add-Member $Coin_Symbol ($CoinsDefault | ConvertTo-Json -Depth 10 | ConvertFrom-Json) -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsActual > $null
                             } else {
                                 $Coin_Symbol = ''

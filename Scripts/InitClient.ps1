@@ -109,6 +109,6 @@ if ($IsWindows -and -not (Test-IsElevated)) {
 
 Initialize-APIServer -Port $Config.APIport
 
-$Config | ConvertTo-Json | Out-File ".\Config\config.txt" -Encoding utf8 
+$Config | ConvertTo-Json -Depth 10 | Out-File ".\Config\config.txt" -Encoding utf8 
 
 Write-Host "Done!"
