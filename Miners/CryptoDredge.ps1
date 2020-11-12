@@ -76,7 +76,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sha256csm";   MinMemGb = 1; Params = ""; Version = "0.24.0"} #Sha256csm, new with v0.24.0
     [PSCustomObject]@{MainAlgorithm = "skunk";       MinMemGb = 1; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "tribus";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "veil";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
+    #[PSCustomObject]@{MainAlgorithm = "veil";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
     [PSCustomObject]@{MainAlgorithm = "x16r";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16rt";       MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16rv2";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
