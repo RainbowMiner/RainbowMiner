@@ -1030,10 +1030,20 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
     }
 
     if ($PoolsData -is [array]) {
+
+        try {
+            $Pool_Request_Nicehash = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag "Nicehash" -timeout 20
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Pool API (Nicehash) has failed. "
+        }
+
+        $InactiveNicehashAlgorithms = @($Pool_Request_Nicehash.miningAlgorithms | Where-Object {[double]$_.paying -le 0 -or [double]$_.speed -le 0} | ForEach-Object {Get-Algorithm $_.algorithm} | Select-Object)
        
         $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals"}) | Select-Object -ExpandProperty Algorithm0 -Unique)
 
-        $PoolsData.Where({$_.Algorithm -notin $ActiveAlgorithms}).Foreach({
+        $PoolsData.Where({$_.Algorithm -notin $ActiveAlgorithms -and ($_.Pool -ne "Nicehash" -or $_.Algorithm -notin $InactiveNicehashAlgorithms)}).Foreach({
             [PSCustomObject]@{
                 Algorithm     = $_.Algorithm
 			    Algorithm0    = $_.Algorithm
