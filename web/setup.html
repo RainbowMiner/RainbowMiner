@@ -150,6 +150,15 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-group row">
+                        <label for="inputEnableEthashZombieMode" class="col-sm-2 col-form-label">Enable Ethash zombie-mode</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableEthashZombieMode" name="EnableEthashZombieMode">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -639,7 +648,7 @@
 
   $(function() {
       $.ajax({
-          url: '/config', success: function (result) {
+          url: '/userconfig', success: function (result) {
               $("input.form-control,select.form-control,input.custom-range").each(function(index) {
                   var conf = $(this).attr('id').replace(/^input/, "")
                   var res = result[conf];

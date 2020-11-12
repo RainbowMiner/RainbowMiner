@@ -256,7 +256,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/userconfig" {
-            $Data = $API.UserConfig
+            $Data = if ($API.UserConfig) {$API.UserConfig} else {ConvertTo-Json $Session.Config -Depth 10}
             Break
         }
         "/ocprofiles" {
