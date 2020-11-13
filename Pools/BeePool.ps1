@@ -77,9 +77,9 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
         if ($TZ_China_Standard_Time) {
             $Pool_Blocks = [PSCustomObject]@{}
             try {
-                $Pool_Blocks = Invoke-RestMethodAsync "https://www.beepool.org/get_blocks" -tag $Name -cycletime 120 -body @{coin=$Pool_Data.coin} -timeout 20
-                if ("$($Pool_Blocks.code)" -eq "0" -and ($Pool_Blocks.data.data | Measure-Object).Count) {
-                    $Pool_TSL = ((Get-Date).ToUniversalTime() - [System.TimeZoneInfo]::ConvertTimeToUtc(($Pool_Blocks.data.data | Select-Object -First 1).time, $TZ_China_Standard_Time)).TotalSeconds
+                $Pool_Blocks = Invoke-RestMethodAsync "https://www.beepool.org/detail/get_blocks" -tag $Name -cycletime 120 -body @{coin=$Pool_Data.coin} -timeout 20
+                if ("$($Pool_Blocks.code)" -eq "0" -and ($Pool_Blocks.data.blocks | Measure-Object).Count) {
+                    $Pool_TSL = ((Get-Date).ToUniversalTime() - [System.TimeZoneInfo]::ConvertTimeToUtc("$((Get-Date).Year)-$(($Pool_Blocks.data.blocks | Select-Object -First 1).time)", $TZ_China_Standard_Time)).TotalSeconds
                 }
             }
             catch {
@@ -89,12 +89,15 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
 
         $Pool_Rate = 0
         if ($Pool_PP -and $Pool_Data."$($Pool_PP)_value" -and $Pool_Currency -ne "GRIN") {
-            $Divisor  = Switch($Pool_Data."$($Pool_PP)_unit".Substring(0,1)) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
+            $Divisor  = ConvertFrom-Hash "1$($Pool_Data."$($Pool_PP)_unit".Substring(0,1))"
             $Pool_Rate = if ($Global:Rates.$Pool_Currency) {$Pool_Data."$($Pool_PP)_value" / $Global:Rates.$Pool_Currency / $Divisor} else {0}
         }
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Rate -Duration $StatSpan -HashRate (ConvertFrom-Hash $Pool_Data.poolhash) -BlockRate ([int]$Pool_Data.last_24_hour_block_total) -ChangeDetection (-not $Pool_Rate) -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Rate -Duration $StatSpan -HashRate (ConvertFrom-Hash $Pool_Data.poolhash) -BlockRate ([int]$Pool_Blocks.data.last_24_total) -ChangeDetection (-not $Pool_Rate) -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
+
+    $Pool_Worker = [int]$Pool_Data.pool_worker
+    if ($Stat.HashRate_Live -gt 0 -and -not $Pool_Data.pool_worker) {$Pool_Worker = 5}
 
     $Pool_SSL = $false
     foreach($Pool_Port in $Pool_Ports) {
@@ -117,7 +120,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee
             DataWindow    = $DataWindow
-            Workers       = $Pool_Data.pool_worker
+            Workers       = $Pool_Worker
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
