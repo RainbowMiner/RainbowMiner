@@ -1647,7 +1647,10 @@ filter ConvertTo-Float {
          2 {"{0:n2} M" -f ($Num / 1e6);Break}
          3 {"{0:n2} G" -f ($Num / 1e9);Break}
          4 {"{0:n2} T" -f ($Num / 1e12);Break}
-         Default {"{0:n2} P" -f ($Num / 1e15)}
+         5 {"{0:n2} P" -f ($Num / 1e15);Break}
+         6 {"{0:n2} E" -f ($Num / 1e18);Break}
+         7 {"{0:n2} Z" -f ($Num / 1e21);Break}
+         Default {"{0:n2} Y" -f ($Num / 1e24)}
     }
 }
 
@@ -1661,12 +1664,15 @@ function ConvertFrom-Hash {
         [string]$Hash
     )
     try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
-    [int64]$(switch (($Hash -replace "[^kMGHTP]")[0]) {
+    [int64]$(switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
         "k" {$Num*1e3;Break}
         "M" {$Num*1e6;Break}
         "G" {$Num*1e9;Break}
         "T" {$Num*1e12;Break}
         "P" {$Num*1e15;Break}
+        "E" {$Num*1e18;Break}
+        "Z" {$Num*1e21;Break}
+        "Y" {$Num*1e24;Break}
         default {$Num}
     })
 }
@@ -1677,12 +1683,15 @@ function ConvertFrom-Bytes {
         [string]$Hash
     )
     try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
-    [int64]$(switch (($Hash -replace "[^kMGHTP]")[0]) {
+    [int64]$(switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
         "k" {$Num*1024;Break}
         "M" {$Num*1048576;Break}
         "G" {$Num*1073741824;Break}
         "T" {$Num*1099511627776;Break}
         "P" {$Num*1.12589990684262e15;Break}
+        "E" {$Num*1.15292150460684e18;Break}
+        "Z" {$Num*1.18059162071741e21;Break}
+        "Y" {$Num*1.20892581961462e24;Break}
         default {$Num}
     })
 }
