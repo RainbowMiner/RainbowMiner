@@ -35,8 +35,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cuckarood29_grin"; MinMemGb = 6;   Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";  MinMemGb = 8;   Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 2;   Params = ""; DevFee = 0.75}
-    [PSCustomObject]@{MainAlgorithm = "kawpow";           MinMemGb = 3;   Params = ""; DevFee = 2.0}
+    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "kawpow";           MinMemGb = 3;   Params = ""; DevFee = 2.0; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3";        MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";           MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "mtp";              MinMemGb = 5;   Params = ""; DevFee = 2.5}

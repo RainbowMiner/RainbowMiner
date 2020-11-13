@@ -2375,18 +2375,23 @@ class Xgminer : Miner {
         $Rejected_Shares  = [Int64]$Data.SUMMARY.rejected
 
         $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = if ($Data.SUMMARY.HS_5s) {[Double]$Data.SUMMARY.HS_5s * [Math]::Pow(1000, 0)}
-        elseif ($Data.SUMMARY.KHS_5s) {[Double]$Data.SUMMARY.KHS_5s * [Math]::Pow(1000, 1)}
-        elseif ($Data.SUMMARY.MHS_5s) {[Double]$Data.SUMMARY.MHS_5s * [Math]::Pow(1000, 2)}
-        elseif ($Data.SUMMARY.GHS_5s) {[Double]$Data.SUMMARY.GHS_5s * [Math]::Pow(1000, 3)}
-        elseif ($Data.SUMMARY.THS_5s) {[Double]$Data.SUMMARY.THS_5s * [Math]::Pow(1000, 4)}
-        elseif ($Data.SUMMARY.PHS_5s) {[Double]$Data.SUMMARY.PHS_5s * [Math]::Pow(1000, 5)}
-        elseif ($Data.SUMMARY.HS_av) {[Double]$Data.SUMMARY.HS_av * [Math]::Pow(1000, 0)}
-        elseif ($Data.SUMMARY.KHS_av) {[Double]$Data.SUMMARY.KHS_av * [Math]::Pow(1000, 1)}
-        elseif ($Data.SUMMARY.MHS_av) {[Double]$Data.SUMMARY.MHS_av * [Math]::Pow(1000, 2)}
-        elseif ($Data.SUMMARY.GHS_av) {[Double]$Data.SUMMARY.GHS_av * [Math]::Pow(1000, 3)}
-        elseif ($Data.SUMMARY.THS_av) {[Double]$Data.SUMMARY.THS_av * [Math]::Pow(1000, 4)}
-        elseif ($Data.SUMMARY.PHS_av) {[Double]$Data.SUMMARY.PHS_av * [Math]::Pow(1000, 5)}
+        $HashRate_Value = If ($Data.SUMMARY.HS_5s) { [Double]$Data.SUMMARY.HS_5s }
+        elseif ($Data.SUMMARY.KHS_5s) { [Double]$Data.SUMMARY.KHS_5s * 1e3 }
+        elseif ($Data.SUMMARY.MHS_5s) { [Double]$Data.SUMMARY.MHS_5s * 1e6 }
+        elseif ($Data.SUMMARY.GHS_5s) { [Double]$Data.SUMMARY.GHS_5s * 1e9 }
+        elseif ($Data.SUMMARY.THS_5s) { [Double]$Data.SUMMARY.THS_5s * 1e12 }
+        elseif ($Data.SUMMARY.PHS_5s) { [Double]$Data.SUMMARY.PHS_5s * 1e15 }
+        elseif ($Data.SUMMARY.KHS_30s) { [Double]$Data.SUMMARY.KHS_30s * 1e3 }
+        elseif ($Data.SUMMARY.MHS_30s) { [Double]$Data.SUMMARY.MHS_30s * 1e6 }
+        elseif ($Data.SUMMARY.GHS_30s) { [Double]$Data.SUMMARY.GHS_30s * 1e9 }
+        elseif ($Data.SUMMARY.THS_30s) { [Double]$Data.SUMMARY.THS_30s * 1e12 }
+        elseif ($Data.SUMMARY.PHS_30s) { [Double]$Data.SUMMARY.PHS_30s * 1e15 }
+        elseif ($Data.SUMMARY.HS_av) { [Double]$Data.SUMMARY.HS_av }
+        elseif ($Data.SUMMARY.KHS_av) { [Double]$Data.SUMMARY.KHS_av * 1e3 }
+        elseif ($Data.SUMMARY.MHS_av) { [Double]$Data.SUMMARY.MHS_av * 1e6 }
+        elseif ($Data.SUMMARY.GHS_av) { [Double]$Data.SUMMARY.GHS_av * 1e9 }
+        elseif ($Data.SUMMARY.THS_av) { [Double]$Data.SUMMARY.THS_av * 1e12 }
+        elseif ($Data.SUMMARY.PHS_av) { [Double]$Data.SUMMARY.PHS_av * 1e15 }
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
