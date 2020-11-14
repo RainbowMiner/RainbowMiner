@@ -2120,6 +2120,7 @@ function Invoke-Core {
                 MultiProcess         = [int]$Miner.MultiProcess
                 SetLDLIBRARYPATH     = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
                 ShareCheck           = [int]$Miner.ShareCheck
+                ExcludePoolName      = $Miner.ExcludePoolName
             }
             #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
             $Global:ActiveMiners.Add($ActiveMiner) > $null

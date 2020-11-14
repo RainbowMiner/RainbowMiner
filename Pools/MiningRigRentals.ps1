@@ -176,12 +176,11 @@ if ($AllRigs_Request) {
                     $DeviceAlgorithm        = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
                     $DeviceExcludeAlgorithm = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
-                    $ActiveAlgorithms       = @($Global:ActiveMiners.Where({$_.DeviceModel -in $Workers_Models[$Worker1]}).Foreach({"$($_.Algorithm | Select-Object -First 1)" -replace "-.+$"}) | Select-Object -Unique)
+                    $ActiveAlgorithms       = @($Global:ActiveMiners.Where({$_.Enabled -and ($_.DeviceModel -in $Workers_Models[$Worker1]) -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)}).Foreach({"$($_.Algorithm[0])" -replace "-.+$"}) | Select-Object -Unique)
 
                     $Rigs_Request | Select-Object id,type | Foreach-Object {
                         $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
-                        if ((Get-Yes $Session.Config.Algorithms.$Pool_Algorithm_Norm.MRREnable) -and -not (
-                            ($ActiveAlgorithms -inotcontains $Pool_Algorithm_Norm) -or
+                        if ((Get-Yes $Session.Config.Algorithms.$Pool_Algorithm_Norm.MRREnable) -and ($ActiveAlgorithms -icontains $Pool_Algorithm_Norm) -and -not (
                             ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
                             ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
                             ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
@@ -737,7 +736,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                     $RigPowerAdd   = 0
                                     $RigSpeedAdd   = 0
                                     $RigRevenueAdd = 0
-                                    $Global:ActiveMiners.Where({$_.Speed -ne $null -and "$($_.Algorithm | Select-Object -First 1)" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model}).Foreach({
+                                    $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and "$($_.Algorithm[0])" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)}).Foreach({
                                         $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
                                         if ($ThisSpeed -gt $RigSpeedAdd) {
                                             $RigPowerAdd   = $_.PowerDraw

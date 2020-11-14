@@ -62,6 +62,7 @@ class Miner {
     [String]$EthPillEnable = "disable"
     [String]$EthPillEnableMTP = "disable"
     [string]$DataInterval
+    [string]$ExcludePoolName
     [String[]]$EnvVars
     [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1;"CPUAffinity"=0}
     [Bool]$Stopped = $false

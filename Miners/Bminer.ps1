@@ -128,6 +128,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             PowerDraw      = 0
                             BaseName       = $Name
                             BaseAlgorithm  = $MainAlgorithm_Norm_0
+                            ExcludePoolName= $_.ExcludePoolName
 						}
 					} else {
 						[PSCustomObject]@{
@@ -156,6 +157,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             PowerDraw      = 0
                             BaseName       = $Name
                             BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)"
+                            ExcludePoolName= $_.ExcludePoolName
 						}
 					}
 				}
