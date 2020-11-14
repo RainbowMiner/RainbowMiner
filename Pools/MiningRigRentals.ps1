@@ -170,15 +170,18 @@ if ($AllRigs_Request) {
                 $API.UpdateMRR = $true
                 $Session.MRRBenchmarkStatus[$Worker1] = $false
             } else {
-                $DeviceAlgorithm        = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
-                $DeviceExcludeAlgorithm = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
-
                 $NotRentedSince_Seconds = ((Get-Date).ToUniversalTime() - $Session.MRRRentalTimestamp[$Worker1]).TotalSeconds
 
                 if (-not $PauseBetweenRentals_Seconds -or $PauseBetweenRentals_Seconds -lt $NotRentedSince_Seconds) {
+                    $DeviceAlgorithm        = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
+                    $DeviceExcludeAlgorithm = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
+
+                    $ActiveAlgorithms       = @($Global:ActiveMiners.Where({$_.DeviceModel -in $Workers_Models[$Worker1]}).Foreach({"$($_.Algorithm | Select-Object -First 1)" -replace "-.+$"}) | Select-Object -Unique)
+
                     $Rigs_Request | Select-Object id,type | Foreach-Object {
                         $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
                         if ((Get-Yes $Session.Config.Algorithms.$Pool_Algorithm_Norm.MRREnable) -and -not (
+                            ($ActiveAlgorithms -inotcontains $Pool_Algorithm_Norm) -or
                             ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
                             ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
                             ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
@@ -709,7 +712,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 $RigPriceFactor = $RigControl_Data.PriceFactor
                             }
                         }
-
 
                         $DeviceAlgorithm        = @($RigModels | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
                         $DeviceExcludeAlgorithm = @($RigModels | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
