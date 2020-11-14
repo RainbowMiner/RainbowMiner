@@ -984,7 +984,7 @@ try {
         }
     }
 
-    if ($Version -le (Get-Version "4.6.4.6")) {
+    if ($Version -le (Get-Version "4.6.4.7")) {
         $RemoveMinerStats += @("*_ProgPowVeil_HashRate.txt")
     }
 
