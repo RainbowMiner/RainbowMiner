@@ -21,6 +21,11 @@
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
         $Session.MachineName        = [System.Environment]::MachineName
         $Session.MyIP               = Get-MyIP
+
+        $Session.RegexAlgoHasEthproxy = [regex]::New("^(Etchash|Ethash|ProgPow|vProgPow)")
+        $Session.RegexAlgoHasDAGSize  = [regex]::New("^(Etchash|Ethash|KawPow|ProgPow|vProgPow)")
+        $Session.RegexAlgoIsEthash    = [regex]::New("^(Etchash|Ethash)")
+        $Session.RegexAlgoIsProgPow   = [regex]::New("^(KawPow|ProgPow|vProgPow)")
     }
 }
 

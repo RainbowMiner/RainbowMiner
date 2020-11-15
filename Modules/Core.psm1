@@ -93,11 +93,6 @@ function Start-Core {
         $Session.DecayPeriod       = 60 #seconds
         $Session.DecayBase         = 1 - 0.1 #decimal percentage
 
-        $Session.RegexAlgoHasEthproxy = [regex]::New("^(Etchash|Ethash|ProgPow|vProgPow)")
-        $Session.RegexAlgoHasDAGSize  = [regex]::New("^(Etchash|Ethash|KawPow|ProgPow|vProgPow)")
-        $Session.RegexAlgoIsEthash    = [regex]::New("^(Etchash|Ethash)")
-        $Session.RegexAlgoIsProgPow   = [regex]::New("^(KawPow|ProgPow|vProgPow)")
-
         $Session.RoundCounter = 0
 
         $Session.SkipSwitchingPrevention = $false
