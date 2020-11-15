@@ -30,14 +30,12 @@ $Pool_Regions = @("ru","eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = [PSCustomObject]@{
-    "ALTEX" = [PSCustomObject]@{port = 7070; region = $Pool_Regions}
     "BELL"  = [PSCustomObject]@{port = 3342; region = $Pool_Regions}
-    "BCX"   = [PSCustomObject]@{port = 7045; region = $Pool_Regions}
-    "BSF"   = [PSCustomObject]@{port = 7065; region = $Pool_Regions}
     "BTX"   = [PSCustomObject]@{port = 7066; region = $Pool_Regions}
     "ZNY"   = [PSCustomObject]@{port = 7054; region = $Pool_Regions}
     "CPU"   = [PSCustomObject]@{port = 7029; region = $Pool_Regions}
     "CRP"   = [PSCustomObject]@{port = 3335; region = $Pool_Regions}
+    "CURVE" = [PSCustomObject]@{port = 7058; region = $Pool_Regions}
     "DMS"   = [PSCustomObject]@{port = 7047; region = $Pool_Regions}
     "GLEEC" = [PSCustomObject]@{port = 7051; region = $Pool_Regions}
     "GOLD"  = [PSCustomObject]@{port = 7057; region = $Pool_Regions}
@@ -48,7 +46,6 @@ $Pools_Data = [PSCustomObject]@{
     "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
-    "LRA"   = [PSCustomObject]@{port = 7050; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
     "NAD"   = [PSCustomObject]@{port = 7064; region = $Pool_Regions}
     "QRN"   = [PSCustomObject]@{port = 7067; region = $Pool_Regions}
@@ -57,13 +54,14 @@ $Pools_Data = [PSCustomObject]@{
     "SPRX"  = [PSCustomObject]@{port = 7052; region = $Pool_Regions}
     "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
     "SWAMP" = [PSCustomObject]@{port = 7023; region = $Pool_Regions}
-    "TDC"   = [PSCustomObject]@{port = 7017; region = $Pool_Regions}
     "URX"   = [PSCustomObject]@{port = 3361; region = $Pool_Regions}
     "VECO"  = [PSCustomObject]@{port = 3351; region = $Pool_Regions}
     "XOL"   = [PSCustomObject]@{port = 7068; region = @("us"); stratum = "randomx"}
     "YTN"   = [PSCustomObject]@{port = 3382; region = $Pool_Regions}
     "ZELS"  = [PSCustomObject]@{port = 7060; region = $Pool_Regions}
 }
+
+#compare-object @($Pools_Request.PSObject.Properties.Name) @($Pools_Data.PSObject.Properties.Name)
 
 $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $Pools_Data."$($_.Name)") -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.Name
