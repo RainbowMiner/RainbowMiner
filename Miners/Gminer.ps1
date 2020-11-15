@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.29-gminer/gminer_2_29_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.30-gminer/gminer_2_30_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.29-gminer/gminer_2_29_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.30-gminer/gminer_2_30_windows64.zip"
 }
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "2.29"
+$Version = "2.30"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -50,7 +50,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGb = 3.0;                   Params = "--algo 192_7";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $true} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGb = 0.5;                   Params = "--algo 210_9";       Vendor = @("NVIDIA");       ExtendInterval = 2; AutoPers = $true} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "EquihashVds";     MinMemGb = 2;                     Params = "--algo vds";         Vendor = @("NVIDIA");       ExtendInterval = 2; AutoPers = $false} #Equihash 96,5 + Scrypt "VDS"
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 0.65; ExcludePoolName = "^(MiningRigRentals|NiceHash|ZergPool)"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Etchash";         MinMemGb = 3;                     Params = "--algo etchash";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 0.65; ExcludePoolName = "^(MiningRigRentals|NiceHash|ZergPool)"} #Etchash
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 0.65; ExcludePoolName = "^(MiningRigRentals|NiceHash|ZergPool)"} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 0;    Params = "--algo ethash+blake2s";        Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 3.00; SecondaryAlgorithm = "Blake2s"; CoinSymbol2 = @("KDA"); ExcludePoolName = "^ZergPool"; ExcludePoolName2 = "^Nicehash"} #Ethash+Blake2s
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 1;    Params = "--algo ethash+blake2s";        Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 3.00; SecondaryAlgorithm = "Blake2s"; CoinSymbol2 = @("KDA"); ExcludePoolName = "^ZergPool"; ExcludePoolName2 = "^Nicehash"} #Ethash+Blake2s
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 3;   Intensity = 2;    Params = "--algo ethash+blake2s";        Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 3.00; SecondaryAlgorithm = "Blake2s"; CoinSymbol2 = @("KDA"); ExcludePoolName = "^ZergPool"; ExcludePoolName2 = "^Nicehash"} #Ethash+Blake2s
@@ -119,11 +120,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $SecondAlgorithm_Norm = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
 
-            $Ethmining = $MainAlgorithm_Norm_0 -eq "Ethash"
+            $Ethmining = $MainAlgorithm_Norm_0 -match $Session.AlgoIsETH
 
             $DualIntensity = $_.Intensity
 
-            $MinMemGB = if ($MainAlgorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$MainAlgorithm_Norm_0.EthDAGSize) {$Pools.$MainAlgorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
+            $MinMemGB = if ($MainAlgorithm_Norm_0 -match $Session.AlgoHasDAGSize) {if ($Pools.$MainAlgorithm_Norm_0.EthDAGSize) {$Pools.$MainAlgorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
 
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
