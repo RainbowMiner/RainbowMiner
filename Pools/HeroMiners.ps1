@@ -132,7 +132,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Hashrate      = $Stat.HashRate_Live
                         TSL           = $Pool_Data.TSL
                         BLK           = $Stat.BlockRate_Average
-                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|vProgPow)") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
+                        EthMode       = if ($Session.RegexAlgoHasEthproxy.Matches($Pool_Algorithm_Norm)) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1

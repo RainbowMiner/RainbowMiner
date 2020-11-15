@@ -90,7 +90,7 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = [int]$_.Value.timesincelast
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
+                EthMode       = if ($Session.RegexAlgoHasEthproxy.Matches($Pool_Algorithm_Norm)) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
                 WTM           = $true
                 Name          = $Name
                 Penalty       = 0

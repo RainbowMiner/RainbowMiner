@@ -71,7 +71,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-            $MinMemGB = if ($Algorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
+            $MinMemGB = if ($Session.RegexAlgoHasDAGSize.Matches($Algorithm_Norm_0)) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
 
             #Zombie-Mode since v1.11
             if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGb -and $Session.Config.EnableEthashZombieMode) {
@@ -89,7 +89,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
                     $PersCoin = if ($_.Pers) {Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"}
 
-                    $EthStratum = if ($Algorithm_Norm -match "^Ethash") {
+                    $EthStratum = if ($Session.RegexAlgoHasEthproxy.Matches($Algorithm_Norm)) {
                         Switch ($Pools.$Algorithm_Norm.EthMode) {
                             "ethproxy" {"ETHPROXY"}
                             default {"ETHV1"}

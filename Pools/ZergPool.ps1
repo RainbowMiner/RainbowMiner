@@ -108,8 +108,8 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
-                EthMode       = if ($Pool_Algorithm_Norm -eq "Ethash") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(ProgPow|KawPOW)") {"stratum"} else {$null}
-                EthDAGSize    = if ($Pool_Algorithm_Norm -match "^(Ethash)") {$Pool_EthDAGSize} else {$null}
+                EthMode       = if ($Session.RegexAlgoIsEthash.Matches($Pool_Algorithm_Norm)) {"ethproxy"} elseif ($Session.RegexAlgoIsProgPow.Matches($Pool_Algorithm_Norm)) {"stratum"} else {$null}
+                EthDAGSize    = if ($Pool_Algorithm_Norm -eq "Ethash") {$Pool_EthDAGSize} else {$null}
 				ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0

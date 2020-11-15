@@ -71,7 +71,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
 			$SecondAlgorithm = $_.SecondaryAlgorithm
 
-            $MinMemGb = if ($MainAlgorithm_Norm_0 -match "^(Ethash|KawPow|ProgPow)") {if ($Pools.$MainAlgorithm_Norm_0.EthDAGSize) {$Pools.$MainAlgorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
+            $MinMemGb = if ($Session.RegexAlgoHasDAGSize.Matches($MainAlgorithm_Norm_0)) {if ($Pools.$MainAlgorithm_Norm_0.EthDAGSize) {$Pools.$MainAlgorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
@@ -92,7 +92,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
    
                     $Stratum = if ($MainAlgorithm -eq "equihash") {"stratum"}
-                               elseif ($MainAlgorithm -eq "ethash") {
+                               elseif ($Session.RegexAlgoHasEthproxy.Matches($MainAlgorithm)) {
                                     Switch($Pools.$MainAlgorithm_Norm.EthMode) {
                                         "minerproxy" {"ethstratum"}
                                         "ethproxy"   {"ethproxy"}

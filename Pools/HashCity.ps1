@@ -102,7 +102,7 @@ $Pools_Data | Where-Object {[double]$Pools_Request.pools."$($_.symbol)".speed_po
         Updated       = $Stat.Updated
         PoolFee       = $Pool_Fee
         Hashrate      = $Stat.HashRate_Live
-        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
+        EthMode       = if ($Session.RegexAlgoHasEthproxy.Matches($Pool_Algorithm_Norm)) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1

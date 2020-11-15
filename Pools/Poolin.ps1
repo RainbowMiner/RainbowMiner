@@ -25,6 +25,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
     $Pool_Currency  = $_.coin
     $Pool_Coin = Get-Coin $_.coin
     $Pool_Rpc  = $_.coin.ToLower()
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -81,7 +82,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
         #TSL           = $Pool_TSL
         BLK           = $Stat.BlockRate_Average
         WTM           = $true
-        EthMode       = if ($Pool_Coin.Algo -match "^(Ethash|ProgPow)") {"ethproxy"} elseif ($Pool_Algorithm_Norm -match "^(KawPOW)") {"stratum"} else {$null}
+        EthMode       = if ($Session.RegexAlgoHasEthproxy.Matches($Pool_Algorithm_Norm)) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1
