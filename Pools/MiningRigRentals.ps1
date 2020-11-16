@@ -414,7 +414,7 @@ if ($AllRigs_Request) {
                                 Pass     = "x"
                             }
                         })
-                        EthMode       = if ($Miner_Port -in @(3322,3333,3344) -and $Session.RegexAlgoHasDAGSize.Matches($Pool_Algorithm_Norm)) {"qtminer"} else {$null}
+                        EthMode       = if ($Miner_Port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {"qtminer"} else {$null}
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1

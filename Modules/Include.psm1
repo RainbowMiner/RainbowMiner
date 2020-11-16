@@ -22,10 +22,10 @@
         $Session.MachineName        = [System.Environment]::MachineName
         $Session.MyIP               = Get-MyIP
 
-        $Session.RegexAlgoHasEthproxy = [regex]::New("^(Etchash|Ethash|ProgPow|vProgPow)")
-        $Session.RegexAlgoHasDAGSize  = [regex]::New("^(Etchash|Ethash|KawPow|ProgPow|vProgPow)")
-        $Session.RegexAlgoIsEthash    = [regex]::New("^(Etchash|Ethash)")
-        $Session.RegexAlgoIsProgPow   = [regex]::New("^(KawPow|ProgPow|vProgPow)")
+        Set-Variable RegexAlgoHasEthproxy -Option Constant -Scope Global -Value "^(Etchash|Ethash|ProgPow|vProgPow)"
+        Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^(Etchash|Ethash|KawPow|ProgPow|vProgPow)"
+        Set-Variable RegexAlgoIsEthash -Option Constant -Scope Global -Value "^(Etchash|Ethash)"
+        Set-Variable RegexAlgoIsProgPow -Option Constant -Scope Global -Value "^(KawPow|ProgPow|vProgPow)"
     }
 }
 

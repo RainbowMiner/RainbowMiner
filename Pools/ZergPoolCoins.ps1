@@ -166,7 +166,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
-                EthMode       = if ($Session.RegexAlgoIsEthash.Matches($Pool_Algorithm_Norm)) {"ethproxy"} elseif ($Session.RegexAlgoIsProgPow.Matches($Pool_Algorithm_Norm)) {"stratum"} else {$null}
+                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
                 ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0

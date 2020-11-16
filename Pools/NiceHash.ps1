@@ -113,7 +113,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                             Pass     = "x"
                         }
                     })
-                    EthMode       = if ($Session.RegexAlgoHasEthproxy.Matches($Pool_Algorithm_Norm)) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                    EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
                     EthDAGSize    = if ($Pool_Algorithm_Norm -eq "Ethash") {$Pool_EthDAGSize} else {$null}
                     Name          = $Name
                     Penalty       = 0
