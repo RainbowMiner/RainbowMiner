@@ -161,8 +161,12 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     $First = $False
                 }
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-                $Pool_Protocol = if ($Pools.$Algorithm_Norm.EthMode -eq "ethstratumnh") {"stratum2+tcp"} else {$Pools.$Algorithm_Norm.Protocol}
-                $Pool_User = if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Worker) {"-u $($Pools.$Algorithm_Norm.Wallet) --worker $($Pools.$Algorithm_Norm.Worker)"} elseif ($Pools.$Algorithm_Norm.User -match "^(.+)\.(.+)$") {"-u $($Matches[1]) --worker $($Matches[2])"} else {"-u $($Pools.$Algorithm_Norm.Wallet)"}
+                $Pool_Protocol = Switch($Pools.$Algorithm_Norm.EthMode) {
+                                    "qtminer"      {"stratum1+tcp"}
+                                    "ethstratumnh" {"stratum2+tcp"}
+                                    default {$Pools.$Algorithm_Norm.Protocol}
+                                }
+                $Pool_User = if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Worker) {"-u $($Pools.$Algorithm_Norm.Wallet) --worker $($Pools.$Algorithm_Norm.Worker)"} else {"-u $($Pools.$Algorithm_Norm.User)"}
 				[PSCustomObject]@{
 					Name           = $Miner_Name
 					DeviceName     = $Miner_Device.Name
