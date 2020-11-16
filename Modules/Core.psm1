@@ -195,16 +195,27 @@ function Start-Core {
             Set-ContentJson -PathToFile $ConfigFile -Data $Parameters > $null        
         } else {
             @($ConfigFile) + @(Get-ChildItem $ConfigPath -Directory | Where-Object {$ConfigFileSub = Join-Path $_.FullName "config.txt";$_.Name -ne "Backup" -and $ConfigFileSub -and (Test-Path $ConfigFileSub)} | Foreach-Object {$ConfigFileSub} | Select-Object) | Foreach-Object {
-                $ConfigForUpdate = Get-ContentByStreamReader $_ | ConvertFrom-Json -ErrorAction Stop
-                if (-not $ConfigForUpdate -and $_ -eq $ConfigFile) {throw "Config file is empty"}
-                $ConfigForUpdate_changed = $false
-                if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force}
-                $MPHLegacyUpdate = if ($ConfigForUpdate.PSObject.Properties.Name -icontains "API_ID") {@{UserName=$ConfigForUpdate.UserName;API_ID=$ConfigForUpdate.API_ID;API_Key=$ConfigForUpdate.API_Key}}
-                Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) | Foreach-Object {
-                    if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
-                    elseif ($_.SideIndicator -eq "<=" -and @("API_ID","API_Key","UserName","LocalAPIport","RemoteAPI","ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
+                $ConfigForUpdate = $null
+                $ConfigFileForUpdate = $_
+                try {
+                    $ConfigForUpdate = Get-ContentByStreamReader $ConfigFileForUpdate | ConvertFrom-Json -ErrorAction Stop
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "The file $ConfigFileForUpdate contains JSON syntax errors: $($_.Exception.Message)"
+                    $ConfigForUpdate = $null
                 }
-                if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $_ -Data $ConfigForUpdate > $null}
+                if ($ConfigForUpdate) {
+                    $ConfigForUpdate_changed = $false
+                    if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force}
+                    $MPHLegacyUpdate = if ($ConfigForUpdate.PSObject.Properties.Name -icontains "API_ID") {@{UserName=$ConfigForUpdate.UserName;API_ID=$ConfigForUpdate.API_ID;API_Key=$ConfigForUpdate.API_Key}}
+                    Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) | Foreach-Object {
+                        if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
+                        elseif ($_.SideIndicator -eq "<=" -and @("API_ID","API_Key","UserName","LocalAPIport","RemoteAPI","ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
+                    }
+                    if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $_ -Data $ConfigForUpdate > $null}
+                } else {
+                    if (-not $ConfigForUpdate -and $_ -eq $ConfigFile) {throw "ALAS! The main config file contains JSON errors. Can't continue!"}
+                }
             }
         }
         $Session.ConfigFiles["Config"].Healthy = $true
