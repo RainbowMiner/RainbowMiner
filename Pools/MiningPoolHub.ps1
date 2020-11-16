@@ -63,6 +63,8 @@ $Pool_Request.return | ForEach-Object {
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     $Divisor = 1e9
 
     if ($Pool_Symbol -eq "ZCL") {$Divisor *= 12.5/0.78} #temp fix "tripple halving of ZCL"
@@ -91,7 +93,7 @@ $Pool_Request.return | ForEach-Object {
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
-                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

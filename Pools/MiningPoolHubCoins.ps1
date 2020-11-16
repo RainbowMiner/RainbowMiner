@@ -58,6 +58,8 @@ $Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
 
     $Divisor = 1e9
@@ -93,7 +95,7 @@ $Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
                 PoolFee       = $Pool_Fee
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
-                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

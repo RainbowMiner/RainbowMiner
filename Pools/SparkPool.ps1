@@ -52,6 +52,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
     $Pool_ID = $_.id
     $Pool_Regions = $_.region
     $Pool_SSL = $_.ssl
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Request.data | Where-Object currency -eq $Pool_Symbol | Foreach-Object {
         if (-not $InfoOnly) {
@@ -87,7 +88,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
                 Hashrate      = $Stat.HashRate_Live
                 #TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
-                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

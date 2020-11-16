@@ -35,6 +35,8 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets."$($_ -replace "
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     if (-not $InfoOnly) {
         $timestamp      = (Get-Date).ToUniversalTime()
         $timestamp24h   = (Get-Date).AddHours(-24).ToUniversalTime()
@@ -72,7 +74,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets."$($_ -replace "
         TSL           = $Pool_TSL
         BLK           = $Stat.BlockRate_Average
         WTM           = $true
-        EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+        EthMode       = $Pool_EthProxy
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1

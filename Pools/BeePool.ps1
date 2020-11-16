@@ -72,6 +72,8 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     if (-not $InfoOnly) {
         $Pool_TSL = $null
         if ($TZ_China_Standard_Time) {
@@ -124,7 +126,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
-            EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+            EthMode       = $Pool_EthProxy
             WTM           = -not $Pool_Rate
             Name          = $Name
             Penalty       = 0

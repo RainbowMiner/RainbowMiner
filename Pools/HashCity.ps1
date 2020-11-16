@@ -75,6 +75,8 @@ $Pools_Data | Where-Object {[double]$Pools_Request.pools."$($_.symbol)".speed_po
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     $Pool_Hashrate = ConvertFrom-Hash "$($Pools_Request.pools."$($_.symbol)".speed_pool)$($Pools_Request.pools."$($_.symbol)".speed_pool_type)"
 
     if (-not $InfoOnly) {
@@ -102,7 +104,7 @@ $Pools_Data | Where-Object {[double]$Pools_Request.pools."$($_.symbol)".speed_po
         Updated       = $Stat.Updated
         PoolFee       = $Pool_Fee
         Hashrate      = $Stat.HashRate_Live
-        EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+        EthMode       = $Pool_EthProxy
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1

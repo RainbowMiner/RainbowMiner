@@ -33,6 +33,8 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     if (-not $Pool_CoinName) {$Pool_CoinName = $Pool_Currency}
 
     if (-not $InfoOnly) {
@@ -68,7 +70,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             PoolFee       = $_.fee
             DataWindow    = $DataWindow
             Hashrate      = $Stat.HashRate_Live
-            EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

@@ -64,6 +64,8 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     $Pool_Request  = [PSCustomObject]@{}
     $Pool_Ports    = @([PSCustomObject]@{})
 
@@ -132,7 +134,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Hashrate      = $Stat.HashRate_Live
                         TSL           = $Pool_Data.TSL
                         BLK           = $Stat.BlockRate_Average
-                        EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                        EthMode       = $Pool_EthProxy
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1

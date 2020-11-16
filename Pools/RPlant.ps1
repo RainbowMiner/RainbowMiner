@@ -69,6 +69,7 @@ $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets."$($_.Name)"
+    $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
     if (-not ($Pool_Data = $Pools_Data.$Pool_Currency)) {
         Write-Log -Level Warn "Pool $($Name) missing port for $($Pool_Currency)"
         return
@@ -104,7 +105,7 @@ $Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = [int]$_.Value.timesincelast
                 BLK           = $Stat.BlockRate_Average
-                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

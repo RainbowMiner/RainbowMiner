@@ -58,6 +58,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($PoolCoins_Request.$Pool_CoinSymbol.fee_solo -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.fee_solo} else {$Pool_Fee}
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     $Divisor = 1e9
 
     $Pool_Price = [Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate
@@ -99,7 +101,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
             SoloMining    = $true
-            EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

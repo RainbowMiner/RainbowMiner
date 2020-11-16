@@ -52,6 +52,7 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
     $Pool_Fee = [double]$_.Value.fee
     $Pool_Port = [int]$_.Value.port
     $Pool_Host = "$($_.Value.algorithm).mining-dutch.nl"
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Factor = Switch -Regex ($_.Value.hashes) {
         "^k" {1e3}
@@ -90,7 +91,7 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = [int]$_.Value.timesincelast
-                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                EthMode       = $Pool_EthProxy
                 WTM           = $true
                 Name          = $Name
                 Penalty       = 0

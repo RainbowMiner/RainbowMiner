@@ -39,6 +39,7 @@ if (-not $Pool_Request -or -not ($Pool_Request | Measure-Object).Count) {
 $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -replace "^VDS$","VOLLAR" -replace "^ULORD$","UT";$Wallets.$Pool_Currency -or $Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Algorithm_Norm = Get-Algorithm $_.algorithm
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     if ($_.hr) {
         $hr = $_.hr  -split "\s+"
@@ -87,7 +88,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                     DataWindow    = $DataWindow
                     Workers       = $Pool_RequestWorkers.data
                     Hashrate      = $Stat.HashRate_Live
-                    EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                    EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1

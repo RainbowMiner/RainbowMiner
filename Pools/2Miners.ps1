@@ -73,6 +73,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
     $Pool_Host = "$($_.rpc).2miners.com"
     $Pool_Fee = $_.fee
     $Pool_Divisor = $_.divisor
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $ok = ($Pool_HostStatus | Where-Object {$_.host -notmatch 'solo-' -and $_.host -match "$($Pool_Host)"} | Measure-Object).Count -gt 0
     if ($ok -and -not $InfoOnly) {
@@ -165,7 +166,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
                     Hashrate      = $Stat.HashRate_Live
                     TSL           = $Pool_TSL
                     BLK           = $Stat.BlockRate_Average
-                    EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+                    EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1

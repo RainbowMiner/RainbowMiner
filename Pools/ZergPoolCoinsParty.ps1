@@ -67,6 +67,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
 
     if ($PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor) {
         $Pool_Factor = [Double]$PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor
@@ -169,7 +170,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
                 SoloMining    = $true
-                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
+                EthMode       = $Pool_EthProxy
                 ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0

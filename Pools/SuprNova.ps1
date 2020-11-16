@@ -41,6 +41,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
     $Pool_Currency = $_.symbol -replace "-.+"
     $Pool_Port = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Hashrate = $Pool_Workers = $null
 
@@ -84,7 +85,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
             Hashrate      = $Pool_Hashrate
             DataWindow    = $DataWindow
             WTM           = $true
-            EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

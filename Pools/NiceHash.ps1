@@ -44,8 +44,6 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
-$Pool_EthDAGSize = Get-EthDAGSize "ETH"
-
 $Grin29_Algorithm = (Get-Coin "GRIN").algo
 
 $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and [Double]$_.speed -gt 0) -or $InfoOnly} | ForEach-Object {
@@ -73,6 +71,9 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_EthDAGSize = if ($Pool_Algorithm_Norm -eq "Ethash") {Get-EthDAGSize "ETH"} else {$null}
 
     $Pool_Host = ".nicehash.com"
 
@@ -113,8 +114,8 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                             Pass     = "x"
                         }
                     })
-                    EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
-                    EthDAGSize    = if ($Pool_Algorithm_Norm -eq "Ethash") {$Pool_EthDAGSize} else {$null}
+                    EthMode       = $Pool_EthProxy
+                    EthDAGSize    = $Pool_EthDAGSize
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
