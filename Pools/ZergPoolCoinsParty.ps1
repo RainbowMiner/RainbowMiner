@@ -169,7 +169,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
                 SoloMining    = $true
-                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
+                EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
                 ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0
