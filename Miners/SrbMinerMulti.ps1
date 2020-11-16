@@ -22,57 +22,57 @@ $Version = "0.5.4"
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cpupower"       ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
-    [PSCustomObject]@{MainAlgorithm = "m7mv2"          ; Params = ""; Fee = 0.00;               Vendor = @("CPU")} #m7m
-    [PSCustomObject]@{MainAlgorithm = "minotaur"       ; Params = ""; Fee = 2.00;               Vendor = @("CPU")} #Minotaur/RING Coin
-    [PSCustomObject]@{MainAlgorithm = "panthera"       ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Panthera
-    [PSCustomObject]@{MainAlgorithm = "randomarq"      ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomArq
-    [PSCustomObject]@{MainAlgorithm = "randomepic"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomEPIC
-    [PSCustomObject]@{MainAlgorithm = "randomkeva"     ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomKEVA
-    [PSCustomObject]@{MainAlgorithm = "randomsfx"      ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomSFX
-    [PSCustomObject]@{MainAlgorithm = "randomwow"      ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomWow
-    [PSCustomObject]@{MainAlgorithm = "randomx"        ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomX
-    [PSCustomObject]@{MainAlgorithm = "randomxl"       ; Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomXL
-    [PSCustomObject]@{MainAlgorithm = "yescryptr16"    ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr16
-    [PSCustomObject]@{MainAlgorithm = "yescryptr32"    ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr32
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8"     ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr8
-    [PSCustomObject]@{MainAlgorithm = "yespower"       ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower
-    [PSCustomObject]@{MainAlgorithm = "yespower2b"     ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower2b
-    [PSCustomObject]@{MainAlgorithm = "yespoweric"     ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespoweric
-    [PSCustomObject]@{MainAlgorithm = "yespoweriots"   ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespoweriots
-    [PSCustomObject]@{MainAlgorithm = "yespoweritc"    ; Params = ""; Fee = 0.00;               Vendor = @("CPU")} #yespoweritc
-    [PSCustomObject]@{MainAlgorithm = "yespowerlitb"   ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerlitb
-    [PSCustomObject]@{MainAlgorithm = "yespowerltncg"  ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerltncg
-    [PSCustomObject]@{MainAlgorithm = "yespowerr16"    ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerr16
-    [PSCustomObject]@{MainAlgorithm = "yespowerres"    ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerRES
-    [PSCustomObject]@{MainAlgorithm = "yespowersugar"  ; Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowersugar
-    [PSCustomObject]@{MainAlgorithm = "yespowerurx"    ; Params = ""; Fee = 0.00;               Vendor = @("CPU")} #yespowerurx
+    [PSCustomObject]@{MainAlgorithm = "cpupower"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
+    [PSCustomObject]@{MainAlgorithm = "m7mv2"          ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #m7m
+    [PSCustomObject]@{MainAlgorithm = "minotaur"       ;              Params = ""; Fee = 2.00;               Vendor = @("CPU")} #Minotaur/RING Coin
+    [PSCustomObject]@{MainAlgorithm = "panthera"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Panthera
+    [PSCustomObject]@{MainAlgorithm = "randomarq"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomArq
+    [PSCustomObject]@{MainAlgorithm = "randomepic"     ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomEPIC
+    [PSCustomObject]@{MainAlgorithm = "randomkeva"     ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomKEVA
+    [PSCustomObject]@{MainAlgorithm = "randomsfx"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomSFX
+    [PSCustomObject]@{MainAlgorithm = "randomwow"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomWow
+    [PSCustomObject]@{MainAlgorithm = "randomx"        ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomX
+    [PSCustomObject]@{MainAlgorithm = "randomxl"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomXL
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr16
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr32
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8"     ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr8
+    [PSCustomObject]@{MainAlgorithm = "yespower"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower
+    [PSCustomObject]@{MainAlgorithm = "yespower2b"     ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespower2b
+    [PSCustomObject]@{MainAlgorithm = "yespoweric"     ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespoweric
+    [PSCustomObject]@{MainAlgorithm = "yespoweriots"   ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespoweriots
+    [PSCustomObject]@{MainAlgorithm = "yespoweritc"    ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #yespoweritc
+    [PSCustomObject]@{MainAlgorithm = "yespowerlitb"   ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerlitb
+    [PSCustomObject]@{MainAlgorithm = "yespowerltncg"  ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerltncg
+    [PSCustomObject]@{MainAlgorithm = "yespowerr16"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerr16
+    [PSCustomObject]@{MainAlgorithm = "yespowerres"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowerRES
+    [PSCustomObject]@{MainAlgorithm = "yespowersugar"  ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yespowersugar
+    [PSCustomObject]@{MainAlgorithm = "yespowerurx"    ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #yespowerurx
 
-    [PSCustomObject]@{MainAlgorithm = "argon2d_dynamic"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Dyn
-    [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa
-    [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa2"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa2
-    [PSCustomObject]@{MainAlgorithm = "bl2bsha3"       ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2b+sha3/HNS
-    [PSCustomObject]@{MainAlgorithm = "blake2b"        ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD"); CoinSymbols = @("TNET")} #blake2b
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"       ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2s
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_bbc"; Params = ""; Fee = 2.0;                Vendor = @("AMD","CPU")} #CryptonightBBC
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_catalans"; Params = ""; Fee = 0.00;          Vendor = @("AMD","CPU")} #CryptonightCatalans
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_cache"; Params = ""; Fee = 0.85;             Vendor = @("AMD","CPU")} #CryptonightCache
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_ccx"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightCCX
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_gpu"; Params = ""; Fee = 0.85;               Vendor = @("AMD")} #CryptonightGPU
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavyx"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightHeavyX
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_talleo";   Params = ""; Fee = 0.00;          Vendor = @("AMD","CPU")} #CryptonightTalleo
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_upx"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightUPX
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_xhv"; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightXHV
-    [PSCustomObject]@{MainAlgorithm = "eaglesong"      ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #eaglesong
-    [PSCustomObject]@{MainAlgorithm = "ethash"         ; Params = "--enable-ethash-leak-fix"; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
-    [PSCustomObject]@{MainAlgorithm = "ubqhash"        ; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
-    [PSCustomObject]@{MainAlgorithm = "k12"            ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
-    [PSCustomObject]@{MainAlgorithm = "kadena"         ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); CoinSymbols = @("KDA")} #blake2s / Kadena
-    [PSCustomObject]@{MainAlgorithm = "keccak"         ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #keccak
-    [PSCustomObject]@{MainAlgorithm = "rainforestv2"   ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #rainforestv2
-    [PSCustomObject]@{MainAlgorithm = "tellor"         ; Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName = "^Hashpool"} #Tellor
-    [PSCustomObject]@{MainAlgorithm = "verushash"      ; Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Verushash
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"       ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #yescrypt
+    [PSCustomObject]@{MainAlgorithm = "argon2d_dynamic";              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Dyn
+    [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa";              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa
+    [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa2";              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Argon2Chukwa2
+    [PSCustomObject]@{MainAlgorithm = "bl2bsha3"       ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2b+sha3/HNS
+    [PSCustomObject]@{MainAlgorithm = "blake2b"        ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD"); CoinSymbols = @("TNET")} #blake2b
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"       ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2s
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_bbc";              Params = ""; Fee = 2.0;                Vendor = @("AMD","CPU")} #CryptonightBBC
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_catalans";              Params = ""; Fee = 0.00;          Vendor = @("AMD","CPU")} #CryptonightCatalans
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_cache";              Params = ""; Fee = 0.85;             Vendor = @("AMD","CPU")} #CryptonightCache
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_ccx";              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightCCX
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_gpu";              Params = ""; Fee = 0.85;               Vendor = @("AMD")} #CryptonightGPU
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavyx";              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightHeavyX
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_talleo";                Params = ""; Fee = 0.00;          Vendor = @("AMD","CPU")} #CryptonightTalleo
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_upx";              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightUPX
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_xhv";              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightXHV
+    [PSCustomObject]@{MainAlgorithm = "eaglesong"      ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #eaglesong
+    [PSCustomObject]@{MainAlgorithm = "ethash"         ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
+    [PSCustomObject]@{MainAlgorithm = "ubqhash"        ;              Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
+    [PSCustomObject]@{MainAlgorithm = "k12"            ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
+    [PSCustomObject]@{MainAlgorithm = "kadena"         ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); CoinSymbols = @("KDA")} #blake2s / Kadena
+    [PSCustomObject]@{MainAlgorithm = "keccak"         ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #keccak
+    [PSCustomObject]@{MainAlgorithm = "rainforestv2"   ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #rainforestv2
+    [PSCustomObject]@{MainAlgorithm = "tellor"         ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName = "^Hashpool"} #Tellor
+    [PSCustomObject]@{MainAlgorithm = "verushash"      ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Verushash
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"       ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #yescrypt
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -108,7 +108,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                 $DeviceParams = "$(if ($CPUThreads){" --cpu-threads $CPUThreads"})$(if ($CPUAffinity -and ($CPUThreads -le 64)){" --cpu-affinity $CPUAffinity"})"
             }
 
-            $MinMemGB = if ($Session.RegexAlgoHasDAGSize.Matches($Algorithm_Norm_0)) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
+            $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
         
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 

@@ -24,9 +24,9 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
-    [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "^F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "EtcHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0} #EtcHash
-    [PSCustomObject]@{MainAlgorithm = "KawPow";                  Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "^F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0} #EtcHash
+    [PSCustomObject]@{MainAlgorithm = "KawPow";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "Octopus";                 Params = ""; MinMemGb = 6;  Vendor = @("NVIDIA");       ExtendInterval = 2; DevFee = 2.0} #Octopus/Conflux
     [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 0.0} #RandomHash2/PASCcoin, RHminerCpu is more than 350% faster
     [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0} #RandomX
@@ -65,7 +65,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                 $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
             }
 
-            $MinMemGB = if ($Session.RegexAlgoHasDAGSize.Matches($Algorithm_Norm_0)) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
+            $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
 
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (($Algorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and (Test-VRAM $_ $MinMemGb))}
 

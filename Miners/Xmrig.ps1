@@ -94,34 +94,34 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $CudaLib) {return}
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2/chukwa"; MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
-    [PSCustomObject]@{MainAlgorithm = "argon2/chukwav2"; MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
-    [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
-    [PSCustomObject]@{MainAlgorithm = "astrobwt";      MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    #[PSCustomObject]@{MainAlgorithm = "cn/1";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    #[PSCustomObject]@{MainAlgorithm = "cn/2";          MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/ccx";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/double";     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/half";       MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/fast";       MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    #[PSCustomObject]@{MainAlgorithm = "cn/r";          MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/rto";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/rwz";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/xao";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn/zls";        MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";    MinMemGb = 3.3; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn-heavy/tube"; MinMemGb = 3.3; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv";  MinMemGb = 3.3; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn-lite/1";     MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn-pico";       MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "kawpow";        MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "rx/0";          MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "rx/arq";        MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "rx/keva";       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    #[PSCustomObject]@{MainAlgorithm = "rx/loki";       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "rx/sfx";        MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "rx/wow";        MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "argon2/chukwa";              MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
+    [PSCustomObject]@{MainAlgorithm = "argon2/chukwav2";              MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
+    [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
+    [PSCustomObject]@{MainAlgorithm = "astrobwt";                   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    #[PSCustomObject]@{MainAlgorithm = "cn/1";                       MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    #[PSCustomObject]@{MainAlgorithm = "cn/2";                       MinMemGb = 1.5; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/ccx";                     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/double";                  MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/half";                    MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/fast";                    MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    #[PSCustomObject]@{MainAlgorithm = "cn/r";                       MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/rto";                     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/rwz";                     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/xao";                     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn/zls";                     MinMemGb = 1.5; Params = ""; ExtendInterval = 1.5; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";                 MinMemGb = 3.3; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/tube";              MinMemGb = 3.3; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv";               MinMemGb = 3.3; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn-lite/1";                  MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn-pico";                    MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/0";                       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/arq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/keva";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    #[PSCustomObject]@{MainAlgorithm = "rx/loki";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/sfx";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/wow";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -163,7 +163,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $First = $True
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-            $MinMemGB = if ($Session.RegexAlgoHasDAGSize.Matches($Algorithm_Norm_0)) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
+            $MinMemGB = if ($_.DAG) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGb}
 
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
 

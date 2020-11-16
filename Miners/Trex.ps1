@@ -68,14 +68,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "dedal"; Params = ""} #Dedal (re-added with v0.13.0)
-    [PSCustomObject]@{MainAlgorithm = "etchash"; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Etchash (new with 0.18.8)
-    [PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
+    [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Etchash (new with 0.18.8)
+    [PSCustomObject]@{MainAlgorithm = "ethash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
     [PSCustomObject]@{MainAlgorithm = "geek"; Params = ""} #Geek (new with v0.7.5)
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725 (new with v0.6.4)
     [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb (new with v0.12.0)
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
     [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
-    [PSCustomObject]@{MainAlgorithm = "kawpow"; Params = ""; ExtendInterval = 2} #KawPOW (new with v0.15.2)
+    [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = ""; ExtendInterval = 2} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "megabtx"; Params = ""} #MegaBTX (Bitcore) (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
@@ -84,10 +84,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "pawelhash"; Params = ""} #GLTPawelHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
-    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; Params = ""; ExtendInterval = 2} #ProgPowVeil (new with v0.18.1)
-    [PSCustomObject]@{MainAlgorithm = "progpow-veriblock"; Params = ""; ExtendInterval = 2} #vProgPow (new with v0.18.1)
-    [PSCustomObject]@{MainAlgorithm = "progpowsero"; Params = "--coin sero"; ExtendInterval = 2; Algorithm = "progpow"} #ProgPow  (new with v0.15.2)
-    [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2} #ProgpowZ (new with v0.17.2)
+    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Params = ""; ExtendInterval = 2} #ProgPowVeil (new with v0.18.1)
+    [PSCustomObject]@{MainAlgorithm = "progpow-veriblock"; DAG = $true; Params = ""; ExtendInterval = 2} #vProgPow (new with v0.18.1)
+    [PSCustomObject]@{MainAlgorithm = "progpowsero"; DAG = $true; Params = "--coin sero"; ExtendInterval = 2; Algorithm = "progpow"} #ProgPow  (new with v0.15.2)
+    [PSCustomObject]@{MainAlgorithm = "progpowz"; DAG = $true; Params = ""; ExtendInterval = 2} #ProgpowZ (new with v0.17.2)
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #SHA256q (Pyrite)
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""} #SHA256t
@@ -143,7 +143,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         
-        $MinMemGB     = if ($Session.RegexAlgoHasDAGSize.Matches($Algorithm_Norm_0)) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
+        $MinMemGB     = if ($_.DAG) {if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
 
         #Zombie-mode since v0.18.3
         if ($Algorithm_Norm_0 -eq "Ethash" -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
