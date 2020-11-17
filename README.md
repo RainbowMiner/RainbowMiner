@@ -263,7 +263,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 |-|`./start-screen.sh`|start as Linux `screen`, `Ctrl+A` then `d` to detach, `screen -r` to reconnect|
 |-|`./start-nohup.sh`|start as background job, run `./stopp.sh` to stop rainbowminer, run `./rbmlog.sh` to follow the Rainbowminer logfile, run `./minerlog.sh` to follow the miner log files|
 |`Setup.bat`|`./setup.sh`|start RainbowMiner configuration|
-|`Install.bat`|`./install.sh`|install pre-requisites|
+|`Install.bat`|`./install.sh`|install pre-requisites + on linux: update powershell to the newest release with `./install.sh -pu`|
 |`InitServer.bat`|`sudo ./initserver.sh`|make this rig a server|
 |`InitClient.bat`|`sudo ./initclient.sh`|make this rig a client|
 |`InitStandalone.bat`|`sudo ./initstandalone.sh`|make this rig a standalone machine|
