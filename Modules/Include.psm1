@@ -1538,16 +1538,20 @@ function Get-PoolsContent {
 
                 if (-not $Parameters.InfoOnly) {
                     if (-not $Session.Config.IgnoreFees -and $c.PoolFee) {$Penalty += $c.PoolFee}
-                    if (-not $c.SoloMining) {
-                        $Pool_MaxAllowedLuck = if ($Parameters.MaxAllowedLuck -ne $null) {$Parameters.MaxAllowedLuck} else {$Session.Config.MaxAllowedLuck}
-                        if ($Pool_MaxAllowedLuck -gt 0 -and $c.TSL -ne $null -and $c.BLK -ne $null) {
-                            $Luck = $c.TSL / $(if ($c.BLK -gt 0) {86400/$c.BLK} else {86400})
-                            if ($Luck -gt $Pool_MaxAllowedLuck) {
-                                $Penalty += [Math]::Exp([Math]::Min($Luck - $Pool_MaxAllowedLuck,0.385)*12)-1
+                    if (-not $c.SoloMining -and $c.TSL -ne $null) {
+                        # check for MaxAllowedLuck, if BLK is set + the block rate is greater than or equal 10 minutes
+                        if ($c.BLK -ne $null -and $c.BLK -le 144) {
+                            $Pool_MaxAllowedLuck = if ($Parameters.MaxAllowedLuck -ne $null) {$Parameters.MaxAllowedLuck} else {$Session.Config.MaxAllowedLuck}
+                            if ($Pool_MaxAllowedLuck -gt 0) {
+                                $Luck = $c.TSL / $(if ($c.BLK -gt 0) {86400/$c.BLK} else {86400})
+                                if ($Luck -gt $Pool_MaxAllowedLuck) {
+                                    $Penalty += [Math]::Exp([Math]::Min($Luck - $Pool_MaxAllowedLuck,0.385)*12)-1
+                                }
                             }
                         }
+                        # check for MaxTimeSinceLastBlock
                         $Pool_MaxTimeSinceLastBlock = if ($Parameters.MaxTimeSinceLastBlock -ne $null) {$Parameters.MaxTimeSinceLastBlock} else {$Session.Config.MaxTimeSinceLastBlock}
-                        if ($Pool_MaxTimeSinceLastBlock -gt 0 -and $c.TSL -ne $null -and $c.TSL -gt $Pool_MaxTimeSinceLastBlock) {
+                        if ($Pool_MaxTimeSinceLastBlock -gt 0 -and $c.TSL -gt $Pool_MaxTimeSinceLastBlock) {
                             $Penalty += [Math]::Exp([Math]::Min($c.TSL - $Pool_MaxTimeSinceLastBlock,554)/120)-1
                         }
                     }
