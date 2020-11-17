@@ -1260,14 +1260,23 @@ function Get-StatFromFile {
     if (-not $Cached -or $Global:StatsCache[$Name] -eq $null -or -not (Test-Path $Path)) {
         try {
             $Stat = ConvertFrom-Json "$(Get-ContentByStreamReader $Path)" -ErrorAction Stop
-            if ($Cached) {$Global:StatsCache[$Name] = $Stat}
+            if ($Cached) {
+                if ($Stat) {
+                    $Global:StatsCache[$Name] = $Stat
+                } else {
+                    $RemoveKey = $true
+                }
+            }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             if (Test-Path $Path) {
                 Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is corrupt and will be removed. "
                 Remove-Item -Path $Path -Force -Confirm:$false
             }
-            if ($Cached -and $Global:StatsCache[$Name] -ne $null) {
+            if ($Cached) {$RemoveKey = $true}
+        }
+        if ($RemoveKey) {
+            if ($Global:StatsCache.ContainsKey($Name)) {
                 $Global:StatsCache.Remove($Name)
             }
         }
