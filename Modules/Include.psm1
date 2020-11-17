@@ -1259,7 +1259,7 @@ function Get-StatFromFile {
 
     if (-not $Cached -or $Global:StatsCache[$Name] -eq $null -or -not (Test-Path $Path)) {
         try {
-            $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
+            $Stat = ConvertFrom-Json "$(Get-ContentByStreamReader $Path)" -ErrorAction Stop
             if ($Cached) {$Global:StatsCache[$Name] = $Stat}
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
