@@ -6599,7 +6599,7 @@ function Get-PoolDataFromRequest {
             TSL     = 0
     }
 
-    $timestamp24h = $timestamp - 24*3600
+    $timestamp24h = $timestamp - 86400
 
     $diffLive     = [decimal]$Request.$NetworkField.difficulty
     $reward       = if ($Request.$NetworkField.reward) {[decimal]$Request.$NetworkField.reward} else {[decimal]$Request.$LastblockField.reward}
@@ -6646,7 +6646,7 @@ function Get-PoolDataFromRequest {
     if ($addBlockData) {
         $blocks = $Request.pool.blocks | Where-Object {$_ -match '^.*?\:(\d+?)\:'} | Foreach-Object {$Matches[1]} | Sort-Object -Descending
         $blocks_measure = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
-        $rewards.BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+        $rewards.BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
         $rewards.TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
     }
     $rewards

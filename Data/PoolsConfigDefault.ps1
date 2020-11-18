@@ -377,6 +377,12 @@
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
+        "WoolyPooly" = [PSCustomObject]@{
+            Currencies=@("CFX","ETH","VEIL")
+        }
+        "WoolyPoolySolo" = [PSCustomObject]@{
+            Currencies=@("CFX","ETH","VEIL")
+        }
         "ZelLabs" = [PSCustomObject]@{
             Currencies=@("TCR","ZEL")
         }
