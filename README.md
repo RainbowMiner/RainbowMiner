@@ -27,7 +27,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **CLient/Server networking for multiple rigs, to minimize internet traffic and avoid pool bans**
 - **Scheduler for different power prices and/or pause during specific timespans**
-- **Build-in automatic update**
+- **Built-in automatic update**
 - **Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
 - **Bind/exclude devices to/from specific algorithm and miners**
