@@ -27,7 +27,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **CLient/Server networking for multiple rigs, to minimize internet traffic and avoid pool bans**
 - **Scheduler for different power prices and/or pause during specific timespans**
-- **Build-in automatic update**
+- **Built-in automatic update**
 - **Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
 - **Bind/exclude devices to/from specific algorithm and miners**
@@ -299,7 +299,7 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 
 Choose one PC to be the Server (it may be a dusty old notebook). No need to let it mine, just let RainbowMiner start in paused mode. Select all other Rigs to act as Clients. All pool API communication will then be managed by the server: no more being blocked by the pools due to excessive use of their API
 
-There is a Network setup build-in the configuration (press [C], then enter [N]) to help with the setup.
+There is a Network setup built-in the configuration (press [C], then enter [N]) to help with the setup.
 
 If you want it quicker, just run one of the following init scripts for very convenient pre-setup:
 
@@ -320,7 +320,7 @@ If you change the RunMode of a rig, RainbowMiner needs to be restarted.
 - enable auth: choose an username and a password.
 - the server will be running on the API port
 
-These are the server-fields to fill in the config.txt (or use the initscripts or the build-in config)
+These are the server-fields to fill in the config.txt (or use the initscripts or the built-in config)
 ```
   "RunMode": "server",
   "APIport": 4000,
@@ -335,7 +335,7 @@ These are the server-fields to fill in the config.txt (or use the initscripts or
 - the RainbowMiner running on the server will tell you the machinename, ip address and port
 - use either the machinename or the ip address of the server as servername
 
-These are the client-fields to fill in the config.txt (or use the initscripts or the build-in config)
+These are the client-fields to fill in the config.txt (or use the initscripts or the built-in config)
 ```
   "RunMode": "client",
   "ServerName": "machinenameofserver",
@@ -475,7 +475,7 @@ The following miners can be fine tuned, using config files. Most of the config f
 
 ## ALGORITHMS
 
-RainbowMiner uses a build-in hash table to convert different algorithmnames to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the "Config\config.txt" or using command line parameters. E.g. cryptonight-v7, cryptonight/1, cryptonightv7 would all be converted to CryptonightV7.
+RainbowMiner uses a built-in hash table to convert different algorithmnames to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the "Config\config.txt" or using command line parameters. E.g. cryptonight-v7, cryptonight/1, cryptonightv7 would all be converted to CryptonightV7.
 
 ## Special notes for Equihash
 
@@ -496,7 +496,7 @@ RainbowMiner uses the following nameing convention:
 The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the “hardness” of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
 For EquihashR the parameter (r) will be added to the algorithm name. For r=0, nothing will be added. 
 
-RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5. BeamHash will be represented by EquihashR25x5x3
+RainbowMiner's built-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5. BeamHash will be represented by EquihashR25x5x3
 
 
 ## OVERCLOCKING OVERVIEW
@@ -736,7 +736,7 @@ Notes for the automatic values for **APIThreads**:
 If you defined CPUMiningThreads or CPUMiningAffinity, you may override the values for single miner, by adding your own "-t" and "--cpu-affinity" to the field Params in miners.config.txt. 
 ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They can be finetuned by editing config files (see section MINERS)
 
-The affinity values define bitmasks, bit 0 = Core 0, bit 1 = Core 1, etc. The bitmasks are build from right to left.
+The affinity values define bitmasks, bit 0 = Core 0, bit 1 = Core 1, etc. The bitmasks are built from right to left.
 
 Some examples:
 
@@ -761,7 +761,7 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 
 - **MinerName** = list of miner, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
 - **ExcludeMinerName** = list of miner names, you want to exclude from mining
-- **ExcludeMinersWithFee** = exclude all miners, that have a developer fee build-in [default=0]
+- **ExcludeMinersWithFee** = exclude all miners, that have a developer fee built-in [default=0]
 - **EnableCheckMiningConflict** = Enable conflict check if running CPU hungry GPU miners (for weak CPUs) [default=0]
 - **EnableEthashZombieMode** = Enable Ethash mining with slower hashrate, even if the current DAG size doesn't fit into the GPU memory [default=0]
 - **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]
@@ -1650,7 +1650,7 @@ More info can be [found here](https://github.com/RainbowMiner/RainbowMiner#copy-
 
 ### How can I make sure, my hand tuned config files in the Bin folders, will not be deleted during miner updates?
 
-- RainbowMiner has a build-in list of protected files, that will be kept during updates: 
+- RainbowMiner has a built-in list of protected files, that will be kept during updates: 
 
     config.txt
     nvidia.txt
