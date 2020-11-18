@@ -27,7 +27,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "beamhash2";                 SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #" -nofee" #Old
     #[PSCustomObject]@{MainAlgorithm = "beam";                      SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #" -nofee" #BEAM
     #[PSCustomObject]@{MainAlgorithm = "bfc";                       SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #BFC
-    #[PSCustomObject]@{MainAlgorithm = "conflux";                   SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #CFX/Octopus
+    #[PSCustomObject]@{MainAlgorithm = "conflux";      DAG = $true; SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #CFX/Octopus
     #[PSCustomObject]@{MainAlgorithm = "cuckaroo29z";               SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; ExcludePoolName = "^EthashPool"} #" -nofee" #Cuckaroom29/GRIN
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo31";                SecondaryAlgorithm = ""; MinMemGb = 8; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo31
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo32";                SecondaryAlgorithm = ""; MinMemGb = 6; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo32
