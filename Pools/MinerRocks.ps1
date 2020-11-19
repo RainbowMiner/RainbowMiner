@@ -24,12 +24,12 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "CCX";   port = 10126; fee = 0.9; rpc = "conceal"; regions = @("eu")}
     [PSCustomObject]@{symbol = "DERO";  port = 30182; fee = 0.9; rpc = "dero";   regions = @("eu","sg")}
     [PSCustomObject]@{symbol = "XHV";   port = 4005;  fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{symbol = "LOKI";  port = 30122; fee = 0.9; rpc = "loki"; regions = @("eu")}
+    #[PSCustomObject]@{symbol = "LOKI";  port = 30122; fee = 0.9; rpc = "loki"; regions = @("eu")}
     [PSCustomObject]@{symbol = "MSR";   port = 30162; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
     [PSCustomObject]@{symbol = "RYO";   port = 30172; fee = 1.2; rpc = "ryo"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "XLA";   port = 30092; fee = 0.9; rpc = "stellite"; regions = @("eu")}
+    #[PSCustomObject]@{symbol = "XLA";   port = 30092; fee = 0.9; rpc = "stellite"; regions = @("eu")}
     [PSCustomObject]@{symbol = "SUMO";  port = 30152; fee = 0.9; rpc = "sumokoin"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "TRTL";  port = 30132; fee = 0.9; rpc = "turtle"; regions = @("eu")}
+    #[PSCustomObject]@{symbol = "TRTL";  port = 30132; fee = 0.9; rpc = "turtle"; regions = @("eu")}
     [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"; regions = @("eu")}
     [PSCustomObject]@{symbol = "XCASH"; port = 30062;  fee = 0.9; rpc = "xcash"; regions = @("eu")}
 )
