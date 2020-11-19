@@ -73,7 +73,7 @@ $Pools_Data | Where-Object {$Pools_Request."$($_.rpc)" -and ($Wallets."$($_.symb
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
-    $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} else {$null}
+    $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} else {$null}
 
     $Pool_Data      = ($Pools_Request.$Pool_RpcPath.modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}).algo_stats
     $Pool_AlgoStats = if ($Pool_Data) {$Pool_Data.PSObject.Properties | Where-Object {$_.Name -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm} | Foreach-Object {$_.Value}}
