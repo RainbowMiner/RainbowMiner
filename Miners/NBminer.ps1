@@ -135,7 +135,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and 
-                        ($_.NH -or ($Pools.$MainAlgorithm_Norm.Name -notmatch "Nicehash" -and ($SecondAlgorithm -eq '' -or $Pools.$SecondAlgorithm_Norm.Name -notmatch "Nicehash"))) -and
+                        ($_.NH -or ($Pools.$MainAlgorithm_Norm.Host -notmatch "nicehash.com" -and ($SecondAlgorithm -eq '' -or $Pools.$SecondAlgorithm_Norm.Host -notmatch "nicehash.com"))) -and
                         ($SecondAlgorithm -eq '' -or $Pools.$MainAlgorithm_Norm.Host -notmatch "MiningPoolHub")
                     ) {
                     if ($First) {
