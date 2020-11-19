@@ -40,7 +40,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
     if (-not $InfoOnly) {
         $Pool_BlocksRequest = @()
         try {
-            $Pool_BlocksRequest = Invoke-RestMethodAsync "https://api.aionmine.org/api/pools/aion/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
+            $Pool_BlocksRequest = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools/aion-pool/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
             $Pool_BlocksRequest = @($Pool_BlocksRequest | Where-Object {$_.status -ne "orphaned"} | Foreach-Object {Get-Date $_.created})
         }
         catch {
@@ -49,10 +49,10 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
             $ok = $false
         }
         if ($ok -and ($Pool_BlocksRequest | Measure-Object).Count) {
-            $timestamp24h = (Get-Date).AddHours(-24)
+            $timestamp24h = (Get-Date).AddHours(-24).ToUniversalTime()
             $blocks_measure = $Pool_BlocksRequest | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
             $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds} else {1})*$blocks_measure.Count)
-            $Pool_TSL = ((Get-Date) - $Pool_BlocksRequest[0]).TotalSeconds
+            $Pool_TSL = ((Get-Date).ToUniversalTime() - $Pool_BlocksRequest[0]).TotalSeconds
         }
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
@@ -69,7 +69,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
         StablePrice   = $Stat.Week
         MarginOfError = $Stat.Week_Fluctuation
         Protocol      = "stratum+tcp"
-        Host          = "stratum.aionmine.org"
+        Host          = "pool.aionmine.org"
         Port          = 3333
         User          = "$($Pool_User).{workername:$Worker}"
         Pass          = "x"
