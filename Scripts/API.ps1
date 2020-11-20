@@ -1098,6 +1098,19 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Remove-Variable "Mrr_Data"
             break
         }
+        "/mrrcontrol" {
+            $Data = try {
+                (Get-ContentByStreamReader ".\Data\mrrcontrol.json" | ConvertFrom-Json -ErrorAction Stop) | Foreach-Object {
+                    [PSCustomObject]@{
+                        Name = $_.Name
+                        PriceFactor = $_.PriceFactor
+                        LastReset = "$(([datetime]$_.LastReset).ToString("yyyy-MM-dd HH:mm:ss"))"
+                    }
+                }
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            $Data = if ($Data) {ConvertTo-Json $Data -Depth 10} else {"[]"}
+            break
+        }
         default {
             # Set index page
             if ($Path -eq "/") {
