@@ -152,35 +152,67 @@ function Start-Core {
     }
 
     if ($IsWindows -and ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count) {
-        $Install_NVSMI = $false
-        if (-not (Test-Path "C:\Program Files\NVIDIA Corporation\NVSMI\nvml.dll")) {
-            Write-Log -Level Warn "NVIDIA C:\Program Files\NVIDIA Corporation\NVSMI\nvml.dll is missing"
-            $Install_NVSMI = $true
-        }
-        if (-not (Test-Path "C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe")) {
-            Write-Log -Level Warn "NVIDIA C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe is missing"
-            $Install_NVSMI = $true
-        }
-        if ($Install_NVSMI) {
-            if ($Session.IsAdmin) {
-                Write-Log -Level Warn "RainbowMiner will try to install NVSMI, but the driver version may be wrong!"
-                try {
-                    $NVSMI_Path = "C:\Program Files\NVIDIA Corporation\NVSMI"
-                    if (-not (Test-Path $NVSMI_Path)) {New-Item $NVSMI_Path -ItemType "directory" > $null}
-            
-                    Copy-Item ".\Includes\nvml.dll" -Destination $NVSMI_Path -Force
-                    Copy-Item ".\Includes\nvidia-smi.exe" -Destination $NVSMI_Path -Force
 
-                    Write-Host "NVSMI installed successfully!" -ForegroundColor Green
-                    Write-Log -Level Info "NVSMI installed successfully"
-                    $Install_NVSMI = $false
-                } catch {
-                    Write-Log -Level Warn "Failed to install NVSMI: $($_.Exception.Message)"
+        $NV_Version = "$(($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"} | Select-Object -First 1).OpenCL.DriverVersion)"
+
+        $NV_Install = @()
+
+        $NV_Paths = [PSCustomObject]@{
+            cur = $Session.DefaultValues.NVSMIpath
+            win = Join-Path $env:windir "System32"
+            inc = ".\Includes"
+        }
+
+        try {
+            foreach ($NV_FileName in @("nvml.dll","nvidia-smi.exe")) {
+                $NV_Data = [PSCustomObject]@{}
+
+                $NV_Paths.PSObject.Properties.Name | Foreach-Object {
+                    $NV_Path = Join-Path $NV_Paths.$_ $NV_FileName
+                    $NV_Data | Add-Member $_ ([PSCustomObject]@{
+                        path    = $NV_Path
+                        version = "$(if (Test-Path $NV_Path) {"$((Get-Item $NV_Path).VersionInfo.FileVersion -replace "[^\d]+" -replace ‘.*?(?=.{1,5}$)’)"})"
+                    }) -Force
+                    if ($NV_Data.$_.version.Length -eq 5) {$NV_Data.$_.version = "$($NV_Data.$_.version.Substring(0,3)).$($NV_Data.$_.version.Substring(3,2))"}
+                }
+
+                $NV_File_Copy = if ((Test-Path $NV_Data.win.path) -and (-not $NV_Version -or $NV_Data.win.version -eq $NV_Version)) {$NV_Data.win} else {$NV_Data.inc}
+
+                if (-not (Test-Path $NV_Data.cur.path)) {
+                    Write-Log -Level Warn "NVIDIA $($NV_Data.cur.path) is missing"
+                    $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
+                } elseif ($NV_Data.cur.version) {
+                    if ($NV_Data.cur.version -ne $NV_Version) {
+                        Write-Log -Level Warn "NVIDIA $($NV_Data.cur.path) has wrong version $($NV_Data.cur.version) vs. $NV_Version"
+                        if ($NV_File_Copy.version -ne $NV_Data.cur.version) {
+                            $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
+                        }
+                    }
                 }
             }
-            if ($Install_NVSMI) {
-                Write-Log -Level Warn "Please run Install.bat to automatically install NVSMI!"
+            if ($NV_Install) {
+                if ($Session.IsAdmin) {
+                    Write-Log -Level Warn "RainbowMiner will try to install NVSMI, but the driver version may be wrong!"
+                    try {
+                        if (-not (Test-Path $NV_Paths.cur)) {New-Item $NV_Paths.cur -ItemType "directory" > $null}
+
+                        foreach($NV_Fx in $NV_Install) {
+                            Copy-Item $NV_Fx.from.path -Destination $NV_Fx.to.path -Force
+                        }
+
+                        Write-Host "NVSMI installed successfully!" -ForegroundColor Green
+                        Write-Log -Level Info "NVSMI installed successfully"
+                        $Install_NVSMI = $false
+                    } catch {
+                        Write-Log -Level Warn "Failed to install NVSMI: $($_.Exception.Message)"
+                    }
+                }
+                if ($Install_NVSMI) {
+                    Write-Log -Level Warn "Please run Install.bat to automatically install NVSMI!"
+                }
             }
+        } catch {
+            Write-Log -Level Warn "Failed to check NVSMI: $($_.Exception.Message)"
         }
     }
 

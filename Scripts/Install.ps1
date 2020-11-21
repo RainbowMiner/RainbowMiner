@@ -76,9 +76,13 @@ $GNVIDIA = ($lspci | Where-Object {$_ -match "NVIDIA" -and $_ -notmatch "nForce"
 $GAMD    = ($lspci | Where-Object {$_ -match "Advanced Micro Devices" -and $_ -notmatch "RS880" -and $_ -notmatch "Stoney"} | Measure-Object).Count
 
 if ($GNVIDIA) {
+    $NV_Version = ""
     try {
         $data = @(Get-DeviceName "nvidia" -UseAfterburner $false | Select-Object)
-        if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\nvidia-names.json" -Data $data  > $null}
+        if (($data | Measure-Object).Count) {
+            Set-ContentJson ".\Data\nvidia-names.json" -Data $data  > $null
+            $NV_Version = "$($data[0].DriverVersion)"
+        }
     } catch {
         Write-Host "WARNING: NVIDIA configuration could not be read." -ForegroundColor Yellow
     }
@@ -105,26 +109,52 @@ if ($IsLinux) {
 }
 
 if ($IsWindows -and $GNVIDIA) {
-    $Install_NVSMI = $false
-    if (-not (Test-Path "C:\Program Files\NVIDIA Corporation\NVSMI\nvml.dll")) {
-        Write-Host "WARNING: nvml.dll is missing" -ForegroundColor Yellow
-        $Install_NVSMI = $true
-    }
-    if (-not (Test-Path "C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe")) {
-        Write-Host "WARNING: nvidia-smi.exe is missing" -ForegroundColor Yellow
-        $Install_NVSMI = $true
+
+    $NV_Install = @()
+
+    $NV_Paths = [PSCustomObject]@{
+        cur = "$(if (${env:ProgramFiles}) {${env:ProgramFiles}} else {"C:\Program Files"})\NVIDIA Corporation\NVSMI"
+        win = Join-Path $env:windir "System32"
+        inc = ".\Includes"
     }
 
-    if ($Install_NVSMI) {
+    foreach ($NV_FileName in @("nvml.dll","nvidia-smi.exe")) {
+        $NV_Data = [PSCustomObject]@{}
+
+        $NV_Paths.PSObject.Properties.Name | Foreach-Object {
+            $NV_Path = Join-Path $NV_Paths.$_ $NV_FileName
+            $NV_Data | Add-Member $_ ([PSCustomObject]@{
+                path    = $NV_Path
+                version = "$(if (Test-Path $NV_Path) {"$((Get-Item $NV_Path).VersionInfo.FileVersion -replace "[^\d]+" -replace ‘.*?(?=.{1,5}$)’)"})"
+            }) -Force
+            if ($NV_Data.$_.version.Length -eq 5) {$NV_Data.$_.version = "$($NV_Data.$_.version.Substring(0,3)).$($NV_Data.$_.version.Substring(3,2))"}
+        }
+
+        $NV_File_Copy = if ((Test-Path $NV_Data.win.path) -and (-not $NV_Version -or $NV_Data.win.version -eq $NV_Version)) {$NV_Data.win} else {$NV_Data.inc}
+
+        if (-not (Test-Path $NV_Data.cur.path)) {
+            Write-Host "WARNING: $($NV_Data.cur.path) is missing" -ForegroundColor Yellow
+            $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
+        } elseif ($NV_Version -and $NV_Data.cur.version) {
+            if ($NV_Data.cur.version -ne $NV_Version) {
+                Write-Log -Level Warn "NVIDIA $($NV_Data.cur.path) has wrong version $($NV_Data.cur.version) vs. $NV_Version"
+                if ($NV_File_Copy.version -ne $NV_Data.cur.version) {
+                    $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
+                }
+            }
+        }
+    }
+    if ($NV_Install) {
         Write-Host "WARNING: RainbowMiner will try to install NVSMI, but the driver version may be wrong!" -ForegroundColor Yellow
         try {
-            $NVSMI_Path = "C:\Program Files\NVIDIA Corporation\NVSMI"
-            if (-not (Test-Path $NVSMI_Path)) {New-Item $NVSMI_Path -ItemType "directory" > $null}
-            
-            Copy-Item ".\Includes\nvidia-smi.exe" -Destination $NVSMI_Path -Force
-            Copy-Item ".\Includes\nvml.dll" -Destination $NVSMI_Path -Force
+            if (-not (Test-Path $NV_Paths.cur)) {New-Item $NV_Paths.cur -ItemType "directory" > $null}
 
-            Write-Host "NVSMI installed!" -ForegroundColor Green
+            foreach($NV_Fx in $NV_Install) {
+                Copy-Item $NV_Fx.from.path -Destination $NV_Fx.to.path -Force
+            }
+
+            Write-Host "NVSMI installed successfully!" -ForegroundColor Green
+            $Install_NVSMI = $false
         } catch {
             Write-Host "Failed to install NVSMI" -ForeGroundColor Red
         }

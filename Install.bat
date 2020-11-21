@@ -6,9 +6,6 @@
 
 @echo off
 
-echo "%command%"
-pause 
-
 where pwsh.exe >nul 2>nul
 if %errorlevel%==1 (
     powershell -version 5.0 -windowstyle normal -executionpolicy Bypass -command "%command%"

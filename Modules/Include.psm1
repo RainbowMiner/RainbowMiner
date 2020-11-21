@@ -3402,16 +3402,17 @@ function Get-DeviceName {
             }
 
             if ($Vendor -eq "NVIDIA") {
-                Invoke-NvidiaSmi "index","gpu_name","pci.device_id","pci.bus_id" | ForEach-Object {
+                Invoke-NvidiaSmi "index","gpu_name","pci.device_id","pci.bus_id","driver_version" | ForEach-Object {
                     $DeviceName = $_.gpu_name.Trim()
                     $SubId = if ($AdlResultSplit.Count -gt 1 -and $AdlResultSplit[1] -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
                     if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
                     [PSCustomObject]@{
-                        Index      = $_.index
-                        DeviceName = $DeviceName
-                        SubId      = if ($_.pci_device_id -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
-                        PCIBusId   = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
-                        CardId     = -1
+                        Index         = $_.index
+                        DeviceName    = $DeviceName
+                        SubId         = if ($_.pci_device_id -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
+                        PCIBusId      = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
+                        CardId        = -1
+                        DriverVersion = "$($_.driver_version)"
                     }
                 }
             }
@@ -6285,6 +6286,7 @@ param(
 function Get-NvidiaSmi {
     $Command =  if ($IsLinux) {"nvidia-smi"}
                 elseif ($Session.Config.NVSMIpath -and (Test-Path ($NVSMI = Join-Path $Session.Config.NVSMIpath "nvidia-smi.exe"))) {$NVSMI}
+                elseif ($Session.DefaultValues.NVSMIpath -and (Test-Path ($NVSMI = Join-Path $Session.DefaultValues.NVSMIpath "nvidia-smi.exe"))) {$NVSMI}
                 else {".\Includes\nvidia-smi.exe"}
     if (Get-Command $Command -ErrorAction Ignore) {$Command}
 }
