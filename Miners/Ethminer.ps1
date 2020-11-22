@@ -19,6 +19,11 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer"
     $UriCuda = @(
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-cuda11.1-linux-amd64.7z"
+            Cuda = "11.1"
+            Version = "0.19.0-11"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-cuda10.0-linux-amd64.7z"
             Cuda = "10.0"
         },
@@ -32,19 +37,19 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-10-cuda10.0-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda10.0-windows-amd64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-10-cuda9.1-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda9.1-windows-amd64.zip"
             Cuda = "9.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-10-cuda8.0-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda8.0-windows-amd64.zip"
             Cuda = "8.0"
         }
     )
-    $Version = "0.19.0-10"
+    $Version = "0.19.0-12"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
