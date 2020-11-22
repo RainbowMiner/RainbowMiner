@@ -5,21 +5,21 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
-
-if ($IsLinux) {
-    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.1c-phoenix/PhoenixMiner_5.1c_Linux.tar.gz"
-    $Version = "5.1c"
-} else {
-    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2b-phoenix/PhoenixMiner_5.2b_Windows.7z"
-    $Version = "5.2b"
-}
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
 $Cuda = "8.0"
+$Version = "5.2e"
+
+if (-not $IsWindows -and -not $IsLinux) {return}
+
+if ($IsLinux) {
+    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2e-phoenix/PhoenixMiner_5.2e_Linux.tar.gz"
+} else {
+    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2e-phoenix/PhoenixMiner_5.2e_Windows.7z"
+}
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
