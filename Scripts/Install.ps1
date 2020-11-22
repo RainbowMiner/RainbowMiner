@@ -137,7 +137,7 @@ if ($IsWindows -and $GNVIDIA) {
             $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
         } elseif ($NV_Version -and $NV_Data.cur.version) {
             if ($NV_Data.cur.version -ne $NV_Version) {
-                Write-Log -Level Warn "NVIDIA $($NV_Data.cur.path) has wrong version $($NV_Data.cur.version) vs. $NV_Version"
+                Write-Host "WARNING: NVIDIA $($NV_Data.cur.path) has wrong version $($NV_Data.cur.version) vs. $NV_Version" -ForegroundColor Yellow
                 if ($NV_File_Copy.version -ne $NV_Data.cur.version) {
                     $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
                 }
