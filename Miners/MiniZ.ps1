@@ -10,17 +10,17 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "1.6w"
+$Version = "1.6w2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w-miniz/miniZ_v1.6w_cuda10_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda10_linux-x64.tar.gz"
             Cuda = "10.0"
         }
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w-miniz/miniZ_v1.6w_cuda8_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda8_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -28,11 +28,11 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w-miniz/miniZ_v1.6w_cuda10_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda10_win-x64.7z"
             Cuda = "10.0"
         }
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w-miniz/miniZ_v1.6w_cuda8_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda8_win-x64.7z"
             Cuda = "8.0"
         }
     )
@@ -85,7 +85,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $MinMemGB = $_.MinMemGb
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($Cuda -ne "8.0" -or (Get-NvidiaArchitecture $_.Model_Base) -eq "Turing")}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($Cuda -ne "8.0" -or $_.OpenCL.Architecture -eq "Turing") -and ($_.OpenCL.Architecture -ne "Ampere")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
