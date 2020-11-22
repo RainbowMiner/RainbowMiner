@@ -2810,6 +2810,10 @@ function Get-Device {
 
                     $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
 
+                    if ($Vendor_Name -eq "NVIDIA") {
+                        $Device_OpenCL.Architecture = Get-NvidiaArchitecture $Model
+                    }
+
                     $Device = [PSCustomObject]@{
                         Name = ""
                         Index = [Int]$Index
