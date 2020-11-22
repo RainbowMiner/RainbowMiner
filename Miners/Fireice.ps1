@@ -80,7 +80,7 @@ if (-not $Uri) {$Uri  = $UriCuda[2].Uri}
 foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and ($_.Vendor -ne "NVIDIA" -or $_.OpenCL.Architecture -in @("Other","Pascal"))})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
             
         switch($Miner_Vendor) {
             "NVIDIA" {$Miner_Deviceparams = "--noUAC --noAMD --noCPU --openCLVendor NVIDIA"}
