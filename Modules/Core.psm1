@@ -2083,70 +2083,77 @@ function Invoke-Core {
         }
         else {
             Write-Log -Level Info "New miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+')"
-            $ActiveMiner = New-Object $Miner.API -Property @{
-                Name                 = $Miner.Name
-                Version              = $Miner.Version
-                BaseName             = $Miner.BaseName
-                Path                 = $Miner.Path
-                Arguments            = $Miner.Arguments
-                API                  = $Miner.API
-                Port                 = $Miner.Port
-                Algorithm            = $Miner.HashRates.PSObject.Properties.Name
-                BaseAlgorithm        = $Miner.BaseAlgorithm -split '-'
-                Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
-                CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
-                CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-                DeviceName           = $Miner.DeviceName
-                DeviceModel          = $Miner.DeviceModel
-                Profit               = $Miner.Profit
-                Profit_Bias          = $Miner.Profit_Bias
-                Profit_Unbias        = $Miner.Profit_Unbias
-                Profit_Cost          = $Miner.Profit_Cost
-                Profit_Cost_Bias     = $Miner.Profit_Cost_Bias
-                PowerDraw            = $Miner.PowerDraw
-                Speed                = $Miner.HashRates.PSObject.Properties.Value
-                Speed_Live           = @(0.0) * $Miner.HashRates.PSObject.Properties.Name.Count
-                Variance             = @(0.0) * $Miner.Hashrates.PSObject.Properties.Name.Count
-                StartCommand         = $Miner.StartCommand
-                StopCommand          = $Miner.StopCommand
-                Best                 = $false
-                New                  = $false
-                Benchmarked          = 0
-                Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
-                MSIAprofile          = $Miner.MSIAprofile
-                DevFee               = $Miner.DevFee
-                OCprofile            = $Miner.OCprofile
-                ExtendInterval       = $Miner.ExtendInterval
-                ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
-                FaultTolerance       = $Miner.FaultTolerance
-                Penalty              = $Miner.Penalty
-                PoolPenalty          = $Miner.Pools.PSObject.Properties.Value.Penalty
-                ManualUri            = $Miner_ManualUri
-                EthPillEnable        = $Session.Config.EthPillEnable
-                EthPillEnableMTP     = $Session.Config.EthPillEnableMTP
-                DataInterval         = $Session.Config.BenchmarkInterval
-                Donator              = $Session.IsDonationRun
-                MaxBenchmarkRounds   = $Session.Strikes
-                EnableAutoPort       = $Session.Config.EnableAutoMinerPorts
-                Enabled              = $true
-                IsFocusWalletMiner   = $Miner_IsFocusWalletMiner
-                IsExclusiveMiner     = $Miner_IsExclusiveMiner
-                IsLocked             = $Miner_IsLocked
-                PostBlockMining      = $Miner_PostBlockMining
-                MinSamples           = $Miner_MinSamples
-                EnvVars              = $Miner.EnvVars
-                NoCPUMining          = [bool]$Miner.NoCPUMining
-                NeedsBenchmark       = $Miner.HashRates.PSObject.Properties.Value -contains $null
-                MaxRejectedShareRatio= $Miner_MaxRejectedShareRatio
-                MiningPriority       = $Miner.MiningPriority
-                MiningAffinity       = $Miner.MiningAffinity
-                MultiProcess         = [int]$Miner.MultiProcess
-                SetLDLIBRARYPATH     = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
-                ShareCheck           = [int]$Miner.ShareCheck
-                ExcludePoolName      = $Miner.ExcludePoolName
+            try {
+                $ActiveMiner = New-Object $Miner.API -Property @{
+                    Name                 = $Miner.Name
+                    Version              = $Miner.Version
+                    BaseName             = $Miner.BaseName
+                    Path                 = $Miner.Path
+                    Arguments            = $Miner.Arguments
+                    API                  = $Miner.API
+                    Port                 = $Miner.Port
+                    Algorithm            = $Miner.HashRates.PSObject.Properties.Name
+                    BaseAlgorithm        = $Miner.BaseAlgorithm -split '-'
+                    Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
+                    CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
+                    CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
+                    DeviceName           = $Miner.DeviceName
+                    DeviceModel          = $Miner.DeviceModel
+                    Profit               = $Miner.Profit
+                    Profit_Bias          = $Miner.Profit_Bias
+                    Profit_Unbias        = $Miner.Profit_Unbias
+                    Profit_Cost          = $Miner.Profit_Cost
+                    Profit_Cost_Bias     = $Miner.Profit_Cost_Bias
+                    PowerDraw            = $Miner.PowerDraw
+                    Speed                = $Miner.HashRates.PSObject.Properties.Value
+                    Speed_Live           = @(0.0) * $Miner.HashRates.PSObject.Properties.Name.Count
+                    Variance             = @(0.0) * $Miner.Hashrates.PSObject.Properties.Name.Count
+                    StartCommand         = $Miner.StartCommand
+                    StopCommand          = $Miner.StopCommand
+                    Best                 = $false
+                    New                  = $false
+                    Benchmarked          = 0
+                    Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
+                    MSIAprofile          = $Miner.MSIAprofile
+                    DevFee               = $Miner.DevFee
+                    OCprofile            = $Miner.OCprofile
+                    ExtendInterval       = $Miner.ExtendInterval
+                    ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
+                    FaultTolerance       = $Miner.FaultTolerance
+                    Penalty              = $Miner.Penalty
+                    PoolPenalty          = $Miner.Pools.PSObject.Properties.Value.Penalty
+                    ManualUri            = $Miner_ManualUri
+                    EthPillEnable        = $Session.Config.EthPillEnable
+                    EthPillEnableMTP     = $Session.Config.EthPillEnableMTP
+                    DataInterval         = $Session.Config.BenchmarkInterval
+                    Donator              = $Session.IsDonationRun
+                    MaxBenchmarkRounds   = $Session.Strikes
+                    EnableAutoPort       = $Session.Config.EnableAutoMinerPorts
+                    Enabled              = $true
+                    IsFocusWalletMiner   = $Miner_IsFocusWalletMiner
+                    IsExclusiveMiner     = $Miner_IsExclusiveMiner
+                    IsLocked             = $Miner_IsLocked
+                    PostBlockMining      = $Miner_PostBlockMining
+                    MinSamples           = $Miner_MinSamples
+                    EnvVars              = $Miner.EnvVars
+                    NoCPUMining          = [bool]$Miner.NoCPUMining
+                    NeedsBenchmark       = $Miner.HashRates.PSObject.Properties.Value -contains $null
+                    MaxRejectedShareRatio= $Miner_MaxRejectedShareRatio
+                    MiningPriority       = $Miner.MiningPriority
+                    MiningAffinity       = $Miner.MiningAffinity
+                    MultiProcess         = [int]$Miner.MultiProcess
+                    SetLDLIBRARYPATH     = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
+                    ShareCheck           = [int]$Miner.ShareCheck
+                    ExcludePoolName      = $Miner.ExcludePoolName
+                }
+                if ($ActiveMiner) {
+                    $Global:ActiveMiners.Add($ActiveMiner) > $null
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "Failed to create miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+')"
             }
             #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
-            $Global:ActiveMiners.Add($ActiveMiner) > $null
         }
     })
 
