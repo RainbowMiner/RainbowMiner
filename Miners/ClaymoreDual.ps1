@@ -38,7 +38,7 @@ $DevFeeDual = 1.0
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 3; SecondAlgorithm = ""; SecondIntensity = 00; Params = ""} #Ethash
+    #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 3; SecondAlgorithm = ""; SecondIntensity = 00; Params = ""} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 40; Params = ""} #Ethash/Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 60; Params = ""} #Ethash/Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 80; Params = ""} #Ethash/Blake2s
