@@ -4680,7 +4680,7 @@ function Set-CombosConfigDefault {
                             Switch ($SubsetType) {
                                 "AMD"    {"$($Model.SubString(0,2))$($Mem)GB";Break}
                                 "NVIDIA" {"$(
-                                    Switch (Get-NvidiaArchitecture $Model) {
+                                    Switch ($_.OpenCL.Architecture) {
                                         "Pascal" {Switch -Regex ($Model) {"105" {"GTX5";Break};"106" {"GTX6";Break};"(104|107|108)" {"GTX7";Break};default {$Model}};Break}
                                         "Turing" {"RTX";Break}
                                         default  {$Model}
