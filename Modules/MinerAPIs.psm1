@@ -55,7 +55,7 @@ class Miner {
     [int]$MaxBenchmarkRounds = 3
     [double]$MaxRejectedShareRatio = 0.3
     [int]$MiningPriority
-    [int]$MiningAffinity
+    [string]$MiningAffinity
     [int]$ShareCheck = 0
     [string]$ManualUri
     [Double[]]$RejectedShareRatio
