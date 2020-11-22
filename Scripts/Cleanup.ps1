@@ -1110,9 +1110,9 @@ try {
 
     if (Test-Path ".\Data\minerinfo.json") {Remove-Item ".\Data\minerinfo.json" -Force -ErrorAction Ignore; $ChangesTotal++}
 
-    "Cleaned $ChangesTotal elements"
+    Write-Output "SUCCESS: Cleaned $ChangesTotal elements"
 }
 catch {
-    "Cleanup failed $($_.Exception.Message)"
+    Write-Output "WARNING: Cleanup failed $($_.Exception.Message)"
 }
 

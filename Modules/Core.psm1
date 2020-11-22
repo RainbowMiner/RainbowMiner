@@ -152,64 +152,32 @@ function Start-Core {
     }
 
     if ($IsWindows -and ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count) {
-
-        $NV_Version = "$(($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"} | Select-Object -First 1).OpenCL.DriverVersion)"
-
-        $NV_Install = @()
-
-        $NV_Paths = [PSCustomObject]@{
-            cur = $Session.DefaultValues.NVSMIpath
-            win = Join-Path $env:windir "System32"
-            inc = ".\Includes"
-        }
-
         try {
-            foreach ($NV_FileName in @("nvml.dll","nvidia-smi.exe")) {
-                $NV_Data = [PSCustomObject]@{}
-
-                $NV_Paths.PSObject.Properties.Name | Foreach-Object {
-                    $NV_Path = Join-Path $NV_Paths.$_ $NV_FileName
-                    $NV_Data | Add-Member $_ ([PSCustomObject]@{
-                        path    = $NV_Path
-                        version = "$(if (Test-Path $NV_Path) {"$((Get-Item $NV_Path).VersionInfo.FileVersion -replace "[^\d]+" -replace ‘.*?(?=.{1,5}$)’)"})"
-                    }) -Force
-                    if ($NV_Data.$_.version.Length -eq 5) {$NV_Data.$_.version = "$($NV_Data.$_.version.Substring(0,3)).$($NV_Data.$_.version.Substring(3,2))"}
-                }
-
-                $NV_File_Copy = if ((Test-Path $NV_Data.win.path) -and (-not $NV_Version -or $NV_Data.win.version -eq $NV_Version)) {$NV_Data.win} else {$NV_Data.inc}
-
-                if (-not (Test-Path $NV_Data.cur.path)) {
-                    Write-Log -Level Warn "NVIDIA $($NV_Data.cur.path) is missing"
-                    $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
-                } elseif ($NV_Data.cur.version) {
-                    if ($NV_Data.cur.version -ne $NV_Version) {
-                        Write-Log -Level Warn "NVIDIA $($NV_Data.cur.path) has wrong version $($NV_Data.cur.version) vs. $NV_Version"
-                        if ($NV_File_Copy.version -ne $NV_Data.cur.version) {
-                            $NV_Install += [PSCustomObject]@{from = $NV_File_Copy; to = $NV_Data.cur}
-                        }
-                    }
-                }
-            }
-            if ($NV_Install) {
-                if ($Session.IsAdmin) {
-                    Write-Log -Level Warn "RainbowMiner will try to install NVSMI, but the driver version may be wrong!"
+            $InstallNVSMI_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\InstallNVSMI.ps1
+            if ($InstallNVSMI_Job) {
+                $InstallNVSMI_Job | Wait-Job -Timeout 60 > $null
+                if ($InstallNVSMI_Job.State -eq 'Running') {
+                    Write-Log -Level Warn "Time-out while loading .\Scripts\InstallNVSMI.ps1"
+                    try {$InstallNVSMI_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                } else {
                     try {
-                        if (-not (Test-Path $NV_Paths.cur)) {New-Item $NV_Paths.cur -ItemType "directory" > $null}
-
-                        foreach($NV_Fx in $NV_Install) {
-                            Copy-Item $NV_Fx.from.path -Destination $NV_Fx.to.path -Force
+                        $InstallNVSMI_Result = Receive-Job -Job $InstallNVSMI_Job
+                        if ($InstallNVSMI_Result) {
+                            $InstallNVSMI_Result | Foreach-Object {
+                                if ($_ -match "^WARNING:\s*(.+)$") {
+                                    Write-Log -Level Warn $Matches[1]
+                                } elseif ($_ -match "^SUCCESS:\s*(.+)$") {
+                                    Write-Host $Matches[1] -ForegroundColor Green
+                                    Write-Log -Level Info $Matches[1]
+                                } else {
+                                    Write-Host $_
+                                    Write-Log -Level Info $_
+                                }
+                            }
                         }
-
-                        Write-Host "NVSMI installed successfully!" -ForegroundColor Green
-                        Write-Log -Level Info "NVSMI installed successfully"
-                        $Install_NVSMI = $false
-                    } catch {
-                        Write-Log -Level Warn "Failed to install NVSMI: $($_.Exception.Message)"
-                    }
+                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                 }
-                if ($Install_NVSMI) {
-                    Write-Log -Level Warn "Please run Install.bat to automatically install NVSMI!"
-                }
+                try {Remove-Job $InstallNVSMI_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
             }
         } catch {
             Write-Log -Level Warn "Failed to check NVSMI: $($_.Exception.Message)"
@@ -299,7 +267,19 @@ function Start-Core {
                         } else {
                             try {
                                 $Cleanup_Result = Receive-Job -Job $Cleanup_Job
-                                if ($Cleanup_Result) {Write-Host $Cleanup_Result}
+                                if ($Cleanup_Result) {
+                                    $Cleanup_Result | Foreach-Object {
+                                        if ($_ -match "^WARNING:\s*(.+)$") {
+                                            Write-Log -Level Warn $Matches[1]
+                                        } elseif ($_ -match "^SUCCESS:\s*(.+)$") {
+                                            Write-Host $Matches[1] -ForegroundColor Green
+                                            Write-Log -Level Info $Matches[1]
+                                        } else {
+                                            Write-Host $_
+                                            Write-Log -Level Info $_
+                                        }
+                                    }
+                                }
                             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                         }
                         try {Remove-Job $Cleanup_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
