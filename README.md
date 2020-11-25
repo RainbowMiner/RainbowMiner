@@ -882,6 +882,8 @@ For Server (Runmode=server) setup:
 - **RemoteAPI** = set to 1 to enable accessability of API within your network [default=0]
 - **Donate** = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
 - **EnableAutoMinerPorts** = set to 1, if miners get into conflict with the ports in use
+- **StaticCPUMinerPort** = enter a static API port number for all CPU miners (0=use default ports) [default=0]
+- **StaticGPUMinerPort** = enter a static API port number for all GPU miners (0=use default ports) [default=0]
 - **DisableAPI** = set to 1, if no localhost API is needed
 - **DisableAsyncLoader** = set to 1, if all net access should happen synchronous (used for debugging)
 - **DisableMSIAmonitor** = set to 1, to fully disable MSI Afterburner monitoring (if more than six AMD GPU are used for mining)

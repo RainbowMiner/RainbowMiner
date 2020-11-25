@@ -2382,6 +2382,10 @@ function Invoke-Core {
                 $_.SetOCprofile($Session.Config,500)
                 if ($IsLinux) {Invoke-OCDaemon -Miner $_ -Quiet > $null}
             }
+
+            $_.SetStaticPort($Session.Config.StaticGPUMinerPort)
+        } else {
+            $_.SetStaticPort($Session.Config.StaticCPUMinerPort)
         }
 
         if ($_.Speed -contains $null) {

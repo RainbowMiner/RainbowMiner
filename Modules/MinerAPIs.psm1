@@ -57,6 +57,7 @@ class Miner {
     [int]$MiningPriority
     [string]$MiningAffinity
     [int]$ShareCheck = 0
+    [int]$StaticPort = 0
     [string]$ManualUri
     [Double[]]$RejectedShareRatio
     [String]$EthPillEnable = "disable"
@@ -131,18 +132,20 @@ class Miner {
         if (-not ($this.GetMiningJob())) {
             if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
 
-            $this.Port = $this.StartPort
+            $Miner_Port = if ($this.StaticPort) {$this.StaticPort} else {$this.StartPort}
+
+            $this.Port = $Miner_Port
 
             if ($this.EnableAutoPort) {
                 try {
                     $PortsInUse = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
                     $portmax = [math]::min($this.Port+9999,65535)
                     while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
-                    if ($this.Port -gt $portmax) {$this.Port=$this.StartPort}
+                    if ($this.Port -gt $portmax) {$this.Port=$Miner_Port}
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
                     Write-Log -Level Warn "Auto-Port failed for $($this.Name): $($_.Exception.Message)"
-                    $this.Port=$this.StartPort
+                    $this.Port=$Miner_Port
                 }
             }
 
@@ -350,6 +353,10 @@ class Miner {
         $this.Priorities.CPU = $cpu
         $this.Priorities.GPU = $gpu
         $this.Priorities.CPUAffinity = ConvertFrom-CPUAffinity $affinity -ToInt
+    }
+
+    SetStaticPort([int]$port=0) {
+        $this.StaticPort = $port
     }
 
     SetStatusRaw([MinerStatus]$Status) {
