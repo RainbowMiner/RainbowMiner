@@ -42,12 +42,12 @@ $Pools_Data = [PSCustomObject]@{
     "GXX"   = [PSCustomObject]@{port = 7025; region = $Pool_Regions}
     "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
     "KVA"   = [PSCustomObject]@{port = 7061; region = @("us"); stratum = "randomx"}
-    "KLR"   = [PSCustomObject]@{port = 3355; region = @("us"); stratum = "randomx"}
     "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
     "NAD"   = [PSCustomObject]@{port = 7064; region = $Pool_Regions}
+    "NOON"  = [PSCustomObject]@{port = 7063; region = $Pool_Regions}
     "QRN"   = [PSCustomObject]@{port = 7067; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
     "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
