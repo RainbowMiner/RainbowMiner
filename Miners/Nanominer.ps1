@@ -7,15 +7,21 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+$ManualURI = "https://github.com/nanopool/nanominer/releases"
+$Port = "534{0:d2}"
+$Cuda = "10.0"
+$DevFee = 3.0
+$Version = "3.1.2"
+
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.1-nanominer/nanominer-linux-3.1.1-cuda11.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.2-nanominer/nanominer-linux-3.1.2-cuda11.tar.gz"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.1-nanominer/nanominer-linux-3.1.1.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.2-nanominer/nanominer-linux-3.1.2.tar.gz"
             Cuda = "10.0"
         }
     )
@@ -23,20 +29,15 @@ if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.1-nanominer/nanominer-windows-3.1.1-cuda11.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.2-nanominer/nanominer-windows-3.1.2-cuda11.zip"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.1-nanominer/nanominer-windows-3.1.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.2-nanominer/nanominer-windows-3.1.2.zip"
             Cuda = "10.0"
         }
     )
 }
-$ManualURI = "https://github.com/nanopool/nanominer/releases"
-$Port = "534{0:d2}"
-$Cuda = "10.0"
-$DevFee = 3.0
-$Version = "3.1.1"
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
