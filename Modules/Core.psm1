@@ -55,6 +55,21 @@ function Start-Core {
         Write-Host "Starting $(if ($SetupOnly) {"setup for "})v$($Session.Version)! Please wait.."
         Write-Host " "
 
+        if (Compare-Version $PSVersionTable.PSVersion $Session.SupportedPSVersion) {
+            $CurrentPSVersion = Get-Version $PSVersionTable.PSVersion
+            Write-Host "RainbowMiner recommends Powershell Core Version $($Session.SupportedPSVersion) (vs. v$($CurrentPSVersion.Major).$($CurrentPSVersion.Minor).$($CurrentPSVersion.Build))" -ForegroundColor Yellow
+            Write-Host "Everything will run fine with the current version, but consider updating your Powershell" -ForegroundColor Yellow
+            Write-Host " "
+            if ($IsWindows) {
+                $PSUpdateMessage = "Link for Powershell: https://github.com/PowerShell/PowerShell/releases/tag/v$($Session.SupportedPSVersion)"
+            } else {
+                $PSUpdateMessage = "To update, run `"sudo ./install.sh -pu`" in folder $($PWD)"
+            }
+            Write-Host $PSUpdateMessage -BackgroundColor Yellow -ForegroundColor Black
+            Write-Log -Level Info $PSUpdateMessage
+            Write-Host " "
+        }
+
         #Setup Core script variables
         [hashtable]$Global:StatsCache   = @{}
         [hashtable]$Global:DeviceCache  = @{}
@@ -182,20 +197,6 @@ function Start-Core {
         } catch {
             Write-Log -Level Warn "Failed to check NVSMI: $($_.Exception.Message)"
         }
-    }
-
-    if (Compare-Version $PSVersionTable.PSVersion $Session.SupportedPSVersion) {
-        $CurrentPSVersion = Get-Version $PSVersionTable.PSVersion
-        Write-Host "RainbowMiner recommends Powershell Core Version $($Session.SupportedPSVersion) (vs. v$($CurrentPSVersion.Major).$($CurrentPSVersion.Minor).$($CurrentPSVersion.Build))" -ForegroundColor Yellow
-        Write-Host "Everything will run fine with the current version, but consider updating your Powershell" -ForegroundColor Yellow
-        Write-Host " "
-        if ($IsWindows) {
-            $PSUpdateMessage = "Link for Powershell: https://github.com/PowerShell/PowerShell/releases/tag/v$($Session.SupportedPSVersion)"
-        } else {
-            $PSUpdateMessage = "To update, run `"sudo ./install.sh -pu`" in folder $($PWD)"
-        }
-        Write-Host $PSUpdateMessage -ForegroundColor Yellow
-        Write-Log -Level Info $PSUpdateMessage
     }
 
     try {
