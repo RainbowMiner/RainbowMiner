@@ -184,6 +184,20 @@ function Start-Core {
         }
     }
 
+    if (Compare-Version $PSVersionTable.PSVersion $Session.SupportedPSVersion) {
+        $CurrentPSVersion = Get-Version $PSVersionTable.PSVersion
+        Write-Host "RainbowMiner recommends Powershell Core Version $($Session.SupportedPSVersion) (vs. v$($CurrentPSVersion.Major).$($CurrentPSVersion.Minor).$($CurrentPSVersion.Build))" -ForegroundColor Yellow
+        Write-Host "Everything will run fine with the current version, but consider updating your Powershell" -ForegroundColor Yellow
+        Write-Host " "
+        if ($IsWindows) {
+            $PSUpdateMessage = "Link for Powershell: https://github.com/PowerShell/PowerShell/releases/tag/v$($Session.SupportedPSVersion)"
+        } else {
+            $PSUpdateMessage = "To update, run `"sudo ./install.sh -pu`" in folder $($PWD)"
+        }
+        Write-Host $PSUpdateMessage -ForegroundColor Yellow
+        Write-Log -Level Info $PSUpdateMessage
+    }
+
     try {
         Write-Host "Initialize configuration .."
 
