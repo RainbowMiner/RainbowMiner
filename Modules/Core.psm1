@@ -384,10 +384,10 @@ function Invoke-Core {
             } else {
                 #Blockchain target
 
-                $Request = Invoke-RestMethodAsync "https://blockscout.com/etc/mainnet/api?module=block&action=eth_block_number" -Timeout 15 -tag "fork"
-                if ([int64]$Request.result -ge 11700000) {
-                    $Fork_Meets_Target = $true
-                }
+                #$Request = Invoke-RestMethodAsync "https://blockscout.com/etc/mainnet/api?module=block&action=eth_block_number" -Timeout 15 -tag "fork"
+                #if ([int64]$Request.result -ge 11700000) {
+                #    $Fork_Meets_Target = $true
+                #}
 
                 #$Request = Invoke-RestMethodAsync "https://mainnet-explorer.beam.mw/explorer/status/?format=json" -Timeout 15 -tag "fork"
                 #if ([int64]$Request.height -ge 777777) {
