@@ -7,13 +7,12 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "ETH";  port = 9999;           fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ETC";  port = @(19999,19433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ETH";  port = @(9999,9433);   fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
     [PSCustomObject]@{symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
     [PSCustomObject]@{symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
-    [PSCustomObject]@{symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true;  usepid = $true}
-    [PSCustomObject]@{symbol = "GRIN"; port = 12111;          fee = 2; divisor = 1;   useemail = $false; walletsymbol = "GRIN29"}
+    [PSCustomObject]@{symbol = "RVN";  port = @(12222,12433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "CFX";  port = @(17777,17433); fee = 1; divisor = 1;   useemail = $false; usepid = $false}
 )
 
 $Count = 0

@@ -23,18 +23,16 @@ $Pool_Regions = @("asia","eu","jp","us-east","us-west", "au")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "ETH";  port = 9999;           fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ETC";  port = @(19999,19433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ETH";  port = @(9999,9433);   fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
     [PSCustomObject]@{symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
     [PSCustomObject]@{symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
-    [PSCustomObject]@{symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true;  usepid = $true}
-    [PSCustomObject]@{symbol = "GRIN"; port = 12111;          fee = 2; divisor = 1;   useemail = $false; walletsymbol = "GRIN29"}
+    [PSCustomObject]@{symbol = "RVN";  port = @(12222,12433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "CFX";  port = @(17777,17433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
-    $Pool_Coin      = Get-Coin $Pool_Symbol
+    $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
@@ -48,7 +46,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_RequestHashrate = [PSCustomObject]@{}
 
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Symbol.ToLower())/approximated_earnings/1000" -tag $Name -retry 5 -retrywait 200 -cycletime 120
+            $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.symbol.ToLower())/approximated_earnings/1000" -tag $Name -retry 5 -retrywait 200 -cycletime 120
             if (-not $Pool_Request.status) {$ok = $false}
         }
         catch {
@@ -61,8 +59,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         }
 
         try {
-            $Pool_RequestWorkers = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Symbol.ToLower())/pool/activeworkers" -tag $Name -retry 5 -retrywait 200 -cycletime 120
-            $Pool_RequestHashrate= Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Symbol.ToLower())/pool/hashrate" -tag $Name -retry 5 -retrywait 200 -cycletime 120
+            $Pool_RequestWorkers = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.symbol.ToLower())/pool/activeworkers" -tag $Name -retry 5 -retrywait 200 -cycletime 120
+            $Pool_RequestHashrate= Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.symbol.ToLower())/pool/hashrate" -tag $Name -retry 5 -retrywait 200 -cycletime 120
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
