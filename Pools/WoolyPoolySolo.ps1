@@ -50,11 +50,10 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "CTXC"; port = 40000; host = "cortex"; rpc = "cortex-1"}
     [PSCustomObject]@{symbol = "ETC"; port = 35000; host = "etc"; rpc = "etc-1"}
     [PSCustomObject]@{symbol = "ETH"; port = 3096; host = "eth"; rpc = "eth-1"}
-    [PSCustomObject]@{symbol = "GRIN"; port = 12000; host = "grin"; rpc = "grin-1"}
-    [PSCustomObject]@{symbol = "GRIN-C31"; port = 12000; host = "grin"; rpc = "grin-1"}
-    [PSCustomObject]@{symbol = "GRIN-C32"; port = 12000; host = "grin"; rpc = "grin-1"}
-    [PSCustomObject]@{symbol = "MWC"; port = 11000; host = "mwc"; rpc = "mwc-1"}
-    [PSCustomObject]@{symbol = "MWC-C31"; port = 11000; host = "mwc"; rpc = "mwc-1"}
+    [PSCustomObject]@{symbol = "GRIN-SEC"; port = 12000; host = "grin"; rpc = "grin-1"}
+    [PSCustomObject]@{symbol = "GRIN-PRI"; port = 12000; host = "grin"; rpc = "grin-1"}
+    [PSCustomObject]@{symbol = "MWC-SEC"; port = 11000; host = "mwc"; rpc = "mwc-1"}
+    [PSCustomObject]@{symbol = "MWC-PRI"; port = 11000; host = "mwc"; rpc = "mwc-1"}
     [PSCustomObject]@{symbol = "RVN"; port = 55555; host = "rvn"; rpc = "raven-1"}
     [PSCustomObject]@{symbol = "SERO"; port = 8008; host = "sero"; rpc = "sero-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
@@ -64,9 +63,8 @@ $Pools_Data = @(
 
 $Pool_PayoutScheme = "SOLO"
 
-$Pools_Data | Where-Object {$Pools_Request."$($_.rpc)" -and ($Wallets."$($_.symbol -replace "-.+$")" -or $InfoOnly)} | ForEach-Object {
+$Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Request."$($_.rpc)" -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
     $Pool_Coin      = Get-Coin $_.symbol
-    $Pool_Currency  = $_.symbol -replace "-.+$"
     $Pool_Port      = $_.port
     $Pool_RpcPath   = $_.rpc
     $Pool_HostPath  = $_.host
