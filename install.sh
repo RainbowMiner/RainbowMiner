@@ -64,7 +64,7 @@ if ! [ -x "$(command -v pwsh)" ]; then
   sudo tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/${pwsh_major_version} --overwrite
   sudo chmod +x /opt/microsoft/powershell/${pwsh_major_version}/pwsh
   sudo ln -s /opt/microsoft/powershell/${pwsh_major_version}/pwsh /usr/bin/pwsh
-  sudo rm -rf /tmp/powershell.tar.gz
+  sudo rm -f /tmp/powershell.tar.gz
 fi
 
 if [ "${pwsh_update}" == "1" ]; then
