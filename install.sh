@@ -56,15 +56,20 @@ EOF
 done
 
 if ! [ -x "$(command -v pwsh)" ]; then
-  if [ -L "/usr/bin/pwsh" ]; then
-    sudo rm -f /usr/bin/pwsh
+  if ps -C pwsh >/dev/null
+  then
+    printf "Alas! RainbowMiner or another pwsh process is still running. Cannot update.\n\n"
+  else
+    if [ -L "/usr/bin/pwsh" ]; then
+      sudo rm -f /usr/bin/pwsh
+    fi
+    wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz -O /tmp/powershell.tar.gz
+    sudo mkdir -p /opt/microsoft/powershell/${pwsh_major_version}
+    sudo tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/${pwsh_major_version} --overwrite
+    sudo chmod +x /opt/microsoft/powershell/${pwsh_major_version}/pwsh
+    sudo ln -s /opt/microsoft/powershell/${pwsh_major_version}/pwsh /usr/bin/pwsh
+    sudo rm -f /tmp/powershell.tar.gz
   fi
-  wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz -O /tmp/powershell.tar.gz
-  sudo mkdir -p /opt/microsoft/powershell/${pwsh_major_version}
-  sudo tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/${pwsh_major_version} --overwrite
-  sudo chmod +x /opt/microsoft/powershell/${pwsh_major_version}/pwsh
-  sudo ln -s /opt/microsoft/powershell/${pwsh_major_version}/pwsh /usr/bin/pwsh
-  sudo rm -f /tmp/powershell.tar.gz
 fi
 
 if [ "${pwsh_update}" == "1" ]; then
