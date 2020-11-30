@@ -33,19 +33,20 @@ catch {
     Write-Log -Level Info "Pool Currency API ($Name) has failed. "
 }
 
-$Pool_Coin = "Ravencoin"
 $Pool_Currency = "RVN"
+$Pool_Algorithm = if ($PoolCoins_Request.$Pool_Currency) {$PoolCoins_Request.$Pool_Currency.algo} else {"kawpow"}
+
+$Pool_Coin = Get-Coin $Pool_Currency
 $Pool_Host = "ravenminer.com"
-$Pool_Algorithm = "KawPOW"
-$Pool_Port = 3838
+$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Ports = @(3838,13838)
 
 [hashtable]$Pool_RegionsTable = @{}
 
 $Pool_Regions = @("us","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$_ -eq "x16rv2"} | ForEach-Object {
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+$Pool_Request.PSObject.Properties.Name | Where-Object {$_ -eq $Pool_Algorithm} | Foreach-Object {
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     $Pool_User = $Wallets.$Pool_Currency
 
@@ -65,41 +66,45 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
 
     if ($Pool_User -or $InfoOnly) {
         foreach($Pool_Region in $Pool_Regions) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = "$($Pool_Region).$($Pool_Host)"
-                Port          = $Pool_Port
-                User          = $Pool_User
-                Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
-                Region        = $Pool_Regions.$Pool_Region
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_PoolFee
-                DataWindow    = $DataWindow
-                Workers       = $Pool_Request.$_.workers
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-				ErrorRatio    = $Stat.ErrorRatio
-                EthMode       = "stratum"
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+            $Pool_SSL = $false
+            foreach($Pool_Port in $Pool_Ports) {
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    Algorithm0    = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = $Stat.$StatAverage #instead of .Live
+                    StablePrice   = $Stat.Week
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                    Host          = "$($Pool_Region).$($Pool_Host)"
+                    Port          = $Pool_Port
+                    User          = $Pool_User
+                    Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+                    Region        = $Pool_Regions.$Pool_Region
+                    SSL           = $Pool_SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $Pool_PoolFee
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_Request.$_.workers
+                    Hashrate      = $Stat.HashRate_Live
+                    BLK           = $Stat.BlockRate_Average
+                    TSL           = $Pool_TSL
+				    ErrorRatio    = $Stat.ErrorRatio
+                    EthMode       = "stratum"
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Wallets.$Pool_Currency
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
+                $Pool_SSL = $true
             }
         }
     }
