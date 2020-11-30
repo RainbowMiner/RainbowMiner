@@ -79,6 +79,10 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
     }
 }
 
+if (-not $Uri) {
+    $Uri = $UriCuda[0].Uri
+}
+
 foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
