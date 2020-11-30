@@ -50,10 +50,10 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN29";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN32";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
-    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC29"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC31"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN-SEC";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN-PRI";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC-SEC"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC-PRI"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
@@ -63,11 +63,11 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
 )
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+$")" -or $InfoOnly} | ForEach-Object {
     $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
-    $Pool_Currency = $_.symbol -replace "\d"
+    $Pool_Currency = $_.symbol -replace "-.+$"
     $Pool_Host = "solo-$($_.rpc).2miners.com"
     $Pool_Fee = $_.fee
     $Pool_Divisor = $_.divisor
@@ -119,8 +119,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
         $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
         if ($_.cycles) {
-            $addName         = $_.symbol -replace "[^\d]"
-            $PBR  = (86400 / $_.cycles) * ($(if ($_.primary) {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
+            $addName         = $Pool_Algorithm_Norm -replace "[^\d]"
+            $PBR  = (86400 / $_.cycles) * ($(if ($_.symbol -match "-PRI$") {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
             $btcRewardLive   = $PBR * $reward * $btcPrice
             $Divisor         = 1
             $Hashrate        = $Pool_Request.hashrates.$addName
@@ -130,7 +130,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
             $Divisor         = 1
             $Hashrate        = $Pool_Request.hashrate
         }
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$($addName)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Hashrate -BlockRate $Pool_BLK -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
