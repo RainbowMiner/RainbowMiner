@@ -17,21 +17,25 @@ if (-not $Payout_Currencies) {
 
 $Pool_Request = [PSCustomObject]@{}
 
+$ok = $false
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.aionmine.org/api/pools" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
-    if (-not $Pool_Request.pools) {throw}
+    $Pool_Request = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
+    if ($Pool_Request.pools) {$ok = $true}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
+}
+
+if (-not $ok) {
     Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
     return
 }
 
 $Count = 0
 $Payout_Currencies | Where-Object {@($Pool_Request.pools | Foreach-Object {$_.coin.type} | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
-    $id = $Pool_Request.pools | Where-Object {$_.coin.type -eq $_.Name} | Select-Object -ExpandProperty id
     try {
-        $Request = Invoke-RestMethodAsync "https://api.aionmine.org/api/pools/aion/miners/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Pool_Id = ($Pool_Request.pools | Where-Object {$_.coin.type -eq $_.Name}).id
+        $Request = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools/$($Pool_Id)/miners/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if ($Request.totalPaid -eq $null) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "

@@ -25,12 +25,16 @@ $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
 $Pool_Request = [PSCustomObject]@{}
 
+$ok = $false
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.aionmine.org/api/pools" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
-    if (-not $Pool_Request.pools) {throw}
+    $Pool_Request = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
+    if ($Pool_Request.pools) {$ok = $true}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
+}
+
+if (-not $ok) {
     Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
     return
 }
@@ -38,14 +42,15 @@ catch {
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | Foreach-Object {
     $ok = $true
     if (-not $InfoOnly) {
+        $Pool_Id = $_.id
         $Pool_BlocksRequest = @()
         try {
-            $Pool_BlocksRequest = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools/aion-pool/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
+            $Pool_BlocksRequest = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools/$($Pool_Id)/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
             $Pool_BlocksRequest = @($Pool_BlocksRequest | Where-Object {$_.status -ne "orphaned"} | Foreach-Object {Get-Date $_.created})
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
+            Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }
         if ($ok -and ($Pool_BlocksRequest | Measure-Object).Count) {
