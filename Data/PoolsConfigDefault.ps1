@@ -36,6 +36,9 @@
         "BeePool" = [PSCustomObject]@{
             Currencies=@("ETH","RVN")
         }
+        "Binance" = [PSCustomObject]@{
+            Currencies=@("ETH")
+        }
         "BlazePool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=22}
             Currencies=@("BTC")
