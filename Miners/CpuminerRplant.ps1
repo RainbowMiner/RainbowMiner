@@ -31,7 +31,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""} #Argon2m (Merge)
 	[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; LinuxOnly = $true} #CpuPower
     [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""} #IOtE
-    [PSCustomObject]@{MainAlgorithm = "curvehash"; Params = ""} #CurveHash/Oblivion
+    #[PSCustomObject]@{MainAlgorithm = "curvehash"; Params = ""} #CurveHash/Oblivion, still broken in v4.5.18
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #Hodl
     #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
