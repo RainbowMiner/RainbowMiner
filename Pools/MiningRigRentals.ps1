@@ -370,14 +370,14 @@ if ($AllRigs_Request) {
                     # hardcoded fixes due to MRR stratum or API failures
                     #
 
-                    if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
-                        $Miner_Server = ($Pool_Failover | Select-Object -First 1).name
-                        $Miner_Port   = 3333
-                        $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
-                    }
+                    #if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
+                    #    $Miner_Server = ($Pool_Failover | Select-Object -First 1).name
+                    #    $Miner_Port   = 3333
+                    #    $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
+                    #}
 
-                    if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
-                    if ($Pool_Algorithm_Norm -eq "Tensority") {$Miner_Port = 3333}
+                    #if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
+                    #if ($Pool_Algorithm_Norm -eq "Tensority") {$Miner_Port = 3333}
 
                     $Pool_SSL = $Pool_Algorithm_Norm -in @("EquihashR25x5","EquihashR25x5x3")
 
@@ -414,7 +414,7 @@ if ($AllRigs_Request) {
                                 Pass     = "x"
                             }
                         })
-                        EthMode       = if ($Miner_Port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {"qtminer"} else {$null}
+                        EthMode       = if ($Miner_Port -match "^33\d\d$" -and $Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {"qtminer"} else {$null}
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1
@@ -439,7 +439,7 @@ if ($AllRigs_Request) {
                                             User   = "$($User).$($Pool_RigId)"
                                             Pass   = "x"
                                             Worker = $Worker1
-                                            Method = if ($Pool_Rig.port -in @(3322,3333,3344)) {"EthProxy"} else {"Stratum"}
+                                            Method = if ($Pool_Rig.port -match "^33\d\d$" -and $Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {"EthProxy"} else {"Stratum"}
                                             WaitForResponse = $_.status.status -eq "rented" -or $_.status.rented
                                         }
                                         Failover = @($Pool_Failover | Select-Object -ExpandProperty name)
@@ -450,6 +450,7 @@ if ($AllRigs_Request) {
     }
 
     if ($MRR_Pings) {
+        #Write-Log -Level Warn "$(ConvertTo-Json $MRR_Pings)"
         try {
             if ($MRR_Job = Get-Job -Name MRRPing -ErrorAction Ignore) {
                 if ($MRR_Job.State -ne "Running") {
@@ -463,6 +464,7 @@ if ($AllRigs_Request) {
         }
 
         if (-not $MRR_Job) {
+            #write-host -level warn "$(ConvertTo-Json $MRR_Pings)"
             $MRR_Job = Start-Job -Name MRRPing  -FilePath .\Scripts\MRRPing.ps1 -ArgumentList $MRR_Pings -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`""))
             if ($MRR_Job) {Remove-Variable "MRR_Job"}
         }
