@@ -10,28 +10,28 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.19.0"
+$Version = "0.19.1"
 $AllowTuring = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-linux-cuda11.1.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-linux-cuda11.1.tar.gz"
             Cuda   = "11.1"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-linux-cuda10.0.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-linux-cuda10.0.tar.gz"
             Cuda   = "10.0"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-linux-cuda9.2.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-linux-cuda9.2.tar.gz"
             Cuda   = "9.2"
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-linux-cuda9.1.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-linux-cuda9.1.tar.gz"
             Cuda   = "9.1"
         }
     )
@@ -39,21 +39,21 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-win-cuda11.1.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-win-cuda11.1.zip"
             Cuda   = "11.1"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-win-cuda10.0.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-win-cuda10.0.zip"
             Cuda   = "10.0"
             Turing = $true
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-win-cuda9.2.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-win-cuda9.2.zip"
             Cuda   = "9.2"
         },
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-trex/t-rex-0.19.0-win-cuda9.1.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-win-cuda9.1.zip"
             Cuda   = "9.1"
         }
     )
@@ -151,7 +151,11 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
             $MinMemGB = $_.MinMemGB
         }
 
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and ($AllowTuring -or $Cuda -match "^10" -or (Get-NvidiaArchitecture $_.Model) -notin @("Ampere","Turing"))}
+        #Remove all devices, that
+        # - don't match the DAG size req.
+        # - are of type Ampere & Turing and CUDA version < 10.0
+        # - are of type Turing & CUDA version != 10.0 and algo is Octopus
+        $Miner_Device = $Device | Where-Object {$Arch = Get-NvidiaArchitecture $_.Model;(Test-VRAM $_ $MinMemGB) -and ($AllowTuring -or $Arch -notin @("Ampere","Turing")) -and ($Algorithm_Norm_0 -ne "Octopus" -or $Arch -ne "Turing" -or $Cuda -eq "10.0")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
