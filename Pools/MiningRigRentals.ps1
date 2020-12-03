@@ -439,7 +439,7 @@ if ($AllRigs_Request) {
                                             User   = "$($User).$($Pool_RigId)"
                                             Pass   = "x"
                                             Worker = $Worker1
-                                            Method = if ($Pool_Rig.port -match "^33\d\d$") {"EthProxy"} else {"Stratum"}
+                                            Method = if ($Pool_Rig.port -in @("3322","3333")) {"EthProxy"} else {"Stratum"}
                                             WaitForResponse = $_.status.status -eq "rented" -or $_.status.rented
                                         }
                                         Failover = @($Pool_Failover | Select-Object -ExpandProperty name)
