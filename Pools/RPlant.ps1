@@ -33,6 +33,7 @@ $Pools_Data = [PSCustomObject]@{
     "BELL"  = [PSCustomObject]@{port = 3342; region = $Pool_Regions}
     "BTX"   = [PSCustomObject]@{port = 7066; region = $Pool_Regions}
     "ZNY"   = [PSCustomObject]@{port = 7054; region = $Pool_Regions}
+    "BLAS"  = [PSCustomObject]@{port = 7065; region = $Pool_Regions}
     "CPU"   = [PSCustomObject]@{port = 7029; region = $Pool_Regions}
     "CRP"   = [PSCustomObject]@{port = 3335; region = $Pool_Regions}
     "CURVE" = [PSCustomObject]@{port = 7058; region = $Pool_Regions}
