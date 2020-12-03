@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes -and $false){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.18-rplant/cpuminer-rplant-4.5.18-linux.7z"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.20-rplant/cpuminer-rplant-4.5.20-linux.tar.gz"
 } else {
-    $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.18-rplant/cpuminer-rplant-4.5.18-win.zip"
+    $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:DeviceCache.DevicesByTypes.CPU.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5.20-rplant/cpuminer-rplant-4.5.20-win.zip"
 }
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
-$Version = "4.5.18"
+$Version = "4.5.20"
 
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
@@ -29,7 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-glt"; GLT="argon2d-glt"; Params = ""} #Argon2d (GLT)
     [PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""} #Argon2i (GLT)
     [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""} #Argon2m (Merge)
-	[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; LinuxOnly = $true} #CpuPower
+	[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
     [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""} #IOtE
     #[PSCustomObject]@{MainAlgorithm = "curvehash"; Params = ""} #CurveHash/Oblivion, still broken in v4.5.18
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #Hodl
@@ -43,24 +43,25 @@ $Commands = [PSCustomObject[]]@(
     ####[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
 	#[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium and CpuminerJayddee faster
 	[PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
+    [PSCustomObject]@{MainAlgorithm = "x22"; Params = ""} #X22 from v4.5.20 on
     ####[PSCustomObject]@{MainAlgorithm = "x33"; Params = ""} #X33 (QRN) from v4.5.16 on
-    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; LinuxOnly = $true} #YescryptR16
-    [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""; LinuxOnly = $true} #YescryptR16v2
-    [PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""; LinuxOnly = $true} #YescryptR24
-    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; GLT="yescryptr32glt"; Params = ""; LinuxOnly = $true} #YescryptR32
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; GLT="yescryptr8glt"; Params = ""; LinuxOnly = $true} #YescryptR8
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""; LinuxOnly = $true} #YescryptR8g (KOTO)
-    [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; LinuxOnly = $true} #Yespower
-    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; LinuxOnly = $true} #YespowerR16
-    [PSCustomObject]@{MainAlgorithm = "yespowerIC"; Params = ""; LinuxOnly = $true} #Yespower IsotopeC (IC)
-    [PSCustomObject]@{MainAlgorithm = "yespowerITC"; Params = ""; LinuxOnly = $true} #Yespower Intercoin (ITC)
-    [PSCustomObject]@{MainAlgorithm = "yespowerIOTS"; Params = ""; LinuxOnly = $true} #Yespower .. (IOTS)
-    [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = ""; LinuxOnly = $true} #Yespower LightBit (LITB)
-    [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""; LinuxOnly = $true} #Yespower LighningCash-Gold v3 (LTNCG)
-    [PSCustomObject]@{MainAlgorithm = "yespowerRES"; Params = ""; LinuxOnly = $true} #Yespower Resistance (RES)
-    [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = ""; LinuxOnly = $true} #Yespower SugarChain (SUGAR)
-    [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = ""; LinuxOnly = $true} #Yespower Uranium-X (URX)
-    [PSCustomObject]@{MainAlgorithm = "sha256csm"; Params = ""; LinuxOnly = $true} #SHA256csm
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
+    [PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; GLT="yescryptr32glt"; Params = ""} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; GLT="yescryptr8glt"; Params = ""} #YescryptR8
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""} #YescryptR8g (KOTO)
+    [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower
+    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16
+    [PSCustomObject]@{MainAlgorithm = "yespowerIC"; Params = ""} #Yespower IsotopeC (IC)
+    [PSCustomObject]@{MainAlgorithm = "yespowerITC"; Params = ""} #Yespower Intercoin (ITC)
+    [PSCustomObject]@{MainAlgorithm = "yespowerIOTS"; Params = ""} #Yespower .. (IOTS)
+    [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = ""} #Yespower LightBit (LITB)
+    [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""} #Yespower LighningCash-Gold v3 (LTNCG)
+    [PSCustomObject]@{MainAlgorithm = "yespowerRES"; Params = ""} #Yespower Resistance (RES)
+    [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = ""} #Yespower SugarChain (SUGAR)
+    [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = ""} #Yespower Uranium-X (URX)
+    [PSCustomObject]@{MainAlgorithm = "sha256csm"; Params = ""} #SHA256csm
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
