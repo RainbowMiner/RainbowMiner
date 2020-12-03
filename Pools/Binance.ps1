@@ -38,8 +38,10 @@ $Pools_Request.data.algoList | ForEach-Object {
         $Pool_Coin  = Get-Coin $Pool_Currency
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
         
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_HashRate -Quiet
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        if (-not $InfoOnly) {
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_HashRate -Quiet
+            if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        }
     
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
