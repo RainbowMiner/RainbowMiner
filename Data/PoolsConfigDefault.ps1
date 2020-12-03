@@ -1,9 +1,9 @@
 ﻿[PSCustomObject]@{
         "2Miners" = [PSCustomObject]@{
-            Currencies=@("XZC")
+            Currencies=@("FIRO")
         }
         "2MinersSolo" = [PSCustomObject]@{
-            Currencies=@("XZC")
+            Currencies=@("FIRO")
         }
         "572133Club" = [PSCustomObject]@{
             Currencies=@("KYAN")
@@ -96,7 +96,7 @@
         "F2pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{UserName=""}
             SetupFields=[PSCustomObject]@{UserName="Enter your f2pool username, if you want to see balances"}
-            Currencies=@("ETH","GRIN","BEAM","XMR","XZC")
+            Currencies=@("ETH","GRIN","BEAM","XMR","FIRO")
         }
         "FairPool" = [PSCustomObject]@{
             Currencies=@("XWP")
@@ -301,7 +301,7 @@
             Autoexchange=$true
         }
         "MintPond" = [PSCustomObject]@{
-            Currencies=@("XZC")
+            Currencies=@("FIRO")
         }
         "MoneroOcean" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}

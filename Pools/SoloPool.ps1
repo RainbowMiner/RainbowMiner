@@ -33,12 +33,16 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 [hashtable]$Pool_Algorithms = @{}
 
-$Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_.ToUpper();$Pool_Wallet = $Wallets.$Pool_CoinSymbol;($Pool_Wallet -or $InfoOnly) -and $_ -notmatch "^dgb-"} | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpper();($Wallets.$Pool_Currency -or ($Pool_Currency -eq "FIRO" -and $Wallets.XZC) -or $InfoOnly) -and $_ -notmatch "^dgb-"} | ForEach-Object {
 
-    $Pool_Coin = Get-Coin $Pool_CoinSymbol
+    $Pool_Coin = Get-Coin $Pool_Currency
 
     $Pool_Algorithm = $Pool_Coin.Algo
     $Pool_CoinName  = $Pool_Coin.Name
+
+    if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
+        $Pool_Wallet = $Wallets.XZC
+    }
 
     $ok = $false
     try {
@@ -52,11 +56,11 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_.ToU
             }
         }
     } catch {
-        Write-Log -Level Warn "$($Name): $($Pool_CoinSymbol) help page not readable"
+        Write-Log -Level Warn "$($Name): $($Pool_Currency) help page not readable"
     }
 
     if (-not $Pool_Algorithm) {
-        Write-Log -Level Warn "Pool $($Name) missing coin $($Pool_CoinSymbol)"
+        Write-Log -Level Warn "Pool $($Name) missing coin $($Pool_Currency)"
         return
     }
 
@@ -79,7 +83,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_.ToU
         $Pool_Port      = if ($Pool_MetaVars.APP.StratumPortVar) {$Pool_MetaVars.APP.StratumPortVar} else {$Pool_MetaVars.APP.StratumPortLow}
 
         if (-not $InfoOnly) {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate (ConvertFrom-Hash $_.hashrate) -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate (ConvertFrom-Hash $_.hashrate) -Quiet
         }
     }
 
@@ -88,8 +92,8 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_.ToU
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
             CoinName      = $Pool_CoinName
-            CoinSymbol    = $Pool_CoinSymbol
-            Currency      = $Pool_CoinSymbol
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
             Price         = 0
             StablePrice   = 0
             MarginOfError = 0
@@ -102,7 +106,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_.ToU
             SSL           = $_ -eq "beam"
             Updated       = (Get-Date).ToUniversalTime()
             PoolFee       = $Pool_PoolFee
-            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
+            Workers       = $PoolCoins_Request.$Pool_Currency.workers
             Hashrate      = $Stat.HashRate_Live
             BLK           = $null
             TSL           = $null

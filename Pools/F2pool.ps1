@@ -28,14 +28,16 @@ catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
 }
 
-$Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency;$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
+$Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency;$Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
 
+    $Pool_Coin = Get-Coin $Pool_Currency
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
+
+    if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
+        $Pool_Wallet = $Wallets."$($_.altsymbol)"
+    }
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
-
-    if (-not $Pool_CoinName) {$Pool_CoinName = $Pool_Currency}
 
     if (-not $InfoOnly) {
         $Divisor  = ConvertFrom-Hash "1$($_.scale)"
@@ -48,12 +50,12 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
 
     $Pool_SSL = $Pool_Currency -in @("BEAM")
 
-    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
+    $Pool_Wallet = Get-WalletWithPaymentId $Pool_Wallet -pidchar '.'
     foreach($Region in $_.region) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
-            CoinName      = $Pool_CoinName
+            CoinName      = $Pool_Coin.Name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live

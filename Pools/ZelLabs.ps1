@@ -19,13 +19,13 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "TCR";  port = 2200; fee = 0.5; rpc = "tcr"; regions = @("eu","us")}
-    [PSCustomObject]@{symbol = "XZC";  port = 7017; fee = 1.0; rpc = "zcoin"; regions = @("eu","us")}
+    [PSCustomObject]@{symbol = "FIRO";  port = 7017; fee = 1.0; rpc = "zcoin"; regions = @("eu","us"); altsymbol = "XZC"}
     [PSCustomObject]@{symbol = "ZEL";  port = 7011; fee = 1.0; rpc = "zel"; regions = @("eu","us")}
 )
 
 $Pools_Requests = [hashtable]@{}
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_Coin          = Get-Coin $_.symbol
     $Pool_Currency      = $_.symbol
     $Pool_Fee           = $_.fee
@@ -33,7 +33,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_RpcPath       = $_.rpc
     $Pool_Name          = $Pool_RpcPath
 
-    $Pool_Wallet        = $Wallets."$($_.symbol)"
+    if (-not ($Pool_Wallet = $Wallets."$($_.symbol)")) {
+        $Pool_Wallet = $Wallets."$($_.altsymbol)"
+    }
 
     $Pool_Regions       = $_.regions
 

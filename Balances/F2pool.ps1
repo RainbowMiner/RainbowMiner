@@ -37,6 +37,7 @@ $Pools_Data = [PSCustomObject]@{
     DCR = "decred/address"
     ETC = "etc/address"
     ETP = "etp/address"
+    FIRO = "zcoin/address"
     HC = "hc/address"
     HDAC = "hdac/address"
     HNS = "hns/address"

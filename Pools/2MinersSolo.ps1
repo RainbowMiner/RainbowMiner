@@ -57,21 +57,24 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
-    [PSCustomObject]@{rpc = "xzc";   symbol = "XZC";   port = 8080; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "xzc";   symbol = "FIRO";   port = 8080; fee = 1.0; divisor = 1e8; altsymbol = "XZC"}
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zel";   symbol = "ZEL";   port = 9090; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
 )
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+$")" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
-    $Pool_Currency = $_.symbol -replace "-.+$"
     $Pool_Host = "solo-$($_.rpc).2miners.com"
     $Pool_Fee = $_.fee
     $Pool_Divisor = $_.divisor
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
+    if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
+        $Pool_Wallet = $Wallets."$($_.altsymbol)"
+    }
 
     $ok = ($Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)"} | Measure-Object).Count -gt 0
     if ($ok -and -not $InfoOnly) {
@@ -136,7 +139,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+$")" -or $InfoOnl
 
     if ($ok) {
         $Pool_Hosts = @()
-        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
+        $Pool_Wallet = Get-WalletWithPaymentId $Pool_Wallet -pidchar '.'
         $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)"} | Select-Object host,port | Sort-Object -Descending:$($Pool_Currency -eq "XZC") {[int]$_.port} | Foreach-Object {
             $Pool_SSL = [int]$_.port -ge 10000
             if ($Pool_Hosts -notcontains "$($_.host)$($Pool_SSL)") {
