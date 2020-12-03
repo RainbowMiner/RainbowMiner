@@ -33,13 +33,33 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 [hashtable]$Pool_Algorithms = @{}
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_.ToUpper();$Pool_Wallet = $Wallets.$Pool_CoinSymbol;($Pool_Wallet -or $InfoOnly) -and $_ -notmatch "^dgb-"} | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_.ToUpper();$Pool_Wallet = $Wallets.$Pool_CoinSymbol;($Pool_Wallet -or $InfoOnly) -and $_ -notmatch "^dgb-"} | ForEach-Object {
 
-    $Pool_Coin      = Get-Coin $Pool_CoinSymbol
+    $Pool_Coin = Get-Coin $Pool_CoinSymbol
 
     $Pool_Algorithm = $Pool_Coin.Algo
     $Pool_CoinName  = $Pool_Coin.Name
-    
+
+    $ok = $false
+    try {
+        $Pool_HelpPage = Invoke-RestMethodAsync "https://$_.solopool.org/help" -tag $Name -cycletime 86400
+        if ($Pool_HelpPage -match 'meta\s+name="arts-pool/config/environment"\s+content="(.+?)"') {
+            $Pool_MetaVars = [System.Web.HttpUtility]::UrlDecode($Matches[1]) | ConvertFrom-Json -ErrorAction Stop
+            $ok = $true
+            if (-not $Pool_Coin) {
+                $Pool_Algorithm = $Pool_MetaVars.TEMPLATE.algorithmTitle
+                $Pool_CoinName  = $Pool_MetaVars.COIN.Name
+            }
+        }
+    } catch {
+        Write-Log -Level Warn "$($Name): $($Pool_CoinSymbol) help page not readable"
+    }
+
+    if (-not $Pool_Algorithm) {
+        Write-Log -Level Warn "Pool $($Name) missing coin $($Pool_CoinSymbol)"
+        return
+    }
+
     if ($_ -eq "xwp" -or $_ -eq "xmr") {
         $Pool_User = $Pool_Wallet
         $Pool_Pass = "{workername:$Worker}"
@@ -53,17 +73,6 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
-
-    $ok = $false
-    try {
-        $Pool_HelpPage = Invoke-RestMethodAsync "https://$_.solopool.org/help" -tag $Name -cycletime 86400
-        if ($Pool_HelpPage -match 'meta\s+name="arts-pool/config/environment"\s+content="(.+?)"') {
-            $Pool_MetaVars = [System.Web.HttpUtility]::UrlDecode($Matches[1]) | ConvertFrom-Json -ErrorAction Stop
-            $ok = $true
-        }
-    } catch {
-        Write-Log -Level Warn "$($Name): $($Pool_CoinSymbol) help page not readable"
-    }
 
     if ($ok) {
         $Pool_Host      = $Pool_MetaVars.APP.StratumHost
