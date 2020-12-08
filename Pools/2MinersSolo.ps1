@@ -38,10 +38,12 @@ catch {
 #    $Name  = $Matches[2]
 #    $Pool_Request | where {$_.host -match "^$($Short).2miners.com"} | select-object -first 1 | foreach {"[PSCustomObject]@{host = `"$($_.host)`"; coin = `"$($Name)`"; algo = `"`"; symbol = `"$(($_.host -split '\.' | Select -First 1).ToUpper())`"; port = $($_.port); fee = 1}"}
 #}
+# List of coins
+#$Pool_HostStatus | where-object {$_.host -notmatch "^solo" -and $_.host -match "^([a-z]+)\."} | Foreach-Object {$Matches[1]} | select-object -unique | sort-object
 
 $Pools_Data = @(
     [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";  port = 5252; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";  port = 5252; fee = 1.0; divisor = 1e8; ssl = $true}
     [PSCustomObject]@{rpc = "btg";   symbol = "BTG";   port = 4040; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "ckb";   symbol = "CKB";   port = 6464; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
@@ -71,6 +73,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
     $Pool_Fee = $_.fee
     $Pool_Divisor = $_.divisor
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_SSL = $_.ssl
 
     if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
         $Pool_Wallet = $Wallets."$($_.altsymbol)"
@@ -138,12 +141,12 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
     }
 
     if ($ok) {
-        $Pool_Hosts = @()
+        [System.Collections.Generic.List[string]]$Pool_Hosts = @()
         $Pool_Wallet = Get-WalletWithPaymentId $Pool_Wallet -pidchar '.'
-        $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)"} | Select-Object host,port | Sort-Object -Descending:$($Pool_Currency -eq "XZC") {[int]$_.port} | Foreach-Object {
-            $Pool_SSL = [int]$_.port -ge 10000
-            if ($Pool_Hosts -notcontains "$($_.host)$($Pool_SSL)") {
-                $Pool_Hosts += "$($_.host)$($Pool_SSL)"
+        $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)"} | Select-Object host,port | Sort-Object -Descending:$($Pool_Currency -eq "FIRO") {[int]$_.port} | Foreach-Object {
+            $Pool_SSL_0 = $Pool_SSL -or ([int]$_.port -ge 10000)
+            if ($Pool_Hosts -notcontains "$($_.host)$($Pool_SSL_0)") {
+                $Pool_Hosts += "$($_.host)$($Pool_SSL_0)"
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     Algorithm0    = $Pool_Algorithm_Norm
@@ -153,13 +156,13 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = if ($Pool_SSL) {"stratum+ssl"} else {"stratum+tcp"}
+                    Protocol      = if ($Pool_SSL_0) {"stratum+ssl"} else {"stratum+tcp"}
                     Host          = "$($_.host)"
                     Port          = [int]$_.port
                     User          = "$($Pool_Wallet).{workername:$Worker}"
                     Pass          = "x"
                     Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
-                    SSL           = $Pool_SSL
+                    SSL           = $Pool_SSL_0
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     DataWindow    = $DataWindow
