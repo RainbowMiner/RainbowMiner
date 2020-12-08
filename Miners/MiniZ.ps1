@@ -10,17 +10,13 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "1.6w2"
+$Version = "1.6x"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda10_linux-x64.tar.gz"
-            Cuda = "10.0"
-        }
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda8_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6x-miniz/miniZ_v1.6x_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -28,11 +24,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda10_win-x64.7z"
-            Cuda = "10.0"
-        }
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6w2-miniz/miniZ_v1.6w2_cuda8_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6x-miniz/miniZ_v1.6x_win-x64.7z"
             Cuda = "8.0"
         }
     )
