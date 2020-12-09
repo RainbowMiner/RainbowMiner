@@ -500,7 +500,7 @@ class Miner {
                 Difficulty = $Difficulty
                 Devices    = $Devices
                 Date       = (Get-Date).ToUniversalTime()
-                PowerDraw  = if ($PowerDraw) {$PowerDraw} else {$this.GetPowerDraw()}
+                PowerDraw  = if ($PowerDraw) {$PowerDraw} else {Get-DevicePowerDraw -DeviceName $this.DeviceName}
                 Round      = $this.Rounds
             }
         $this.ActiveLast = Get-Date
@@ -591,10 +591,6 @@ class Miner {
         else {
             return $HashRates_Average
         }
-    }
-
-    [double]GetPowerDraw() {
-        return Get-DevicePowerDraw -DeviceName $this.DeviceName
     }
 
     [Bool]IsBenchmarking() {
