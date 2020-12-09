@@ -484,7 +484,7 @@ class Miner {
                             }
                         }
 
-                        $this.AddMinerData($Line_Simple,[PSCustomObject]@{[String]$this.Algorithm = $HashRates},$null,$Devices)
+                        $this.AddMinerData($Line_Simple,[PSCustomObject]@{[String]$this.Algorithm = $HashRates},$null,$null,$Devices)
                     }
                 }
             }
@@ -493,25 +493,29 @@ class Miner {
         }
     }
 
-    AddMinerData($Raw,$HashRate,$Difficulty,$Devices) {
+    AddMinerData($Raw,$HashRate,$Difficulty,$PowerDraw,$Devices) {
         $this.Data += [PSCustomObject]@{
                 Raw        = if ($Global:Session.LogLevel -eq "Debug") {$Raw} else {$null}
                 HashRate   = $HashRate
                 Difficulty = $Difficulty
                 Devices    = $Devices
                 Date       = (Get-Date).ToUniversalTime()
-                PowerDraw  = Get-DevicePowerDraw -DeviceName $this.DeviceName
+                PowerDraw  = if ($PowerDraw) {$PowerDraw} else {$this.GetPowerDraw()}
                 Round      = $this.Rounds
             }
         $this.ActiveLast = Get-Date
     }
 
     AddMinerData($Raw,$HashRate) {
-        $this.AddMinerData($Raw,$HashRate,$null,$null)
+        $this.AddMinerData($Raw,$HashRate,$null,$null,$null)
     }
 
     AddMinerData($Raw,$HashRate,$Difficulty) {
-        $this.AddMinerData($Raw,$HashRate,$Difficulty,$null)
+        $this.AddMinerData($Raw,$HashRate,$Difficulty,$null,$null)
+    }
+
+    AddMinerData($Raw,$HashRate,$Difficulty,$PowerDraw) {
+        $this.AddMinerData($Raw,$HashRate,$Difficulty,$PowerDraw,$null)
     }
 
     [Int]GetMinerDataCount() {
@@ -587,6 +591,10 @@ class Miner {
         else {
             return $HashRates_Average
         }
+    }
+
+    [double]GetPowerDraw() {
+        return Get-DevicePowerDraw -DeviceName $this.DeviceName
     }
 
     [Bool]IsBenchmarking() {
@@ -834,9 +842,6 @@ class BMiner : Miner {
 
             $HashRate_Value = 0.0
 
-            $Accepted_Shares = [Int64]$Data.stratums.$_.accepted_shares
-            $Rejected_Shares = [Int64]$Data.stratums.$_.rejected_shares
-
             $Data.devices | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
                 $Data.devices.$_.solvers | Where-Object {$HashRate_Name -like "$(Get-Algorithm $_.Algorithm)*"} | ForEach-Object {
                     if ($_.speed_info.hash_rate) {$HashRate_Value += [Double]$_.speed_info.hash_rate}
@@ -845,6 +850,9 @@ class BMiner : Miner {
             }
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
                 $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                $Accepted_Shares = [Int64]$Data.stratums.$_.accepted_shares
+                $Rejected_Shares = [Int64]$Data.stratums.$_.rejected_shares
                 $this.UpdateShares($Index,$Accepted_Shares,$Rejected_Shares)
             }
             $Index++
@@ -885,11 +893,11 @@ class Cast : Miner {
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.devices.hash_rate | Measure-Object -Sum).Sum / 1000
 
-        $Accepted_Shares = [Int64]$Data.shares.num_accepted
-        $Rejected_Shares = [Int64]($Data.shares.num_rejected + $Data.shares.num_rejected + $Data.shares.num_network_fail + $Data.shares.num_outdated)
-
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]$Data.shares.num_accepted
+            $Rejected_Shares = [Int64]($Data.shares.num_rejected + $Data.shares.num_rejected + $Data.shares.num_network_fail + $Data.shares.num_outdated)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -926,14 +934,14 @@ class Ccminer : Miner {
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = if ($Data.HS -ne $null -and [Double]$Data.HS -gt [Double]$Data.KHS) {[Double]$Data.HS} else {[Double]$Data.KHS * 1000}
 
-        $Difficulty_Value = [Double]$Data.DIFF
-
-        $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
-        $Rejected_Shares = [Int64]($Data.REJ | Measure-Object -Sum).Sum
-
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.DIFF
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+    
+            $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
+            $Rejected_Shares = [Int64]($Data.REJ | Measure-Object -Sum).Sum
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -967,19 +975,21 @@ class Claymore : Miner {
             return
         }
 
-        $HashRate_Name = [String]$this.Algorithm[0]
-
+        $HashRate_Name    = [String]$this.Algorithm[0]
         $HashRate_Value   = [Double]($Data.result[2] -split ";")[0]
-        $Accepted_Shares  = [Int64]($Data.result[2] -split ";")[1]
-        $Rejected_Shares  = [Int64]($Data.result[2] -split ";")[2]
-        $Accepted_Shares -= $Rejected_Shares
 
-        if ($this.Algorithm -match "^(ethash|kawpow|neoscrypt|progpow)" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
+        if ($this.Algorithm -match "^ethash|^etchash|^kawpow|^neoscrypt|progpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
 
         $HashRate_Value = [Int64]$HashRate_Value
 
+        $PowerDraw      = [Double]$Data.result[9]
+
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares  = [Int64]($Data.result[2] -split ";")[1]
+            $Rejected_Shares  = [Int64]($Data.result[2] -split ";")[2]
+            $Accepted_Shares -= $Rejected_Shares
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -987,21 +997,20 @@ class Claymore : Miner {
             $HashRate_Name = [String]$this.Algorithm[1]
 
             $HashRate_Value = [Double]($Data.result[4] -split ";")[0]
-            $Accepted_Shares = [Int64]($Data.result[4] -split ";")[1]
-            $Rejected_Shares = [Int64]($Data.result[4] -split ";")[2]
-            $Accepted_Shares -= $Rejected_Shares
 
-            if ($this.Algorithm -like "ethash*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
-            if ($this.Algorithm -like "progpow*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
-            if ($this.Algorithm -eq "neoscrypt") {$HashRate_Value *= 1000}
+            if ($this.Algorithm -match "^ethash|^etchash|^kawpow|^neoscrypt|progpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
 
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
                 $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                $Accepted_Shares = [Int64]($Data.result[4] -split ";")[1]
+                $Rejected_Shares = [Int64]($Data.result[4] -split ";")[2]
+                $Accepted_Shares -= $Rejected_Shares
                 $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
             }
         }
 
-        $this.AddMinerData($Response,$HashRate)
+        $this.AddMinerData($Response,$HashRate,$null,$PowerDraw)
 
         $this.CleanupMinerData()
     }
@@ -1033,11 +1042,11 @@ class CryptoDredge : Miner {
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.KHS * 1000
 
-        $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
-        $Rejected_Shares = [Int64]($Data.REJ | Measure-Object -Sum).Sum
-
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
+            $Rejected_Shares = [Int64]($Data.REJ | Measure-Object -Sum).Sum
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1070,15 +1079,15 @@ class Dstm : Miner {
             return
         }
 
-        $Accepted_Shares = [Double]($Data.result.accepted_shares | Measure-Object -Sum).Sum
-        $Rejected_Shares = [Double]($Data.result.rejected_shares | Measure-Object -Sum).Sum
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.result.sol_ps | Measure-Object -Sum).Sum
         if (-not $HashRate_Value) {$HashRate_Value = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum} #ewbf fix
         
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Double]($Data.result.accepted_shares | Measure-Object -Sum).Sum
+            $Rejected_Shares = [Double]($Data.result.rejected_shares | Measure-Object -Sum).Sum
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1113,15 +1122,15 @@ class Eminer : Miner {
             return
         }
         $Global:ProgressPreference = $oldProgressPreference
-
-        $Accepted_Shares = [Double]$Data.found_solutions
-        $Rejected_Shares = [Double]($Data.invalid_solutions + $Data.rejected_solutions)
         
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.total_hashrate_mean | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Double]$Data.found_solutions
+            $Rejected_Shares = [Double]($Data.invalid_solutions + $Data.rejected_solutions)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1160,9 +1169,6 @@ class EnemyZ : Miner {
 
         $HashRate_Name = [String]$this.Algorithm[0]
 
-        $Accepted_Shares  = [Int64]$Data.accepted_count
-        $Rejected_Shares  = [Int64]$Data.rejected_count
-        $Difficulty_Value = [Double]$Data.pool_difficulty
         $HashRate_Value   = [Double]$Data.hashrate
         $HashRateGPUs_Value = [Double]($Data.gpus.hashrate | Measure-Object -Sum).Sum
         if ($HashRate_Value -le $HashRateGPUs_Value*0.6) {
@@ -1171,7 +1177,12 @@ class EnemyZ : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.pool_difficulty
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Int64]$Data.accepted_count
+            $Rejected_Shares  = [Int64]$Data.rejected_count
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1215,12 +1226,12 @@ class EthminerWrapper : Miner {
                             default {1}
                         })
 
-                        $Accepted_Shares = [Int64]$(if ($Line_Cols[3] -match "A(\d+)") {$Matches[1]})
-                        $Rejected_Shares = [Int64]0
-
                         if ($HashRate_Value -gt 0) {
                             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
                             $Difficulty | Add-Member @{$HashRate_Name = $this.Difficulty_Value}
+
+                            $Accepted_Shares = [Int64]$(if ($Line_Cols[3] -match "A(\d+)") {$Matches[1]})
+                            $Rejected_Shares = [Int64]0
                             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                         }
 
@@ -1345,10 +1356,6 @@ class Fireice : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Difficulty_Value = [Double]$Data.results.diff_current
-        $Accepted_Shares  = [Double]$Data.results.shares_good
-        $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]$Data.hashrate.total[0]
         if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[1]} #fix
@@ -1356,7 +1363,12 @@ class Fireice : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.results.diff_current
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Double]$Data.results.shares_good
+            $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1395,33 +1407,34 @@ class Gminer : Miner {
 
         #$Version = if ($Data.miner -match "(\d\.[\d\.]+)") {$Matches[1]} else {$null}
 
-        $Accepted_Shares = [Int64]($Data.devices.accepted_shares | Measure-Object -Sum).Sum
-        $Rejected_Shares = [Int64]($Data.devices.rejected_shares | Measure-Object -Sum).Sum
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.devices.speed | Measure-Object -Sum).Sum
+
+        $PowerDraw      = [Double]($Data.devices.power_usage | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             #if ($HashRate_Name -eq "Eaglesong" -and $Version -ne $null -and [version]$Version -le [version]"1.77") {$HashRate_Value /= 2}
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]($Data.devices.accepted_shares | Measure-Object -Sum).Sum
+            $Rejected_Shares = [Int64]($Data.devices.rejected_shares | Measure-Object -Sum).Sum
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
             if ($this.Algorithm[1]) {
-                $Accepted_Shares = [Int64]($Data.devices.accepted_shares2 | Measure-Object -Sum).Sum
-                $Rejected_Shares = [Int64]($Data.devices.rejected_shares2 | Measure-Object -Sum).Sum
-
                 $HashRate_Name = [String]$this.Algorithm[1]
                 $HashRate_Value = [Double]($Data.devices.speed2 | Measure-Object -Sum).Sum
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                    #if ($HashRate_Name -eq "Eaglesong" -and $Version -ne $null -and [version]$Version -le [version]"1.78") {$HashRate_Value /= 2}
                     $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                    $Accepted_Shares = [Int64]($Data.devices.accepted_shares2 | Measure-Object -Sum).Sum
+                    $Rejected_Shares = [Int64]($Data.devices.rejected_shares2 | Measure-Object -Sum).Sum
                     $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
                 }
             }
         }
 
-        $this.AddMinerData($Response,$HashRate)
+        $this.AddMinerData($Response,$HashRate,$null,$PowerDraw)
 
         $this.CleanupMinerData()
     }
@@ -1498,14 +1511,14 @@ class GrinPro : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Accepted_Shares = [Int64]$Data.shares.accepted
-        $Rejected_Shares = [Int64]($Data.shares.submitted - $Data.shares.accepted)
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.workers | Where-Object status -eq "ONLINE" | Select-Object -ExpandProperty graphsPerSecond | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]$Data.shares.accepted
+            $Rejected_Shares = [Int64]($Data.shares.submitted - $Data.shares.accepted)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1571,10 +1584,6 @@ class Jceminer : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Difficulty_Value = [Double]$Data.results.diff_current
-        $Accepted_Shares  = [Double]$Data.results.shares_good
-        $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
-
         $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $Data.algo))
         if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix
         if (-not $HashRate_Name) {$HashRate_Name = [String]$this.Algorithm[0]} #fireice fix
@@ -1584,7 +1593,12 @@ class Jceminer : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.results.diff_current
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Double]$Data.results.shares_good
+            $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1620,18 +1634,20 @@ class Lol : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Accepted_Shares = [Int64]$Data.Session.Accepted
-        $Rejected_Shares = [Int64]($Data.Session.Submitted - $Data.Session.Accepted)
-
         $HashRate_Name  = [String]$this.Algorithm[0]
-        $HashRate_Value = [Double]$data.Session.Performance_Summary
+        $HashRate_Value = [Double]$Data.Session.Performance_Summary
+
+        $PowerDraw      = [Double]$Data.Session.TotalPower
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]$Data.Session.Accepted
+            $Rejected_Shares = [Int64]($Data.Session.Submitted - $Data.Session.Accepted)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData($Data,$HashRate)
+        $this.AddMinerData($Data,$HashRate,$null,$PowerDraw)
 
         $this.CleanupMinerData()
     }
@@ -1663,11 +1679,11 @@ class Luk : Miner {
         $HashRate_Name  = $this.Algorithm[0]        
         $HashRate_Value = [double]$Data.hash_rate
 
-        $Accepted_Shares = [int64]$Data.num_shares_accepted
-        $Rejected_Shares = [int64]$Data.num_shares_rejected
-
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [int64]$Data.num_shares_accepted
+            $Rejected_Shares = [int64]$Data.num_shares_rejected
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1688,7 +1704,8 @@ class MiniZ : Miner {
         $Request = '{"id":"1", "method":"getstat"}'
         $Response = ""
 
-        $HashRate = [PSCustomObject]@{}
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
 
         try {
             $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
@@ -1700,18 +1717,23 @@ class MiniZ : Miner {
             return
         }
 
-        $Accepted_Shares = [Int64]($Data.result.accepted_shares | Measure-Object -Sum).Sum
-        $Rejected_Shares = [Int64]($Data.result.rejected_shares | Measure-Object -Sum).Sum
+        $HashRate_Name    = [String]$this.Algorithm[0]
+        $HashRate_Value   = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum
 
-        $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum
+        $PowerDraw        = [Double]($Data.result.gpu_power_usage | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.pool.difficulty
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Int64]($Data.result.accepted_shares | Measure-Object -Sum).Sum
+            $Rejected_Shares  = [Int64]($Data.result.rejected_shares | Measure-Object -Sum).Sum
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData($Response,$HashRate)
+        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
 
         $this.CleanupMinerData()
     }
@@ -1780,14 +1802,15 @@ class Nanominer : Miner {
         $HashRate_Name = [String]$this.Algorithm[0]
 
         $HashRate_Value = [Double]($Data.result[2] -split ";")[0]
-        $Accepted_Shares = [Int64]($Data.result[2] -split ";")[1]
-        $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
-        $Accepted_Shares -= $Rejected_Shares
 
         if ($this.Algorithm -like "ethash*") {$HashRate_Value *= 1000}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]($Data.result[2] -split ";")[1]
+            $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
+            $Accepted_Shares -= $Rejected_Shares
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1828,34 +1851,31 @@ class NBminer : Miner {
 
         $HashRate_Name = [String]$this.Algorithm[$ix]
 
-        $HashRate_Value = $Difficulty_Value = 0.0
-        $Accepted_Shares = $Rejected_Shares = 0
-
-        $Accepted_Shares  = [Int64]$Data.stratum.accepted_shares
-        $Rejected_Shares  = [Int64]$Data.stratum.rejected_shares
-        $Difficulty_Value = [Double](ConvertFrom-Hash($Data.stratum.difficulty))
-
         $HashRate_Value = [Double]$Data.miner.total_hashrate_raw
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double](ConvertFrom-Hash($Data.stratum.difficulty))
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Int64]$Data.stratum.accepted_shares
+            $Rejected_Shares  = [Int64]$Data.stratum.rejected_shares
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
             if ($ix -and $this.Algorithm[0]) {
                 $HashRate_Name = [String]$this.Algorithm[0]
 
-                $HashRate_Value = $Difficulty_Value = 0.0
-                $Accepted_Shares = $Rejected_Shares = 0
-
                 $HashRate_Value = [Double]$Data.miner.total_hashrate2_raw
-                $Accepted_Shares  = [Int64]$Data.stratum.accepted_shares2
-                $Rejected_Shares  = [Int64]$Data.stratum.rejected_shares2
-                $Difficulty_Value = [Double](ConvertFrom-Hash($Data.stratum.difficulty2))
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
                     $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                    $Difficulty_Value = [Double](ConvertFrom-Hash($Data.stratum.difficulty2))
                     $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+                    $Accepted_Shares  = [Int64]$Data.stratum.accepted_shares2
+                    $Rejected_Shares  = [Int64]$Data.stratum.rejected_shares2
                     $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
                 }
             }
@@ -1890,15 +1910,15 @@ class Nheq : Miner {
             return
         }
 
-        $RunningMinutes = ($this.GetRunningTime()).TotalMinutes
-        $Accepted_Shares = [Double]($Data.result.accepted_per_minute | Measure-Object -Sum).Sum * $RunningMinutes
-        $Rejected_Shares = [Double]($Data.result.rejected_per_minute | Measure-Object -Sum).Sum * $RunningMinutes
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.result.speed_ips | Measure-Object -Sum).Sum * 1e6
         
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $RunningMinutes = ($this.GetRunningTime()).TotalMinutes
+            $Accepted_Shares = [Double]($Data.result.accepted_per_minute | Measure-Object -Sum).Sum * $RunningMinutes
+            $Rejected_Shares = [Double]($Data.result.rejected_per_minute | Measure-Object -Sum).Sum * $RunningMinutes
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1935,11 +1955,11 @@ class NoncerPro : Miner {
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.totalHashrate
 
-        $Rejected_Shares = [Int64]$Data.invalidShares
-        $Accepted_Shares = [Int64]$Data.totalShares - $Rejected_Shares
-
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Rejected_Shares = [Int64]$Data.invalidShares
+            $Accepted_Shares = [Int64]$Data.totalShares - $Rejected_Shares
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -1976,11 +1996,11 @@ class Nqminer : Miner {
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.totalHashrate
 
-        $Rejected_Shares = [Int64]$Data.errors
-        $Accepted_Shares = [Int64]$Data.shares
-
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Rejected_Shares = [Int64]$Data.errors
+            $Accepted_Shares = [Int64]$Data.shares
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -2055,14 +2075,14 @@ class RH : Miner {
             return
         }
 
-        $Accepted_Shares = [Double]($Data.infos.accepted | Measure-Object -Sum).Sum
-        $Rejected_Shares = [Double]($Data.infos.rejected | Measure-Object -Sum).Sum
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.infos.speed | Measure-Object -Sum).Sum
         
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Double]($Data.infos.accepted | Measure-Object -Sum).Sum
+            $Rejected_Shares = [Double]($Data.infos.rejected | Measure-Object -Sum).Sum
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -2209,15 +2229,15 @@ class SrbMiner : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Accepted_Shares = [Int64]$Data.shares.accepted
-        $Rejected_Shares = [Int64]$Data.shares.rejected
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [double]$Data.HashRate_total_5min
         if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.HashRate_total_now}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]$Data.shares.accepted
+            $Rejected_Shares = [Int64]$Data.shares.rejected
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -2238,7 +2258,8 @@ class SrbMinerMulti : Miner {
         $Request = ""
         $Response = ""
 
-        $HashRate = [PSCustomObject]@{}
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
 
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
@@ -2254,15 +2275,18 @@ class SrbMinerMulti : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Accepted_Shares = [Int64]$Data.shares.accepted
-        $Rejected_Shares = [Int64]$Data.shares.rejected
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [double]$Data.hashrate."5min"
         if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.hashrate.now}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.pool.difficulty
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares = [Int64]$Data.shares.accepted
+            $Rejected_Shares = [Int64]$Data.shares.rejected
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -2332,11 +2356,11 @@ class SwapminerWrapper : Miner {
 
                         $HashRate_Value  = [double]($Matches[1] -replace ',','.')
 
-                        $Accepted_Shares = [Int64]$Matches[3]
-                        $Rejected_Shares = [Int64]$Matches[4]
-
                         if ($HashRate_Value -gt 0) {
                             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                            $Accepted_Shares = [Int64]$Matches[3]
+                            $Rejected_Shares = [Int64]$Matches[4]
                             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                         }
 
@@ -2378,10 +2402,6 @@ class Xgminer : Miner {
             return
         }
 
-        $Difficulty_Value = [Double]$Data.SUMMARY.Difficulty_Accepted
-        $Accepted_Shares  = [Int64]$Data.SUMMARY.accepted
-        $Rejected_Shares  = [Int64]$Data.SUMMARY.rejected
-
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = If ($Data.SUMMARY.HS_5s) { [Double]$Data.SUMMARY.HS_5s }
         elseif ($Data.SUMMARY.KHS_5s) { [Double]$Data.SUMMARY.KHS_5s * 1e3 }
@@ -2403,7 +2423,12 @@ class Xgminer : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
-            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}            
+
+            $Difficulty_Value = [Double]$Data.SUMMARY.Difficulty_Accepted
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Int64]$Data.SUMMARY.accepted
+            $Rejected_Shares  = [Int64]$Data.SUMMARY.rejected
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -2518,10 +2543,6 @@ class Xmrig : Miner {
             return
         }
         $Global:ProgressPreference = $oldProgressPreference
-
-        $Accepted_Shares  = [Double]$Data.results.shares_good
-        $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
-        $Difficulty_Value = [Double]$Data.results.diff_current
         
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.hashrate.total[0]
@@ -2530,7 +2551,12 @@ class Xmrig : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.results.diff_current
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Double]$Data.results.shares_good
+            $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
@@ -2672,10 +2698,6 @@ class Xmrig3 : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Accepted_Shares  = [Double]$Data.results.shares_good
-        $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
-        $Difficulty_Value = [Double]$Data.results.diff_current
-        
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.hashrate.total[0]
         if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[1]} #fix
@@ -2683,7 +2705,12 @@ class Xmrig3 : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.results.diff_current
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Double]$Data.results.shares_good
+            $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
