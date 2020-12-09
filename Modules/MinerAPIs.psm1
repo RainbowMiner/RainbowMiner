@@ -1845,9 +1845,10 @@ class NBminer : Miner {
 
         $ix = if ($this.Algorithm[1]) {1} else {0}
 
-        $HashRate_Name = [String]$this.Algorithm[$ix]
-
+        $HashRate_Name  = [String]$this.Algorithm[$ix]
         $HashRate_Value = [Double]$Data.miner.total_hashrate_raw
+
+        $PowerDraw      = [Double]$Data.miner.total_power_consume
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
@@ -1877,7 +1878,7 @@ class NBminer : Miner {
             }
         }
 
-        $this.AddMinerData($Response,$HashRate,$Difficulty)
+        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
 
         $this.CleanupMinerData()
     }
