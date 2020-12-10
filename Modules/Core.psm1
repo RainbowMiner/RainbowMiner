@@ -441,8 +441,6 @@ function Invoke-Core {
         Get-NimqHashrates -Silent
         Get-Regions -Silent
         Get-Regions2 -Silent
-
-        Update-Algorithms2EthDagSizes
     }
 
     if (Test-Path $Session.ConfigFiles["Config"].Path) {

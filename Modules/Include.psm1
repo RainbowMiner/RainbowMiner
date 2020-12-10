@@ -3845,10 +3845,16 @@ function Get-EthDAGSize {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [String]$CoinSymbol = ""
+        [String]$CoinSymbol = "",
+        [Parameter(Mandatory = $false)]
+        [String]$Algorithm = "",
+        [Parameter(Mandatory = $false)]
+        [Double]$Minimum = 3
     )
     if (-not (Test-Path Variable:Global:GlobalEthDAGSizes)) {Get-EthDAGSizes -Silent}
-    if ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null) {$Global:GlobalEthDAGSizes.$CoinSymbol} else {3}
+    if     ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null)          {$Global:GlobalEthDAGSizes.$CoinSymbol} 
+    elseif ($Algorithm -and $Global:GlobalAlgorithms2EthDagSizes.$Algorithm -ne $null) {$Global:GlobalAlgorithms2EthDagSizes.$Algorithm}
+    else   {$Minimum}
 }
 
 function Get-NimqHashrate {
@@ -3949,6 +3955,8 @@ function Get-EthDAGSizes {
         [Switch]$EnableRemoteUpdate = $false
     )
 
+    if (-not (Test-Path Variable:Global:GlobalCoinsDB)) {Get-CoinsDB -Silent}
+
     if ($EnableRemoteUpdate) {
         $Request = [PSCustomObject]@{}
         try {
@@ -3967,6 +3975,16 @@ function Get-EthDAGSizes {
     }
     $Global:GlobalEthDAGSizes = [PSCustomObject]@{}
     $Request.PSObject.Properties | Foreach-Object {$Global:GlobalEthDAGSizes | Add-Member $_.Name ($_.Value/1Gb)}
+
+    $Global:GlobalAlgorithms2EthDagSizes = [PSCustomObject]@{}
+    $Global:GlobalCoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Global:GlobalEthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Foreach-Object {
+        if ($Global:GlobalAlgorithms2EthDagSizes.$Algo -eq $null) {
+            $Global:GlobalAlgorithms2EthDagSizes | Add-Member $Algo $Global:GlobalEthDAGSizes.$Coin -Force
+        } elseif ($Global:GlobalAlgorithms2EthDagSizes.$Algo -lt $Global:GlobalEthDAGSizes.$Coin) {
+            $Global:GlobalAlgorithms2EthDagSizes.$Algo = $Global:GlobalEthDAGSizes.$Coin
+        }
+    }
+
     if (-not $Silent) {$Global:GlobalEthDAGSizes}
 }
 
@@ -3983,13 +4001,6 @@ function Get-NimqHashrates {
 
     }
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
-}
-
-function Update-Algorithms2EthDagSizes {
-    [hashtable]$Global:GlobalAlgorithms2EthDagSizes = @{}
-    $Global:GlobalCoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Global:GlobalEthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Where-Object {-not $Global:GlobalAlgorithms2EthDagSizes.ContainsKey($Algo) -or $Global:GlobalAlgorithms2EthDagSizes[$Algo] -lt $Global:GlobalEthDAGSizes.$Coin} | Foreach-Object {
-        $Global:GlobalAlgorithms2EthDagSizes[$Algo] = $Global:GlobalEthDAGSizes.$Coin
-    }
 }
 
 function Test-VRAM {
