@@ -34,10 +34,8 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
     return
 }
 
-$Pool_EthDAGSize = 2.5
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -delay 1000 -tag $Name -cycletime 120
-    $Pool_EthDAGSize = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object {$_.algo -eq "ethash"} | Foreach-Object {Get-EthDAGSize $_.symbol} | Measure-Object -Maximum).Maximum
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -68,7 +66,15 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
+    $Pool_EthProxy = $null
+    $Pool_EthDAGSize = $null
+
+    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+        $Pool_EthProxy   = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}
+        if (-not $Pool_Symbol) {
+            $Pool_EthDAGSize = $Global:GlobalAlgorithms2EthDagSizes[$Pool_Algorithm_Norm]
+        }
+    }
 
     $Pool_Factor = [double]$Pool_Request.$_.mbtc_mh_factor
     if ($Pool_Factor -le 0) {

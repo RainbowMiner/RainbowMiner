@@ -3985,6 +3985,13 @@ function Get-NimqHashrates {
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
 
+function Update-Algorithms2EthDagSizes {
+    [hashtable]$Global:GlobalAlgorithms2EthDagSizes = @{}
+    $Global:GlobalCoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Global:GlobalEthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Where-Object {-not $Global:GlobalAlgorithms2EthDagSizes.ContainsKey($Algo) -or $Global:GlobalAlgorithms2EthDagSizes[$Algo] -lt $Global:GlobalEthDAGSizes.$Coin} | Foreach-Object {
+        $Global:GlobalAlgorithms2EthDagSizes[$Algo] = $Global:GlobalEthDAGSizes.$Coin
+    }
+}
+
 function Test-VRAM {
     [CmdletBinding()]
     param(
