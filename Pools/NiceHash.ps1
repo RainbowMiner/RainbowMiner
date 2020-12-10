@@ -65,6 +65,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
         "EquihashR25x5x3"   {"BEAM"}
         "Lbry"              {"LBC"}
         "RandomX"           {"XMR"}
+        "Octopus"           {"CFX"}
     }
     
     $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
@@ -72,8 +73,15 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
 
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
-    $Pool_EthDAGSize = if ($Pool_Algorithm_Norm -eq "Ethash") {Get-EthDAGSize "ETH"} else {$null}
+    $Pool_EthProxy = $null
+    $Pool_EthDAGSize = $null
+
+    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+        $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+        if (-not $Pool_CoinSymbol) {
+            $Pool_EthDAGSize = $Global:GlobalAlgorithms2EthDagSizes[$Pool_Algorithm_Norm]
+        }
+    }
 
     $Pool_Host = ".nicehash.com"
 
