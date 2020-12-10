@@ -74,13 +74,9 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
 
     $Pool_EthProxy = $null
-    $Pool_EthDAGSize = $null
 
     if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
         $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
-        if (-not $Pool_CoinSymbol) {
-            $Pool_EthDAGSize = $Global:GlobalAlgorithms2EthDagSizes[$Pool_Algorithm_Norm]
-        }
     }
 
     $Pool_Host = ".nicehash.com"
@@ -123,7 +119,6 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                         }
                     })
                     EthMode       = $Pool_EthProxy
-                    EthDAGSize    = $Pool_EthDAGSize
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
