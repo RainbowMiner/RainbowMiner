@@ -23,7 +23,7 @@ $UriCuda = @(
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2} #ProgPOW
+    [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOW
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -63,7 +63,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         $CoinSymbol = if ($Pools.$Algorithm_Norm_0.CoinSymbol) {$Pools.$Algorithm_Norm_0.CoinSymbol} else {"ZANO"}
 
-        $MinMemGb = if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $CoinSymbol}
+        $MinMemGB = Get-EthDAGSize -CoinSymbol $CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
 
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 

@@ -115,7 +115,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $SecondAlgorithm = $_.SecondAlgorithm
             $SecondAlgorithm_Norm = if ($SecondAlgorithm) {Get-Algorithm $SecondAlgorithm} else {$null}
 
-			$MinMemGB = if ($MainAlgorithm_Norm_0 -eq "Ethash") {if ($Pools.$MainAlgorithm_Norm_0.EthDAGSize) {$Pools.$MainAlgorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol}} else {$_.MinMemGB}
+			$MinMemGB = Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb
 
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 

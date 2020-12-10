@@ -87,7 +87,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $CoinSymbol = if ($Pools.$Algorithm_Norm_0.CoinSymbol) {$Pools.$Algorithm_Norm_0.CoinSymbol} else {"RVN"}
 
-            $MinMemGB = if ($Pools.$Algorithm_Norm_0.EthDAGSize) {$Pools.$Algorithm_Norm_0.EthDAGSize} else {Get-EthDAGSize $CoinSymbol}
+            $MinMemGB = Get-EthDAGSize -CoinSymbol $CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
 
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
