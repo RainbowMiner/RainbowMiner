@@ -94,7 +94,7 @@ foreach ($Miner_Vendor in @("AMD")) {
 							daemon_mode     = $false
 							flush_stdout    = $false
 							output_file     = ""
-							httpd_port      = [Int]$Miner_Port
+							httpd_port      = "`$mport"
 							http_login      = ""
 							http_pass       = ""
 							prefer_ipv4     = $true
