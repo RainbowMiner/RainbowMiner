@@ -64,7 +64,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--devices=$($DeviceIDsAll) --address=$($Pools.$Algorithm_Norm.Wallet -replace "\s+") --name=$($Pools.$Algorithm_Norm.Worker) --server=$($Pools.$Algorithm_Norm.Host) --port=$($Pool_Port) --api --apiport=$($Miner_Port) --mode=dumb"
+					Arguments      = "--devices=$($DeviceIDsAll) --address=$($Pools.$Algorithm_Norm.Wallet -replace "\s+") --name=$($Pools.$Algorithm_Norm.Worker) --server=$($Pools.$Algorithm_Norm.Host) --port=$($Pool_Port) --api --apiport=`$mport --mode=dumb"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "NoncerPro"
 					Port           = $Miner_Port
