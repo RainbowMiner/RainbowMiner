@@ -13,8 +13,6 @@ $Port = "500{0:d2}"
 $DevFee = 0.0
 $Version = "3.15.3"
 
-$f=$Global:GlobalCPUInfo.Features
-
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
     $Path_AVX = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'avx'} elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
