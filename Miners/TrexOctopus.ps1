@@ -10,7 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "326{0:d2}"
 $DevFee = 1.0
-$Version = "0.19.1"
+$Version = "0.19.3"
 
 # use cuda 10, if cuda 11.1 is installed. Otherwise do not use this miner module.
 
@@ -18,7 +18,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexOctopus\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-linux-cuda10.0.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.3-trex/t-rex-0.19.3-linux-cuda10.0.tar.gz"
             Cuda   = "11.1"
         }
     )
@@ -26,7 +26,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexOctopus\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-trex/t-rex-0.19.1-win-cuda10.0.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.3-trex/t-rex-0.19.3-win-cuda10.0.zip"
             Cuda   = "11.1"
         }
     )
