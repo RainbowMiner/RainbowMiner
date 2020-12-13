@@ -49,7 +49,6 @@ if (-not $DownloaderConfig) {
 $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | ForEach-Object {
     $URI = $_.URI
     $Path = $_.Path
-    $Searchable = $_.Searchable
     $IsMiner = $_.IsMiner
 
     if ($IsMiner) {
@@ -79,22 +78,6 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
             Write-Log -Level Warn "Downloader-error: $($_.Exception.Message)"
             if ($URI) {Write-Log -Level Warn "Cannot download $($Path) distributed at $($URI). "}
             else {Write-Log -Level Warn "Cannot download $($Path). "}
-
-            if ($Searchable) {
-                Write-Log -Level Warn "Searching for $($Path). "
-
-                $Path_Old = Get-PSDrive -PSProvider FileSystem | ForEach-Object {Get-ChildItem -Path $_.Root -Include (Split-Path $Path -Leaf) -Recurse -ErrorAction Ignore} | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
-                $Path_New = $Path
-            }
-
-            if ($Searchable -and $Path_Old) {
-                if (Test-Path (Split-Path $Path_New)) {(Split-Path $Path_New) | Remove-Item -Recurse -Force}
-                (Split-Path $Path_Old) | Copy-Item -Destination (Split-Path $Path_New) -Recurse -Force
-            }
-            else {
-                if ($URI) {Write-Log -Level Warn "Cannot find $($Path) distributed at $($URI). "}
-                else {Write-Log -Level Warn "Cannot find $($Path). "}
-            }
         }
         $Global:ProgressPreference = $oldProgressPreference
     } elseif ($IsMiner -and -not (Test-Path $UriJson)) {
