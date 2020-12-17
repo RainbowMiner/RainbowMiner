@@ -3118,7 +3118,6 @@ function Stop-Core {
             Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X quit" > $null
         }
     }
-    Stop-OpenHardwareMonitor
     Stop-Autoexec
     [console]::TreatControlCAsInput = $false
 }

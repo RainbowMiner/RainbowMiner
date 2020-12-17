@@ -6728,13 +6728,6 @@ function Get-Uptime {
     if ($ts) {$ts} else {New-TimeSpan -Seconds 0}
 }
 
-function Stop-OpenHardwareMonitor {
-    if (Test-Path "Variables:Script:ohMonitor") {
-        $Script:ohMonitor.Close()
-        Remove-Variable "ohMonitor" -ErrorAction Ignore
-    }
-}
-
 function Get-SysInfo {
     if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
     if ($IsWindows) {
@@ -6750,42 +6743,26 @@ function Get-SysInfo {
                     Method      = "ohm"
             }
         } | Select-Object)
-        
-        if ((Test-IsElevated) -and (Test-Path ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorLib.dll")) {
-            try {
-                if (-not (Test-Path "Variables:Script:ohMonitor")) {
-                    Add-Type -Path ".\Includes\OpenHardwareMonitor\OpenHardwareMonitorLib.dll"
-                    $Script:ohMonitor = [OpenHardwareMonitor.Hardware.Computer]::New()
-                    $Script:ohMonitor.CPUEnabled = $true
-                    $Script:ohMonitor.Open()
-                }
 
-                if ($Script:ohMonitor) {
-                    $Script:ohMonitor.Reset()
-                    foreach($Hardware in $Script:ohMonitor.Hardware) {
-                        $Hardware.Update()
-                    }
-                }
+        $GetCPU_Data = if (Test-IsElevated) {
+            try {
+                Invoke-Exe ".\Includes\getcpu\GetCPU.exe" | ConvertFrom-Json -ErrorAction Stop
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                $Script:ohMonitor = $false
             }
         }
-
+        
         try {
             $Index = 0
             $CPUs | Foreach-Object {
                 $CPU = $_
-                if ($Script:ohMonitor) {
-                    $Script:ohMonitor.Hardware | Where-Object {$_.HardwareType -eq "CPU" -and $_.Identifier -match "/$Index$"} | Foreach-Object {
-                        $CPU.PowerDraw   = (($_.Sensors | Where-Object {$_.SensorType -eq "Power" -and $_.Name -match "Package"}).Value | Measure-Object -Sum).Sum
-                        $CPU.Temperature = (($_.Sensors | Where-Object {$_.SensorType -eq "Temperature" -and $_.Name -match "Package"}).Value | Measure-Object -Average).Average
-                        $CPU.Clock       = (($_.Sensors | Where-Object {$_.SensorType -eq "Clock" -and $_.Name -match "CPU"}).Value | Measure-Object -Average).Average
-                        $CPU.Utilization = (($_.Sensors | Where-Object {$_.SensorType -eq "Load" -and $_.Name -match "Total"}).Value | Measure-Object -Average).Average
-                    }
-                }
 
-                if (-not $CPU.PowerDraw) {
+                if ($GetCPU_Data -and $GetCPU_Data[$Index] -ne $null) {
+                    $CPU.Clock = $GetCPU_Data[$Index].Clock
+                    $CPU.Utilization = $GetCPU_Data[$Index].Utilization
+                    $CPU.PowerDraw = $GetCPU_Data[$Index].PowerDraw
+                    $CPU.Temperature = $GetCPU_Data[$Index].Temperature
+                } else {
                     if (-not $CIM_CPU) {
                         $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
                     }
