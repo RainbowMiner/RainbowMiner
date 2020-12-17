@@ -50,6 +50,8 @@ if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -o
 
 $Wallets_Data = @(
     [PSCustomObject]@{symbol = "ETH";  match = "^0x";   rpc = "https://api.ethplorer.io/getAddressInfo/{w}?apiKey=freekey";           address = "address"; balance = "ETH.balance"; received = "";              divisor = 1}
+    [PSCustomObject]@{symbol = "BCH";  match = "^[1q]"; rpc = "https://explorer.api.bitcoin.com/bch/v1/addr/{w}";                     address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
+    [PSCustomObject]@{symbol = "LTC";  match = "^[M3]"; rpc = "https://sochain.com/api/v2/get_address_balance/ltc/{w}";               address = "data.address"; balance = "data.confirmed_balance"; received = ""; divisor = 1; verify = "status"; verify_value = "success"}
     [PSCustomObject]@{symbol = "RVN";  match = "^R";    rpc = "https://ravencoin.network/api/addr/{w}/?noTxList=1";                   address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
     [PSCustomObject]@{symbol = "SAFE"; match = "^R";    rpc = "https://explorer.safecoin.org/api/addr/{w}/?noTxList=1";               address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
     [PSCustomObject]@{symbol = "XLM";  match = "^G";    rpc = "https://horizon.stellar.org/accounts/{w}";                             address = "id";      balance = "balances";    received = "";              divisor = 1}
@@ -68,7 +70,9 @@ foreach ($Wallet_Data in $Wallets_Data) {
             $Success = $true
             try {
                 $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$_)" -cycletime ($Config.BalanceUpdateMinutes*60)
-                if ($Request."$($Wallet_Data.address)" -ne $_) {$Success = $false}
+                if (($Wallet_Data.verify -eq $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.address)")" -ne $_) -or 
+                    ($Wallet_Data.verify -ne $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.verify)")" -ne $Wallet_Data.verify_value)
+                    ) {$Success = $false}
             }
             catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
