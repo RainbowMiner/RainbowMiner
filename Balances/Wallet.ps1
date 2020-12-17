@@ -53,7 +53,7 @@ $Wallets_Data = @(
     [PSCustomObject]@{symbol = "RVN";  match = "^R";    rpc = "https://ravencoin.network/api/addr/{w}/?noTxList=1";                   address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
     [PSCustomObject]@{symbol = "SAFE"; match = "^R";    rpc = "https://explorer.safecoin.org/api/addr/{w}/?noTxList=1";               address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
     [PSCustomObject]@{symbol = "XLM";  match = "^G";    rpc = "https://horizon.stellar.org/accounts/{w}";                             address = "id";      balance = "balances";    received = "";              divisor = 1}
-    [PSCustomObject]@{symbol = "XZC";  match = "^[aZ]"; rpc = "https://explorer.zcoin.io/insight-api-zcoin/addr/{w}/?noTxList=1";     address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
+    [PSCustomObject]@{symbol = "FIRO"; match = "^[aZ]"; rpc = "https://explorer.zcoin.io/insight-api-zcoin/addr/{w}/?noTxList=1";     address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
     [PSCustomObject]@{symbol = "ZEC";  match = "^t";    rpc = "https://api.zcha.in/v2/mainnet/accounts/{w}";                          address = "address"; balance = "balance";     received = "totalRecv";     divisor = 1}
 )
 
