@@ -7,17 +7,18 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-if ($IsLinux) {
-    $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.20-teamred/teamredminer-v0.7.20-linux.tgz"
-} else {
-    $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.20-teamred/teamredminer-v0.7.20-win.zip"
-}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.7.20"
+$Version = "0.7.21"
+
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-Teamred\teamredminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.21-teamred/teamredminer-v0.7.21-linux.tgz"
+} else {
+    $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.21-teamred/teamredminer-v0.7.21-win.zip"
+}
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
