@@ -9,16 +9,16 @@ $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
 $Cuda = "8.0"
-$Version = "5.4b"
+$Version = "5.4c"
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Phoenix\PhoenixMiner"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.4b-phoenix/PhoenixMiner_5.4b_Linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.4c-phoenix/PhoenixMiner_5.4c_Linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.4b-phoenix/PhoenixMiner_5.4b_Windows.7z"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.4c-phoenix/PhoenixMiner_5.4c_Windows.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
