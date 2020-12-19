@@ -7,24 +7,23 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+$ManualUri = "https://github.com/scala-network/XLArig/releases"
+$Port = "541{0:d2}"
+$Version = "5.2.0"
+
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Xlarig\xlarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.1.0-xlarig/XLArig-v5.1.0-linux-x86_64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.0-xlarig/XLArig-v5.2.0-linux-x86_64.zip"
     $DevFee = 0.0
 } else {
     $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.1.0-xlarig/XLArig-v5.1.0-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.0-xlarig/XLArig-v5.2.0-win64.zip"
     $DevFee = 0.0
 }
-$ManualUri = "https://github.com/scala-network/XLArig/releases"
-$Port = "541{0:d2}"
-$Version = "5.1.0"
-
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "defyx"; Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "panthera"; Params = ""; ExtendInterval = 2}
 )
 
