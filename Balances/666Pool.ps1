@@ -19,7 +19,7 @@ $Payout_Currencies | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count 
     $Pool_Wallet = $_.Value -replace "@(pps|pplns)$"
 
     try {
-        $Request = Invoke-RestMethodAsync "https://666pool.cn/pool2/main.php?coin=$($Pool_Currency)&address=$($Pool_Wallet)" -delay $(if ($Count){1000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://666pool.cn/pool2/main/$($Pool_Currency)/$($Pool_Wallet)" -delay $(if ($Count){1000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if (-not ($Data = ([regex]'(?si)<div class="col djs-bord">(.+?)</div>').Matches($Request)) -or $Data.Count -lt 2) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "

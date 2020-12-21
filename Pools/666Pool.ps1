@@ -17,7 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 try {
     $Request = (((Invoke-RestMethodAsync "https://www.666pool.cn/pool2/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
     $Pools_Data = $Request -replace '<!--.+?-->' -split '<tr>' | Foreach-Object {
-        if ($Data = ([regex]'(?si)coin=([-\w]+?)[^-\w].+?(\w+?).666pool.cn:(\d+)<').Matches($_)) {
+        if ($Data = ([regex]'(?si)pool2/block/([-\w]+?)[^-\w].+?(\w+?).666pool.cn:(\d+)<').Matches($_)) {
             $Columns = $_ -replace '</td>' -split '[\s\r\n]*<td[^>]*>[\s\r\n]*'
             if ($Data[0].Groups.Count -gt 3 -and $Columns.Count -ge 6) {
                 $Symbol = $Data[0].Groups[1].Value -replace "-.+$"
@@ -74,7 +74,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://www.666pool.cn/pool2/block.php?coin=$($_.id)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
+            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://www.666pool.cn/pool2/block/$($_.id)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
             if ($Pool_BlocksRequest.Count -ne 3) {$ok = $false}
             else {
                 $Pool_BLK = [int]"$(if ($Pool_BlocksRequest[0] -match "green[^>]+>(\d+)<") {$Matches[1]} else {0})"
