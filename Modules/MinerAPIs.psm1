@@ -1165,6 +1165,8 @@ class EnemyZ : Miner {
 
         $HashRate_Name = [String]$this.Algorithm[0]
 
+        $PowerDraw      = [Double]($Data.gpus.power | Measure-Object -Sum).Sum / 1e3
+
         $HashRate_Value   = [Double]$Data.hashrate
         $HashRateGPUs_Value = [Double]($Data.gpus.hashrate | Measure-Object -Sum).Sum
         if ($HashRate_Value -le $HashRateGPUs_Value*0.6) {
@@ -1182,7 +1184,7 @@ class EnemyZ : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData($Response,$HashRate,$Difficulty)
+        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
 
         $this.CleanupMinerData()
     }
