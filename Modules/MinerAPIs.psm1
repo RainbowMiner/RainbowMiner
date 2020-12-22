@@ -978,8 +978,8 @@ class Claymore : Miner {
 
         $HashRate_Value = [Int64]$HashRate_Value
 
-        $PowerDraw      = [Double]$Data.result[9]
-
+        $PowerDraw      = if ($Data.result[9]) {("$($Data.result[9])" -split ";" | Foreach-Object {[Double]$_} | Measure-Object -Sum).Sum}
+            
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
 
