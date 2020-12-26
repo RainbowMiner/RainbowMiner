@@ -12,12 +12,18 @@ if (-not (Test-IsElevated)) {
 }
 
 if (-not $NV_Version) {
+    Add-Type -Path .\DotNet\OpenCL\*.cs
     try {
-        $data = @(Get-DeviceName "nvidia" -UseAfterburner $false | Select-Object)
-        if (($data | Measure-Object).Count) {
-            $NV_Version = "$($data[0].DriverVersion)"
-        }
+        $data = @([OpenCl.Platform]::GetPlatformIDs() | Where-Object {$_.Name -match "^NVIDIA"} | ForEach-Object {
+            [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All)
+        } | Select-Object)
     } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $data = @(Get-DeviceName "nvidia" -UseAfterburner $false | Select-Object)
+    }
+    if (($data | Measure-Object).Count) {
+        $NV_Version = "$($data[0].DriverVersion)"
+    } else {
         $NV_Version = ""
     }
 }
