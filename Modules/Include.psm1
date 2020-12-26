@@ -2662,13 +2662,16 @@ function Get-Device {
         
         if ($IsWindows) {
             #Get WDDM data               
-            $WDDM_Devices = try {
-                Get-CimInstance CIM_VideoController | ForEach-Object { 
-                    $BusId = (Get-PnpDevice $_.PNPDeviceID | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber").Data
+            $Global:WDDM_Devices = try {
+                Get-CimInstance CIM_VideoController | ForEach-Object {
+                    $PnpDevice = Get-PnpDevice $_.PNPDeviceId
+                    $BusId         = ($PnpDevice | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber" -ErrorAction Ignore).Data
+                    $DeviceAddress = ($PnpDevice | Get-PnpDeviceProperty "DEVPKEY_Device_Address" -ErrorAction Ignore).Data
+                    if ($DeviceAddress -eq $null) {$DeviceAddress = 0}
                     [PSCustomObject]@{
                         Name        = $_.Name
                         InstanceId  = $_.PNPDeviceId
-                        Bus         = $(if ($BusId -ne $null -and $BusId.GetType() -match "int") {[int]$BusId})
+                        BusId       = $(if ($BusId -ne $null-and $BusId.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusId,([int]$DeviceAddress -shr 16)})
                         Vendor      = switch -Regex ([String]$_.AdapterCompatibility) { 
                                         "Advanced Micro Devices" {"AMD"}
                                         "Intel"  {"INTEL"}
@@ -2683,7 +2686,7 @@ function Get-Device {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "WDDM device detection has failed. "
             }
-            $WDDM_Devices = @($WDDM_Devices | Sort-Object -Property Bus)
+            $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object -Property BusId)
         }
 
         [System.Collections.Generic.List[string]]$AllPlatforms = @()
@@ -2833,7 +2836,7 @@ function Get-Device {
                         Model_Name = [String]$Device_Name
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
-                        Bus = $null
+                        BusId = $null
                         GpuGroup = ""
                         Data = [PSCustomObject]@{
                                         AdapterId         = 0  #amd
@@ -2870,13 +2873,13 @@ function Get-Device {
                         }
                         $Index++
                         if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
-                        if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+):[A-F0-9]+$") {
-                               $Device.Bus = [int]"0x$($Matches[1])"
+                        if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
+                            $Device.BusId = $Matches[1]
                         }
                         if ($IsWindows) {
-                            $WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
-                                if ($_.Bus -ne $null -and $Device.Bus -isnot [int]) {$Device.Bus = $_.Bus}
-                                if ($_.InstanceId -and $Device.InstanceId -eq "")   {$Device.InstanceId = $_.InstanceId}
+                            $Global:WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
+                                if ($_.BusId -ne $null -and $Device.BusId -eq $null) {$Device.BusId = $_.BusId}
+                                if ($_.InstanceId -and $Device.InstanceId -eq "")    {$Device.InstanceId = $_.InstanceId}
                             }
                         }
                     }
@@ -3406,7 +3409,7 @@ function Get-DeviceName {
             }
 
             if ($Vendor -eq "NVIDIA") {
-                Invoke-NvidiaSmi "index","gpu_name","pci.device_id","pci.bus_id","driver_version" | ForEach-Object {
+                Invoke-NvidiaSmi "index","gpu_name","pci.device_id","pci.bus_id","driver_version" -CheckForErrors | ForEach-Object {
                     $DeviceName = $_.gpu_name.Trim()
                     $SubId = if ($AdlResultSplit.Count -gt 1 -and $AdlResultSplit[1] -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
                     if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
@@ -3663,7 +3666,7 @@ function Update-DeviceInformation {
                 $DeviceId = 0
                 if ($Script:NvidiaCardsTDP -eq $null) {$Script:NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-                Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" | ForEach-Object {
+                Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" -CheckForErrors | ForEach-Object {
                     $Smi = $_
                     $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                         $_.Data.Utilization       = if ($smi.utilization_gpu -ne $null) {$smi.utilization_gpu} else {100}
@@ -6321,38 +6324,58 @@ param(
     [Parameter(Mandatory = $False)]
     [String[]]$Arguments = @(),
     [Parameter(Mandatory = $False)]
-    [Switch]$Runas
+    [Switch]$Runas,
+    [Parameter(Mandatory = $False)]
+    [Switch]$CheckForErrors
 )
+
     if (-not ($NVSMI = Get-NvidiaSmi)) {return}
 
     $ArgumentsString = "$($Arguments -join ' ')"
-    if ($Query) {
-        $ArgumentsString = "$ArgumentsString --query-gpu=$($Query -join ',') --format=csv,noheader,nounits"
-        $CsvParams =  @{Header = @($Query | Foreach-Object {$_ -replace "[^a-z_-]","_" -replace "_+","_"} | Select-Object)}
-        Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString.Trim() -ExcludeEmptyLines -ExpandLines -Runas:$Runas | ConvertFrom-Csv @CsvParams | Foreach-Object {
-            $obj = $_
-            $obj.PSObject.Properties.Name | Foreach-Object {
-                $v = $obj.$_
-                if ($v -match '(error|supported)') {$v = $null}
-                elseif ($_ -match "^(clocks|fan|index|memory|temperature|utilization)") {
-                    $v = $v -replace "[^\d\.]"
-                    if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = $null}
-                    else {$v = [int]$v}
-                }
-                elseif ($_ -match "^(power)") {
-                    $v = $v -replace "[^\d\.]"
-                    if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = $null}
-                    else {$v = [double]$v}
-                }
-                $obj.$_ = $v
-            }
-            $obj
+
+    if ($CheckForErrors -and $ArgumentsString -notmatch "-i ") {
+        if (-not (Test-Path Variable:Global:GlobalNvidiaSMIList)) {
+            $Global:GlobalNvidiaSMIList = @(Invoke-NvidiaSmi -Arguments "--list-gpus" | Foreach-Object {if ($_ -match "UUID:\s+([A-Z0-9\-]+)") {$Matches[1]} else {"error"}} | Select-Object)
+        }
+        $DeviceId = 0
+        $GoodDevices = $Global:GlobalNvidiaSMIList | Foreach-Object {if ($_ -ne "error") {$DeviceId};$DeviceId++}
+        $Arguments += "-i $($GoodDevices -join ",")"
+        $SMI_Result = Invoke-NvidiaSmi -Query $Query -Arguments $Arguments -Runas:$Runas
+        $DeviceId = 0
+        $Global:GlobalNvidiaSMIList | Foreach-Object {
+            if ($_ -ne "error") {$SMI_Result[$DeviceId];$DeviceId++}
+            else {[PSCustomObject]@{}}
         }
     } else {
-        if ($IsLinux -and $Runas) {
-            Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
+
+        if ($Query) {
+            $ArgumentsString = "$ArgumentsString --query-gpu=$($Query -join ',') --format=csv,noheader,nounits"
+            $CsvParams =  @{Header = @($Query | Foreach-Object {$_ -replace "[^a-z_-]","_" -replace "_+","_"} | Select-Object)}
+            Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString.Trim() -ExcludeEmptyLines -ExpandLines -Runas:$Runas | ConvertFrom-Csv @CsvParams | Foreach-Object {
+                $obj = $_
+                $obj.PSObject.Properties.Name | Foreach-Object {
+                    $v = $obj.$_
+                    if ($v -match '(error|supported)') {$v = $null}
+                    elseif ($_ -match "^(clocks|fan|index|memory|temperature|utilization)") {
+                        $v = $v -replace "[^\d\.]"
+                        if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = $null}
+                        else {$v = [int]$v}
+                    }
+                    elseif ($_ -match "^(power)") {
+                        $v = $v -replace "[^\d\.]"
+                        if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = $null}
+                        else {$v = [double]$v}
+                    }
+                    $obj.$_ = $v
+                }
+                $obj
+            }
         } else {
-            Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString -ExcludeEmptyLines -ExpandLines -Runas:$Runas
+            if ($IsLinux -and $Runas) {
+                Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
+            } else {
+                Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString -ExcludeEmptyLines -ExpandLines -Runas:$Runas
+            }
         }
     }
 }
