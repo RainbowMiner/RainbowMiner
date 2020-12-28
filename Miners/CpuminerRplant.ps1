@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.7"
+$Version = "5.0.8"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.7-rplant/cpuminer-rplant-5.0.7-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.8-rplant/cpuminer-rplant-5.0.8-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.7-rplant/cpuminer-rplant-5.0.7-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.8-rplant/cpuminer-rplant-5.0.8-win.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
@@ -29,6 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-glt"; GLT="argon2d-glt"; Params = ""} #Argon2d (GLT)
     [PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""} #Argon2i (GLT)
     [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""} #Argon2m (Merge)
+    [PSCustomObject]@{MainAlgorithm = "balloon"; Algorithm = "BalloonZenX"; Params = ""} #ZentoshiCoin (ZENX)
     [PSCustomObject]@{MainAlgorithm = "circcash"; Params = ""} #CircCash
 	[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
     [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""} #IOtE
@@ -88,7 +89,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 
     $Commands.Where({-not $_.LinuxOnly -or $IsLinux}).ForEach({
 
-        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+        $Algorithm_Norm_0 = Get-Algorithm "$(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm})"
 
         $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
         $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
