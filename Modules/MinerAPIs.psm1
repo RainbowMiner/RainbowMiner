@@ -1193,6 +1193,53 @@ class EnemyZ : Miner {
 }
 
 
+class Ethminer : Miner {
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server   = "localhost"
+        $Timeout  = 10 #seconds
+
+        $Request  = '{"id":1,"jsonrpc":"2.0","method":"miner_getstatdetail"}'
+        $Response = ""
+
+        $HashRate = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
+
+        try {
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            if (-not $Data -or -not $Data.result) {throw}
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            return
+        }
+
+        $HashRate_Name    = [String]$this.Algorithm[0]
+        $HashRate_Value   = [Int64]$Data.result.mining.hashrate
+
+        $Difficulty | Add-Member @{$HashRate_Name = [Double]$Data.result.mining.difficulty}
+
+        $PowerDraw      = ($Data.result.devices | Foreach-Object {[Double]$_.hardware.sensors[2]} | Measure-Object -Sum).Sum
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares  = [Int64]$Data.result.mining.shares[0]
+            $Rejected_Shares  = [Int64]$Data.result.mining.shares[1]
+            $Accepted_Shares -= $Rejected_Shares
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
+
+        $this.CleanupMinerData()
+    }
+}
+
+
 class EthminerWrapper : Miner {
     [Double]$Difficulty_Value = 0.0
 
