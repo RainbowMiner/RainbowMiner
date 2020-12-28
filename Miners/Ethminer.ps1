@@ -37,6 +37,10 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda11.1-windows-amd64.zip"
+            Cuda = "11.1"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda10.0-windows-amd64.zip"
             Cuda = "10.0"
         },
