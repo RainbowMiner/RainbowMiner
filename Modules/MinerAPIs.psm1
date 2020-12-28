@@ -657,12 +657,14 @@ class Miner {
             $this.Profiles = [PSCustomObject]@{}
             foreach ($DeviceModel in @($this.OCprofile.Keys)) {
                 $x = Switch -Regex ($DeviceModel) {
-                    "1050" {2;Break}
+                    "1050"      {2;Break}
                     "P106-?100" {2;Break}
                     "P106-?090" {1;Break}
                     "P104-?100" {1;Break}
                     "P102-?100" {1;Break}
-                    "1660" {4;Break}
+                    "1650"      {4;Break}
+                    "1660"      {4;Break}
+                    "^RTX"      {4;Break}
                     default {3}
                 }
                 [System.Collections.Generic.List[int]]$DeviceIds = @()
