@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.9"
+$Version = "5.0.10"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.9-rplant/cpuminer-rplant-5.0.9-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.10-rplant/cpuminer-rplant-5.0.10-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.9-rplant/cpuminer-rplant-5.0.9-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.10-rplant/cpuminer-rplant-5.0.10-win.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
@@ -41,6 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
+    [PSCustomObject]@{MainAlgorithm = "phi5"; Params = ""} #Combode Coin
     #[PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b, Jayddee faster
     ####[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
 	#[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium and CpuminerJayddee faster
