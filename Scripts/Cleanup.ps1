@@ -1014,7 +1014,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.6.6.9")) {
-        $AddAlgorithm += @("BalloonZenX")
+        $AddAlgorithm += @("BalloonZenX","PHI5")
     }
 
     # remove mrrpools.json from cache
