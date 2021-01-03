@@ -2034,6 +2034,7 @@ function Start-SubProcessInScreen {
                 GPU_MAX_ALLOC_PERCENT=100
                 GPU_MAX_SINGLE_ALLOC_PERCENT=100
                 GPU_ENABLE_LARGE_ALLOCATION=100
+                GPU_MAX_WORKGROUP_SIZE=1024
             }
         }
         "NVIDIA" {
