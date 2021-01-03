@@ -158,7 +158,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                         Penalty        = 0
 					    DevFee         = $_.Fee
 					    ManualUri      = $ManualUri
-					    EnvVars        = $null
+					    EnvVars        = if ($Miner_Vendor -eq "AMD" -and $IsLinux) {@("GPU_MAX_WORKGROUP_SIZE=1024")} else {$null}
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
