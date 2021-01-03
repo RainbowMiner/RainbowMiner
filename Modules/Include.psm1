@@ -1829,13 +1829,13 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$BashFileName = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$SetAMDEnv = $false,
+        [String]$Vendor = "",
         [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
-        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -SetAMDEnv:$SetAMDEnv -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     } else {
@@ -1984,7 +1984,7 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [String]$BashFileName = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$SetAMDEnv = $false,
+        [String]$Vendor = "",
         [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false
     )
@@ -2025,17 +2025,32 @@ function Start-SubProcessInScreen {
     $Stuff.Add("cd /") > $null
     $Stuff.Add("cd '$WorkingDirectory'") > $null
 
-    if ($SetAMDEnv) {
-        $Stuff.Add("export GPU_FORCE_64BIT_PTR=1") > $null
-        $Stuff.Add("export GPU_MAX_HEAP_SIZE=100") > $null
-        $Stuff.Add("export GPU_USE_SYNC_OBJECTS=1") > $null
-        $Stuff.Add("export GPU_MAX_ALLOC_PERCENT=100") > $null
-        $Stuff.Add("export GPU_SINGLE_ALLOC_PERCENT=100") > $null
-        $Stuff.Add("export GPU_MAX_WORKGROUP_SIZE=256") > $null
+    $StuffEnv = Switch ($Vendor) {
+        "AMD" {
+            [ordered]@{
+                GPU_MAX_HEAP_SIZE=100
+                GPU_MAX_USE_SYNC_OBJECTS=1
+                GPU_SINGLE_ALLOC_PERCENT=100
+                GPU_MAX_ALLOC_PERCENT=100
+                GPU_MAX_SINGLE_ALLOC_PERCENT=100
+                GPU_ENABLE_LARGE_ALLOCATION=100
+            }
+        }
+        "NVIDIA" {
+            [ordered]@{
+                CUDA_DEVICE_ORDER="PCI_BUS_ID"
+            }
+        }
+        default {
+            [ordered]@{}
+        }
     }
-    $Stuff.Add("export CUDA_DEVICE_ORDER=PCI_BUS_ID") > $null
 
-    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff.Add("export $($matches[1])=$($matches[2])") > $null}
+    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$StuffEnv[$matches[1]]=$matches[2]}
+
+    $StuffEnv.GetEnumerator() | Foreach-Object {
+        $Stuff.Add("export $($_.Name)=$($_.Value)") > $null
+    }
 
     if ($SetLDLIBRARYPATH) {
         $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null

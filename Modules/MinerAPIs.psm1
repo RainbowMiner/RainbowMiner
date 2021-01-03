@@ -64,6 +64,7 @@ class Miner {
     [String]$EthPillEnableMTP = "disable"
     [string]$DataInterval
     [string]$ExcludePoolName
+    [string]$Vendor = ""
     [String[]]$EnvVars
     [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1;"CPUAffinity"=0}
     [Bool]$Stopped = $false
@@ -99,6 +100,14 @@ class Miner {
 
     [String]GetMinerDeviceName() {
         return "$($this.BaseName)-$(($this.DeviceName | Sort-Object) -join '-')"
+    }
+
+    [String]GetVendor() {
+        if ($this.Vendor -eq "") {
+            $Devices = @($this.DeviceModel -split '-')
+            $this.Vendor  = $Global:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Foreach-Object {$_.Vendor} | Select-Object -Unique
+        }
+        return $this.Vendor
     }
 
     [Bool]IsWrapper() {
@@ -151,8 +160,7 @@ class Miner {
 
             Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
-            $Devices = @($this.DeviceModel -split '-')
-            $Vendor  = $Global:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Foreach-Object {$_.Vendor} | Select-Object -Unique
+            $DeviceVendor = $this.GetVendor()
 
             $ArgumentList = $this.GetArguments()
             
@@ -173,13 +181,13 @@ class Miner {
                         $Command = ".\Includes\OhGodAnETHlargementPill-r2.exe"
                     }
                     $Command = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Command)
-                    $this.EthPillJob = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -SetAMDEnv:$($Vendor -eq "AMD") -SetLDLIBRARYPATH
+                    $this.EthPillJob = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
             $this.StartTime = (Get-Date).ToUniversalTime()
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -SetAMDEnv:$($Vendor -eq "AMD") -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
 
             if ($this.GetMiningJob()) {
                 $this.Status = [MinerStatus]::Running
@@ -632,10 +640,10 @@ class Miner {
         [System.Collections.Generic.List[string]]$AmdCmd = @()
         [System.Collections.Generic.List[object]]$RunCmd = @()
 
-        $Vendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
+        $DeviceVendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
         if ($Global:IsWindows) {
-            if ($Vendor -ne "NVIDIA") {
+            if ($DeviceVendor -ne "NVIDIA") {
                 try {
                     $Script:abMonitor.ReloadAll()
                     $Script:abControl.ReloadAll()
@@ -713,7 +721,7 @@ class Miner {
 
             $applied_any = $false
 
-            if ($Vendor -eq "NVIDIA") {
+            if ($DeviceVendor -eq "NVIDIA") {
 
                 foreach($DeviceId in $this.Profiles.$DeviceModel.Index) {
                     if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
@@ -735,15 +743,15 @@ class Miner {
                     }
                 }
 
-            } elseif ($Vendor -eq "AMD" -and $Global:IsLinux) {
+            } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux) {
 
                 foreach($CardId in $this.Profiles.$DeviceModel.CardId) {
                     #if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
                 }
             
-            } elseif ($Pattern.$Vendor -ne $null) {
+            } elseif ($Pattern.$DeviceVendor -ne $null) {
                 $DeviceId = 0
-                $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor | Select-Object -ExpandProperty Index | Foreach-Object {
+                $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor | Select-Object -ExpandProperty Index | Foreach-Object {
                     if ($DeviceId -in $this.Profiles.$DeviceModel.Index) {
                         $GpuEntry = $Script:abControl.GpuEntries[$_]
                         try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
@@ -779,10 +787,10 @@ class Miner {
 
         if ($applied.Count) {
             if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
-            if ($Vendor -eq "NVIDIA") {
+            if ($DeviceVendor -eq "NVIDIA") {
                 if ($Global:IsLinux) {Invoke-NvidiaSettings $NvCmd}
                 else {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd}
-            } elseif ($Vendor -eq "AMD" -and $AmdCmd.Count) {
+            } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
                 if ($Global:IsLinux) {}
                 else {}
             } else {$Script:abControl.CommitChanges()}

@@ -97,6 +97,7 @@ if ($InfoOnly) {
 }
 
 foreach ($Miner_Vendor in @("AMD","CPU")) {
+
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
@@ -157,7 +158,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                         Penalty        = 0
 					    DevFee         = $_.Fee
 					    ManualUri      = $ManualUri
-					    EnvVars        = if ($Miner_Vendor -ne "CPU") {@("GPU_MAX_SINGLE_ALLOC_PERCENT=100","GPU_FORCE_64BIT_PTR=0")} else {$null}
+					    EnvVars        = $null
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
