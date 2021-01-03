@@ -7,17 +7,19 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-if ($IsLinux) {
-    $Path = ".\Bin\AMD-FancyIX\sgminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b7b-fancyix/sgminer-fancyIX-linux-amd64-0.7.1.zip"
-} else {
-    $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b7b-fancyix/sgminer-fancyIX-win64-0.7.1.zip"
-}
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0
-$Version = "v5.6.1.3-beta7b"
+
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-FancyIX\sgminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-fancyix/sgminer-fancyIX-linux-amd64-0.7.2.tar.gz"
+    $Version = "v0.7.2"
+} else {
+    $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b7b-fancyix/sgminer-fancyIX-win64-0.7.1.zip"
+    $Version = "v5.6.1.3-beta7b"
+}
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
