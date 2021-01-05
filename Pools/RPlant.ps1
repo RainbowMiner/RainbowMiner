@@ -57,6 +57,7 @@ $Pools_Data = [PSCustomObject]@{
     "SPRX"  = [PSCustomObject]@{port = 7052; region = $Pool_Regions}
     "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
     "SWAMP" = [PSCustomObject]@{port = 7023; region = $Pool_Regions}
+    "TDC"   = [PSCustomObject]@{port = 7059; region = $Pool_Regions}
     "URX"   = [PSCustomObject]@{port = 3361; region = $Pool_Regions}
     "VECO"  = [PSCustomObject]@{port = 3351; region = $Pool_Regions}
     "XOL"   = [PSCustomObject]@{port = 7068; region = @("us"); stratum = "randomx"}
