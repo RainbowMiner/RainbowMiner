@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.28.2"
+$Version = "0.28.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.2-wildrigmulti/wildrig-multi-linux-0.28.2.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.3-wildrigmulti/wildrig-multi-linux-0.28.3.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.2-wildrigmulti/wildrig-multi-windows-0.28.2.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.28.3-wildrigmulti/wildrig-multi-windows-0.28.3.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -42,8 +42,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";             Vendor = @("AMD");        Params = ""} #GLT-PawelHash
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD");          Params = ""} #HMQ1725
-    [PSCustomObject]@{MainAlgorithm = "honeycomb";                 Vendor = @("AMD");          Params = ""} #Honeycomb
-    [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.22.0"} #KawPOW
+    #[PSCustomObject]@{MainAlgorithm = "honeycomb";                 Vendor = @("AMD");          Params = ""} #Honeycomb broken since v0.17.6
+    [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "lyra2tdc";                  Vendor = @("AMD");          Params = ""; DevFee = 2.0} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";                   Vendor = @("AMD");          Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";               Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
@@ -53,13 +53,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp";                       Vendor = @("AMD");          Params = ""} #MTP, new in v0.20.0 beta
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr";                   Vendor = @("AMD");          Params = ""} #MTPTcr, new in v0.20.0 beta, --split-job 4
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD");          Params = ""} #PHI
-    [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"} #ProgPowEthercore
-    [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.23.0"; ExcludePoolName = "^Beepool"} #ProgPowSero
-    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.28.0"; ExcludePoolName = "^Beepool"} #ProgPowVeil
-    [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; Version = "0.21.0"; ExcludePoolName = "^Fairpool"} #ProgPowZ
+    [PSCustomObject]@{MainAlgorithm = "phi5";                      Vendor = @("AMD","NVIDIA"); Params = ""} #PHI5
+    [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2} #ProgPowEthercore
+    [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #ProgPowSero
+    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #ProgPowVeil
+    [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest";                Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";                   Vendor = @("AMD");          Params = ""} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0; Version = "0.20.6"} #SHA256csm
+    [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";                   Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";                   Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256t
     [PSCustomObject]@{MainAlgorithm = "skein2";                    Vendor = @("AMD","NVIDIA"); Params = ""} #Skein2
