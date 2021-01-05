@@ -10,29 +10,31 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0
+$Version = "v0.7.2-1"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-FancyIX\sgminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-fancyix/sgminer-fancyIX-linux-amd64-0.7.2.tar.gz"
-    $Version = "v0.7.2"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-1-fancyix/sgminer-fancyIX-linux-amd64-0.7.2-1.tar.gz"
 } else {
     $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b7b-fancyix/sgminer-fancyIX-win64-0.7.1.zip"
-    $Version = "v5.6.1.3-beta7b"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-1-fancyix/sgminer-fancyIX-win64-0.7.2-1.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "allium";  Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "argon2d"; Params = "--gpu-threads 2 --worksize 64"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "--gpu-threads 1 --worksize 256 -I 24"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";  Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2zz"; Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "mtp";     Params = "-I 20"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "phi2";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "x22i";    Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "x25x";    Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "allium";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "argon2d";        Params = "--gpu-threads 2 --worksize 64"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";        Params = "--gpu-threads 1 --worksize 256 -I 24"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz";        Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "mtp";            Params = "-I 20"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt";      Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaja"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "phi2";           Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "yescrypt";       Params = "--gpu-threads 1 --worksize 256 -I 20"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "x22i";           Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "x25x";           Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
