@@ -1018,7 +1018,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.6.7.0")) {
-        $AddAlgorithm += @("NeoscryptXaya")
+        $AddAlgorithm += @("NeoscryptXaya","YescryptTIDE")
     }
 
     # remove mrrpools.json from cache
