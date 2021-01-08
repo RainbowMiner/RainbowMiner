@@ -78,7 +78,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "tribus";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     #[PSCustomObject]@{MainAlgorithm = "veil";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
     [PSCustomObject]@{MainAlgorithm = "x16r";        MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16rt";       MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
+    #[PSCustomObject]@{MainAlgorithm = "x16rt";       MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16rv2";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
     [PSCustomObject]@{MainAlgorithm = "x16s";        MinMemGb = 1; Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";         MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
