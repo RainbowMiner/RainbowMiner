@@ -10,7 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "326{0:d2}"
 $DevFee = 1.0
-$Version = "0.19.5"
+$Version = "0.19.7"
 
 # use cuda 10, if cuda 11.1 is installed. Otherwise do not use this miner module.
 
@@ -18,7 +18,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexOctopus\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.5-trex/t-rex-0.19.5-linux-cuda10.0.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.7-trex/t-rex-0.19.7-linux-cuda10.0.tar.gz"
             Cuda   = "11.1"
         }
     )
@@ -26,7 +26,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexOctopus\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.5-trex/t-rex-0.19.5-win-cuda10.0.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.7-trex/t-rex-0.19.7-win-cuda10.0.zip"
             Cuda   = "11.1"
         }
     )
@@ -74,7 +74,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         
         $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (Get-NvidiaArchitecture $_.Model) -eq "Turing"}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (Get-NvidiaArchitecture $_.Model) -in @("Pascal","Turing")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
