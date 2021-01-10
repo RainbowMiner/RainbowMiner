@@ -30,10 +30,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_RpcPath   = $_.rpc
     $Pool_Regions   = $_.region
 
-    if (-not $InfoOnly -and $Wallets.$Pool_Currency -notmatch "\.") {
-        Write-Log -Level Warn "$Name's $Pool_Currency wallet must be in the form xxx.yyy - check the pool's `"My Workers`" page."
-        return
-    }
+    $Pool_User      = "$($Wallets.$Pool_Currency)$(if ($Wallets.$Pool_Currency -notmatch "\.") {".{workername:$Worker}"})"
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
@@ -76,7 +73,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$Pool_RpcPath.poolium.win"
                 Port          = $Pool_Port
-                User          = $Wallets.$Pool_Currency
+                User          = $Pool_User
                 Pass          = "$(if ($Password) {$Password} else {"x"})"
                 Region        = $Pool_RegionsTable[$Pool_Region]
                 SSL           = $Pool_SSL
@@ -94,8 +91,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 				HasMinerExclusions = $false
 				Price_Bias    = 0.0
 				Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency -replace "\..+$"
-                Worker        = $Wallets.$Pool_Currency -replace "^.+\."
+                Wallet        = $Pool_User -replace "\..+$"
+                Worker        = $Pool_User -replace "^.+\."
                 Email         = $Email
             }
             $Pool_SSL = $true
