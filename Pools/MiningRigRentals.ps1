@@ -921,6 +921,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $RigMRRid = $_.name
                                             $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
 
+                                                $RigPools_Id = [int]$_.id
+
                                                 if ($RigControl_Data -and ($_.status.status -eq "rented" -or $_.status.rented)) {
                                                     $RigControl_Data.LastReset = (Get-Date).ToUniversalTime()
                                                 }
@@ -938,17 +940,17 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                      ($RigServer -and ($_.region -ne $RigServer.region)) -or
                                                      ($_.extensions -ne $CreateRig.extensions)
                                                 ) {
-                                                    $CreateRig["id"] = $_.id
+                                                    $CreateRig["id"] = $RigPools_Id
                                                     if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
                                                     $RigUpdated = $false
                                                     if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
                                                         if ($RigCreated -lt $MaxAPICalls) {
                                                             $RigUpdated = $true
                                                             try {
-                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($_.id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
                                                             } catch {
                                                                 if ($Error.Count){$Error.RemoveAt(0)}
-                                                                Write-Log -Level Warn "$($Name): Unable to update rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                                Write-Log -Level Warn "$($Name): Unable to update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                             }
                                                             $RigCreated++
                                                         }
@@ -957,46 +959,46 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         $RigsToUpdate += $CreateRig
                                                     }
                                                     if ($RigUpdated) {
-                                                        Write-Log -Level Info "$($Name): Update rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
+                                                        Write-Log -Level Info "$($Name): Update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
                                                     }
                                                 }
 
                                                 if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
-                                                    $RigPoolCurrent = $RigPools[[int]$_.id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
-                                                    if ((-not $RigPoolCurrent -and ($RigPools[[int]$_.id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
+                                                    $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
+                                                    if ((-not $RigPoolCurrent -and ($RigPools[$RigPools_Id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
                                                         try {
                                                             $RigPriority = [int]$(if ($RigPoolCurrent) {
                                                                 $RigPoolCurrent.priority
                                                             } else {
                                                                 foreach($i in 0..4) {
-                                                                    if (-not ($RigPools[[int]$_.id] | Where-Object {$_.priority -eq $i})) {
+                                                                    if (-not ($RigPools[$RigPools_Id] | Where-Object {$_.priority -eq $i})) {
                                                                         $i
                                                                         break
                                                                     }
                                                                 }
                                                             })
-                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($_.id)/pool/$($RigPriority)" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
+                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($RigPriority)" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
                                                             if ($Result.success) {
                                                                 $RigCreated++
                                                             }
-                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) pools of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                         } catch {
                                                             if ($Error.Count){$Error.RemoveAt(0)}
-                                                            Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                            Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                         }                                                        
                                                     }
 
                                                     #temporary fix
-                                                    $RigPools[[int]$_.id] | Where-Object {$_.user -eq "rbm.worker1"} | Foreach-Object {
+                                                    $RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Foreach-Object {
                                                         try {
-                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($_.id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
+                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
                                                             if ($Result.success) {
                                                                 $RigCreated++
                                                             }
-                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $($_.priority+1) of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $($_.priority+1) of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                         } catch {
                                                             if ($Error.Count){$Error.RemoveAt(0)}
-                                                            Write-Log -Level Warn "$($Name): Unable to delete pool $($_.priority+1) from rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                            Write-Log -Level Warn "$($Name): Unable to delete pool $($_.priority+1) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                         }                                                           
                                                     }
                                                 }
