@@ -2452,7 +2452,7 @@ function Invoke-Core {
                         Kicked    = $Session.Timer
                     }
                 }
-                elseif (-not ($WatchdogTimer.Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset))) {
+                elseif ($WatchdogTimer.Kicked -le $WDResetTime) {
                     $WatchdogTimer.Kicked = $Session.Timer
                 }
             }
