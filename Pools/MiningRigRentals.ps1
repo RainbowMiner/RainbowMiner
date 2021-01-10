@@ -962,7 +962,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 }
 
                                                 if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
-                                                    $RigPoolCurrent = $RigPools[[int]$_.id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"} | Select-Object -First 1
+                                                    $RigPoolCurrent = $RigPools[[int]$_.id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
                                                     if ((-not $RigPoolCurrent -and ($RigPools[[int]$_.id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
                                                         try {
                                                             $RigPriority = [int]$(if ($RigPoolCurrent) {
@@ -984,6 +984,20 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             if ($Error.Count){$Error.RemoveAt(0)}
                                                             Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                         }                                                        
+                                                    }
+
+                                                    #temporary fix
+                                                    $RigPools[[int]$_.id] | Where-Object {$_.user -eq "rbm.worker1"} | Foreach-Object {
+                                                        try {
+                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($_.id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
+                                                            if ($Result.success) {
+                                                                $RigCreated++
+                                                            }
+                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $($_.priority+1) of rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                        } catch {
+                                                            if ($Error.Count){$Error.RemoveAt(0)}
+                                                            Write-Log -Level Warn "$($Name): Unable to delete pool $($_.priority+1) from rig #$($_.id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                        }                                                           
                                                     }
                                                 }
                                             })

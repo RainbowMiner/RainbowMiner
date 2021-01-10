@@ -134,9 +134,9 @@ param(
                 'Cache-Control' = 'no-cache'
             }
             try {
-                $body = Switch($method) {
-                    "PUT" {$params_local | ConvertTo-Json -Depth 10;Break}
-                    "GET" {if ($params_local.Count) {$params_local} else {$null};Break}
+                $body = Switch -Regex ($method) {
+                    "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
+                    "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
                 }
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
                 $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
