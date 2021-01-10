@@ -1472,10 +1472,20 @@ function Invoke-Core {
     $API.AllPools   = $NewPools
     $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
 
+    #Setup and reset Watchdog
+    $WDIntervalTime = $Session.Timer.AddSeconds( - $Session.WatchdogInterval)
+    $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
+
+    if ($Session.WatchdogReset -gt $Session.WatchdogInterval) {
+        $WDRemoveTimers = $Global:WatchdogTimers.Where({$_.Kicked -le $WDResetTime})
+        if ($WDRemoveTimers.Count) {
+            $Global:WatchdogTimers = @($Global:WatchdogTimers | Where-Object {$_ -notin $WDRemoveTimers})
+        }
+        Remove-Variable "WDRemoveTimers"
+    }
+
     #Apply watchdog to pools, only if there is more than one pool selected
     if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
-        $WDIntervalTime = $Session.Timer.AddSeconds( - $Session.WatchdogInterval)
-        $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
         $NewPools = $NewPools.Where({-not $_.Disabled}).Where({
             $Pool = $_
             $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({($_.PoolName -eq $Pool.Name) -and ($_.Kicked -lt $WDIntervalTime) -and ($_.Kicked -gt $WDResetTime)})
@@ -1979,7 +1989,7 @@ function Invoke-Core {
     #Apply watchdog to miners
     $Miners = $Miners.Where({
         $Miner = $_
-        $Miner_WatchdogTimers = $Global:WatchdogTimers.Where({$_.MinerName -eq $Miner.Name -and $_.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval) -and $_.Kicked -gt $Session.Timer.AddSeconds( - $Session.WatchdogReset)})
+        $Miner_WatchdogTimers = $Global:WatchdogTimers.Where({$_.MinerName -eq $Miner.Name -and $_.Kicked -lt $WDIntervalTime -and $_.Kicked -gt $WDResetTime})
         $Miner_WatchdogTimers.Count -lt <#stage#>2 -and $Miner_WatchdogTimers.Where({$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm}).Count -lt <#stage#>1 -and ($Session.Config.DisableDualMining -or $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or -not $Miner.Pools.PSObject.Properties.Value.Where({$_.Exclusive}).Count)
     })
     if ($Miner_WatchdogTimers -ne $null) {Remove-Variable "Miner_WatchdogTimers"}
@@ -2344,7 +2354,7 @@ function Invoke-Core {
                 $Miner_Algorithm = $_
                 $Miner_Pool = $Miner.Pool[$Miner_Index]                
                 if ($WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}) {
-                    if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) -and -not $Session.RestartMiners) {
+                    if (($WatchdogTimer.Kicked -lt $WDIntervalTime) -and -not $Session.RestartMiners) {
                         Write-ActivityLog $Miner -Crashed 2
                         $Miner.SetStatus([MinerStatus]::Failed)
                         Write-Log -Level Warn "Miner $Miner_Name mining $($Miner_Algorithm) on pool $($Miner_Pool) temporarily disabled. "
