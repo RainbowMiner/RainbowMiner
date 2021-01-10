@@ -46,8 +46,8 @@ function Compare-Version {
     if ($revs -gt 0 -and $revs -lt $max) {$max = $revs}
 
     for($i=0;$i -lt $max;$i++) {
-        if ($ver1[$i] -lt $ver2[$i]) {return -1}
-        if ($ver1[$i] -gt $ver2[$i]) {return 1}
+        if ([int]$ver1[$i] -lt [int]$ver2[$i]) {return -1}
+        if ([int]$ver1[$i] -gt [int]$ver2[$i]) {return 1}
     }
     return 0
 }
