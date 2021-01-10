@@ -995,11 +995,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             if ($Result.success) {
                                                                 $RigCreated++
                                                             }
-                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                         } catch {
                                                             if ($Error.Count){$Error.RemoveAt(0)}
                                                             Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
-                                                        }                                                           
+                                                        }
                                                     }
                                                 }
                                             })
