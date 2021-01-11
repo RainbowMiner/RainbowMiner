@@ -778,7 +778,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/pause" {
-            $API.Pause = -not $API.Pause
+            if ($Parameters.action -in @("set","reset")) {
+                $API.Pause = $Parameters.action -eq "set"
+            } else {
+                $API.Pause = -not $API.Pause
+            }
             $Data = $API.Pause | ConvertTo-Json
             Break
         }
