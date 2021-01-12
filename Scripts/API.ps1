@@ -778,8 +778,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/pause" {
-            if ($Parameters.action -in @("set","reset")) {
-                $API.Pause = $Parameters.action -eq "set"
+            if ($Parameters.action -in @("set","reset","pause","unpause")) {
+                $API.Pause = $Parameters.action -in @("set","pause")
             } else {
                 $API.Pause = -not $API.Pause
             }
