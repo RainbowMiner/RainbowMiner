@@ -2246,8 +2246,6 @@ function Stop-SubProcess {
                 if ($IsLinux) {
                     if ($Job.ScreenName) {
                         try {
-                            [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
-
                             if ($false -in $ToKill.HasExited) {
                                 Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
@@ -2309,23 +2307,6 @@ function Stop-SubProcess {
                             Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
                         }
 
-                        try {
-                            if ($ScreenProcessId) {
-                                $ArgumentList = "-S $($Job.ScreenName) -X quit"
-                                if (Test-OCDaemon) {
-                                    $Cmd = "screen $ArgumentList"
-                                    $Msg = Invoke-OCDaemon -Cmd $Cmd
-                                    if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
-                                } else {
-                                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                                    $Screen_Process.WaitForExit(5000) > $null
-                                }
-                            }
-                        } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
-                            Write-Log -Level Warn "Problem killing bash screen $($Job.ScreenName): $($_.Exception.Message)"
-                        }
-
                     } else {
                         Stop-Process -id $Process.Id -Force -ErrorAction Ignore
                     }
@@ -2356,6 +2337,27 @@ function Stop-SubProcess {
     if ($Job.Name) {
         Get-Job -Name $Job.Name -ErrorAction Ignore | Remove-Job -Force
         $Job.Name = $null
+    }
+
+
+    if ($IsLinux -and $Job.ScreenName) {
+        try {
+            [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+            if ($ScreenProcessId) {
+                $ArgumentList = "-S $($Job.ScreenName) -X quit"
+                if (Test-OCDaemon) {
+                    $Cmd = "screen $ArgumentList"
+                    $Msg = Invoke-OCDaemon -Cmd $Cmd
+                    if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
+                } else {
+                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                    $Screen_Process.WaitForExit(5000) > $null
+                }
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Problem killing bash screen $($Job.ScreenName): $($_.Exception.Message)"
+        }
     }
 }
 
