@@ -2204,40 +2204,71 @@ function Stop-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$Title = "Process",
         [Parameter(Mandatory = $false)]
-        [String]$Name = ""
+        [String]$Name = "",
+        [Parameter(Mandatory = $false)]
+        [String]$ShutdownUrl = ""
     )
     if ($Job.OwnWindow -and $Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
+
+                $ToKill = @()
+                $ToKill += $Process
+                if ($IsLinux) {
+                    $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
+                }
+
+                $StopWatch = [System.Diagnostics.Stopwatch]::New()
+
+                if ($ShutdownUrl -ne "") {
+                    Write-Log -Level Info "Trying to shutdown $($Title) via API$(if ($Name) {": $($Name)"})"
+                    $oldProgressPreference = $Global:ProgressPreference
+                    $Global:ProgressPreference = "SilentlyContinue"
+                    try {
+                        $Response = Invoke-WebRequest $ShutdownUrl -UseBasicParsing -TimeoutSec 20 -ErrorAction Stop
+                        #$Data = $Response | ConvertFrom-Json -ErrorAction Stop
+
+                        $StopWatch.Reset()
+                        while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
+                            Start-Sleep -Milliseconds 500
+                        }
+                        if ($false -in $ToKill.HasExited) {
+                            Write-Log -Level Warn "$($Title) failed to close within 10 seconds via API $(if ($Name) {": $($Name)"})"
+                        }
+                    }
+                    catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "Failed to shutdown process $($Title) via API$(if ($Name) {": $($Name)"})"
+                    }
+                    $Global:ProgressPreference = $oldProgressPreference
+                }
+
                 if ($IsLinux) {
                     if ($Job.ScreenName) {
-                        $StopWatch = [System.Diagnostics.Stopwatch]::New()
                         try {
                             [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
 
-                            $ToKill = @()
-                            $ToKill += $Process
-                            $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
-
-                            Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
-
-                            $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
-                            if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                                $Cmd = "screen $ArgumentList"
-                                $Msg = Invoke-OCDaemon -Cmd $Cmd
-                                if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
-                            } else {
-                                $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                                $Screen_Process.WaitForExit(5000) > $null
-                            }
-
-                            $StopWatch.Restart()
-                            while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
-                                Start-Sleep -Milliseconds 500
-                            }
-
                             if ($false -in $ToKill.HasExited) {
-                                Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                                Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
+
+                                $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
+                                if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                                    $Cmd = "screen $ArgumentList"
+                                    $Msg = Invoke-OCDaemon -Cmd $Cmd
+                                    if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
+                                } else {
+                                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                                    $Screen_Process.WaitForExit(5000) > $null
+                                }
+
+                                $StopWatch.Restart()
+                                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
+                                    Start-Sleep -Milliseconds 500
+                                }
+
+                                if ($false -in $ToKill.HasExited) {
+                                    Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                                }
                             }
 
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
@@ -2300,6 +2331,7 @@ function Stop-SubProcess {
                     }
                 }
                 else {$Process.CloseMainWindow() > $null}
+
                 # Wait up to 10 seconds for the miner to close gracefully
                 if($Process.WaitForExit(10000)) { 
                     Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"

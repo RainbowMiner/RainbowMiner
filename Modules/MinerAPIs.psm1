@@ -127,6 +127,10 @@ class Miner {
         }
     }
 
+    [String]GetShutdownUrl() {
+        return ""
+    }
+
     hidden StartMining() {
         $this.StopMining()
 
@@ -205,7 +209,7 @@ class Miner {
         $this.ResetMinerData()
 
         if ($this.Job) {
-            Stop-SubProcess -Job $this.Job -Title "Miner $($this.Name)"
+            Stop-SubProcess -Job $this.Job -Title "Miner $($this.Name)" -ShutdownUrl $this.GetShutdownUrl()
 
             $this.Active = $this.GetActiveTime()
             $this.Job    = $null
@@ -2427,6 +2431,64 @@ class SwapminerWrapper : Miner {
 
             $this.CleanupMinerData()
         }
+    }
+}
+
+
+class Trex : Miner {
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "localhost"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
+
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
+        try {
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            return
+        }
+        $Global:ProgressPreference = $oldProgressPreference
+
+        $HashRate_Name = [String]$this.Algorithm[0]
+
+        $PowerDraw      = [Double]($Data.gpus.power | Measure-Object -Sum).Sum
+
+        $HashRate_Value   = [Double]$Data.hashrate
+        $HashRateGPUs_Value = [Double]($Data.gpus.hashrate | Measure-Object -Sum).Sum
+        if ($HashRate_Value -le $HashRateGPUs_Value*0.6) {
+            $HashRate_Value = $HashRateGPUs_Value
+        }
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = ConvertFrom-Hash "$($Data.active_pool.difficulty)"
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Int64]$Data.accepted_count
+            $Rejected_Shares  = [Int64]$Data.rejected_count
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
+
+        $this.CleanupMinerData()
+    }
+
+    [String]GetShutdownUrl() {
+        return "http://127.0.0.1:$($this.Port)/control?command=shutdown"
     }
 }
 
