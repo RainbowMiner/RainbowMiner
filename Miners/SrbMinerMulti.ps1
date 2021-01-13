@@ -25,7 +25,6 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "balloon_zentoshi";             Params = ""; Fee = 0.85;               Vendor = @("CPU")} #BalloonZentoshi
     [PSCustomObject]@{MainAlgorithm = "circcash"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Circcash/CIRC
-    [PSCustomObject]@{MainAlgorithm = "curvehash"      ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Curvehash
     [PSCustomObject]@{MainAlgorithm = "cpupower"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
     [PSCustomObject]@{MainAlgorithm = "curvehash"      ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Curvehash
     [PSCustomObject]@{MainAlgorithm = "minotaur"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Minotaur/RING Coin
