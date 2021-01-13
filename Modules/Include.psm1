@@ -2208,17 +2208,19 @@ function Stop-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$ShutdownUrl = ""
     )
-    if ($Job.OwnWindow -and $Job.ProcessId) {
+
+    if ($Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
 
-                $ToKill = @()
-                $ToKill += $Process
+                $StopWatch = [System.Diagnostics.Stopwatch]::New()
+
+                $ToKill  = @()
                 if ($IsLinux) {
                     $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
                 }
 
-                $StopWatch = [System.Diagnostics.Stopwatch]::New()
+                $ToKill += $Process
 
                 if ($ShutdownUrl -ne "") {
                     Write-Log -Level Info "Trying to shutdown $($Title) via API$(if ($Name) {": $($Name)"})"
@@ -2243,86 +2245,90 @@ function Stop-SubProcess {
                     $Global:ProgressPreference = $oldProgressPreference
                 }
 
-                if ($IsLinux) {
-                    if ($Job.ScreenName) {
-                        try {
-                            if ($false -in $ToKill.HasExited) {
-                                Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
+                if ($Job.OwnWindow) {
+                    if ($IsLinux) {
+                        if ($Job.ScreenName) {
+                            try {
+                                if ($false -in $ToKill.HasExited) {
+                                    Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
-                                $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
-                                if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                                    $Cmd = "screen $ArgumentList"
-                                    $Msg = Invoke-OCDaemon -Cmd $Cmd
-                                    if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
-                                } else {
-                                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                                    $Screen_Process.WaitForExit(5000) > $null
+                                    $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
+                                    if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                                        $Cmd = "screen $ArgumentList"
+                                        $Msg = Invoke-OCDaemon -Cmd $Cmd
+                                        if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
+                                    } else {
+                                        $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                                        $Screen_Process.WaitForExit(5000) > $null
+                                    }
+
+                                    $StopWatch.Restart()
+                                    while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
+                                        Start-Sleep -Milliseconds 500
+                                    }
+
+                                    if ($false -in $ToKill.HasExited) {
+                                        Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                                    }
                                 }
 
-                                $StopWatch.Restart()
-                                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
+                                $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
+                                if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+                                    if (-not $Process.HasExited -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
+                                        $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
+                                        if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                                            $Cmd = "start-stop-daemon $ArgumentList"
+                                            $Msg = Invoke-OCDaemon -Cmd $Cmd
+                                            if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
+                                        } else {
+                                            $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
+                                            $StartStopDaemon_Process.WaitForExit() > $null
+                                        }
+                                    }
+                                    if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
+                                    if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
+                                }
+
+                                #$ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
+                                #    if (Test-OCDaemon) {
+                                #        Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
+                                #    } else {
+                                #        $_.Kill()
+                                #    }
+                                #}
+
+                                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 180) {
                                     Start-Sleep -Milliseconds 500
                                 }
 
                                 if ($false -in $ToKill.HasExited) {
-                                    Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                                        Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
+                                        if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
                                 }
+                            } catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                                Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
                             }
 
-                            $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
-                            if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                                if (-not $Process.HasExited -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
-                                    $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
-                                    if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                                        $Cmd = "start-stop-daemon $ArgumentList"
-                                        $Msg = Invoke-OCDaemon -Cmd $Cmd
-                                        if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
-                                    } else {
-                                        $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
-                                        $StartStopDaemon_Process.WaitForExit() > $null
-                                    }
-                                }
-                                if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
-                                if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
-                            }
-
-                            #$ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-                            #    if (Test-OCDaemon) {
-                            #        Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
-                            #    } else {
-                            #        $_.Kill()
-                            #    }
-                            #}
-
-                            while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 180) {
-                                Start-Sleep -Milliseconds 500
-                            }
-
-                            if ($false -in $ToKill.HasExited) {
-                                    Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
-                                    if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
-                            }
-                        } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
-                            Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
+                        } else {
+                            $ToKill | Foreach-Object {Stop-Process -id $_ -Force -ErrorAction Ignore}
                         }
-
-                    } else {
-                        Stop-Process -id $Process.Id -Force -ErrorAction Ignore
+                        $Job.ProcessId = [int[]]@()
                     }
-                }
-                else {$Process.CloseMainWindow() > $null}
+                    else {$Process.CloseMainWindow() > $null}
 
-                # Wait up to 10 seconds for the miner to close gracefully
-                if($Process.WaitForExit(10000)) { 
-                    Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
-                    Start-Sleep 1
-                } else {
-                    Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                    # Wait up to 10 seconds for the miner to close gracefully
+                    if($Process.WaitForExit(10000)) { 
+                        Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
+                        Start-Sleep 1
+                    } else {
+                        Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                    }
                 }
             }
         }
     }
+
     if ($Job.ProcessId) {
         $Job.ProcessId | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
@@ -2334,11 +2340,11 @@ function Stop-SubProcess {
         }
         $Job.ProcessId = [int[]]@()
     }
+
     if ($Job.Name) {
         Get-Job -Name $Job.Name -ErrorAction Ignore | Remove-Job -Force
         $Job.Name = $null
     }
-
 
     if ($IsLinux -and $Job.ScreenName) {
         try {
