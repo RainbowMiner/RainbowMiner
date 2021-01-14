@@ -21,7 +21,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "BEAM";  port = 3333; fee = 0.5; rpc = "beam"; region = @("us","eu","asia"); coinUnits = 100000000; ssl = $true}
     [PSCustomObject]@{symbol = "TTNZ";  port = 3333; fee = 0.1; rpc = "ttnz"; region = @("us","eu"); endpoint = "stats"}
     [PSCustomObject]@{symbol = "QRL";   port = 3333; fee = 0.8; rpc = "qrl";  region = @("us","eu"); endpoint = "stats"}
-    [PSCustomObject]@{symbol = "ZP";   port = 8811; fee = 2.0; rpc = "zp";  region = @("us-east","eu","asia"); endpoint = "stats"}
+    [PSCustomObject]@{symbol = "ZP";    port = 8811; fee = 2.0; rpc = "zp";   region = @("us-east","eu","asia")}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
