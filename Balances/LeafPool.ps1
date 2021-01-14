@@ -7,10 +7,10 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "BEAM";  port = 3333; fee = 0.5; rpc = "beam"; region = @("us","eu","asia"); coinUnits = 100000000}
+    [PSCustomObject]@{symbol = "BEAM";  port = 3333; fee = 0.5; rpc = "beam"; region = @("us","eu","asia"); coinUnits = 100000000; ssl = $true}
     [PSCustomObject]@{symbol = "TTNZ";  port = 3333; fee = 0.1; rpc = "ttnz"; region = @("us","eu"); endpoint = "stats"}
-    [PSCustomObject]@{symbol = "RYO";   port = 5555; fee = 1.0; rpc = "ryo";  region = @("us-west","us-east","eu"); endpoint = "stats"}
-    [PSCustomObject]@{symbol = "DEFT";  port = 6622; fee = 1.0; rpc = "deft"; region = @("us","eu"); coinUnits = 1}
+    [PSCustomObject]@{symbol = "QRL";   port = 3333; fee = 0.8; rpc = "qrl";  region = @("us","eu"); endpoint = "stats"}
+    [PSCustomObject]@{symbol = "ZP";    port = 8811; fee = 2.0; rpc = "zp";   region = @("us-east","eu","asia")}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
