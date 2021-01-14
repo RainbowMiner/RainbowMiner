@@ -3480,6 +3480,8 @@ function Invoke-ReportMinerStatus {
                 Pool           = @($Miner.Pool)
                 CurrentSpeed   = @($Miner.Speed_Live)
                 EstimatedSpeed = @($Miner.Speed)
+                Accepted       = @($Miner.Stratum | Foreach-Object {$_.Accepted} | Select-Object)
+                Rejected       = @($Miner.Stratum | Foreach-Object {$_.Rejected} | Select-Object)
                 PowerDraw      = $Miner_PowerDraw
                 'BTC/day'      = $Miner.Profit
                 Profit         = $Miner.Profit

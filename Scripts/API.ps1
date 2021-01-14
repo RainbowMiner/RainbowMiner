@@ -93,15 +93,15 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             break
         }
         "/activeminers" {
-            $Data = if ($API.ActiveMiners) {ConvertTo-Json $API.ActiveMiners -Depth 2 -WarningAction Ignore} else {"[]"}
+            $Data = if ($API.ActiveMiners) {ConvertTo-Json $API.ActiveMiners -Depth 3 -WarningAction Ignore} else {"[]"}
             break
         }
         "/runningminers" {
-            $Data = if ($API.RunningMiners) {ConvertTo-Json $API.RunningMiners -Depth 2 -WarningAction Ignore} else {"[]"}
+            $Data = if ($API.RunningMiners) {ConvertTo-Json $API.RunningMiners -Depth 3 -WarningAction Ignore} else {"[]"}
             Break
         }
         "/failedminers" {
-            $Data = if ($API.FailedMiners) {ConvertTo-Json $API.FailedMiners -Depth 2 -WarningAction Ignore} else {"[]"}
+            $Data = if ($API.FailedMiners) {ConvertTo-Json $API.FailedMiners -Depth 3 -WarningAction Ignore} else {"[]"}
             Break
         }
         "/remoteminers" {

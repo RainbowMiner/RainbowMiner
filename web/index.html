@@ -20,7 +20,7 @@
             <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
             <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
             <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
-            <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Currency</th>
+            <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
             <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
             <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
@@ -28,6 +28,7 @@
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
             <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+            <th data-field="tPrimaryShares" data-align="right">Acc/Rej</th>
             <th data-field="tActive" data-align="right" data-sortable="true">Active</th>
             <th data-field="tDonator" data-sortable="true">Mines</th>
         </tr>
@@ -82,13 +83,14 @@
                 <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                 <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
                 <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
-                <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Currency</th>
+                <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
                 <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
                 <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
                 <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
                 <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
                 <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
                 <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+                <th data-field="tPrimaryShares" data-align="right">Acc/Rej</th>
                 <th data-field="tActive" data-align="right" data-sortable="true">Active</th>
                 <th data-field="tDonator" data-sortable="true">Mines</th>
             </tr>
@@ -385,6 +387,16 @@ function formatRunningMiners(data) {
             item.tPrimaryHashRate = item.Speed;
         }
 
+        item.tPrimaryShares = "- / -";
+        item.tSecondaryShares = "- / -";
+        if (Array.isArray(item.Stratum) && item.Stratum.length) {
+            item.tPrimaryShares = (typeof item.Stratum[0].Accepted !== "undefined"? item.Stratum[0].Accepted : '-') + ' / ' + (typeof item.Stratum[0].Rejected !== "undefined"? item.Stratum[0].Rejected : '-')
+            if (item.Stratum.length > 1)
+                item.tSecondaryShares = (typeof item.Stratum[1].Accepted !== "undefined"? item.Stratum[1].Accepted : '-') + ' / ' + (typeof item.Stratum[1].Rejected !== "undefined"? item.Stratum[1].Rejected : '-')
+        } else if (typeof item.Stratum !== "undefined") {
+            item.tPrimaryShares = (typeof item.Stratum.Accepted !== "undefined"? item.Stratum.Accepted : '-') + ' / ' + (typeof item.Stratum.Rejected !== "undefined"? item.Stratum.Rejected : '-')
+        }
+
         if (Array.isArray(item.Speed_Live)) {
             item.tPrimaryHashRateLive = item.Speed_Live[0];
             item.tSecondaryHashRateLive = item.Speed_Live[1];
@@ -488,6 +500,17 @@ function formatRemoteMiners(data) {
         } else {
             item.tPrimaryHashRateLive = item.CurrentSpeed;
         }
+
+        item.tPrimaryShares = "- / -";
+        item.tSecondaryShares = "- / -";
+        if (Array.isArray(item.Accepted) && item.Accepted.length) {
+            item.tPrimaryShares = (typeof item.Accepted[0] !== "undefined"? item.Accepted[0] : '-') + ' / ' + (typeof item.Rejected[0] !== "undefined"? item.Rejected[0] : '-')
+            if (item.Accepted.length > 1)
+                item.tSecondaryShares = (typeof item.Accepted[1] !== "undefined"? item.Accepted[1] : '-') + ' / ' + (typeof item.Rejected[1] !== "undefined"? item.Rejected[1] : '-')
+        } else if (typeof item.Accepted !== "undefined") {
+            item.tPrimaryShares = (typeof item.Accepted !== "undefined"? item.Accepted : '-') + ' / ' + (typeof item.Rejected !== "undefined"? item.Rejected : '-')
+        }
+
         item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
 
         item.tDonator = item.Donator ? "for dev" : "for you";
