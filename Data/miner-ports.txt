@@ -42,6 +42,7 @@
 141	CcminerKlausT820
 142	CcminerKlausT825
 143	CcminerSha3d
+144	CcminerZP
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -113,6 +114,7 @@
 360	NoncerProNvidia
 361	Nqminer
 362	MiniZRTX
+363	CryptoDredge25
 
 400	Sgminer
 401	SgminerBitcore
@@ -135,7 +137,7 @@
 
 500	CpuminerJayddee
 501	CpuminerRplantPW
-502	
+502
 503	
 504	CpuminerOptBF
 510	
