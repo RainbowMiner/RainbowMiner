@@ -368,7 +368,6 @@ All variables defined in "ExcludeServerConfig" will not be overwritten by the se
 <details><summary>BeePool</summary> https://www.beepool.com/ no auto-exchange, enter wallet address for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Binance</summary> https://pool.binance.com/ no auto-exchange, ETH mining, instead of wallet, setup and use a miner name. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>BlazePool</summary> https://www.blazepool.com/ auto-exchange and payout in BTC</details>
-<details><summary>BlockCruncher</summary> https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>BlockMasters</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC, mine most profitable algorithm. Pool chooses coin or merged mining benefits
 </details>
 <details><summary>BlockMastersCoins</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC, mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
