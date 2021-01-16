@@ -553,14 +553,6 @@ param(
     Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -Cache $Cache -cycletime $Session.Config.Interval | Where-Object description -match "\[($($workers -join '|'))\]"
 }
 
-function Update-MiningRigRentalRigs {
-    Write-Host "Not implemented"
-}
-
-function Invoke-MiningRigRentalUpdatePrices {
-    Write-Host "Not implemented"
-}
-
 function Get-MiningRigRentalsRigID {
 [cmdletbinding()]
 Param(   
@@ -610,4 +602,21 @@ Param(
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
     }
     $PoolsData
+}
+
+function Get-MiningRigRentalGroups {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [String]$key,
+    [Parameter(Mandatory = $True)]
+    [String]$secret,
+    [Parameter(Mandatory = $False)]
+    [String[]]$workers,
+    [Parameter(Mandatory = $False)]
+    [Int]$Cache = 0
+)
+    if ($Result = Invoke-MiningRigRentalRequest "/riggroup" $key $secret -Cache $Cache) {
+        $Result.PSObject.Properties.Value | Where-Object {-not $Workers.Count -or "$($_.name -replace "^RBM-")" -in $Workers}
+    }
 }

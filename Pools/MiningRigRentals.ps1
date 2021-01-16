@@ -101,7 +101,7 @@ if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
 
 if (-not $Workers.Count) {return}
 
-$AllRigs_Request = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
+$AllRigs_Request   = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
 
 $Pool_Request = [PSCustomObject]@{}
 
@@ -112,6 +112,12 @@ Set-MiningRigRentalConfigDefault -Workers $Workers > $null
 $Devices_Benchmarking = @($API.MinersNeedingBenchmark | Select-Object -ExpandProperty DeviceName | Select-Object -Unique)
 if ($Session.MRRBenchmarkStatus -eq $null) {$Session.MRRBenchmarkStatus = @{}}
 if ($Session.MRRRentalTimestamp -eq $null) {$Session.MRRRentalTimestamp = @{}}
+if ($Session.MRRRigGroups       -eq $null) {
+    $Session.MRRRigGroups       = @{}
+    Get-MiningRigRentalGroups -key $API_Key -secret $API_Secret | Foreach-Object {
+        $Session.MRRRigGroups[$_.name] = [int]$_.id
+    }
+}
 
 $UpdateInterval_Seconds      = ConvertFrom-Time "$UpdateInterval"
 $PauseBetweenRentals_Seconds = ConvertFrom-Time "$PauseBetweenRentals"
@@ -486,6 +492,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $RigDivisors = @("h","kh","mh","gh","th") | Foreach-Object {[PSCustomObject]@{type=$_;value=(ConvertFrom-Hash "1$_")}}
     $RigCreated = 0
     $RigsToUpdate = @()
+    $RigGroupsAdd = @()
+    $RigGroupsRemove = @()
     $RigMinProfit = 0.00001
     $RigServer = $null
 
@@ -821,6 +829,24 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)$(if (Get-Coin $Matches[1]) {"/$($Matches[1].ToUpper())"} elseif ($Matches[1] -ne $Algorithm_Norm_Mapped) {"/$($Matches[1])"})"} else {$Algorithm_Norm_Mapped}
                                         $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
                                         $RigSubst["Display"]     = $_.display
+
+                                        $RigGroupName = "RBM-$($RigName)"
+
+                                        if (-not $Session.MRRRigGroups.$RigGroupName) {
+                                            try {
+                                                $Result = Invoke-MiningRigRentalRequest "/riggroup" $API_Key $API_Secret -params @{name = $RigGroupName;enabled = 1;rental_limit = 1} -method "PUT" -Timeout 60
+                                                if ($Result.id) {
+                                                    $RigCreated++
+                                                    $Session.MRRRigGroups[$RigGroupName] = [int]$Result.id
+                                                }
+                                                Write-Log -Level Info "$($Name): $(if ($Result.id) {"Successfully created"} else {"Failed to create"}) rig group $($RigGroupName)"
+                                            } catch {
+                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                Write-Log -Level Warn "$($Name): Unable to create rig group $($RigGroupName): $($_.Exception.Message)"
+                                            }
+                                        }
+
+                                        $RigGroupId = if ($Session.MRRRigGroups.$RigGroupName) {[int]$Session.MRRRigGroups.$RigGroupName} else {0}
                                     
                                         if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + $Session.Config.DefaultPoolRegion.Where({$_ -ne $Session.Config.Region}) | Select-Object)}
                                         $CreateRig = if ($RigRunMode -eq "create") {
@@ -835,6 +861,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 ndevices    = 1
                                             }
                                         }
+
+                                        #$CreateRig["riggroup"] = $RigGroupId
 
                                         if ($RigType -eq "GPU") {
                                             $CreateRig["device_ram"] = $RigDeviceRam
@@ -893,6 +921,9 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             try {
                                                 $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
                                                 if ($Result.id) {
+                                                    if ($RigGroupId) {
+                                                        $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $Result.id}
+                                                    }
                                                     Write-Log -Level Info "$($Name): Created rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
                                                     if ($RigPool) {
                                                         try {
@@ -923,6 +954,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                                 $RigPools_Id = [int]$_.id
 
+                                                if ($RigGroupId -and ([int]$_.riggroup -ne $RigGroupId)) {
+                                                    $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $RigPools_Id}
+                                                    if ([int]$_.riggroup) {
+                                                        $RigGroupsRemove += [PSCustomObject]@{groupid = [int]$_.riggroup;rigid = $RigPools_Id}
+                                                    }
+                                                }
+
                                                 if ($RigControl_Data -and ($_.status.status -eq "rented" -or $_.status.rented)) {
                                                     $RigControl_Data.LastReset = (Get-Date).ToUniversalTime()
                                                 }
@@ -932,6 +970,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 if ( (-not $RigMinPriceCurrent) -or
                                                      ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
                                                      ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
+                                                     #([int]$_.riggroup -ne $CreateRig.riggroup) -or
                                                      ($_.ndevices -ne $CreateRig.ndevices) -or 
                                                      ($CreateRig.device_ram -and ($_.device_ram -ne $CreateRig.device_ram)) -or
                                                      ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
@@ -1020,14 +1059,41 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     }
 
     if ($RigsToUpdate.Count) {
-
         try {
             $Result = Invoke-MiningRigRentalRequest "/rig/batch" $API_Key $API_Secret -params @{"rigs"=$RigsToUpdate} -method "PUT" -Timeout 60
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "$($Name): Unable to update: $($_.Exception.Message)"
         }
+    }
 
+
+    if ($RigGroupsRemove.Count) {
+        #POST /riggroup/[ID]/remove/[rigid1];[rigid2];[rigid3]...
+        $RigGroupsRemove | Group-Object groupid | Foreach-Object {
+            $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.name).Name
+            try {
+                $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/remove/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
+                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Successfully removed"} else {"Failed to remove"}) rigs $($_.Group.rigid -join ',') from group $($RigGroupName): $($_.Exception.Message)"
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "$($Name): Unable to remove rigs from group $($RigGroupName): $($_.Exception.Message)"
+            }
+        }
+    }
+
+    if ($RigGroupsAdd.Count) {
+        #POST /riggroup/[ID]/add/[rigid1];[rigid2];[rigid3]...
+        $RigGroupsAdd | Group-Object groupid | Foreach-Object {
+            $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.name).Name
+            try {
+                $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/add/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
+                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Successfully added"} else {"Failed to add"}) rigs $($_.Group.rigid -join ',') to group $($RigGroupName): $($_.Exception.Message)"
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "$($Name): Unable to add rigs to group $($RigGroupName): $($_.Exception.Message)"
+            }
+        }
     }
 
     Set-ContentJson ".\Data\mrrcontrol.json" -Data $MRRRigControl > $null
