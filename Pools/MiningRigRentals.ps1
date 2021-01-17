@@ -970,7 +970,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 if ( (-not $RigMinPriceCurrent) -or
                                                      ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
                                                      ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
-                                                     #([int]$_.riggroup -ne $CreateRig.riggroup) -or
                                                      ($_.ndevices -ne $CreateRig.ndevices) -or 
                                                      ($CreateRig.device_ram -and ($_.device_ram -ne $CreateRig.device_ram)) -or
                                                      ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
