@@ -18,7 +18,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexOctopus\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.7-trex/t-rex-0.19.7-linux-cuda10.0.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.9-trex/t-rex-0.19.9-linux-cuda10.0.tar.gz"
             Cuda   = "11.1"
         }
     )
@@ -26,7 +26,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexOctopus\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.7-trex/t-rex-0.19.7-win-cuda10.0.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.9-trex/t-rex-0.19.9-win-cuda10.0.zip"
             Cuda   = "11.1"
         }
     )
