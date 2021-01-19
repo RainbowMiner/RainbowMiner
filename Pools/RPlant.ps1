@@ -49,8 +49,8 @@ $Pools_Data = [PSCustomObject]@{
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
-    "NAD"   = [PSCustomObject]@{port = 7064; region = $Pool_Regions}
     "NOON"  = [PSCustomObject]@{port = 7063; region = $Pool_Regions}
+    "PYRK"  = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
     "QRN"   = [PSCustomObject]@{port = 7067; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
     "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
