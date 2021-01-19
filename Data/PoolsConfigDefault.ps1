@@ -84,9 +84,6 @@
         "CryptoKnight" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
-        "Equipool" = [PSCustomObject]@{
-            Currencies=@("ZEC")
-        }
         "EthashPool" = [PSCustomObject]@{
             Currencies=@("ETC","ETH","ETP")
         }
