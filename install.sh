@@ -8,11 +8,9 @@ function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4
 
 pwsh_major_version="7"
 pwsh_minor_version="1"
-pwsh_build_version="0"
+pwsh_build_version="1"
 
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
-
-function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
 if [ -x "$(command -v pwsh)" ]; then
   pwsh_version_current="$(pwsh --version | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')"
@@ -23,7 +21,7 @@ do
   if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
     cat << EOF
 
-RainbowMiner Installer v1.1
+RainbowMiner Installer v1.2
 
 Commandline options:
 
