@@ -1156,6 +1156,20 @@ Example:
 
 In this example, the switching hysteresis would be set to 5% (another pool with the same algorithm would need at least a 5% higher price to be accepted) and switched off completely for ZergPoolCoins.
 
+#### Force a specific region's stratum
+
+All region stratums are chosen automatically, depending on your "Region" setting in config.txt. For some cases, you might want to select a specific region stratum for a pool.
+
+Example:
+
+    "Nicehash": {
+        "BTC": "<YOUR_BTC_ADDRESS>",
+        "Worker": "$WorkerName",
+        "Region": "US"
+    },
+
+In this example, only the US stratum will be used for Nicehash. Make sure, that the pool supports a stratum for the selected region. If it doesn't, the pool will not show up anymore.
+
 ### Config\miners.config.txt
 
 Each miner can be configured by it's own section, in the miners.config.txt

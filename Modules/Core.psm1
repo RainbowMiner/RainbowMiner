@@ -726,17 +726,27 @@ function Invoke-Core {
             if (Test-Config "Algorithms" -Health) {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
                 $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
-                    $Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force
-                    $Session.Config.Algorithms.$_ | Add-Member Penalty ([Math]::Round([double]($Session.Config.Algorithms.$_.Penalty -replace "[^\d\.\-]+"),2)) -Force
-                    $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
-                    $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
-                    $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Algorithms.$_.MaxTimeToFind) -Force
-                    $Session.Config.Algorithms.$_ | Add-Member MSIAprofile ([int]$Session.Config.Algorithms.$_.MSIAprofile) -Force
-                    $Session.Config.Algorithms.$_ | Add-Member MinBLKRate $(if ($Session.Config.Algorithms.$_.MaxTimeToFind) {86400/$Session.Config.Algorithms.$_.MaxTimeToFind} else {0}) -Force
-                    $Session.Config.Algorithms.$_ | Add-Member MRREnable $(if ($Session.Config.Algorithms.$_.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$_.MRREnable} else {$true}) -Force
-                    $Session.Config.Algorithms.$_ | Add-Member MRRAllowExtensions $(if ($Session.Config.Algorithms.$_.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$_.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$_.MRRAllowExtensions} else {$null}) -Force
-                    $MRRPriceModifierPercent = "$($Session.Config.Algorithms.$_.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
-                    $Session.Config.Algorithms.$_ | Add-Member MRRPriceModifierPercent $(if ($MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$MRRPriceModifierPercent,2)))} else {$null}) -Force
+                    $a = $_
+                    $Session.Config.Algorithms | Add-Member $a $AllAlgorithms.$a -Force
+                    $Algo_MRRPriceModifierPercent = "$($Session.Config.Algorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
+                    $Algo_MaxTimeToFInd           = (ConvertFrom-Time $Session.Config.Algorithms.$a.MaxTimeToFind)
+                    ([ordered]@{
+                        Penalty                 = ([Math]::Round([double]($Session.Config.Algorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
+                        MinHashrate             = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrate)
+                        MinWorkers              = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinWorkers)
+                        MaxTimeToFind           = $Algo_MaxTimeToFind
+                        MSIAprofile             = ([int]$Session.Config.Algorithms.$a.MSIAprofile)
+                        MinBLKRate              = $(if ($Algo_MaxTimeToFind) {86400/$Algo_MaxTimeToFind} else {0})
+                        MRREnable               = $(if ($Session.Config.Algorithms.$a.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRREnable} else {$true})
+                        MRRAllowExtensions      = $(if ($Session.Config.Algorithms.$a.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRRAllowExtensions} else {$null})
+                        MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
+                    }).GetEnumerator() | Foreach-Object {
+                        if ([bool]$Session.Config.Algorithms.$a.PSObject.Properties["$($_.Name)"]) {
+                            $Session.Config.Algorithms.$a."$($_.Name)" = $_.Value
+                        } else {
+                            $Session.Config.Algorithms.$a | Add-Member "$($_.Name)" $_.Value -Force
+                        }
+                    }
                 }
             }
             if ($AllAlgorithms -ne $null) {Remove-Variable "AllAlgorithms"}
@@ -752,16 +762,26 @@ function Invoke-Core {
             if (Test-Config "Coins" -Health) {
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
                 $AllCoins.PSObject.Properties.Name | Select-Object | Foreach-Object {
-                    $Session.Config.Coins | Add-Member $_ $AllCoins.$_ -Force
-                    $Session.Config.Coins.$_ | Add-Member Penalty ([Math]::Round([double]($Session.Config.Coins.$_.Penalty -replace "[^\d\.\-]+"),2)) -Force
-                    $Session.Config.Coins.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Coins.$_.MinHashrate) -Force
-                    $Session.Config.Coins.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Coins.$_.MinWorkers) -Force
-                    $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
-                    $Session.Config.Coins.$_ | Add-Member Wallet ($Session.Config.Coins.$_.Wallet -replace "\s+") -Force
-                    $Session.Config.Coins.$_ | Add-Member EnableAutoPool (Get-Yes $Session.Config.Coins.$_.EnableAutoPool) -Force
-                    $Session.Config.Coins.$_ | Add-Member PostBlockMining (ConvertFrom-Time $Session.Config.Coins.$_.PostBlockMining) -Force
-                    $Session.Config.Coins.$_ | Add-Member MinProfitPercent ([double]($Session.Config.Coins.$_.MinProfitPercent -replace "[^\d\.]+")) -Force
-                    $Session.Config.Coins.$_ | Add-Member MinBLKRate $(if ($Session.Config.Coins.$_.MaxTimeToFind) {86400/$Session.Config.Coins.$_.MaxTimeToFind} else {0}) -Force
+                    $c = $_
+                    $Session.Config.Coins | Add-Member $c $AllCoins.$c -Force
+                    $Coin_MaxTimeToFind = (ConvertFrom-Time $Session.Config.Coins.$c.MaxTimeToFind)
+                    ([ordered]@{
+                        Penalty          = ([Math]::Round([double]($Session.Config.Coins.$c.Penalty -replace "[^\d\.\-]+"),2))
+                        MinHashrate      = (ConvertFrom-Hash $Session.Config.Coins.$c.MinHashrate)
+                        MinWorkers       = (ConvertFrom-Hash $Session.Config.Coins.$c.MinWorkers)
+                        MaxTimeToFind    = $Coin_MaxTimeToFind
+                        Wallet           = ($Session.Config.Coins.$c.Wallet -replace "\s+")
+                        EnableAutoPool   = (Get-Yes $Session.Config.Coins.$c.EnableAutoPool)
+                        PostBlockMining  = (ConvertFrom-Time $Session.Config.Coins.$c.PostBlockMining)
+                        MinProfitPercent = ([double]($Session.Config.Coins.$c.MinProfitPercent -replace "[^\d\.]+"))
+                        MinBLKRate       = $(if ($Coin_MaxTimeToFind) {86400/$Coin_MaxTimeToFind} else {0})
+                    }).GetEnumerator() | Foreach-Object {
+                        if ([bool]$Session.Config.Coins.$c.PSObject.Properties["$($_.Name)"]) {
+                            $Session.Config.Coins.$c."$($_.Name)" = $_.Value
+                        } else {
+                            $Session.Config.Coins.$c | Add-Member "$($_.Name)" $_.Value -Force
+                        }
+                    }
                 }
                 $CheckCoins = $true
             }
@@ -928,33 +948,54 @@ function Invoke-Core {
                 if ($q -eq "FocusWallet" -and $Session.Config.Pools.$p.$q.Count) {
                     $Session.Config.Pools.$p.$q = @(Compare-Object $Session.Config.Pools.$p.$q $Session.Config.Pools.$p.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject -Unique)
                 }
-                $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+                $v = @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object)
+                if ([bool]$Session.Config.Pools.$p.PSObject.Properties[$q]) {
+                    $Session.Config.Pools.$p.$q = $v
+                } else {
+                    $Session.Config.Pools.$p | Add-Member $q $v -Force
+                }
             }
 
             $Session.Config.Pools.$p.PSObject.Properties | Where-Object {$_.Name -match "^(Allow|Enable)" -and $_.Value -isnot [bool]} | Foreach-Object {
-                $AddEnable = $_
-                $Session.Config.Pools.$p | Add-Member $AddEnable.Name (Get-Yes $AddEnable.Value) -Force
+                $Session.Config.Pools.$p."$($_.Name)" = Get-Yes $_.Value
             }
 
             if ($Session.Config.Pools.$p.EnableAutoCoin) {
                 $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.EnableAutoPool -and $_.Value.Wallet} | Sort-Object Name | Foreach-Object {
-                    if (-not $Session.Config.Pools.$p."$($_.Name)") {$Session.Config.Pools.$p | Add-Member $_.Name $_.Value.Wallet -Force}
+                    if (-not $Session.Config.Pools.$p."$($_.Name)") {
+                        if ([bool]$Session.Config.Pools.$p.PSObject.Properties["$($_.Name)"]) {
+                            $Session.Config.Pools.$p."$($_.Name)" = $_.Value.Wallet
+                        } else {
+                            $Session.Config.Pools.$p | Add-Member $_.Name $_.Value.Wallet -Force
+                        }
+                    }
                 }
             }
             $cparams = [PSCustomObject]@{}
             $Session.Config.Pools.$p.PSObject.Properties.Name | Where-Object {$_ -notmatch "^#" -and $_ -match "^(.+)-Params$"} | Foreach-Object {$cparams | Add-Member $Matches[1] $Session.Config.Pools.$p.$_ -Force}
             $Session.Config.Pools.$p | Add-Member Wallets $(Get-PoolPayoutCurrencies $Session.Config.Pools.$p) -Force
             $Session.Config.Pools.$p | Add-Member Params $cparams -Force
-            $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
-            $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
-            $Session.Config.Pools.$p | Add-Member MaxMarginOfError ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)) -Force
-            $Pool_SwHyst = "$($Session.Config.Pools.$p.SwitchingHysteresis -replace "[^\d\.\-]+")"
-            $Session.Config.Pools.$p | Add-Member SwitchingHysteresis $(if ($Pool_SwHyst) {[Math]::Max([Math]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null}) -Force
-            $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
-            $Pool_MaxAllowedLuck = "$($Session.Config.Pools.$p.MaxAllowedLuck -replace "[^\d\.]+")"
-            $Session.Config.Pools.$p | Add-Member MaxAllowedLuck $(if ($Pool_MaxAllowedLuck) {[Math]::Max([double]$Pool_MaxAllowedLuck,0.0)} else {$null}) -Force
+
+            $Pool_SwHyst                = "$($Session.Config.Pools.$p.SwitchingHysteresis -replace "[^\d\.\-]+")"
+            $Pool_MaxAllowedLuck        = "$($Session.Config.Pools.$p.MaxAllowedLuck -replace "[^\d\.]+")"
             $Pool_MaxTimeSinceLastBlock = "$($Session.Config.Pools.$p.MaxTimeSinceLastBlock -replace "[^\d\.mhdw]+")"
-            $Session.Config.Pools.$p | Add-Member MaxTimeSinceLastBlock $(if ($Pool_MaxTimeSinceLastBlock) {ConvertFrom-Time $Pool_MaxTimeSinceLastBlock} else {$null}) -Force
+
+            ([ordered]@{
+                DataWindow            = (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)
+                Penalty               = ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2))
+                MaxMarginOfError      = ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2))
+                SwitchingHysteresis   = $(if ($Pool_SwHyst) {[Math]::Max([Math]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null})
+                StatAverage           = (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage)
+                MaxAllowedLuck        = $(if ($Pool_MaxAllowedLuck) {[Math]::Max([double]$Pool_MaxAllowedLuck,0.0)} else {$null})
+                MaxTimeSinceLastBlock = $(if ($Pool_MaxTimeSinceLastBlock) {ConvertFrom-Time $Pool_MaxTimeSinceLastBlock} else {$null})
+                Region                = $(if ($Session.Config.Pools.$p.Region) {Get-Region $Session.Config.Pools.$p.Region} else {$null})
+            }).GetEnumerator() | Foreach-Object {
+                if ([bool]$Session.Config.Pools.$p.PSObject.Properties["$($_.Name)"]) {
+                    $Session.Config.Pools.$p."$($_.Name)" = $_.Value
+                } else {
+                    $Session.Config.Pools.$p | Add-Member "$($_.Name)" $_.Value -Force
+                }
+            }
         }
     }
 

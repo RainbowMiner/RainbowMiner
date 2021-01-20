@@ -1529,6 +1529,9 @@ function Get-PoolsContent {
 
         foreach($c in @($Content)) {
             if ($PoolName -ne "WhatToMine") {
+                if ($Parameters.Region -and ($c.Region -ne $Parameters.Region)) {
+                    continue
+                }
                 $Penalty = [Double]$Parameters.Penalty
                 if (-not $Parameters.InfoOnly) {
                     $Penalty += [Double]$Session.Config.Algorithms."$($c.Algorithm)".Penalty + [Double]$Session.Config.Coins."$($c.CoinSymbol)".Penalty
@@ -5016,7 +5019,7 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
