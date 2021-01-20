@@ -34,11 +34,9 @@ catch {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{id = "beam";   symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("cn","asia","eu","us")}
-    [PSCustomObject]@{id = "";       symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn","asia","kr","jp")}
-    [PSCustomObject]@{id = "ckb";    symbol = "CKB";     port = 8888;  fee = 1; ssl = $false; region = @("cn","asia","eu")}
-    [PSCustomObject]@{id = "grin";   symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
-    [PSCustomObject]@{id = "grin";   symbol = "GRIN_32"; port = 6665;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
+    [PSCustomObject]@{id = "beam";   symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("cn","asia","eu","us"); noid = @()}
+    [PSCustomObject]@{id = "eth";    symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn","asia","eu","us","kr","jp"); noid = @("cn","asia","kr","jp")}
+    [PSCustomObject]@{id = "ckb";    symbol = "CKB";     port = 8888;  fee = 1; ssl = $false; region = @("cn","asia","eu"); noid = @()}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "_.+$";$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
@@ -49,6 +47,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "_.+$";$Wallets.
     $Pool_Fee = $_.fee
     $Pool_ID = $_.id
     $Pool_Regions = $_.region
+    $Pool_RegionsWithNoID = $_.noid
     $Pool_SSL = $_.ssl
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
@@ -63,6 +62,9 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "_.+$";$Wallets.
         }
 
         foreach ($Pool_Region in $Pool_Regions) {
+
+            $Pool_RegionWithID = $Pool_Region -notin $Pool_RegionsWithNoID
+
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 Algorithm0    = $Pool_Algorithm_Norm
@@ -73,7 +75,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "_.+$";$Wallets.
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                Host          = "$(if ($Pool_ID) {$Pool_ID})$(if ($Pool_ID -and $Pool_Region -ne "cn") {"-"})$(if ($Pool_Region -ne "cn" -or -not $Pool_ID) {$Pool_Region}).sparkpool.com"
+                Host          = "$(if ($Pool_RegionWithID) {$Pool_ID})$(if ($Pool_RegionWithID -and $Pool_Region -ne "cn") {"-"})$(if ($Pool_Region -ne "cn" -or -not $Pool_RegionWithID) {$Pool_Region}).sparkpool.com"
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"
                 Pass          = "x"
