@@ -33,13 +33,17 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
     $Pool_Currency   = $Pool_Request.coins.$_.tag
     $Pool_Algorithm  = $Pool_Request.coins.$_.algorithm -replace "[^a-z0-9]+"
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm
 
-    if ($Divisor -and ($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
+    if ($Pool_Algorithm -eq "ProgPow") {
+        $Pool_Algorithm = "ProgPow$($Pool_Currency)"
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    }
 
-        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
+    if ($Divisor -and ($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
 
         if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.coins.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
@@ -55,6 +59,8 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
             MarginOfError = $Stat.Week_Fluctuation
             Updated       = $Stat.Updated
         }
+
+        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
     }
 }
 
@@ -81,13 +87,17 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
     $Pool_Currency   = $Pool_Request.coins.$_.tag
     $Pool_Algorithm  = $Pool_Request.coins.$_.algorithm -replace "[^a-z0-9]+"
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm
 
-    if ($Divisor -and ($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
+    if ($Pool_Algorithm -eq "ProgPow") {
+        $Pool_Algorithm = "ProgPow$($Pool_Currency)"
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    }
 
-        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
+    if ($Divisor -and ($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
 
         $Pool_CoinRequest = [PSCustomObject]@{}
         try {
@@ -118,6 +128,8 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
                 MarginOfError = $Stat.Week_Fluctuation
                 Updated       = $Stat.Updated
             }
+
+            $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
         }
     }
 }
@@ -149,8 +161,6 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin} | Foreach-Object {
 
     if (($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
 
-        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
-
         if (-not ($lastSatPrice = Get-LastSatPrice $_.coin)) {
             $lastSatPrice = if ($Global:Rates.USD -and $_.price -gt 0) {$_.price / $Global:Rates.USD * 1e8} else {0}
         }
@@ -165,6 +175,8 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin} | Foreach-Object {
             MarginOfError = $Stat.Week_Fluctuation
             Updated       = $Stat.Updated
         }
+
+        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
     }
 }
 
