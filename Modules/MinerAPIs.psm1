@@ -1694,7 +1694,7 @@ class Lol : Miner {
         $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name  = [String]$this.Algorithm[0]
-        $HashRate_Value = [Double]$Data.Session.Performance_Summary
+        $HashRate_Value = [Double](ConvertFrom-Hash "$($Data.Session.Performance_Summary)$($Data.Session.Performance_Unit)")
 
         $PowerDraw      = [Double]$Data.Session.TotalPower
 
