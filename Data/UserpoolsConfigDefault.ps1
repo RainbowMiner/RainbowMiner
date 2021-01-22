@@ -1,0 +1,17 @@
+﻿[PSCustomObject]@{
+    Enable="0"
+    Name=""
+    PoolFee="0"
+    Algorithm=""
+    CoinName=""
+    CoinSymbol=""
+    Currency=""
+    Protocol="stratum+tcp"
+    Host="stratum.userpool.com"
+    Port="1495"
+    User="`$Wallet.`$WorkerName"
+    Pass="x"
+    Region="US"
+    SSL="0"
+    EthMode=""
+}
