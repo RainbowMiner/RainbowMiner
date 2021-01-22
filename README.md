@@ -22,6 +22,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Multi-Platform (AMD, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (2Miners, 572133Club, 666Pool, 6Block, Acepool, AHashPool, BaikalMiner, BeePool, Binance, BlazePool, BlockCruncher, BlockMasters, Bsod, BtcPrivate, Cortexmint, EthashPool, Ethermine, F2pool, FairPool, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, MinerRocks, MiningDutch, MiningPoolHub, MiningPoolOvh, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, MoneroOcean, Nanopool, Nicehash, Poolin, Poolium, PoolmineXyz, Ravenminer, Ravepool, SoloPool, SparkPool, Sunpool, SuprNova, UUpool, WoolyPooly, ZelLabs, Zergpool and Zpool)**
+- **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -1169,6 +1170,78 @@ Example:
     },
 
 In this example, only the US stratum will be used for Nicehash. Make sure, that the pool supports a stratum for the selected region. If it doesn't, the pool will not show up anymore.
+
+### Config\userpools.config.txt
+
+Integrate your own pool or other pools of choice via `.\Config\userpools.config.txt`.
+
+Notes:
+- Each Currency/Coin/Algorithm combination needs an own entry
+- Every unique pool name will automatically get an config entry in pools.config.txt
+- Price and profit calculations will be done via WhatToMine
+- Hashrate/Workers/Blocktimes are currently not supported
+- Don't forget to add your custom pool's name to `"PoolName"` in config.txt!
+
+#### Example for flexpool.io:
+
+add in pools.config.txt
+
+```
+  {
+    "Enable": "1",
+    "Name": "Flexpool",
+    "PoolFee": "0",
+    "Algorithm": "",
+    "CoinName": "",
+    "CoinSymbol": "ETH",
+    "Currency": "ETH",
+    "Protocol": "stratum+tcp",
+    "Host": "eu.flexpool.io",
+    "Port": "4444",
+    "User": "$Wallet.$WorkerName",
+    "Pass": "x",
+    "Region": "EU",
+    "SSL": "0",
+    "EthMode": ""
+  },
+```
+
+in config.txt, add the Flexpool to the "PoolName" list:
+```
+  "PoolName": "Nicehash,ZergPoolCoins,Flexpool",
+```
+
+#### Mandatory parameters:
+- **Enable** = set to "1", to enable your new entry [default=0]
+- **Name** = name of the pool, every unique name will automatically get an own entry in pools.config.txt
+- **CoinSymbol** = coin, that will be mined
+- **Currency** = coin, that will be payed, determines the wallet address. Each currency will have an entry in pools.config.txt
+- **Host** = stratum server address, without `stratum+tcp://`, just my.server.name
+- **Port** = stratum server port
+
+Remark: if CoinSymbol equals Currency, only one of the two needs to be set. 
+
+#### Optional parameters:
+- **User** = exact syntax for the user parameter for the miners, variables possible, see remarks below [default=$Wallet.$WorkerName]
+- **Pass** = specific pool password, variables possible, see remarks below [default=x]
+- **Protocol** = setup your own protocol, if it differs from the default [default=stratum+tcp / stratum+ssl]
+- **PoolFee** = pool fee in percent (e.g. 1 for one percent) [default=0]
+- **SSL** = set to "1" if the stratum wants SSL [default=0]
+- **Algorithm** = if your coin is not in our database, explicitly setup the algorithm here.
+- **CoinName** = if your coin is not in our database, explicitly setup the coin's name here.
+- **EthMode** = setup the stratum/proxy mining mode for Ethash, Kawpow, Progpow pools [default=ethproxy for Ethash, stratum for KawPow]
+  - "ethproxy"
+  - "ethstratumnh"
+  - "qtminer"
+  - "minerproxy"
+  - "stratum"
+
+Remark: the following variables will be automatically replaced in parameters **User** and **Pass**:
+- `$Wallet` will be replaced with your currency's wallet (as defined in pools.config.txt)
+- `$WorkerName` will be replaced with your rig's workername (or the value in pools.config.txt)
+- `$CoinSymbol` will be replaced with the CoinSymbol
+- `$Currency` will be replaced with the Currency
+
 
 ### Config\miners.config.txt
 
