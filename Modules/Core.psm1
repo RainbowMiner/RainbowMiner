@@ -925,7 +925,7 @@ function Invoke-Core {
                         }
                     }
 
-                    foreach ($q in @("CoinSymbol","Currency","Host","Port","User")) {
+                    foreach ($q in @("CoinSymbol","Currency","Host","Port")) {
                         if ("$($UPool.$q)" -eq "") {$UPool.Enable = $false;Break}
                     }
                     $UPool
@@ -1432,11 +1432,6 @@ function Invoke-Core {
     if (-not $Session.Updatetracker.ReportDeviceData -or $Session.Updatetracker.ReportDeviceData -lt (Get-Date).AddDays(-1)) {
         $Session.Updatetracker.ReportDeviceData = Get-Date
         $Session.ReportDeviceData = $true
-    }
-
-    #Add Userpools
-    if (-not $Session.IsDonationRun -and $Session.Config.Userpools) {
-        
     }
 
     #Update the pool balances every "BalanceUpdateMinutes" minutes

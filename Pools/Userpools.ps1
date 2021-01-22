@@ -31,10 +31,10 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Price         = 0
         StablePrice   = 0
         MarginOfError = 0
-        Protocol      = "$(if ($_.Protocol) {$_.Protocol} else {"stratum+tcp"})"
+        Protocol      = "$(if ($_.Protocol) {$_.Protocol} else {"stratum+$(if ($_.SSL) {"ssl"} else {"tcp"})"})"
         Host          = $_.Host
         Port          = $_.Port
-        User          = "$($_.User)".Replace("`$Wallet",$Pool_Wallet).Replace("`$WorkerName","{workername:$Worker}")
+        User          = "$(if ($_.User) {$_.User} else {"`$Wallet.`$WorkerName"})".Replace("`$Wallet",$Pool_Wallet).Replace("`$WorkerName","{workername:$Worker}")
         Pass          = "$(if ($_.Pass) {$_.Pass} else {"x"})"
         Region        = "$(if ($_.Region) {Get-Region $_.Region} else {"US"})"
         SSL           = $_.SSL
@@ -54,7 +54,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Price_Bias    = 0.0
         Price_Unbias  = 0.0
         Wallet        = $Pool_Wallet
-        Worker        = "$(if ($_.Worker) {$_.Worker} else {"`$WorkerName"})".Replace("`$WorkerName","{workername:$Worker}")
+        Worker        = "{workername:$Worker}"
         Email         = $Email
     }
 }
