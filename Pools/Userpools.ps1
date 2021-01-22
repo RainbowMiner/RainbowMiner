@@ -18,6 +18,8 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
     $Pool_Algorithm_Norm = Get-Algorithm "$(if ($Pool_Coin) {Get-Algorithm $Pool_Coin.Algo} else {$_.Algorithm})"
     $Pool_Wallet    = $Wallets."$($_.Currency)"
 
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($_.Name)_$($Pool_Algorithm_Norm)_$($_.CoinSymbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Quiet
     }
@@ -45,7 +47,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Hashrate      = $null
         TSL           = $null
         BLK           = $null
-        EthMode       = "$(if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {$_.EthMode} else {$null})"
+        EthMode       = "$(if ($_.EthMode) {$_.EthMode} else {$Pool_EthProxy})"
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1
