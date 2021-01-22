@@ -83,11 +83,12 @@ function Start-Core {
         $Global:AllPools = $null
 
         #Setup session variables
-        [hashtable]$Session.ConfigFiles = @{
+        $Session.ConfigFiles = [ordered]@{
             Config        = @{Path='';LastWriteTime=0;Healthy=$false}
             Devices       = @{Path='';LastWriteTime=0;Healthy=$false}
             Miners        = @{Path='';LastWriteTime=0;Healthy=$false}
             OCProfiles    = @{Path='';LastWriteTime=0;Healthy=$false}
+            Userpools     = @{Path='';LastWriteTime=0;Healthy=$false}
             Pools         = @{Path='';LastWriteTime=0;Healthy=$false}
             Algorithms    = @{Path='';LastWriteTime=0;Healthy=$false}
             Coins         = @{Path='';LastWriteTime=0;Healthy=$false}
@@ -244,17 +245,12 @@ function Start-Core {
                 Get-ChildItem "$($ConfigFile_Path)\Backup" -Filter "*" | Where-Object {$_.BaseName -match "^(\d{14})" -and $Matches[1] -le $BackupDateDelete} | Remove-Item -Force -ErrorAction Ignore
             }
 
-            $Session.ConfigFiles.Keys | Sort-Object -Descending {$_ -eq "Config"} | Foreach-Object {
+            $Session.ConfigFiles.Keys | Foreach-Object {
                 $FNtmp   = "$(if ($_ -ne "Config") {"$($_.ToLower())."})$ConfigFile_Name"
                 $Session.ConfigFiles[$_].Path = Join-Path $ConfigFile_Path $FNtmp
                 if (-not $psISE -and (Test-Path $Session.ConfigFiles[$_].Path)) {Copy-Item $Session.ConfigFiles[$_].Path -Destination (Join-Path (Join-Path $ConfigFile_Path "Backup") "$($BackupDate)_$($FNtmp)")}
                 Set-ConfigDefault $_ -Force > $null
                 if (Test-Path $Session.ConfigFiles[$_].Path) {$Session.ConfigFiles[$_].Path = $Session.ConfigFiles[$_].Path | Resolve-Path -Relative}
-            }
-
-            if ($false -and $MPHLegacyUpdate -and ($PoolsPath = Get-ConfigPath "pools")) {
-                $PoolsData = Get-ConfigContent "pools" -Parameters $MPHLegacyUpdate -ConserveUnkownParameters
-                Set-ContentJson -PathToFile $PoolsPath -Data $PoolsData > $null
             }
         }
 
@@ -370,7 +366,7 @@ function Invoke-Core {
     $CheckGpuGroups = $false
     $CheckCombos = $false
     
-    [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object)
+    [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools","WhatToMine")} | Sort-Object)
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
     #Fork detection
@@ -469,6 +465,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Combos ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Scheduler @() -Force
+                $Session.Config | Add-Member Userpools @() -Force
 
                 Remove-Variable "ConfigSetup"
                 Remove-Variable "Parameters"
@@ -903,6 +900,39 @@ function Invoke-Core {
                 }
             }
             if ($AllCombos -ne $null) {Remove-Variable "AllCombos"}
+        }
+    }
+
+    #Check for userpools config
+    if (Set-ConfigDefault "Userpools") {
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Userpools -or (Test-Config "Userpools" -LastWriteTime))) {
+            $UserpoolsConfig = Get-ConfigContent "Userpools" -UpdateLastWriteTime -ConserveUnkownParameters
+            if (Test-Config "Userpools" -Health) {
+                $Session.Config | Add-Member Userpools @($UserpoolsConfig | Where-Object {"$($_.Name)" -ne ""} | Foreach-Object {
+                    $UPool = $_
+
+                    ([ordered]@{
+                        Enable        = Get-Yes $UPool.Enable
+                        SSL           = Get-Yes $UPool.SSL
+                        PoolFee       = [double](ConvertTo-Float "$($Upool.PoolFee)")
+                        Currency      = "$(if ($UPool.Currency) {$UPool.Currency} else {$UPool.CoinSymbol})".ToUpper()
+                        CoinSymbol    = "$(if ($UPool.CoinSymbol) {$UPool.CoinSymbol} else {$UPool.Currency})".ToUpper()
+                    }).GetEnumerator() | Foreach-Object {
+                        if ([bool]$UPool.PSObject.Properties["$($_.Name)"]) {
+                            $UPool."$($_.Name)" = $_.Value
+                        } else {
+                            $UPool | Add-Member "$($_.Name)" $_.Value -Force
+                        }
+                    }
+
+                    foreach ($q in @("CoinSymbol","Currency","Host","Port","User")) {
+                        if ("$($UPool.$q)" -eq "") {$UPool.Enable = $false;Break}
+                    }
+                    $UPool
+                }) -Force
+                $CheckPools = $true
+            }
+            if ($UserPoolsConfig -ne $null) {Remove-Variable "UserPoolsConfig"}
         }
     }
 
@@ -1364,17 +1394,27 @@ function Invoke-Core {
     $TimerPools = @{}
     $StopWatch = [System.Diagnostics.StopWatch]::New()
     if (Test-Path "Pools") {
-        $NewPools = $Session.AvailPools | Where-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
-            $SelectedPoolNames.Add($_) > $null
+        $NewPools = $Session.AvailPools + "Userpools" | Where-Object {($Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)) -or ($_ -eq "Userpools" -and $Session.Config.Userpools)} | Foreach-Object {
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $StopWatch.Restart()
-            $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false}
-            $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
-            Get-PoolsContent $_ -Parameters $Pool_Parameters -Disabled $Disabled
+            if ($_ -eq "Userpools") {
+                $Session.Config.Userpools | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique | Sort-Object | Foreach-Object {
+                    $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false; Name = $_}
+                    $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
+                    Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled
+                    $SelectedPoolNames.Add($_) > $null
+                    Remove-Variable "Pool_Parameters"
+                }
+            } else {
+                $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false}
+                $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
+                Get-PoolsContent $_ -Parameters $Pool_Parameters -Disabled $Disabled
+                $SelectedPoolNames.Add($_) > $null
+                Remove-Variable "Pool_Parameters"
+            }
             $TimerPools[$_] = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
-            Remove-Variable "Pool_Parameters"
         }
     }
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
@@ -1389,10 +1429,14 @@ function Invoke-Core {
     }
 
     #Report devices
-
     if (-not $Session.Updatetracker.ReportDeviceData -or $Session.Updatetracker.ReportDeviceData -lt (Get-Date).AddDays(-1)) {
         $Session.Updatetracker.ReportDeviceData = Get-Date
         $Session.ReportDeviceData = $true
+    }
+
+    #Add Userpools
+    if (-not $Session.IsDonationRun -and $Session.Config.Userpools) {
+        
     }
 
     #Update the pool balances every "BalanceUpdateMinutes" minutes

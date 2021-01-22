@@ -84,16 +84,21 @@ function Start-Setup {
         $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
         $DevicesActual = Get-Content $ConfigFiles["Devices"].Path | ConvertFrom-Json
         $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
+        $UserpoolsActual = Get-Content $ConfigFiles["Userpools"].Path | ConvertFrom-Json
+
         $SetupDevices = Get-Device "nvidia","amd","cpu" -IgnoreOpenCL
 
         $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
 
-        $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = "0";OCprofile = ""}
-        $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0";MinProfitPercent="0";Comment=""}
+        $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions=""}
+        $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
         $MRRDefault        = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
-        $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = ""}
+        $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region=""}
+        $UserpoolsDefault  = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
 
         $Controls = @("cancel","exit","back","save","done","<")
+
+        $AvailPools = $Session.AvailPools + @($UserpoolsActual | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique) | Sort-Object
 
         Clear-Host
               
@@ -909,7 +914,7 @@ function Start-Setup {
                             if ($IsInitialSetup) {
                                 Write-Host " "
                                 Write-Host "Choose your mining pools from this list or accept the default for a head start (read the Pools section of our readme for more details): " -ForegroundColor Cyan
-                                Write-Host "$($Session.AvailPools -join ", ")" -ForegroundColor Cyan
+                                Write-Host "$($AvailPools -join ", ")" -ForegroundColor Cyan
                                 Write-Host " "
                             }
 
@@ -928,7 +933,7 @@ function Start-Setup {
                             Write-Host "Hint: `"+entryname`" = add an entry to a list, `"-entryname`" = remove an entry from a list" -ForegroundColor Yellow
                             Write-Host " "
 
-                            $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "autoaddcoins" {
                             if ($IsInitialSetup -and $CoinsWithWallets.Count) {
@@ -938,7 +943,7 @@ function Start-Setup {
                             }
                         }
                         "excludepoolname" {
-                            $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "minername" {
                             if ($IsInitialSetup) {

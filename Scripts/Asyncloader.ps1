@@ -81,6 +81,4 @@ while (-not $AsyncLoader.Stop) {
     if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
 }
 
-Stop-OpenHardwareMonitor
-
 if ($AsyncLoader.Debug) {Stop-Transcript}

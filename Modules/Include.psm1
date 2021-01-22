@@ -1519,8 +1519,9 @@ function Get-PoolsContent {
 
     if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
+    $UsePoolName = if ($Parameters.Name) {$Parameters.Name} else {$PoolName}
+
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
-        $Pool_Name = $_.BaseName
 
         $Content = & {
                 $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
@@ -1571,7 +1572,7 @@ function Get-PoolsContent {
                 $c.StablePrice  *= $Pool_Factor
                 $c.PenaltyFactor = $Pool_Factor
 
-                if ($Disabled -and $Disabled.ContainsKey("$($PoolName)_$(if ($c.CoinSymbol) {$c.CoinSymbol} else {$c.Algorithm})_Profit")) {
+                if ($Disabled -and $Disabled.ContainsKey("$($UsePoolName)_$(if ($c.CoinSymbol) {$c.CoinSymbol} else {$c.Algorithm})_Profit")) {
                     $c.Disabled = $true
                 }
             }
@@ -5010,7 +5011,21 @@ function Set-PoolsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Pools"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+
+    $UserpoolsUpdated = $false
+    $UserpoolsPathToFile = ""
+
+    $UserpoolsConfigName = "$(if ($Folder -and $Session.ConfigFiles.Contains("$Folder/Userpools")) {"$Folder/"})Userpools"
+    if ($UserpoolsConfigName -and $Session.ConfigFiles.Contains($UserpoolsConfigName)) {
+        $UserpoolsPathToFile = $Session.ConfigFiles[$UserpoolsConfigName].Path
+        if (Test-Path $UserpoolsPathToFile) {
+            $UserpoolsUpdated = ((Test-Path $PathToFile) -and (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem $UserpoolsPathToFile).LastWriteTime.ToUniversalTime())
+        } else {
+            $UserpoolsPathToFile = ""
+        }
+    }
+
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime() -or $UserpoolsUpdated) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -5021,19 +5036,31 @@ function Set-PoolsConfigDefault {
             $Done = [PSCustomObject]@{}
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
+            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools","WhatToMine")})
+            $Userpools = @()
+            if ($UserpoolsPathToFile) {
+                $UserpoolsConfig = Get-ConfigContent $UserpoolsConfigName
+                if ($Session.ConfigFiles[$UserpoolsConfigName].Healthy) {
+                    $Userpools = @($UserpoolsConfig | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique)
+                }
+            }
             $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
-            if ($Pools.Count -gt 0) {
-                $Pools | Foreach-Object {
+            if ($Pools.Count -gt 0 -or $Userpools.Count -gt 0) {
+                $Pools + $Userpools | Sort-Object | Foreach-Object {
                     $Pool_Name = $_
                     if ($Preset -and $Preset.PSObject.Properties.Name -icontains $Pool_Name) {
                         $Setup_Content = $Preset.$Pool_Name
                     } else {
                         $Setup_Content = [PSCustomObject]@{}
-                        $Setup_Currencies = @("BTC")
-                        if ($Setup.$Pool_Name) {
-                            if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
-                            $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
+                        if ($Pool_Name -in $Userpools) {
+                            $Setup_Currencies = @($UserpoolsConfig | Where-Object {$_.Name -eq $Pool_Name} | Select-Object -ExpandProperty Currency -Unique)
+                            if (-not $Setup_Currencies) {$Setup_Currencies = @("BTC")}
+                        } else {
+                            $Setup_Currencies = @("BTC")
+                            if ($Setup.$Pool_Name) {
+                                if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
+                                $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
+                            }
                         }
                         $Setup_Currencies | Foreach-Object {
                             $Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force
@@ -5162,6 +5189,49 @@ function Set-SchedulerConfigDefault {
     Test-Config $ConfigName -Exists
 }
 
+function Set-UserpoolsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "$(if ($Folder) {"$Folder/"})Userpools"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile)) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {
+            $Default = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
+            if ($Preset -is [string] -or $Preset -eq $null) {
+                $Preset = 1..5 | Foreach-Object {$Default | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+            }
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+
+            if ($Preset -isnot [array] -and $Preset.value -ne $null) {
+                $Preset = $Preset.value
+            }
+            
+            $Preset | Foreach-Object {
+                foreach($SetupName in @($Default.PSObject.Properties.Name | Select-Object)) {
+                    if ($_.$SetupName -eq $null) {$_ | Add-Member $SetupName $Default.$SetupName -Force}
+                }
+            }
+
+            Set-ContentJson -PathToFile $PathToFile -Data @($Preset | Select-Object) -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
 function Test-Config {
     [CmdletBinding()]
     param(
@@ -5175,7 +5245,7 @@ function Test-Config {
         [Switch]$LastWriteTime
     )
     if (-not $Exists -and ($Health -or $LastWriteTime)) {$Exists = $true}
-    $Session.ConfigFiles.ContainsKey($ConfigName) -and $Session.ConfigFiles[$ConfigName].Path -and (-not $Exists -or (Test-Path $Session.ConfigFiles[$ConfigName].Path)) -and (-not $Health -or $Session.ConfigFiles[$ConfigName].Healthy) -and (-not $LastWriteTime -or (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles[$ConfigName].LastWriteTime)
+    $Session.ConfigFiles.Contains($ConfigName) -and $Session.ConfigFiles[$ConfigName].Path -and (-not $Exists -or (Test-Path $Session.ConfigFiles[$ConfigName].Path)) -and (-not $Health -or $Session.ConfigFiles[$ConfigName].Healthy) -and (-not $LastWriteTime -or (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles[$ConfigName].LastWriteTime)
 }
 
 function Set-ConfigLastWriteTime {
@@ -5210,6 +5280,7 @@ function Set-ConfigDefault {
         "OCProfiles"  {Set-OCProfilesConfigDefault -Folder $Folder -Force:$Force;Break}
         "Pools"       {Set-PoolsConfigDefault -Folder $Folder -Force:$Force;Break}
         "Scheduler"   {Set-SchedulerConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Userpools"   {Set-UserpoolsConfigDefault -Folder $Folder -Force:$Force;Break}
     }
 }
 
