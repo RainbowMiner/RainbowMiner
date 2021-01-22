@@ -1176,7 +1176,7 @@ In this example, only the US stratum will be used for Nicehash. Make sure, that 
 Integrate your own pool or other pools of choice via `.\Config\userpools.config.txt`.
 
 Notes:
-- Each Currency/Coin/Algorithm combination needs an own entry
+- Each Currency/Coin/Algorithm/Region combination needs an own entry
 - Every unique pool name will automatically get an config entry in pools.config.txt
 - Price and profit calculations will be done via WhatToMine
 - Hashrate/Workers/Blocktimes are currently not supported
@@ -1229,6 +1229,7 @@ Remark: if CoinSymbol equals Currency, only one of the two needs to be set.
 - **SSL** = set to "1" if the stratum wants SSL [default=0]
 - **Algorithm** = if your coin is not in our database, explicitly setup the algorithm here.
 - **CoinName** = if your coin is not in our database, explicitly setup the coin's name here.
+- **Region** = setup the stratum server's home region.
 - **EthMode** = setup the stratum/proxy mining mode for Ethash, Kawpow, Progpow pools [default=ethproxy for Ethash, stratum for KawPow]
   - "ethproxy"
   - "ethstratumnh"
