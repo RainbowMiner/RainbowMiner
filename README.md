@@ -1229,7 +1229,7 @@ Remark: if CoinSymbol equals Currency, only one of the two needs to be set.
 - **SSL** = set to "1" if the stratum wants SSL [default=0]
 - **Algorithm** = if your coin is not in our database, explicitly setup the algorithm here.
 - **CoinName** = if your coin is not in our database, explicitly setup the coin's name here.
-- **Region** = setup the stratum server's home region.
+- **Region** = setup the stratum server's home region [default=US]
 - **EthMode** = setup the stratum/proxy mining mode for Ethash, Kawpow, Progpow pools [default=ethproxy for Ethash, stratum for KawPow]
   - "ethproxy"
   - "ethstratumnh"
