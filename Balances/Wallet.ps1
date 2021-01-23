@@ -1,4 +1,4 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
     $Config
@@ -49,14 +49,16 @@ if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -o
 }
 
 $Wallets_Data = @(
-    [PSCustomObject]@{symbol = "ETH";  match = "^0x";   rpc = "https://api.ethplorer.io/getAddressInfo/{w}?apiKey=freekey";           address = "address"; balance = "ETH.balance"; received = "";              divisor = 1}
-    [PSCustomObject]@{symbol = "BCH";  match = "^[1q]"; rpc = "https://explorer.api.bitcoin.com/bch/v1/addr/{w}";                     address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
-    [PSCustomObject]@{symbol = "LTC";  match = "^[M3]"; rpc = "https://sochain.com/api/v2/get_address_balance/ltc/{w}";               address = "data.address"; balance = "data.confirmed_balance"; received = ""; divisor = 1; verify = "status"; verify_value = "success"}
-    [PSCustomObject]@{symbol = "RVN";  match = "^R";    rpc = "https://ravencoin.network/api/addr/{w}/?noTxList=1";                   address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
-    [PSCustomObject]@{symbol = "SAFE"; match = "^R";    rpc = "https://explorer.safecoin.org/api/addr/{w}/?noTxList=1";               address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
-    [PSCustomObject]@{symbol = "XLM";  match = "^G";    rpc = "https://horizon.stellar.org/accounts/{w}";                             address = "id";      balance = "balances";    received = "";              divisor = 1}
-    [PSCustomObject]@{symbol = "FIRO"; match = "^[aZ]"; rpc = "https://explorer.zcoin.io/insight-api-zcoin/addr/{w}/?noTxList=1";     address = "addrStr"; balance = "balance";     received = "totalReceived"; divisor = 1}
-    [PSCustomObject]@{symbol = "ZEC";  match = "^t";    rpc = "https://api.zcha.in/v2/mainnet/accounts/{w}";                          address = "address"; balance = "balance";     received = "totalRecv";     divisor = 1}
+    [PSCustomObject]@{symbol = "ETH";  match = "^0x";   rpc = "https://api.ethplorer.io/getAddressInfo/{w}?apiKey=freekey";           address = "address";                          balance = "ETH.balance";                     received = "";                                 divisor = 1}
+    [PSCustomObject]@{symbol = "BCH";  match = "^[1q]"; rpc = "https://explorer.api.bitcoin.com/bch/v1/addr/{w}";                     address = "addrStr";                          balance = "balance";                         received = "totalReceived";                    divisor = 1}
+    [PSCustomObject]@{symbol = "LTC";  match = "^[M3]"; rpc = "https://sochain.com/api/v2/get_address_balance/ltc/{w}";               address = "data.address";                     balance = "data.confirmed_balance";          received = "";                                 divisor = 1; verify = "status"; verify_value = "success"}
+    [PSCustomObject]@{symbol = "RVN";  match = "^R";    rpc = "https://ravencoin.network/api/addr/{w}/?noTxList=1";                   address = "addrStr";                          balance = "balance";                         received = "totalReceived";                    divisor = 1}
+    [PSCustomObject]@{symbol = "SAFE"; match = "^R";    rpc = "https://explorer.safecoin.org/api/addr/{w}/?noTxList=1";               address = "addrStr";                          balance = "balance";                         received = "totalReceived";                    divisor = 1}
+    [PSCustomObject]@{symbol = "XLM";  match = "^G";    rpc = "https://horizon.stellar.org/accounts/{w}";                             address = "id";                               balance = "balances";                        received = "";                                 divisor = 1}
+    [PSCustomObject]@{symbol = "FIRO"; match = "^[aZ]"; rpc = "https://explorer.zcoin.io/insight-api-zcoin/addr/{w}/?noTxList=1";     address = "addrStr";                          balance = "balance";                         received = "totalReceived";                    divisor = 1}
+    [PSCustomObject]@{symbol = "ZEC";  match = "^t";    rpc = "https://api.zcha.in/v2/mainnet/accounts/{w}";                          address = "address";                          balance = "balance";                         received = "totalRecv";                        divisor = 1}
+	[PSCustomObject]@{symbol = "XRP";  match = "^r";    rpc = "https://api.xrpscan.com/api/v1/account/{w}";                           address = "account";                          balance = "xrpBalance";                      received = "";                                 divisor = 1}
+	[PSCustomObject]@{symbol = "XTZ";  match = "^tz";   rpc = "https://api.blockchair.com/tezos/raw/account{w}";                      address = "data.{w}.account.address";         balance = "data.{w}.account.total_balance";  received = "data.{w}.account.total_received";  divisor = 1}
 )
 
 foreach ($Wallet_Data in $Wallets_Data) {
