@@ -147,7 +147,7 @@
 520	ClaymoreCpu
 521	XmrigCpu
 530	CpuminerYespower
-531	CpuminerBinarium
+531	CpuminerEasy
 532	CpuminerRplant
 533	NanominerRh
 534	Nanominer
