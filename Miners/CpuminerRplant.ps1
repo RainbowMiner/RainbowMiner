@@ -23,36 +23,82 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2ad"; Params = ""} #Argon2ad (URX)
+    #[PSCustomObject]@{MainAlgorithm = "argon2ad"; Params = ""} #Argon2ad (URX)
+    [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Allium (GRLC)
+    [PSCustomObject]@{MainAlgorithm = "anime"; Params = ""} #Anime (ANI)
+    [PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""} #Argon2d-crds (CRDS)
     [PSCustomObject]@{MainAlgorithm = "argon2d500"; Params = ""} #Argon2d500 (DYN)
     [PSCustomObject]@{MainAlgorithm = "argon2d4096"; Params = ""} #Argon2d4096 (UIS)
-    [PSCustomObject]@{MainAlgorithm = "argon2d-glt"; GLT="argon2d-glt"; Params = ""} #Argon2d (GLT)
-    [PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""} #Argon2i (GLT)
-    [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""} #Argon2m (Merge)
+    #[PSCustomObject]@{MainAlgorithm = "argon2d-glt"; GLT="argon2d-glt"; Params = ""} #Argon2d (GLT)
+    #[PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""} #Argon2i (GLT)
+    #[PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""} #Argon2m (Merge)
+    [PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""} #Shabal-256
     [PSCustomObject]@{MainAlgorithm = "balloon"; Algorithm = "BalloonZenX"; Params = ""} #ZentoshiCoin (ZENX)
+    [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #Blake256r14
+    [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""} #Blake2b 256
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake-2 s
+    [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""} #Blake256r8
+    [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #BMW-256
+    [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""} #BMW-512
+    [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11 (CHC)
     [PSCustomObject]@{MainAlgorithm = "circcash"; Params = ""} #CircCash
-	[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
-    [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""} #IOtE
+    #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
+    #[PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""} #IOtE
     #[PSCustomObject]@{MainAlgorithm = "curvehash"; Params = ""} #CurveHash/Oblivion, still broken in v4.5.18
+    [PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Deepcoin (DCN)
+    [PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #Diamond
+    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = ""} #h16r-hex
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #Espers
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #Hodl
     #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
-    [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
-	[PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; LinuxOnly = $true} #Lyra2h
-    [PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
+    [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #Jackpot
+    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Maxcoin
+    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #Creative
+    [PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #LBRY
+    #[PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
+    [PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; LinuxOnly = $true} #Lyra2h
+    [PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""} #LYRA2
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = ""} #LYRAv2
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyrav2v3 (VERT)
+    #[PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
+    [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #Myriad-groestl
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt(128,2,1)
+    [PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #NIST5
+    [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""} #5xBlake512
+    [PSCustomObject]@{MainAlgorithm = "phi1612"; Params = ""} #Phi
+    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #Phi2
     [PSCustomObject]@{MainAlgorithm = "phi5"; Params = ""} #Combode Coin
+    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b, Jayddee faster
+    [PSCustomObject]@{MainAlgorithm = "quark"; Params = ""} #Quark
+    [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
     ####[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
-	#[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium and CpuminerJayddee faster
-	[PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
+    #[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium and CpuminerJayddee faster
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
+    #[PSCustomObject]@{MainAlgorithm = "sha256csm"; Params = ""} #SHA256csm
+    [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #Shavite3
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
+    [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #Skein 2 - Wood coin
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #SIGT
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sono
+    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel7 (MAC)
+    [PSCustomObject]@{MainAlgorithm = "timetravel10"; Params = ""} #Bitcore (BTX)
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Denarius (DNR)
+    [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
+    [PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
+    [PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #WhirlpoolX
+    [PSCustomObject]@{MainAlgorithm = "x11"; Params = ""} #Dash
     [PSCustomObject]@{MainAlgorithm = "x22"; Params = ""} #X22 from v4.5.20 on
     ####[PSCustomObject]@{MainAlgorithm = "x33"; Params = ""} #X33 (QRN) from v4.5.16 on
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
-    [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
-    [PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
-    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; GLT="yescryptr32glt"; Params = ""} #YescryptR32
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; GLT="yescryptr8glt"; Params = ""} #YescryptR8
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #YescryptR8
     [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""} #YescryptR8g (KOTO)
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower
     [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16
@@ -65,7 +111,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = ""} #Yespower SugarChain (SUGAR)
     [PSCustomObject]@{MainAlgorithm = "yespowerTIDE"; Params = ""} #Yespower Tidecoin (TDC)
     [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = ""} #Yespower Uranium-X (URX)
-    [PSCustomObject]@{MainAlgorithm = "sha256csm"; Params = ""} #SHA256csm
+    [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #Ziftr
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
