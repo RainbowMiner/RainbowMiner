@@ -6,6 +6,24 @@ awk 'BEGIN {
                 printf "  \"CpuLoad\": %.2f,\n", $(NF-3)
         }
 
+        if ((getline _ < "/opt/rainbowminer/bin/cpuinfo") >= 0) {
+                printf "  \"Cpus\": [\n"
+                i = 0
+                while ("/opt/rainbowminer/bin/cpuinfo"| getline) {
+                        if ( $0 ~ /CPU:/) {
+                                if (i>0) {printf ",\n"}
+                                printf "    {\n"
+                                printf "      \"Clock\": %.1f,\n", $2
+                                printf "      \"Temperature\": %.1f,\n", $3
+                                printf "      \"Method\": \"cpuinfo\"\n"
+                                printf "    }"
+                                i++
+                        }
+                }
+                if (i>0) {printf "\n"}
+                printf "  ],\n"
+        }
+
         while("free -m"| getline) {
                 if( $0 ~ /Mem:/) {
                 printf "  \"Memory\": {\n"
