@@ -1807,6 +1807,11 @@ function Invoke-Core {
 
     if ($ComboAlgos -ne $null) {Remove-Variable "ComboAlgos"}
 
+    #Remove all miners, that need benchmarks during donation run
+    if ($Session.IsDonationRun) {
+        $AllMiners = $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -notcontains $null})
+    }
+
     Write-Log "Calculating profit for each miner. "
 
     $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
