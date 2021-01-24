@@ -3788,10 +3788,10 @@ function Update-DeviceInformation {
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
                     if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
-                    $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus) {$Session.SysInfo.Cpus[0].Clock} else {$Global:GlobalCPUInfo.MaxClockSpeed})
+                    $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Clock) {$Session.SysInfo.Cpus[0].Clock} else {$Global:GlobalCPUInfo.MaxClockSpeed})
                     $_.Data.Utilization = [int]$Utilization
                     $_.Data.PowerDraw   = [int]($CPU_tdp * $Utilization / 100)
-                    $_.Data.Temperature = [int]$(if ($Session.SysInfo.Cpus) {$Session.SysInfo.Cpus[0].Temperature} else {0})
+                    $_.Data.Temperature = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Temperature) {$Session.SysInfo.Cpus[0].Temperature} else {0})
                     $_.Data.Method      = "tdp"
                 }
             }
