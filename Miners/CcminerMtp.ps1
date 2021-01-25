@@ -11,29 +11,42 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer_linux_cuda"
     $UriCuda = @(
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.11-ccminertcr/ccminertcr-v1.2.11-linux-cuda111.7z"
+            Cuda = "11.1"
+            Version = "1.2.11"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-linux-cuda102.7z"
             Cuda = "10.2"
+            Version = "1.2.10"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-linux-cuda100.7z"
             Cuda = "10.0"
+            Version = "1.2.10"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-linux-cuda92.7z"
             Cuda = "9.2"
+            Version = "1.2.10"
         }
     )
-    $Version = "1.2.10"
     $UseCPUAffinity = $true
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
+
     $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.11-ccminertcr/ccminertcr-v1.2.11-win.7z"
+            Cuda = "11.1"
+            Version = "1.2.11"
+        },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-win.7z"
             Cuda = "10.2"
+            Version = "1.2.10"
         }
     )
-    $Version = "1.2.10"
     $UseCPUAffinity = $false
 }
 
@@ -69,6 +82,7 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
         $Uri = $UriCuda[$i].Uri
         $Cuda= $UriCuda[$i].Cuda
+        $Version = $UriCuda[$i].Version
     }
 }
 if (-not $Uri) {return}
