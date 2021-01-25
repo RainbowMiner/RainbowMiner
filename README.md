@@ -758,8 +758,13 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 - **ExcludeAlgorithm** = list of algorithms, you want to exclude from mining
 - **ExcludeCoin** = list of coins, you want to exclude from mining
 - **ExcludeFromWatchdog** = list of algorithms or miner, you want to exclude from the watchdog
-- **DisableUnprofitableAlgolist** = set to "1" if you do not want to use the list of unprofitable algorithms, provided live by RainbowMiner.
-- **DisableUnprofitableCpuAlgolist** = set to "1" if you do not want to use the list of unprofitable CPU algorithms, provided live by RainbowMiner (if you want to mine all possible GPU algorithms on your CPU).
+- **DisableUnprofitableAlgolist** = set to "1" if you do not want to use the list of unprofitable algorithms, provided live by RainbowMiner. [default=0]
+- **DisableUnprofitableCpuAlgolist** = set to "1" if you do not want to use the list of unprofitable CPU algorithms, provided live by RainbowMiner (if you want to mine all possible GPU algorithms on your CPU). [default=0]
+
+Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both maintained actively online and updated every hour. Both lists are active, by default. This avoids running benchmarks for algorithms, that normally don't turn into good profit.
+- **unprofitable.json** = contains mostly ASIC algorithms with very low GPU mining profitability. This list is also in use as emergency switch-off for coins/algorithms, for which the pools fail to provide valid numbers. This avoids mining to rogue coins/algorithms.
+- **unprofitable-cpu.json** = contains mostly GPU algorithms, with very low CPU mining profitability. If you like and want to mine one of these algorithms on your CPU, set `"DisableUnprofitableCpuAlgolist": "1",` in config.txt. There is no drawback, just low profits :)
+
 
 #### Select miners ####
 
