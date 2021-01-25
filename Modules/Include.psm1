@@ -2336,7 +2336,7 @@ function Stop-SubProcess {
                     } else {
                         $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
                             Write-Log -Level Info "Attempting to kill $($Title) PID $($_.Id)$(if ($Name) {": $($Name)"})"
-                            if (Test-OCDaemon) {
+                            if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                 Invoke-OCDaemon -Cmd "kill $($_.Id)" > $null
                             } else {
                                 Stop-Process $_ -Force -ErrorAction Ignore
