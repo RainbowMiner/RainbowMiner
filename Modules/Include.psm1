@@ -154,7 +154,7 @@ function Get-UnprofitableAlgos {
         Write-Log -Level Warn "Unprofitable algo API failed. "
     }
 
-    if ($Request.Algorithms -and $Request.Algorithms -gt 10) {
+    if ($Request.Algorithms -and $Request.Algorithms.Count -gt 10) {
         Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Request -MD5hash $Global:GlobalUnprofitableAlgosHash > $null
     } elseif (Test-Path ".\Data\unprofitable.json") {
         try{
@@ -165,6 +165,30 @@ function Get-UnprofitableAlgos {
         }
     }
     $Global:GlobalUnprofitableAlgosHash = Get-ContentDataMD5hash $Request
+    $Request
+}
+
+function Get-UnprofitableCpuAlgos {
+    $Request = [PSCustomObject]@{}
+    try {
+        $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable-cpu.json" -cycletime 3600 -Jobkey "unprofitablecpu"
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Unprofitable Cpu algo API failed. "
+    }
+
+    if ($Request -and $Request.Count -gt 10) {
+        Set-ContentJson -PathToFile ".\Data\unprofitable-cpu.json" -Data $Request -MD5hash $Global:GlobalUnprofitableCpuAlgosHash > $null
+    } elseif (Test-Path ".\Data\unprofitable.json") {
+        try{
+            $Request = Get-ContentByStreamReader ".\Data\unprofitable-cpu.json" | ConvertFrom-Json -ErrorAction Ignore
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Unprofitable Cpu database is corrupt. "
+        }
+    }
+    $Global:GlobalUnprofitableCpuAlgosHash = Get-ContentDataMD5hash $Request
     $Request
 }
 

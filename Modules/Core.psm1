@@ -1482,6 +1482,7 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best pools .."}
 
     $UnprofitableAlgos = Get-UnprofitableAlgos
+    $UnprofitableCpuAlgos = Get-UnprofitableCpuAlgos
 
     $LockMiners = $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun
 
@@ -1717,11 +1718,15 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0) {Write-Host "Loading miner modules .."}
 
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
-    # select only the miners that match $Session.Config.MinerName, if specified, and don't match $Session.Config.ExcludeMinerName    
+    # select only the miners that match $Session.Config.MinerName, if specified, and don't match $Session.Config.ExcludeMinerName
+
+    $Miner_DontCheckForUnprofitableCpuAlgos = -not $Global:DeviceCache.DevicesByTypes.CPU -or $Session.Config.DisableUnprofitableCpuAlgolist
+
     $AllMiner_Warnings = @()
     $AllMiners = @(if (($NewPools | Measure-Object).Count -gt 0 -and (Test-Path "Miners")) {
         Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} | 
             Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Global:DeviceCache.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
+            Where-Object {$Miner_DontCheckForUnprofitableCpuAlgos -or ($_.DeviceModel -ne "CPU") -or ($_.BaseAlgorithm -notin $UnprofitableCpuAlgos)} |
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object $Global:DeviceCache.DevicesNames @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |
             Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             

@@ -759,6 +759,7 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 - **ExcludeCoin** = list of coins, you want to exclude from mining
 - **ExcludeFromWatchdog** = list of algorithms or miner, you want to exclude from the watchdog
 - **DisableUnprofitableAlgolist** = set to "1" if you do not want to use the list of unprofitable algorithms, provided live by RainbowMiner.
+- **DisableUnprofitableCpuAlgolist** = set to "1" if you do not want to use the list of unprofitable CPU algorithms, provided live by RainbowMiner (if you want to mine all possible GPU algorithms on your CPU).
 
 #### Select miners ####
 
