@@ -8,30 +8,40 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer_linux_cuda"
+    $Path = ".\Bin\NVIDIA-CcminerMTP10\ccminer_linux_cuda"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.11-ccminertcr/ccminertcr-v1.2.11-linux-cuda111.7z"
-            Cuda = "11.1"
-            Version = "1.2.11"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-linux-cuda102.7z"
+            Cuda = "10.2"
+            Version = "1.2.10"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-linux-cuda100.7z"
+            Cuda = "10.0"
+            Version = "1.2.10"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-linux-cuda92.7z"
+            Cuda = "9.2"
+            Version = "1.2.10"
         }
     )
     $UseCPUAffinity = $true
 } else {
-    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
+    $Path = ".\Bin\NVIDIA-CcminerMTP10\ccminer.exe"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.11-ccminertcr/ccminertcr-v1.2.11-win.7z"
-            Cuda = "11.1"
-            Version = "1.2.11"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-win.7z"
+            Cuda = "10.2"
+            Version = "1.2.10"
         }
     )
     $UseCPUAffinity = $false
 }
 
 $ManualUri = "https://github.com/tecracoin/ccminer/releases"
-$Port = "126{0:d2}"
+$Port = "127{0:d2}"
 $DevFee = 0.0
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
@@ -78,7 +88,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $MinMemGB = $_.MinMemGB
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and $_.OpenCL.Architecture -in @("Other","Pascal","Turing")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Miner_Device | Measure-Object).Count -le 6 -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
