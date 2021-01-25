@@ -2110,15 +2110,15 @@ function Start-SubProcessInScreen {
     if ($Session.Config.EnableDebugMode -and (Test-Path $PIDBash)) {
         Copy-Item -Path $PIDBash -Destination $PIDDebug -ErrorAction Ignore
         $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru
-        $Chmod_Process.WaitForExit() > $null
+        $Chmod_Process.WaitForExit(1000) > $null
     }
 
     $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
-    $Chmod_Process.WaitForExit() > $null
+    $Chmod_Process.WaitForExit(1000) > $null
     $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru
-    $Chmod_Process.WaitForExit() > $null
+    $Chmod_Process.WaitForExit(1000) > $null
     $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
-    $Chmod_Process.WaitForExit() > $null
+    $Chmod_Process.WaitForExit(1000) > $null
 
     $Job = Start-Job -FilePath .\Scripts\StartInScreen.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin
 
@@ -2220,11 +2220,11 @@ function Stop-SubProcess {
                 $StopWatch = [System.Diagnostics.Stopwatch]::New()
 
                 $ToKill  = @()
+                $ToKill += $Process
+
                 if ($IsLinux) {
                     $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
                 }
-
-                $ToKill += $Process
 
                 if ($ShutdownUrl -ne "") {
                     Write-Log -Level Info "Trying to shutdown $($Title) via API$(if ($Name) {": $($Name)"})"
@@ -2279,6 +2279,7 @@ function Stop-SubProcess {
                                 $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                                 if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                                     if (-not $Process.HasExited -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
+                                        Write-Log -Level Info "Call start-stop-daemon to kill $($Title)"
                                         $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
                                         if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                             $Cmd = "start-stop-daemon $ArgumentList"
@@ -2286,36 +2287,40 @@ function Stop-SubProcess {
                                             if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
                                         } else {
                                             $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
-                                            $StartStopDaemon_Process.WaitForExit() > $null
+                                            if (-not $StartStopDaemon_Process.WaitForExit(10000)) {
+                                                Write-Log -Level Info "start-stop-daemon failed to close $($Title) within 10 seconds$(if ($Name) {": $($Name)"})"
+                                            }
                                         }
                                     }
                                     if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
                                     if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
                                 }
 
-                                $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-                                    if (Test-OCDaemon) {
-                                        Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
-                                    } else {
-                                        $_.Kill()
-                                    }
-                                }
+                                #$ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
+                                #    if (Test-OCDaemon) {
+                                #        Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
+                                #    } else {
+                                #        $_.Kill()
+                                #    }
+                                #}
 
                                 while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 180) {
                                     Start-Sleep -Milliseconds 500
                                 }
 
                                 if ($false -in $ToKill.HasExited) {
-                                        Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
+                                        Write-Log -Level Warn "Alas! $($Title) failed to close within 3 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
                                         if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
                                 }
                             } catch {
                                 if ($Error.Count){$Error.RemoveAt(0)}
                                 Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
                             }
-
                         } else {
-                            $ToKill | Foreach-Object {Stop-Process -id $_ -Force -ErrorAction Ignore}
+                            $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
+                                Write-Log -Level Info "Attempting to kill $($Title) PID $($_.Id)$(if ($Name) {": $($Name)"})"
+                                Stop-Process $_ -Force -ErrorAction Ignore
+                            }
                         }
                         $Job.ProcessId = [int[]]@()
                     }

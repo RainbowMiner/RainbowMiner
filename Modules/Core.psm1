@@ -3203,14 +3203,16 @@ function Stop-Core {
                 @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {$Cmd += "kill $($_)"}
                 Invoke-OCDaemon -Cmd $Cmd -Quiet > $null
             } else {
-                @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {Stop-Process $_ -Force -ErrorAction Ignore}
+                @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {Stop-Process -Id $_ -Force -ErrorAction Ignore}
             }
         }
-        $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
-        Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_[a-z0-9_-]+)"} | Foreach-Object {
-            Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X stuff `^C" > $null
-            Start-Sleep -Milliseconds 250
-            Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X quit" > $null
+        if (Get-Command "screen" -ErrorAction Ignore) {
+            $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
+            Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_[a-z0-9_-]+)"} | Foreach-Object {
+                Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X stuff `^C" > $null
+                Start-Sleep -Milliseconds 250
+                Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X quit" > $null
+            }
         }
     }
     Stop-Autoexec

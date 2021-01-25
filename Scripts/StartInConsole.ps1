@@ -41,7 +41,7 @@ if ($StartWithoutTakingFocus) {
 
         # Fix executable permissions
         $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
-        $Chmod_Process.WaitForExit() > $null
+        $Chmod_Process.WaitForExit(1000) > $null
 
         # Set lib path to local
         #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
