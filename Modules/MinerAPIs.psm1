@@ -78,6 +78,7 @@ class Miner {
     [Bool]$NoCPUMining = $false
     [Bool]$NeedsBenchmark = $false
     [Bool]$SetLDLIBRARYPATH = $false
+    [Bool]$SkipWaitOnShutDown = $false
     [Int]$MultiProcess = 0
     [DateTime]$StartTime = [DateTime]::MinValue
     [DateTime]$ActiveLast = [DateTime]::MinValue
@@ -209,7 +210,7 @@ class Miner {
         $this.ResetMinerData()
 
         if ($this.Job) {
-            Stop-SubProcess -Job $this.Job -Title "Miner $($this.Name)" -ShutdownUrl $this.GetShutdownUrl()
+            Stop-SubProcess -Job $this.Job -Title "Miner $($this.Name)" -ShutdownUrl $this.GetShutdownUrl() -SkipWait:$this.SkipWaitOnShutDown
 
             $this.Active = $this.GetActiveTime()
             $this.Job    = $null
@@ -218,7 +219,7 @@ class Miner {
 
         if ($this.EthPillJob) {
             Write-Log "Stopping OhGodAnETHlargementPill"
-            Stop-SubProcess -Job $this.EthPillJob -Title "OhGodAnETHlargementPill"
+            Stop-SubProcess -Job $this.EthPillJob -Title "OhGodAnETHlargementPill" -SkipWait:$this.SkipWaitOnShutDown
             $this.EthPillJob = $null
         }
 

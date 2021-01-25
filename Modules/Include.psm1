@@ -2210,8 +2210,12 @@ function Stop-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$Name = "",
         [Parameter(Mandatory = $false)]
-        [String]$ShutdownUrl = ""
+        [String]$ShutdownUrl = "",
+        [Parameter(Mandatory = $false)]
+        [Switch]$SkipWait = $false
     )
+
+    $WaitForExit = if ($SkipWait) {0} elseif ($IsWindows) {20} else {120}
 
     if ($Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
@@ -2346,17 +2350,18 @@ function Stop-SubProcess {
                 # Wait for miner to shutdown
                 #
 
-                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 120) {
+                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le $WaitForExit) {
                     Start-Sleep -Milliseconds 500
                 }
 
-                if ($false -in $ToKill.HasExited) {
-                    Write-Log -Level Warn "Alas! $($Title) failed to close within 2 minutes$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
-                    if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
-                } else {
-                    Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
+                if ($WaitForExit -gt 0) {
+                    if ($false -in $ToKill.HasExited) {
+                        Write-Log -Level Warn "Alas! $($Title) failed to close within $WaitForExit seconds$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
+                        if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
+                    } else {
+                        Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
+                    }
                 }
-
             }
         }
     }
@@ -6416,7 +6421,7 @@ param(
 
 function Stop-Autoexec {
     $Global:AutoexecCommands | Where-Object {$_.ProcessId -or $_.Name} | Foreach-Object {
-        Stop-SubProcess -Job $_ -Title "Autoexec command" -Name "$($_.FilePath) $($_.Arguments)"
+        Stop-SubProcess -Job $_ -Title "Autoexec command" -Name "$($_.FilePath) $($_.Arguments)" -SkipWait
     }
 }
 
