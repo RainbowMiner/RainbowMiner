@@ -1828,6 +1828,7 @@ function Invoke-Core {
 
     $MinerFaultToleranceCPU = $Session.Config.MinerFaultToleranceCPU/100
     $MinerFaultToleranceGPU = $Session.Config.MinerFaultToleranceGPU/100
+    $MinerPowerPrice        = (100+$Session.Config.PowerOffsetPercent)*24/100000 * $Session.CurrentPowerPriceBTC
 
     [hashtable]$AllMiners_VersionCheck = @{}
     [hashtable]$AllMiners_VersionDate  = @{}
@@ -1861,6 +1862,9 @@ function Invoke-Core {
         $Miner_Profits_Unbias = [hashtable]@{}
 
         foreach($p in @($Miner.DeviceModel -split '-')) {$Miner.OCprofile[$p] = ""}
+
+        $Miner_FaultTolerance = if ($Miner.DeviceModel -eq "CPU") {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
+        $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[Math]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
 
         if ($Session.Config.Miners) {
             $Miner_CommonCommands = $Miner_Arguments = $Miner_Difficulty = ''
@@ -1985,7 +1989,7 @@ function Invoke-Core {
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Cost   = if ($Miner.DeviceModel -eq "CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
-                [Double]($Miner.PowerDraw*(100+$Session.Config.PowerOffsetPercent)*24/100000 * $Session.CurrentPowerPriceBTC)
+                [Double]($Miner.PowerDraw*$MinerPowerPrice)
             }
         }
 
@@ -2022,9 +2026,6 @@ function Invoke-Core {
         }
         try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Miner_Difficulty=0.0}
         if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}|{workername:$($Session.Config.WorkerName)}",$(@($Miner.DeviceModel -split '\-' | Foreach-Object {if ($Session.Config.Devices.$_.Worker) {$Session.Config.Devices.$_.Worker} else {$Session.Config.WorkerName}} | Select-Object -Unique) -join '_') -replace "{workername:(.+?)}","`$1"}
-
-        $Miner_FaultTolerance = if ($Miner.DeviceModel -eq "CPU") {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
-        $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[Math]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
 
         if (-not $Miner.ExtendInterval) {$Miner.ExtendInterval = 1}
         if (-not $Miner.Penalty)        {$Miner.Penalty = 0}
