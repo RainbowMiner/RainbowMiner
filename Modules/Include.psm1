@@ -936,7 +936,7 @@ function Set-Stat {
                 if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
                 if ($FaultTolerance -lt 1) {
                     $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100), 0.9))
-                    $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100 + 0.1), 0.9))
+                    $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100 + 0.1), 1.0))
                 } elseif ($Stat.Hour -gt 0) {
                     if ($FaultTolerance -lt 2) {$FaultTolerance = 2}
                     $ToleranceMin = $Stat.Hour / $FaultTolerance

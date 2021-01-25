@@ -1606,6 +1606,11 @@ function Invoke-Core {
         $OutOfSyncDivisor  = [Math]::Log($Session.OutofsyncWindow-$Session.SyncWindow) #precalc for sync decay method
         $OutOfSyncLimit    = 1/($Session.OutofsyncWindow-$Session.SyncWindow)
 
+        $PoolSwitchingHysteresis = $Session.Config.PoolSwitchingHysteresis/100
+        $PoolAccuracyWeight      = $Session.Config.PoolAccuracyWeight/100
+        $HashrateWeightStrength  = $Session.Config.HashrateWeightStrength/100
+        $HashrateWeight          = $Session.Config.HashrateWeight/100
+
         $Pools_Hashrates   = @{}
         $Pools_Running     = @{}
         $Pools_Benchmarking= @{}
@@ -1641,16 +1646,16 @@ function Invoke-Core {
                         if (-not ($Session.Config.EnableFastSwitching -or $Session.SkipSwitchingPrevention)) {
                             if ($Pool_Rounds -eq $null) {
                                 if ($Session.Config.Pools."$($_.Name)".MaxMarginOfError) {
-                                    $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * ($Session.Config.PoolAccuracyWeight/100)
+                                    $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * $PoolAccuracyWeight
                                 }
                             } elseif ($Session.Config.Pools."$($_.Name)".SwitchingHysteresis -ne $null) {
                                 $Price_Cmp *= 1+($Session.Config.Pools."$($_.Name)".SwitchingHysteresis/100)
                             } elseif ($Session.Config.PoolSwitchingHystereis) {
-                                $Price_Cmp *= 1+($Session.Config.PoolSwitchingHysteresis/100)
+                                $Price_Cmp *= 1+$PoolSwitchingHysteresis
                             }
                         }
                         if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
-                            $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm0)-$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100)) * ($Session.Config.HashrateWeight/100)
+                            $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm0)-$($_.CoinSymbol)"],$HashrateWeightStrength)) * $HashrateWeight
                         }
                         #if ($_.TSL -ne $null -and $_.BLK -ne $null -and $Session.Config.MaxAllowedLuck -gt 0) {
                         #    $Luck = $_.TSL / $(if ($_.BLK -gt 0) {86400/$_.BLK} else {86400})
@@ -1821,6 +1826,9 @@ function Invoke-Core {
 
     $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
 
+    $MinerFaultToleranceCPU = $Session.Config.MinerFaultToleranceCPU/100
+    $MinerFaultToleranceGPU = $Session.Config.MinerFaultToleranceGPU/100
+
     [hashtable]$AllMiners_VersionCheck = @{}
     [hashtable]$AllMiners_VersionDate  = @{}
     [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
@@ -1976,7 +1984,7 @@ function Invoke-Core {
             $Miner.Profit        = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
-            $Miner.Profit_Cost   = if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
+            $Miner.Profit_Cost   = if ($Miner.DeviceModel -eq "CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
                 [Double]($Miner.PowerDraw*(100+$Session.Config.PowerOffsetPercent)*24/100000 * $Session.CurrentPowerPriceBTC)
             }
         }
@@ -2014,9 +2022,11 @@ function Invoke-Core {
         }
         try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Miner_Difficulty=0.0}
         if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}|{workername:$($Session.Config.WorkerName)}",$(@($Miner.DeviceModel -split '\-' | Foreach-Object {if ($Session.Config.Devices.$_.Worker) {$Session.Config.Devices.$_.Worker} else {$Session.Config.WorkerName}} | Select-Object -Unique) -join '_') -replace "{workername:(.+?)}","`$1"}
-                
+
+        $Miner_FaultTolerance = if ($Miner.DeviceModel -eq "CPU") {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
+        $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[Math]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
+
         if (-not $Miner.ExtendInterval) {$Miner.ExtendInterval = 1}
-        if (-not $Miner.FaultTolerance) {$Miner.FaultTolerance = if ($Miner.DeviceName -match "^CPU") {0.25} else {0.1}}
         if (-not $Miner.Penalty)        {$Miner.Penalty = 0}
     })
 
