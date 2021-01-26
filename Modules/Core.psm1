@@ -1082,17 +1082,23 @@ function Invoke-Core {
             try {
                 $Request = Invoke-RestMethodAsync "server://allpools" -cycletime 120 -Timeout 20
                 $Pool_WorkerNames = [hashtable]@{}
+                $Pool_Zonk = $false
                 $ServerPools = $Request | Where-Object {$_.Name -and $_.Algorithm -and $_.Name -ne "MiningRigRentals"} | Foreach-Object {
-                    if (-not $Pool_WorkerNames.ContainsKey($_.Name)) {
-                        $Pool_WorkerNames[$_.Name] = "{workername:$(if ($Session.Config.Pools."$($_.Name)".Worker) {$Session.Config.Pools."$($_.Name)".Worker} else {$Session.Config.WorkerName})}"
-                    }
-                    $Pool_Worker = $_.Worker = $Pool_WorkerNames[$_.Name]
-                    $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
-                    $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
-                    if ($_.Failover) {
-                        $_.Failover | Foreach-Object {
-                            $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
-                            $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
+                    if (-not $Pool_Zonk) {
+                        if (-not $Pool_WorkerNames.ContainsKey($_.Name)) {
+                            if ("$($_.Worker)$($_.User)$($_.Pass)" -match "{workername:mpx}") {$Pool_Zonk = $true}
+                            else {
+                                $Pool_WorkerNames[$_.Name] = "{workername:$(if ($Session.Config.Pools."$($_.Name)".Worker) {$Session.Config.Pools."$($_.Name)".Worker} else {$Session.Config.WorkerName})}"
+                            }
+                        }
+                        $Pool_Worker = $_.Worker = $Pool_WorkerNames[$_.Name]
+                        $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
+                        $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
+                        if ($_.Failover) {
+                            $_.Failover | Foreach-Object {
+                                $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
+                                $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
+                            }
                         }
                     }
                     $_.Updated = [DateTime]$_.Updated
