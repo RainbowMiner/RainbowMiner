@@ -5836,27 +5836,30 @@ Param(
         [switch]$AsJob
 )
     if ($JobKey -and $JobData) {
-        if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2)) {
-            $serverbody = @{
-                url       = $JobData.url
-                method    = $JobData.method
-                timeout   = $JobData.timeout
-                body      = $JobData.body | ConvertTo-Json -Depth 10 -Compress
-                headers   = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
-                cycletime = $JobData.cycletime
-                retry     = $JobData.retry
-                retrywait = $Jobdata.retrywait
-                tag       = $JobData.tag
-                user      = $JobData.user
-                password  = $JobData.password
-                jobkey    = $JobKey
-                machinename = $Session.MachineName
-                myip      = $Session.MyIP
+        if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
+            $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                $serverbody = @{
+                    url       = $JobData.url
+                    method    = $JobData.method
+                    timeout   = $JobData.timeout
+                    body      = $JobData.body | ConvertTo-Json -Depth 10 -Compress
+                    headers   = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
+                    cycletime = $JobData.cycletime
+                    retry     = $JobData.retry
+                    retrywait = $Jobdata.retrywait
+                    tag       = $JobData.tag
+                    user      = $JobData.user
+                    password  = $JobData.password
+                    jobkey    = $JobKey
+                    machinename = $Session.MachineName
+                    myip      = $Session.MyIP
+                }
+                #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Config.ServerName):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
+                $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
+                if ($Result.Status) {return $Result.Content}
             }
-            #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
-            $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
-            #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
-            if ($Result.Status) {return $Result.Content}
         }
 
         $url      = $JobData.url
@@ -5866,6 +5869,17 @@ Param(
         $headers  = $JobData.headers
         $user     = $JobData.user
         $password = $JobData.password
+    }
+
+    if ($url -match "^server://(.+)$") {
+        $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+        if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+            $url           = "http://$($Config.ServerName):$($Config.ServerPort)/$($Matches[1])"
+            $user          = $Config.ServerUser
+            $password      = $Config.ServerPassword
+        } else {
+            return
+        }
     }
 
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
@@ -7085,28 +7099,32 @@ param(
     if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]@{}}
     if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
-       $Remote = $false
+        $Remote = $false
 
-       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2)) {
-            $serverbody = @{
-                endpoint  = $endpoint
-                key       = $key
-                secret    = $secret
-                orgid     = $organizationid
-                params    = $params | ConvertTo-Json -Depth 10 -Compress
-                method    = $method
-                base      = $base
-                timeout   = $timeout
-                machinename = $Session.MachineName
-                workername  = $Session.Config.Workername
-                myip      = $Session.MyIP
-            }
-            try {
-                $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getnh" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
-                if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Info "Nicehash server call: $($_.Exception.Message)"
+        if (-not $ForceLocal) {
+            $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                $serverbody = @{
+                    endpoint  = $endpoint
+                    key       = $key
+                    secret    = $secret
+                    orgid     = $organizationid
+                    params    = $params | ConvertTo-Json -Depth 10 -Compress
+                    method    = $method
+                    base      = $base
+                    timeout   = $timeout
+                    machinename = $Session.MachineName
+                    workername  = $Config.Workername
+                    myip      = $Session.MyIP
+                }
+                try {
+                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                    if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Info "Nicehash server call: $($_.Exception.Message)"
+                }
             }
         }
 

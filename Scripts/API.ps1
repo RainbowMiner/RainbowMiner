@@ -484,6 +484,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/balances" {
+            if ($Parameters.raw) {
+                $Data = if ($API.Balances) {$API.Balances} else {"[]"}
+                Break
+            }
             if ($API.Balances) {$Balances = ConvertFrom-Json $API.Balances}
             if ($API.Rates)    {$LocalRates = ConvertFrom-Json $API.Rates}
             $Balances = $Balances | Where-Object {($Parameters.add_total -or $_.Name -notmatch "^\*") -and ($Parameters.add_wallets -or $_.BaseName -ne "Wallet")}

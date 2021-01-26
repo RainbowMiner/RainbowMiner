@@ -691,7 +691,7 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Session.PauseMiners)) {$Session.PauseMiners = $API.Pause = $true}
 
     #Update defaults for all subfolders, if in Server-mode
-    if ($Session.Config.RunMode -eq "Server") {
+    if (-not $Session.IsDonationRun -and $Session.Config.RunMode -eq "Server") {
         $ConfigFile = Get-ConfigPath "Config"
         $ConfigFile_Name = Split-Path $ConfigFile -Leaf
         $ConfigFile_Path = Split-Path $ConfigFile
@@ -1146,6 +1146,8 @@ function Invoke-Core {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($Session.LastDonated.AddHours($DonateDelayHours) - ($Session.Timer.AddMinutes($DonateMinutes))))
     }
 
+    $UserConfig = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+
     #Clear pool cache if the pool configuration has changed
     if ($Global:AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {
         Write-Log -Level Info "Resetting AllPools data store"
@@ -1334,12 +1336,9 @@ function Invoke-Core {
         Test-GPU
     }
 
+    #init round variables and set Proxy
     if ($Session.Config.Proxy) {$PSDefaultParameterValues["*:Proxy"] = $Session.Config.Proxy}
     else {$PSDefaultParameterValues.Remove("*:Proxy")}
-
-    if ($Session.RoundCounter -eq 0) {Write-Host "Loading API modules .."}
-
-    #Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
 
     if ($UseTimeSync) {Test-TimeSync}
     $Session.Timer = (Get-Date).ToUniversalTime()
@@ -1347,6 +1346,9 @@ function Invoke-Core {
     $RoundSpan = if ($Session.RoundStart) {New-TimeSpan $Session.RoundStart $Session.Timer} else {New-TimeSpan -Seconds $Session.Config.BenchmarkInterval}
     $Session.RoundStart = $Session.Timer
     $RoundEnd = $Session.Timer.AddSeconds($Session.CurrentInterval)
+
+    $UnprofitableAlgos = Get-UnprofitableAlgos
+    $UnprofitableCpuAlgos = Get-UnprofitableCpuAlgos
 
     #Update the exchange rates
     Write-Log "Updating exchange rates. "
@@ -1446,19 +1448,10 @@ function Invoke-Core {
 
         if ($Session.RoundCounter -eq 0) {Write-Host "Loading balance modules .."}
 
-        $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
+        $BalancesData = Get-Balance -Config $UserConfig -Refresh $RefreshBalances
 
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {
-            $BalancesData_DateTime = Get-Date
-            $BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet"} | Foreach-Object {
-                $Balance = $_
-                $Earnings = Set-Balance $Balance -Updated $BalancesData_DateTime
-                $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "^Earnings" -or $_ -eq "Started"} | Foreach-Object {
-                    $Balance | Add-Member $_ $Earnings.$_ -Force
-                }
-            }
-            if ($Earnings -ne $null) {Remove-Variable "Earnings"}
             $API.Balances = ConvertTo-Json $BalancesData -Depth 10
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
@@ -1468,7 +1461,7 @@ function Invoke-Core {
     }
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
-    if ($Session.Config.RunMode -ne "Server") {
+    if (-not $Session.IsDonationRun -and $Session.Config.RunMode -ne "Server") {
         $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_ -or -not (($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_))} | Foreach-Object {Stop-AsyncJob -tag $_}
     }
 
@@ -1480,9 +1473,6 @@ function Invoke-Core {
     Remove-Variable "SelectedPoolNames"
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best pools .."}
-
-    $UnprofitableAlgos = Get-UnprofitableAlgos
-    $UnprofitableCpuAlgos = Get-UnprofitableCpuAlgos
 
     $LockMiners = $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun
 
@@ -2800,19 +2790,19 @@ function Invoke-Core {
     if ($StatusLine -ne $null) {Remove-Variable "StatusLine"}
 
     #Check if server is up
-    if ($Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort) {
-        $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2
+    if ($UserConfig.RunMode -eq "Client" -and $UserConfig.ServerName -and $UserConfig.ServerPort) {
+        $ServerConnected = Test-TcpServer $UserConfig.ServerName -Port $UserConfig.ServerPort -Timeout 2
         if ($ServerConnected) {            
-            Write-Host "[Client-Mode] Connected to $($Session.Config.ServerName):$($Session.Config.ServerPort)" -ForegroundColor Green
+            Write-Host "[Client-Mode] Connected to $($UserConfig.ServerName):$($UserConfig.ServerPort)" -ForegroundColor Green
         } else {
-            Write-Host "[Client-Mode] Server $($Session.Config.ServerName):$($Session.Config.ServerPort) does not respond." -ForegroundColor Red
+            Write-Host "[Client-Mode] Server $($UserConfig.ServerName):$($UserConfig.ServerPort) does not respond." -ForegroundColor Red
         }
         Write-Host " "
-        Write-Log -Level Info "Client-Mode: $(if ($ServerConnected) {"Connected"} else {"Not connected"}) to $($Session.Config.ServerName):$($Session.Config.ServerPort)"
+        Write-Log -Level Info "Client-Mode: $(if ($ServerConnected) {"Connected"} else {"Not connected"}) to $($UserConfig.ServerName):$($UserConfig.ServerPort)"
     }
-    if ($Session.Config.RunMode -eq "Server") {
+    if ($UserConfig.RunMode -eq "Server") {
         if ($API.RemoteAPI) {
-            Write-Host "[Server-Mode] Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($Session.Config.APIport) " -ForegroundColor Green
+            Write-Host "[Server-Mode] Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($UserConfig.APIport) " -ForegroundColor Green
             if ($APIClients) {
                 Write-Host " "
                 Write-Host "Clients: " -NoNewLine
@@ -2826,7 +2816,7 @@ function Invoke-Core {
             Write-Host "[Server-Mode] Server has not been started. Run RainbowMiner with admin privileges." -ForegroundColor Red
         }
         Write-Host " "
-        Write-Log -Level Info "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($Session.Config.APIport)"} else {"not started!"})"
+        Write-Log -Level Info "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($UserConfig.APIport)"} else {"not started!"})"
     }
 
     #Check for updated RainbowMiner
@@ -3245,8 +3235,20 @@ function Stop-Core {
 
 function Get-Balance {
     [CmdletBinding()]
-    param($Config, [Bool]$Refresh = $false, [Bool]$Details = $false)
+    param($Config,[Bool]$Refresh = $false)
     
+    if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and $Config.EnableServerPools) {
+        $ServerConnected = Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2
+        if ($ServerConnected) {
+            try {
+                Invoke-RestMethodAsync "server://balances?raw=1" -cycletime ($Config.BalanceUpdateMinutes*60) -Timeout 20
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+            return
+        }
+    }
+
     if (-not (Test-Path Variable:Global:CachedPoolBalances) -or $Refresh) {
         $Global:CachedPoolBalances = @(Get-BalancesContent -Config $Config | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Currency} | Group-Object -Property Caption | Foreach-Object {
             if ($_.Count -gt 1){foreach ($p in @("Balance","Pending","Total","Paid","Earned","Payouts")) {if (Get-Member -InputObject $_.Group[0] -Name $p) {if ($p -eq "Payouts") {$_.Group[0].$p = @($_.Group.$p | Select-Object)} else {$_.Group[0].$p = ($_.Group.$p | Measure-Object -Sum).Sum}}}}
@@ -3353,7 +3355,7 @@ function Get-Balance {
         }
     }
 
-    if (-not $Details) {
+    if (-not $Config.ShowPoolBalancesDetails) {
         #Consolidate result
         $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
             $_.Group | Sort-Object @{Expression={$_.Currency -eq "BTC"};Descending=$true},Caption | Select-Object -First 1 | Foreach-Object {
@@ -3382,6 +3384,16 @@ function Get-Balance {
         $Balance = $_
         $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \(|Pending \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($n = if ($Balance.$_ -ge 10 -and $Digits[$Matches[2]] -eq 8) {[Math]::Min([Math]::Ceiling([Math]::Log10($Balance.$_)),8)} else {1};$Digits[$Matches[2]]-$n+1)}" -f $Balance.$_}
     }
+
+    $Balances_DateTime = Get-Date
+    $Balances | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet"} | Foreach-Object {
+        $Balance = $_
+        $Earnings = Set-Balance $Balance -Updated $Balances_DateTime
+        $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "^Earnings" -or $_ -eq "Started"} | Foreach-Object {
+            $Balance | Add-Member $_ $Earnings.$_ -Force
+        }
+    }
+    if ($Earnings -ne $null) {Remove-Variable "Earnings"}
     
     $Balances
 }

@@ -91,34 +91,38 @@ param(
     if ($Session.MRRCache -eq $null) {[hashtable]$Session.MRRCache = @{}}
     if (-not $Cache -or -not $Session.MRRCache[$JobKey] -or -not $Session.MRRCache[$JobKey].request -or -not $Session.MRRCache[$JobKey].request.success -or $Session.MRRCache[$JobKey].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
-       $Remote = $false
+        $Remote = $false
 
-       if ($nonce -le 0) {$nonce = Get-UnixTimestamp -Milliseconds}
+        if ($nonce -le 0) {$nonce = Get-UnixTimestamp -Milliseconds}
 
         $params_local = @{}
         if ($params) {$params.Keys | Foreach-Object {$params_local[$_] = $params[$_]}}
 
-       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2)) {
-            $serverbody = @{
-                endpoint  = $endpoint
-                key       = $key
-                secret    = $secret
-                params    = $params_local | ConvertTo-Json -Depth 10 -Compress
-                method    = $method
-                base      = $base
-                timeout   = $timeout
-                nonce     = $nonce
-                machinename = $Session.MachineName
-                workername  = $Session.Config.Workername
-                myip      = $Session.MyIP
-            }
-            try {
-                $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getmrr" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
-                if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
-                #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Info "MiningRigRental server call: $($_.Exception.Message)"
+        if (-not $ForceLocal) {
+            $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                $serverbody = @{
+                    endpoint  = $endpoint
+                    key       = $key
+                    secret    = $secret
+                    params    = $params_local | ConvertTo-Json -Depth 10 -Compress
+                    method    = $method
+                    base      = $base
+                    timeout   = $timeout
+                    nonce     = $nonce
+                    machinename = $Session.MachineName
+                    workername  = $Config.Workername
+                    myip      = $Session.MyIP
+                }
+                try {
+                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getmrr" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                    if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+                    #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Info "MiningRigRental server call: $($_.Exception.Message)"
+                }
             }
         }
 
