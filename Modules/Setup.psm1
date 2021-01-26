@@ -763,11 +763,11 @@ function Start-Setup {
                                 if ($IsInitialSetup) {
                                     Write-Host " "
                                     Write-Host "It is possible to let the server rig control pools/coins/balance data of the client." -ForegroundColor Cyan
-                                    Write-Host "This reduces network traffic significantly. The local PoolName setup still applies." -ForegroundColor Cyan
+                                    Write-Host "This reduces network traffic significantly. The local pool setup will be ignored." -ForegroundColor Cyan
                                     Write-Host "MiningRigRentals is exluded - this pool always runs locally." -ForegroundColor Cyan
                                     Write-Host " "
                                 }
-                                $Config.EnableServerPools = Read-HostBool "Let the server rig control the pools/coins/balance data? " -Default $Config.EnableServerPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.EnableServerPools = Read-HostBool "Use the server's pool/coins/balance statistics and mine exactly to those pools (except for MiningRigRentals)? " -Default $Config.EnableServerPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }

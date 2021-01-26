@@ -344,6 +344,7 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
   "ServerUser": "serverusername",
   "ServerPassword": "serverpassword",
   "EnableServerConfig": "1",
+  "EnableServerPools": "1",
   "ServerConfigName": "config,coins,pools",
   "EnableServerExcludeList": "0",
   "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,Serve
@@ -353,6 +354,8 @@ rPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServe
 If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the indiviual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectoy `<workername>`.
 Setting the field "EnableServerExcludeList" to "1" lets your client use the servers "ExcludeServerConfigVars" field, instead of the local one in config.txt
 All variables defined in "ExcludeServerConfig" will not be overwritten by the server's values.
+
+If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exaclty those pools (except for MiningRigRentals, which will always be handled locally)
 
 ## POOLS
 
@@ -815,6 +818,8 @@ For Client (Runmode=client) setup:
 - **ServerUser** = enter the server's username (if auth)
 - **ServerPassword** = enter the server's password
 - **EnableServerConfig** = set to "1" to use the server's config files on this rig
+- **EnableServerPools** = set to "1" to use the server's pool/coins/balance statistics and mine exactly to those pools (except for MiningRigRentals)
+  Note: With this setting, it is possible to let the server rig control pools/coins/balance data of the client. This reduces network traffic significantly, but overrides the local pool setup. MiningRigRentals is exluded - this pool always runs locally.
 - **ServerConfigName** = list of config files to be downloaded if "EnableServerConfig" is set to "1". Possible values are "algorithms","coins","config","miners","ocprofiles","pools"
 - **ExcludeServerConfigVars** = list of parameter names in config.txt or pools.config.txt, that should -not- be overwritten with server values (best is to leave it as is).
   For pools.config.txt:

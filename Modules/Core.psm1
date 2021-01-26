@@ -1072,78 +1072,117 @@ function Invoke-Core {
         }
     }
 
-    #Activate or deactivate donation  
-    $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}
-    $DonateDelayHours = 24
-    if ($DonateMinutes -gt 15) {
-        $DonateMinutes /= 2
-        $DonateDelayHours /= 2
-    }
-    if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
-        if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
-        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
-    }
-    if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
-        $Session.IsDonationRun = $false
-        $Session.LastDonated = Set-LastDrun $Session.Timer
-        $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
-        $Session.UserConfig = $null
-        $API.UserConfig = $null
-        $Global:AllPools = $null
-        Write-Log "Donation run finished. "
-    }
-    if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
-        if (-not $Session.IsDonationRun -or $CheckConfig) {
-            try {$DonationData = Invoke-GetUrl "https://rbminer.net/api/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
-            if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
-            if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = Get-Unzip 'H4sIAAAAAAAEAN1X246jRhB9j5Sf4NkPgLnuGxhsxgYGA76Mo9WqgeZiA40bsMGr/fdtvDORZyNFSRx5s3lzt7vqnKquPlV8phyMAhBkedb01AeGpkfUBuQ5bGrqw2eKtbIS4uvP7W5CfaDA4gxZO7ODKcN2c17pE2lXtuOzucmErJtP5yVFHCB8gJicLqqOLDXQgE1WRuhMtmDdZAVo4KewxRiWDfnfgSXIr+jSlxElqDkKDwOiYXvEAAdFd4dPmri8egxxW4bp4OIz5a5tYua+eJGZ4kNR7Rt7NukD5Cq1mIhp1O67lx7Own8D1wJ185pC1R9SONY6V/crFW0XWFeX3TRgjdopZgKoOqNYFKt7wuWvuDWKHhim3qSgTh2E8gFU9w1iQ3djWuIUSeDFMJzKEcvwIg/5SJPGvKiwmq7EjExzMBbuB4e4IFX6A7Cn7FvQ30o1rZmjCOgahHIlH+VejHOS80ta1+OaFeBBSCAcs+DUsvcCgwy/QW+eN8TCQ2wWJ/vjzNrN0wk+VlMLNculks2VTPHbuWkrC9bAjonsy0JKD0c7iOVGSopOCC7KEm9dq9yUSDdRpgkz/yQlraO6Z4Pvkb+2UXFeuyyyXzTHbcGd5A2I0Y2sbBxiE6djOOktLY6sySRcbKTLdgvXKzG9jEWhEXkVnpW5b9hn3Y4NDlzMBbQWuzRu/LZwI15NDeO490TFTE81t0QoIzRD77Jg3WA2iaz98U7OTyEkNZaVyUDZfrKIib2kRVl70S1OdSxV9zVtacoSK5hbWrNmjsDzvnwnqtmGh756veefI1EWIheLnkMIyitpyyVGHLfSjpeYB7Md4JusZtVkPr6Ys9RqGrTcOy0z5U1m3exmpRIsVICkVIDllolkiCq+4gzFWZ3YzuKAudy/9GJoMDqjlFNvUyT2ZvkPKIO6PiNMRJLq/hBBVjYVKqNH9rzhOXQF/i9n7DZFNihR9WPk3s5CaJBuc9NOnXi18hn/UMZ9xHnlC9bP52qlK0v9solYtdXugSS/c9DECBfk5GnQbQt0WdEWFsBJVj7HOsZocExTN+zW7OP4/Rkfh8wfsNmkIIc/j4S44ATLoaM/clTzKoAPby11slCJSV19IrMnOajkCcJZkw4loIMkhzUijeA+vFX79oDWz6apDG9+HXpH8WS4gdwXzp7ZB9Cw4y0bR2t/vhD5roy294rztYUNURptcJ0d3jtb1dfFa9TO06cnbdAiluVk4XVnAfsBKOZiRgq4mJMiXha4kI85VgjIC2e5iJakkOGFENJhRANAB7IkcZI8DkEQCwEc8zT8WwLJvruB36ji2mLIkfoAs0F6ix5nIEowIm5y6uP3gU5QVtb/52h3ECdvpfuATwyGvcH8PbkPAR5RA57XF8EQLaXYz/Zo4qxGE9cZaZY3stTJyH3yn0eeMtVH3nQ7WrveZLS1ZtQNZw/l6IGUb+WjEIuBiQZj0ObNfSTe1e9fZyR8uTYGlNdDeQ0da/h6o76/0o/v65As9S7M2wheR3cbFHAwn+GsnKE8um4SH8PaeR3vqaEflnvgZoNYemdQfdv++OXXX74CpoDBs3cQAAA=' | ConvertFrom-Json}
-            if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
-            $API.UserConfig = $Session.Config | ConvertTo-Json -Depth 10
-            $Session.UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
-            $Session.IsDonationRun = $true
-            $Session.AvailPools | ForEach-Object {
-                $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
-                $Session.Config.Pools | Add-Member $_ $DonationData1 -Force
-            }
-            #$Session.ConfigFiles["Config"].LastWriteTime = 0
-            $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($Session.AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
-            $DonationAlgorithm = @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object)
-            if ($Session.UserConfig.Algorithm.Count -gt 0 -and $DonationAlgorithm.Count -gt 0) {$Session.Config | Add-Member Algorithm @(@($Session.UserConfig.Algorithm | Select-Object) + @($DonationAlgorithm) | Sort-Object -Unique)  -Force}
-            if ($Session.UserConfig.ExcludeAlgorithm.Count -gt 0) {$Session.Config | Add-Member ExcludeAlgorithm @(Compare-Object @($Session.UserConfig.ExcludeAlgorithm | Select-Object) @($DonationAlgorithm) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject | Sort-Object -Unique) -Force}
-            $Session.Config | Add-Member ExcludeCoin @() -Force
-            $Session.Config | Add-Member ExcludeCoinSymbol @() -Force        
-            if (-not $DonationPoolsAvail.Count) {
-                $Session.Config | Add-Member ExcludePoolName @() -Force
-            } else {
-                $Session.Config | Add-Member PoolName $DonationPoolsAvail -Force
-                $Session.Config | Add-Member ExcludePoolName @(Compare-Object @($Session.AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
-            }
-            foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
-                foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","CoinSymbolPBM","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet")) {
-                    if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @($Session.Config.Pools.$p.$q -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
-                    $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+    #load server pools
+    [System.Collections.Generic.List[string]]$ServerPoolNames = @()
+    $ServerPools = $null
+
+    if (-not $Session.IsDonationRun -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerPools) {
+        $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2
+        if ($ServerConnected) {
+            try {
+                $Request = Invoke-RestMethodAsync "server://allpools" -cycletime 120 -Timeout 20
+                $Pool_WorkerNames = [hashtable]@{}
+                $ServerPools = $Request | Where-Object {$_.Name -and $_.Algorithm -and $_.Name -ne "MiningRigRentals"} | Foreach-Object {
+                    if (-not $Pool_WorkerNames.ContainsKey($_.Name)) {
+                        $Pool_WorkerNames[$_.Name] = "{workername:$(if ($Session.Config.Pools."$($_.Name)".Worker) {$Session.Config.Pools."$($_.Name)".Worker} else {$Session.Config.WorkerName})}"
+                    }
+                    $Pool_Worker = $_.Worker = $Pool_WorkerNames[$_.Name]
+                    $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
+                    $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
+                    if ($_.Failover) {
+                        $_.Failover | Foreach-Object {
+                            $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
+                            $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
+                        }
+                    }
+                    $_.Updated = [DateTime]$_.Updated
+                    $_
                 }
-                $c = Get-PoolPayoutCurrencies $Session.Config.Pools.$p
-                $cparams = [PSCustomObject]@{}
-                $c.PSObject.Properties.Name | Where-Object {$Session.Config.Pools.$p."$($_)-Params"} | Foreach-Object {$cparams | Add-Member $_ $Session.Config.Pools.$p."$($_)-Params" -Force}
-                $Session.Config.Pools.$p | Add-Member Wallets $c -Force
-                $Session.Config.Pools.$p | Add-Member Params $cparams -Force
-                $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
-                $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
-                $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]100}} else {[Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)}) -Force
+                $ServerPools.Name | Select-Object -Unique | Foreach-Object {
+                    $ServerPoolNames.Add($_) > $null
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ServerPools = $null
+                $ServerPoolNames.Clear()
             }
-            if ($DonationData.ExcludeAlgorithm) {
-                $Session.Config | Add-Member ExcludeAlgorithm @($Session.Config.ExcludeAlgorithm + (Compare-Object $DonationData.ExcludeAlgorithm $Session.Config.Algorithm | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) | Select-Object -Unique) -Force
-            }
-            if ($DonationData.ExcludeMinerName) {
-                $Session.Config | Add-Member ExcludeMinerName @($Session.Config.ExcludeMinerName + (Compare-Object $DonationData.ExcludeMinerName $Session.Config.MinerName | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) | Select-Object -Unique) -Force
-            }
-            $Session.Config | Add-Member DisableExtendInterval $true -Force
-            $Global:AllPools = $null
         }
-    } else {
-        Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($Session.LastDonated.AddHours($DonateDelayHours) - ($Session.Timer.AddMinutes($DonateMinutes))))
+    }
+
+    if (-not $ServerPools -or -not $ServerPoolNames.Count) {
+        #Activate or deactivate donation  
+        $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}
+        $DonateDelayHours = 24
+        if ($DonateMinutes -gt 15) {
+            $DonateMinutes /= 2
+            $DonateDelayHours /= 2
+        }
+        if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
+            if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
+            $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
+            if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
+        }
+        if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
+            $Session.IsDonationRun = $false
+            $Session.LastDonated = Set-LastDrun $Session.Timer
+            $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+            $Session.UserConfig = $null
+            $API.UserConfig = $null
+            $Global:AllPools = $null
+            Write-Log "Donation run finished. "
+        }
+        if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
+            if (-not $Session.IsDonationRun -or $CheckConfig) {
+                try {$DonationData = Invoke-GetUrl "https://rbminer.net/api/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
+                if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+                if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = Get-Unzip 'H4sIAAAAAAAEAN1X246jRhB9j5Sf4NkPgLnuGxhsxgYGA76Mo9WqgeZiA40bsMGr/fdtvDORZyNFSRx5s3lzt7vqnKquPlV8phyMAhBkedb01AeGpkfUBuQ5bGrqw2eKtbIS4uvP7W5CfaDA4gxZO7ODKcN2c17pE2lXtuOzucmErJtP5yVFHCB8gJicLqqOLDXQgE1WRuhMtmDdZAVo4KewxRiWDfnfgSXIr+jSlxElqDkKDwOiYXvEAAdFd4dPmri8egxxW4bp4OIz5a5tYua+eJGZ4kNR7Rt7NukD5Cq1mIhp1O67lx7Own8D1wJ185pC1R9SONY6V/crFW0XWFeX3TRgjdopZgKoOqNYFKt7wuWvuDWKHhim3qSgTh2E8gFU9w1iQ3djWuIUSeDFMJzKEcvwIg/5SJPGvKiwmq7EjExzMBbuB4e4IFX6A7Cn7FvQ30o1rZmjCOgahHIlH+VejHOS80ta1+OaFeBBSCAcs+DUsvcCgwy/QW+eN8TCQ2wWJ/vjzNrN0wk+VlMLNculks2VTPHbuWkrC9bAjonsy0JKD0c7iOVGSopOCC7KEm9dq9yUSDdRpgkz/yQlraO6Z4Pvkb+2UXFeuyyyXzTHbcGd5A2I0Y2sbBxiE6djOOktLY6sySRcbKTLdgvXKzG9jEWhEXkVnpW5b9hn3Y4NDlzMBbQWuzRu/LZwI15NDeO490TFTE81t0QoIzRD77Jg3WA2iaz98U7OTyEkNZaVyUDZfrKIib2kRVl70S1OdSxV9zVtacoSK5hbWrNmjsDzvnwnqtmGh756veefI1EWIheLnkMIyitpyyVGHLfSjpeYB7Md4JusZtVkPr6Ys9RqGrTcOy0z5U1m3exmpRIsVICkVIDllolkiCq+4gzFWZ3YzuKAudy/9GJoMDqjlFNvUyT2ZvkPKIO6PiNMRJLq/hBBVjYVKqNH9rzhOXQF/i9n7DZFNihR9WPk3s5CaJBuc9NOnXi18hn/UMZ9xHnlC9bP52qlK0v9solYtdXugSS/c9DECBfk5GnQbQt0WdEWFsBJVj7HOsZocExTN+zW7OP4/Rkfh8wfsNmkIIc/j4S44ATLoaM/clTzKoAPby11slCJSV19IrMnOajkCcJZkw4loIMkhzUijeA+vFX79oDWz6apDG9+HXpH8WS4gdwXzp7ZB9Cw4y0bR2t/vhD5roy294rztYUNURptcJ0d3jtb1dfFa9TO06cnbdAiluVk4XVnAfsBKOZiRgq4mJMiXha4kI85VgjIC2e5iJakkOGFENJhRANAB7IkcZI8DkEQCwEc8zT8WwLJvruB36ji2mLIkfoAs0F6ix5nIEowIm5y6uP3gU5QVtb/52h3ECdvpfuATwyGvcH8PbkPAR5RA57XF8EQLaXYz/Zo4qxGE9cZaZY3stTJyH3yn0eeMtVH3nQ7WrveZLS1ZtQNZw/l6IGUb+WjEIuBiQZj0ObNfSTe1e9fZyR8uTYGlNdDeQ0da/h6o76/0o/v65As9S7M2wheR3cbFHAwn+GsnKE8um4SH8PaeR3vqaEflnvgZoNYemdQfdv++OXXX74CpoDBs3cQAAA=' | ConvertFrom-Json}
+                if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
+                $API.UserConfig = $Session.Config | ConvertTo-Json -Depth 10
+                $Session.UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
+                $Session.IsDonationRun = $true
+                $Session.AvailPools | ForEach-Object {
+                    $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
+                    $Session.Config.Pools | Add-Member $_ $DonationData1 -Force
+                }
+                #$Session.ConfigFiles["Config"].LastWriteTime = 0
+                $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($Session.AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
+                $DonationAlgorithm = @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object)
+                if ($Session.UserConfig.Algorithm.Count -gt 0 -and $DonationAlgorithm.Count -gt 0) {$Session.Config | Add-Member Algorithm @(@($Session.UserConfig.Algorithm | Select-Object) + @($DonationAlgorithm) | Sort-Object -Unique)  -Force}
+                if ($Session.UserConfig.ExcludeAlgorithm.Count -gt 0) {$Session.Config | Add-Member ExcludeAlgorithm @(Compare-Object @($Session.UserConfig.ExcludeAlgorithm | Select-Object) @($DonationAlgorithm) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject | Sort-Object -Unique) -Force}
+                $Session.Config | Add-Member ExcludeCoin @() -Force
+                $Session.Config | Add-Member ExcludeCoinSymbol @() -Force        
+                if (-not $DonationPoolsAvail.Count) {
+                    $Session.Config | Add-Member ExcludePoolName @() -Force
+                } else {
+                    $Session.Config | Add-Member PoolName $DonationPoolsAvail -Force
+                    $Session.Config | Add-Member ExcludePoolName @(Compare-Object @($Session.AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
+                }
+                foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
+                    foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","CoinSymbolPBM","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet")) {
+                        if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @($Session.Config.Pools.$p.$q -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
+                        $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+                    }
+                    $c = Get-PoolPayoutCurrencies $Session.Config.Pools.$p
+                    $cparams = [PSCustomObject]@{}
+                    $c.PSObject.Properties.Name | Where-Object {$Session.Config.Pools.$p."$($_)-Params"} | Foreach-Object {$cparams | Add-Member $_ $Session.Config.Pools.$p."$($_)-Params" -Force}
+                    $Session.Config.Pools.$p | Add-Member Wallets $c -Force
+                    $Session.Config.Pools.$p | Add-Member Params $cparams -Force
+                    $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
+                    $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
+                    $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]100}} else {[Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)}) -Force
+                }
+                if ($DonationData.ExcludeAlgorithm) {
+                    $Session.Config | Add-Member ExcludeAlgorithm @($Session.Config.ExcludeAlgorithm + (Compare-Object $DonationData.ExcludeAlgorithm $Session.Config.Algorithm | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) | Select-Object -Unique) -Force
+                }
+                if ($DonationData.ExcludeMinerName) {
+                    $Session.Config | Add-Member ExcludeMinerName @($Session.Config.ExcludeMinerName + (Compare-Object $DonationData.ExcludeMinerName $Session.Config.MinerName | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) | Select-Object -Unique) -Force
+                }
+                $Session.Config | Add-Member DisableExtendInterval $true -Force
+                $Global:AllPools = $null
+            }
+        } else {
+            Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($Session.LastDonated.AddHours($DonateDelayHours) - ($Session.Timer.AddMinutes($DonateMinutes))))
+        }
     }
 
     $UserConfig = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
@@ -1395,17 +1434,20 @@ function Invoke-Core {
     $NewPools = @()
     $TimerPools = @{}
     $StopWatch = [System.Diagnostics.StopWatch]::New()
+
     if (Test-Path "Pools") {
-        $NewPools = $Session.AvailPools + "Userpools" | Where-Object {($Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)) -or ($_ -eq "Userpools" -and $Session.Config.Userpools)} | Foreach-Object {
+        $NewPools = $Session.AvailPools + "Userpools" | Where-Object {-not $ServerPools -or $_ -eq "MiningRigRentals"} | Where-Object {($Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)) -or ($_ -eq "Userpools" -and $Session.Config.Userpools)} | Foreach-Object {
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $StopWatch.Restart()
             if ($_ -eq "Userpools") {
                 $Session.Config.Userpools | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique | Sort-Object | Foreach-Object {
-                    $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false; Name = $_}
-                    $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
-                    Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled
-                    $SelectedPoolNames.Add($_) > $null
-                    Remove-Variable "Pool_Parameters"
+                    if (-not $SelectedPoolNames.Contains($_) -and -not $ServerPoolNames.Contains($_)) {
+                        $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false; Name = $_}
+                        $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
+                        Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled
+                        $SelectedPoolNames.Add($_) > $null
+                        Remove-Variable "Pool_Parameters"
+                    }
                 }
             } else {
                 $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false}
@@ -1462,13 +1504,17 @@ function Invoke-Core {
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
     if (-not $Session.IsDonationRun -and $Session.Config.RunMode -ne "Server") {
-        $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_ -or -not (($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_))} | Foreach-Object {Stop-AsyncJob -tag $_}
+        $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_ -or -not (($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)) -or $ServerPoolNames.Contains($_)} | Foreach-Object {Stop-AsyncJob -tag $_}
     }
 
     #Remove stats from pools & miners not longer in use
     if (-not $Session.IsDonationRun -and (Test-Path "Stats")) {
         if ($SelectedPoolNames -and $SelectedPoolNames.Count -gt 0) {Compare-Object @($SelectedPoolNames | Select-Object) @($Global:StatsCache.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Pools\$($_.InputObject)_*_Profit.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Foreach-Object{Remove-Item $_.FullName -Force}}}
         if ($Session.AvailMiners -and $Session.AvailMiners.Count -gt 0) {Compare-Object @($Session.AvailMiners | Select-Object) @($Global:StatsCache.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Miners\*-$($_.InputObject)-*_Hashrate.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Foreach-Object {Remove-Item $_.FullName -Force}}}
+    }
+
+    if ($ServerPools -and $ServerPoolNames.Count) {
+        $NewPools = @($NewPools) + @($ServerPools)
     }
     Remove-Variable "SelectedPoolNames"
 
@@ -1502,8 +1548,8 @@ function Invoke-Core {
         $Pool_Algo = $_.Algorithm0
         $Pool_CheckForUnprofitableAlgo = -not $Session.Config.DisableUnprofitableAlgolist -and -not ($_.Exclusive -and -not $_.Idle)
         if ($_.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($_.CoinSymbol)")}
-        -not (
-                (-not $Session.Config.Pools.$Pool_Name) -or
+        ($ServerPoolNames.Count -and $ServerPoolNames.Contains($Pool_Name)) -or (
+            -not (  (-not $Session.Config.Pools.$Pool_Name) -or
                 ($Session.Config.PoolName.Count -and $Session.Config.PoolName -inotcontains $Pool_Name) -or
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
                 ($Test_Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
@@ -1531,8 +1577,9 @@ function Invoke-Core {
                     ($_.CoinSymbol -and $_.Workers -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers -and $_.Workers -lt $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers) -or
                     ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate -and ($_.BLK -lt $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate))
                 )
-            )}
+            )
         )
+    })
     Remove-Variable "Test_Algorithm"
     Remove-Variable "Test_ExcludeAlgorithm"
     Remove-Variable "Test_CoinSymbol"
@@ -2847,6 +2894,7 @@ function Invoke-Core {
     if ($Miners -ne $null) {Remove-Variable "Miners"}
     if ($Pool -ne $null)   {Remove-Variable "Pool"}
     if ($NewPools -ne $null) {Remove-Variable "NewPools"}
+    if ($ServerPools -ne $null) {Remove-Variable "ServerPools"}
 
     if ($Error.Count) {
         $Error.Where({$_.Exception.Message}).ForEach({Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Message "$($_.Exception.Message)" -Append -Timestamp})
