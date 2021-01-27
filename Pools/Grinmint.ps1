@@ -40,8 +40,8 @@ $Pool_Regions = @("eu-west","us-east")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "GRIN-SEC"; port = 3416; ssl = $false}
-    [PSCustomObject]@{symbol = "GRIN-SEC"; port = 4416; ssl = $true}
+    #[PSCustomObject]@{symbol = "GRIN-SEC"; port = 3416; ssl = $false}
+    #[PSCustomObject]@{symbol = "GRIN-SEC"; port = 4416; ssl = $true}
     [PSCustomObject]@{symbol = "GRIN-PRI"; port = 3416; ssl = $false; primary = $true}
     [PSCustomObject]@{symbol = "GRIN-PRI"; port = 4416; ssl = $true;  primary = $true}
 )
@@ -71,7 +71,7 @@ $Pool_TSL      = if ($lastBlock) {((Get-Date).ToUniversalTime() - (Get-Date $las
 $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
     
 if (-not $InfoOnly) {
-    $Stat_Secondary = Set-Stat -Name "$($Name)_$($Pool_Currency)-SEC_Profit" -Value ($PBR_Secondary * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK
+    #$Stat_Secondary = Set-Stat -Name "$($Name)_$($Pool_Currency)-SEC_Profit" -Value ($PBR_Secondary * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK
     $Stat_Primary   = Set-Stat -Name "$($Name)_$($Pool_Currency)-PRI_Profit" -Value ($PBR_Primary * $reward * $btcPrice)   -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.primary_hashrate   -BlockRate $Pool_BLK
 }
 
