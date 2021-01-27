@@ -2265,10 +2265,10 @@ function Stop-SubProcess {
                         #$Data = $Response | ConvertFrom-Json -ErrorAction Stop
 
                         $StopWatch.Reset()
-                        while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 20) {
+                        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 20) {
                             Start-Sleep -Milliseconds 500
                         }
-                        if ($false -in $ToKill.HasExited) {
+                        if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
                             Write-Log -Level Warn "$($Title) failed to close within 20 seconds via API $(if ($Name) {": $($Name)"})"
                         }
                     }
@@ -2287,6 +2287,7 @@ function Stop-SubProcess {
 
                     if ($Job.OwnWindow) {
                         $Process.CloseMainWindow() > $null
+                        Start-Sleep -S 1
                     } else {
                         if (-not $Process.HasExited) {
                             Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
@@ -2302,7 +2303,7 @@ function Stop-SubProcess {
 
                     if ($Job.ScreenName) {
                         try {
-                            if ($false -in $ToKill.HasExited) {
+                            if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
                                 Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
                                 $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
@@ -2316,11 +2317,11 @@ function Stop-SubProcess {
                                 }
 
                                 $StopWatch.Restart()
-                                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
+                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 10) {
                                     Start-Sleep -Milliseconds 500
                                 }
 
-                                if ($false -in $ToKill.HasExited) {
+                                if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
                                     Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
                                 }
                             }
@@ -2374,12 +2375,12 @@ function Stop-SubProcess {
                 # Wait for miner to shutdown
                 #
 
-                while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le $WaitForExit) {
+                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le $WaitForExit) {
                     Start-Sleep -Milliseconds 500
                 }
 
                 if ($WaitForExit -gt 0) {
-                    if ($false -in $ToKill.HasExited) {
+                    if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
                         Write-Log -Level Warn "Alas! $($Title) failed to close within $WaitForExit seconds$(if ($Name) {": $($Name)"}) - $(if ($Session.Config.EnableRestartComputer) {"REBOOTING COMPUTER NOW"} else {"PLEASE REBOOT COMPUTER!"})"
                         if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
                     } else {
