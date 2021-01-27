@@ -35,8 +35,8 @@ $Commands = [PSCustomObject[]]@(
 
     #Others
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                 SecondaryAlgorithm = ""; Params = "-a beamv3";        NH = $true; MinMemGb = 3;   DevFee = 2.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #BEAM
-    [PSCustomObject]@{MainAlgorithm = "Etchash";      DAG = $true; SecondaryAlgorithm = ""; Params = "-a etchash";       NH = $true; MinMemGb = 3;   DevFee = 1.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Etchash
-    [PSCustomObject]@{MainAlgorithm = "Ethash";       DAG = $true; SecondaryAlgorithm = ""; Params = "-a ethash";        NH = $true; MinMemGb = 3;   DevFee = 1.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash
+    #[PSCustomObject]@{MainAlgorithm = "Etchash";      DAG = $true; SecondaryAlgorithm = ""; Params = "-a etchash";       NH = $true; MinMemGb = 3;   DevFee = 1.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Etchash
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";       DAG = $true; SecondaryAlgorithm = ""; Params = "-a ethash";        NH = $true; MinMemGb = 3;   DevFee = 1.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash
     [PSCustomObject]@{MainAlgorithm = "KawPOW";       DAG = $true; SecondaryAlgorithm = ""; Params = "-a kawpow";        NH = $true; MinMemGb = 2.4; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #KAWPoW
     [PSCustomObject]@{MainAlgorithm = "Octopus";      DAG = $true; SecondaryAlgorithm = ""; Params = "-a octopus";       NH = $true; MinMemGb = 5;   DevFee = 3.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Octopus/Conflux
     [PSCustomObject]@{MainAlgorithm = "ProgPowSero";  DAG = $true; SecondaryAlgorithm = ""; Params = "-a progpow_sero";  NH = $true; MinMemGb = 3;   DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #ProgPowSero
