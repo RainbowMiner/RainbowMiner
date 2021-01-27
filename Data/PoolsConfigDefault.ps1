@@ -54,7 +54,6 @@
         "BlockmastersCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=50}
             Currencies=@("BTC")
-            Autoexchange=$true
             Yiimp=$true
         }
         "Bsod" = [PSCustomObject]@{
@@ -182,7 +181,6 @@
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=3}
             SetupFields=[PSCustomObject]@{User="Enter your MiningDutch username";API_ID="Enter your MiningDutch account ID";API_Key = "Enter your MiningDutch API key";AECurrency = "Enter your MiningDutch autoexchange currency"}
             Currencies=@("GLT")
-            Autoexchange=$true
         }
         "MiningPoolHub" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=12}
@@ -194,7 +192,6 @@
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC"}
             SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
             Currencies=@()
-            Autoexchange=$true
         }
         "MiningPoolOvh" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{API_Key="";Password="x"}
@@ -324,7 +321,6 @@
         }
         "NLPoolCoins" = [PSCustomObject]@{
             Currencies=@("BTC")
-            Autoexchange=$true
             Yiimp=$true
         }
         "Poolin" = [PSCustomObject]@{
@@ -397,21 +393,18 @@
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
-            Autoexchange=$true
             Yiimp=$true
         }
         "ZergPoolCoinsParty" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
-            Autoexchange=$true
             Yiimp=$true
         }
         "ZergPoolCoinsSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
-            Autoexchange=$true
             Yiimp=$true
         }
         "ZergPoolParty" = [PSCustomObject]@{
@@ -439,7 +432,6 @@
             Fields=[PSCustomObject]@{AECurrency="";Penalty=16}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
-            Autoexchange=$true
             Yiimp=$true
         }
 }
