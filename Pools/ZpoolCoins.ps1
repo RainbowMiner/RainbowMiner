@@ -19,7 +19,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies" -tag $Name -cycletime 120 -delay 500
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies" -tag $Name -cycletime 120 -delay 1000
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
