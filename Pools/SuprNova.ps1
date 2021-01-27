@@ -22,17 +22,23 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "BTG"   ; rpc = "btg"      ; port = @(8866,8817)}
     [PSCustomObject]@{symbol = "BTX"   ; rpc = "btx"      ; port = 3629}
     [PSCustomObject]@{symbol = "BSD"   ; rpc = "bsd"      ; port = 8686}
-    [PSCustomObject]@{symbol = "DYN"   ; rpc = "dyn"      ; port = 5960}
+	[PSCustomObject]@{symbol = "DASH"  ; rpc = "dash"     ; port = 443}
+	[PSCustomObject]@{symbol = "DYN"   ; rpc = "dyn"      ; port = 5960}
     [PSCustomObject]@{symbol = "ERC"   ; rpc = "erc"      ; port = 7674}
+	[PSCustomObject]@{symbol = "GAP"   ; rpc = "gap"      ; port = 2433}
     [PSCustomObject]@{symbol = "GRLC"  ; rpc = "grlc"     ; port = 8600}
+	[PSCustomObject]@{symbol = "GRS"   ; rpc = "grs"      ; port = 5544}
     [PSCustomObject]@{symbol = "HODL"  ; rpc = "hodl"     ; port = 4693}
     [PSCustomObject]@{symbol = "MNX"   ; rpc = "mnx"      ; port = 7077}
+	[PSCustomObject]@{symbol = "RIC"   ; rpc = "ric"      ; port = 5000}
     [PSCustomObject]@{symbol = "ROI"   ; rpc = "roi"      ; port = 4699}
     [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 8888}
     [pscustomobject]@{symbol = "VEIL"  ; rpc = "veil"     ; port = 7220}
     [pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17"  ; port = 7477}
     [PSCustomObject]@{symbol = "VTC"   ; rpc = "vtc"      ; port = 5778}
+	[PSCustomObject]@{symbol = "XCN"   ; rpc = "xcn"      ; port = 8008}
     [PSCustomObject]@{symbol = "YTN"   ; rpc = "ytn"      ; port = 4932}
+	[PSCustomObject]@{symbol = "ZEN"   ; rpc = "zen"     ; port = 3618}
     [PSCustomObject]@{symbol = "ZER"   ; rpc = "zero"     ; port = 6568}
 )
 
