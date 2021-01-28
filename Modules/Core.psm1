@@ -83,7 +83,7 @@ function Start-Core {
         $Global:AllPools = $null
 
         #Setup session variables
-        $Session.ConfigFiles = [ordered]@{
+        [hashtable]$Session.ConfigFiles = @{
             Config        = @{Path='';LastWriteTime=0;Healthy=$false}
             Devices       = @{Path='';LastWriteTime=0;Healthy=$false}
             Miners        = @{Path='';LastWriteTime=0;Healthy=$false}
@@ -246,7 +246,7 @@ function Start-Core {
                 Get-ChildItem "$($ConfigFile_Path)\Backup" -Filter "*" | Where-Object {$_.BaseName -match "^(\d{14})" -and $Matches[1] -le $BackupDateDelete} | Remove-Item -Force -ErrorAction Ignore
             }
 
-            $Session.ConfigFiles.Keys | Foreach-Object {
+            $Session.ConfigFiles.Keys | Sort-Object -Descending {if ($_ -eq "Config") {2} elseif ($_ -eq "Userpools") {1} else {0}}  | Foreach-Object {
                 $FNtmp   = "$(if ($_ -ne "Config") {"$($_.ToLower())."})$ConfigFile_Name"
                 $Session.ConfigFiles[$_].Path = Join-Path $ConfigFile_Path $FNtmp
                 if (-not $psISE -and (Test-Path $Session.ConfigFiles[$_].Path)) {Copy-Item $Session.ConfigFiles[$_].Path -Destination (Join-Path (Join-Path $ConfigFile_Path "Backup") "$($BackupDate)_$($FNtmp)")}

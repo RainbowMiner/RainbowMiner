@@ -5076,8 +5076,8 @@ function Set-PoolsConfigDefault {
     $UserpoolsUpdated = $false
     $UserpoolsPathToFile = ""
 
-    $UserpoolsConfigName = "$(if ($Folder -and $Session.ConfigFiles.Contains("$Folder/Userpools")) {"$Folder/"})Userpools"
-    if ($UserpoolsConfigName -and $Session.ConfigFiles.Contains($UserpoolsConfigName)) {
+    $UserpoolsConfigName = "$(if ($Folder -and $Session.ConfigFiles.ContainsKey("$Folder/Userpools")) {"$Folder/"})Userpools"
+    if ($UserpoolsConfigName -and $Session.ConfigFiles.ContainsKey($UserpoolsConfigName)) {
         $UserpoolsPathToFile = $Session.ConfigFiles[$UserpoolsConfigName].Path
         if (Test-Path $UserpoolsPathToFile) {
             $UserpoolsUpdated = ((Test-Path $PathToFile) -and (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem $UserpoolsPathToFile).LastWriteTime.ToUniversalTime())
@@ -5306,7 +5306,7 @@ function Test-Config {
         [Switch]$LastWriteTime
     )
     if (-not $Exists -and ($Health -or $LastWriteTime)) {$Exists = $true}
-    $Session.ConfigFiles.Contains($ConfigName) -and $Session.ConfigFiles[$ConfigName].Path -and (-not $Exists -or (Test-Path $Session.ConfigFiles[$ConfigName].Path)) -and (-not $Health -or $Session.ConfigFiles[$ConfigName].Healthy) -and (-not $LastWriteTime -or (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles[$ConfigName].LastWriteTime)
+    $Session.ConfigFiles.ContainsKey($ConfigName) -and $Session.ConfigFiles[$ConfigName].Path -and (-not $Exists -or (Test-Path $Session.ConfigFiles[$ConfigName].Path)) -and (-not $Health -or $Session.ConfigFiles[$ConfigName].Healthy) -and (-not $LastWriteTime -or (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles[$ConfigName].LastWriteTime)
 }
 
 function Set-ConfigLastWriteTime {
