@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_gpu"; Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_heavy"; Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_bittube2"; Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_haven"; Params = ""; ExtendInterval = 2}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; MinMemGb = 4; Algorithm = "cryptonight_haven"; Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

@@ -36,7 +36,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/upx";   Threads = 1; MinMemGb = 1;   Params = "--variation 19"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Threads = 1; MinMemGb = 3.3; Params = "--variation 5"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Threads = 1; MinMemGb = 3.3; Params = "--variation 13"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; MinMemGb = 3.3; Params = "--variation 12"}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; MinMemGb = 3.3; Params = "--variation 12"}
 )
 
 #N=1 Original Cryptonight
