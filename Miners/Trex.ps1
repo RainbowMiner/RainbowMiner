@@ -157,10 +157,14 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     $First = $False
                 }
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-                $Pool_Protocol = Switch($Pools.$Algorithm_Norm.EthMode) {
-                                    "qtminer"      {"stratum1+tcp"}
-                                    "ethstratumnh" {"stratum2+tcp"}
-                                    default {$Pools.$Algorithm_Norm.Protocol}
+                $Pool_Protocol = if ($Algorithm_Norm_0 -in @("Octopus")) {
+                                    $Pools.$Algorithm_Norm.Protocol
+                                 } else {
+                                    Switch($Pools.$Algorithm_Norm.EthMode) {
+                                        "qtminer"      {"stratum1+tcp"}
+                                        "ethstratumnh" {"stratum2+tcp"}
+                                        default {$Pools.$Algorithm_Norm.Protocol}
+                                    }
                                 }
 				[PSCustomObject]@{
 					Name           = $Miner_Name
