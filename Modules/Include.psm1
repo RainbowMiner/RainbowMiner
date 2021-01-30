@@ -2271,6 +2271,7 @@ function Stop-SubProcess {
                         if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
                             Write-Log -Level Warn "$($Title) failed to close within 20 seconds via API $(if ($Name) {": $($Name)"})"
                         }
+                        $StopWatch.Reset()
                     }
                     catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
