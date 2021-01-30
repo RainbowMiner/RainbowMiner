@@ -2287,7 +2287,6 @@ function Stop-SubProcess {
 
                     if ($Job.OwnWindow) {
                         $Process.CloseMainWindow() > $null
-                        Start-Sleep -S 1
                     } else {
                         if (-not $Process.HasExited) {
                             Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
@@ -2376,7 +2375,8 @@ function Stop-SubProcess {
                 #
 
                 while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le $WaitForExit) {
-                    Start-Sleep -Milliseconds 500
+                    Write-Log -Level Info "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.Seconds)s elapsed)$(if ($Name) {": $($Name)"})"
+                    Start-Sleep -Seconds 1
                 }
 
                 if ($WaitForExit -gt 0) {
@@ -2385,6 +2385,7 @@ function Stop-SubProcess {
                         if ($Session.Config.EnableRestartComputer) {$Session.RestartComputer = $true}
                     } else {
                         Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
+                        Start-Sleep -Seconds 1
                     }
                 }
             }
