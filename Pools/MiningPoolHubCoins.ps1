@@ -45,8 +45,9 @@ $Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
     $Pool_Host      = $_.host
     $Pool_Hosts     = $_.host_list.split(";")
     $Pool_Port      = $_.port
+    $Pool_CoinSymbol= $_.symbol
 
-    $Pool_Coin      = Get-Coin "$($_.symbol)$(if ($_.coin_name -match '-') {"-$($_.algo)"})"
+    $Pool_Coin      = Get-Coin "$($Pool_CoinSymbol)$(if ($_.coin_name -match '-') {"-$($_.algo)"})"
     if ($Pool_Coin) {
         $Pool_Algorithm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
@@ -79,7 +80,7 @@ $Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
                 Algorithm     = $Pool_Algorithm_Norm
 				Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $Pool_CoinName
-                CoinSymbol    = $_.symbol
+                CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
@@ -113,7 +114,7 @@ $Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
                     Algorithm     = $Pool_Algorithm_Norm
 					Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = $Pool_CoinName
-                    CoinSymbol    = $_.symbol
+                    CoinSymbol    = $Pool_CoinSymbol
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
