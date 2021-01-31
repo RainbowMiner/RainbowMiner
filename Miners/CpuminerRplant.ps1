@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; LinuxOnly = $true} #Lyra2h
     [PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""} #LYRA2
     [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = ""} #LYRAv2
-    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyrav2v3 (VERT)
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyrav2v3
     #[PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #Lyra2z330
