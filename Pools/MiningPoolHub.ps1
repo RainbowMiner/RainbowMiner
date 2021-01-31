@@ -56,6 +56,9 @@ $Pool_Request.return | Where-Object {$_.current_mining_coin_symbol} | ForEach-Ob
         $Pool_CoinName  = (Get-Culture).TextInfo.ToTitleCase($_.coin_name -replace "-.+$")
     }
 
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
