@@ -41,6 +41,7 @@ class Miner {
     [Bool]$ShowMinerWindow = $false
     [int]$MSIAprofile
     $OCprofile
+    [Bool]$EnableOCprofile
     $DevFee
     [string]$BaseName
     [double]$FaultTolerance = 0.1
@@ -624,7 +625,7 @@ class Miner {
     }
 
     [bool]HasOCprofile() {
-        foreach ($model in @($this.DeviceModel -split '-' | Select-Object)) {if ($this.OCProfile.$model) {return $true}}
+        if ($this.EnableOCprofile) {foreach ($model in @($this.DeviceModel -split '-' | Select-Object)) {if ($this.OCProfile.$model) {return $true}}}
         return $false
     }
 

@@ -2229,6 +2229,7 @@ function Invoke-Core {
             $ActiveMiner.MSIAprofile        = $Miner.MSIAprofile
             $ActiveMiner.DevFee             = $Miner.DevFee
             $ActiveMiner.OCprofile          = $Miner.OCprofile
+            $ActiveMiner.EnableOCprofile    = $Session.Config.EnableOCProfiles
             $ActiveMiner.FaultTolerance     = $Miner.FaultTolerance
             $ActiveMiner.Penalty            = $Miner.Penalty
             $ActiveMiner.ManualUri          = "$Miner_ManualUri"
@@ -2295,6 +2296,7 @@ function Invoke-Core {
                     MSIAprofile          = $Miner.MSIAprofile
                     DevFee               = $Miner.DevFee
                     OCprofile            = $Miner.OCprofile
+                    EnableOCprofile      = $Session.Config.EnableOCProfiles
                     ExtendInterval       = $Miner.ExtendInterval
                     ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
                     FaultTolerance       = $Miner.FaultTolerance
