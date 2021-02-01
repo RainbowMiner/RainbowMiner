@@ -9,7 +9,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pools_Data = @(
     #ASIC
     [PSCustomObject]@{symbol = "AEON";  port = 30112; fee = 0.9; rpc = "aeon"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "KRB";  port = 30192; fee = 0.9; rpc = "karbo"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "KRB";  port = 30192; fee = 0.9; rpc = "krb"; regions = @("eu")}
     [PSCustomObject]@{symbol = "QWC";   port = 30052; fee = 0.9; rpc = "qwertycoin";   regions = @("eu")}
 
     #Other
