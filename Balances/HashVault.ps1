@@ -7,17 +7,17 @@ param(
 #https://turtle.hashvault.pro/api/miner/TRTLv1Hqo3wHdqLRXuCyX3MwvzKyxzwXeBtycnkDy8ceFp4E23bm3P467xLEbUusH6Q1mqQUBiYwJ2yULJbvr5nKe8kcyc4uyps.2b66ef38b93ed6d9c9bfe9af2ebc2e830eb422f9a0c9c0e9147e55fc2579da0f/stats
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AEON";  port = 3333; fee = 0.9; rpc = "aeon"} #pool.aeon.hashvault.pro:3333
     [PSCustomObject]@{symbol = "CCX";   port = 3333; fee = 0.9; rpc = "conceal"} #pool.conceal.hashvault.pro:3333
     [PSCustomObject]@{symbol = "GRFT";  port = 3333; fee = 0.9; rpc = "graft"} #pool.graft.hashvault.pro:3333
     [PSCustomObject]@{symbol = "KVA";   port = 3333; fee = 0.9; rpc = "kevacoin"} #pool.hashvault.pro:3333
     [PSCustomObject]@{symbol = "LTHN";  port = 3333; fee = 0.9; rpc = "lethean"} #pool.lethean.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "LOKI";  port = 3333; fee = 0.9; rpc = "loki"} #pool.loki.hashvault.pro:3333
     [PSCustomObject]@{symbol = "MSR";   port = 3333; fee = 0.9; rpc = "masari"} #pool.masari.hashvault.pro:3333
     [PSCustomObject]@{symbol = "RYO";   port = 3333; fee = 0.9; rpc = "ryo"} #pool.ryo.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "SUMO";  port = 3333; fee = 0.9; rpc = "sumo"} #pool.sumo.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "TUBE";  port = 3333; fee = 0.9; rpc = "bittube"} #pool.bittube.hashvault.pro:3333
+    [PSCustomObject]@{symbol = "SUMO";  port = 3333; fee = 0.9; rpc = "sumokoin"} #pool.sumo.hashvault.pro:3333
+    [PSCustomObject]@{symbol = "TUBE";  port = 3333; fee = 0.9; rpc = "bittubecash"} #pool.bittube.hashvault.pro:3333
     [PSCustomObject]@{symbol = "TRTL";  port = 3333; fee = 0.9; rpc = "turtle"} #pool.turtle.hashvault.pro:3333
     [PSCustomObject]@{symbol = "WOW";   port = 3333; fee = 0.9; rpc = "wownero"} #pool.wownero.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XHV";   port = 3333; fee = 0.9; rpc = "haven"} #pool.haven.hashvault.pro:3333

@@ -22,11 +22,10 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "GRFT";  port = 3333; fee = 0.9; rpc = "graft"} #pool.graft.hashvault.pro:3333
     [PSCustomObject]@{symbol = "KVA";   port = 3333; fee = 0.9; rpc = "kevacoin"} #pool.hashvault.pro:3333
     [PSCustomObject]@{symbol = "LTHN";  port = 3333; fee = 0.9; rpc = "lethean"} #pool.lethean.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "LOKI";  port = 3333; fee = 0.9; rpc = "loki"} #pool.loki.hashvault.pro:3333
     [PSCustomObject]@{symbol = "MSR";   port = 3333; fee = 0.9; rpc = "masari"} #pool.masari.hashvault.pro:3333
     [PSCustomObject]@{symbol = "RYO";   port = 3333; fee = 0.9; rpc = "ryo"} #pool.ryo.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "SUMO";  port = 3333; fee = 0.9; rpc = "sumo"} #pool.sumo.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "TUBE";  port = 3333; fee = 0.9; rpc = "bittube"} #pool.bittube.hashvault.pro:3333
+    [PSCustomObject]@{symbol = "SUMO";  port = 3333; fee = 0.9; rpc = "sumokoin"} #pool.sumo.hashvault.pro:3333
+    [PSCustomObject]@{symbol = "TUBE";  port = 3333; fee = 0.9; rpc = "bittubecash"} #pool.bittube.hashvault.pro:3333
     [PSCustomObject]@{symbol = "TRTL";  port = 3333; fee = 0.9; rpc = "turtle"} #pool.turtle.hashvault.pro:3333
     [PSCustomObject]@{symbol = "WOW";   port = 3333; fee = 0.9; rpc = "wownero"} #pool.wownero.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XHV";   port = 3333; fee = 0.9; rpc = "haven"} #pool.haven.hashvault.pro:3333
@@ -52,10 +51,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Ports         = @([PSCustomObject]@{})
 
     $ok = $true
+    #https://api.hashvault.pro/v3/haven
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/stats" -tag $Name -timeout 15 -cycletime 120
-            $Pool_Blocks = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/pool/blocks/stats" -tag $Name -timeout 15 -cycletime 120
+            $Pool_Blocks = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/pool/blocks?limit=100&page=0&pooltype=collective" -tag $Name -timeout 15 -cycletime 120
             #$Pool_PortsRequest = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/pool/ports" -tag $Name -timeout 15 -cycletime 86400
             #$Pool_Ports   = Get-PoolPortsFromRequest $Pool_PortsRequest.pplns -mCPU "low" -mGPU "mid" -mRIG "(high|ultra)" -descField "description"
             $Pool_Ports = @([PSCustomObject]@{CPU=80;GPU=3333;RIG=3333})
@@ -81,8 +81,10 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $profitLive   = if ($diffLive) {86400/$diffLive*$reward/$coinUnits} else {0}
         $lastBTCPrice = if ($Global:Rates.$Pool_Currency) {1/$Global:Rates.$Pool_Currency} else {[decimal]$Pool_Request.market.price_btc}
 
-        $blocks_measure = $Pool_Blocks.distribution | Where-Object {$_.ts -ge $timestamp24h} | Select-Object -ExpandProperty ts | Measure-Object -Minimum -Maximum
+        $blocks_measure = $Pool_Blocks | Where-Object {$_.ts -ge $timestamp24h} | Select-Object -ExpandProperty ts | Measure-Object -Minimum -Maximum
         $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+
+        $Pool_TSL = $timestamp - ($Pool_Blocks | Select-Object -First 1).ts/1000
 
         $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
         $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
@@ -117,7 +119,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     PoolFee       = $Pool_Fee
                     Workers       = $Pool_Request.pool_statistics.collective.miners
                     Hashrate      = $Stat.HashRate_Live
-                    TSL           = if ($Pool_Request.pool_statistics.collective.lastFoundBlock.ts) {$timestamp - $Pool_Request.pool_statistics.collective.lastFoundBlock.ts/1000} else {$timestamp}
+                    TSL           = $Pool_TSL
                     BLK           = $Stat.BlockRate_Average
                     Name          = $Name
                     Penalty       = 0
