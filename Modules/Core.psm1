@@ -135,6 +135,7 @@ function Start-Core {
         $Session.ReportMinerData = $false
         $Session.ReportPoolsData = $false
         $Session.ReportDeviceData = $false
+        $Session.ResetDonationRun = $null
         $Session.TimeDiff = 0
         $Session.PhysicalCPUs = 0
 
@@ -1075,7 +1076,8 @@ function Invoke-Core {
 
     #load server pools
     [System.Collections.Generic.List[string]]$ServerPoolNames = @()
-    $ServerPools = $null
+    $ServerPools       = $null
+    $ServerDonationRun = $false
 
     if (-not $Session.IsDonationRun -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerPools) {
         $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2
@@ -1083,11 +1085,10 @@ function Invoke-Core {
             try {
                 $Request = Invoke-RestMethodAsync "server://allpools" -cycletime 120 -Timeout 20
                 $Pool_WorkerNames = [hashtable]@{}
-                $Pool_Zonk = $false
                 $ServerPools = $Request | Where-Object {$_.Name -and $_.Algorithm -and $_.Name -ne "MiningRigRentals"} | Foreach-Object {
-                    if (-not $Pool_Zonk) {
+                    if (-not $ServerDonationRun) {
                         if (-not $Pool_WorkerNames.ContainsKey($_.Name)) {
-                            if ("$($_.Worker)$($_.User)$($_.Pass)" -match "{workername:mpx}") {$Pool_Zonk = $true}
+                            if ("$($_.Worker)$($_.User)$($_.Pass)" -match "{workername:mpx}") {$ServerDonationRun = $true}
                             else {
                                 $Pool_WorkerNames[$_.Name] = "{workername:$(if ($Session.Config.Pools."$($_.Name)".Worker) {$Session.Config.Pools."$($_.Name)".Worker} else {$Session.Config.WorkerName})}"
                             }
@@ -1108,11 +1109,6 @@ function Invoke-Core {
                 $ServerPools.Name | Select-Object -Unique | Foreach-Object {
                     $ServerPoolNames.Add($_) > $null
                 }
-
-                $Session.IsServerDonationRun = $Pool_Zonk
-                if ($Pool_Zonk) {
-                    $Session.LastDonated = Set-LastDrun $Session.Timer
-                }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $ServerPools = $null
@@ -1121,6 +1117,8 @@ function Invoke-Core {
         }
     }
 
+    $Session.IsServerDonationRun = $ServerDonationRun
+
     #Activate or deactivate donation  
     $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}
     $DonateDelayHours = 24
@@ -1128,19 +1126,25 @@ function Invoke-Core {
         $DonateMinutes /= 2
         $DonateDelayHours /= 2
     }
-    if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
+    if ($Session.IsServerDonationRun) {
+        $Session.ResetDonationRun = $Session.Timer
+    } elseif (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
         if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.ResetDonationRun = $ShiftDonationRun}
     }
-    if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
+    if ($Session.ResetDonationRun -or ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59))) {
         $Session.IsDonationRun = $false
-        $Session.LastDonated = Set-LastDrun $Session.Timer
-        $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
-        $Session.UserConfig = $null
-        $API.UserConfig = $null
-        $Global:AllPools = $null
-        Write-Log "Donation run finished. "
+        $LastDonated = if ($Session.ResetDonationRun) {$Session.ResetDonationRun} else {$Session.Timer}
+        $Session.LastDonated = Set-LastDrun $LastDonated
+        $Session.ResetDonationRun = $null
+        if ($Session.UserConfig -ne $null) {
+            $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+            $Session.UserConfig = $null
+            $API.UserConfig = $null
+            $Global:AllPools = $null
+            Write-Log "Donation run finished. "
+        }
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if (-not $Session.IsDonationRun -or $CheckConfig) {
@@ -2617,7 +2621,7 @@ function Invoke-Core {
     #Move donation run into the future, if benchmarks are ongoing
     if ((-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun -and $MinersNeedingBenchmarkCount -gt 0) -or $Session.IsExclusiveRun) {
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.ResetDonationRun = $ShiftDonationRun}
     }
 
     #Update API miner information
