@@ -1084,10 +1084,17 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     if ($RigGroupsAdd.Count) {
         #POST /riggroup/[ID]/add/[rigid1];[rigid2];[rigid3]...
         $RigGroupsAdd | Group-Object groupid | Foreach-Object {
-            $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.name).Name
+            $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.Name).Name
             try {
                 $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/add/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
-                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Successfully added"} else {"Failed to add"}) rigs $($_.Group.rigid -join ',') to group $($RigGroupName): $($_.Exception.Message)"
+                $FailedToAdd = @(Compare-Object @($Result.rigs.id | Select-Object) @($_.Group.rigid | Select-Object) | Where-Object SideIndicator -eq "=>" | Foreach-Object {$_.InputObject} | Select-Object)
+                $SuccessToAdd = @($_.Group.rigid | Where-Object {$_ -notin $FailedToAdd} | Select-Object)
+                if ($SuccessToAdd.Count) {
+                    Write-Log -Level Info "$($Name): Successfully added rig$(if ($SuccessToAdd.Count -gt 1) {"s"}) $($SuccessToAdd -join ',') to group $($RigGroupName)"
+                }
+                if ($FailedToAdd.Count) {
+                    Write-Log -Level Info "$($Name): Failed to add rig$(if ($FailedToAdd.Count -gt 1) {"s"}) $($FailedToAdd -join ',') to group $($RigGroupName)"
+                }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Unable to add rigs to group $($RigGroupName): $($_.Exception.Message)"
