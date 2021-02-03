@@ -2494,6 +2494,35 @@ class Trex : Miner {
     }
 }
 
+class VerthashWrapper : Miner {
+
+    [Void]UpdateMinerData () {
+        $MJob = $this.GetWrapperJob()
+        if ($MJob.HasMoreData) {
+            $HashRate_Name = $this.Algorithm[0]
+
+            $MJob | Receive-Job | ForEach-Object {
+                $Line = $_ -replace "`n|`r", ""
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
+                if ($Line_Simple -match "^.+?accepted[:\s]+(\d+)/(\d+).+hashrate[:\s]+(.+?)/s") {
+                    $HashRate_Value = ConvertFrom-Hash "$($Matches[3])"
+                    $HashRate = [PSCustomObject]@{}
+                    if ($HashRate_Value -gt 0) {
+                        $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                    }
+
+                    $this.AddMinerData($Line_Simple,$HashRate)
+
+                    $Accepted_Shares = [Int64]$Matches[1]
+                    $Rejected_Shares = [Int64]$Matches[2] - $Accepted_Shares
+                    $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+                }
+            }
+
+            $this.CleanupMinerData()
+        }
+    }
+}
 
 class Wrapper : Miner {
 }
