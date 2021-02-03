@@ -58,7 +58,11 @@ function Start-Core {
         if ((Compare-Version $PSVersionTable.PSVersion $Session.SupportedPSVersion) -lt 0) {
             $CurrentPSVersion = Get-Version $PSVersionTable.PSVersion
             Write-Host "RainbowMiner recommends PowerShell Core Version $($Session.SupportedPSVersion) (vs. v$($CurrentPSVersion.Major).$($CurrentPSVersion.Minor).$($CurrentPSVersion.Build))" -ForegroundColor Yellow
-            Write-Host "Everything will run fine with the current version, but consider updating your PowerShell" -ForegroundColor Yellow
+            if ($CurrentPSVersion.Major -eq 7 -and $CurrentPSVersion.Minor -eq 1 -and $CurrentPSVersion.Build -eq 0) {
+                Write-Host "The v7.1.0 contains a serious bug, consider updating your PowerShell" -ForegroundColor Yellow
+            } else {
+                Write-Host "Everything will run fine with the current version, but consider updating your PowerShell" -ForegroundColor Yellow
+            }
             Write-Host " "
             if ($IsWindows) {
                 $PSUpdateMessage = "Link for PowerShell: https://github.com/PowerShell/PowerShell/releases/tag/v$($Session.SupportedPSVersion)"
