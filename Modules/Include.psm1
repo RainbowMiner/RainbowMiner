@@ -1913,7 +1913,7 @@ function Start-SubProcessInBackground {
     if ($LogPath) {$ScriptBlock += " | Tee-Object `"$($LogPath -replace '"','``"')`""}
 
     $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
-    
+
     [int[]]$ProcessIds = @()
     
     if ($Job) {
@@ -2188,9 +2188,10 @@ function Get-SubProcessIds {
 
     $WaitCount = 0
     $ProcessFound = 0
+    $ArgumentList = "*$($ArgumentList.Replace("'","*").Replace('"',"*"))*" -replace "\*+","*"
     do {
         Start-Sleep -Milliseconds 100
-        Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $_.CommandLine -like "*$($ArgumentList)*" -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
+        Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $_.CommandLine -like $ArgumentList -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
             $Running += $_.ProcessId
             $ProcessFound++
             $_.ProcessId
@@ -2457,8 +2458,9 @@ function Expand-WebRequest {
     [Environment]::CurrentDirectory = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation
 
     if (-not $Path) {$Path = Join-Path ".\Downloads" ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName}
-    if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" > $null}
-    if (-not (Test-Path ".\Bin"))       {New-Item "Bin" -ItemType "directory" > $null}
+    if (-not (Test-Path ".\Downloads"))  {New-Item "Downloads" -ItemType "directory" > $null}
+    if (-not (Test-Path ".\Bin"))        {New-Item "Bin" -ItemType "directory" > $null}
+    if (-not (Test-Path ".\Bin\Common")) {New-Item "Bin\Common" -ItemType "directory" > $null}
     $FileName = Join-Path ".\Downloads" (Split-Path $Uri -Leaf)
 
     if (Test-Path $FileName) {Remove-Item $FileName}

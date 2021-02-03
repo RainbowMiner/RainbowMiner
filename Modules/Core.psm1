@@ -2091,20 +2091,30 @@ function Invoke-Core {
     if ($Miner_Profits_Unbias -ne $null) {Remove-Variable "Miner_Profits_Unbias"}
     if ($Miner_Arguments_List -ne $null) {Remove-Variable "Miner_Arguments_List"}
 
-    $Miners_DownloadList = @()
+    $Miners_DownloadList    = @()
+    $Miners_DownloadListPrq = @()
     $Miners = $AllMiners.Where({(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $AllMiners_VersionCheck[$_.BaseName]})
     if ((($AllMiners | Measure-Object).Count -ne ($Miners | Measure-Object).Count) -or $Session.StartDownloader) {
-        $Miners_DownloadList = @($AllMiners.Where({$_.PrerequisitePath}) | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "IsMiner"; expression = {$false}}) + @($AllMiners | Where-Object {$AllMiners_VersionCheck[$_.BaseName] -ne $true} | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "IsMiner"; expression = {$true}})
+
+        $Miners_DownloadList = @($AllMiners.Where({$AllMiners_VersionCheck[$_.BaseName] -ne $true}) | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "IsMiner"; expression = {$true}})
         if ($Miners_DownloadList.Count -gt 0 -and $Global:Downloader.State -ne "Running") {
             Clear-Host
-            Write-Log "Starting download of $($Miners_DownloadList.Count) files."
-            if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) files) .."}
+            Write-Log -Level Info "Starting download of $($Miners_DownloadList.Count) miners."
+            if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) miners) .."}
             $Global:Downloader = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList) -FilePath .\Scripts\Downloader.ps1
         }
+
+        $Miners_DownloadPrqList = @($AllMiners.Where({$_.PrerequisitePath}) | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "IsMiner"; expression = {$false}})
+        if ($Miners_DownloadListPrq.Count -gt 0 -and $Miners_DownloadList.Count -eq 0 -and $Global:Downloader.State -ne "Running" -and $Global:DownloaderPrq.State -ne "Running") {
+            Write-Log -Level Info "Starting download of $($Miners_DownloadListPrq.Count) pre-requisites."
+            if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadListPrq.Count) pre-requisites) .."}
+            $Global:DownloaderPrq = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadListPrq) -FilePath .\Scripts\Downloader.ps1
+        }
+
         $Session.StartDownloader = $false
     }
-    $API.DownloadList = $Miners_DownloadList
-    $Miners_Downloading = $Miners_DownloadList.Count
+    $API.DownloadList   = $Miners_DownloadList + $Miners_DownloadListPrq
+    $Miners_Downloading = $Miners_DownloadList.Count + $Miners_DownloadListPrq.Count
     if ($AllMiners_VersionCheck -ne $null) {Remove-Variable "AllMiners_VersionCheck"}
     if ($AllMiners_VersionDate -ne $null) {Remove-Variable "AllMiners_VersionDate"}
     if ($Miners_DownloadList -ne $null) {Remove-Variable "Miners_DownloadList"}
@@ -2545,6 +2555,7 @@ function Invoke-Core {
     Remove-Variable "Running_MinerPaths"
 
     if ($Global:Downloader.HasMoreData) {$Global:Downloader | Receive-Job | Out-Host}
+    if ($Global:DownloaderPrq.HasMoreData) {$Global:DownloaderPrq | Receive-Job | Out-Host}
     if ($Session.Config.Delay -gt 0) {Start-Sleep $Session.Config.Delay} #Wait to prevent BSOD
 
     $Global:ActiveMiners.Where({$_.Best -EQ $true -and $_.Status -ne [MinerStatus]::Running}).ForEach({
@@ -3151,6 +3162,7 @@ function Invoke-Core {
     if ($SamplesPicked -eq 0) {Update-ActiveMiners -ActiveMiners_DeviceNames $ActiveMiners_DeviceNames -UpdateDeviceInformation > $null;$Session.Timer = (Get-Date).ToUniversalTime();$SamplesPicked++}
 
     if ($Global:Downloader.HasMoreData) {$Global:Downloader | Receive-Job | Out-Host}
+    if ($Global:DownloaderPrq.HasMoreData) {$Global:DownloaderPrq | Receive-Job | Out-Host}
 
     if (-not $keyPressed) {
         $host.UI.RawUI.CursorPosition = $CursorPosition
