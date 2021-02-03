@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.8.0"
+$Version = "0.8.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.0-teamred/teamredminer-v0.8.0-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-teamred/teamredminer-v0.8.1-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.0-teamred/teamredminer-v0.8.0-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-teamred/teamredminer-v0.8.1-win.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
