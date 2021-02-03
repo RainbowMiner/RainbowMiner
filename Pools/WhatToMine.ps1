@@ -45,10 +45,36 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
 
     if ($Divisor -and ($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
 
+        $lastSatPrice = Get-LastSatPrice $Pool_Currency
+
         if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.coins.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
+            if ($lastSatPrice) {
+                $btc_revenue = $lastSatPrice * [double]$Pool_Request.coins.$_.estimated_rewards / 1e8
+            } else {
+                $btc_revenue = [double]$Pool_Request.coins.$_.btc_revenue
+                if (-not $btc_revenue) {
+                    $ExCurrency = $Pool_Request.coins.$_.exchange_rate_curr
+                    if ($Global:Rates.$ExCurrency) {
+                        $lastSatPrice = Get-LastSatPrice $Pool_Currency ([double]$Pool_Request.coins.$_.exchange_rate / $Global:Rates.$ExCurrency * 1e8)
+                        $btc_revenue = $lastSatPrice * [double]$Pool_Request.coins.$_.estimated_rewards / 1e8
+                    }
+                }
+            }
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
         } else {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.coins.$_.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
+            if ($lastSatPrice) {
+                $btc_revenue = $lastSatPrice * [double]$Pool_Request.coins.$_.estimated_rewards24 / 1e8
+            } else {
+                $btc_revenue = [double]$Pool_Request.coins.$_.btc_revenue24
+                if (-not $btc_revenue) {
+                    $ExCurrency = $Pool_Request.coins.$_.exchange_rate_curr
+                    if ($Global:Rates.$ExCurrency) {
+                        $lastSatPrice = Get-LastSatPrice $Pool_Currency ([double]$Pool_Request.coins.$_.exchange_rate24 / $Global:Rates.$ExCurrency * 1e8)
+                        $btc_revenue = $lastSatPrice * [double]$Pool_Request.coins.$_.estimated_rewards24 / 1e8
+                    }
+                }
+            }
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
         }
 
         [PSCustomObject]@{
@@ -83,7 +109,7 @@ if (-not $Pool_Request.coins -or ($Pool_Request.coins.PSObject.Properties.Name |
 
 $Pool_Coins = @($WTMWallets.CoinSymbol | Select-Object)
 
-$Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $Pool_Request.coins.$_.tag} | ForEach-Object {
+$Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Request.coins.$_.status -eq "Active" -and $Pool_Coins -icontains $Pool_Request.coins.$_.tag} | ForEach-Object {
     $Pool_Currency   = $Pool_Request.coins.$_.tag
     $Pool_Algorithm  = $Pool_Request.coins.$_.algorithm -replace "[^a-z0-9]+"
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
@@ -103,21 +129,30 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
         try {
             $Pool_CoinRequest = Invoke-RestMethodAsync "https://whattomine.com/coins/$($Pool_Request.coins.$_.id).json?hr=10&p=0&fee=0.0&cost=0.0&hcost=0.0" -tag $Name -cycletime 120
         } catch {
-           if ($Error.Count){$Error.RemoveAt(0)} 
+           if ($Error.Count){$Error.RemoveAt(0)}
         }
 
         if ($Pool_CoinRequest -and $Pool_CoinRequest.tag) {
-            $btc_revenue = [double]$Pool_CoinRequest.btc_revenue
-            if (-not $btc_revenue) {
-                $lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.tag ([double]$Pool_CoinRequest.exchange_rate)
-                $btc_revenue = $lastSatPrice * [double]$Pool_CoinRequest.estimated_rewards
+
+            $lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.tag
+
+            if ($lastSatPrice) {
+                $btc_revenue = $lastSatPrice * [double]$Pool_CoinRequest.estimated_rewards / 1e8
+            } else {
+                $btc_revenue = [double]$Pool_CoinRequest.btc_revenue
+                if (-not $btc_revenue) {
+                    $ExCurrency = $Pool_CoinRequest.exchange_rate_curr
+                    if ($Global:Rates.$ExCurrency) {
+                        $lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.tag ([double]$Pool_CoinRequest.exchange_rate / $Global:Rates.$ExCurrency * 1e8)
+                        $btc_revenue = $lastSatPrice * [double]$Pool_CoinRequest.estimated_rewards
+                    }
+                }
             }
-            $btc_revenue24 = $btc_revenue
 
             if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
                 $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
             } else {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
             }
 
             [PSCustomObject]@{
