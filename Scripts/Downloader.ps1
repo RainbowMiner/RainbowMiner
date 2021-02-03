@@ -17,7 +17,7 @@ try {
     $RunningMiners_Request = Invoke-GetUrl "http://localhost:$($LocalAPIport)/runningminers"
     if ($RunningMiners_Request -isnot [array]) {
         if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
-            $RunningMiners_Paths.Add($RunningMiners_Request.Path) | Out-Null
+            $RunningMiners_Paths.Add($RunningMiners_Request.Path) > $null
         }
     }
     else {
@@ -65,8 +65,19 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
         $Global:ProgressPreference = "SilentlyContinue"
         try {
             if ($URI -and (Split-Path $URI -Leaf) -eq (Split-Path $Path -Leaf)) {
-                New-Item (Split-Path $Path) -ItemType "Directory" | Out-Null
-                Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
+                $PathFolder = Split-Path $Path
+                $FileName = Join-Path ".\Downloads" (Split-Path $Uri -Leaf)
+
+                if (-not (Test-Path $PathFolder)) {New-Item $PathFolder -ItemType "Directory" > $null}
+                if (-not (Test-Path ".\Downloads"))  {New-Item "Downloads" -ItemType "directory" > $null}
+
+                if (Test-Path $FileName) {Remove-Item $FileName}
+
+                Invoke-WebRequest $URI -OutFile $FileName -UseBasicParsing -ErrorAction Stop
+
+                if ((Test-Path $FileName) -and (Get-Item $FileName).Length) {
+                    Move-Item -Path $FileName -Destination $PathFolder
+                }
             }
             else {
                 Expand-WebRequest $URI $(if ($IsMiner) {Get-MinerInstPath $Path} else {Split-Path $Path}) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop -EnableMinerBackups:$DownloaderConfig.EnableMinerBackups -EnableKeepDownloads:$DownloaderConfig.EnableKeepDownloads
