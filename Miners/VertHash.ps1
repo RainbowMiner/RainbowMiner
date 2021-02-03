@@ -73,7 +73,7 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
 
 if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
     Write-Log -Level Warn "VertHash: downloading verthash.dat (1.2GB) in the background, please wait!"
-    $DatFile = ".\Bin\Common\verthash.dat"
+    $DatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
 }
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {

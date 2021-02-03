@@ -21,6 +21,7 @@
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
         $Session.MachineName        = [System.Environment]::MachineName
         $Session.MyIP               = Get-MyIP
+        $Session.MainPath           = "$PWD"
 
         Set-Variable RegexAlgoHasEthproxy -Option Constant -Scope Global -Value "^Etc?hash|ProgPow"
         Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|Octopus"
