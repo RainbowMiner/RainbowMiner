@@ -1113,6 +1113,7 @@ function Invoke-Core {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $ServerPools = $null
                 $ServerPoolNames.Clear()
+                $ServerDonationRun = $false
             }
         }
     }
