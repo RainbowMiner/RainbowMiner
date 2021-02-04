@@ -118,15 +118,13 @@ class Miner {
 
     [System.Management.Automation.Job]GetMiningJob() {
         return $this.Job.XJob
-        #$MJob = if ($this.Job -and $this.Job.Name) {Get-Job -Name $this.Job.Name -ErrorAction Ignore} else {$null}
-        #return $MJob
     }
 
     [System.Management.Automation.Job]GetWrapperJob() {
         if ($Global:IsLinux) {
             return $this.WrapperJob
         } else {
-            return $this.GetMiningJob()
+            return $this.Job.XJob
         }
     }
 
@@ -145,7 +143,7 @@ class Miner {
         $this.IntervalBegin = 0
         if (-not $this.StartPort) {$this.StartPort = $this.Port}
 
-        if (-not ($this.GetMiningJob())) {
+        if (-not $this.Job.XJob) {
             if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
 
             $Miner_Port = if ($this.StaticPort) {$this.StaticPort} else {$this.StartPort}
@@ -196,7 +194,7 @@ class Miner {
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
             $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
 
-            if ($this.GetMiningJob()) {
+            if ($this.Job.XJob) {
                 $this.Status = [MinerStatus]::Running
                 if ($Global:IsLinux -and $this.IsWrapper()) {
                     Write-Log "Starting WrapperJob"
@@ -258,8 +256,7 @@ class Miner {
 
     EndOfRoundCleanup() {
         if ($Global:IsLinux -or ($this.API -notmatch "Wrapper")) {
-            $MJob = $this.GetMiningJob()
-            if ($MJob.HasMoreData) {$MJob | Receive-Job > $null}
+            if ($this.Job.XJob.HasMoreData) {$this.Job.XJob | Receive-Job > $null}
         }
         if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
         $this.Rounds++
@@ -267,8 +264,8 @@ class Miner {
     }
 
     [DateTime]GetActiveStart() {
-        $MiningProcess = if ($this.Job.OwnWindow -and $this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime}
-        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {($this.GetMiningJob()).PSBeginTime}
+        $MiningProcess = if ($this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Job.XJob.PSBeginTime}
 
         if ($Begin) {
             return $Begin
@@ -279,14 +276,14 @@ class Miner {
     }
 
     [DateTime]GetActiveLast() {
-        $MiningProcess = if ($this.Job.OwnWindow -and $this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $MiningProcess = if ($this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
 
-        if (-not $MiningProcess -and -not ($this.GetMiningJob())) {
+        if (-not $MiningProcess -and -not $this.Job.XJob) {
             return $this.ActiveLast
         }
 
-        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {($this.GetMiningJob()).PSBeginTime}
-        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {($this.GetMiningJob()).PSEndTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Job.XJob.PSBeginTime}
+        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Job.XJob.PSEndTime}
 
         if ($Begin -and $End) {
             return $End
@@ -300,9 +297,9 @@ class Miner {
     }
 
     [TimeSpan]GetActiveTime() {
-        $MiningProcess = if ($this.Job.OwnWindow -and $this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
-        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {($this.GetMiningJob()).PSBeginTime}
-        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {($this.GetMiningJob()).PSEndTime}
+        $MiningProcess = if ($this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Job.XJob.PSBeginTime}
+        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Job.XJob.PSEndTime}
         
         if ($Begin -and $End) {
             return $this.Active + ($End - $Begin)
@@ -320,10 +317,10 @@ class Miner {
     }
 
     [TimeSpan]GetRunningTime([Bool]$MeasureInterval = $false) {
-        $MiningProcess = if ($this.Job.OwnWindow -and $this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $MiningProcess = if ($this.Job.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MeasureInterval) {$this.IntervalBegin}
-        if (-not $MeasureInterval -or $Begin -eq 0) {$Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {($this.GetMiningJob()).PSBeginTime}}
-        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {($this.GetMiningJob()).PSEndTime}
+        if (-not $MeasureInterval -or $Begin -eq 0) {$Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Job.XJob.PSBeginTime}}
+        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Job.XJob.PSEndTime}
         
         if ($Begin -and $End) {
             if ($MeasureInterval) {$this.IntervalBegin = $End}
@@ -345,7 +342,7 @@ class Miner {
     [MinerStatus]GetStatus() {
         $MiningProcess = $this.Job.ProcessId | Where-Object {$_} | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore}
 
-        if ((-not $MiningProcess -and ($this.GetMiningJob()).State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq $(if ($Global:IsLinux) {1} else {$this.MultiProcess+1}))) {
+        if ((-not $MiningProcess -and $this.Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq $(if ($Global:IsLinux) {1} else {$this.MultiProcess+1}))) {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
@@ -442,7 +439,7 @@ class Miner {
     }
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetWrapperJob()
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $Date = (Get-Date).ToUniversalTime()
 
@@ -1262,7 +1259,7 @@ class EthminerWrapper : Miner {
     [Double]$Difficulty_Value = 0.0
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetWrapperJob()
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -2163,7 +2160,7 @@ class RHWrapper : Miner {
     [Double]$Difficulty_Value = 0.0
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetWrapperJob()
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -2208,7 +2205,7 @@ class RHWrapper : Miner {
 class SixMinerWrapper : Miner {
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetWrapperJob()
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -2408,7 +2405,7 @@ class SwapminerWrapper : Miner {
     }
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetWrapperJob()
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -2501,7 +2498,6 @@ class Trex : Miner {
 class VerthashWrapper : Miner {
 
     [Void]UpdateMinerData () {
-        #$MJob = $this.GetWrapperJob()
         $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
@@ -2887,7 +2883,7 @@ class Xmrig3 : Miner {
 class XmrigWrapper : Miner {
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetWrapperJob()
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
