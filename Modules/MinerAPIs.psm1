@@ -154,7 +154,7 @@ class Miner {
 
             if ($this.EnableAutoPort) {
                 try {
-                    $PortsInUse = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
+                    $PortsInUse = @((([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners()).Port | Where-Object {$_} | Select-Object -Unique)
                     $portmax = [math]::min($this.Port+9999,65535)
                     while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
                     if ($this.Port -gt $portmax) {$this.Port=$Miner_Port}
@@ -560,8 +560,11 @@ class Miner {
     }
 
     [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm,[Bool]$Safe = $true) {
-        $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
-        if (-not $HashRates_Devices) {$HashRates_Devices = @("Device")}
+        if (($this.Data | Where-Object Device | Measure-Object).Count) {
+            $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
+        } else {
+            $HashRates_Devices = @("Device")
+        }
 
         $Intervals = [Math]::Max($this.ExtendInterval,1)
         $Timeframe = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
@@ -584,7 +587,7 @@ class Miner {
                 $Data_Devices = $_.Device
                 if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
 
-                $HashRate = $Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum
+                $HashRate = ($Data_HashRates | Measure-Object -Sum).Sum
                 if ($HashRates_Variances."$($Data_Devices -join '-')" -or ($HashRate -gt $HashRates_Average * $MinHashRate)) {
                     $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
                     $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @($HashRate / $Data_Devices.Count)}
@@ -592,9 +595,9 @@ class Miner {
                 }
             }
 
-            $HashRates_Count    = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
-            $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
-            $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
+            $HashRates_Count    = ($HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum).Minimum
+            $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average).Average * $HashRates_Averages.Keys.Count
+            $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_} | Measure-Object -Maximum).Maximum / $HashRates_Average} else {1}
             Write-Log "GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
         }
 
@@ -2504,10 +2507,19 @@ class VerthashWrapper : Miner {
             $HashRate_Name = $this.Algorithm[0]
 
             $MJob | Receive-Job | ForEach-Object {
-                $Line = $_ -replace "`n|`r", ""
-                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
-                if ($Line_Simple -match "^.+?accepted[:\s]+(\d+)/(\d+).+hashrate[:\s]+(.+?)/s") {
-                    $HashRate_Value = ConvertFrom-Hash "$($Matches[3])"
+                $Line = $_ -replace "`n|`r"
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]"
+                if ($Line_Simple -match "^.+?accepted[:\s]+(\d+)/(\d+).+hashrate[^\d]+(.+?)\s+(.+?)/s") {
+                    $HashRate_Value = [Double]"$($Matches[3])"
+
+                    switch ("$($Matches[4])") {
+                        "kH" {$HashRate_Value *= 1e+3;Break}
+                        "MH" {$HashRate_Value *= 1e+6;Break}
+                        "GH" {$HashRate_Value *= 1e+9;Break}
+                        "TH" {$HashRate_Value *= 1e+12;Break}
+                        "PH" {$HashRate_Value *= 1e+15;Break}
+                    }
+
                     $HashRate = [PSCustomObject]@{}
                     if ($HashRate_Value -gt 0) {
                         $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
