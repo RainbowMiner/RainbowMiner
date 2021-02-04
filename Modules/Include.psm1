@@ -1872,7 +1872,7 @@ function Start-SubProcess {
     }
 }
 
-function Start-SubProcessInBackground {
+function Start-SubProcessInBackgroundOld {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -1907,9 +1907,10 @@ function Start-SubProcessInBackground {
         $ScriptBlock += " $ArgumentListToBlock"
         if ($ArgumentList -ne $ArgumentListToBlock) {
             Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
+            $ArgumentList = $ArgumentListToBlock
         }
     }
-    $ScriptBlock += " *>&1"
+    $ScriptBlock += " 2>&1"
     $ScriptBlock += " | Write-Output"
     if ($LogPath) {$ScriptBlock += " | Tee-Object `"$($LogPath -replace '"','``"')`""}
 
@@ -1926,6 +1927,82 @@ function Start-SubProcessInBackground {
     [PSCustomObject]@{
         ScreenName = ""
         Name       = $Job.Name
+        XProcess   = $Job
+        OwnWindow  = $false
+        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+    }
+}
+
+
+function Start-SubProcessInBackground {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath, 
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$LogPath = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$WorkingDirectory = "", 
+        [ValidateRange(-2, 3)]
+        [Parameter(Mandatory = $false)]
+        [Int]$Priority = 0,
+        [Parameter(Mandatory = $false)]
+        [Int]$CPUAffinity = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$EnvVars = @(),
+        [Parameter(Mandatory = $false)]
+        [Int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetLDLIBRARYPATH = $false
+    )
+
+    [int[]]$Running = @()
+    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
+
+    $Command = ". '$($FilePath.Replace("'","``'"))'"
+    if ($ArgumentList) {
+        $ArgumentListToBlock = $ArgumentList
+        ([regex]"\s-+\w+[\s=]+(\w[=\w]*,[,=\w]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value)'"}
+        $Command += " $ArgumentListToBlock"
+        if ($ArgumentList -ne $ArgumentListToBlock) {
+            Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
+            $ArgumentList = $ArgumentListToBlock
+        }
+    }
+
+    $WorkingDirectory = $WorkingDirectory.Replace("'","``'")
+    $Command          = $Command.Replace('"','``"')
+    if ($LogPath) {$LogPath = $LogPath.Replace("'","``'")}
+
+    $ScriptBlock  = @()
+    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$ScriptBlock += "`$env:$($Matches[1])=$($Matches[2])"}
+    $ScriptBlock += "Set-Location '$($WorkingDirectory)'"
+    $ScriptBlock += "(Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'"
+    $ScriptBlock += "`$MiningProcess = [PowerShell]::Create()"
+    $ScriptBlock += "`$MiningProcess.AddScript(`"$($Command) 2>&1 | Write-Verbose -Verbose`") | Out-Null"
+    $ScriptBlock += "`$Result = `$MiningProcess.BeginInvoke()"
+    $ScriptBlock += "do {"
+    $ScriptBlock += "  Start-Sleep -S 1"
+    $ScriptBlock += "  `$MiningProcess.Streams.Verbose.ReadAll()$(if ($LogPath) {" | Foreach-Object {Out-File -InputObject `$_ -FilePath '$($LogPath)' -Append -Encoding UTF8;`$_}"})"
+    $ScriptBlock += "  if (-not (Get-Process -Id $($PID) -ErrorAction Ignore)) {`$MiningProcess.Stop() | Out-Null}"
+    $ScriptBlock += "} until (`$MiningProcess.IsCompleted)"
+
+    $Job = Start-Job ([ScriptBlock]::Create("$($ScriptBlock -join "`n")"))
+
+    [int[]]$ProcessIds = @()
+    
+    if ($Job) {
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
+    }
+    
+    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
+
+    [PSCustomObject]@{
+        ScreenName = ""
+        Name       = $Job.Name
+        XProcess   = $Job
         OwnWindow  = $false
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
@@ -1983,6 +2060,7 @@ function Start-SubProcessInConsole {
     [PSCustomObject]@{
         ScreenName = ""
         Name       = $Job.Name
+        XProcess   = $Job
         OwnWindow  = $true
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
@@ -2157,6 +2235,7 @@ function Start-SubProcessInScreen {
     [PSCustomObject]@{
         ScreenName = $ScreenName
         Name       = $Job.Name
+        XProcess   = $Job
         OwnWindow  = $true
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }

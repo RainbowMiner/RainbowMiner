@@ -117,8 +117,9 @@ class Miner {
     }
 
     [System.Management.Automation.Job]GetMiningJob() {
-        $MJob = if ($this.Job -and $this.Job.Name) {Get-Job -Name $this.Job.Name -ErrorAction Ignore} else {$null}
-        return $MJob
+        return $this.Job.XProcess
+        #$MJob = if ($this.Job -and $this.Job.Name) {Get-Job -Name $this.Job.Name -ErrorAction Ignore} else {$null}
+        #return $MJob
     }
 
     [System.Management.Automation.Job]GetWrapperJob() {
@@ -2511,11 +2512,11 @@ class VerthashWrapper : Miner {
                         $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
                     }
 
-                    $this.AddMinerData($Line_Simple,$HashRate)
-
                     $Accepted_Shares = [Int64]$Matches[1]
                     $Rejected_Shares = [Int64]$Matches[2] - $Accepted_Shares
                     $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+
+                    $this.AddMinerData($Line_Simple,$HashRate)
                 }
             }
 
