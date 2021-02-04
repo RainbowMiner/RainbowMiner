@@ -1927,7 +1927,6 @@ function Start-SubProcessInBackgroundOld {
     [PSCustomObject]@{
         ScreenName = ""
         Name       = $Job.Name
-        XProcess   = $Job
         OwnWindow  = $false
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
@@ -1983,7 +1982,6 @@ function Start-SubProcessInBackground {
     [PSCustomObject]@{
         ScreenName = ""
         Name       = $Job.Name
-        XProcess   = $Job
         OwnWindow  = $false
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
@@ -2041,7 +2039,6 @@ function Start-SubProcessInConsole {
     [PSCustomObject]@{
         ScreenName = ""
         Name       = $Job.Name
-        XProcess   = $Job
         OwnWindow  = $true
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
@@ -2216,7 +2213,6 @@ function Start-SubProcessInScreen {
     [PSCustomObject]@{
         ScreenName = $ScreenName
         Name       = $Job.Name
-        XProcess   = $Job
         OwnWindow  = $true
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }

@@ -117,9 +117,8 @@ class Miner {
     }
 
     [System.Management.Automation.Job]GetMiningJob() {
-        return $this.Job.XProcess
-        #$MJob = if ($this.Job -and $this.Job.Name) {Get-Job -Name $this.Job.Name -ErrorAction Ignore} else {$null}
-        #return $MJob
+        $MJob = if ($this.Job -and $this.Job.Name) {Get-Job -Name $this.Job.Name -ErrorAction Ignore} else {$null}
+        return $MJob
     }
 
     [System.Management.Automation.Job]GetWrapperJob() {
@@ -154,7 +153,7 @@ class Miner {
 
             if ($this.EnableAutoPort) {
                 try {
-                    $PortsInUse = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
+                    $PortsInUse = @((([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners()).Port | Select-Object -Unique)
                     $portmax = [math]::min($this.Port+9999,65535)
                     while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
                     if ($this.Port -gt $portmax) {$this.Port=$Miner_Port}
@@ -194,7 +193,7 @@ class Miner {
             }
             $this.StartTime = (Get-Date).ToUniversalTime()
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum).Maximum -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
 
             if ($this.GetMiningJob()) {
                 $this.Status = [MinerStatus]::Running
@@ -560,8 +559,11 @@ class Miner {
     }
 
     [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm,[Bool]$Safe = $true) {
-        $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
-        if (-not $HashRates_Devices) {$HashRates_Devices = @("Device")}
+        if (($this.Data | Where-Object Device | Measure-Object -Count).Count) {
+            $HashRates_Devices = @(($this.Data | Where-Object Device).Device | Select-Object -Unique)
+        } else{
+            $HashRates_Devices = @("Device")
+        }
 
         $Intervals = [Math]::Max($this.ExtendInterval,1)
         $Timeframe = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
@@ -581,10 +583,13 @@ class Miner {
                 $Data_HashRates = $_.HashRate.$Algorithm
                 if (-not $Data_HashRates -and $Algorithm -match "-") {$Data_HashRates = $_.HashRate."$($Algorithm -replace '\-.*$')"}
 
-                $Data_Devices = $_.Device
-                if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
+                if ($_.Device) {
+                    $Data_Devices = $_.Device
+                } else {
+                    $Data_Devices = $HashRates_Devices
+                }
 
-                $HashRate = $Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum
+                $HashRate = ($Data_HashRates | Measure-Object -Sum).Sum
                 if ($HashRates_Variances."$($Data_Devices -join '-')" -or ($HashRate -gt $HashRates_Average * $MinHashRate)) {
                     $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
                     $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @($HashRate / $Data_Devices.Count)}
@@ -592,9 +597,9 @@ class Miner {
                 }
             }
 
-            $HashRates_Count    = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
-            $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
-            $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
+            $HashRates_Count    = ($HashRates_Counts.Values | Measure-Object -Minimum).Minimum
+            $HashRates_Average  = ($HashRates_Averages.Values | Measure-Object -Average).Average * $HashRates_Averages.Keys.Count
+            $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {Get-Sigma $HashRates_Variances.$_} | Measure-Object -Maximum).Maximum / $HashRates_Average} else {1}
             Write-Log "GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
         }
 
@@ -614,7 +619,7 @@ class Miner {
 
     [Int64]GetPowerDraw() {
         $TimeFrame = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * [Math]::Max($this.ExtendInterval,1))
-        return ($this.Data | Where-Object {$_.PowerDraw -and $_.Date -ge $TimeFrame} | Select-Object -ExpandProperty PowerDraw | Measure-Object -Average).Average
+        return ($this.Data | Where-Object {$_.PowerDraw -and $_.Date -ge $TimeFrame} | Measure-Object -Property PowerDraw -Average).Average
     }
 
     [bool]HasDevFees() {
@@ -758,7 +763,7 @@ class Miner {
             
             } elseif ($Pattern.$DeviceVendor -ne $null) {
                 $DeviceId = 0
-                $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor | Select-Object -ExpandProperty Index | Foreach-Object {
+                ($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor).Index | Where-Object {$_ -ne $null} | Foreach-Object {
                     if ($DeviceId -in $this.Profiles.$DeviceModel.Index) {
                         $GpuEntry = $Script:abControl.GpuEntries[$_]
                         try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
