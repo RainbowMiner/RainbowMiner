@@ -344,6 +344,9 @@ function Start-Core {
         Write-Log -Level Error "Error writing version: $($_.Exception.Message)"
     }
 
+    if (Test-Path ".\stopp.txt")  {Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore}
+    if (Test-Path ".\reboot.txt") {Remove-Item ".\reboot.txt" -Force -ErrorAction Ignore}
+
     $Session.Timer      = (Get-Date).ToUniversalTime()
     $Session.NextReport = (Get-Date).ToUniversalTime()
     $Session.DecayStart = (Get-Date).ToUniversalTime()
@@ -638,6 +641,7 @@ function Invoke-Core {
         $API.Stop = $false
         $API.Pause = $false
         $API.Update = $false
+        $API.Reboot = $false
         $API.UpdateBalance = $false
         $API.WatchdogReset = $false
         $API.LockMiners = $false
@@ -2944,7 +2948,7 @@ function Invoke-Core {
     if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = -not (Test-Internet)}
 
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
-    $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
+    $Session.SkipSwitchingPrevention = $Session.Stopp = $Session.RestartComputer = $keyPressed = $false
 
     #Dynamically adapt current interval
     $NextIntervalPreset = if ($Running) {$Session.Config."$(if ($Session.Benchmarking -or $Session.IsBenchmarkingRun) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}
@@ -3033,6 +3037,7 @@ function Invoke-Core {
         }
  
         $keyPressedValue =  if ((Test-Path ".\stopp.txt") -or $API.Stop) {"X"}
+                            elseif ((Test-Path ".\reboot.txt") -or $API.Reboot) {"Q"}
                             elseif ($API.Pause -ne $Session.PauseMiners) {"P"}
                             elseif ($API.LockMiners -ne $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and -not $Session.IsServerDonationRun) {"L"}
                             elseif ($API.Update) {"U"}
@@ -3148,6 +3153,14 @@ function Invoke-Core {
                     Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart
                     Write-Host -NoNewline "[Y] pressed - Asyncloader yanked."
                     Write-Log "Asyncloader yanked."
+                    Break
+                }
+                "Q" {
+                    $Session.RestartComputer = $true
+                    $host.UI.RawUI.CursorPosition = $CursorPosition
+                    Write-Log "User requests to reboot the computer. "
+                    Write-Host -NoNewline "[Q] pressed - reboot computer."
+                    $keyPressed = $true
                     Break
                 }
             }
@@ -3267,7 +3280,9 @@ function Stop-Core {
     if (-not $Session.Config.DisableAPI)         {Stop-APIServer}
     if (-not $Session.Config.DisableAsyncLoader) {Stop-AsyncLoader}
 
-    Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
+    if (Test-Path ".\stopp.txt")  {Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore}
+    if (Test-Path ".\reboot.txt") {Remove-Item ".\reboot.txt" -Force -ErrorAction Ignore}
+
     Write-Log "Gracefully halting RainbowMiner"
     [System.Collections.Generic.List[string]]$ExcavatorWindowsClosed = @()
     $Global:ActiveMiners.Where({$_.Activated -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running}).ForEach({
