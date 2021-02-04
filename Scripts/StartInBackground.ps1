@@ -15,9 +15,10 @@ $Result = $MiningProcess.BeginInvoke()
 do {
     Start-Sleep -S 1
     $MiningProcess.Streams.Verbose.ReadAll() | Foreach-Object {
-        if ($LogPath) {Out-File -InputObject $_ -FilePath $LogPath -Append -Encoding UTF8}
-        $_
+        $Line = "$($_)"
+        if ($LogPath) {Out-File -InputObject $Line -FilePath $LogPath -Append -Encoding UTF8}
+        $Line
     }
-    $MiningProcess.Streams.ClearStreams()
+    $MiningProcess.Streams.ClearStreams() > $null
     if (-not (Get-Process -Id $ControllerProcessID -ErrorAction Ignore)) {$MiningProcess.Stop() > $null}
 } until ($MiningProcess.IsCompleted)
