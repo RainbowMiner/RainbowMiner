@@ -1712,14 +1712,14 @@ function ConvertFrom-Hash {
     )
     try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
     switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
-        "k" {[int64]$Num*1e3;Break}
-        "M" {[int64]$Num*1e6;Break}
-        "G" {[int64]$Num*1e9;Break}
-        "T" {[int64]$Num*1e12;Break}
-        "P" {[int64]$Num*1e15;Break}
-        "E" {if ($Num -lt 10) {[int64]$Num*1e18} else {[bigint]$Num*1e18};Break}
-        "Z" {[bigint]$Num*1e21;Break}
-        "Y" {[bigint]$Num*1e24;Break}
+        "k" {[int64]($Num*1e3);Break}
+        "M" {[int64]($Num*1e6);Break}
+        "G" {[int64]($Num*1e9);Break}
+        "T" {[int64]($Num*1e12);Break}
+        "P" {[int64]($Num*1e15);Break}
+        "E" {if ($Num -lt 10) {[int64]($Num*1e18)} else {[bigint]($Num*1e18)};Break}
+        "Z" {[bigint]($Num*1e21);Break}
+        "Y" {[bigint]($Num*1e24);Break}
         default {[int64]$Num}
     }
 }
