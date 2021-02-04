@@ -10,6 +10,7 @@
     $API.Stop        = $false
     $API.Pause       = $false
     $API.Update      = $false
+    $API.Reboot      = $false
     $API.UpdateBalance = $false
     $API.UpdateMRR   = $false
     $API.WatchdogReset = $false

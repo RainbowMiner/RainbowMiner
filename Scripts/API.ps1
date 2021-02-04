@@ -781,6 +781,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = "Stopping"
             Break
         }
+        "/reboot" {
+            $API.Reboot = $true
+            $Data = "Rebooting"
+            Break
+        }
         "/pause" {
             if ($Parameters.action -in @("set","reset","pause","unpause")) {
                 $API.Pause = $Parameters.action -in @("set","pause")
