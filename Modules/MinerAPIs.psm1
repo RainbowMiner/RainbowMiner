@@ -505,6 +505,7 @@ class Miner {
 
             $this.CleanupMinerData()
         }
+        $MJob = $null
     }
 
     AddMinerData($Raw,$HashRate,$Difficulty,$PowerDraw,$Devices) {
@@ -559,7 +560,7 @@ class Miner {
     }
 
     [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm,[Bool]$Safe = $true) {
-        if (($this.Data | Where-Object Device | Measure-Object -Count).Count) {
+        if (($this.Data | Where-Object Device | Measure-Object).Count) {
             $HashRates_Devices = @(($this.Data | Where-Object Device).Device | Select-Object -Unique)
         } else{
             $HashRates_Devices = @("Device")
@@ -1309,6 +1310,7 @@ class EthminerWrapper : Miner {
 
             $this.CleanupMinerData()
         }
+        $MJob = $null
     }
 }
 
@@ -2204,6 +2206,7 @@ class RHWrapper : Miner {
 
             $this.CleanupMinerData()
         }
+        $MJob = $null
     }
 }
 
@@ -2248,6 +2251,7 @@ class SixMinerWrapper : Miner {
 
             $this.CleanupMinerData()
         }
+        $MJob = $null
     }
 }
 
@@ -2439,6 +2443,7 @@ class SwapminerWrapper : Miner {
 
             $this.CleanupMinerData()
         }
+        $MJob = $null
     }
 }
 
@@ -2503,7 +2508,7 @@ class Trex : Miner {
 class VerthashWrapper : Miner {
 
     [Void]UpdateMinerData () {
-        $MJob = $this.GetWrapperJob()
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
         if ($MJob.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -2527,6 +2532,7 @@ class VerthashWrapper : Miner {
 
             $this.CleanupMinerData()
         }
+        $MJob = $null
     }
 }
 
