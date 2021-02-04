@@ -1961,35 +1961,16 @@ function Start-SubProcessInBackground {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $Command = ". '$($FilePath.Replace("'","``'"))'"
     if ($ArgumentList) {
         $ArgumentListToBlock = $ArgumentList
         ([regex]"\s-+\w+[\s=]+(\w[=\w]*,[,=\w]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value)'"}
-        $Command += " $ArgumentListToBlock"
         if ($ArgumentList -ne $ArgumentListToBlock) {
             Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
             $ArgumentList = $ArgumentListToBlock
         }
     }
 
-    $WorkingDirectory = $WorkingDirectory.Replace("'","``'")
-    $Command          = $Command.Replace('"','``"')
-    if ($LogPath) {$LogPath = $LogPath.Replace("'","``'")}
-
-    $ScriptBlock  = @()
-    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$ScriptBlock += "`$env:$($Matches[1])=$($Matches[2])"}
-    $ScriptBlock += "Set-Location '$($WorkingDirectory)'"
-    $ScriptBlock += "(Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'"
-    $ScriptBlock += "`$MiningProcess = [PowerShell]::Create()"
-    $ScriptBlock += "`$MiningProcess.AddScript(`"$($Command) 2>&1 | Write-Verbose -Verbose`") | Out-Null"
-    $ScriptBlock += "`$Result = `$MiningProcess.BeginInvoke()"
-    $ScriptBlock += "do {"
-    $ScriptBlock += "  Start-Sleep -S 1"
-    $ScriptBlock += "  `$MiningProcess.Streams.Verbose.ReadAll()$(if ($LogPath) {" | Foreach-Object {Out-File -InputObject `$_ -FilePath '$($LogPath)' -Append -Encoding UTF8;`$_}"})"
-    $ScriptBlock += "  if (-not (Get-Process -Id $($PID) -ErrorAction Ignore)) {`$MiningProcess.Stop() | Out-Null}"
-    $ScriptBlock += "} until (`$MiningProcess.IsCompleted)"
-
-    $Job = Start-Job ([ScriptBlock]::Create("$($ScriptBlock -join "`n")"))
+    $Job = Start-Job -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority
 
     [int[]]$ProcessIds = @()
     
