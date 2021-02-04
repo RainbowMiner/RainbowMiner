@@ -1,18 +1,16 @@
-﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority)
+﻿param($ControllerProcessID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $CurrentPwd)
 
-$EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
-
-Set-Location $WorkingDirectory
+$EnvParams = @($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($matches[1])=`"$($matches[2].Replace('"','``"'))`";"}) -join " "
 
 $ControllerProcess = Get-Process -Id $ControllerProcessID -ErrorAction Ignore
 if ($ControllerProcess -eq $null) {return}
 
 $ControllerProcess.Handle >$null
 
-(Get-Process -Id $PID).PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+$PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
 
 $MiningProcess = [PowerShell]::Create()
-$MiningProcess.AddScript("& `"$($FilePath)`" $($ArgumentList.Replace('"','``"')) *>&1 | Write-Verbose -Verbose")
+$MiningProcess.AddScript("Set-Location `"$($WorkingDirectory)`"; $EnvParams (Get-Process -Id `$PID).PriorityClass = `"$($PriorityClass)`"; & `"$($FilePath)`" $($ArgumentList.Replace('"','``"')) *>&1 | Write-Verbose -Verbose")
 $Result = $MiningProcess.BeginInvoke()
 do {
     Start-Sleep -S 1
