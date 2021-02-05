@@ -305,36 +305,66 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/debug" {
             #create zip log and xxx out all purses
-            $DebugDate = Get-Date -Format "yyyy-MM-dd"
-            $DebugPath = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
-            $PurgeStrings = @()
-            $UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
-            @($Session.Config,$UserConfig) | Where-Object {$_} | Foreach-Object {
+            $DebugDate     = Get-Date -Format "yyyy-MM-dd"
+            $DebugPath     = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
+            $PurgeStrings  = @()
+            $UserConfig    = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
+            $RunningConfig = $Session.Config | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            @($RunningConfig,$UserConfig) | Where-Object {$_} | Foreach-Object {
                 $CurrentConfig = $_
-                @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
+                @("Wallet","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
+                @("Username","APIPassword","ServerPassword") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$CurrentConfig.$_ = "XXX"}
                 $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                     $CurrentPool = $_
-                    $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Select-Object)
-                    @("Wallet","API_Key","API_Secret","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                    $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Where-Object {$_} | Select-Object)
+                    @("Wallet","API_Key","API_Secret","OrganizationID","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                    @("Username") | Where-Object {$CurrentPool.$_} | Foreach-Object {$CurrentPool.$_ = "XXX"}
                 }
             }
-            $PurgeStrings = $PurgeStrings | Select-Object -Unique | Foreach-Object {[regex]::Escape($_)}
+
+            $PurgeStrings = @($PurgeStrings | Select-Object -Unique | Where-Object {$_ -and $_.Length -gt 2} | Foreach-Object {[regex]::Escape($_)} | Sort-Object -Property {$_.Length})
+
+            $PurgeStringsUnique = [System.Collections.ArrayList]@()
+
+            While ($PurgeStrings) {
+                $PurgeUnique = @()
+                for ($i=0;$i -lt $PurgeStrings.Count;$i++) {
+                    if (-not (@($PurgeStrings | Select-Object -Skip ($i+1)) -match $PurgeStrings[$i])) {
+                        $PurgeUnique += $PurgeStrings[$i]
+                    }
+                }
+                if ($PurgeUnique.Count) {
+                    $PurgeStringsUnique.Add(@($PurgeUnique)) > $null
+                    $PurgeStrings = @(Compare-Object $PurgeStrings $PurgeUnique | Where-Object SideIndicator -eq "<=" | Foreach-Object {$_.InputObject} | Select-Object)
+                } else {
+                    $PurgeStringsUnique.Add(@($PurgeStrings)) > $null
+                    $PurgeStrings = $null
+                }
+            }
+            if (Test-Path "Variable:p") {Remove-Variable "p" -ErrorAction Ignore}
 
             if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
             @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Sort-Object LastWriteTime | Foreach-Object {
                 $LastWriteTime = $_.LastWriteTime
                 $NewFile = "$DebugPath\$($_.Name)"
-                Get-ContentByStreamReader $_ | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
+                $PurgeString = Get-ContentByStreamReader $_
+                $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
+                Out-File -InputObject $PurgeString -FilePath $NewFile
+                Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
             }
 
             if ($Session.Config) {
                 $NewFile = "$DebugPath\config.json"
-                ($Session.Config | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                $PurgeString = $Config | ConvertTo-Json -Depth 10
+                $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
+                Out-File -InputObject $PurgeString -FilePath $NewFile
             }
 
             if ($API.UserConfig) {
                 $NewFile = "$DebugPath\userconfig.json"
-                $API.UserConfig -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                $PurgeString = $Config | ConvertTo-Json -Depth 10
+                $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
+                Out-File -InputObject $PurgeString -FilePath $NewFile
             }
 
             @(".\Data\lscpu.txt", ".\Data\gpu-count.txt") | Where-Object {Test-Path $_} | Foreach-Object {
@@ -354,6 +384,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             }
 
+
             $Params.PassThru = $true
             (Start-Process @Params).WaitForExit()>$null
 
@@ -364,8 +395,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $ContentFileName = "debug_$($DebugDate).zip"
 
             Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
-            Remove-Variable "PurgeStrings" -ErrorAction Ignore
-            if ($UserConfig -ne $null) {Remove-Variable "UserConfig"}
+
+            @("Params","PurgeString","PurgeUnique","PurgeStrings","PurgeStringsUnique","UserConfig","RunningConfig","CurrentConfig","CurrentPool") | Where-Object {Test-Path "Variable:$_"} | Foreach-Object {Remove-Variable "$_" -ErrorAction Ignore}
             Break
         }
         "/setup.json" {
@@ -401,6 +432,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/totals" {
+            $Totals = @((Get-Stat -Totals).Values | Foreach-Object {$_.Power *= 24} | Select-Object)
             $Data = ConvertTo-Json @((Get-Stat -Totals).Values | Select-Object) -Depth 10
             Break
         }
