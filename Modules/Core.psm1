@@ -344,9 +344,11 @@ function Start-Core {
         Write-Log -Level Error "Error writing version: $($_.Exception.Message)"
     }
 
+    #Remove trigger files
     if (Test-Path ".\stopp.txt")  {Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore}
     if (Test-Path ".\reboot.txt") {Remove-Item ".\reboot.txt" -Force -ErrorAction Ignore}
 
+    #Initialize timers and trackers
     $Session.Timer      = (Get-Date).ToUniversalTime()
     $Session.NextReport = (Get-Date).ToUniversalTime()
     $Session.DecayStart = (Get-Date).ToUniversalTime()
@@ -357,6 +359,9 @@ function Start-Core {
         PoolsSave = if (Test-Path ".\Data\poolsdata.json") {Get-ChildItem ".\Data\poolsdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
         ReportDeviceData = 0
     }
+
+    #Load databases, that only need updates once in a while
+    Get-WorldCurrencies -Silent -EnableRemoteUpdate
 
     $true
 }
