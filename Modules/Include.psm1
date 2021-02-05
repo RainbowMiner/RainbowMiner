@@ -2470,9 +2470,10 @@ function Stop-SubProcess {
         $Job.ProcessId = [int[]]@()
     }
 
-    if ($Job.Name) {
-        Get-Job -Name $Job.Name -ErrorAction Ignore | Remove-Job -Force
+    if ($Job.XJob) {
+        Remove-Job $Job.XJob -Force -ErrorAction Ignore
         $Job.Name = $null
+        $Job.XJob = $null
     }
 
     if ($IsLinux -and $Job.ScreenName) {
@@ -4279,11 +4280,30 @@ function Get-WorldCurrencies {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [Switch]$Silent = $false
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$EnableRemoteUpdate = $false
     )
+
     if (-not (Test-Path Variable:Global:GlobalWorldCurrencies)) {
         $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
     }
+
+    if ($EnableRemoteUpdate) {
+        $Request = [PSCustomObject]@{}
+        try {
+            $Request = Invoke-GetUrlAsync "https://api.coinbase.com/v2/currencies" -cycletime 86400 -Jobkey "worldcurrencies"
+            if ($Request.data -and ($Request.data | Measure-Object).Count -gt 100) {
+                Set-ContentJson -PathToFile ".\Data\worldcurrencies.json" -Data $Request.data.id -MD5hash (Get-ContentDataMD5hash $Global:GlobalWorldCurrencies) > $null
+                $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Worldcurrencies API failed. "
+        }
+    }
+
     if (-not $Silent) {$Global:GlobalWorldCurrencies}
 }
 

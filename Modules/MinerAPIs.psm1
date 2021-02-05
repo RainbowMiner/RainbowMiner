@@ -778,13 +778,12 @@ class Miner {
             foreach($Cmd in $RunCmd) {
                 Write-Log -Level Info "Miner $($this.Name) $($CmdInfo): $($Cmd.FilePath) $($Cmd.ArgumentList)"
                 $CmdJob = Start-SubProcess -FilePath $Cmd.FilePath -ArgumentList $Cmd.ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -ShowMinerWindow $true -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
-                $MJob = if ($CmdJob -and $CmdJob.Name) {Get-Job -Name $CmdJob.Name -ErrorAction Ignore} else {$null}
-                if ($MJob) {
+                if ($CmdJob.XJob) {
                     $wait = 0
                     While ($wait -lt 300) {
                         Start-Sleep -Milliseconds 100
                         $CmdProcess = $CmdJob.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
-                        if ((-not $CmdProcess -and $MJob.State -eq "Running") -or ($CmdProcess -and ($CmdProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
+                        if ((-not $CmdProcess -and $CmdJob.XJob.State -eq "Running") -or ($CmdProcess -and ($CmdProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
                     }
                 }
                 Stop-SubProcess -Job $CmdJob -Title "Miner $($this.Name) ($($CmdInfo))"
@@ -1347,8 +1346,7 @@ class Fireice : Miner {
                 Remove-Item "$Miner_Path\config_$($Miner_Vendor.ToLower())-*.txt" -Force -ErrorAction Ignore
                 $ArgumentList = "--poolconf $PoolConfigFN --config $ConfigFN --$($Miner_Vendor.ToLower()) $HwConfigFN $($Parameters.Params)".Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory $Miner_Path -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
-                $MJob = if ($Job -and $Job.Name) {Get-Job -Name $Job.Name -ErrorAction Ignore} else {$null}
-                if ($MJob) {
+                if ($Job.XJob) {
                     $wait = 0
                     While ($wait -lt 60) {
                         if (Test-Path $HwConfigFile) {
@@ -1361,11 +1359,13 @@ class Fireice : Miner {
                         }
                         Start-Sleep -Milliseconds 500
                         $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
-                        if ((-not $MiningProcess -and $MJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
+                        if ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
                     }
                 }
-                Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
-                Remove-Variable "Job"
+                if ($Job) {
+                    Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
+                    Remove-Variable "Job"
+                }
             }
 
             if (-not (Test-Path $DeviceConfigFile)) {
@@ -2624,8 +2624,7 @@ class Xmrig : Miner {
 
                 $ArgumentList = ("$($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath $LogFile -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
-                $MJob = if ($Job -and $Job.Name) {Get-Job -Name $Job.Name -ErrorAction Ignore} else {$null}
-                if ($MJob) {
+                if ($Job.XJob) {
                     $wait = 0
                     While ($wait -lt 60) {
                         if (($ThreadsConfig = @(Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads | Select-Object)) {
@@ -2639,7 +2638,7 @@ class Xmrig : Miner {
                         }
                         Start-Sleep -Milliseconds 500
                         $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
-                        if ((-not $MiningProcess -and $MJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
+                        if ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
                     }
                 }
                 if ($Job) {
@@ -2758,8 +2757,7 @@ class Xmrig3 : Miner {
 
                 $ArgumentList = ("--algo=$Algo $($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
-                $MJob = if ($Job -and $Job.Name) {Get-Job -Name $Job.Name -ErrorAction Ignore} else {$null}
-                if ($MJob) {
+                if ($Job.XJob) {
                     $wait = 0
                     While ($wait -lt 60) {
                         if (($ThreadsConfig = @(Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).$Device | Select-Object)) {
@@ -2768,7 +2766,7 @@ class Xmrig3 : Miner {
                         }
                         Start-Sleep -Milliseconds 500
                         $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
-                        if ((-not $MiningProcess -and $MJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
+                        if ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
                     }
                 }
                 if ($Job) {
