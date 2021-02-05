@@ -3913,13 +3913,15 @@ function Update-Rates {
         $Symbols
     )
 
-    $GetSymbols = @($Symbols | Select-Object) + @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object) + @($Global:Rates.Keys) | Select-Object -Unique
-
-    [hashtable]$NewRates = @{}
+    $WCSymbols   = Get-WorldCurrencies
+    $BaseSymbols = @($Session.Config.Currency | Select-Object) + @("USD") | Select-Object -Unique
+    $GetSymbols  = @($Symbols | Select-Object) + @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object) + @($Global:Rates.Keys) | Select-Object -Unique
+    
+    [hashtable]$NewRates   = @{}
     try {
         $NewCoinbase = (Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase").data.rates
         if ($NewCoinbase.BTC) {
-            $NewCoinbase.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
+            $NewCoinbase.PSObject.Properties | Where-Object {$_.Name -notin $WCSymbols -or $_.Name -in $BaseSymbols} | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
         }
     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
@@ -3928,7 +3930,7 @@ function Update-Rates {
         try {
             $AltCoinbase = Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json"
             if ($AltCoinbase.BTC) {
-                $AltCoinbase.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
+                $AltCoinbase.PSObject.Properties | Where-Object {$_.Name -notin $WCSymbols -or $_.Name -in $BaseSymbols} | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
             }
         } catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Coinbase down. "}
     }
@@ -3939,6 +3941,8 @@ function Update-Rates {
         if ($_.SideIndicator -eq "==") {$Global:Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
         elseif ($Session.GetTicker -inotcontains $_.InputObject) {$Session.GetTicker.Add($_.InputObject.ToUpper()) > $null}
     }
+
+    Compare-Object @($WCSymbols) @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
 
     if ($Session.GetTicker.Count -gt 0) {
         try {
@@ -3955,10 +3959,6 @@ function Update-Rates {
             Write-Log -Level Info "Rbminer.net/cmc API for $($SymbolStr) has failed. "
         }
     }
-
-    $WorldCurrencies = Get-WorldCurrencies
-
-    Compare-Object @($WorldCurrencies) @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
 }
 
 function Update-WatchdogLevels {
