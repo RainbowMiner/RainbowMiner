@@ -16,6 +16,7 @@
 <table id="pools" class="table"
        data-toggle="table"
        data-url="/totals"
+       data-response-handler="formatTotals"
        data-filter-control="true"
        data-filter-show-clear="true"
        data-sort-order="asc"
@@ -35,7 +36,7 @@
             <th data-field="Pool" data-sortable="true" data-filter-control="select" data-footer-formatter="formatTotalFooter">Poolname</th>
             <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Profit</th>
             <th data-field="Cost" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Cost</th>
-            <th data-field="Power" data-align="right" data-sortable="true" data-formatter="formatPower" data-footer-formatter="formatPowerFooter">Power</th>
+            <th data-field="tPower" data-align="right" data-sortable="true" data-formatter="formatPower" data-footer-formatter="formatPowerFooter">Power</th>
             <th data-field="Duration" data-align="right" data-sortable="true" data-formatter="formatMinutes" data-footer-formatter="formatMinutesFooter">Minutes</th>
             <th data-field="Started" data-sortable="true" data-formatter="formatDate" data-footer-formatter="formatTotalFooter">Started</th>
             <th data-field="Updated" data-sortable="true" data-formatter="formatDate" data-footer-formatter="formatTotalFooter">Updated</th>
@@ -99,6 +100,18 @@
         }).reduce(function (sum, i) {
             return sum + i
         }, 0))
+    }
+
+    function formatTotals(data) {
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+
+
+        $.each(data, function (index, item) {
+            item.tPower = item.Power? parseFloat(item.Power) * 24 : null
+        });
+
+        return data;
     }
 </script>
 <!--#include file="/parts/foot.html" -->
