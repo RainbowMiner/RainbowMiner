@@ -1,6 +1,6 @@
 ﻿[PSCustomObject]@{
     PoolName = @("Nicehash","MiningPoolHub","NLpool","ZergPool","Zpool")
-    ExcludeMinerName = if ($IsLinux) {@("CcminerMTP","Lukminer")} else {@("CcminerMTP")}
+    ExcludeMinerName = if ($IsLinux) {@("CcminerMTP","CcminerMTP10","Lukminer")} else {@("CcminerMTP","CcminerMTP10")}
     MinerStatusURL = "https://rbminer.net"
     FastestMinerOnly = $true
     RemoteAPI = $false 
