@@ -14,6 +14,11 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$CoinXlat = [PSCustomObject]@{
+    PM = "PMEER"
+    ERGO = "ERG"
+}
+
 try {
     $Request = (((Invoke-RestMethodAsync "https://www.666pool.cn/pool2/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
     $Pools_Data = $Request -replace '<!--.+?-->' -split '<tr>' | Foreach-Object {
@@ -25,7 +30,7 @@ try {
                 if ($Symbol -ne "PM" -or $Algo -ne "KecK") {
                     [PSCustomObject]@{
                         id       = "$($Data[0].Groups[1].Value)"
-                        symbol   = "$(if ($Symbol -eq "PM") {"PMEER"} else {$Symbol})"
+                        symbol   = "$(if ($CoinXlat.$Symbol) {$CoinXlat.$Symbol} else {$Symbol})"
                         rpc      = $Data[0].Groups[2].Value
                         port     = $Data[0].Groups[3].Value
                         hashrate = ConvertFrom-Hash "$($Columns[3])"
