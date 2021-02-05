@@ -93,7 +93,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                    Host          = "$($_.symbol.ToLower())-$($Pool_Region)1.nanopool.org"
+                    Host          = "$($_.rpc)-$($Pool_Region)1.nanopool.org"
                     Port          = $Pool_Port
                     User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                     Pass          = "x"
