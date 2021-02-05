@@ -7,12 +7,13 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ETC";  port = @(19999,19433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "ETH";  port = @(9999,9433);   fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
-    [PSCustomObject]@{symbol = "RVN";  port = @(12222,12433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{symbol = "CFX";  port = @(17777,17433); fee = 1; divisor = 1;   useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ETC";  rpc = "etc";  port = @(19999,19433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ETH";  rpc = "eth";  port = @(9999,9433);   fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ZEC";  rpc = "zec";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "XMR";  rpc = "xmr";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
+    [PSCustomObject]@{symbol = "RVN";  rpc = "rvn";  port = @(12222,12433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "CFX";  rpc = "cfx";  port = @(17777,17433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ERG";  rpc = "ergo"; port = @(11111,11433); fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
 )
 
 $Count = 0
@@ -23,7 +24,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
     if ($Pool_Currency -eq "PASC") {$Pool_Wallet.wallet = "$($Pool_Wallet.wallet -replace "-\d+")$(if (-not $Pool_Wallet.paymentid) {".0"})"}
     try {
         #$Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/user/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
-        $Request = Invoke-RestMethodAsync "https://$($Pool_Currency.ToLower()).nanopool.org/api/v1/load_account/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
+        $Request = Invoke-RestMethodAsync "https://$($_.rpc).nanopool.org/api/v1/load_account/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
         $Count++
         if (-not $Request.status) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned $($Request.error). "
