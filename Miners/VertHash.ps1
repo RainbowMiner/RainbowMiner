@@ -84,9 +84,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
 		switch($_.Vendor) {
-			"NVIDIA" {$Miner_Deviceparams = "--cu-devices"}
-			"AMD" {$Miner_Deviceparams = "--cl-devices"}
-			Default {$Miner_Deviceparams = ""}
+			"NVIDIA" {$Miner_Deviceparams = "--cu-devices"; $Miner_DeviceIndex = "Type_Vendor_Index"}
+			"AMD" {$Miner_Deviceparams = "--cl-devices"; $Miner_DeviceIndex = "Type_Index"}
+			Default {$Miner_Deviceparams = "";$Miner_DeviceIndex = "Type_Index"}
 		}
 
         $Commands.ForEach({
@@ -102,7 +102,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+                        $DeviceIDsAll = $Miner_Device.$Miner_DeviceIndex -join ','
                         $First = $false
                     }
 
