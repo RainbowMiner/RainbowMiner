@@ -130,7 +130,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         BaseAlgorithm    = $Algorithm_Norm_0
                         PrerequisitePath = $DatFile
                         PrerequisiteURI  = "https://vtc.suprnova.cc/verthash.dat"
-                        PrerequisiteMsg  = "Downloading verthash.dat (1.2GB) in the background, please wait!"
+                        PrerequisiteMsg  = "$($Name): Downloading verthash.dat (1.2GB) in the background, please wait!"
 				    }
 			    }
 		    }

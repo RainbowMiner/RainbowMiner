@@ -2117,7 +2117,7 @@ function Invoke-Core {
             $Global:Downloader = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList) -FilePath .\Scripts\Downloader.ps1
         }
 
-        $Miners_DownloadListPrq = @($AllMiners.Where({$_.PrerequisitePath}) | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "IsMiner"; expression = {$false}}, @{name = "Msg"; expression = {"$($_.Name): $($_.PrerequisiteMsg)"}})
+        $Miners_DownloadListPrq = @($AllMiners.Where({$_.PrerequisitePath}) | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "IsMiner"; expression = {$false}}, @{name = "Msg"; expression = {$_.PrerequisiteMsg}})
         if ($Miners_DownloadListPrq.Count -gt 0 -and $Miners_DownloadList.Count -eq 0 -and $Global:Downloader.State -ne "Running" -and $Global:DownloaderPrq.State -ne "Running") {
             Write-Log -Level Info "Starting download of $($Miners_DownloadListPrq.Count) pre-requisites."
             if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadListPrq.Count) pre-requisites) .."}
