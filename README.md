@@ -53,14 +53,12 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
     - **Nvidia official downloads**:
-      - [Nvidia Driver Version v441.34 hotfix - Standard - Windows 10](https://international.download.nvidia.com/Windows/441.34hf/441.34-desktop-notebook-win10-64bit-international.hf.exe)
-      - [Nvidia Driver Version v441.34 hotfix - DCH - Windows 10](https://international.download.nvidia.com/Windows/441.34hf/441.34-desktop-notebook-win10-64bit-international-dch.hf.exe)
-      - [Nvidia Driver Version v441.34 - Standard - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/441.34hf/441.34-desktop-notebook-win8-win7-64bit-international.hf.exe)
-    - **AMD**: [AMD Adrenalin 2020 Edition 20.2.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64) - if you run into trouble, try older versions.
+      - [Nvidia Driver Version v461.40 - Windows 10](https://international.download.nvidia.com/Windows/461.40/461.40-desktop-win10-64bit-international-dch-whql.exe)
+      - [Nvidia Driver Version v461.40 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/461.40/461.40-desktop-win7-64bit-international-whql.exe)
+    - **AMD**: [AMD Adrenalin 2020 Edition 20.3.1](https://www.guru3d.com/files-get/amd-radeon-adrenalin-edition-20-2-3-driver-download,1.html) - if you run into trouble, try older versions.
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
-5. If you plan on using [GrinGoldMiner](https://github.com/mozkomor/GrinGoldMiner): Install Microsoft [.NET Core 2.2 Runtime](https://dotnet.microsoft.com/download) - download and install "Run Apps .NET Core Runtime", click the button "** Download .NET Core Runtime (see here: https://github.com/RainbowMiner/RainbowMiner/issues/441#issuecomment-465932125) **"
 
-Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
+Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
 
@@ -158,17 +156,17 @@ At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v7.0.3 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v7.1.1 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 ```
 # if not already done, download the package, change the ubuntu distro version number!
-wget https://github.com/PowerShell/PowerShell/releases/download/v7.0.3/powershell_7.0.3-1.ubuntu.18.04_amd64.deb
+wget https://github.com/PowerShell/PowerShell/releases/download/v7.1.1/powershell_7.1.1-1.ubuntu.18.04_amd64.deb
 
 # install powershell package
-dpkg -i powershell_7.0.3-1.ubuntu.18.04_amd64.deb
+dpkg -i powershell_7.1.1-1.ubuntu.18.04_amd64.deb
 
 # install powershell dependecies
 apt install -f
