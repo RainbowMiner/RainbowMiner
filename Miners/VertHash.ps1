@@ -73,11 +73,8 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
 
 if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
     $DatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
-    if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
-        if (Test-Path $DatFile) {Remove-Item $DatFile}
-        if (-not $InfoOnly) {
-            Write-Log -Level Warn "VertHash: downloading verthash.dat (1.2GB) in the background, please wait!"
-        }
+    if ((Test-Path $DatFile) -and (Get-Item $DatFile).length -lt 1.19GB) {
+        Remove-Item $DatFile -ErrorAction Ignore
     }
 }
 
@@ -133,6 +130,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         BaseAlgorithm    = $Algorithm_Norm_0
                         PrerequisitePath = $DatFile
                         PrerequisiteURI  = "https://vtc.suprnova.cc/verthash.dat"
+                        PrerequisiteMsg  = "Downloading verthash.dat (1.2GB) in the background, please wait!"
 				    }
 			    }
 		    }
