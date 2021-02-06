@@ -2792,7 +2792,7 @@ function Invoke-Core {
             Write-Log -Level Warn "Download in progress: $($Miners_Downloading) miner$(if($Miners_Downloading -gt 1){"s"}) left. Command windows might popup during extraction."
         }
         if ($Miners_DownloadingPrq -gt 0) {
-            Write-Log -Level Warn "Download in progress: $($Miners_DownloadingPrq) mining pre-requisite$(if($Miners_Downloading -gt 1){"s"}) left."
+            Write-Log -Level Warn "Download in progress: $($Miners_DownloadingPrq) mining pre-requisite$(if($Miners_DownloadingPrq -gt 1){"s"}) left."
         }
         if ($NoCPUMining) {
             Write-Log -Level Warn $BestMiners_Message
