@@ -23,7 +23,6 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
     $Pool_Wallet = Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.' -asobject
     if ($Pool_Currency -eq "PASC") {$Pool_Wallet.wallet = "$($Pool_Wallet.wallet -replace "-\d+")$(if (-not $Pool_Wallet.paymentid) {".0"})"}
     try {
-        #$Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/user/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
         $Request = Invoke-RestMethodAsync "https://$($_.rpc).nanopool.org/api/v1/load_account/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
         $Count++
         if (-not $Request.status) {
@@ -31,7 +30,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         } else {
             $Balance = [Math]::Max([Decimal]$Request.data.userParams.balance,0)
             $Pending = [Decimal]$Request.data.userParams.balance_uncomfirmed
-			$Payouts = @(try {Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/payments/$($Pool_Wallet.wallet)/0/50" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200 | Where-Object status | Select-Object -ExpandProperty data} catch {})
+			$Payouts = @(try {Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/payments/$($Pool_Wallet.wallet)/0/50" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200 | Where-Object status | Select-Object -ExpandProperty data} catch {})
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
 				BaseName    = $Name

@@ -60,7 +60,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         }
 
         try {
-            $Pool_RequestWorkers   = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.epc)/pool/activeworkers" -tag $Name -retry 5 -retrywait 200 -cycletime 120
+            $Pool_RequestWorkers   = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/pool/activeworkers" -tag $Name -retry 5 -retrywait 200 -cycletime 120
             $Pool_RequestHashrate  = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/pool/hashrate" -tag $Name -retry 5 -retrywait 200 -cycletime 120
             $Pool_RequestBlocks    = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/pool/count_blocks/24" -tag $Name -retry 5 -retrywait 200 -cycletime 120
             $Pool_RequestLastBlock = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/pool/recentblocks/1" -tag $Name -retry 5 -retrywait 200 -cycletime 120
