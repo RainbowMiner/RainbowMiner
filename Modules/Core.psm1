@@ -2126,8 +2126,9 @@ function Invoke-Core {
 
         $Session.StartDownloader = $false
     }
-    $API.DownloadList   = $Miners_DownloadList + $Miners_DownloadListPrq
-    $Miners_Downloading = $Miners_DownloadList.Count + $Miners_DownloadListPrq.Count
+    $API.DownloadList      = $Miners_DownloadList + $Miners_DownloadListPrq
+    $Miners_Downloading    = $Miners_DownloadList.Count
+    $Miners_DownloadingPrq = $Miners_DownloadListPrq.Count
     if ($AllMiners_VersionCheck -ne $null) {Remove-Variable "AllMiners_VersionCheck"}
     if ($AllMiners_VersionDate -ne $null) {Remove-Variable "AllMiners_VersionDate"}
     if ($Miners_DownloadList -ne $null) {Remove-Variable "Miners_DownloadList"}
@@ -2761,7 +2762,7 @@ function Invoke-Core {
             Write-Host " "
         }
 
-        if ($Session.Benchmarking -or $Miners_Downloading -gt 0) {Write-Host " "}
+        if ($Session.Benchmarking -or $Miners_Downloading -gt 0 -or $Miners_DownloadingPrq -gt 0) {Write-Host " "}
         #Display benchmarking progress
         if ($Session.Benchmarking) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmarkCount) miner$(if ($MinersNeedingBenchmarkCount -gt 1){'s'}) left, interval is set to $($Session.Config.BenchmarkInterval) seconds."
@@ -2788,7 +2789,10 @@ function Invoke-Core {
             }
         }
         if ($Miners_Downloading -gt 0) {
-            Write-Log -Level Warn "Download in progress: $($Miners_Downloading) miner$(if($Miners_Downloading -gt 1){"s"}) left. Command windows will popup during extraction."
+            Write-Log -Level Warn "Download in progress: $($Miners_Downloading) miner$(if($Miners_Downloading -gt 1){"s"}) left. Command windows might popup during extraction."
+        }
+        if ($Miners_DownloadingPrq -gt 0) {
+            Write-Log -Level Warn "Download in progress: $($Miners_DownloadingPrq) mining pre-requisite$(if($Miners_Downloading -gt 1){"s"}) left."
         }
         if ($NoCPUMining) {
             Write-Log -Level Warn $BestMiners_Message
