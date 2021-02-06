@@ -50,7 +50,6 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
     $URI = $_.URI
     $Path = $_.Path
     $IsMiner = $_.IsMiner
-    $Msg = $_.Msg
 
     if ($IsMiner) {
         $UriJson = Join-Path (Get-MinerInstPath $Path) "_uri.json"
@@ -62,9 +61,6 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
     }
 
     if (-not (Test-Path $Path) -or ($IsMiner -and ($URI -ne $UriJsonData.URI))) {
-        if ($Msg) {
-            Write-Log -Level Warn "$Msg"
-        }
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
         try {

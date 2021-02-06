@@ -2106,10 +2106,11 @@ function Invoke-Core {
 
     $Miners_DownloadList    = @()
     $Miners_DownloadListPrq = @()
+    $Miners_DownloadMsgPrq  = $null
     $Miners = $AllMiners.Where({(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $AllMiners_VersionCheck[$_.BaseName]})
     if ((($AllMiners | Measure-Object).Count -ne ($Miners | Measure-Object).Count) -or $Session.StartDownloader) {
 
-        $Miners_DownloadList = @($AllMiners.Where({$AllMiners_VersionCheck[$_.BaseName] -ne $true}) | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "IsMiner"; expression = {$true}}, @{name = "Msg"; expression = {""}})
+        $Miners_DownloadList = @($AllMiners.Where({$AllMiners_VersionCheck[$_.BaseName] -ne $true}) | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "IsMiner"; expression = {$true}})
         if ($Miners_DownloadList.Count -gt 0 -and $Global:Downloader.State -ne "Running") {
             Clear-Host
             Write-Log -Level Info "Starting download of $($Miners_DownloadList.Count) miners."
@@ -2117,11 +2118,14 @@ function Invoke-Core {
             $Global:Downloader = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList) -FilePath .\Scripts\Downloader.ps1
         }
 
-        $Miners_DownloadListPrq = @($AllMiners.Where({$_.PrerequisitePath}) | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "IsMiner"; expression = {$false}}, @{name = "Msg"; expression = {$_.PrerequisiteMsg}})
-        if ($Miners_DownloadListPrq.Count -gt 0 -and $Miners_DownloadList.Count -eq 0 -and $Global:Downloader.State -ne "Running" -and $Global:DownloaderPrq.State -ne "Running") {
-            Write-Log -Level Info "Starting download of $($Miners_DownloadListPrq.Count) pre-requisites."
-            if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadListPrq.Count) pre-requisites) .."}
-            $Global:DownloaderPrq = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadListPrq) -FilePath .\Scripts\Downloader.ps1
+        $Miners_DownloadListPrq = @($AllMiners.Where({$_.PrerequisitePath}) | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "IsMiner"; expression = {$false}})
+        if ($Miners_DownloadListPrq.Count -gt 0 -and $Miners_DownloadList.Count -eq 0) {
+            $Miners_DownloadMsgPrq = @($AllMiners.Where({$_.PrerequisitePath -and $_.PrerequisiteMsg}) | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Foreach-Object {$_.PrerequisiteMsg})
+            if ($Global:Downloader.State -ne "Running" -and $Global:DownloaderPrq.State -ne "Running") {
+                Write-Log -Level Info "Starting download of $($Miners_DownloadListPrq.Count) pre-requisites."
+                if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadListPrq.Count) pre-requisites) .."}
+                $Global:DownloaderPrq = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadListPrq) -FilePath .\Scripts\Downloader.ps1
+            }
         }
 
         $Session.StartDownloader = $false
@@ -2793,6 +2797,11 @@ function Invoke-Core {
         }
         if ($Miners_DownloadingPrq -gt 0) {
             Write-Log -Level Warn "Download in progress: $($Miners_DownloadingPrq) mining pre-requisite$(if($Miners_DownloadingPrq -gt 1){"s"}) left."
+            if ($Miners_DownloadMsgPrq) {
+                $Miners_DownloadMsgPrq | Foreach-Object {
+                    Write-Log -Level Warn "-> $($_)"
+                }
+            }
         }
         if ($NoCPUMining) {
             Write-Log -Level Warn $BestMiners_Message
