@@ -127,7 +127,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $CoinSymbol = $Pools.$Algorithm_Norm.CoinSymbol
                     $Coin = if ($Algorithm_Norm -match "ProgPow") {"bci"}
                             elseif ($CoinSymbol -and $CoinXlat.$CoinSymbol) {$CoinXlat.$CoinSymbol}
-                            elseif ($Algorithm_Norm -eq "EtcHash") {"etc"}
+                            elseif ($Algorithm_Norm_0 -eq "EtcHash") {"etc"}
                             else {"auto"}
 
 					[PSCustomObject]@{
