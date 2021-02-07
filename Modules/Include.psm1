@@ -3024,6 +3024,7 @@ function Get-Device {
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
                         BusId = $null
+                        BusId_Index = 0
                         GpuGroup = ""
                         Data = [PSCustomObject]@{
                                         AdapterId         = 0  #amd
@@ -3100,6 +3101,10 @@ function Get-Device {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "GPU detection has failed: $($_.Exception.Message)"
         }
+
+        #Roundup and add sort order by PCI busid
+        $Index = 0
+        $Global:GlobalCachedDevices | Sort-Object BusId | Foreach-Object {$_.BusId_Index = $Index++}
 
         #CPU detection
         try {

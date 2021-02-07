@@ -85,8 +85,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 		switch($_.Vendor) {
 			"NVIDIA" {$Miner_Deviceparams = "--cu-devices"; $Miner_DeviceIndex = "Type_Vendor_Index"}
-			"AMD" {$Miner_Deviceparams = "--cl-devices"; $Miner_DeviceIndex = "Type_Index"}
-			Default {$Miner_Deviceparams = "";$Miner_DeviceIndex = "Type_Index"}
+			"AMD" {$Miner_Deviceparams = "--cl-devices"; $Miner_DeviceIndex = "BusId_Index"}
+			Default {$Miner_Deviceparams = "";$Miner_DeviceIndex = "BusId_Index"}
 		}
 
         $Commands.ForEach({
