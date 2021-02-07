@@ -3106,7 +3106,7 @@ function Get-Device {
         #Roundup and add sort order by PCI busid
         $Index = 0
         $MineableIndex = 0
-        $Global:GlobalCachedDevices | Sort-Object BusId | Foreach-Object {
+        $Global:GlobalCachedDevices | Sort-Object BusId,Index | Foreach-Object {
             $_.BusId_Index = $Index++
             $_.BusId_Mineable_Index = $MineableIndex
             if ($_.Vendor -in @("AMD","NVIDIA")) {$MineableIndex++}
