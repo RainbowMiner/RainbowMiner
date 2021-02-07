@@ -3025,6 +3025,7 @@ function Get-Device {
                         CardId = $CardId
                         BusId = $null
                         BusId_Index = 0
+                        BusId_Mineable_Index = 0
                         GpuGroup = ""
                         Data = [PSCustomObject]@{
                                         AdapterId         = 0  #amd
@@ -3060,7 +3061,7 @@ function Get-Device {
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
                         $Index++
-                        if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+                        if ($Vendor_Name -in @("NVIDIA","AMD")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                         if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
                             $Device.BusId = $Matches[1]
                         }
@@ -3104,7 +3105,12 @@ function Get-Device {
 
         #Roundup and add sort order by PCI busid
         $Index = 0
-        $Global:GlobalCachedDevices | Sort-Object BusId | Foreach-Object {$_.BusId_Index = $Index++}
+        $MineableIndex = 0
+        $Global:GlobalCachedDevices | Sort-Object BusId | Foreach-Object {
+            $_.BusId_Index = $Index++
+            $_.BusId_Mineable_Index = $MineableIndex
+            if ($_.Vendor -in @("AMD","NVIDIA")) {$MineableIndex++}
+        }
 
         #CPU detection
         try {
