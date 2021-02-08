@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Version = "0.19.0"
+$Version = "0.19.0-17"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
@@ -19,13 +19,17 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-cuda11.1-linux-amd64.7z"
-            Cuda = "11.1"
-            Version = "0.19.0-11"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda11.2-linux-amd64.7z"
+            Cuda = "11.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda10.2-linux-amd64.7z"
+            Cuda = "10.2"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-cuda10.0-linux-amd64.7z"
             Cuda = "10.0"
+            Version = "0.19.0"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.1-ethminer/ethminer-0.17.1-linux-x86_64.tar.gz"
@@ -37,19 +41,19 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda11.1-windows-amd64.zip"
-            Cuda = "11.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda11.2-windows-amd64.zip"
+            Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda10.0-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda10.0-windows-amd64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda9.1-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda9.1-windows-amd64.zip"
             Cuda = "9.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda8.0-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda8.0-windows-amd64.zip"
             Cuda = "8.0"
         }
     )
