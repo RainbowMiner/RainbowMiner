@@ -2,6 +2,13 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <h1 id="title" class="h2" data-navbaractive="navactivity">Active Miners over the past 3 days</h1>
 </div>
+
+<div class="d-flex align-items-center">
+    <div class="m-2">
+        <a href="/activity?as_csv=1" id="downloadactivities" class="btn btn-primary">Download as CSV</a>
+    </div>
+</div>
+
 <table id="miners" class="table"
   data-toggle="table"
   data-url="/activity"
@@ -35,6 +42,7 @@
           <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
           <th data-field="tEff" data-align="right" data-sortable="true">mBTC/kWh</th>
           <th data-field="tRatio" data-align="right" data-sortable="true">Rejected</th>
+          <th data-field="tDonation" data-align="right" data-sortable="true">Mined</th>
       </tr>
   </thead>
 </table>
@@ -105,6 +113,7 @@
             item.tProfit = item.TotalProfit ? Math.round(profit*1000)/1000 + ' mBTC' : '-.---';
             item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
             item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw && item.tActive > 1.0 ? Math.round(profit / powerdraw * 1000) / 1000 : '-.---';
+            item.tDonation = item.Donation ? 'for dev':'for you';
         });
         return data;
     }

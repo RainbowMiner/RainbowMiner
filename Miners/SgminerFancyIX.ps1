@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -7,30 +7,34 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-if ($IsLinux) {
-    $Path = ".\Bin\AMD-FancyIX\sgminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b6a-fancyix/sgminer-phi2-fancyIX-linux-amd64-0.6.0.1.zip"
-} else {
-    $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b6a-fancyix/sgminer-phi2-fancyIX-win64-0.6.0.1.zip"
-}
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0
-$Version = "5.6.1.3-beta6a"
+$Version = "v0.7.2-1"
+
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-FancyIX\sgminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-1-fancyix/sgminer-fancyIX-linux-amd64-0.7.2-1.tar.gz"
+} else {
+    $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-1-fancyix/sgminer-fancyIX-win64-0.7.2-1.zip"
+}
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "allium";  Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "argon2d"; Params = "--gpu-threads 2 --worksize 64"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "--gpu-threads 1 --worksize 256 -I 24"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";  Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2zz"; Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "mtp";     Params = "-I 20"}
-    [PSCustomObject]@{MainAlgorithm = "phi2";    Params = "--gpu-threads 1 --worksize 256 -I 22"}
-    [PSCustomObject]@{MainAlgorithm = "x22i";    Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x25x";    Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "allium";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "argon2d";        Params = "--gpu-threads 2 --worksize 64"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";        Params = "--gpu-threads 1 --worksize 256 -I 24"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz";        Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "mtp";            Params = "-I 20"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt";      Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaja"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "phi2";           Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "yescrypt";       Params = "--gpu-threads 1 --worksize 256 -I 20"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "x22i";           Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "x25x";           Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -51,15 +55,15 @@ if ($InfoOnly) {
 
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Pools.$Algorithm_Norm.Name -notmatch "Nicehash" -and $Miner_Device) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -91,5 +95,5 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    }
+    })
 }

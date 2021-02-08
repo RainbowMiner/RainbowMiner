@@ -10,7 +10,7 @@ export GPU_SINGLE_ALLOC_PERCENT=100
 export GPU_MAX_WORKGROUP_SIZE=256
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-command="& ./InitStandalone.ps1"
+command="& ./Scripts/InitStandalone.ps1"
 
 pwsh -ExecutionPolicy bypass -Command ${command}
 

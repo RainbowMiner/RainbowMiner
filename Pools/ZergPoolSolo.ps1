@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$AECurrency = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -52,6 +53,11 @@ if ($PoolCoins_Request) {
     if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
 }
 
+if (-not $InfoOnly -and $Pool_Currencies.Count -gt 1) {
+    if ($AECurrency -eq "" -or $AECurrency -notin $Pool_Currencies) {$AECurrency = $Pool_Currencies | Select-Object -First 1}
+    $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
+}
+
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
     $Pool_Host = "$($Pool_Request.$_.name).mine.zergpool.com"
     $Pool_Port = $Pool_Request.$_.port
@@ -63,6 +69,11 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
+    $Pool_EthProxy = $null
+
+    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+        $Pool_EthProxy   = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}
+    }
 
     $Pool_Factor = [double]$Pool_Request.$_.mbtc_mh_factor
     if ($Pool_Factor -le 0) {
@@ -96,7 +107,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = $Wallets.$Pool_Currency
-                Pass          = "{workername:$Worker},c=$Pool_Currency,m=solo{diff:,d=`$difficulty}$Pool_Params"
+                Pass          = "{workername:$Worker},c=$Pool_Currency,m=solo{diff:,sd=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
@@ -106,6 +117,8 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                SoloMining    = $true
+                EthMode       = $Pool_EthProxy
 				ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0

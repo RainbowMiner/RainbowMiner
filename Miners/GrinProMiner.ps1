@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -25,7 +25,7 @@ $Version = "2.2"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #XWP/Cuckaroo29s
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #XWP/Cuckaroo29s
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -48,18 +48,18 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
+        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+        $Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
             $First = $true
-            $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+            $MinMemGb = $_.MinMemGb
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
             $Algorithm = $_.MainAlgorithm
             $Algorithm_Norm_0 = Get-Algorithm $Algorithm
 
-			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
+			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
@@ -106,6 +106,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					}
 				}
 			}
-        }
+        })
     }
 }

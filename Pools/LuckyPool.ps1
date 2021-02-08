@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -16,10 +16,13 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "BBR";   port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
-    [PSCustomObject]@{symbol = "RYO";   port = 7777; fee = 0.9; rpc = "ryo"; region = @("eu")}
+    [PSCustomObject]@{symbol = "TUBE";  port = 5577; fee = 0.9; rpc = "tube4"; divisor = 40; region = @("eu")}
+    [PSCustomObject]@{symbol = "VBK";   port = 9501; fee = 1.0; rpc = "veriblock"; region = @("eu")}
     [PSCustomObject]@{symbol = "XCASH"; port = 4477; fee = 0.9; rpc = "xcash"; region = @("eu")}
+    [PSCustomObject]@{symbol = "XLA";   port = 6677; fee = 0.9; rpc = "scala"; region = @("eu")}
     [PSCustomObject]@{symbol = "XWP";   port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
     [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano"; region = @("eu")}
+    [PSCustomObject]@{symbol = "ZELS";  port = 4502; fee = 0.9; rpc = "zelantus"; region = @("eu")}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -35,6 +38,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_HostPath      = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Request = [PSCustomObject]@{}
     $Pool_Ports   = @([PSCustomObject]@{})
@@ -84,7 +89,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = "$($Pool_HostPath).luckypool.io"
-                        Port          = $Pool_Port.CPU
+                        Port          = if ($Pool_Port.CPU) {$Pool_Port.CPU} else {$_.Port}
                         Ports         = $Pool_Port
                         User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
                         Pass          = "$(if ($Pool_Wallet.paymentid) {"$($Pool_Wallet.paymentid)+"}){workername:$Worker}"
@@ -97,7 +102,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         TSL           = $Pool_Data.TSL
                         BLK           = $Stat.BlockRate_Average
                         ScratchPadUrl = if ($Pool_ScratchPadUrl) {$Pool_ScratchPadUrl -replace "#region",$Pool_Region} else {$null}
-                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                        EthMode       = $Pool_EthProxy
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1

@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -16,7 +18,7 @@ catch {
     return
 }
 
-$Pool_Request.data | Where-Object {$Pool_Currency = $_.currency -replace "_.+$";$Config.Pools.$Name.Wallets.$Pool_Currency} | Foreach-Object {
+$Pool_Request.data | Where-Object {$Pool_Currency = $_.currency -replace "_.+$";$Config.Pools.$Name.Wallets.$Pool_Currency -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Pool_Currency)} | Foreach-Object {
 
     $Request = [PSCustomObject]@{}
 

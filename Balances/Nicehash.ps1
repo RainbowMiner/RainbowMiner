@@ -1,3 +1,5 @@
+using module ..\Modules\Include.psm1
+
 param(
     $Config
 )
@@ -5,26 +7,16 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $PoolConfig = $Config.Pools.$Name
 
-if (!$PoolConfig.BTC) {
+if (-not $PoolConfig.BTC) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
     return
 }
 
-$Request = [PSCustomObject]@{}
 $Request_Balance = [PSCustomObject]@{}
-
-try {
-    $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs/" -cycletime ($Config.BalanceUpdateMinutes*60)
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
-    return
-}
 
 if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.OrganizationID) {
     try {
-        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/accounts" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
+        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -32,21 +24,28 @@ if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.Organizatio
     }
 }
 
-if ($Request_Balance.currency -match "BTC") {
-    $Request_Balance | Where-Object {$_.currency -eq "BTC"} | Foreach-Object {
-        $Pending = if ($_.currency -eq "BTC") {[Decimal]$Request.unpaidAmount} else {0}
-        [PSCustomObject]@{
-            Caption     = "$($Name) ($($_.currency))"
-            BaseName    = $Name
-            Currency    = $_.currency
-            Balance     = [Decimal]$_.balance
-            Pending     = [Decimal]$Pending
-            Total       = [Decimal]$Pending + [Decimal]$_.balance
-            Payouts     = @()
-            LastUpdated = (Get-Date).ToUniversalTime()
-        }        
-    }
+if ($Request_Balance.active) {
+    [PSCustomObject]@{
+        Caption     = "$($Name) ($($Request_Balance.currency))"
+        BaseName    = $Name
+        Currency    = $Request_Balance.currency
+        Balance     = [Decimal]$Request_Balance.available
+        Pending     = [Decimal]$Request_Balance.pending
+        Total       = [Decimal]$Request_Balance.totalBalance
+        Payouts     = @()
+        LastUpdated = (Get-Date).ToUniversalTime()
+    }        
 } else {
+    $Request = [PSCustomObject]@{}
+    try {
+        $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs2/" -cycletime ($Config.BalanceUpdateMinutes*60)
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
+        return
+    }
+
     [PSCustomObject]@{
         Caption     = "$($Name) (BTC)"
         BaseName    = $Name
@@ -58,3 +57,4 @@ if ($Request_Balance.currency -match "BTC") {
         LastUpdated = (Get-Date).ToUniversalTime()
     }
 }
+

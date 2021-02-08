@@ -100,9 +100,12 @@ namespace OpenCl
         private const uint CL_DEVICE_IL_VERSION =                             0x105B;
         private const uint CL_DEVICE_MAX_NUM_SUB_GROUPS =                     0x105C;
         private const uint CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS = 0x105D;
-        private const uint CL_DEVICE_PCI_BUS_ID_NV                          = 0x4008;
-        private const uint CL_DEVICE_PCI_SLOT_ID_NV                         = 0x4009;
-        private const uint CL_DEVICE_TOPOLOGY_AMD                           = 0x4037;
+        private const uint CL_DEVICE_COMPUTE_CAPABILITY_MAJOR_NV =            0x4000;
+        private const uint CL_DEVICE_COMPUTE_CAPABILITY_MINOR_NV =            0x4001;
+        private const uint CL_DEVICE_PCI_BUS_ID_NV =                          0x4008;
+        private const uint CL_DEVICE_PCI_SLOT_ID_NV =                         0x4009;
+        private const uint CL_DEVICE_TOPOLOGY_AMD =                           0x4037;
+        private const uint CL_DEVICE_BOARD_NAME_AMD =                         0x4038;
 
         internal Device(IntPtr handle) : base(handle) { }
 
@@ -293,9 +296,45 @@ namespace OpenCl
             get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE); }
         }
 
-        public string Name
+        public string DeviceCapability
+        {
+            get {
+                try {
+                    string Vendor = Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_VENDOR);
+
+                    if(Vendor.IndexOf("nvidia", StringComparison.OrdinalIgnoreCase) >= 0) {
+                        string cuda = string.Format("{0}.{1}",Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_COMPUTE_CAPABILITY_MAJOR_NV),Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_COMPUTE_CAPABILITY_MINOR_NV));
+                        return cuda;
+                    }
+                }
+                catch (OpenClException) {
+                }
+
+                return  null;
+            }
+        }
+
+        public string Architecture
         {
             get { return Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_NAME); }
+        }
+
+        public string Name
+        {
+            get {
+                string Vendor = Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_VENDOR);
+
+                if (Vendor.IndexOf("Advanced Micro Devices", StringComparison.OrdinalIgnoreCase) >= 0) {
+                    try {
+                        string Name_AMD = Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_BOARD_NAME_AMD);
+                        return Name_AMD;
+                    }
+                    catch (OpenClException) {
+                    }
+                }
+
+                return Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_NAME);
+            }
         }
 
         public string ClVersion
@@ -386,20 +425,39 @@ namespace OpenCl
             get { return Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DRIVER_VERSION); }
         }
 
-        public uint PCIBusId
+        public string PCIBusId
         {
-            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_BUS_ID_NV ); }
-        }
+            get {
+                string Vendor = Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_VENDOR);
+                uint BusId = 0;
+                uint DevId = 0;
+                bool ok = false;
 
-        public uint PCISlotId
-        {
-            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_SLOT_ID_NV); }
-        }
+                if (Vendor.IndexOf("nvidia", StringComparison.OrdinalIgnoreCase) >= 0) {
+                    try {
+                        BusId = Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_BUS_ID_NV );
+                        DevId = Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_SLOT_ID_NV) >> 3;
+                        ok = true;
+                    }
+                    catch (OpenClException) {
+                    }
+                } else {
+                    try {
+                        //int type; byte[17] unused; byte bus; byte device; byte function; 
+                        byte[] PCIBus_AMD = Cl.GetInfoArray<byte>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_TOPOLOGY_AMD);
 
-//        public uint PCITopology
-//        {
-//            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_TOPOLOGY_AMD); }
-//        }
+                        if (PCIBus_AMD != null && PCIBus_AMD.Length == 24 && PCIBus_AMD[0] == 1) {
+                            BusId = PCIBus_AMD[21];
+                            DevId = PCIBus_AMD[22];
+                            ok = true;
+                        }
+                    }
+                    catch (OpenClException) {
+                    }
+                }
+                return ok? string.Format("{0:X2}:{1:X2}",BusId,DevId) : null;
+            }
+        }
 
         // static factory methods
 

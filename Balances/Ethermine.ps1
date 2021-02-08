@@ -1,20 +1,21 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Request = [PSCustomObject]@{}
-
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
-    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1.ethermine.org";     rpc = "api.ethermine.org";     symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("asia","eu","useast");          host = "-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("asia","eu","uswest","useast"); host = ".ethermine.org";     rpc = "api.ethermine.org";     symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000}
 )
 
 $Count = 0
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
+    $Request = [PSCustomObject]@{}
     try {
-        $Request = Invoke-RestMethodAsync "$($_.rpc)/miner/$($Config.Pools.$Name.Wallets."$($_.symbol)")/dashboard" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://$($_.rpc)/miner/$($Config.Pools.$Name.Wallets."$($_.symbol)" -replace "^0x")/dashboard" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if ($Request.status -ne "OK") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.symbol) returned nothing. "            

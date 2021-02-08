@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -56,8 +56,9 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_Key = "$($Pool_Algorithm)_$($Pool_CoinSymbol)".ToLower()
-    $Pool_PoolFee = if ($PoolCoins_Request.$Pool_CoinSymbol.fees -ne $null) {$Pool_Request.$Pool_CoinSymbol.fees} else {$Pool_Fee}
+    $Pool_PoolFee = if ($PoolCoins_Request.$Pool_CoinSymbol.fees -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.fees} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     #$Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
@@ -119,6 +120,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Pass          = "c=$Pool_Currency{diff:,d=`$difficulty}"
                 }
             })
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -14,42 +16,46 @@ if (-not $Payout_Currencies) {
 }
 
 $PoolCoins_Request = [PSCustomObject]@{}
+
+$ok = $false
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://hashpool.eu/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://hashpool.com/api/coins" -tag $Name -cycletime 120
+    if ($PoolCoins_Request.code -eq 0 -and ($PoolCoins_Request.data | Measure-Object).Count) {$ok = $true}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
+}
+
+if (-not $ok) {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-$Pool_Xlat = [PSCustomObject]@{
-    "DGBM" = "DGB"
-    "DGBQ" = "DGB"
-    "DGBS" = "DGB"
-    "DGBSK" = "DGB"
-    "XVGG" = "XVG"
+$Pool_Coins = @{}
+$PoolCoins_Request.data | Foreach-Object {
+    $Pool_Coins."$($_.coin -replace "DGBODO","DBG")" = $_.coin
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Foreach-Object {$Pool_CoinSymbol = $_.Name;if ($Pool_Xlat.$Pool_CoinSymbol) {$Pool_Xlat.$Pool_CoinSymbol} else {$Pool_CoinSymbol}} | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {$Pool_Coins.ContainsKey($_.Name) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
+    $Pool_Currency   = $_.Name
+    $Pool_CoinSymbol = $Pool_Coins.$Pool_Currency
+
     try {
-        $Request = Invoke-RestMethodAsync "https://hashpool.eu/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://hashpool.com/api/worker/base-info/$($Pool_CoinSymbol)?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
-        if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+        if ($Request.code -ne 0 -or $Request.data.address -eq $null) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
             [PSCustomObject]@{
-                Caption     = "$($Name) ($($Request.currency))"
+                Caption     = "$($Name) ($($Pool_Currency))"
 				BaseName    = $Name
-                Currency    = $Request.currency
-                Balance     = [Decimal]$Request.balance
-                Pending     = [Decimal]$Request.unsold
-                Total       = [Decimal]$Request.unpaid
-                #Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
-                Paid24h     = [Decimal]$Request.paid24h
-                Earned      = [Decimal]$Request.total
-                Payouts     = @(Get-BalancesPayouts $Request.payouts | Select-Object)
+                Currency    = $Pool_Currency
+                Balance     = [Decimal]$Request.data.balance
+                Pending     = 0
+                Total       = [Decimal]$Request.data.balance
+                Earned      = [Decimal]$Request.data.earnAmount
+                Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }

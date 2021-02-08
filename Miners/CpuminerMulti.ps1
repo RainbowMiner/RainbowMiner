@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""} #ScryptN
     #[PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #SHAvite3
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #Skein2
-    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #Verium
+    #[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium faster
     #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #X12
     #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt, CpuminerJayddee faster
     #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #ZR5
@@ -58,13 +58,16 @@ if ($InfoOnly) {
 $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
     $Miner_Model = $_.Model
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU.Where({$_.Model -eq $Miner_Model})
 
-    $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
-
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+
+        $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+        $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+
+        $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
@@ -78,7 +81,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-b `$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
+					Arguments      = "-b `$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParams) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Ccminer"
 					Port           = $Miner_Port
@@ -95,5 +98,5 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    }
+    })
 }

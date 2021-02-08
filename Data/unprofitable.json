@@ -6,6 +6,7 @@
     "Cryptolight",
     "Cryptonight",
     "CryptonightV7",
+    "Curvehash",
     "Decred",
     "Keccak",
     "KeccakC",
@@ -18,7 +19,6 @@
     "Quark",
     "Qubit",
     "Scrypt",
-    "ScryptN",
     "SHA256d",
     "SHA256t",
     "Sib",
@@ -27,12 +27,32 @@
     "X14",
     "X15"
   ],
-  "Coins": [],
+  "Coins": [
+    "CURVE"
+  ],
   "Pools": {
+    "MiningPoolHub": {
+      "Coins": [
+        "ZCL"
+      ]
+    },
+    "MiningPoolHubCoins": {
+      "Coins": [
+        "ZCL"
+      ]
+    },
+    "ZergPool": {
+      "Algorithms": [
+        "RandomX"
+      ]
+    },
     "ZergPoolCoins": {
       "Algorithms": [],
       "Coins": [
-        "BTG"
+        "BTG",
+        "ESP",
+        "ETH",
+        "XMR"
       ]
     }
   }

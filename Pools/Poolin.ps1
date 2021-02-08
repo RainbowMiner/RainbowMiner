@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -11,8 +11,6 @@ param(
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10"
 )
-
-if (-not $InfoOnly -and -not (Compare-Object @("ETH","RVN") $Wallets.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent)) {return}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -27,6 +25,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
     $Pool_Currency  = $_.coin
     $Pool_Coin = Get-Coin $_.coin
     $Pool_Rpc  = $_.coin.ToLower()
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -61,8 +61,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
     }
     
     [PSCustomObject]@{
-        Algorithm     = $Pool_Coin.Algo
-		Algorithm0    = $Pool_Coin.Algo
+        Algorithm     = $Pool_Algorithm_Norm
+		Algorithm0    = $Pool_Algorithm_Norm
         CoinName      = $Pool_Coin.Name
         CoinSymbol    = $Pool_Currency
         Currency      = $Pool_Currency
@@ -83,7 +83,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
         #TSL           = $Pool_TSL
         BLK           = $Stat.BlockRate_Average
         WTM           = $true
-        EthMode       = if ($Pool_Coin.Algo -match "Ethash") {"ethproxy"} else {$null}
+        EthMode       = $Pool_EthProxy
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1

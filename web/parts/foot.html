@@ -26,9 +26,9 @@
         var earnings = $("#earnings").attr("btc");
         var currency = $("#profit_currency option:selected").val();
 
-        if (currency == "BTC" || currency == "mBTC") {
-            $("#profit").html(currency == "mBTC"? formatmBTC(profit):formatBTC(profit));
-            $("#earnings").html(currency == "mBTC"? formatmBTC(earnings):formatBTC(earnings));
+        if (currency == "BTC" || currency == "mBTC" || currency == "sat") {
+            $("#profit").html(formatBTC(profit,currency));
+            $("#earnings").html(formatBTC(earnings,currency));
         } else {
             $("#profit").html((parseFloat(profit) * parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
             $("#earnings").html((parseFloat(earnings) * parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
@@ -89,18 +89,32 @@ $(function () {
                     if (!$("#profit_currency option[value='" + key + "']").length) {
                         $("#profit_currency").append('<option value="' + key + '">' + key + '/day</option>');
                         if (key == "BTC") {
-                            $("#profit_currency").append('<option value="m' + key + '">m' + key + '/day</option>');
+                            $("#profit_currency").append('<option value="m' + key + '">m' + key + '/day</option>').append('<option value="sat">sat/day</option>');
                         }
                     }
                     $("#profit_currency option[value='" + key + "']").attr("rate", itm).attr("selected", currency == key ? "selected" : null);
                     if (key == "BTC") {
                         $("#profit_currency option[value='m" + key + "']").attr("rate", itm*1000).attr("selected", currency == ("m"+key) ? "selected" : null);
+                        $("#profit_currency option[value='sat']").attr("rate", itm*1e8).attr("selected", currency == "sat" ? "selected" : null);
                     }                    
                 });
                 $("#exchangerates").html(xchange.join(" = "));
 
                 $("#profit").attr("btc", result.AllProfitBTC);
                 $("#earnings").attr("btc", result.AllEarnings_Avg);
+
+                var power = parseFloat(result.Power.CPU)+parseFloat(result.Power.GPU);
+                var powerunit = "W";
+                if (power > 1000) {
+                    power /= 1000;
+                    powerunit = "kW";
+                    power = power.toFixed(2);
+                } else {
+                    power = power.toFixed(0);
+                }
+                var poweroffset = parseFloat(result.Power.Offset);
+                    
+                $("#power").html(power + powerunit + (poweroffset>0? "<small>+"+poweroffset.toFixed(0)+"W</small>":''));
 
                 if (globalconfig && globalconfig.Version) {
                     $('.powerprice span').text(result.PowerPrice + (globalconfig.PowerPriceCurrency ? ' ' + globalconfig.PowerPriceCurrency : ''));
@@ -126,6 +140,11 @@ $(function () {
         } else {
             $('#updatemsg-inner').hide()
         }
+        if(globalconfig.IsLinux) {
+            $(".is--linux").show()
+        } else {
+            $(".is--linux").hide()
+        }
         setTimeout(q, 600000);
     })();
 
@@ -133,6 +152,8 @@ $(function () {
         $('#uptime').text(formatUptime(last_uptime + Math.round((Date.now() - start_uptime) / 1000)));
         setTimeout(r, 1000);
     })();
+
+    $('[data-toggle="tooltip"]').tooltip();
 });
   
 </script>

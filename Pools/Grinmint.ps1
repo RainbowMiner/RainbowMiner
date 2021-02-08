@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -23,9 +23,9 @@ $Pool_Request = [PSCustomObject]@{}
 $Pool_NetworkRequest = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.grinmint.com/v1/poolStats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.grinmint.com/v2/poolStats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
     if (-not $Pool_Request.status) {throw}
-    $Pool_NetworkRequest = Invoke-RestMethodAsync "https://api.grinmint.com/v1/networkStats" -tag $Name -retry 3 -retrywait 1000 -delay 500 -cycletime 120
+    $Pool_NetworkRequest = Invoke-RestMethodAsync "https://api.grinmint.com/v2/networkStats" -tag $Name -retry 3 -retrywait 1000 -delay 500 -cycletime 120
     if (-not $Pool_NetworkRequest.status) {throw}
 }
 catch {
@@ -39,13 +39,11 @@ catch {
 $Pool_Regions = @("eu-west","us-east")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Coin = Get-Coin $Pool_Currency
-
 $Pools_Data = @(
-    [PSCustomObject]@{algo = $Pool_Coin.algo; port = 3416; ssl = $false}
-    [PSCustomObject]@{algo = $Pool_Coin.algo; port = 4416; ssl = $true}
-    [PSCustomObject]@{algo = "Cuckatoo31";  port = 3416; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckatoo31";  port = 4416; ssl = $true}
+    #[PSCustomObject]@{symbol = "GRIN-SEC"; port = 3416; ssl = $false}
+    #[PSCustomObject]@{symbol = "GRIN-SEC"; port = 4416; ssl = $true}
+    [PSCustomObject]@{symbol = "GRIN-PRI"; port = 3416; ssl = $false; primary = $true}
+    [PSCustomObject]@{symbol = "GRIN-PRI"; port = 4416; ssl = $true;  primary = $true}
 )
 
 $block_time_sec = 60
@@ -61,8 +59,11 @@ $reward = 60
 
 $diff   = $Pool_NetworkRequest.target_difficulty
 $PBR29  = (86400 / 42) * ($Pool_NetworkRequest.secondary_scaling/$diff)
-$PBR31  = (86400 / 42) * (7936/$diff) #31*2^8
+#$PBR31  = (86400 / 42) * (7936/$diff) #31*2^8
 $PBR32  = (86400 / 42) * (16384/$diff) #32*2^9
+
+$PBR_Secondary = $PBR29
+$PBR_Primary   = $PBR32
 
 $lastBlock     = $Pool_Request.mined_blocks | Sort-Object height | Select-Object -last 1
 $Pool_BLK      = $Pool_Request.pool_stats.blocks_found_last_24_hours
@@ -70,13 +71,14 @@ $Pool_TSL      = if ($lastBlock) {((Get-Date).ToUniversalTime() - (Get-Date $las
 $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
     
 if (-not $InfoOnly) {
-    $Stat29 = Set-Stat -Name "$($Name)_$($Pool_Currency)29_Profit" -Value ($PBR29 * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK
-    $Stat31 = Set-Stat -Name "$($Name)_$($Pool_Currency)31_Profit" -Value ($PBR31 * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.primary_hashrate -BlockRate $Pool_BLK
+    #$Stat_Secondary = Set-Stat -Name "$($Name)_$($Pool_Currency)-SEC_Profit" -Value ($PBR_Secondary * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK
+    $Stat_Primary   = Set-Stat -Name "$($Name)_$($Pool_Currency)-PRI_Profit" -Value ($PBR_Primary * $reward * $btcPrice)   -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.primary_hashrate   -BlockRate $Pool_BLK
 }
 
 $Pools_Data | ForEach-Object {
-    $Stat = if ($_.algo -match "29") {$Stat29} else {$Stat31}
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Coin = Get-Coin $_.symbol
+    $Stat = if ($_.primary) {$Stat_Primary} else {$Stat_Secondary}
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     Foreach ($Pool_Region in $Pool_Regions) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm

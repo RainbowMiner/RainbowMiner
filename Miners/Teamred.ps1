@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -7,44 +7,49 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-if ($IsLinux) {
-    $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.1-teamred/teamredminer-v0.6.1-linux.tgz"
-} else {
-    $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.1-teamred/teamredminer-v0.6.1-win.zip"
-}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.6.1"
+$Version = "0.8.1"
 
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-Teamred\teamredminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-teamred/teamredminer-v0.8.1-linux.tgz"
+} else {
+    $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-teamred/teamredminer-v0.8.1-win.zip"
+}
+
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cn_conceal";       MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_haven";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_heavy";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_saber";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnr";              MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8";             MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";         MinMemGb = 4; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_half";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";         MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_trtl";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cuckarood29_grin"; MinMemGb = 8; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";  MinMemGb = 8; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 4; Params = ""; DevFee = 0.75}
-    [PSCustomObject]@{MainAlgorithm = "lyra2rev3";        MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";           MinMemGb = 2; Params = ""; DevFee = 3.0}
-    [PSCustomObject]@{MainAlgorithm = "mtp";              MinMemGb = 6; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "phi2";             MinMemGb = 2; Params = ""; DevFee = 3.0}
-    [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";      MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "x16r";             MinMemGb = 4; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16rt";            MinMemGb = 2; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16rv2";           MinMemGb = 2; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16s";             MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_conceal";                    MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_haven";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_heavy";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_saber";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnr";                           MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8";                          MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";                      MinMemGb = 3.3; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_half";                     MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_trtl";                     MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";                     MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cuckarood29_grin";              MinMemGb = 6;   Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";               MinMemGb = 8;   Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "etchash";          DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "kawpow";           DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3";                     MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";                        MinMemGb = 1.5; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "mtp";                           MinMemGb = 5;   Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "nimiq";                         MinMemGb = 1.5; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "phi2";                          MinMemGb = 1.5; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";                   MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "trtl_chukwa2";                  MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeArchitecture = @("gfx1010","gfx1011","gfx1012","gfx1030","gfx1031","gfx1032")}
+    [PSCustomObject]@{MainAlgorithm = "x16r";                          MinMemGb = 3.3; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16rt";                         MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16rv2";                        MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16s";                          MinMemGb = 1.5; Params = ""; DevFee = 2.5}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -64,33 +69,55 @@ if ($InfoOnly) {
 }
 
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
     $Miner_PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
         $First = $True
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-        $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)})
+
+        $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
+
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $_.ExcludeArchitecture -or $_.OpenCL.Architecture -notin $_.ExcludeArchitecture)}
+
+        #Zombie-mode since v0.7.14
+        if ($_.DAG -and $Algorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
+            $MinMemGB = $_.MinMemGB
+        }
+
         $Miner_DevFee = $_.DevFee
 
         if ($_.MainAlgorithm -eq "ethash" -and (($Miner_Model -split '-') -notmatch "(Baffin|Ellesmere|RX\d)" | Measure-Object).Count) {
             $Miner_DevFee = 1.0
         }
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                 if ($First) {
 				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $DeviceIDsAll = $Device.Type_Vendor_Index -join ','
-                    $AdditionalParams = @()
+
+                    $Pool_Host = $Pools.$Algorithm_Norm_0.Host
+                    $Pool_User = $Pools.$Algorithm_Norm_0.User
+                    $Pool_Protocol = $Pools.$Algorithm_Norm_0.Protocol
+
+                    $AdditionalParams = @("--watchdog_disabled")
                     if ($Pools.$Algorithm_Norm_0.Name -match "^bsod" -and $Algorithm_Norm_0 -eq "x16rt") {
                         $AdditionalParams += "--no_ntime_roll"
                     }
                     if ($IsLinux -and $Algorithm_Norm_0 -match "^cn") {
                         $AdditionalParams += "--allow_large_alloc"
+                    }
+                    if ($_.MainAlgorithm -eq "nimiq") {
+                        $Pool_User = $Pools.$Algorithm_Norm_0.Wallet
+                        $Pool_Protocol = "stratum+tcp"
+                        $AdditionalParams += "--nimiq_worker=$($Pools.$Algorithm_Norm_0.Worker)"
+                        #if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
+                        #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
+                        #}
                     }
                     $First = $False
                 }
@@ -102,7 +129,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host):$($Pool_Port) -u $($Pool_User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Xgminer"
 					Port           = $Miner_Port
@@ -119,5 +146,5 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    }
+    })
 }

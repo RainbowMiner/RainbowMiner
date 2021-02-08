@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -10,10 +12,12 @@ if (!$PoolConfig.GRIN) {
     return
 }
 
+if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalances -contains "GRIN") {return}
+
 $Request = [PSCustomObject]@{}
 
 try {
-    if ($Request = Invoke-RestMethodAsync "https://api.grinmint.com/v1/user/$($PoolConfig.GRIN)/userStats" -cycletime ($Config.BalanceUpdateMinutes*60)) {
+    if ($Request = Invoke-RestMethodAsync "https://api.grinmint.com/v2/user/$($PoolConfig.GRIN)/userStats" -cycletime ($Config.BalanceUpdateMinutes*60)) {
         if ($Request.status) {
 			$Divisor  = [Decimal]1e9
             $Unpaid   = [Decimal]$Request.unpaid_balance / $Divisor

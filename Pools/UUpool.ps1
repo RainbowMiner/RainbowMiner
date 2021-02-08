@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -39,6 +39,7 @@ if (-not $Pool_Request -or -not ($Pool_Request | Measure-Object).Count) {
 $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -replace "^VDS$","VOLLAR" -replace "^ULORD$","UT";$Wallets.$Pool_Currency -or $Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Algorithm_Norm = Get-Algorithm $_.algorithm
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     if ($_.hr) {
         $hr = $_.hr  -split "\s+"
@@ -46,8 +47,11 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
 
         $Pool_User   = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$Wallets."$($_.coin)"}
 
-        $Pool_Hashrate = [Double]$hr[0]  * $(Switch ($hr[1])  {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
-        $Pool_Estimate = [Double]$est[0] / $(Switch ($est[2]) {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
+        $hr_value  = [Double]($hr[0] -replace "[^\d\.]+")
+        $est_value = [Double]($est[0] -replace "[^\d\.]+")
+
+        $Pool_Hashrate = [Double]$hr_value  * $(Switch ($hr[1])  {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
+        $Pool_Estimate = [Double]$est_value / $(Switch ($est[2]) {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
 
         $lastBTCPrice = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency}
                         elseif ($Global:Rates."$($_.coin)") {1/[double]$Global:Rates."$($_.coin)"}
@@ -84,7 +88,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                     DataWindow    = $DataWindow
                     Workers       = $Pool_RequestWorkers.data
                     Hashrate      = $Stat.HashRate_Live
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                    EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1

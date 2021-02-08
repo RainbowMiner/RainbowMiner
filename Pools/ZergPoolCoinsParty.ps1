@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -6,7 +6,6 @@ param(
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
-    [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
@@ -68,6 +67,9 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
+
+    if ($Pool_CoinSymbol -eq "CURVE") {$Pool_Port = 3343}
 
     if ($PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor) {
         $Pool_Factor = [Double]$PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor
@@ -102,6 +104,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             "quark" {1000}
             "qubit" {1000}
             "scrypt" {1000}
+            "scryptn2" {0.001}
             "sha256" {1000000000}
             "skein" {1000}
             "skunk" {1}
@@ -140,7 +143,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} elseif ($PoolCoins_Request.$Pool_Currency.noautotrade -eq 0) {$AECurrency}
+    $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} elseif ($PoolCoins_Request.$Pool_CoinSymbol.noautotrade -eq 0) {$AECurrency}
 
     if (($Pool_ExCurrency -and $Wallets.$Pool_ExCurrency) -or $InfoOnly) {
         $Pool_Params = if ($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)") {",$($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)")"} elseif ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"} 
@@ -159,7 +162,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = $Wallets.$Pool_ExCurrency
-                Pass          = "{workername:$Worker},c=$Pool_ExCurrency,mc=$Pool_Currency,m=party.$($PartyPassword){diff:,d=`$difficulty}$Pool_Params"
+                Pass          = "{workername:$Worker},c=$Pool_ExCurrency,mc=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
@@ -168,6 +171,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                SoloMining    = $true
+                EthMode       = $Pool_EthProxy
                 ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0
@@ -176,7 +181,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 HasMinerExclusions = $false
                 Price_Bias    = 0.0
                 Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
+                Wallet        = $Wallets.$Pool_ExCurrency
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }

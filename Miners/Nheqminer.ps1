@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Nheqminer\nheqminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.0-nheqminer/nheqminer-Linux-v0.8.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-nheqminer/nheqminer-0.8.2-linux.7z"
 } else {
     $Path = ".\Bin\CPU-Nheqminer\nheqminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.0-nheqminer/nheqminer-Windows-v0.8.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-nheqminer/nheqminer-0.8.2-win.7z"
 }
 $ManualUri = "https://github.com/VerusCoin/nheqminer/releases"
 $Port = "536{0:d2}"
 $DevFee = 0.0
-$Version = "0.8.0"
+$Version = "0.8.2"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -43,19 +43,23 @@ if ($InfoOnly) {
 
 $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU.Where({$_.Model -eq $Miner_Model})
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+
+        $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+        $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+
+        $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){" -t $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" --cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
                     $First = $false
                 }
 				[PSCustomObject]@{
@@ -80,5 +84,5 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    }
+    })
 }

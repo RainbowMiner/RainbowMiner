@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -27,6 +27,9 @@ catch {
 $Pools_Request       = [PSCustomObject]@{}
 try {
     $Pools_Request = Invoke-RestMethodAsync "http://cpu-pool.com/api/stats" -tag $Name -timeout 15 -cycletime 120
+    if ($Pools_Request -is [string]) {
+        $Pools_Request = ConvertFrom-Json "$($Pools_Request -replace '"workers":{".+?}},')" -ErrorAction Stop
+    }
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -43,10 +46,11 @@ $Pool_Ports = [PSCustomObject]@{
     "BELL"  = 63338
     "CPU"   = 63386
     "CRP"   = 63358
-    "ITC"   = 63328
+    #"ITC"   = 63328
     "KOTO"  = 63318
     "LITB"  = 63398
     "MBC"   = 63408
+    "SUGAR" = 63418
     "URX"   = 63378
     "YTN"   = 63368
 }
@@ -92,7 +96,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"minerproxy"} else {$null}
+            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow|KawPow)") {"minerproxy"} else {$null}
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

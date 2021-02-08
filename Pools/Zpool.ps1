@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$AECurrency = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -32,7 +33,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies" -tag $Name -cycletime 120 -delay 500
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies" -tag $Name -cycletime 120 -delay 1000
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -50,6 +51,11 @@ $Pool_Currencies = @("BTC") + @($Wallets.PSObject.Properties.Name | Select-Objec
 if ($PoolCoins_Request) {
     $PoolCoins_Algorithms = @($Pool_Request.PSObject.Properties.Value | Where-Object coins -eq 1 | Select-Object -ExpandProperty name -Unique)
     if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
+}
+
+if (-not $InfoOnly -and $Pool_Currencies.Count -gt 1) {
+    if ($AECurrency -eq "" -or $AECurrency -notin $Pool_Currencies) {$AECurrency = $Pool_Currencies | Select-Object -First 1}
+    $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
 }
 
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {

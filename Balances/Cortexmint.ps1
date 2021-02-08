@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -12,6 +14,8 @@ if (-not $Payout_Currencies) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
     return
 }
+
+if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalances -contains "CTXC") {return}
 
 $Count = 0
 $Payout_Currencies | Where-Object {$_.Name -eq "CTXC"} | Foreach-Object {

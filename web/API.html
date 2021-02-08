@@ -29,6 +29,10 @@
         <a href="/info">/info</a>
         <p>Small configuration info for localhost display.</p>
 
+        <h3>System Info</h3>
+        <a href="/sysinfo">/sysinfo</a>
+        <p>Hardwareinformation summary: CPU load, memory and harddisk usage</p>
+
         <h3>Config</h3>
         <a href="/config">/config</a>
         <p>Shows the full configuration for the running script, after all variable substitution and pool entries are added</p>
@@ -105,8 +109,10 @@
         <p>Shows the balances and earnings at the pools by currencies plus a *Totals* entry, that contains a sum of all currencies (add &amp;as_csv=1 to download CSV)</p>
 
         <a href="/balances?consolidate=1">/balances?consolidate=1</a> |
-        <a href="/balances?consolidate=1">/balances?consolidate=1&as_csv=1</a>
+        <a href="/balances?consolidate=1&as_csv=1">/balances?consolidate=1&as_csv=1</a>
         <p>Shows the balances and consolidated earnings at the pools by BTC (add &amp;as_csv=1 to download CSV)</p>
+
+        <p>If wallet balances should be added, add parameter "add_wallets=1"</p>
 
         <h3>Pool Earnings</h3>
         <a href="/earnings">/earnings</a> |
@@ -170,8 +176,8 @@
         <legend>Command Resources</legend>
 
         <h3>Pause</h3>
-        <a href="/pause">/pause</a>
-        <p>Pause and restart mining</p>
+        <a href="/pause">/pause[?action=set|reset]</a>
+        <p>Pause and restart mining. Without parameter "action", the Pause will be toggled. "action=set" will start Pause, "action=reset" will end Pause</p>
 
         <h3>Status</h3>
         <a href="/status">/status</a>
@@ -185,46 +191,58 @@
         <a href="/stop">/stop</a>
         <p>Exit RainbowMiner</p>
 
+        <h3>Updatebalance</h3>
+        <a href="/updatebalance">/update</a>
+        <p>Trigger immediate balance update</p>
+
+        <h3>UpdateMRR</h3>
+        <a href="/updatemrr">/update</a>
+        <p>Trigger run of MiningRigRentals automatic routines in next round</p>
+
     </fieldset><fieldset>
-        <legend>Debugging Resources</legend>
+    <legend>Debugging Resources</legend>
 
-        <h3>Debug</h3>
-        <a href="/debug">/debug</a>
-        <p>Shows all data added to the $API hashtable, used only for debugging.</p>
+    <h3>Debug</h3>
+    <a href="/debug">/debug</a>
+    <p>Shows all data added to the $API hashtable, used only for debugging.</p>
 
-        <h3>Session Vars</h3>
-        <a href="/sessionvars">/sessionvars</a>
-        <p>Lists all relevant session variables.</p>
+    <h3>Session Vars</h3>
+    <a href="/sessionvars">/sessionvars</a>
+    <p>Lists all relevant session variables.</p>
 
-        <h3>Stats</h3>
-        <a href="/stats">/stats</a>
-        <p>Dump of the $Stats variable, used only for debugging. Stats data is used for internal RainbowMiner calculations.</p>
+    <h3>Stats</h3>
+    <a href="/stats">/stats</a>
+    <p>Dump of the $Stats variable, used only for debugging. Stats data is used for internal RainbowMiner calculations.</p>
 
-        <h3>PoolStats</h3>
-        <a href="/poolstats">/poolstats</a>
-        <p>Dump of the $PoolsStats variable, used only for debugging. PoolStats data is used for internal RainbowMiner calculations.</p>
+    <h3>PoolStats</h3>
+    <a href="/poolstats">/poolstats</a>
+    <p>Dump of the $PoolsStats variable, used only for debugging. PoolStats data is used for internal RainbowMiner calculations.</p>
 
-        <h3>WatchdogTimers</h3>
-        <a href="/watchdogtimers">/watchdogtimers</a>
-        <p>Dump of the $WatchdogTimers variable, used only for debugging. WatchdogTimers data is used for internal RainbowMiner calculations.</p>
+    <h3>WatchdogTimers</h3>
+    <a href="/watchdogtimers">/watchdogtimers</a>
+    <p>Dump of the $WatchdogTimers variable, used only for debugging. WatchdogTimers data is used for internal RainbowMiner calculations.</p>
 
-        <h3>Asynchronous Loader Jobs</h3>
-        <a href="/asyncloaderjobs">/asyncloaderjobs</a>
-        <p>Dump of the $AsyncLoader.Jobs variable, used only for debugging. These are the jobs running in the background.</p>
+    <h3>CrashCounter</h3>
+    <a href="/crashcounter">/crashcounter</a>
+    <p>Dump of the $CrashCounter variable, used only for debugging. This array contains all crashes during the past hour.</p>
 
-        <h3>Asynchronous Loader Errors</h3>
-        <a href="/asyncloadererrors">/asyncloadererrors</a>
-        <p>Dump of the $AsyncLoader.Errors variable, used only for debugging. These are the past 50 errors, the jobs running in the background have caused.</p>
+    <h3>Asynchronous Loader Jobs</h3>
+    <a href="/asyncloaderjobs">/asyncloaderjobs</a>
+    <p>Dump of the $AsyncLoader.Jobs variable, used only for debugging. These are the jobs running in the background.</p>
 
-        <h3>Miner Ports</h3>
-        <a href="/minerports">/minerports</a>
-        <p>Lists all assigned localhost ports</p>
+    <h3>Asynchronous Loader Errors</h3>
+    <a href="/asyncloadererrors">/asyncloadererrors</a>
+    <p>Dump of the $AsyncLoader.Errors variable, used only for debugging. These are the past 50 errors, the jobs running in the background have caused.</p>
 
-        <h3>Download List</h3>
-        <a href="/downloadlist">/downloadlist</a>
-        <p>List of current miners downloading</p>
+    <h3>Miner Ports</h3>
+    <a href="/minerports">/minerports</a>
+    <p>Lists all assigned localhost ports</p>
 
-    </fieldset>
+    <h3>Download List</h3>
+    <a href="/downloadlist">/downloadlist</a>
+    <p>List of current miners downloading</p>
+
+</fieldset>
     <script>
     $(function () {
         var port = $(location).attr('port')

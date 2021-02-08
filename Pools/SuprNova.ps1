@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -17,21 +17,29 @@ $Pool_Region = Get-Region "US"
 $Pool_Request = [PSCustomObject]@{}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "BCI"   ; rpc = "bci"      ; port = 9166}
-    [PSCustomObject]@{symbol = "BEAM"  ; rpc = "beam"     ; port = @(7786,7787)}
-    [PSCustomObject]@{symbol = "BTG"   ; rpc = "btg"      ; port = @(8866,8817)}
-    [PSCustomObject]@{symbol = "BTX"   ; rpc = "btx"      ; port = 3629}
-    [PSCustomObject]@{symbol = "BSD"   ; rpc = "bsd"      ; port = 8686}
-    [PSCustomObject]@{symbol = "DYN"   ; rpc = "dyn"      ; port = 5960}
-    [PSCustomObject]@{symbol = "GRLC"  ; rpc = "grlc"     ; port = 8600}
-    [PSCustomObject]@{symbol = "HODL"  ; rpc = "hodl"     ; port = 4693}
-    [PSCustomObject]@{symbol = "ROI"   ; rpc = "roi"      ; port = 4699}
-    [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 7777}
-    [pscustomobject]@{symbol = "VEIL"  ; rpc = "veil"     ; port = 7220}
-    [pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17"  ; port = 7477}
-    [PSCustomObject]@{symbol = "VTC"   ; rpc = "vtc"      ; port = 5778}
-    [PSCustomObject]@{symbol = "XDNA"  ; rpc = "xdna"     ; port = 4919}
-    [PSCustomObject]@{symbol = "ZER"   ; rpc = "zero"     ; port = 6568}
+    [PSCustomObject]@{symbol = "BCI"     ; rpc = "bci"     ; port = 9166}
+    [PSCustomObject]@{symbol = "BEAM"    ; rpc = "beam"    ; port = @(7786,7787)}
+    [PSCustomObject]@{symbol = "BTG"     ; rpc = "btg"     ; port = @(8866,8817)}
+    [PSCustomObject]@{symbol = "BTX"     ; rpc = "btx"     ; port = 3629}
+    [PSCustomObject]@{symbol = "BSD"     ; rpc = "bsd"     ; port = 8686}
+	[PSCustomObject]@{symbol = "DASH"    ; rpc = "dash"    ; port = 443}
+	[PSCustomObject]@{symbol = "DYN"     ; rpc = "dyn"     ; port = 5960}
+    [PSCustomObject]@{symbol = "ERC"     ; rpc = "erc"     ; port = 7674}
+	[PSCustomObject]@{symbol = "GAP"     ; rpc = "gap"     ; port = 2433}
+    [PSCustomObject]@{symbol = "GRLC"    ; rpc = "grlc"    ; port = 8600}
+	[PSCustomObject]@{symbol = "GRS"     ; rpc = "grs"     ; port = 5544}
+    [PSCustomObject]@{symbol = "HODL"    ; rpc = "hodl"    ; port = 4693}
+    [PSCustomObject]@{symbol = "MNX"     ; rpc = "mnx"     ; port = @(7077,7078)}
+	[PSCustomObject]@{symbol = "RIC"     ; rpc = "ric"     ; port = 5000}
+    [PSCustomObject]@{symbol = "ROI"     ; rpc = "roi"     ; port = 4699}
+    [PSCustomObject]@{symbol = "RVN"     ; rpc = "rvn"     ; port = 8888}
+    [pscustomobject]@{symbol = "VEIL"    ; rpc = "veil"    ; port = 7220}
+    [pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17" ; port = 7477}
+    [PSCustomObject]@{symbol = "VTC"     ; rpc = "vtc"     ; port = 1777}
+	[PSCustomObject]@{symbol = "XCN"     ; rpc = "xcn"     ; port = 8008}
+    [PSCustomObject]@{symbol = "YTN"     ; rpc = "ytn"     ; port = 4932}
+	[PSCustomObject]@{symbol = "ZEN"     ; rpc = "zen"     ; port = @(3618,3621)}
+    [PSCustomObject]@{symbol = "ZER"     ; rpc = "zero"    ; port = @(6568,6569)}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly} | ForEach-Object {
@@ -39,6 +47,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
     $Pool_Currency = $_.symbol -replace "-.+"
     $Pool_Port = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Hashrate = $Pool_Workers = $null
 
@@ -82,7 +91,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
             Hashrate      = $Pool_Hashrate
             DataWindow    = $DataWindow
             WTM           = $true
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

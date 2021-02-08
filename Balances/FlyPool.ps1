@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -7,15 +9,16 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Request = [PSCustomObject]@{}
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-beam.flypool.org";  rpc = "api-beam.flypool.org";  symbol = "BEAM"; port = @(3333,3443); fee = 1; divisor = 1}
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-zcash.flypool.org"; rpc = "api-zcash.flypool.org"; symbol = "ZEC";  port = @(3333,3443); fee = 1; divisor = 1}
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-ycash.flypool.org"; rpc = "api-ycash.flypool.org"; symbol = "YEC";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-beam.flypool.org";      rpc = "api-beam.flypool.org";      symbol = "BEAM"; port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-zcash.flypool.org";     rpc = "api-zcash.flypool.org";     symbol = "ZEC";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-ycash.flypool.org";     rpc = "api-ycash.flypool.org";     symbol = "YEC";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("stratum");        host = "-ravencoin.flypool.org";  rpc = "api-ravencoin.flypool.org"; symbol = "RVN";  port = @(3333,3443); fee = 1; divisor = 1}
 )
 
 $Count = 0
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
     try {
-        $Request = Invoke-RestMethodAsync "$($_.rpc)/miner/$($Config.Pools.$Name.Wallets."$($_.symbol)")/dashboard" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://$($_.rpc)/miner/$($Config.Pools.$Name.Wallets."$($_.symbol)")/dashboard" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if ($Request.status -ne "OK") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.symbol) returned nothing. "            

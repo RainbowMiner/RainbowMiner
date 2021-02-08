@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -20,16 +20,23 @@ $Pool_Regions = @("eu","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "RVN"; url = "ravencoin"; port = 3010; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{symbol = "XZC"; url = "zcoin";     port = 3000; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{symbol = "BEAM"; url = "beam";      port = 3025; fee = 0.9; ssl = $true;  protocol = "stratum+ssl"}
+    [PSCustomObject]@{symbol = "RVN";  url = "ravencoin"; port = 3010; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{symbol = "FIRO"; url = "firo";      port = 3000; fee = 0.9; ssl = $false; protocol = "stratum+tcp"; altsymbol = "XZC"}
 )
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
     $Pool_Url = "https://api.mintpond.com/v1/$($_.url)"
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+
+    if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
+        $Pool_Wallet = $Wallets."$($_.altsymbol)"
+    }
 
     $Pool_Request = [PSCustomObject]@{}
     $Pool_RequestBlockstats = [PSCustomObject]@{}
@@ -85,7 +92,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = $_.protocol
                 Host          = "$($_.url)-$($Pool_Region).mintpond.com"
                 Port          = $_.port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $_.ssl
@@ -96,6 +103,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
@@ -103,7 +111,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 HasMinerExclusions = $false
                 Price_Bias    = 0.0
                 Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
+                Wallet        = $Pool_Wallet
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }

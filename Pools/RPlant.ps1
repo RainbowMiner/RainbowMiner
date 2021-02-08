@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -26,84 +26,103 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("ru","eu","asia")
+$Pool_Regions = @("ru","eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Ports = [PSCustomObject]@{
-    "BNODE" = 7017
-    "BELL"  = 3342
-    "BIN"   = 3334
-    "CPU"   = 7029
-    "CRP"   = 3335
-    "CSM"   = 7044
-    "DMS"   = 7047
-    "DNGR"  = 7045
-    "GXX"   = 7025
-    "ITC"   = 7048
-    "IOTS"  = 7028
-    "ISO"   = 7030
-    "KOTO"  = 3032
-    "LDC"   = 7046
-    "LITB"  = 7041
-    "LBTC"  = 3355
-    "LTFN"  = 3385
-    "MBC"   = 7022
-    "RES"   = 7040
-    "SUGAR" = 7042
-    "SWAMP" = 7023
-    "URX"   = 3361
-    "VECO"  = 3351
-    "XEBEC" = 7051
-    "YTN"   = 3382
+$Pools_Data = [PSCustomObject]@{
+    "BELL"  = [PSCustomObject]@{port = 3342; region = $Pool_Regions}
+    "BTX"   = [PSCustomObject]@{port = 7066; region = $Pool_Regions}
+    "ZNY"   = [PSCustomObject]@{port = 7054; region = $Pool_Regions}
+    "BLAS"  = [PSCustomObject]@{port = 7065; region = $Pool_Regions}
+    "CIRC"  = [PSCustomObject]@{port = 7050; region = $Pool_Regions}
+    "CBE"   = [PSCustomObject]@{port = 7055; region = $Pool_Regions}
+    "CPU"   = [PSCustomObject]@{port = 7029; region = $Pool_Regions}
+    "CRP"   = [PSCustomObject]@{port = 3335; region = $Pool_Regions}
+    "CURVE" = [PSCustomObject]@{port = 7058; region = $Pool_Regions}
+    "DMS"   = [PSCustomObject]@{port = 7047; region = $Pool_Regions}
+    "GLEEC" = [PSCustomObject]@{port = 7051; region = $Pool_Regions}
+    "GOLD"  = [PSCustomObject]@{port = 7057; region = $Pool_Regions}
+    "GXX"   = [PSCustomObject]@{port = 7025; region = $Pool_Regions}
+    "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
+    "KVA"   = [PSCustomObject]@{port = 7061; region = @("us"); stratum = "randomx"}
+    "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
+    "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
+    "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
+    "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
+    "NOON"  = [PSCustomObject]@{port = 7063; region = $Pool_Regions}
+    "PYRK"  = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
+    "QRN"   = [PSCustomObject]@{port = 7067; region = $Pool_Regions}
+    "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
+    "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
+    "SPRX"  = [PSCustomObject]@{port = 7052; region = $Pool_Regions}
+    "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
+    "SWAMP" = [PSCustomObject]@{port = 7023; region = $Pool_Regions}
+    "TDC"   = [PSCustomObject]@{port = 7059; region = $Pool_Regions}
+    "URX"   = [PSCustomObject]@{port = 3361; region = $Pool_Regions}
+    "VECO"  = [PSCustomObject]@{port = 3351; region = $Pool_Regions}
+    "WOW"   = [PSCustomObject]@{port = 3385; region = @("us"); stratum = "randomx"}
+    "XOL"   = [PSCustomObject]@{port = 7068; region = @("us"); stratum = "randomx"}
+    "YTN"   = [PSCustomObject]@{port = 3382; region = $Pool_Regions}
+    "ZELS"  = [PSCustomObject]@{port = 7060; region = $Pool_Regions}
 }
 
-$Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $Pool_Ports."$($_.Name)") -or $InfoOnly} | ForEach-Object {
+#compare-object @($Pools_Request.PSObject.Properties.Name) @($Pools_Data.PSObject.Properties.Name)
+
+$Pools_Request.PSObject.Properties | Where-Object {($Wallets."$($_.Name)" -and $Pools_Data."$($_.Name)") -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.Name
     $Pool_Algorithm      = $_.Value.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets."$($_.Name)"
+    $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    if (-not ($Pool_Data = $Pools_Data.$Pool_Currency)) {
+        Write-Log -Level Warn "Pool $($Name) missing port for $($Pool_Currency)"
+        return
+    }
+    $Pool_Stratum        = if ($Pool_Data.stratum) {$Pool_Data.stratum} else {"stratum-%region%"}
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.Value.hashrate) -BlockRate ([double]$_.Value."24h_blocks") -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    foreach ($Pool_Region in $Pool_Regions) {    
-        [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            Algorithm0    = $Pool_Algorithm_Norm
-            CoinName      = $_.Value.name
-            CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
-            Price         = 0
-            StablePrice   = 0
-            MarginOfError = 0
-            Protocol      = "stratum+tcp"
-            Host          = "stratum-$($Pool_Region).rplant.xyz"
-            Port          = $Pool_Ports.$Pool_Currency
-            User          = "$($Pool_User).{workername:$Worker}"
-            Pass          = "x"
-            Region        = $Pool_RegionsTable.$Pool_Region
-            SSL           = $false
-            Updated       = (Get-Date).ToUniversalTime()
-            PoolFee       = $Pool_Fee
-            Workers       = [int]$_.Value.workers
-            Hashrate      = $Stat.HashRate_Live
-            TSL           = [int]$_.Value.timesincelast
-            BLK           = $Stat.BlockRate_Average
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"minerproxy"} else {$null}
-            Name          = $Name
-            Penalty       = 0
-            PenaltyFactor = 1
-            Disabled      = $false
-            HasMinerExclusions = $false
-            Price_Bias    = 0.0
-            Price_Unbias  = 0.0
-            Wallet        = $Pool_User
-            Worker        = "{workername:$Worker}"
-            Email         = $Email
-            WTM           = $true
+    foreach ($Pool_Region in $Pool_Data.region) {
+        foreach ($SSL in @($false,$true)) {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                Algorithm0    = $Pool_Algorithm_Norm
+                CoinName      = $_.Value.name
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
+                Price         = 0
+                StablePrice   = 0
+                MarginOfError = 0
+                Protocol      = "stratum+$(if ($SSL) {"ssl"} else {"tcp"})"
+                Host          = "$($Pool_Stratum -replace "%region%",$Pool_Region).rplant.xyz"
+                Port          = if ($SSL) {$Pool_Data.port+10000} else {$Pool_Data.port}
+                User          = "$($Pool_User).{workername:$Worker}"
+                Pass          = "x"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $SSL
+                Updated       = (Get-Date).ToUniversalTime()
+                PoolFee       = $Pool_Fee
+                Workers       = [int]$_.Value.workers
+                Hashrate      = $Stat.HashRate_Live
+                TSL           = [int]$_.Value.timesincelast
+                BLK           = $Stat.BlockRate_Average
+                EthMode       = $Pool_EthProxy
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Disabled      = $false
+                HasMinerExclusions = $false
+                Price_Bias    = 0.0
+                Price_Unbias  = 0.0
+                Wallet        = $Pool_User
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
+                WTM           = $true
+            }
         }
     }
 }

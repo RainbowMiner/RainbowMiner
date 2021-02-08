@@ -2,7 +2,7 @@
 
 @if not "%CUDA_DEVICE_ORDER%"=="PCI_BUS_ID" (setx CUDA_DEVICE_ORDER PCI_BUS_ID) > nul
 
-@set "command=& {.\Install.ps1; exit $lastexitcode}"
+@set "command=& {.\Scripts\Install.ps1; exit $lastexitcode}"
 
 @echo off
 

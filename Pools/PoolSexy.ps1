@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -36,6 +36,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Currency  = $_.symbol
     $Pool_RpcPath   = $_.rpc.ToLower()
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Port      = $_.port
     $Pool_Fee       = $_.fee
@@ -105,7 +106,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

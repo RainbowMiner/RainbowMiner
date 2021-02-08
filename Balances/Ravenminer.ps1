@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -9,6 +11,8 @@ if (!$PoolConfig.RVN) {
     Write-Log -Level Verbose "Pool Balance API ($Name) has failed - no wallet address specified."
     return
 }
+
+if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalances -contains "RVN") {return}
 
 $Request = [PSCustomObject]@{}
 

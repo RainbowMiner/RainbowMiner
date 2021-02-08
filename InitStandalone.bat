@@ -2,7 +2,7 @@
 
 @if not "%CUDA_DEVICE_ORDER%"=="PCI_BUS_ID" (setx CUDA_DEVICE_ORDER PCI_BUS_ID) > nul
 
-@set "command=& .\InitStandalone.ps1"
+@set "command=& .\Scripts\InitStandalone.ps1"
 
 @echo off
 

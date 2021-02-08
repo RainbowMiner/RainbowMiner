@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -23,7 +25,7 @@ catch {
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {@("BTC") + @($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {@("BTC") + @($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     $Currency = $_.Name
     try {
         $Request = Invoke-RestMethodAsync "http://blockmasters.co/api/walletEx?address=$($_.Value)" -delay $(if ($Count){2000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)

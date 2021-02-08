@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -61,6 +61,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Key = "$($Pool_Algorithm)_$($Pool_CoinSymbol)".ToLower()
     $Pool_PoolFee = if ($PoolCoins_Request.$Pool_CoinSymbol.fees_solo -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.fees_solo} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     #$Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
@@ -112,6 +113,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
+            SoloMining    = $true
 			ErrorRatio    = $Stat.ErrorRatio
             Failover      = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
                 [PSCustomObject]@{
@@ -122,6 +124,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Pass          = "m=party.$PartyPassword,c=$Pool_Currency{diff:,d=`$difficulty}"
                 }
             })
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

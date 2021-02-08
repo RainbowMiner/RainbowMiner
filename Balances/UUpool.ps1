@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -20,7 +22,7 @@ if (-not $Pool_Request -or -not ($Pool_Request | Measure-Object).Count) {
 }
 
 $Count = 0
-$Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -replace "^VDS$","VOLLAR";$Config.Pools.$Name.Wallets.$Pool_Currency -or $Config.Pools.$Name.Wallets."$($_.coin)"} | ForEach-Object {
+$Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -replace "^VDS$","VOLLAR";($Config.Pools.$Name.Wallets.$Pool_Currency -or $Config.Pools.$Name.Wallets."$($_.coin)") -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Pool_Currency)} | ForEach-Object {
     try {
         $Request = Invoke-RestMethodAsync "https://uupool.cn/api/getWallet.php?coin=$($_.coin)&address=$(if ($Config.Pools.$Name.Wallets.$Pool_Currency) {$Config.Pools.$Name.Wallets.$Pool_Currency} else {$Config.Pools.$Name.Wallets."$($_.coin)"})" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++

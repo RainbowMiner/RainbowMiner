@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -7,24 +7,24 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-if ($IsLinux) {
-    $Path = ".\Bin\CPU-Xlarig\xlarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-xlarig/XLArig-v5.0.1-linux-x86_64.zip"
-    $DevFee = 0.0
-} else {
-    $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-xlarig/XLArig-v5.0.1-win64.zip"
-    $DevFee = 0.0
-}
 $ManualUri = "https://github.com/scala-network/XLArig/releases"
 $Port = "541{0:d2}"
-$Version = "5.0.1"
+$Version = "5.2.0"
 
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-Xlarig\xlarig"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.0-xlarig/XLArig-v5.2.0-linux-x86_64.zip"
+    $DevFee = 0.0
+} else {
+    $Path = ".\Bin\CPU-Xlarig\xlarig520.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.0-xlarig/XLArig-v5.2.0-win64.zip"
+    $DevFee = 0.0
+}
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "defyx"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "panthera"; Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -45,10 +45,10 @@ if ($InfoOnly) {
 
 $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU.Where({$_.Model -eq $Miner_Model})
     
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -79,8 +79,8 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     }
                     Params  = $Params
                     HwSig   = "$(($Global:DeviceCache.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"
-                    Threads = if ($Session.Config.CPUMiningThreads){$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.Threads}
-                    Affinity= if ($Session.Config.CPUMiningAffinity -ne '') {$Session.Config.CPUMiningAffinity} else {$null}
+                    Threads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}  else {$Global:GlobalCPUInfo.Threads}
+                    Affinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity} else {$null}
                 }
 
 				[PSCustomObject]@{
@@ -105,5 +105,5 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    }
+    })
 }

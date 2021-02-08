@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -25,7 +25,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("eu","useast");                 host = "-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("asia","eu","useast");          host = "-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
     [PSCustomObject]@{regions = @("asia","eu","uswest","useast"); host = ".ethermine.org";     rpc = "api.ethermine.org";     symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000}
 )
 
@@ -37,6 +37,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Ports = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Request = [PSCustomObject]@{}
 
@@ -82,7 +84,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
                 WTM           = $true
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
+                EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

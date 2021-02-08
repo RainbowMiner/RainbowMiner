@@ -1,36 +1,47 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "AEON";  port = 10650; fee = 0.9; rpc = "aeon"; region = @("de","fi","hk")}
-    [PSCustomObject]@{symbol = "ARQ";   port = 10640; fee = 0.9; rpc = "arqma"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "TUBE";  port = 10280; fee = 0.9; rpc = "tube"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "BLOC";  port = 10430; fee = 0.9; rpc = "bloc"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "CCX";   port = 10360; fee = 0.9; rpc = "conceal"; region = @("fi","de","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "XEQ";   port = 10600; fee = 0.9; rpc = "equilibria"; region = @("de","hk")}
-    [PSCustomObject]@{symbol = "GRFT";  port = 10100; fee = 0.9; rpc = "graft"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "XHV";   port = 10450; fee = 0.9; rpc = "haven"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "IRD";   port = 10670; fee = 0.9; rpc = "iridium"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "LOKI";  port = 10110; fee = 0.9; rpc = "loki"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "MSR";   port = 10150; fee = 0.9; rpc = "masari"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "XMR";   port = 10190; fee = 0.9; rpc = "monero"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "QRL";   port = 10370; fee = 0.9; rpc = "qrl"; region = @("de")}
-    [PSCustomObject]@{symbol = "RYO";   port = 10270; fee = 0.9; rpc = "ryo"; region = @("de","fi")}
-    [PSCustomObject]@{symbol = "XLA";   port = 10130; fee = 0.9; rpc = "scala"; region = @("de","fi","hk")}
-    [PSCustomObject]@{symbol = "SUMO";  port = 10610; fee = 0.9; rpc = "sumo"; region = @("de","fi")}
-    [PSCustomObject]@{symbol = "XWP";   port = 10440; fee = 0.9; rpc = "swap"; divisor = 32; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "TRTL";  port = 10380; fee = 0.9; rpc = "turtlecoin"; region = @("de","fi","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "UPX";   port = 10470; fee = 0.9; rpc = "uplexa"; region = @("fi","de","ca","hk","sg")}
-    [PSCustomObject]@{symbol = "WOW";   port = 10660; fee = 0.9; rpc = "wownero"; region = @("de","fi","hk")}
-    [PSCustomObject]@{symbol = "XCASH"; port = 10490; fee = 0.9; rpc = "xcash"; region = @("fi","de","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "AEON";  port = 10651; fee = 0.9; rpc = "aeon"; region = @("de","fi","hk")}
+    [PSCustomObject]@{symbol = "ARQ";   port = 10641; fee = 0.9; rpc = "arqma"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "BEAM";  port = 10231; fee = 0.9; rpc = "beam"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "TUBE";  port = 10281; fee = 0.9; rpc = "bittube"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "CLO";   port = 10211; fee = 0.9; rpc = "callisto"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "CCX";   port = 10361; fee = 0.9; rpc = "conceal"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "CFX";   port = 10221; fee = 0.9; rpc = "conflux"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "CTXC";  port = 10321; fee = 0.9; rpc = "cortex"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "DERO";  port = 10121; fee = 0.9; rpc = "dero"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "ERG";   port = 10251; fee = 0.9; rpc = "ergo"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "ETC";   port = 10161; fee = 0.9; rpc = "etc"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "ETH";   port = 10201; fee = 0.9; rpc = "ethereum"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "EXP";   port = 10181; fee = 0.9; rpc = "expanse"; region = @("de","fi","ca","hk","sg")}
+    #[PSCustomObject]@{symbol = "GRIN-SEC";port = 10301; fee = 0.9; rpc = "grin"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "GRIN-PRI";port = 10301; fee = 0.9; rpc = "grin"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "XHV";   port = 10451; fee = 0.9; rpc = "haven"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "KVA";   port = 10141; fee = 0.9; rpc = "kevacoin"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "MSR";   port = 10151; fee = 0.9; rpc = "masari"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "XMR";   port = 10191; fee = 0.9; rpc = "monero"; region = @("de","fi","ca","hk","sg")}
+    #[PSCustomObject]@{symbol = "MWC-SEC";port = 10311; fee = 0.9; rpc = "mwc"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "MWC-PRI";port = 10311; fee = 0.9; rpc = "mwc"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "QRL";   port = 10371; fee = 0.9; rpc = "qrl"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "RVN";   port = 10241; fee = 0.9; rpc = "ravencoin"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "RYO";   port = 10271; fee = 0.9; rpc = "ryo"; region = @("de","fi")}
+    [PSCustomObject]@{symbol = "XLA";   port = 10131; fee = 0.9; rpc = "scala"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "SUMO";  port = 10611; fee = 0.9; rpc = "sumo"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "XWP";   port = 10441; fee = 0.9; rpc = "swap"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "TRTL";  port = 10381; fee = 0.9; rpc = "turtlecoin"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "UPX";   port = 10471; fee = 0.9; rpc = "uplexa"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "WOW";   port = 10661; fee = 0.9; rpc = "wownero"; region = @("de","fi","ca","hk","sg")}
+    [PSCustomObject]@{symbol = "XCASH"; port = 10491; fee = 0.9; rpc = "xcash"; region = @("de","fi","ca","hk","sg")}
 )
 
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Config.Pools.$Name.Wallets."$($_.symbol2)")} | Foreach-Object {
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
     $Pool_Currency = $_.symbol
-    $Pool_Currency2 = $_.symbol2
     $Pool_RpcPath  = $_.rpc
 
     $Pool_Request = [PSCustomObject]@{}

@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -57,6 +57,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     if ($Pool_Request.$Pool_Algorithm.mbtc_mh_factor) {
         $Pool_Factor = [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
@@ -110,6 +111,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -17,12 +17,12 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "LTHN"; port = 6070; fee = 1.0; rpc = "lethean"; user="%wallet%+%worker%"}
+    #[PSCustomObject]@{symbol = "LTHN"; port = 6070; fee = 1.0; rpc = "lethean"; user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "LOKI"; port = 5577; fee = 1.0; rpc = "loki";    user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "MSR";  port = 6060; fee = 1.0; rpc = "msr";     user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "QRL";  port = 7000; fee = 1.0; rpc = "qrl";     user="%wallet%+%worker%"}
+    #[PSCustomObject]@{symbol = "QRL";  port = 7000; fee = 1.0; rpc = "qrl";     user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "RYO";  port = 5555; fee = 1.0; rpc = "ryo";     user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "TUBE"; port = 6040; fee = 1.0; rpc = "tube";    user="%wallet%+%worker%"}
+    [PSCustomObject]@{symbol = "TUBE"; port = 6040; fee = 1.0; rpc = "bittubecash"; user="%wallet%+%worker%"; divisor = 40}
     [PSCustomObject]@{symbol = "XWP";  port = 6080; fee = 1.0; rpc = "xfh";     user="%wallet%+%worker%"; divisor = 32}
     [PSCustomObject]@{symbol = "WOW";  port = 6090; fee = 1.0; rpc = "wow";     user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "XHV";  port = 5566; fee = 1.0; rpc = "xhv";     user="%wallet%+%worker%"}
@@ -44,6 +44,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_RpcPath = $_.rpc.ToLower()
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     $Pool_Port = $_.port
     $Pool_Fee  = $_.fee
@@ -97,7 +99,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

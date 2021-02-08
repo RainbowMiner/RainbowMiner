@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -17,26 +17,31 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = "asia"
 
 [hashtable]$Pool_RegionsTable = @{}
-@("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request = [PSCustomObject]@{}
 try {
     $Pool_Request = Invoke-RestMethodAsync "http://rbminer.net/api/data/f2pool.json" -tag $Name -cycletime 300
+    $Pool_Request.PSObject.Properties.Value.Region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
 }
 
-$Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency;$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
+$Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency;$Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
 
+    $Pool_Coin = Get-Coin $Pool_Currency
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
-    if (-not $Pool_CoinName) {$Pool_CoinName = $Pool_Currency}
+
+    if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
+        $Pool_Wallet = $Wallets."$($_.altsymbol)"
+    }
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     if (-not $InfoOnly) {
-        $Divisor  = Switch($_.scale) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
-        $Hashrate = Switch($_.hashrateunit) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
+        $Divisor  = ConvertFrom-Hash "1$($_.scale)"
+        $Hashrate = ConvertFrom-Hash "1$($_.hashrateunit)"
         $Pool_Rate = $Global:Rates.$Pool_Currency
         if (-not $Pool_Rate -and $_.price -and $Global:Rates.USD) {$Pool_Rate = $Global:Rates.USD / $_.price}                          
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$($_.id -split '-' | Select-Object -Skip 1)_Profit" -Value $(if ($Pool_Rate) {$_.estimate / $Divisor / $Pool_Rate} else {0}) -Duration $StatSpan -ChangeDetection $false -HashRate ($_.hashrate * $Hashrate) -Quiet
@@ -45,12 +50,12 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
 
     $Pool_SSL = $Pool_Currency -in @("BEAM")
 
-    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
+    $Pool_Wallet = Get-WalletWithPaymentId $Pool_Wallet -pidchar '.'
     foreach($Region in $_.region) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
-            CoinName      = $Pool_CoinName
+            CoinName      = $Pool_Coin.Name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live
@@ -67,7 +72,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             PoolFee       = $_.fee
             DataWindow    = $DataWindow
             Hashrate      = $Stat.HashRate_Live
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+            EthMode       = $Pool_EthProxy
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

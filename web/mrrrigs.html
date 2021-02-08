@@ -5,23 +5,52 @@
 <p>
     "Adv.Price", "Min.Price", "Suggested" and "Last Price" in BTC per day and "Unit" / "Rig Price" in BTC per day
 </p>
+<div class="d-flex align-items-center">
+    <div class="m-2">
+        <a href="#" id="updatemrr" class="btn btn-primary">Run Rig-Updates</a>
+    </div>
+</div>
+
+<table id="mrrcontrol" class="table"
+       data-toggle="table"
+       data-url="/mrrcontrol"
+       data-filter-control="false"
+       data-filter-show-clear="false"
+       data-sort-order="asc"
+       data-sort-name="Name"
+       data-cache="false"
+       data-show-columns="true"
+       data-show-toggle="false"
+       data-show-refresh="true"
+       data-icons-prefix="fa"
+       data-icons="icons"
+       data-detail-view="true"
+       data-detail-formatter="detailFormatter">
+    <thead>
+        <tr>
+            <th data-field="Name" data-sortable="true">Worker Name</th>
+            <th data-field="PriceFactor" data-align="right" data-sortable="true">Profit Factor</th>
+            <th data-field="LastReset" data-align="right" data-sortable="true">Last Reset</th>
+        </tr>
+    </thead>
+</table>
 
 <table id="mrrrigs" class="table"
-        data-toggle="table"
-        data-url="/mrrrigs"
-        data-response-handler="formatMRRRigs"
-        data-filter-control="true"
-        data-filter-show-clear="true"
-        data-sort-order="asc"
-        data-sort-name="Title"
-        data-cache="false"
-        data-show-columns="true"
-        data-show-toggle="true"
-        data-show-refresh="true"
-        data-icons-prefix="fa"
-        data-icons="icons"
-        data-detail-view="true"
-        data-detail-formatter="detailFormatter">
+       data-toggle="table"
+       data-url="/mrrrigs"
+       data-response-handler="formatMRRRigs"
+       data-filter-control="true"
+       data-filter-show-clear="true"
+       data-sort-order="asc"
+       data-sort-name="Title"
+       data-cache="false"
+       data-show-columns="true"
+       data-show-toggle="true"
+       data-show-refresh="true"
+       data-icons-prefix="fa"
+       data-icons="icons"
+       data-detail-view="true"
+       data-detail-formatter="detailFormatter">
     <thead>
         <tr>
             <th data-field="Title" data-sortable="true" data-filter-control="select">Name</th>
@@ -43,24 +72,35 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
     $(function () {
-        function refreshTable() {
-            if (!$("table#mrrrigs tr.detail-view").length) $("table#mrrrigs").bootstrapTable("refresh", { silent: true });
-            window.setTimeout(refreshTable, 600000);
-        }
-        window.setTimeout(refreshTable, 600000);
+    $("#updatemrr").click(function (event) {
+    event.stopPropagation()
+    $.ajax({
+    url: '/updatemrr', success: function (result) {
+    $('.modal-body').text('MiningRigRental rigs will be automatically created/updated next round.');
+    $('.modal-title').text('Run Rig-Updates');
+    $('#myModal').modal({ show: true });
+    }
+    })
+    });
+
+    function refreshTable() {
+    if (!$("table#mrrrigs tr.detail-view").length) $("table#mrrrigs").bootstrapTable("refresh", { silent: true });
+    window.setTimeout(refreshTable, 600000);
+    }
+    window.setTimeout(refreshTable, 600000);
     });
 
     function formatMRRRigs(data) {
-        // This function can alter the returned data before building the table, formatting it in a way
-        // that is easier to display and manipulate in a table
-        $.each(data, function (index, item) {
-            item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
-            item.tHashRateAdv = (item.HashRateAdv) ? formatHashRate(item.HashRateAdv) : "-";
-            item.tModifier = (item.Modifier != '0') ? item.Modifier + " %" : "-";
-            item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
-            item.tHours = "" + item.MinHours + "-" + item.MaxHours + " h";
-        });
-        return data;
+    // This function can alter the returned data before building the table, formatting it in a way
+    // that is easier to display and manipulate in a table
+    $.each(data, function (index, item) {
+    item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
+    item.tHashRateAdv = (item.HashRateAdv) ? formatHashRate(item.HashRateAdv) : "-";
+    item.tModifier = (item.Modifier != '0') ? item.Modifier + " %" : "-";
+    item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
+    item.tHours = "" + item.MinHours + "-" + item.MaxHours + " h";
+    });
+    return data;
     }
 
 

@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -38,7 +38,7 @@ $DevFeeDual = 1.0
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = ""; SecondIntensity = 00; Params = ""} #Ethash
+    #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 3; SecondAlgorithm = ""; SecondIntensity = 00; Params = ""} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 40; Params = ""} #Ethash/Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 60; Params = ""} #Ethash/Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = "blake2s"; SecondIntensity = 80; Params = ""} #Ethash/Blake2s
@@ -96,7 +96,7 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
 		$Miner_Model = $_.Model
-		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
+		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 		$Fee = 0
 		if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 4gb}) {$Fee=$DevFee}
 
@@ -106,7 +106,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			Default {$Arguments_Platform = ""}
 		}
  
-		$Commands | ForEach-Object {
+		$Commands.ForEach({
             $First = $true
 
 			$MainAlgorithm = $_.MainAlgorithm
@@ -115,16 +115,16 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $SecondAlgorithm = $_.SecondAlgorithm
             $SecondAlgorithm_Norm = if ($SecondAlgorithm) {Get-Algorithm $SecondAlgorithm} else {$null}
 
-			$MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$MainAlgorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
+			$MinMemGB = Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb
 
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
             if ($SecondAlgorithm_Norm) {
                 $Miner_Config = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)".Intensity
                 if ($Miner_Config -and $Miner_Config -notcontains $_.SecondIntensity) {$Miner_Device = $null}
             }
 
-			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
+			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
@@ -189,6 +189,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					}
 				}
 			}
-		}
+		})
 	}
 }

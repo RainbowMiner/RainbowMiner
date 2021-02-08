@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -7,28 +7,51 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-if ($IsLinux) {
-    $Path = ".\Bin\ANY-Nanominer\nanominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.1-nanominer/nanominer-linux-1.7.1.tar.gz"
-} else {
-    $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.1-nanominer/nanominer-windows-1.7.1.zip"
-}
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
-$Cuda = "8.0"
+$Cuda = "10.0"
 $DevFee = 3.0
-$Version = "1.7.1"
+$Version = "3.2.0"
+
+if ($IsLinux) {
+    $Path = ".\Bin\ANY-Nanominer\nanominer"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-linux-3.2.0-cuda11.tar.gz"
+            Cuda = "11.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-linux-3.2.0.tar.gz"
+            Cuda = "10.0"
+        }
+    )
+} else {
+    $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-windows-3.2.0-cuda11.zip"
+            Cuda = "11.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-windows-3.2.0.zip"
+            Cuda = "10.0"
+        }
+    )
+}
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";              Params = ""; MinMemGb = 6; MinMemGbW10 = 8; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
-    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";             Params = ""; MinMemGb = 6; MinMemGbW10 = 8; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckarood29
-    [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 1.0} #Ethash
-    #[PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash2/PASCcoin, RHminerCpu is more than 350% faster
-    [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #RandomX
-    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #UbqHash
+    [PSCustomObject]@{MainAlgorithm = "autolykos";               Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 5.0} #Autolycos/Ergo
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
+    [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "^F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0} #EtcHash
+    [PSCustomObject]@{MainAlgorithm = "KawPow";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #KawPOW
+    #[PSCustomObject]@{MainAlgorithm = "Octopus";    DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("NVIDIA");       ExtendInterval = 2; DevFee = 2.0} #Octopus/Conflux
+    [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 0.0} #RandomHash2/PASCcoin, RHminerCpu is more than 350% faster
+    [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0} #RandomX
+    [PSCustomObject]@{MainAlgorithm = "Verushash";               Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes")} #Verushash
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "^F2Pool"} #UbqHash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -39,7 +62,7 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda.Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
@@ -47,25 +70,42 @@ if ($InfoOnly) {
     return
 }
 
-if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+$Uri = ""
+if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
+    for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+            $Uri = $UriCuda[$i].Uri
+            $Cuda= $UriCuda[$i].Cuda
+        }
+    }
+}
+
+if (-not $Uri) {
+    $Uri = $UriCuda[0].Uri
+}
 
 foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
-        $DeviceParams = if ($Miner_Vendor -eq "CPU") {"$(if ($Session.Config.CPUMiningThreads){" -cputhreads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" -processorsaffinity $((ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -join ",")"})"} else {""}
-    
-        $Commands |  Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.CPUFeatures -or ($Global:GlobalCPUInfo.Features -and -not (Compare-Object @($Global:GlobalCPUInfo.Features.Keys) $_.CPUFeatures | Where-Object SideIndicator -eq "=>" | Measure-Object).Count))}).ForEach({
             $First = $true
-            $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+            $Algorithm_Norm_0 = if ($_.Algorithm) {Get-Algorithm $_.Algorithm} else {Get-Algorithm $_.MainAlgorithm}
 
-            $MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} elseif ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
+            if ($Miner_Vendor -eq "CPU") {
+                $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+                $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+            }
 
-            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
-		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($Algorithm_Norm -ne "Ethash" -or $Pools.$Algorithm_Norm.Name -notmatch "F2Pool")) {
+            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (($Algorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and (Test-VRAM $_ $MinMemGb))}
+
+            $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
+
+		    foreach($Algorithm_Norm in $All_Algorithms) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or ($Pools.$Algorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol))) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -85,6 +125,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
 				    $Arguments = [PSCustomObject]@{
                         Algo      = $_.MainAlgorithm
+                        Coin      = $Pools.$Algorithm_Norm.CoinSymbol
 					    Host      = $Pools.$Algorithm_Norm.Host
 					    Port      = $Pools.$Algorithm_Norm.Port
 					    SSL       = $Pools.$Algorithm_Norm.SSL
@@ -93,8 +134,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Worker    = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
                         Pass      = $Pools.$Algorithm_Norm.Pass
                         Email     = $Pools.$Algorithm_Norm.Email
-                        Threads   = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningThreads} else {$null}
-                        Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Mineable_Index} else {$null} 
+                        Threads   = if ($Miner_Vendor -eq "CPU") {$CPUThreads} else {$null}
+                        Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.BusId_Mineable_Index} else {$null}
 				    }
 
 				    [PSCustomObject]@{
@@ -112,7 +153,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Penalty        = 0
 					    DevFee         = $_.DevFee
 					    ManualUri      = $ManualUri
-                        MiningAffinity = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningAffinity} else {$null}
+                        MiningAffinity = if ($Miner_Vendor -eq "CPU") {$CPUAffinity} else {$null}
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
@@ -120,6 +161,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 				    }
 			    }
 		    }
-        }
+        })
     }
 }

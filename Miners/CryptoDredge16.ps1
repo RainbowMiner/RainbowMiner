@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
@@ -28,12 +28,12 @@ $UriCuda = @(
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "allium";      NH = $true;  MinMemGb = 1; Params = ""} #Allium
-    [PSCustomObject]@{MainAlgorithm = "exosis";      NH = $true;  MinMemGb = 1; Params = ""} #Exosis
-    [PSCustomObject]@{MainAlgorithm = "hmq1725";     NH = $true;  MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v3";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2Re3 (CD 0.22.0 faster)
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt";   NH = $true;  MinMemGb = 1; Params = ""} #Neoscrypt
-    [PSCustomObject]@{MainAlgorithm = "phi2";        NH = $true;  MinMemGb = 1; Params = ""} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "allium";      MinMemGb = 1; Params = ""} #Allium
+    [PSCustomObject]@{MainAlgorithm = "bitcore";     MinMemGb = 1; Params = ""} #BitCore
+    #[PSCustomObject]@{MainAlgorithm = "exosis";      MinMemGb = 1; Params = ""} #Exosis (EXO is x16r)
+    #[PSCustomObject]@{MainAlgorithm = "hmq1725";     MinMemGb = 1; Params = ""} #HMQ1725 (CD 0.23.0 faster)
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v3";     MinMemGb = 1; Params = ""} #Lyra2Re3 (CD 0.22.0 faster)
+    [PSCustomObject]@{MainAlgorithm = "phi2";        MinMemGb = 1; Params = ""} #PHI2
 )
 
 
@@ -63,19 +63,19 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
 if (-not $Uri) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
-    $Miner_Model = $_.Model    
+    $Miner_Model = $_.Model
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-    $Commands | ForEach-Object {
+    $Commands.ForEach({
         $First = $true
-        $MinMemGb = $_.MinMemGb
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.Architecture -in @("Other","Pascal","Turing")}
 
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         
-		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                 if ($First) {
 		            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 	                $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -105,5 +105,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    }
+    })
 }

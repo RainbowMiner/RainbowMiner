@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -54,6 +54,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
     $Pool_Symbol = ''
     $Pool_Port = [int]$_.Value.port
     $Pool_Host = "$($_.Value.name).mining-dutch.nl"
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
         
     $Pool_Factor = [double]$_.Value.mbtc_mh_factor
     if ($Pool_Factor -le 0) {
@@ -93,7 +94,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
                 DataWindow    = $DataWindow
                 Workers       = [int]$_.Value.workers_shared
                 Hashrate      = $Stat.HashRate_Live
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

@@ -1,4 +1,6 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
@@ -25,23 +27,23 @@ catch {
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     try {
         $Request = Invoke-RestMethodAsync "https://icemining.ca/api/wallet/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
+            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned $(if ($Request -is [string] -and $Request.Length -lt 200) {$Request} else {"nothing"}). "
         } else {
             [PSCustomObject]@{
-                Caption     = "$($Name) ($($Request.currency))"
+                Caption     = "$($Name) ($($_.Name))"
 				BaseName    = $Name
-                Currency    = $Request.currency
+                Currency    = $_.Name
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold
                 Total       = [Decimal]$Request.total_unpaid
                 Paid        = [Decimal]$Request.total_paid
                 Earned      = [Decimal]$Request.total_earned
-                Payouts     = @(Get-BalancesPayouts $Request.payouts | Select-Object)
+                Payouts     = @(Get-BalancesPayouts $Request.user_payments | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }

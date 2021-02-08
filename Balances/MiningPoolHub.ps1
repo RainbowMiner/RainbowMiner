@@ -1,11 +1,13 @@
-﻿param(
+﻿using module ..\Modules\Include.psm1
+
+param(
     $Config
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $PoolConfig = $Config.Pools.$Name
 
-if(!$PoolConfig.API_Key) {
+if(-not $PoolConfig.API_Key) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no API key specified. "
     return
 }
@@ -27,24 +29,41 @@ if (($Request.getuserallbalances.data | Get-Member -MemberType NoteProperty -Err
     return
 }
 
-$Request.getuserallbalances.data | Foreach-Object {
+$Pool_Request = [PSCustomObject]@{}
 
-    $Currency = Get-CoinSymbol $_.coin
-    if (-not $Currency -and $_.coin -match '-') {$Currency = Get-CoinSymbol ($_.coin -replace '\-.*$')}
+try {
+    $Pool_Request = Invoke-RestMethodAsync "https://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&{timestamp}" -tag $Name -cycletime 120
+}
+catch {
+    if ($Error.Count){$Error.RemoveAt(0)}
+    Write-Log -Level Warn "Pool API ($Name) has failed. "
+    return
+}
+
+if (($Pool_Request.return | Measure-Object).Count -le 1) {
+    Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+    return
+}
+
+$Request.getuserallbalances.data | Where-Object {$_.coin} | Foreach-Object {
+
+    $Pool_CoinName = $_.coin
+    $Currency = ($Pool_Request.return | Where-Object {$_.coin_name -eq $Pool_CoinName}).symbol
     if (-not $Currency) {
-        $Currency = $_.coin
         Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "
     }
 
-    [PSCustomObject]@{
-        Caption     = "$($Name) ($($Currency))"
-		BaseName    = $Name
-        Currency    = $Currency
-        Balance     = [Decimal]$_.confirmed
-        Pending     = [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
-        Total       = [Decimal]$_.confirmed + [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
-        Paid        = [Decimal]0
-		Payouts     = @()
-        Lastupdated = (Get-Date).ToUniversalTime()
+    if (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency) {
+        [PSCustomObject]@{
+            Caption     = "$($Name) ($($Currency))"
+		    BaseName    = $Name
+            Currency    = $Currency
+            Balance     = [Decimal]$_.confirmed
+            Pending     = [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
+            Total       = [Decimal]$_.confirmed + [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
+            Paid        = [Decimal]0
+		    Payouts     = @()
+            Lastupdated = (Get-Date).ToUniversalTime()
+        }
     }
 }

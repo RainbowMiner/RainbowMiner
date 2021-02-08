@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -12,7 +12,7 @@ param(
     [String]$StatAverage = "Minute_10"
 )
 
-if (-not $InfoOnly -and -not (Compare-Object @("ETH","ETC","ETP","GRIN") $Wallets.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent)) {return}
+if (-not $InfoOnly -and -not (Compare-Object @("ETH","ETC","ETP") @($Wallets.PSObject.Properties.Name | Select-Object) -IncludeEqual -ExcludeDifferent)) {return}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -34,6 +34,8 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets."$($_ -replace "
     $Pool_Algorithm = $Pool_Request1.algo
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
 
     if (-not $InfoOnly) {
         $timestamp      = (Get-Date).ToUniversalTime()
@@ -72,7 +74,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets."$($_ -replace "
         TSL           = $Pool_TSL
         BLK           = $Stat.BlockRate_Average
         WTM           = $true
-        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+        EthMode       = $Pool_EthProxy
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1

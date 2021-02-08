@@ -1,4 +1,4 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -22,8 +22,8 @@ if (-not $InfoOnly) {
 }
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag $Name
-    $Pool_MiningRequest = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/algorithms/" -tag $Name -cycle 3600
+    $Pool_Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag $Name -timeout 20
+    $Pool_MiningRequest = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/algorithms/" -tag $Name -cycle 3600 -timeout 20
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -44,7 +44,9 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
-$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | Where-Object {$_.algorithm -ne "GRINCUCKAROOD29"} | ForEach-Object {
+$Grin29_Algorithm = (Get-Coin "GRIN").algo
+
+$Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and [Double]$_.speed -gt 0) -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
     $Pool_Port = $Pool_Data.port
@@ -54,20 +56,28 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
-        "CuckooCycle"     {"AE"}
-        "Cuckaroo29"      {"XBG"}
-        #"Cuckarood29"     {"GRIN"}
-        "Cuckaroom29"     {"GRIN"}
-        "Eaglesong"       {"CKB"}
-        "EquihashR25x5x3" {"BEAM"}
-        "Lbry"            {"LBC"}
-        "RandomX"         {"XMR"}
+        "BeamHash3"         {"BEAM"}
+        "CuckooCycle"       {"AE"}
+        "Cuckaroo29"        {"XBG"}
+        "Cuckarood29"       {"MWC"}
+        "$Grin29_Algorithm" {"GRIN"}
+        "Eaglesong"         {"CKB"}
+        "EquihashR25x5x3"   {"BEAM"}
+        "Lbry"              {"LBC"}
+        "RandomX"           {"XMR"}
+        "Octopus"           {"CFX"}
     }
     
     $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
+
+    $Pool_EthProxy = $null
+
+    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+        $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    }
 
     $Pool_Host = ".nicehash.com"
 
@@ -108,7 +118,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                             Pass     = "x"
                         }
                     })
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                    EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1

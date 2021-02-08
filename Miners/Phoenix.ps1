@@ -1,34 +1,68 @@
-﻿using module ..\Include.psm1
+﻿using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Pools,
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
-
-if ($IsLinux) {
-    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.9c-phoenix/PhoenixMiner_4.9c_Linux.tar.gz"
-} else {
-    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.9c-phoenix/PhoenixMiner_4.9c_Windows.7z"
-}
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
 $Cuda = "8.0"
-$Version = "4.9c"
+$Version = "5.5c"
+
+if (-not $IsWindows -and -not $IsLinux) {return}
+
+if ($IsLinux) {
+    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.5c-phoenix/PhoenixMiner_5.5c_Linux.tar.gz"
+} else {
+    $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.5c-phoenix/PhoenixMiner_5.5c_Windows.7z"
+}
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "progpow2gb" ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow2GB
-    [PSCustomObject]@{MainAlgorithm = "progpow3gb" ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow3GB
-    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow
+    [PSCustomObject]@{MainAlgorithm = "etchash"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Etchash
+    [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @(); ExcludePoolName = "^SuprNova"} #ProgPow
 )
 $CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1"
+
+$CoinXlat = [PSCustomObject]@{
+    "AKA" = "akroma"
+    "ATH" = "ath"
+    "AURA" = "aura"
+    "B2G" = "b2g"
+    "BCI" = "bci"
+    "CLO" = "clo"
+    "DBIX" = "dbix"
+    "EGEM" = "egem"
+    "ELLA" = "ella"
+    "ESN" = "esn"
+    "ETC" = "etc"
+    "ETCC" = "etcc"
+    "ETH" = "eth"
+    "ETHO" = "etho"
+    "ETP" = "etp"
+    "ETZ" = "etz"
+    "EXP" = "exp"
+    "GEN" = "gen"
+    "HBC" = "hbc"
+    "MIX" = "mix"
+    "MOAC" = "moac"
+    "MUSIC" = "music"
+    "NUKO" = "nuko"
+    "PGC" = "pgc"
+    "PIRL" = "pirl"
+    "QKC" = "qkc"
+    "REOSC" = "reosc"
+    "UBQ" = "ubq"
+    "VIC" = "vic"
+    "WHL" = "whale"
+    "YOC" = "yoc"
+}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -50,8 +84,8 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
-		$Miner_Model = $_.Model
+        $Miner_Model = $_.Model
+		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
 		switch($_.Vendor) {
 			"NVIDIA" {$Miner_Deviceparams = "-nvidia -nvdo 1"}
@@ -59,19 +93,19 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			Default {$Miner_Deviceparams = ""}
 		}
 
-		$Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+		$Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
             $First = $true
 			$Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-			$MinMemGB = if ($_.MainAlgorithm -eq "Ethash") {Get-EthDAGSize $Pools.$Algorithm_Norm_0.CoinSymbol} else {$_.MinMemGB}
+			$MinMemGB = Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
 
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
-			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -notmatch "^progpow" -or $Pools.$Algorithm_Norm.Name -ne "SuprNova")) {
+			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
+				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-			            $Miner_Name = ((@($Name) + @("$($Algorithm_Norm_0 -replace '^(ethash|progpow)', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
+			            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 			            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index}) -join ''
                         $First = $false
                     }
@@ -81,15 +115,19 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         "minerproxy"       {"-proto 1"}
                         "ethproxy"         {"-proto 2"}
                         "qtminer"          {"-proto 3"}
+                        "ethstratum"       {"-proto 4"}
+                        "ethstratum1"      {"-proto 4"}
 						"ethstratumnh"     {"-proto 4 -stales 0"}
+                        "ethstratum2"      {"-proto 5"}
 						default            {"-proto 1"}
 					}
 
                     if ($Pools.$Algorithm_Norm.Name -eq "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
 
+                    $CoinSymbol = $Pools.$Algorithm_Norm.CoinSymbol
                     $Coin = if ($Algorithm_Norm -match "ProgPow") {"bci"}
-                            elseif ($Pools.$Algorithm_Norm.CoinSymbol -eq "UBQ" -or $Pools.$Algorithm_Norm.CoinName -like "ubiq") {"ubq"}
-                            elseif ($Pools.$Algorithm_Norm.CoinSymbol -eq "QKC" -or $Pools.$Algorithm_Norm.CoinName -like "quarkchain") {"qkc"}
+                            elseif ($CoinSymbol -and $CoinXlat.$CoinSymbol) {$CoinXlat.$CoinSymbol}
+                            elseif ($Algorithm_Norm_0 -eq "EtcHash") {"etc"}
                             else {"auto"}
 
 					[PSCustomObject]@{
@@ -115,6 +153,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					}
 				}
 			}
-		}
+		})
 	}
 }
