@@ -25,16 +25,6 @@ if ($IsLinux) {
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda10.2-linux-amd64.7z"
             Cuda = "10.2"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-cuda10.0-linux-amd64.7z"
-            Cuda = "10.0"
-            Version = "0.19.0"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.1-ethminer/ethminer-0.17.1-linux-x86_64.tar.gz"
-            Cuda = "9.0"
-            Version = "0.17.1"
         }
     )
 } else {
@@ -57,13 +47,12 @@ if ($IsLinux) {
             Cuda = "8.0"
         }
     )
-    $Version = "0.19.0-12"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 2} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
