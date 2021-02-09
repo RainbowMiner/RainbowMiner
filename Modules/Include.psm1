@@ -2249,6 +2249,10 @@ function Get-SubProcessIds {
 
     if (-not $IsWindows) {return}
 
+    $StopWatch = [System.Diagnostics.Stopwatch]::New()
+
+    $StopWatch.Restart()
+
     $WaitCount = 0
     $ProcessFound = 0
     $ArgumentList = "*$($ArgumentList.Replace("'","*").Replace('"',"*"))*" -replace "\*+","*"
@@ -2261,7 +2265,8 @@ function Get-SubProcessIds {
             Write-Log -Level Info "$($_.ProcessId) found for $FilePath"
         }
         $WaitCount++
-    } until (($WaitCount -gt 100) -or ($ProcessFound -gt $MultiProcess))
+    } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -gt $MultiProcess))
+    $StopWatch = $null
 }
 
 function Set-SubProcessPriority {
