@@ -13,12 +13,15 @@ $MiningProcess = [PowerShell]::Create()
 $MiningProcess.AddScript("Set-Location `"$($WorkingDirectory)`"; $EnvParams (Get-Process -Id `$PID).PriorityClass = `"$($PriorityClass)`"; & `"$($FilePath)`" $($ArgumentList.Replace('"','``"')) *>&1 | Write-Verbose -Verbose")
 $Result = $MiningProcess.BeginInvoke()
 do {
-    Start-Sleep -S 1
-    $MiningProcess.Streams.Verbose.ReadAll() | Foreach-Object {
-        $Line = "$($_)"
-        if ($LogPath) {Out-File -InputObject $Line -FilePath $LogPath -Append -Encoding UTF8}
-        $Line
+    if ($ControllerProcess.WaitForExit(1000)) {
+        $MiningProcess.Streams.ClearStreams() > $null
+        $MiningProcess.Stop() > $null
+    } else {
+        $MiningProcess.Streams.Verbose.ReadAll() | Foreach-Object {
+            $Line = "$($_)"
+            if ($LogPath) {Out-File -InputObject $Line -FilePath $LogPath -Append -Encoding UTF8}
+            $Line
+        }
+        $MiningProcess.Streams.ClearStreams() > $null
     }
-    $MiningProcess.Streams.ClearStreams() > $null
-    if (-not (Get-Process -Id $ControllerProcessID -ErrorAction Ignore)) {$MiningProcess.Stop() > $null}
 } until ($MiningProcess.IsCompleted)
