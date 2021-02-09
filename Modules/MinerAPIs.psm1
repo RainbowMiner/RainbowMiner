@@ -795,12 +795,12 @@ class Miner {
             try {
                 if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
                 if ($DeviceVendor -eq "NVIDIA") {
-                    if ($Global:IsLinux) {Invoke-NvidiaSettings $NvCmd}
-                    else {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd}
+                    Invoke-NvidiaSettings $NvCmd
                 } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
-                    if ($Global:IsLinux) {}
-                    else {}
-                } else {$Script:abControl.CommitChanges()}
+                    #t.b.i
+                } else {
+                    $Script:abControl.CommitChanges()
+                }
                 $applied | Foreach-Object {Write-Log $_}
                 if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
             } catch {

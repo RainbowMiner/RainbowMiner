@@ -2212,6 +2212,8 @@ function Start-SubProcessInScreen {
     [int[]]$ProcessIds = @()
     
     if ($JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
+
+    $JobOutput.StartLog | Foreach-Object {Write-Log -Level Info "$_"}
     
     [PSCustomObject]@{
         ScreenName = $ScreenName
@@ -4326,6 +4328,7 @@ function Invoke-NvidiaSettings {
         [Parameter(Mandatory = $False)]
         [Switch]$SetPowerMizer
     )
+    if (-not $NvCmd) {return}
     if ($IsLinux) {
         $Cmd = "$($NvCmd -join ' ')"
         if ($SetPowerMizer) {
@@ -4335,6 +4338,8 @@ function Invoke-NvidiaSettings {
         if ($Cmd) {
             Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         }
+    } elseif ($IsWindows) {
+        & ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd
     }
 }
 

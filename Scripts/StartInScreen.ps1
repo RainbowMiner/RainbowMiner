@@ -28,32 +28,61 @@ if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
         $started = $BashProc.WaitForExit(60000)
     }
 }
-if ($started) {
-    [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
-    $MinerExecutable = Split-Path $FilePath -Leaf
 
+$StartLog = @()
+
+if ($started) {
     $StopWatch.Restart()
+
     do {
         Start-Sleep -Milliseconds 500
-        if ($StartStopDaemon) {
-            if (Test-Path $PIDPath) {
-                $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
-                if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
+        [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
+    } until ($ScreenProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
+
+    if (-not $ScreenProcessId) {
+        $StartLog += "Failed to get screen."
+        $StartLog += "Result of `"screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'`""
+        Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'" | Foreach-Object {$StartLog += $_}
+        $StartLog += "Result of `"screen -ls`""
+        Invoke-Expression "screen -ls" | Foreach-Object {$StartLog += $_}
+    } else {
+
+        $StartLog += "Success: got id $ScreenProcessId for screen $ScreenName"
+
+        $MinerExecutable = Split-Path $FilePath -Leaf
+
+        $StopWatch.Restart()
+        do {
+            Start-Sleep -Milliseconds 500
+            if ($StartStopDaemon) {
+                if (Test-Path $PIDPath) {
+                    $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
+                    if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
+                }
+            } else {
+                $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $($_.Parent).Parent.Id -eq $ScreenProcessId}
+                if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
             }
+        } until ($Process -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
+
+        if ($Process) {
+            $StartLog += "Success: got id $($Process.Id) for $MinerExecutable in screen $ScreenName"
         } else {
-            $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $($_.Parent).Parent.Id -eq $ScreenProcessId}
-            if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
+            $StartLog += "Failed to get process for $ScreenName with id $ScreenProcessId"
+            $StartLog += "List of processes:"
+            Get-Process | Foreach-Object {"$($_.Name)`t$($_.Id)`t$($_.Parent.Id)"}
         }
-    } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
+
+    }
     $StopWatch.Stop()
 }
 
 if (-not $Process) {
-    [PSCustomObject]@{ProcessId = $null}
+    [PSCustomObject]@{ProcessId = $null;StartLog = $StartLog}
     return
 }
 
-[PSCustomObject]@{ProcessId = $Process.Id}
+[PSCustomObject]@{ProcessId = $Process.Id;StartLog = $StartLog}
 
 $ControllerProcess.Handle >$null
 $Process.Handle >$null
