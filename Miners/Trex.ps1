@@ -11,7 +11,6 @@ $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "316{0:d2}"
 $DevFee = 1.0
 $Version = "0.19.10"
-$AllowTuring = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
@@ -23,11 +22,12 @@ if ($IsLinux) {
         [PSCustomObject]@{
             Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.10-trex/t-rex-0.19.10-linux-cuda10.0.tar.gz"
             Cuda   = "10.0"
+            IsGtx  = $true
         },
         [PSCustomObject]@{
             Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.10-trex/t-rex-0.19.10-linux-cuda9.2.tar.gz"
             Cuda   = "9.2"
-            Arch   = @("Other","Pascal")
+            IsGtx  = $true
         }
     )
 } else {
@@ -40,11 +40,12 @@ if ($IsLinux) {
         [PSCustomObject]@{
             Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.10-trex/t-rex-0.19.10-win-cuda10.0.zip"
             Cuda   = "10.0"
+            IsGtx  = $true
         },
         [PSCustomObject]@{
             Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.10-trex/t-rex-0.19.10-win-cuda9.2.zip"
             Cuda   = "9.2"
-            Arch   = @("Other","Pascal")
+            IsGtx  = $true
         }
     )
 }
@@ -67,10 +68,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = ""; ExtendInterval = 2} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
-    [PSCustomObject]@{MainAlgorithm = "megabtx"; Params = ""} #MegaBTX (Bitcore) (new with v0.18.1)
+    [PSCustomObject]@{MainAlgorithm = "megabtx"; Params = ""; IsGtx = $true} #MegaBTX (Bitcore) (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP-TCR (new with v0.15.2)
-    [PSCustomObject]@{MainAlgorithm = "octopus"; Params = ""; ExtendInterval = 2; DevFee = 2.0} #Octopus  (new with v0.19.0)
+    [PSCustomObject]@{MainAlgorithm = "octopus"; Params = ""; ExtendInterval = 2; DevFee = 2.0; IsGtx = $true} #Octopus  (new with v0.19.0)
     [PSCustomObject]@{MainAlgorithm = "padihash"; Params = ""} #GLTPadiHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "pawelhash"; Params = ""} #GLTPawelHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
@@ -78,10 +79,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Params = ""; ExtendInterval = 2} #ProgPowVeil (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "progpow-veriblock"; DAG = $true; Params = ""; ExtendInterval = 2} #vProgPow (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "progpowsero"; DAG = $true; Params = "--coin sero"; ExtendInterval = 2; Algorithm = "progpow"} #ProgPow  (new with v0.15.2)
-    [PSCustomObject]@{MainAlgorithm = "progpowz"; DAG = $true; Params = ""; ExtendInterval = 2} #ProgpowZ (new with v0.17.2)
+    [PSCustomObject]@{MainAlgorithm = "progpowz"; DAG = $true; Params = ""; ExtendInterval = 2; IsGtx = $true} #ProgpowZ (new with v0.17.2)
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #SHA256q (Pyrite)
-    [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""} #SHA256t
+    [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""; IsGtx = $true} #SHA256q (Pyrite)
+    [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""; IsGtx = $true} #SHA256t
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "tensority"; Params = ""; DevFee = 3.0} #Tensority
@@ -118,10 +119,9 @@ if ($InfoOnly) {
 $Uri = ""
 for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-        $Uri = $UriCuda[$i].Uri
-        $Cuda= $UriCuda[$i].Cuda
-        $CudaCheck = Compare-Version $Cuda "10.0"
-        if ($UriCuda[$i].Arch -ne $null) {$Arch = $UriCuda[$i].Arch}
+        $Uri   = $UriCuda[$i].Uri
+        $Cuda  = $UriCuda[$i].Cuda
+        $IsGtx = $UriCuda[$i].IsGtx
     }
 }
 if (-not $Uri) {return}
@@ -142,11 +142,9 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
             $MinMemGB = $_.MinMemGB
         }
 
-        #Remove all devices, that
-        # - don't match the DAG size req.
-        # - are of type Ampere & Turing and CUDA version < 10.0
-        # - are of type Turing & CUDA version != 10.0 and algo is Octopus
-        $Miner_Device = $Device | Where-Object {$Model_Arch = Get-NvidiaArchitecture $_.Model;(Test-VRAM $_ $MinMemGB) -and (-not $Arch -or $Model_Arch -in $Arch) -and ($Algorithm_Norm_0 -ne "Octopus" -or $CudaCheck -ne 1 -or $Model_Arch -notin @("Pascal","Turing"))}
+        $Miner_IsGtx = $_.IsGtx
+
+        $Miner_Device = $Device | Where-Object {($IsGtx -or -not $Miner_IsGtx -or $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")) -and (Test-VRAM $_ $MinMemGB)}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
