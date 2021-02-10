@@ -3083,6 +3083,7 @@ function Get-Device {
                 if ($_.Index -eq $Index) {$Need_Sort = $true}
                 $_.Index = $Index
                 $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+                $Index++
             }
 
             if ($Need_Sort) {
