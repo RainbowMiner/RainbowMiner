@@ -2790,7 +2790,10 @@ function Get-Device {
         $Type_Mineable_Index = @{}
         $GPUVendorLists = @{}
         $GPUDeviceNames = @{}
-        foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
+
+        $KnownVendors = @("AMD","NVIDIA","INTEL")
+
+        foreach ($GPUVendor in $KnownVendors) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
         
         if ($IsWindows) {
             #Get WDDM data               
@@ -2826,8 +2829,16 @@ function Get-Device {
             [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
                 $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
                 $Device_Index = 0
+                $PlatformVendor = switch -Regex ([String]$_.Vendor) { 
+                                        "Advanced Micro Devices" {"AMD"}
+                                        "Intel"  {"INTEL"}
+                                        "NVIDIA" {"NVIDIA"}
+                                        "AMD"    {"AMD"}
+                                        default {$_.Vendor -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                            }
                 [PSCustomObject]@{
                     PlatformId=$PlatformId
+                    Vendor=$PlatformVendor
                     Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
                         [PSCustomObject]@{
                             DeviceIndex      = $Device_Index
@@ -2867,17 +2878,35 @@ function Get-Device {
                         CardId          = -1
                     }
                 }
-                if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
+                if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Vendor="NVIDIA";Devices=$OpenCL_Devices}}
             } else {
                 Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
             }
         }
 
         try {
+            $OpenCL_Platforms = @()
+            if (Test-Path ".\Data\openclplatforms.json") {
+                $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
+            }
+
+            $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
+
+            if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current) {
+                Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms_Current > $null
+                $OpenCL_Platforms = $OpenCL_Platforms_Current
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "OpenCL platform detection failed: $($_.Exception.Message)"
+        }
+
+        try {
             $AmdModels   = @{}
             [System.Collections.Generic.List[string]]$AmdModelsEx = @()
-            $Platform_Devices | Foreach-Object {
+            $Platform_Devices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Vendor)} | Foreach-Object {
                 $PlatformId = $_.PlatformId
+                $PlatformVendor = $_.Vendor
                 $_.Devices | Foreach-Object {    
                     $Device_OpenCL = $_
 
@@ -2889,6 +2918,8 @@ function Get-Device {
                         $Vendor_Name = "AMD"
                     } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                         $Vendor_Name = "INTEL"
+                    } else {
+                        return #GPU not supported
                     }
 
                     $Device_Name = Get-NormalizedDeviceName $Device_OpenCL.Name -Vendor $Vendor_Name
@@ -2955,6 +2986,7 @@ function Get-Device {
                         PlatformId = [Int]$PlatformId
                         PlatformId_Index = [Int]$PlatformId_Index."$($PlatformId)"
                         Type_PlatformId_Index = [Int]$Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"
+                        Platform_Vendor = $PlatformVendor
                         Vendor = [String]$Vendor_Name
                         Vendor_Name = [String]$Device_OpenCL.Vendor                    
                         Vendor_Index = [Int]$Vendor_Index."$($Device_OpenCL.Vendor)"

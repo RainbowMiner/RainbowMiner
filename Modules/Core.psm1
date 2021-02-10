@@ -164,7 +164,7 @@ function Start-Core {
 
     try {
         Write-Host "Detecting devices .."
-        $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL).Where({$_})
+        $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL -Refresh).Where({$_})
         $Session.PhysicalCPUs = $Global:GlobalCPUInfo.PhysicalCPUs
     }
     catch {
