@@ -17,6 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $CoinXlat = [PSCustomObject]@{
     PM = "PMEER"
     ERGO = "ERG"
+    VDS = "VOLLAR"
 }
 
 try {
