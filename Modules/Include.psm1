@@ -1872,68 +1872,6 @@ function Start-SubProcess {
     }
 }
 
-function Start-SubProcessInBackgroundOld {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [String]$FilePath, 
-        [Parameter(Mandatory = $false)]
-        [String]$ArgumentList = "", 
-        [Parameter(Mandatory = $false)]
-        [String]$LogPath = "", 
-        [Parameter(Mandatory = $false)]
-        [String]$WorkingDirectory = "", 
-        [ValidateRange(-2, 3)]
-        [Parameter(Mandatory = $false)]
-        [Int]$Priority = 0,
-        [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
-        [Parameter(Mandatory = $false)]
-        [String[]]$EnvVars = @(),
-        [Parameter(Mandatory = $false)]
-        [Int]$MultiProcess = 0,
-        [Parameter(Mandatory = $false)]
-        [Switch]$SetLDLIBRARYPATH = $false
-    )
-
-    [int[]]$Running = @()
-    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
-
-    $ScriptBlock = "Set-Location `"$($WorkingDirectory -replace '"','``"')`"; `$proc = Get-Process -Id `$PID; `$proc.PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
-    $ScriptBlock += "& `"$($FilePath -replace '"','``"')`""
-    if ($ArgumentList) {
-        $ArgumentListToBlock = $ArgumentList
-        ([regex]"\s-+\w+[\s=]+(\w[=\w]*,[,=\w]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value)'"}
-        $ScriptBlock += " $ArgumentListToBlock"
-        if ($ArgumentList -ne $ArgumentListToBlock) {
-            Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
-            $ArgumentList = $ArgumentListToBlock
-        }
-    }
-    $ScriptBlock += " 2>&1"
-    $ScriptBlock += " | Write-Output"
-    if ($LogPath) {$ScriptBlock += " | Tee-Object `"$($LogPath -replace '"','``"')`""}
-
-    $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
-
-    [int[]]$ProcessIds = @()
-    
-    if ($Job) {
-        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
-    }
-    
-    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
-
-    [PSCustomObject]@{
-        ScreenName = ""
-        Name       = $Job.Name
-        XJob       = $Job
-        OwnWindow  = $false
-        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
-    }
-}
-
-
 function Start-SubProcessInBackground {
     [CmdletBinding()]
     param(
@@ -1970,7 +1908,7 @@ function Start-SubProcessInBackground {
         }
     }
 
-    $Job = Start-Job -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $PWD
+    $Job = Start-ThreadJob -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $PWD
 
     [int[]]$ProcessIds = @()
     
