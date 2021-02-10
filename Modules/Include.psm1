@@ -3080,9 +3080,11 @@ function Get-Device {
             $Index = 0
             $Need_Sort = $false
             $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
-                if ($_.Index -ne $Index) {$Need_Sort = $true}
-                $_.Index = $Index
-                $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+                if ($_.Index -ne $Index) {
+                    $Need_Sort = $true
+                    $_.Index = $Index
+                    $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+                }
                 $Index++
             }
 
