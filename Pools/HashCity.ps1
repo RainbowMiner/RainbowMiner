@@ -26,23 +26,26 @@ catch {
     return
 }
 
-# (convertfrom-json '{"eth":"eth.hashcity.org:7777",
-# "etc":"etc.hashcity.org:8888",
-# "clo":"clo.hashcity.org:6666",
-# "moac":"moac.hashcity.org:5555",
-# "xmr":"xmr.hashcity.org:4444",
-# "pirl":"pirl.hashcity.org:9999",
-# "lthn":"lethean.hashcity.org:4545",
-# "dbix":"dbix.hashcity.org:4646",
-# "zec":"zec.hashcity.org:3030",
-# "bcn":"bcn.hashcity.org:5454",
-# "btg":"btg.hashcity.org:4040",
-# "btc":"btc.hashcity.org:3333",
-# "bch":"bch.hashcity.org:2222",
-# "dash":"dash.hashcity.org:4000",
-# "ltc":"ltc.hashcity.org:3000",
-# "sumo":"sumo.hashcity.org:4555",
-# "bsv":"bsv.hashcity.org:5000"}').PSObject.Properties | Sort-Object Name | Foreach-Object {
+#(convertfrom-json '{"btc":"btc.hashcity.org:3333",
+#"eth":"eth.hashcity.org:7777",
+#"ltc":"ltc.hashcity.org:3000",
+#"bch":"bch.hashcity.org:2222",
+#"bsv":"bsv.hashcity.org:5000",
+#"xmr":"xmr.hashcity.org:4444",
+#"dash":"dash.hashcity.org:4000",
+#"zec":"zec.hashcity.org:3030",
+#"etc":"etc.hashcity.org:8888",
+#"rvn":"rvn.hashcity.org:8080",
+#"btg":"btg.hashcity.org:4040",
+#"bcn":"bcn.hashcity.org:5454",
+#"moac":"moac.hashcity.org:5555",
+#"clo":"clo.hashcity.org:6666",
+#"sumo":"sumo.hashcity.org:4555",
+#"pirl":"pirl.hashcity.org:9999",
+#"dbix":"dbix.hashcity.org:4646",
+#"lthn":"lthn.hashcity.org:4545",
+#"exp":"exp.hashcity.org:9999",
+#"xmrx":""}').PSObject.Properties | Sort-Object Name | Foreach-Object {
 #    "[PSCustomObject]@{symbol = `"$($_.Name.ToUpper())`";$(if ($_.Name.Length -eq 3) {" "}) port = $($_.Value -split ':' | Select-Object -Last 1); fee = $(if ($_.Name -in @("bch","btc","ltc","dash")) {0} else {1}).0; rpc = `"$($_.Value -split '\.' | Select-Object -First 1)`"}"
 #}
 
@@ -57,10 +60,12 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "DBIX"; port = 4646; fee = 1.0; rpc = "dbix"}
     [PSCustomObject]@{symbol = "ETC";  port = 8888; fee = 1.0; rpc = "etc"}
     [PSCustomObject]@{symbol = "ETH";  port = 7777; fee = 1.0; rpc = "eth"}
+    [PSCustomObject]@{symbol = "EXP";  port = 9999; fee = 1.0; rpc = "exp"}
     [PSCustomObject]@{symbol = "LTC";  port = 3000; fee = 0.0; rpc = "ltc"}
-    [PSCustomObject]@{symbol = "LTHN"; port = 4545; fee = 1.0; rpc = "lethean"}
+    [PSCustomObject]@{symbol = "LTHN"; port = 4545; fee = 1.0; rpc = "lthn"}
     [PSCustomObject]@{symbol = "MOAC"; port = 5555; fee = 1.0; rpc = "moac"}
     [PSCustomObject]@{symbol = "PIRL"; port = 9999; fee = 1.0; rpc = "pirl"}
+    [PSCustomObject]@{symbol = "RVN";  port = 8080; fee = 1.0; rpc = "rvn"}
     [PSCustomObject]@{symbol = "SUMO"; port = 4555; fee = 1.0; rpc = "sumo"}
     [PSCustomObject]@{symbol = "XMR";  port = 4444; fee = 1.0; rpc = "xmr"}
     [PSCustomObject]@{symbol = "ZEC";  port = 3030; fee = 1.0; rpc = "zec"}
