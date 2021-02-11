@@ -1518,7 +1518,7 @@ function Invoke-Core {
 
         if ($Session.RoundCounter -eq 0) {Write-Host "Loading balance modules .."}
 
-        $BalancesData = Get-Balance -Config $UserConfig -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
+        $BalancesData = Get-Balance -Config $UserConfig -Refresh $RefreshBalances
 
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {
