@@ -1157,6 +1157,8 @@ function Invoke-Core {
             $Session.UserConfig = $null
             $API.UserConfig = $null
             $Global:AllPools = $null
+            $Global:WatchdogTimers = @()
+            Update-WatchdogLevels -Reset
             Write-Log "Donation run finished. "
         }
     }
@@ -1926,9 +1928,11 @@ function Invoke-Core {
         $Miner_Profits_Bias   = [hashtable]@{}
         $Miner_Profits_Unbias = [hashtable]@{}
 
+        $Miner_IsCPU = $Miner.DeviceModel -eq "CPU"
+
         foreach($p in @($Miner.DeviceModel -split '-')) {$Miner.OCprofile[$p] = ""}
 
-        $Miner_FaultTolerance = if ($Miner.DeviceModel -eq "CPU") {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
+        $Miner_FaultTolerance = if ($Miner_IsCPU) {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
         $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[Math]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
 
         if ($Session.Config.Miners) {
@@ -2053,12 +2057,12 @@ function Invoke-Core {
             $Miner.Profit        = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
-            $Miner.Profit_Cost   = if ($Miner.DeviceModel -eq "CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
+            $Miner.Profit_Cost   = if ($Miner_IsCPU -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
                 [Double]($Miner.PowerDraw*$MinerPowerPrice)
             }
         }
 
-        if (($Session.Config.UsePowerPrice -or ($Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw)) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
+        if (($Session.Config.UsePowerPrice -or (-not $Miner_IsCPU -and $EnableMiningHeatControl -and $Miner.PowerDraw)) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             if ($Session.Config.UsePowerPrice) {
                 $Miner.Profit -= $Miner.Profit_Cost
             }
