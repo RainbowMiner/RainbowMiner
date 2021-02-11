@@ -11,10 +11,10 @@ $Port = "340{0:d2}"
 $ManualURI = "https://github.com/hyle-team/zano/releases"
 $DevFee = 0.0
 $Version = "1.1.2"
+$Path = ".\Bin\NVIDIA-ProgPOWZ\progminer-zano-cuda.exe"
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Path = ".\Bin\NVIDIA-ProgPOWZ\progminer-zano-cuda.exe"
         Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.2-progminerzano/progminer-zano-win-1.1.2.7z"
         Cuda = "10.1"
     }
@@ -42,15 +42,15 @@ if ($InfoOnly) {
     return
 }
 
-$Uri = $Path = ""
-for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+$Cuda = $null
+for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-        $Path= $UriCuda[$i].Path
-        $Uri = $UriCuda[$i].Uri
-        $Cuda= $UriCuda[$i].Cuda
+        $Uri  = $UriCuda[$i].Uri
+        $Cuda = $UriCuda[$i].Cuda
     }
 }
-if (-not $Uri) {return}
+
+if (-not $Cuda) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true

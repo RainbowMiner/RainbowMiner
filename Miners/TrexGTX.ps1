@@ -58,14 +58,15 @@ if ($InfoOnly) {
     return
 }
 
-$Uri = ""
-for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+$Cuda = $null
+for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-        $Uri = $UriCuda[$i].Uri
-        $Cuda= $UriCuda[$i].Cuda
+        $Uri  = $UriCuda[$i].Uri
+        $Cuda = $UriCuda[$i].Cuda
     }
 }
-if (-not $Uri) {return}
+
+if (-not $Cuda) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model

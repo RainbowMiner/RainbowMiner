@@ -84,14 +84,19 @@ if ($InfoOnly) {
     return
 }
 
-for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
-    if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -or (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda)) {
-        $Uri = $UriCuda[$i].Uri
-        $Cuda= $UriCuda[$i].Cuda
+$Cuda = $null
+if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
+    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
+        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+            $Uri  = $UriCuda[$i].Uri
+            $Cuda = $UriCuda[$i].Cuda
+        }
     }
 }
 
-if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if (-not $Cuda) {
+    $Uri = $UriCuda[0].Uri
+}
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {

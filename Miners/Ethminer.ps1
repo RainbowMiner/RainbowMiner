@@ -56,7 +56,6 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
-$Uri = $UriCuda[0].Uri
 
 if ($InfoOnly) {
     [PSCustomObject]@{
@@ -72,17 +71,18 @@ if ($InfoOnly) {
     return
 }
 
+$Cuda = $null
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
-    $Cuda = 0
-    for($i=0;$i -le $UriCuda.Count -and -not $Cuda;$i++) {
+    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-            $Uri = $UriCuda[$i].Uri
-            $Cuda= $UriCuda[$i].Cuda
-            if ($UriCuda[$i].Version -ne $null) {
-                $Version = $UriCuda[$i].Version
-            }
+            $Uri  = $UriCuda[$i].Uri
+            $Cuda = $UriCuda[$i].Cuda
         }
     }
+}
+
+if (-not $Cuda) {
+    $Uri = $UriCuda[0].Uri
 }
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {

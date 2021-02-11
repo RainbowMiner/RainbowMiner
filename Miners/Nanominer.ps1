@@ -70,17 +70,17 @@ if ($InfoOnly) {
     return
 }
 
-$Uri = ""
+$Cuda = $null
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
-    for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-            $Uri = $UriCuda[$i].Uri
-            $Cuda= $UriCuda[$i].Cuda
+            $Uri  = $UriCuda[$i].Uri
+            $Cuda = $UriCuda[$i].Cuda
         }
     }
 }
 
-if (-not $Uri) {
+if (-not $Cuda) {
     $Uri = $UriCuda[0].Uri
 }
 

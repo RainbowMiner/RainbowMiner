@@ -40,9 +40,6 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Uri     = $UriCuda[0].Uri
-$DatFile = $UriCuda[0].DatFile
-
 if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("AMD","NVIDIA")
@@ -57,18 +54,20 @@ if ($InfoOnly) {
     return
 }
 
+$Cuda = $null
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
-    $Cuda = 0
-    for($i=0;$i -le $UriCuda.Count -and -not $Cuda;$i++) {
+    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
             $Uri     = $UriCuda[$i].Uri
             $Cuda    = $UriCuda[$i].Cuda
             $DatFile = $UriCuda[$i].DatFile
-            if ($UriCuda[$i].Version -ne $null) {
-                $Version = $UriCuda[$i].Version
-            }
         }
     }
+}
+
+if (-not $Cuda) {
+    $Uri     = $UriCuda[0].Uri
+    $DatFile = $UriCuda[0].DatFile
 }
 
 if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
