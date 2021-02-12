@@ -139,7 +139,6 @@ function Start-Core {
         $Session.ReportMinerData = $false
         $Session.ReportPoolsData = $false
         $Session.ReportDeviceData = $false
-        $Session.ResetDonationRun = $null
         $Session.TimeDiff = 0
         $Session.PhysicalCPUs = 0
 
@@ -1140,28 +1139,31 @@ function Invoke-Core {
         $DonateMinutes /= 2
         $DonateDelayHours /= 2
     }
-    if ($Session.IsServerDonationRun) {
-        $Session.ResetDonationRun = $Session.Timer
-    } elseif (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
+
+    if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
         if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.ResetDonationRun = $ShiftDonationRun}
-    }
-    if ($Session.ResetDonationRun -or ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59))) {
-        $Session.IsDonationRun = $false
-        $LastDonated = if ($Session.ResetDonationRun) {$Session.ResetDonationRun} else {$Session.Timer}
-        $Session.LastDonated = Set-LastDrun $LastDonated
-        $Session.ResetDonationRun = $null
-        if ($Session.UserConfig -ne $null) {
-            $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
-            $Session.UserConfig = $null
-            $API.UserConfig = $null
-            $Global:AllPools = $null
-            $Global:WatchdogTimers = @()
-            Update-WatchdogLevels -Reset
-            Write-Log "Donation run finished. "
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
+            $Session.IsDonationRun = $false
+            $Session.LastDonated   = Set-LastDrun $ShiftDonationRun
         }
     }
+
+    if ($Session.IsServerDonationRun -or ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59))) {
+        $Session.IsDonationRun = $false
+        $Session.LastDonated   = Set-LastDrun $Session.Timer
+    }
+
+    if (-not $Session.IsDonationRun -and ($Session.UserConfig -ne $null)) {
+        $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+        $Session.UserConfig = $null
+        $API.UserConfig = $null
+        $Global:AllPools = $null
+        $Global:WatchdogTimers = @()
+        Update-WatchdogLevels -Reset
+        Write-Log "Donation run finished. "
+    }
+
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if (-not $Session.IsDonationRun -or $CheckConfig) {
             try {$DonationData = Invoke-GetUrl "https://rbminer.net/api/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
@@ -2655,7 +2657,7 @@ function Invoke-Core {
     #Move donation run into the future, if benchmarks are ongoing
     if ((-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun -and $MinersNeedingBenchmarkCount -gt 0) -or $Session.IsExclusiveRun) {
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.ResetDonationRun = $ShiftDonationRun}
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
 
     #Update API miner information
