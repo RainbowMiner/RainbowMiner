@@ -4325,7 +4325,6 @@ function Invoke-NvidiaSettings {
         [Parameter(Mandatory = $False)]
         [Switch]$SetPowerMizer
     )
-    if (-not $NvCmd) {return}
     if ($IsLinux) {
         $Cmd = "$($NvCmd -join ' ')"
         if ($SetPowerMizer) {
@@ -4335,7 +4334,7 @@ function Invoke-NvidiaSettings {
         if ($Cmd) {
             Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         }
-    } elseif ($IsWindows) {
+    } elseif ($IsWindows -and $NvCmd) {
         & ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd
     }
 }
