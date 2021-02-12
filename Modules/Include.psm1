@@ -2907,8 +2907,6 @@ function Get-Device {
                         $Vendor_Name = "AMD"
                     } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                         $Vendor_Name = "INTEL"
-                    } else {
-                        return #GPU not supported
                     }
 
                     $Device_Name = Get-NormalizedDeviceName $Device_OpenCL.Name -Vendor $Vendor_Name
