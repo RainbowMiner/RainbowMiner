@@ -13,6 +13,7 @@ $Port = "338{0:d2}"
 $DevFee = 1.0
 $Version = "0.16.0"
 $Enable_Logfile = $false
+$DeviceCapability = "5.0"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -65,7 +66,9 @@ if (-not $Cuda) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model -and (-not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)})
+
+    if (-not $Device) {return}
 
     $Commands.ForEach({
         $First = $true

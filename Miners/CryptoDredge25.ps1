@@ -12,6 +12,7 @@ $Port = "363{0:d2}"
 $DevFee = 1.0
 $Version = "0.25.1"
 $Enable_Logfile = $false
+$DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge25\CryptoDredge"
@@ -108,7 +109,9 @@ $Miners_IsMaxCUDAVersion = (Compare-Version "11.1" $Session.Config.CUDAVersion) 
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model -and (-not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)})
+
+    if (-not $Device) {return}
 
     $Commands.Where({$_.Legacy -or $Miners_IsMaxCUDAVersion}).ForEach({
         $First = $true
