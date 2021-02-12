@@ -36,15 +36,31 @@ if ($started) {
 
     do {
         Start-Sleep -Milliseconds 500
-        [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
+        $ScreenCmd = "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
+        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+            [int]$ScreenProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd
+            $OCDcount++            
+        } else {
+            [int]$ScreenProcessId = Invoke-Expression $ScreenCmd
+        }
     } until ($ScreenProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
 
     if (-not $ScreenProcessId) {
         $StartLog += "Failed to get screen."
-        $StartLog += "Result of `"screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'`""
-        Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'" | Foreach-Object {$StartLog += $_}
+        $StartLog += "Result of `"$($ScreenCmd)`""
+        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd | Foreach-Object {$StartLog += $_}
+            $OCDcount++
+        } else {
+            Invoke-Expression $ScreenCmd | Foreach-Object {$StartLog += $_}
+        }
         $StartLog += "Result of `"screen -ls`""
-        Invoke-Expression "screen -ls" | Foreach-Object {$StartLog += $_}
+        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -ls" | Foreach-Object {$StartLog += $_}
+            $OCDcount++
+        } else {
+            Invoke-Expression "screen -ls" | Foreach-Object {$StartLog += $_}
+        }
     } else {
 
         $StartLog += "Success: got id $ScreenProcessId for screen $ScreenName"

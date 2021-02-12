@@ -3331,7 +3331,25 @@ function Stop-Core {
             }
         }
         if (Get-Command "screen" -ErrorAction Ignore) {
+
             $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
+            if (Test-OCDaemon) {
+                [System.Collections.Generic.List[string]]$Cmd = @()
+                $Cmd.Add("screen -ls `"$WorkerName`" |  grep '[0-9].$($WorkerName)_' | (") > $null
+                $Cmd.Add("  IFS=`$(printf '\t');") > $null
+                $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
+                $Cmd.Add("  while read -r name stuff; do") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
+                $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
+                $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
+                $Cmd.Add("  done") > $null
+                $Cmd.Add(")") > $null
+                Invoke-OCDaemon -Cmd $Cmd > $null
+            }
+
             Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_[a-z0-9_-]+)"} | Foreach-Object {
                 Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X stuff `^C" > $null
                 Start-Sleep -Milliseconds 250

@@ -2094,7 +2094,7 @@ function Start-SubProcessInScreen {
     }
 
     [System.Collections.Generic.List[string]]$Cmd = @()
-    $Cmd.Add("screen -ls `"$ScreenName`" | (") > $null
+    $Cmd.Add("screen -ls `"$ScreenName`" |  grep '[0-9].$ScreenName' | (") > $null
     $Cmd.Add("  IFS=`$(printf '\t');") > $null
     $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
     $Cmd.Add("  while read -r name stuff; do") > $null
@@ -2151,7 +2151,7 @@ function Start-SubProcessInScreen {
     
     if ($JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
 
-    $JobOutput.StartLog | Foreach-Object {Write-Log -Level Info "$_"}
+    $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log -Level Info "$_"}
     
     [PSCustomObject]@{
         ScreenName = $ScreenName
@@ -2423,10 +2423,16 @@ function Stop-SubProcess {
 
     if ($IsLinux -and $Job.ScreenName) {
         try {
-            [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+            $ScreenCmd = "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+            if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                [int]$ScreenProcessId = Invoke-OCDaemon -Cmd $ScreenCmd
+                $OCDcount++
+            } else {
+                [int]$ScreenProcessId = Invoke-Expression $ScreenCmd
+            }
             if ($ScreenProcessId) {
                 $ArgumentList = "-S $($Job.ScreenName) -X quit"
-                if (Test-OCDaemon) {
+                if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                     $Cmd = "screen $ArgumentList"
                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                     if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
