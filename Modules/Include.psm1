@@ -4,9 +4,21 @@
 
     if (-not (Test-Path Variable:Global:Session)) {
         $Global:Session = [hashtable]::Synchronized(@{})
+
+        $Session.IsVM = $false
+
         if ($IsWindows) {
             $Session.WindowsVersion = [System.Environment]::OSVersion.Version
             $Session.IsWin10        = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0")
+            
+            try {
+                $VM_Match = "^Bochs|^KVM|^HVM|^QEMU|^UML|^Xen|ARAnyM|microsoft|red hat|virtual|vmware|vmxnet"
+                $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore
+                $Session.IsVM = (@($ComputerSystem.Manufacturer,$ComputerSystem.Model) | Where-Object {$_ -match $VM_Match} | Measure-Object).Count -gt 0
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+
         } elseif ($IsLinux) {
             try {
                 Get-ChildItem ".\IncludesLinux\bin\libc_version" -File -ErrorAction Stop | Foreach-Object {
@@ -15,6 +27,14 @@
                 }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
+            }
+
+            if (Get-Command "virt-what" -ErrorAction Ignore) {
+                try {
+                    $Session.IsVM = (virt-what | Measure-Object).Count -gt 0
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
             }
         }
         $Session.IsAdmin            = Test-IsElevated
