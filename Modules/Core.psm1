@@ -168,7 +168,7 @@ function Start-Core {
             if (((Test-IsElevated) -or (Test-OCDaemon)) -and (Get-Command "virt-what" -ErrorAction Ignore)) {
                     $Session.IsVM = (Invoke-Exe "virt-what" -Runas -ExcludeEmptyLines -ExpandLines | Measure-Object).Count -gt 0
             }
-        } elsif ($IsWindows) {
+        } elseif ($IsWindows) {
             $VM_Match = "^Bochs|^KVM|^HVM|^QEMU|^UML|^Xen|ARAnyM|microsoft|red hat|virtual|vmware|vmxnet"
             $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore
             $Session.IsVM = (@($ComputerSystem.Manufacturer,$ComputerSystem.Model) | Where-Object {$_ -match $VM_Match} | Measure-Object).Count -gt 0
