@@ -22,6 +22,7 @@ function Start-Core {
         if (-not (Test-Path "$ConfigPath\Backup")) {New-Item "$ConfigPath\Backup" -ItemType "directory" -Force > $null}
         if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}
 
+        #Linux specific init header
         if ($IsLinux) {
             [Console]::TreatControlCAsInput = $True
 
@@ -35,6 +36,25 @@ function Start-Core {
                         Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/$($_.Value) $($Dir)/$($_.Name)" > $null
                     }
                 }
+            }
+
+            if (($Session.IsAdmin -or (Test-OCDaemon)) -and (Get-Command "virt-what" -ErrorAction Ignore)) {
+                try {
+                    $Session.IsVM = (Invoke-Exe "virt-what" -Runas -ExcludeEmptyLines -ExpandLines | Measure-Object).Count -gt 0
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+            }
+        }
+
+        #Windows specific init header
+        if ($IsWindows) {
+            try {
+                $VM_Match = "^Bochs|^KVM|^HVM|^QEMU|^UML|^Xen|ARAnyM|microsoft|red hat|virtual|vmware|vmxnet"
+                $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore
+                $Session.IsVM = (@($ComputerSystem.Manufacturer,$ComputerSystem.Model) | Where-Object {$_ -match $VM_Match} | Measure-Object).Count -gt 0
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
             }
         }
 
