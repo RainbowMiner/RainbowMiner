@@ -172,6 +172,48 @@ function Start-Core {
         $Session.PauseMiners = $true
     }
 
+    if ($IsWindows -and ($GpuMemSizeMB = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100)) {
+        try {
+            Write-Host "Checking Windows pagefile/virtual memory .. " -NoNewline
+
+            $PageFile_Warn = @()
+            
+            if ((Get-CimInstance Win32_ComputerSystem).AutomaticManagedPagefile) {
+                $PageFile_Warn += "Pagefile is set to manage automatically. This is NOT recommended!"
+            } elseif ($PageFileInfo = Get-CimInstance Win32_PageFileSetting -ErrorAction Ignore) {
+                if (-not $PageFileInfo.InitialSize -and -not $PageFileInfo.MaximumSize) {
+                    $PageFile_Warn += "Pagefile is set to system managed"
+                } else {
+                    if ($PageFileInfo.MaximumSize -lt $GpuMemSizeMB) {
+                        $PageFile_Warn += "Pagefile is too small ($($PageFileInfo.MaximumSize) MB). Set it to a minimum of $($GpuMemSizeMB) MB"
+                    }
+                    if ($PageFileInfo.InitialSize -ne $PageFileInfo.MaximumSize) {
+                        $PageFile_Warn += "Pagefile initial size is not equal maximum size."
+                    }
+                }
+                Write-Log -Level Info "Pagefile is set to initial size $($PageFileInfo.InitialSize) MB and maximum size $($PageFileInfo.MaximumSize) MB"
+            } else {
+                $PageFile_Warn += "No pagefile found"
+            }
+            if ($PageFile_Warn) {
+                Write-Host "problem!" -ForegroundColor Red
+                $PageFile_Warn | Where-Object {$_} | Foreach-Object {Write-Log -Level Warn "$_"}
+                Write-Host " "
+                Write-Host "To adjust your pagefile settings:" -BackgroundColor Yellow -ForegroundColor Black
+                Write-Host "1. goto Computer Properties -> Advanced System Settings -> Performance -> Advanced -> Virtual Memory" -ForegroundColor Yellow
+                Write-Host "2. uncheck `"Automatically manage paging file size for all drives`"" -ForegroundColor Yellow
+                Write-Host "3. select `"Custom size`"" -ForegroundColor Yellow
+                Write-Host "4. enter $($GpuMemSizeMB) into the fields `"Initial Size (MB)`" and `"Maximum Size (MB)`"" -ForegroundColor Yellow
+                Write-Host "5. click onto `"Set`" and then `"OK`"" -ForegroundColor Yellow
+                Write-Host " "
+            } else {
+                Write-Host "ok" -ForegroundColor Green
+            }
+        } catch {
+            Write-Log -Level Warn "Failed to check Windows pagefile: $($_.Exception.Message)"
+        }
+    }
+
     if ($IsWindows -and ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count) {
         try {
             $InstallNVSMI_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\InstallNVSMI.ps1
