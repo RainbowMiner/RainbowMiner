@@ -86,7 +86,7 @@ if ($started) {
         } else {
             $StartLog += "Failed to get process for $ScreenName with id $ScreenProcessId"
             $StartLog += "List of processes:"
-            Get-Process | Foreach-Object {$StartLog += "$($_.Name)`t$($_.Id)`t$($_.Parent.Id)"}
+            Get-Process | Where-Object {$_.Path -and $_.Path -like "$($CurrentPwd)/Bin/*"} | Foreach-Object {$StartLog += "$($_.Name)`t$($_.Id)`t$($_.Parent.Id)"}
         }
 
     }
