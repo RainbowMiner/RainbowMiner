@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -or $Session.IsVM) {return}
 
 $Path = ".\Bin\NVIDIA-CryptoDredge16\CryptoDredge.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"

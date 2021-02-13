@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
+if ((-not $IsWindows -and -not $IsLinux) -or $Session.IsVM) {return}
 
 $ManualUri = "https://github.com/technobyl/CryptoDredge/releases"
 $Port = "363{0:d2}"
