@@ -2353,14 +2353,6 @@ function Stop-SubProcess {
                                 if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
                             }
 
-                            #$ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-                            #    if (Test-OCDaemon) {
-                            #        Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
-                            #    } else {
-                            #        $_.Kill()
-                            #    }
-                            #}
-
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                             Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
@@ -2371,7 +2363,7 @@ function Stop-SubProcess {
                             if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                 Invoke-OCDaemon -Cmd "kill $($_.Id)" > $null
                             } else {
-                                Stop-Process $_ -Force -ErrorAction Ignore
+                                Stop-Process -InputObject $_ -Force -ErrorAction Ignore
                             }
                         }
                     }
@@ -2408,7 +2400,11 @@ function Stop-SubProcess {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
                 if (-not $Process.HasExited) {
                     Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
-                    Stop-Process -InputObject $Process -ErrorAction Ignore -Force
+                    #if ($IsLinux -and (Test-OCDaemon)) {
+                    #    Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
+                    #} else {
+                        Stop-Process -InputObject $Process -ErrorAction Ignore -Force
+                    #}
                 }
             }
         }

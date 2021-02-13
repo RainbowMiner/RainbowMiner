@@ -120,7 +120,7 @@ do {
         }
 
         $StopWatch.Restart()
-        while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
+        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 10) {
             Start-Sleep -Milliseconds 500
         }
 
@@ -140,7 +140,7 @@ do {
                 Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "kill -9 $($_.Id)" -Quiet > $null
                 $OCDcount++
             } else {
-                $_.Kill()
+                Stop-Process -InputObject $_ -Force -ErrorAction Ignore
             }
         }
 
