@@ -38,7 +38,7 @@ function Start-Core {
                 }
             }
 
-            if (($Session.IsAdmin -or (Test-OCDaemon)) -and (Get-Command "virt-what" -ErrorAction Ignore)) {
+            if (((Test-IsElevated) -or (Test-OCDaemon)) -and (Get-Command "virt-what" -ErrorAction Ignore)) {
                 try {
                     $Session.IsVM = (Invoke-Exe "virt-what" -Runas -ExcludeEmptyLines -ExpandLines | Measure-Object).Count -gt 0
                 } catch {
