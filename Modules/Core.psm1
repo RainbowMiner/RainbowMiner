@@ -162,7 +162,7 @@ function Start-Core {
     }
 
 
-    Write-Host "Checking for VM .." -NoNewline
+    Write-Host "Checking for VM .. " -NoNewline
     try {
         if ($IsLinux) {
             if (((Test-IsElevated) -or (Test-OCDaemon)) -and (Get-Command "virt-what" -ErrorAction Ignore)) {
