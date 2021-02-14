@@ -181,7 +181,7 @@ function Start-Core {
     if ($Session.IsVM) {
         Write-Host "found, some miners will be excluded." -ForegroundColor Red
     } else {
-        Write-Host "ok" -ForegroundColor Green
+        Write-Host "ok, not in a VM" -ForegroundColor Green
     }
 
     try {
@@ -204,17 +204,21 @@ function Start-Core {
             if ((Get-CimInstance Win32_ComputerSystem).AutomaticManagedPagefile) {
                 $PageFile_Warn += "Pagefile is set to manage automatically. This is NOT recommended!"
             } elseif ($PageFileInfo = Get-CimInstance Win32_PageFileSetting -ErrorAction Ignore) {
-                if (-not $PageFileInfo.InitialSize -and -not $PageFileInfo.MaximumSize) {
-                    $PageFile_Warn += "Pagefile is set to system managed"
-                } else {
-                    if ($PageFileInfo.MaximumSize -lt $GpuMemSizeMB) {
-                        $PageFile_Warn += "Pagefile is too small ($($PageFileInfo.MaximumSize) MB). Set it to a minimum of $($GpuMemSizeMB) MB"
+                $PageFileInfo | Foreach-Object {
+                    $PageFileLetter = "$("$([IO.Path]::GetPathRoot($_.Name) -split ':' | Select-Object -First 1)".ToUpper()):"
+                    if (-not $_.InitialSize -and -not $_.MaximumSize) {
+                        $PageFile_Warn += "Pagefile on $($PageFileLetter) is set to system managed"
+                    } else {
+                        if ($_.InitialSize -ne $_.MaximumSize) {
+                            $PageFile_Warn += "Pagefile on $($PageFileLetter) initial size is not equal maximum size."
+                        }
                     }
-                    if ($PageFileInfo.InitialSize -ne $PageFileInfo.MaximumSize) {
-                        $PageFile_Warn += "Pagefile initial size is not equal maximum size."
-                    }
+                    Write-Log -Level Info "$($_.Name) is set to initial size $($_.InitialSize) MB and maximum size $($_.MaximumSize) MB"
                 }
-                Write-Log -Level Info "Pagefile is set to initial size $($PageFileInfo.InitialSize) MB and maximum size $($PageFileInfo.MaximumSize) MB"
+                $PageFileMaxSize = ($PageFileInfo | Measure-Object -Property MaximumSize -Sum).Sum
+                if ($PageFileMaxSize -lt $GpuMemSizeMB) {
+                    $PageFile_Warn += "Pagefiles are too small ($($PageFileMaxSize) MB). Set them to a total minimum of $($GpuMemSizeMB) MB"
+                }
             } else {
                 $PageFile_Warn += "No pagefile found"
             }
