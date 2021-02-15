@@ -50,7 +50,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnturtle";    MinMemGb = 3.3; Params = ""} #Cryptonightturtle
     [PSCustomObject]@{MainAlgorithm = "cnupx2";      MinMemGb = 1.5; Params = ""} #CryptoNightLiteUpx2, new with v0.23.0
     [PSCustomObject]@{MainAlgorithm = "cnzls";       MinMemGb = 3.3; Params = ""} #CryptonightZelerius, new with v0.23.0
-    [PSCustomObject]@{MainAlgorithm = "kawpow";      MinMemGb = 3;   Params = ""; DAG = $true} #CryptonightZelerius, new with v0.26.0
+    #[PSCustomObject]@{MainAlgorithm = "kawpow";      MinMemGb = 3;   Params = ""; DAG = $true} #CryptonightZelerius, new with v0.26.0
     #[PSCustomObject]@{MainAlgorithm = "mtp";         MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
     #[PSCustomObject]@{MainAlgorithm = "mtp-tcr";     MinMemGb = 5; Params = ""; ExtendInterval = 2} #MTP-TCR
 )
