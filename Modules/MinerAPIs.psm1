@@ -2833,7 +2833,7 @@ class Xmrig3 : Miner {
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
-        return ("--algo=$($Parameters.Algorithm) $($Parameters.DeviceParams) --config=$ConfigFN $($Parameters.PoolParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+        return ("--algo=$($Parameters.Algorithm) --config=$ConfigFN $($Parameters.DeviceParams) $($Parameters.PoolParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
     }
 
     [Void]UpdateMinerData () {
