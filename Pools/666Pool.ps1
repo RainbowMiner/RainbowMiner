@@ -28,7 +28,6 @@ try {
             if ($Data[0].Groups.Count -gt 3 -and $Columns.Count -ge 6) {
                 $Symbol = $Data[0].Groups[1].Value -replace "-.+$"
                 $Algo   = "$($Data[0].Groups[1].value -replace "^.+-")"
-                Write-Host "$Symbol $Algo $(ConvertTo-Json $Columns)"
                 if ($Symbol -ne "PM" -or $Algo -ne "KecK") {
                     [PSCustomObject]@{
                         id       = "$($Data[0].Groups[1].Value)"
