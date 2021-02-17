@@ -28,32 +28,77 @@ if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
         $started = $BashProc.WaitForExit(60000)
     }
 }
-if ($started) {
-    [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
-    $MinerExecutable = Split-Path $FilePath -Leaf
 
+$StartLog = @()
+
+if ($started) {
     $StopWatch.Restart()
+
     do {
         Start-Sleep -Milliseconds 500
-        if ($StartStopDaemon) {
-            if (Test-Path $PIDPath) {
-                $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
-                if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
-            }
+        $ScreenCmd = "screen -ls | grep $ScreenName | cut -f1 -d'.' | sed 's/\W//g'"
+        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+            [int]$ScreenProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd
+            $OCDcount++            
         } else {
-            $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $($_.Parent).Parent.Id -eq $ScreenProcessId}
-            if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
+            [int]$ScreenProcessId = Invoke-Expression $ScreenCmd
         }
-    } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
+    } until ($ScreenProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
+
+    if (-not $ScreenProcessId) {
+        $StartLog += "Failed to get screen."
+        $StartLog += "Result of `"$($ScreenCmd)`""
+        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd | Foreach-Object {$StartLog += $_}
+            $OCDcount++
+        } else {
+            Invoke-Expression $ScreenCmd | Foreach-Object {$StartLog += $_}
+        }
+        $StartLog += "Result of `"screen -ls`""
+        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -ls" | Foreach-Object {$StartLog += $_}
+            $OCDcount++
+        } else {
+            Invoke-Expression "screen -ls" | Foreach-Object {$StartLog += $_}
+        }
+    } else {
+
+        $StartLog += "Success: got id $ScreenProcessId for screen $ScreenName"
+
+        $MinerExecutable = Split-Path $FilePath -Leaf
+
+        $StopWatch.Restart()
+        do {
+            Start-Sleep -Milliseconds 500
+            if ($StartStopDaemon) {
+                if (Test-Path $PIDPath) {
+                    $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
+                    if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
+                }
+            } else {
+                $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $($_.Parent).Parent.Id -eq $ScreenProcessId}
+                if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
+            }
+        } until ($Process -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
+
+        if ($Process) {
+            $StartLog += "Success: got id $($Process.Id) for $MinerExecutable in screen $ScreenName"
+        } else {
+            $StartLog += "Failed to get process for $ScreenName with id $ScreenProcessId"
+            $StartLog += "List of processes:"
+            Get-Process | Where-Object {$_.Path -and $_.Path -like "$($CurrentPwd)/Bin/*"} | Foreach-Object {$StartLog += "$($_.Name)`t$($_.Id)`t$($_.Parent.Id)"}
+        }
+
+    }
     $StopWatch.Stop()
 }
 
 if (-not $Process) {
-    [PSCustomObject]@{ProcessId = $null}
+    [PSCustomObject]@{ProcessId = $null;StartLog = $StartLog}
     return
 }
 
-[PSCustomObject]@{ProcessId = $Process.Id}
+[PSCustomObject]@{ProcessId = $Process.Id;StartLog = $StartLog}
 
 $ControllerProcess.Handle >$null
 $Process.Handle >$null
@@ -75,7 +120,7 @@ do {
         }
 
         $StopWatch.Restart()
-        while ($false -in $ToKill.HasExited -and $StopWatch.Elapsed.Seconds -le 10) {
+        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 10) {
             Start-Sleep -Milliseconds 500
         }
 
@@ -95,7 +140,7 @@ do {
                 Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "kill -9 $($_.Id)" -Quiet > $null
                 $OCDcount++
             } else {
-                $_.Kill()
+                Stop-Process -InputObject $_ -Force -ErrorAction Ignore
             }
         }
 
@@ -110,6 +155,7 @@ do {
             }
         }
     }
+    $StopWatch = $null
     if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
     $Error.Clear()
 }

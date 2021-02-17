@@ -792,16 +792,22 @@ class Miner {
         }
 
         if ($applied.Count) {
-            if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
-            if ($DeviceVendor -eq "NVIDIA") {
-                if ($Global:IsLinux) {Invoke-NvidiaSettings $NvCmd}
-                else {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd}
-            } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
-                if ($Global:IsLinux) {}
-                else {}
-            } else {$Script:abControl.CommitChanges()}
-            $applied | Foreach-Object {Write-Log $_}
-            if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
+            try {
+                if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
+                if ($DeviceVendor -eq "NVIDIA") {
+                    Invoke-NvidiaSettings $NvCmd
+                } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
+                    #t.b.i
+                } else {
+                    $Script:abControl.CommitChanges()
+                }
+                $applied | Foreach-Object {Write-Log $_}
+                if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "Failed to apply OC for $($this.Name))!"
+                $applied | Foreach-Object {Write-Log "$($_ -replace "OC set","OC NOT set")"}
+            }
         }
     }
 
@@ -2827,7 +2833,7 @@ class Xmrig3 : Miner {
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
-        return ("--algo=$($Parameters.Algorithm) $($Parameters.DeviceParams) --config=$ConfigFN $($Parameters.PoolParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+        return ("--algo=$($Parameters.Algorithm) --config=$ConfigFN $($Parameters.DeviceParams) $($Parameters.PoolParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
     }
 
     [Void]UpdateMinerData () {

@@ -139,7 +139,6 @@ function Start-Core {
         $Session.ReportMinerData = $false
         $Session.ReportPoolsData = $false
         $Session.ReportDeviceData = $false
-        $Session.ResetDonationRun = $null
         $Session.TimeDiff = 0
         $Session.PhysicalCPUs = 0
 
@@ -162,15 +161,84 @@ function Start-Core {
         $false
     }
 
+
+    Write-Host "Checking for VM .. " -NoNewline
+    try {
+        if ($IsLinux) {
+            if (((Test-IsElevated) -or (Test-OCDaemon)) -and (Get-Command "virt-what" -ErrorAction Ignore)) {
+                    $Session.IsVM = (Invoke-Exe "virt-what" -Runas -ExcludeEmptyLines -ExpandLines | Measure-Object).Count -gt 0
+            }
+        } elseif ($IsWindows) {
+            $VM_Match = "^Bochs|^KVM|^HVM|^QEMU|^UML|^Xen|ARAnyM|microsoft|red hat|virtual|vmware|vmxnet"
+            $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore
+            $Session.IsVM = (@($ComputerSystem.Manufacturer,$ComputerSystem.Model) | Where-Object {$_ -match $VM_Match} | Measure-Object).Count -gt 0
+        }
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Error "VM detection failed: $($_.Exception.Message)"
+    }
+    if ($Session.IsVM) {
+        Write-Host "found, some miners will be excluded." -ForegroundColor Red
+    } else {
+        Write-Host "ok, not in a VM" -ForegroundColor Green
+    }
+
     try {
         Write-Host "Detecting devices .."
-        $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL).Where({$_})
+        $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL -Refresh).Where({$_})
         $Session.PhysicalCPUs = $Global:GlobalCPUInfo.PhysicalCPUs
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Error "Device detection failed: $($_.Exception.Message)"
         $Session.PauseMiners = $true
+    }
+
+    if ($IsWindows -and ($GpuMemSizeMB = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100)) {
+        try {
+            Write-Host "Checking Windows pagefile/virtual memory .. " -NoNewline
+
+            $PageFile_Warn = @()
+            
+            if ((Get-CimInstance Win32_ComputerSystem).AutomaticManagedPagefile) {
+                $PageFile_Warn += "Pagefile is set to manage automatically. This is NOT recommended!"
+            } elseif ($PageFileInfo = Get-CimInstance Win32_PageFileSetting -ErrorAction Ignore) {
+                $PageFileInfo | Foreach-Object {
+                    $PageFileLetter = "$("$([IO.Path]::GetPathRoot($_.Name) -split ':' | Select-Object -First 1)".ToUpper()):"
+                    if (-not $_.InitialSize -and -not $_.MaximumSize) {
+                        $PageFile_Warn += "Pagefile on $($PageFileLetter) is set to system managed"
+                    } else {
+                        if ($_.InitialSize -ne $_.MaximumSize) {
+                            $PageFile_Warn += "Pagefile on $($PageFileLetter) initial size is not equal maximum size."
+                        }
+                    }
+                    Write-Log -Level Info "$($_.Name) is set to initial size $($_.InitialSize) MB and maximum size $($_.MaximumSize) MB"
+                }
+                $PageFileMaxSize = ($PageFileInfo | Measure-Object -Property MaximumSize -Sum).Sum
+                if ($PageFileMaxSize -lt $GpuMemSizeMB) {
+                    $PageFile_Warn += "Pagefiles are too small ($($PageFileMaxSize) MB). Set them to a total minimum of $($GpuMemSizeMB) MB"
+                }
+            } else {
+                $PageFile_Warn += "No pagefile found"
+            }
+            if ($PageFile_Warn) {
+                Write-Host "problem!" -ForegroundColor Red
+                $PageFile_Warn | Where-Object {$_} | Foreach-Object {Write-Log -Level Warn "$_"}
+                Write-Host " "
+                Write-Host "To adjust your pagefile settings:" -BackgroundColor Yellow -ForegroundColor Black
+                Write-Host "1. goto Computer Properties -> Advanced System Settings -> Performance -> Advanced -> Virtual Memory" -ForegroundColor Yellow
+                Write-Host "2. uncheck `"Automatically manage paging file size for all drives`"" -ForegroundColor Yellow
+                Write-Host "3. select `"Custom size`"" -ForegroundColor Yellow
+                Write-Host "4. enter $($GpuMemSizeMB) into the fields `"Initial Size (MB)`" and `"Maximum Size (MB)`"" -ForegroundColor Yellow
+                Write-Host "5. click onto `"Set`" and then `"OK`"" -ForegroundColor Yellow
+                Write-Host " "
+            } else {
+                Write-Host "ok" -ForegroundColor Green
+            }
+        } catch {
+            Write-Log -Level Warn "Failed to check Windows pagefile: $($_.Exception.Message)"
+        }
     }
 
     if ($IsWindows -and ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count) {
@@ -1140,26 +1208,35 @@ function Invoke-Core {
         $DonateMinutes /= 2
         $DonateDelayHours /= 2
     }
-    if ($Session.IsServerDonationRun) {
-        $Session.ResetDonationRun = $Session.Timer
-    } elseif (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
-        if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
-        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.ResetDonationRun = $ShiftDonationRun}
-    }
-    if ($Session.ResetDonationRun -or ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59))) {
-        $Session.IsDonationRun = $false
-        $LastDonated = if ($Session.ResetDonationRun) {$Session.ResetDonationRun} else {$Session.Timer}
-        $Session.LastDonated = Set-LastDrun $LastDonated
-        $Session.ResetDonationRun = $null
-        if ($Session.UserConfig -ne $null) {
-            $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
-            $Session.UserConfig = $null
-            $API.UserConfig = $null
-            $Global:AllPools = $null
-            Write-Log "Donation run finished. "
+
+    if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
+        $ShiftDonationHours = 1
+        if (-not $Session.LastDonated) {
+            $Session.LastDonated = Get-LastDrun
+            $ShiftDonationHours = (Get-Random -Minimum 100 -Maximum 200)/100
+        }
+        $ShiftDonationRun = $Session.Timer.AddHours($ShiftDonationHours - $DonateDelayHours).AddMinutes($DonateMinutes)
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
+            $Session.IsDonationRun = $false
+            $Session.LastDonated   = Set-LastDrun $ShiftDonationRun
         }
     }
+
+    if ($Session.IsServerDonationRun -or ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59))) {
+        $Session.IsDonationRun = $false
+        $Session.LastDonated   = Set-LastDrun $Session.Timer
+    }
+
+    if (-not $Session.IsDonationRun -and ($Session.UserConfig -ne $null)) {
+        $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+        $Session.UserConfig = $null
+        $API.UserConfig = $null
+        $Global:AllPools = $null
+        $Global:WatchdogTimers = @()
+        Update-WatchdogLevels -Reset
+        Write-Log "Donation run finished. "
+    }
+
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if (-not $Session.IsDonationRun -or $CheckConfig) {
             try {$DonationData = Invoke-GetUrl "https://rbminer.net/api/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
@@ -1926,9 +2003,11 @@ function Invoke-Core {
         $Miner_Profits_Bias   = [hashtable]@{}
         $Miner_Profits_Unbias = [hashtable]@{}
 
+        $Miner_IsCPU = $Miner.DeviceModel -eq "CPU"
+
         foreach($p in @($Miner.DeviceModel -split '-')) {$Miner.OCprofile[$p] = ""}
 
-        $Miner_FaultTolerance = if ($Miner.DeviceModel -eq "CPU") {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
+        $Miner_FaultTolerance = if ($Miner_IsCPU) {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
         $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[Math]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
 
         if ($Session.Config.Miners) {
@@ -2053,12 +2132,12 @@ function Invoke-Core {
             $Miner.Profit        = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
-            $Miner.Profit_Cost   = if ($Miner.DeviceModel -eq "CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
+            $Miner.Profit_Cost   = if ($Miner_IsCPU -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {0} else {
                 [Double]($Miner.PowerDraw*$MinerPowerPrice)
             }
         }
 
-        if (($Session.Config.UsePowerPrice -or ($Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw)) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
+        if (($Session.Config.UsePowerPrice -or (-not $Miner_IsCPU -and $EnableMiningHeatControl -and $Miner.PowerDraw)) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             if ($Session.Config.UsePowerPrice) {
                 $Miner.Profit -= $Miner.Profit_Cost
             }
@@ -2557,7 +2636,7 @@ function Invoke-Core {
     if ($IsWindows) {
         @(Get-CIMInstance CIM_Process).Where({$_.ExecutablePath -and $_.ExecutablePath -like "$(Get-Location)\Bin\*" -and $Running_ProcessIds -notcontains $_.ProcessId -and $Running_MinerPaths -icontains $_.ProcessName}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
     } elseif ($IsLinux) {
-        @(Get-Process).Where({$_.Path -and $_.Path -like "$(Get-Location)/bin/*" -and -not (Compare-Object $Running_ProcessIds @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual) -and $Running_MinerPaths -icontains $_.ProcessName}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+        @(Get-Process).Where({$_.Path -and $_.Path -like "$(Get-Location)/Bin/*" -and -not (Compare-Object $Running_ProcessIds @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual) -and $Running_MinerPaths -icontains $_.ProcessName}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
 
     #Kill maroding EthPills
@@ -2651,7 +2730,7 @@ function Invoke-Core {
     #Move donation run into the future, if benchmarks are ongoing
     if ((-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun -and $MinersNeedingBenchmarkCount -gt 0) -or $Session.IsExclusiveRun) {
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.ResetDonationRun = $ShiftDonationRun}
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
 
     #Update API miner information
@@ -3327,7 +3406,25 @@ function Stop-Core {
             }
         }
         if (Get-Command "screen" -ErrorAction Ignore) {
+
             $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
+            if (Test-OCDaemon) {
+                [System.Collections.Generic.List[string]]$Cmd = @()
+                $Cmd.Add("screen -ls `"$WorkerName`" |  grep '[0-9].$($WorkerName)_' | (") > $null
+                $Cmd.Add("  IFS=`$(printf '\t');") > $null
+                $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
+                $Cmd.Add("  while read -r name stuff; do") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
+                $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
+                $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
+                $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
+                $Cmd.Add("  done") > $null
+                $Cmd.Add(")") > $null
+                Invoke-OCDaemon -Cmd $Cmd > $null
+            }
+
             Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_[a-z0-9_-]+)"} | Foreach-Object {
                 Invoke-Exe "screen" -ArgumentList "-S $($Matches[1]) -X stuff `^C" > $null
                 Start-Sleep -Milliseconds 250

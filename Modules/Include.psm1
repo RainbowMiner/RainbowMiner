@@ -4,6 +4,7 @@
 
     if (-not (Test-Path Variable:Global:Session)) {
         $Global:Session = [hashtable]::Synchronized(@{})
+
         if ($IsWindows) {
             $Session.WindowsVersion = [System.Environment]::OSVersion.Version
             $Session.IsWin10        = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0")
@@ -1712,15 +1713,15 @@ function ConvertFrom-Hash {
     )
     try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
     switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
-        "k" {[int64]($Num*1e3);Break}
-        "M" {[int64]($Num*1e6);Break}
-        "G" {[int64]($Num*1e9);Break}
-        "T" {[int64]($Num*1e12);Break}
-        "P" {[int64]($Num*1e15);Break}
-        "E" {if ($Num -lt 10) {[int64]($Num*1e18)} else {[bigint]($Num*1e18)};Break}
-        "Z" {[bigint]($Num*1e21);Break}
-        "Y" {[bigint]($Num*1e24);Break}
-        default {[int64]$Num}
+        "k" {$Num*1e3;Break}
+        "M" {$Num*1e6;Break}
+        "G" {$Num*1e9;Break}
+        "T" {$Num*1e12;Break}
+        "P" {$Num*1e15;Break}
+        "E" {$Num*1e18;Break}
+        "Z" {$Num*1e21;Break}
+        "Y" {$Num*1e24;Break}
+        default {$Num}
     }
 }
 
@@ -1872,68 +1873,6 @@ function Start-SubProcess {
     }
 }
 
-function Start-SubProcessInBackgroundOld {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [String]$FilePath, 
-        [Parameter(Mandatory = $false)]
-        [String]$ArgumentList = "", 
-        [Parameter(Mandatory = $false)]
-        [String]$LogPath = "", 
-        [Parameter(Mandatory = $false)]
-        [String]$WorkingDirectory = "", 
-        [ValidateRange(-2, 3)]
-        [Parameter(Mandatory = $false)]
-        [Int]$Priority = 0,
-        [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0,
-        [Parameter(Mandatory = $false)]
-        [String[]]$EnvVars = @(),
-        [Parameter(Mandatory = $false)]
-        [Int]$MultiProcess = 0,
-        [Parameter(Mandatory = $false)]
-        [Switch]$SetLDLIBRARYPATH = $false
-    )
-
-    [int[]]$Running = @()
-    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
-
-    $ScriptBlock = "Set-Location `"$($WorkingDirectory -replace '"','``"')`"; `$proc = Get-Process -Id `$PID; `$proc.PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
-    $ScriptBlock += "& `"$($FilePath -replace '"','``"')`""
-    if ($ArgumentList) {
-        $ArgumentListToBlock = $ArgumentList
-        ([regex]"\s-+\w+[\s=]+(\w[=\w]*,[,=\w]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value)'"}
-        $ScriptBlock += " $ArgumentListToBlock"
-        if ($ArgumentList -ne $ArgumentListToBlock) {
-            Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
-            $ArgumentList = $ArgumentListToBlock
-        }
-    }
-    $ScriptBlock += " 2>&1"
-    $ScriptBlock += " | Write-Output"
-    if ($LogPath) {$ScriptBlock += " | Tee-Object `"$($LogPath -replace '"','``"')`""}
-
-    $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
-
-    [int[]]$ProcessIds = @()
-    
-    if ($Job) {
-        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
-    }
-    
-    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
-
-    [PSCustomObject]@{
-        ScreenName = ""
-        Name       = $Job.Name
-        XJob       = $Job
-        OwnWindow  = $false
-        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
-    }
-}
-
-
 function Start-SubProcessInBackground {
     [CmdletBinding()]
     param(
@@ -1970,7 +1909,7 @@ function Start-SubProcessInBackground {
         }
     }
 
-    $Job = Start-Job -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $PWD
+    $Job = Start-ThreadJob -FilePath .\Scripts\StartInBackground.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $ArgumentList, $LogPath, $EnvVars, $Priority, $PWD
 
     [int[]]$ProcessIds = @()
     
@@ -2156,7 +2095,7 @@ function Start-SubProcessInScreen {
     }
 
     [System.Collections.Generic.List[string]]$Cmd = @()
-    $Cmd.Add("screen -ls `"$ScreenName`" | (") > $null
+    $Cmd.Add("screen -ls `"$ScreenName`" |  grep '[0-9].$ScreenName' | (") > $null
     $Cmd.Add("  IFS=`$(printf '\t');") > $null
     $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
     $Cmd.Add("  while read -r name stuff; do") > $null
@@ -2212,6 +2151,8 @@ function Start-SubProcessInScreen {
     [int[]]$ProcessIds = @()
     
     if ($JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
+
+    $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log -Level Info "$_"}
     
     [PSCustomObject]@{
         ScreenName = $ScreenName
@@ -2247,6 +2188,10 @@ function Get-SubProcessIds {
 
     if (-not $IsWindows) {return}
 
+    $StopWatch = [System.Diagnostics.Stopwatch]::New()
+
+    $StopWatch.Restart()
+
     $WaitCount = 0
     $ProcessFound = 0
     $ArgumentList = "*$($ArgumentList.Replace("'","*").Replace('"',"*"))*" -replace "\*+","*"
@@ -2259,7 +2204,8 @@ function Get-SubProcessIds {
             Write-Log -Level Info "$($_.ProcessId) found for $FilePath"
         }
         $WaitCount++
-    } until (($WaitCount -gt 100) -or ($ProcessFound -gt $MultiProcess))
+    } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -gt $MultiProcess))
+    $StopWatch = $null
 }
 
 function Set-SubProcessPriority {
@@ -2408,14 +2354,6 @@ function Stop-SubProcess {
                                 if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
                             }
 
-                            #$ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-                            #    if (Test-OCDaemon) {
-                            #        Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
-                            #    } else {
-                            #        $_.Kill()
-                            #    }
-                            #}
-
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                             Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
@@ -2426,7 +2364,7 @@ function Stop-SubProcess {
                             if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                 Invoke-OCDaemon -Cmd "kill $($_.Id)" > $null
                             } else {
-                                Stop-Process $_ -Force -ErrorAction Ignore
+                                Stop-Process -InputObject $_ -Force -ErrorAction Ignore
                             }
                         }
                     }
@@ -2463,7 +2401,11 @@ function Stop-SubProcess {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
                 if (-not $Process.HasExited) {
                     Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
-                    Stop-Process -InputObject $Process -ErrorAction Ignore -Force
+                    #if ($IsLinux -and (Test-OCDaemon)) {
+                    #    Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
+                    #} else {
+                        Stop-Process -InputObject $Process -ErrorAction Ignore -Force
+                    #}
                 }
             }
         }
@@ -2478,10 +2420,16 @@ function Stop-SubProcess {
 
     if ($IsLinux -and $Job.ScreenName) {
         try {
-            [int]$ScreenProcessId = Invoke-Expression "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+            $ScreenCmd = "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+            if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                [int]$ScreenProcessId = Invoke-OCDaemon -Cmd $ScreenCmd
+                $OCDcount++
+            } else {
+                [int]$ScreenProcessId = Invoke-Expression $ScreenCmd
+            }
             if ($ScreenProcessId) {
                 $ArgumentList = "-S $($Job.ScreenName) -X quit"
-                if (Test-OCDaemon) {
+                if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                     $Cmd = "screen $ArgumentList"
                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                     if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
@@ -2845,7 +2793,10 @@ function Get-Device {
         $Type_Mineable_Index = @{}
         $GPUVendorLists = @{}
         $GPUDeviceNames = @{}
-        foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
+
+        $KnownVendors = @("AMD","NVIDIA","INTEL")
+
+        foreach ($GPUVendor in $KnownVendors) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
         
         if ($IsWindows) {
             #Get WDDM data               
@@ -2881,8 +2832,16 @@ function Get-Device {
             [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
                 $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
                 $Device_Index = 0
+                $PlatformVendor = switch -Regex ([String]$_.Vendor) { 
+                                        "Advanced Micro Devices" {"AMD"}
+                                        "Intel"  {"INTEL"}
+                                        "NVIDIA" {"NVIDIA"}
+                                        "AMD"    {"AMD"}
+                                        default {$_.Vendor -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                            }
                 [PSCustomObject]@{
                     PlatformId=$PlatformId
+                    Vendor=$PlatformVendor
                     Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
                         [PSCustomObject]@{
                             DeviceIndex      = $Device_Index
@@ -2922,7 +2881,7 @@ function Get-Device {
                         CardId          = -1
                     }
                 }
-                if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
+                if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Vendor="NVIDIA";Devices=$OpenCL_Devices}}
             } else {
                 Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
             }
@@ -2933,6 +2892,7 @@ function Get-Device {
             [System.Collections.Generic.List[string]]$AmdModelsEx = @()
             $Platform_Devices | Foreach-Object {
                 $PlatformId = $_.PlatformId
+                $PlatformVendor = $_.Vendor
                 $_.Devices | Foreach-Object {    
                     $Device_OpenCL = $_
 
@@ -3010,6 +2970,7 @@ function Get-Device {
                         PlatformId = [Int]$PlatformId
                         PlatformId_Index = [Int]$PlatformId_Index."$($PlatformId)"
                         Type_PlatformId_Index = [Int]$Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"
+                        Platform_Vendor = $PlatformVendor
                         Vendor = [String]$Vendor_Name
                         Vendor_Name = [String]$Device_OpenCL.Vendor                    
                         Vendor_Index = [Int]$Vendor_Index."$($Device_OpenCL.Vendor)"
@@ -3101,6 +3062,41 @@ function Get-Device {
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "GPU detection has failed: $($_.Exception.Message)"
+        }
+
+        #re-index in case the OpenCL platforms have shifted positions
+        try {
+            $OpenCL_Platforms = @()
+            if (Test-Path ".\Data\openclplatforms.json") {
+                $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
+            }
+
+            $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
+
+            if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current) {
+                Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms_Current > $null
+                $OpenCL_Platforms = $OpenCL_Platforms_Current
+            }
+
+            $Index = 0
+            $Need_Sort = $false
+            $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
+                if ($_.Index -ne $Index) {
+                    $Need_Sort = $true
+                    $_.Index = $Index
+                    $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+                }
+                $Index++
+            }
+
+            if ($Need_Sort) {
+                Write-Log -Level Info "OpenCL platforms have changed from initial run. Resorting indices."
+                $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
+            }
+
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "OpenCL platform detection failed: $($_.Exception.Message)"
         }
 
         #Roundup and add sort order by PCI busid
@@ -4335,6 +4331,8 @@ function Invoke-NvidiaSettings {
         if ($Cmd) {
             Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         }
+    } elseif ($IsWindows -and $NvCmd) {
+        & ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd
     }
 }
 

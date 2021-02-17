@@ -5,13 +5,14 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
+if ((-not $IsWindows -and -not $IsLinux) -or $Session.IsVM) {return}
 
 $ManualUri = "https://github.com/technobyl/CryptoDredge/releases"
 $Port = "313{0:d2}"
 $DevFee = 1.0
 $Version = "0.26.0"
 $Enable_Logfile = $false
+$DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
@@ -49,7 +50,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnturtle";    MinMemGb = 3.3; Params = ""} #Cryptonightturtle
     [PSCustomObject]@{MainAlgorithm = "cnupx2";      MinMemGb = 1.5; Params = ""} #CryptoNightLiteUpx2, new with v0.23.0
     [PSCustomObject]@{MainAlgorithm = "cnzls";       MinMemGb = 3.3; Params = ""} #CryptonightZelerius, new with v0.23.0
-    [PSCustomObject]@{MainAlgorithm = "kawpow";      MinMemGb = 3;   Params = ""; DAG = $true} #CryptonightZelerius, new with v0.26.0
+    #[PSCustomObject]@{MainAlgorithm = "kawpow";      MinMemGb = 3;   Params = ""; DAG = $true} #CryptonightZelerius, new with v0.26.0
     #[PSCustomObject]@{MainAlgorithm = "mtp";         MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
     #[PSCustomObject]@{MainAlgorithm = "mtp-tcr";     MinMemGb = 5; Params = ""; ExtendInterval = 2} #MTP-TCR
 )
@@ -70,21 +71,21 @@ if ($InfoOnly) {
     return
 }
 
-$Uri = ""
-for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+$Cuda = $null
+for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-        $Uri = $UriCuda[$i].Uri
-        $Cuda= $UriCuda[$i].Cuda
-        if ($UriCuda[$i].Version) {
-            $Version = $UriCuda[$i].Version
-        }
+        $Uri  = $UriCuda[$i].Uri
+        $Cuda = $UriCuda[$i].Cuda
     }
 }
-if (-not $Uri) {return}
+
+if (-not $Cuda) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model -and (-not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)})
+
+    if (-not $Device) {return}
 
     $Commands.Where({-not $_.Version -or (Compare-Version $Version $_.Version) -ge 0}).ForEach({
         $First = $true

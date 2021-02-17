@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Version = "0.19.0"
+$Version = "0.19.0-17"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
@@ -19,51 +19,43 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-cuda11.1-linux-amd64.7z"
-            Cuda = "11.1"
-            Version = "0.19.0-11"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda11.2-linux-amd64.7z"
+            Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-cuda10.0-linux-amd64.7z"
-            Cuda = "10.0"
-        },
-        [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.1-ethminer/ethminer-0.17.1-linux-x86_64.tar.gz"
-            Cuda = "9.0"
-            Version = "0.17.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda10.2-linux-amd64.7z"
+            Cuda = "10.2"
         }
     )
 } else {
     $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda11.1-windows-amd64.zip"
-            Cuda = "11.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda11.2-windows-amd64.zip"
+            Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda10.0-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda10.0-windows-amd64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda9.1-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda9.1-windows-amd64.zip"
             Cuda = "9.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-12-cuda8.0-windows-amd64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-17-cuda8.0-windows-amd64.zip"
             Cuda = "8.0"
         }
     )
-    $Version = "0.19.0-12"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 2} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
-$Uri = $UriCuda[0].Uri
 
 if ($InfoOnly) {
     [PSCustomObject]@{
@@ -79,17 +71,18 @@ if ($InfoOnly) {
     return
 }
 
+$Cuda = $null
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
-    $Cuda = 0
-    for($i=0;$i -le $UriCuda.Count -and -not $Cuda;$i++) {
+    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-            $Uri = $UriCuda[$i].Uri
-            $Cuda= $UriCuda[$i].Cuda
-            if ($UriCuda[$i].Version -ne $null) {
-                $Version = $UriCuda[$i].Version
-            }
+            $Uri  = $UriCuda[$i].Uri
+            $Cuda = $UriCuda[$i].Cuda
         }
     }
+}
+
+if (-not $Cuda) {
+    $Uri = $UriCuda[0].Uri
 }
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {

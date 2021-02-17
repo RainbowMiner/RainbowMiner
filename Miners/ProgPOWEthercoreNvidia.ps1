@@ -13,37 +13,33 @@ $DevFee = 0.0
 $Version = "1.0.0"
 
 if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer"
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ethercore/ethcoreminer-1.0.0-nvidia-cuda-10-linux-x86_64.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer"
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ethercore/ethcoreminer-1.0.0-nvidia-cuda-9-linux-x86_64.tar.gz"
             Cuda = "9.0"
         },
         [PSCustomObject]@{
-            Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer"
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ethercore/ethcoreminer-1.0.0-nvidia-cuda-8-linux-x86_64.tar.gz"
             Cuda = "8.0"
         }
     )
 } else {
+    $Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer.exe"
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ethercore/ethcoreminer-1.0.0-nvidia-cuda-10.0-windows-amd64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer.exe"
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ethercore/ethcoreminer-1.0.0-nvidia-cuda-9.2-windows-amd64.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Path = ".\Bin\NVIDIA-ProgPOWEthercore\ethcoreminer.exe"
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ethercore/ethcoreminer-1.0.0-nvidia-cuda-8.0-windows-amd64.zip"
             Cuda = "8.0"
         }
@@ -72,15 +68,15 @@ if ($InfoOnly) {
     return
 }
 
-$Uri = $Path = ""
-for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+$Cuda = $null
+for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-        $Path= $UriCuda[$i].Path
-        $Uri = $UriCuda[$i].Uri
-        $Cuda= $UriCuda[$i].Cuda
+        $Uri  = $UriCuda[$i].Uri
+        $Cuda = $UriCuda[$i].Cuda
     }
 }
-if (-not $Uri) {return}
+
+if (-not $Cuda) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true

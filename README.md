@@ -4,8 +4,10 @@
 ###### **Actual master.zip: [Developer Version master.zip](https://github.com/RainbowMiner/RainbowMiner/archive/master.zip)**
 
 ###### **Central monitoring for all of your rigs: [https://rbminer.net](https://rbminer.net)**
+[![miners](https://img.shields.io/endpoint?url=https%3A%2F%2Frbminer.net%2Fapi%2Fshio.php%3Fid%3Dminers)](https://rbminer.net/monitoring) [![profit](https://img.shields.io/endpoint?url=https%3A%2F%2Frbminer.net%2Fapi%2Fshio.php%3Fid%3Dprofit)](https://rbminer.net/monitoring)
 
-###### **Discord: [https://discord.gg/ZBNVWYY](https://discord.gg/ZBNVWYY)**
+###### **Discord: [https://discord.gg/DUJqjfk4](https://discord.gg/DUJqjfk4)**
+[![online](https://img.shields.io/discord/513274071010508800)](https://discord.gg/DUJqjfk4)
 
 
 ## INTRODUCTION
@@ -49,7 +51,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ### Windows 7/8.1/10 pre-requesites
 
-1. Install PowerShell 7: [Download Installer for version 7.1.1](https://github.com/PowerShell/PowerShell/releases/download/v7.1.1/PowerShell-7.1.1-win-x64.msi)
+1. Install PowerShell 7: [Download Installer for version 7.1.2](https://github.com/PowerShell/PowerShell/releases/download/v7.1.2/PowerShell-7.1.2-win-x64.msi)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
     - **Nvidia official downloads**:
@@ -156,17 +158,17 @@ At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v7.1.1 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v7.1.2 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 ```
 # if not already done, download the package, change the ubuntu distro version number!
-wget https://github.com/PowerShell/PowerShell/releases/download/v7.1.1/powershell_7.1.1-1.ubuntu.18.04_amd64.deb
+wget https://github.com/PowerShell/PowerShell/releases/download/v7.1.2/powershell_7.1.2-1.ubuntu.18.04_amd64.deb
 
 # install powershell package
-dpkg -i powershell_7.1.1-1.ubuntu.18.04_amd64.deb
+dpkg -i powershell_7.1.2-1.ubuntu.18.04_amd64.deb
 
 # install powershell dependecies
 apt install -f

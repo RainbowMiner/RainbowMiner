@@ -355,14 +355,14 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             if ($Session.Config) {
                 $NewFile = "$DebugPath\config.json"
-                $PurgeString = $Config | ConvertTo-Json -Depth 10
+                $PurgeString = $RunningConfig | ConvertTo-Json -Depth 10
                 $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
                 Out-File -InputObject $PurgeString -FilePath $NewFile
             }
 
             if ($API.UserConfig) {
                 $NewFile = "$DebugPath\userconfig.json"
-                $PurgeString = $Config | ConvertTo-Json -Depth 10
+                $PurgeString = $UserConfig | ConvertTo-Json -Depth 10
                 $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
                 Out-File -InputObject $PurgeString -FilePath $NewFile
             }

@@ -144,7 +144,14 @@ if ($AllRigs_Request) {
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
 
         $Rigs_DeviceModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $Worker1} | Select-Object -ExpandProperty Name | Select-Object -Unique)
-        $Rigs_Devices = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)))})
+
+        if ($Session.Config.MiningMode -eq "Legacy") {
+            $Rigs_Devices = @($Global:DeviceCache.DevicesByTypes.AMD + $Global:DeviceCache.DevicesByTypes.NVIDIA + $Global:DeviceCache.DevicesByTypes.CPU | Sort-Object Index)
+        } else {
+            $Rigs_Devices = $Global:DeviceCache.Devices
+        }
+
+        $Rigs_Devices = $Rigs_Devices.Where({($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)})
         $Workers_Devices[$Worker1] = @($Rigs_Devices | Select-Object -ExpandProperty Name -Unique)
         $Workers_Models[$Worker1]  = @($Rigs_Devices | Select-Object -ExpandProperty Model -Unique)
 

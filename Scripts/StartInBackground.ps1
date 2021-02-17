@@ -9,16 +9,21 @@ $ControllerProcess.Handle >$null
 
 $PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
 
-$MiningProcess = [PowerShell]::Create()
-$MiningProcess.AddScript("Set-Location `"$($WorkingDirectory)`"; $EnvParams (Get-Process -Id `$PID).PriorityClass = `"$($PriorityClass)`"; & `"$($FilePath)`" $($ArgumentList.Replace('"','``"')) *>&1 | Write-Verbose -Verbose")
-$Result = $MiningProcess.BeginInvoke()
+$MiningProcess = [PowerShell]::Create().AddScript("Set-Location `"$($WorkingDirectory)`"; $EnvParams (Get-Process -Id `$PID).PriorityClass = `"$($PriorityClass)`"; & `"$($FilePath)`" $($ArgumentList.Replace('"','``"')) *>&1 | Write-Verbose -Verbose")
+$MiningStatus  = $MiningProcess.BeginInvoke()
+
 do {
-    Start-Sleep -S 1
-    $MiningProcess.Streams.Verbose.ReadAll() | Foreach-Object {
-        $Line = "$($_)"
-        if ($LogPath) {Out-File -InputObject $Line -FilePath $LogPath -Append -Encoding UTF8}
-        $Line
+    if ($ControllerProcess.WaitForExit(1000)) {
+        $MiningProcess.Streams.ClearStreams() > $null
+        $MiningProcess.Stop() > $null
+    } else {
+        if ($LogPath) {
+            $MiningProcess.Streams.Verbose.ReadAll() | Tee-Object $LogPath -Append
+        } else {
+            $MiningProcess.Streams.Verbose.ReadAll()
+        }
+        $MiningProcess.Streams.ClearStreams() > $null
     }
-    $MiningProcess.Streams.ClearStreams() > $null
-    if (-not (Get-Process -Id $ControllerProcessID -ErrorAction Ignore)) {$MiningProcess.Stop() > $null}
-} until ($MiningProcess.IsCompleted)
+} until ($MiningStatus.IsCompleted)
+
+$MiningProcess.Dispose()

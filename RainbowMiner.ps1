@@ -307,12 +307,12 @@ $EnableMinerStatus = $true
 
 Initialize-Session
 
-$Session.Version         = "4.6.8.5"
+$Session.Version         = "4.6.8.9"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
 
-$Session.SupportedPSVersion = "7.1.1"
+$Session.SupportedPSVersion = "7.1.2"
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 

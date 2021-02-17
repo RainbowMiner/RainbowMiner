@@ -11,17 +11,17 @@ $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "10.0"
 $DevFee = 3.0
-$Version = "3.2.0"
+$Version = "3.2.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-linux-3.2.0-cuda11.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.2-nanominer/nanominer-linux-3.2.2-cuda11.tar.gz"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-linux-3.2.0.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.2-nanominer/nanominer-linux-3.2.2.tar.gz"
             Cuda = "10.0"
         }
     )
@@ -29,11 +29,11 @@ if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-windows-3.2.0-cuda11.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.2-nanominer/nanominer-windows-3.2.2-cuda11.zip"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-nanominer/nanominer-windows-3.2.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.2-nanominer/nanominer-windows-3.2.2.zip"
             Cuda = "10.0"
         }
     )
@@ -70,17 +70,17 @@ if ($InfoOnly) {
     return
 }
 
-$Uri = ""
+$Cuda = $null
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
-    for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+    for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
-            $Uri = $UriCuda[$i].Uri
-            $Cuda= $UriCuda[$i].Cuda
+            $Uri  = $UriCuda[$i].Uri
+            $Cuda = $UriCuda[$i].Cuda
         }
     }
 }
 
-if (-not $Uri) {
+if (-not $Cuda) {
     $Uri = $UriCuda[0].Uri
 }
 

@@ -17,6 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $CoinXlat = [PSCustomObject]@{
     PM = "PMEER"
     ERGO = "ERG"
+    VDS = "VOLLAR"
 }
 
 try {
@@ -34,9 +35,9 @@ try {
                         rpc      = $Data[0].Groups[2].Value
                         port     = $Data[0].Groups[3].Value
                         hashrate = ConvertFrom-Hash "$($Columns[3])"
-                        workers  = [int]"$($Columns[4])"
-                        profit   = "$(if (($Columns[5] -replace "&nbsp;"," ") -match "([\d\.]+)[\s\w\/]+(\w)") {[double]$Matches[1]/(ConvertFrom-Hash "1$($Matches[2])")} else {$null})"
-                        fee      = [double]"$(if ($Columns[6] -match "(\d+)%$") {$Matches[1]})"
+                        workers  = $null #[int]"$($Columns[4])"
+                        profit   = "$(if (($Columns[4] -replace "&nbsp;"," ") -match "([\d\.]+)[\s\w\/]+(\w)") {[double]$Matches[1]/(ConvertFrom-Hash "1$($Matches[2])")} else {$null})"
+                        fee      = [double]"$(if ($Columns[5] -match "(\d+)%$") {$Matches[1]})"
                     }
                 }
             }
@@ -82,6 +83,10 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://www.666pool.cn/pool2/block/$($_.id)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
             if ($Pool_BlocksRequest.Count -ne 3) {$ok = $false}
             else {
+                $Pool_Power = ([regex]'(?si)djs-power">([^<]+)<').Matches($Pool_BlocksRequest[0])
+                if (-not $Pool_Workers -and $Pool_Power.Count -gt 1) {
+                    $Pool_Workers = [int]$Pool_Power[1].groups[1].Value
+                }
                 $Pool_BLK = [int]"$(if ($Pool_BlocksRequest[0] -match "green[^>]+>(\d+)<") {$Matches[1]} else {0})"
                 $Pool_BlocksRequest = $Pool_BlocksRequest[1] -split "<tbody[^>]*>"
                 $Pool_TSL = if ($TZ_China_Standard_Time -and $Pool_BlocksRequest.Count -ge 2 -and (($Pool_BlocksRequest[1] -split "<tr>")[1] -match "(\d+-\d+-\d+\s+\d+:\d+)")) {

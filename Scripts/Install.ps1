@@ -33,6 +33,8 @@ if ($IsLinux) {
     Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
     Write-Host "Install screen .."
     Start-Process ".\IncludesLinux\bash\screen.sh" -Wait
+    Write-Host "Install virt-what .."
+    Start-Process ".\IncludesLinux\bash\virt-what.sh" -Wait
 
     Write-Host "Linking libraries .."
     if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
