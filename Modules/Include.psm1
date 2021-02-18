@@ -2809,7 +2809,7 @@ function Get-Device {
                     [PSCustomObject]@{
                         Name        = $_.Name
                         InstanceId  = $_.PNPDeviceId
-                        BusId       = $(if ($BusId -ne $null-and $BusId.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusId,([int]$DeviceAddress -shr 16)})
+                        BusId       = $(if ($BusId -ne $null -and $BusId.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusId,([int]$DeviceAddress -shr 16)})
                         Vendor      = switch -Regex ([String]$_.AdapterCompatibility) { 
                                         "Advanced Micro Devices" {"AMD"}
                                         "Intel"  {"INTEL"}

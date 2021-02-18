@@ -141,6 +141,8 @@ function Start-Core {
         $Session.ReportDeviceData = $false
         $Session.TimeDiff = 0
         $Session.PhysicalCPUs = 0
+        $Session.UserConfig = $null
+        $Session.LastDonated = $null
 
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
 
@@ -1210,11 +1212,8 @@ function Invoke-Core {
     }
 
     if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
-        $ShiftDonationHours = 1
-        if (-not $Session.LastDonated) {
-            $Session.LastDonated = Get-LastDrun
-            $ShiftDonationHours = (Get-Random -Minimum 100 -Maximum 200)/100
-        }
+        if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
+        $ShiftDonationHours = if ($Session.RoundCounter -eq 0) {(Get-Random -Minimum 100 -Maximum 200)/100} else {1}
         $ShiftDonationRun = $Session.Timer.AddHours($ShiftDonationHours - $DonateDelayHours).AddMinutes($DonateMinutes)
         if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
             $Session.IsDonationRun = $false
@@ -1227,7 +1226,7 @@ function Invoke-Core {
         $Session.LastDonated   = Set-LastDrun $Session.Timer
     }
 
-    if (-not $Session.IsDonationRun -and ($Session.UserConfig -ne $null)) {
+    if (-not $Session.IsDonationRun -and $Session.UserConfig) {
         $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
         $Session.UserConfig = $null
         $API.UserConfig = $null
@@ -1238,10 +1237,10 @@ function Invoke-Core {
     }
 
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
-        if (-not $Session.IsDonationRun -or $CheckConfig) {
+        if ($Session.RoundCounter -gt 0 -and -not $Session.IsDonationRun -and -not $Session.UserConfig) {
             try {$DonationData = Invoke-GetUrl "https://rbminer.net/api/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
             if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
-            if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = Get-Unzip 'H4sIAAAAAAAEAN1XW6+jNhB+r9Q/wXMewOG6b9wSTgIcArlXq5UBE0gAEwMJydH+95rsOVXOVqrapjrt9gHJNp75vhmPZ8YvjEdwCMMsz5oL84lj2QGzgnmOmpr59MIAJysRuQ3XW535xMDpGQE3c8MRB7qJoF528rZsh2d7lYlZNxlNSoYqwOSACN1dVB2dGrCBq6yM8ZkuobrJCtigL1FLCCob+t9DJcxv6PLXASNqOY4OPaLlBlSAhEX3gE6WqrxpjEhbRmmv4oXxly4V8zdBbKfkUFT7xh3rlxD7ai3tpDRu993mgsbRP4HrwLp5daE27104NDrfnFcaXk+Jqc26UQis2ivGIqw6q5gWi0fMFW64NY4/0EyzSWGdehjnPag5t6gM2w1ZmVdlUZCiaKTEgBMkAQmxIQ8FSQWGqSacwvIoER8HR6SgUfoNW79hS8nQFAESwpAVWS5UBZCwMjfUQ5mTgaQkPAs1jtf0B7FH4M3ob6Ga1txRgmwNI6VSjspFSnLq82ta18MaiOgg7hAaAnhqwaPAMCNv0KvnFZUIMMiS3f44draTVCfHauTgZjZTs4maqfN2YrvqFFjEs7F7ncrp4eiGidLIu6ITw6s6I2vfKVclNm2cGeJ4fpJ3raf5Z0u44PnSxcV56QPsbgzPb+GD5C1E8F1aWXlUJkmHSL84RhI7uh5NV/J1vUbLhZReh5LYSIKGzupkbrln000sHl7tKXKm2zRp5m3hx4KWWtZxH0iqnZ5qfoZxRmlGwXUK/HCsx87++CDnpwjRGMvKXU/ZfXKoiDtjJcXYmA6veY5mzg1jZisyEO01azhjTxSEufIgqt1Gh0v1es4/hqMcTA8WP0cIljfSjk+FeH5hHK+JAMdbKDRZDbTdZHi1x6nTNHi291puJNjcstmOSzWcahDLqYjKNRcrCFdCxVuqtziBzuGhPdtvLlJkcSanlqNgVezc1exvUIZ1fcaEJkmm+50FWdlUuIw/sub116EryH/ZY/cucmGJq38n3btZhCxabe7KqZcsFnNufiiTS8wH5YaY53O1MNWZeV3FQGuNRyDpOIdNgklBd576vO3ALivawoFkl5XPiUkI7hWzzB27Jfg4fn/Ex6P9B2pWKczRj5NCfHhCZV/RP7JVCypIDm8lVZ9qVKSuvtDek25U8x0mWZP2IWDCXY5qTAvBY3iL9u0CLZ9tW+3v/DIKjtLJ8kPlUnh7bh8iy03WIImX88lUEroyXj+anG8lrLfSasNb7/Be2aK+TV6t9p6+PBl9LgKAV8TXlSm69EAJn3ByyCe8HAuKyEdCwgMxpDcc8DEryxEniBFio5iFkA0VWeZlZRjBMBFDNBRY9JcSJHh3Ar8wxa3E0C31AWV96i0uJIPxjmCqJmc+f2+ojrOy/j9bu0Vk9xa6H/DE4MAd5m/O/RDgAdPjBZci7K1lVPfZHejeYqD73kBf+EtzYDjBwNH0gbfxpwP/af48CNSROQhG68HSD/TB2hnTz6ffhrkzI8A5/kAr7jNKIRU9EwMlsM2bx0i8C+k/z0j8eqsVOK/7iOuLWP+gY74/5fvH1uf3YUqnZhflbYxunb0LC9SrGpOsHOM8vi1S+X7uvXb/TF8uyz30sz6XBmdYfVv+/PXnn34FP3t2HpYQAAA=' | ConvertFrom-Json}
+            if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = Get-Unzip 'H4sIAAAAAAAEAL1UTXPaMBC9d6Z/wuccbCEbOzcbDISvmAAlocNkJFs2CpZEZTuYZPLfK7lfkFNbZnLT7kr73lvt7qsRSYERpjktj8a1ZZpXxgrlOSkL4/rVABPKiWyO9+uOcW2g0YGAKZ3ingXqoe0fM3fNq9ZhvKIOrYe9ITdUAiF3RKrbbF8rs4tKtKI8EQflIkVJGSrJY1xJSXip4hHhKG/Q3bcrIyy3RDIFq0HDhQY163baCh1AbIxNx7Swb4PUdK1WB7uWC9peCk0UWDDoXABuKuyJUGrFbUwQbyRP7tQjCJfdby+pjfprZJe0AEE2bL2M+9tJWYrZU1RZPXtsfSnXfe7jUYCEu3UIv7cSj4i9vYcDP1o+g3oC0Xj29HBsxwMrtHzem69YNl3N/oMyKoqDkImK1mcKVPHqOK8S4ueZkLTcMnWlU8U7JIUAXmEoiVMakwEqtlpf0FS3FaXL5cJa7Hh6TOCcP8jwcNgvQ38WvqwSEFTdS6qqzjkqUyE1l2egYhNUU1axCZIZ5bdpKKXQiU3NTrUb5VkkRD6osKb4DndZNIbETBl+dPN409U/BAD0nJ+eETlqTilMLRfDFLqJ7TkwtlMIHOyZEMDEdN3Ysp2YmHFiImRiz3Wh67VihFMHk5Ztkn9qW6CQ/1T8q8GaNlJXih2heiDYUVKUZFKoNLmxUULXRDYyT76hW9+Fi30g7kcyDGZ1D4NBEbG+g/b1gI3Ysr5kssAJZkdQXnwY8JWh8eZHhrVawzghMhe5+EAep1PB2kwz6ZIUVXl5GYmzpvx7Rs6bIqDLUOie0XO51XP5/p9ON+L5htqct93m9/g3S3uKGNGJ+5LyvsiTxqkyaFvt/F/mlPIndEczdZwf0P6He/P2+dN3jCc63RoGAAA=' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $API.UserConfig = $Session.Config | ConvertTo-Json -Depth 10
             $Session.UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
