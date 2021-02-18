@@ -48,8 +48,18 @@ function formatHashRate(value) {
   }
 }
  
-function formatBTC(value) {
-  return parseFloat(value).toFixed(8);
+function formatBTC(value,unit) {
+  var m = 1, f=8;
+  if (typeof unit !== "undefined" && unit != "BTC") {
+    if (unit == "mBTC") {m=1000;f=5}
+    else if (unit == "sat") {m=1e8;f=0}
+  }
+  return (parseFloat(value)*m).toFixed(f);
+};
+
+function formatmBTC(value) {
+    var v = parseFloat(value) * 1000;
+    return v.toFixed(5);
 };
 
 function formatArrayAsString(value) {
@@ -68,8 +78,65 @@ function formatMinerHashRatesValues(value) {
   return hashrates.toString();
 }
 
-function formatPrices(data) {
-    return (data * 1000000000).toFixed(10);
+function getSelectedCurrency() {
+    if (selected_currency.currency != null && selected_currency.rate) {
+        return selected_currency
+    }
+
+    var selcur = {
+        rate: 1000,
+        currency: ($("#profit_currency option").length)? $("#profit_currency option:selected").val() : window.localStorage.getItem("currency")
+    }
+    if ($("#profit_currency option").length) {
+        selcur.rate = parseFloat($("#profit_currency option[value='"+selcur.currency+"']").attr("rate"));
+    } else if (selcur.curreny == "BTC") {
+        selcur.rate = 1
+    } else if (selcur.currency == "mBTC") {
+        selcur.rate = 1000
+    } else if (selcur.currency == "sat") {
+        selcur.rate = 1e8
+    } else {
+        selcur.currency = "mBTC";
+        selcur.rate = 1000;
+    }
+    return selcur
+}
+
+function formatPricesByCurrency(data,selcur) {
+    if (typeof data == "undefined" || !data) return "-";
+    if (typeof selcur.currency == "undefined" || !selcur.currency) selcur = {currency: "mBTC", rate: 1000}
+    if (typeof selcur.rate == "undefined" || !selcur.rate) {
+        if (selcur.currency == "BTC") selcur.rate = 1
+        else if (selcur.currency == "mBTC") selcur.rate = 1000
+        else if (selcur.currency == "sat") selcur.rate = 1e8
+        else {
+            return formatPricesBTC(data);
+        }
+    }
+
+    var value = parseFloat(data) * selcur.rate;
+
+    if (selcur.currency == "BTC") {
+        return value.toFixed(8).toString();
+	} else if (selcur.currency == "mBTC") {
+        return value.toFixed(5).toString() + '&nbsp;m';
+    } else if (selcur.currency == "sat") {
+        return Math.round(value);
+    }
+    return value.toFixed(3).toString() + '&nbsp;' + selcur.currency;
+}
+
+function formatPricesBTC(data) {
+    if (typeof data == "undefined" || !data) return "-";
+    var value = parseFloat(data);
+    var currency = ($("#profit_currency option").length)? $("#profit_currency option:selected").val() : window.localStorage.getItem("currency");
+    if (currency == "BTC") {
+        return value.toFixed(8).toString();
+	}
+    var i = Math.floor(Math.log(value) / Math.log(1000));
+    var cm = "", rto = 5;
+    if (i < 0) { cm = "m"; value *= 1e3; rto = 5 }
+    return value.toFixed(rto).toString() + (cm ? '&nbsp;' + cm : '');
 }
 
 function formatDate(data) {

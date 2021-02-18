@@ -23,7 +23,7 @@
             <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
             <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
-            <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
+            <th data-field="tProfit" data-align="right" data-sortable="true">Profit</th>
             <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
@@ -53,13 +53,13 @@
             <tr>
                 <th data-field="worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                 <th data-field="status" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
-                <th data-field="tmachine" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Machine</th>
-                <th data-field="tlastseen" data-sortable="true">Last seen</th>
-                <th data-field="tuptime" data-sortable="true">Uptime</th>
-                <th data-field="tversion" data-sortable="true">Version</th>
-                <th data-field="profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
-                <th data-field="tpowerdraw" data-align="right" data-sortable="true">Power</th>
-                <th data-field="tmaxtemp" data-align="right" data-sortable="true " data-title-tooltip="Maximum temperature in °C">max °C</th>
+                <th data-field="tMachine" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Machine</th>
+                <th data-field="tLastSeen" data-sortable="true">Last seen</th>
+                <th data-field="tUptime" data-sortable="true">Uptime</th>
+                <th data-field="tVersion" data-sortable="true">Version</th>
+                <th data-field="tProfit" data-align="right" data-sortable="true">Profit</th>
+                <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+                <th data-field="tMaxTemp" data-align="right" data-sortable="true " data-title-tooltip="Maximum temperature in °C">max °C</th>
             </tr>
         </thead>
     </table>
@@ -85,7 +85,7 @@
                 <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
                 <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
                 <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
-                <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
+                <th data-field="tProfit" data-align="right" data-sortable="true">Profit</th>
                 <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
                 <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
                 <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
@@ -349,7 +349,11 @@ $(function () {
         window.setTimeout(refreshTableRemoteWorkers, 60000);
     }
     window.setTimeout(refreshTableRemoteWorkers, 60000);
-
+    function refreshTableRemoteMiners() {
+        $("table#remoteminers").bootstrapTable("refresh", { silent: true });
+        window.setTimeout(refreshTableRemoteMiners, 60000);
+    }
+    window.setTimeout(refreshTableRemoteMiners, 60000);
 
     /*
     const $table = $('table#remoteworkers');
@@ -363,6 +367,10 @@ $(function () {
 });
 
 function formatRunningMiners(data) {
+    var selcur = getSelectedCurrency()
+
+    $("#runningminers_profit_currency").html(selcur.currency);
+
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
     $.each(data, function (index, item) {
@@ -403,10 +411,10 @@ function formatRunningMiners(data) {
         } else {
             item.tPrimaryHashRateLive = item.Speed_Live;
         }
+
+        item.tProfit = formatPricesByCurrency(item.Profit,selcur);
         item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
-
         item.tDonator = item.Donator ? "for dev" : "for you";
-
         item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== "" ? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== "" ? item.CoinName : '-')
 
         // Format the Profile(s)
@@ -434,6 +442,10 @@ function formatRunningMiners(data) {
 }
 
 function formatRemoteWorkers(data) {
+    var selcur = getSelectedCurrency()
+
+    $("#remoteworkers_profit_currency").html(selcur.currency);
+
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
     if (data && data.length) $("div#remoteworkersandminers").show()
@@ -443,11 +455,11 @@ function formatRemoteWorkers(data) {
         // Format the type(s)
         //console.log(data);
         //console.log(item);
-        item.tmachine = '<div style="line-height:1">'+item.machinename + '<span class="small font-weight-lighter"><br />'+item.machineip+'</span></div>';
-        item.tlastseen = timeSince(new Date(item.lastseen * 1000));
-        item.tuptime = item.uptime && parseInt(item.uptime) > 0 ? formatUptime(item.uptime) : '-';
+        item.tMachine = '<div style="line-height:1">'+item.machinename + '<span class="small font-weight-lighter"><br />'+item.machineip+'</span></div>';
+        item.tLastSeen = timeSince(new Date(item.lastseen * 1000));
+        item.tUptime = item.uptime && parseInt(item.uptime) > 0 ? formatUptime(item.uptime) : '-';
         var vb = item.version.split(" ");
-        item.tversion = vb.length > 1 ? vb[1] : item.version
+        item.tVersion = vb.length > 1 ? vb[1] : item.version
         var maxtemp = 0;
 
         if (item.status == "Running") {
@@ -464,13 +476,19 @@ function formatRemoteWorkers(data) {
             }
         }
 
-        item.tpowerdraw = Math.round(parseFloat(item.powerdraw)) + ' W';
-        item.tmaxtemp   = maxtemp>0? maxtemp + ' °C' : '-';
+        item.tProfit = formatPricesByCurrency(item.profit,selcur);
+        item.tPowerDraw = Math.round(parseFloat(item.powerdraw)) + ' W';
+        item.tMaxTemp   = maxtemp>0? maxtemp + ' °C' : '-';
     });
     return data;
 }
 
 function formatRemoteMiners(data) {
+
+    var selcur = getSelectedCurrency()
+
+    $("#remoteminers_profit_currency").html(selcur.currency);
+
     // This function can alter the returned data before building the table, formatting it in a way
     // that is easier to display and manipulate in a table
     $.each(data, function (index, item) {
@@ -527,10 +545,9 @@ function formatRemoteMiners(data) {
             item.tPrimaryShares = (typeof item.Accepted !== "undefined"? item.Accepted : '-') + ' / ' + (typeof item.Rejected !== "undefined"? item.Rejected : '-')
         }
 
+        item.tProfit = formatPricesByCurrency(item.Profit,selcur);
         item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
-
         item.tDonator = item.Donator ? "for dev" : "for you";
-
         item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== "" ? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== "" ? item.CoinName : '-')
 
         if (!item.Benchmarking && !item.tPrimaryHashRateLive && !item.PowerDraw) {
@@ -555,6 +572,7 @@ function colorStatus(row, index) {
 }
 
 function detailFormatterRemoteWorkers(index, row) {
+    var selcur = getSelectedCurrency()
     //console.log(row);
     var html = [];
     html.push("<strong>Running Miners on "+row.worker+"</strong>");
@@ -568,7 +586,7 @@ function detailFormatterRemoteWorkers(index, row) {
         html.push('<td>' + (typeof value.CoinSymbol !== "undefined" && value.CoinSymbol != "" && value.Pool != "MiningRigRentals" ? value.CoinSymbol : (typeof value.CoinName !== "undefined" && value.CoinName != "" ? value.CoinName : '-')) + '</td>');
         html.push('<td>' + value.Currency + '</td>');
         html.push('<td>' + value.Type + '</td>');
-        html.push('<td>' + formatPricesBTC(value.Profit) + '</td>');
+        html.push('<td>' + formatPricesByCurrency(value.Profit,selcur) + '</td>');
         html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
         html.push('<td>' + formatHashRate(value.EstimatedSpeed) + '</td>');
         html.push('<td>' + Math.round(parseFloat(value.PowerDraw)) + ' W</td>');
