@@ -12,7 +12,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 # Bitcoin Wallet
 #
 
-$Wallets = @($Config.Wallet) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.BTC} | Foreach-Object {$_.Wallets.BTC}) | Where-Object {$_ -match "^[13]"} | Select-Object -Unique | Sort-Object
+$Wallets = @($Config.Wallet) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.BTC} | Foreach-Object {$_.Wallets.BTC}) | Where-Object {$_ -match "^[13]|^bc1"} | Select-Object -Unique | Sort-Object
 
 if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains "BTC")) {
     $Request = [PSCustomObject]@{}
