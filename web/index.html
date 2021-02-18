@@ -477,8 +477,24 @@ function formatRemoteMiners(data) {
         // Format the type(s)
         //console.log(data);
         //console.log(item);
+
         item.tDevices = item.Type.toString();
         item.Name = item.Name.split(/\-/)[0];
+
+        // Add GPU count
+        if (item.tDevices.indexOf("CPU") == -1) {
+            var devices = item.tDevices.split(/\-/)
+            for (var i=0; i < devices.length; i++) {
+                var dcount = 0;
+                $.each(item.Devices, function(dindex, device) {
+                    if (device.Name == devices[i]) {dcount++;}
+                });
+                if (dcount > 1) {
+                    devices[i] = dcount + 'x' + devices[i];
+                }
+            }
+            item.tDevices = devices.join('-');
+        }
 
         // Format the algorithms and hashrates
 
