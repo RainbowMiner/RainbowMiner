@@ -69,7 +69,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
         $Algorithm_Norm_0 = Get-Algorithm $MainAlgorithm
 
-        $Miner_Device = $Device | Where-Object {($_.Model -notmatch "^RX5\d\d\d" -and $MainAlgorithm -eq $_.MainAlgorithm) -or ($_.Model -match "^RX5\d\d\d" -and $MainAlgorithm -ne $_.MainAlgorithm)}
+        $Miner_Device = $Device | Where-Object {($_.Model -notmatch "^RX[56]\d\d\d" -and $MainAlgorithm -eq $_.MainAlgorithm) -or ($_.Model -match "^RX[56]\d\d\d" -and $MainAlgorithm -ne $_.MainAlgorithm)}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
