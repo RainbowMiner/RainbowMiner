@@ -78,6 +78,10 @@ function formatMinerHashRatesValues(value) {
   return hashrates.toString();
 }
 
+function formatPrices(data) {
+    return (data * 1000000000).toFixed(10);
+}
+
 function getSelectedCurrency() {
     if (selected_currency.currency != null && selected_currency.rate) {
         return selected_currency
