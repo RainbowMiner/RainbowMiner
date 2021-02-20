@@ -214,14 +214,14 @@ function Start-Setup {
             Write-Host " "
             Write-Host "- Wallet: setup wallet addresses, worker- and username, API-keys" -ForegroundColor Yellow
             Write-Host "- Common: setup the most common RainbowMiner settings and flags" -ForegroundColor Yellow
-            Write-Host "- Energycosts: setup energy consumtion values" -ForegroundColor Yellow
-            Write-Host "- Selection: select which pools, miners, algorithm to use" -ForegroundColor Yellow
+            Write-Host "- Energycosts: setup energy consumption values" -ForegroundColor Yellow
+            Write-Host "- Selection: select which pools, miners, algorithms to use" -ForegroundColor Yellow
             Write-Host "- All: step through the full setup, configuring all" -ForegroundColor Yellow
-            Write-Host "- Miners: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
+            Write-Host "- Miners: finetune miners, add command-line arguments, penalty values and more (only for the technical savvy user)" -ForegroundColor Yellow
             Write-Host "- Pools: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
             Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
-            Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hasrate and more" -ForegroundColor Yellow
-            Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hasrate and more" -ForegroundColor Yellow
+            Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hashrate and more" -ForegroundColor Yellow
+            Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hashrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
             if (@(Get-ConfigArray $Config.PoolName) -contains "MiningRigRentals") {
                 Write-Host "- MRR: list and delete rigs at MiningRigRentals" -ForegroundColor Yellow
