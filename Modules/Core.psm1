@@ -3041,7 +3041,12 @@ function Invoke-Core {
     $Session.Timer = (Get-Date).ToUniversalTime()
 
     #Start asyncloader after first run
-    if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = -not (Test-Internet)}
+    if (Test-Path Variable:Global:AsyncLoader) {
+        $AsyncLoader.Pause = -not (Test-Internet)
+        if ($AsyncLoader.Timestamp -and ($AsyncLoader.Timestamp -lt $Session.Timer.AddHours(-1))) {
+            Write-Log -Level Warn "Asyncloader seems to be crashed. Please press [Y] to restart it."
+        }
+    }
 
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $Session.SkipSwitchingPrevention = $Session.Stopp = $Session.RestartComputer = $keyPressed = $false

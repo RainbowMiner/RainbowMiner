@@ -15,9 +15,13 @@ $Cycle = -1
 
 $StopWatch = [System.Diagnostics.StopWatch]::New()
 
+$AsyncLoader_Paused = $AsyncLoader.Pause
+
 while (-not $AsyncLoader.Stop) {
+
     $StopWatch.Restart()
     $Cycle++
+    $AsyncLoader.Timestamp = (Get-Date).ToUniversalTime()
 
     if ($AsyncLoader.Verbose) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start cycle" -Append -Timestamp
@@ -31,6 +35,11 @@ while (-not $AsyncLoader.Stop) {
 
         $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
         foreach ($JobKey in $JobKeys) {
+
+            if ($AsyncLoader.Pause) {
+                break
+            }
+
             $Job = $AsyncLoader.Jobs.$JobKey
 
             if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
@@ -76,6 +85,11 @@ while (-not $AsyncLoader.Stop) {
 
     if ($AsyncLoader.Verbose) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End cycle $(if ($Delta -gt 0) {"(wait $Delta s)"})" -Append -Timestamp
+    }
+
+    if ($AsyncLoader.Pause -ne $AsyncLoader_Paused) {
+        $AsyncLoader_Paused = $AsyncLoader.Pause
+        Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$(if ($AsyncLoader_Paused) {"Stopping asyncloader due to"} else {"Restarting asyncloader after"}) internet outage" -Append -Timestamp
     }
 
     if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}

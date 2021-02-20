@@ -20,6 +20,7 @@ Param(
     $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
     $AsyncLoader.Verbose    = $false
     $AsyncLoader.Debug      = $Session.LogLevel -eq "Debug"
+    $AsyncLoader.Timestamp  = $null
 
     # Setup additional, global variables for server handling
     $Global:AsyncLoaderListeners   = [System.Collections.ArrayList]@()
