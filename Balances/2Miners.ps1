@@ -50,8 +50,8 @@ $Pools_Data | Where-Object {($Config.Pools.$Name.Wallets."$($_.symbol)" -or ($_.
 				BaseName    = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.stats.balance / $Divisor
-                Pending     = [Decimal]$Request.stats.pending / $Divisor
-                Total       = [Decimal]$Request.stats.balance / $Divisor
+                Pending     = [Decimal]$Request.stats.immature / $Divisor
+                Total       = ([Decimal]$Request.stats.balance + [Decimal]$Request.stats.immature ) / $Divisor
                 Paid        = [Decimal]$Request.stats.paid / $Divisor
                 Payouts     = @(Get-BalancesPayouts $Request.payments -Divisor $Divisor | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
