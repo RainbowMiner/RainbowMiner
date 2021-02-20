@@ -42,6 +42,10 @@ while (-not $AsyncLoader.Stop) {
 
             $Job = $AsyncLoader.Jobs.$JobKey
 
+            if (-not $Job) {
+                continue
+            }
+
             if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
 
             $JobFailRetry = $false

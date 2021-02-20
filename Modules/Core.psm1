@@ -3040,7 +3040,7 @@ function Invoke-Core {
 
     $Session.Timer = (Get-Date).ToUniversalTime()
 
-    #Start asyncloader after first run
+    #Pause/Restart Asyncloader if internet status changes
     if (Test-Path Variable:Global:AsyncLoader) {
         $AsyncLoader.Pause = -not (Test-Internet)
         if ($AsyncLoader.Timestamp -and ($AsyncLoader.Timestamp -lt $Session.Timer.AddHours(-1))) {
