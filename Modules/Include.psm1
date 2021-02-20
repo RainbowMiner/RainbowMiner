@@ -562,6 +562,11 @@ function Set-Total {
 }
 
 function Set-TotalsAvg {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$CleanupOnly = $false
+    )
 
     $Updated        = (Get-Date).ToUniversalTime()
     $Path0          = "Stats\Totals"
@@ -574,6 +579,8 @@ function Set-TotalsAvg {
     $Last1w = (Get-Date).AddDays(-7)
 
     Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -lt $LastValid_File} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+
+    if ($CleanupOnly) {return}
 
     $Totals = [PSCustomObject]@{}
     Get-ChildItem "Stats\Totals" -Filter "*_TotalAvg.txt" | Foreach-Object {

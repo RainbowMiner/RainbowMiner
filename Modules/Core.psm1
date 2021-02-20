@@ -3822,49 +3822,8 @@ function Invoke-ReportMinerStatus {
     $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
 
     $Pool_Totals = if ($Session.ReportTotals) {
-        Set-TotalsAvg
-        try {
-            $Session.ReportTotals = $false
-
-            $Pool_Stats = Get-Stat -TotalAvgs
-            $Earn_Stats = Get-Stat -Balances
-
-            if ($Pool_Stats) {
-                $Pool_Stats_Consolidated = @{}
-                $Pool_Stats.Keys | Foreach-Object {
-                    $StatName = $_ -replace "(Coins|Party|Solo)_","_"
-                    if ($Pool_Stats_Consolidated.ContainsKey($StatName)) {
-                        $Pool_Stats_Consolidated[$StatName].Profit_Avg += $Pool_Stats.$_.Profit_Avg
-                        $Pool_Stats_Consolidated[$StatName].ProfitApi_Avg += $Pool_Stats.$_.ProfitApi_Avg
-                        $Pool_Stats_Consolidated[$StatName].Cost_Avg += $Pool_Stats.$_.Cost_Avg
-                        $Pool_Stats_Consolidated[$StatName].Power_Avg += $Pool_Stats.$_.Power_Avg
-                    } else {
-                        $Pool_Stats_Consolidated[$StatName] = [PSCustomObject]@{
-                            Pool = $Pool_Stats.$_.Pool -replace "(Coins|Party|Solo)$"
-                            Profit_Avg = $Pool_Stats.$_.Profit_Avg
-                            ProfitApi_Avg = $Pool_Stats.$_.ProfitApi_Avg
-                            Cost_Avg = $Pool_Stats.$_.Cost_Avg
-                            Power_Avg = $Pool_Stats.$_.Power_Avg
-                        }
-                    }
-                }
-
-                $Pool_Stats_Consolidated.Keys | Foreach-Object {
-                    $PoolName = $_.Value.Pool                    
-                    [PSCustomObject]@{
-                        Name      = $PoolName
-                        Profit    = "$([Math]::Round($Pool_Stats_Consolidated.$_.Profit_Avg,5))"
-                        ProfitApi = "$([Math]::Round($Pool_Stats_Consolidated.$_.ProfitApi_Avg,5))"
-                        Cost      = "$([Math]::Round($Pool_Stats_Consolidated.$_.Cost_Avg,5))"
-                        Power     = "$([Math]::Round($Pool_Stats_Consolidated.$_.Power_Avg,2))"
-                        Earnings  = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.Keys | Where-Object {$Earn_Stats.$_.PoolName -eq $PoolName -and $Global:Rates."$($Earn_Stats.$_.Currency)"} | Foreach-Object {$Earn_Stats.$_.Earnings_Avg / $Global:Rates."$($Earn_Stats.$_.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
-                    }
-                } | Where-Object {$_.Profit -gt 0 -and $_.Earnings -gt 0}
-            }
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Miner Status get pool stats has failed. "
-        }
+        Set-TotalsAvg -CleanupOnly
+        $Session.ReportTotals = $false
     }
 
     if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$ReportAPI=$null}}
