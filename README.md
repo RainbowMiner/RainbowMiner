@@ -255,7 +255,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - Set your Windows virtual memory size to a fixed size, to the sum of your GPU memories x 1.1, e.g. if you have 6x GTX1070 8GB installed, use at least 53000 (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
 - if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to set "Force P2-State" to "Off", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
-- Important: **NEVER EDIT THE "Start.bat" !** It will break the autoupate. If you want to add commands to the start, edit .\Config\autoexec.txt
+- Important: **NEVER EDIT THE "Start.bat" !** It will break the autoupdate. If you want to add commands to the start, edit .\Config\autoexec.txt
 - the root directory of RainbowMiner contains the following, additional batch files:
 
 |Windows|Linux|Description|
@@ -287,12 +287,12 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 ## WEB-INTERFACE
 
 For your convenience, you can monitor and setup RainbowMiner using your web browser. The web interface very prominently shows RainbowMiner's live profitability and the current BTC exchange rates. To start the web interface, simply open the URL [localhost:4000](http://localhost:4000) in a new browser tab.
-- Dashboard: shows the live running miners & pool balances, click the Pause/Restart button to halt and restart RainbowMiner. It will take up to 20 seconds, until the miner script finalize the pause/restart procedure, so give it some time.
+- Dashboard: shows the live running miners & pool balances, click the Pause/Restart button to halt and restart RainbowMiner. It will take up to 20 seconds, until the miner script finalizes the pause/restart procedure, so give it some time.
 - Selected Devices: lists the preselected devices
 - All Devices: lists all available devices in your rig
 - Best Pools: lists the best possible pool for every algorithm
-- All Pools: lists all pools available vs. all algorithm
-- Miners: lists all miners vs. all algorithm
+- All Pools: lists all pools available vs. all algorithms
+- Miners: lists all miners vs. all algorithms
 - Active Miners: lists the best possible miners for each algorithm
 - Benchmarks: monitor and reset benchmarks of failed and updated miners, reset all benchmarks
 
@@ -351,11 +351,11 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
 rPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
 ```
 
-If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the indiviual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectoy `<workername>`.
-Setting the field "EnableServerExcludeList" to "1" lets your client use the servers "ExcludeServerConfigVars" field, instead of the local one in config.txt
+If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectoy `<workername>`.
+Setting the field "EnableServerExcludeList" to "1" lets your client use the servers "ExcludeServerConfigVars" field, instead of the local one in config.txt.
 All variables defined in "ExcludeServerConfig" will not be overwritten by the server's values.
 
-If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exaclty those pools (except for MiningRigRentals, which will always be handled locally)
+If "EnableServerPools" is set to "1", the client will download the server's pool and balance statistics and mine to exactly those pools (except for MiningRigRentals, which will always be handled locally).
 
 ## POOLS
 
@@ -446,8 +446,8 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
   
 <details><summary>Notes for NiceHash</summary>
 
-If you plan to mine through Nicehash, I strongly recommend, that you register an account with them (https://www.nicehash.com/register). In this case, Nicehash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
-This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). An additional benefit for Coinbase users: sending BTC from the Nicehash wallet to your Coinbase account is free of charge.</details>
+If you plan to mine through Nicehash, I strongly recommend, that you register an account with them (https://www.nicehash.com/register). In this case, NiceHash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
+This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). An additional benefit for Coinbase users: sending BTC from the NiceHash wallet to your Coinbase account is free of charge.</details>
 <details><summary>Notes for the pools BlockCruncher, BlockMasters, Bsod, CryptoKnight, GosCx, Hashcryptos, HashPool, Icemining, MinerRocks, NLpool, PhiPhiPool, PocketWhale, Ravenminer, YiiMP and Zpool</summary>
   
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Bsod, CryptoKnight, GosCx, Icemining, MinerRocks, PhiPhiPool, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
@@ -469,7 +469,7 @@ Bsod.pw, Gos.cx and ZergPool allow solo mining and party mining. This is achieve
 
 ### Special finetuning
 
-The following miners can be fine tuned, using config files. Most of the config files are being generated upon the first start of the miner. All config files will be written once, only, and kept through miner updates. To let Rainbowminer recreate those files, they will have to be deleted.
+The following miners can be fine tuned, using config files. Most of the config files are being generated upon the first start of the miner. All config files will be written once, only, and kept through miner updates. To let RainbowMiner recreate those files, they will have to be deleted.
 
 |Minername|Type|Path|Configfile(s)|Documentation Link|
 |---|---|---|---|---|
@@ -571,7 +571,7 @@ Overclocking option, recommended for **unique GPU mining rigs with maximum 6 GPU
 
 ### Introduction
 
-MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU. RainbowMiner will never change these values, but it can be defined for miners/algorithms/devices, that another profile than the default should be used during minining (miners.config.txt, fields "MSIAprofile"). RainbowMiner comes with some miner/algorithm presets, already.
+MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU. RainbowMiner will never change these values, but it can be defined for miners/algorithms/devices, that another profile than the default should be used during mining (miners.config.txt, fields "MSIAprofile"). RainbowMiner comes with some miner/algorithm presets, already.
 
 ### Enable Profile Switching
 
