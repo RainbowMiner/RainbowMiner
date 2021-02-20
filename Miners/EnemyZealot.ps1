@@ -36,6 +36,11 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
     $UriCuda = @(
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.3-zenemy/z-enemy-2.6.3-win-cuda11.1.zip"
+            Cuda = "11.1"
+            Version = "2.6.3"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-zenemy/z-enemy-2.6.2-win-cuda10.1.zip"
             Cuda = "10.1"
         },
@@ -99,6 +104,7 @@ for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
         $Uri  = $UriCuda[$i].Uri
         $Cuda = $UriCuda[$i].Cuda
+        if ($UriCuda[$i].Version) {$Version = $UriCuda[$i].Version}
     }
 }
 
@@ -108,6 +114,8 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
     $Miner_Model = $_.Model
     $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
+    $Miner_AllowAmpere = (Compare-Version $Version "2.6.3") -ge 0
+
     $Commands.ForEach({
         $First = $true
 
@@ -115,7 +123,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGb) -and ($_.OpenCL.Architecture -ne "Ampere")}
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGb) -and ($Miner_AllowAmpere -or $_.OpenCL.Architecture -ne "Ampere")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
