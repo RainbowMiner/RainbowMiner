@@ -20,6 +20,7 @@
         }
         $Session.IsAdmin            = Test-IsElevated
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
+        $Session.IsPS7              = $PSVersionTable.PSVersion -ge (Get-Version "7.0")
         $Session.MachineName        = [System.Environment]::MachineName
         $Session.MyIP               = Get-MyIP
         $Session.MainPath           = "$PWD"
@@ -4006,6 +4007,20 @@ function Get-Coin {
     }
 }
 
+function Get-HttpStatusCode {
+    [CmdletBinding()]
+    param(
+        [Parameter(
+            Position = 0,
+            ParameterSetName = '',   
+            ValueFromPipeline = $True,
+            Mandatory = $false)]
+        [String]$Code = ""
+    )
+    if (-not (Test-Path Variable:Global:GlobalHttpStatusCodes)) {Get-HttpStatusCodes -Silent}
+    $Global:GlobalHttpStatusCodes | Where StatusCode -eq $Code
+}
+
 function Get-MappedAlgorithm {
     [CmdletBinding()]
     param(
@@ -4190,6 +4205,20 @@ function Get-EthDAGSizes {
     }
 
     if (-not $Silent) {$Global:GlobalEthDAGSizes}
+}
+
+function Get-HttpStatusCodes {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalHttpStatusCodes)) {
+        $Global:GlobalHttpStatusCodes = Get-ContentByStreamReader "Data\httpstatuscodes.json" | ConvertFrom-Json -ErrorAction Ignore
+    }
+    if (-not $Silent) {
+        $Global:GlobalHttpStatusCodes
+    }
 }
 
 function Get-NimqHashrates {
@@ -6010,23 +6039,56 @@ Param(
         }
     } else {
         $ErrorMessage = ''
-        try {
-            if ($method -eq "REST") {
-                $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
-                $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-            } else {
-                $oldProgressPreference = $Global:ProgressPreference
-                $Global:ProgressPreference = "SilentlyContinue"
-                $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-                $Global:ProgressPreference = $oldProgressPreference
+        if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+            $StatusCode = $null
+            try {
+                $ServicePoint = $null
+                if ($method -eq "REST") {
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
+                    $Data = Invoke-RestMethod $RequestUrl -SkipHttpErrorCheck -StatusCodeVariable "StatusCode" -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $oldProgressPreference = $Global:ProgressPreference
+                    $Global:ProgressPreference = "SilentlyContinue"
+                    $Data = (Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -StatusCodeVariable "StatusCode" -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                    $Global:ProgressPreference = $oldProgressPreference
+                }
+                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ErrorMessage = "$($_.Exception.Message)"
+            } finally {
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                $ServicePoint = $null
             }
-            if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $ErrorMessage = "$($_.Exception.Message)"
-        } finally {
-            if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
-            $ServicePoint = $null
+            if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
+                if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
+                    if ($StatusCodeObject.Type -ne "Success") {
+                        $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                    }
+                } else {
+                    $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                }
+            }
+        } else {
+            try {
+                $ServicePoint = $null
+                if ($method -eq "REST") {
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
+                    $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $oldProgressPreference = $Global:ProgressPreference
+                    $Global:ProgressPreference = "SilentlyContinue"
+                    $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                    $Global:ProgressPreference = $oldProgressPreference
+                }
+                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ErrorMessage = "$($_.Exception.Message)"
+            } finally {
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                $ServicePoint = $null
+            }
         }
         if ($ErrorMessage -eq '') {$Data}
         if ($ErrorMessage -ne '') {throw $ErrorMessage}

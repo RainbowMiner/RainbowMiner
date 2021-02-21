@@ -137,20 +137,51 @@ param(
 	            'x-api-nonce'= $nonce
                 'Cache-Control' = 'no-cache'
             }
-            try {
-                $body = Switch -Regex ($method) {
-                    "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
-                    "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
+            $ServicePoint = $null
+            if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+                $StatusCode = $null
+                $ErrorMessage = ''
+                try {
+                    $body = Switch -Regex ($method) {
+                        "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
+                        "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
+                    }
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
+                    $Request = Invoke-RestMethod "$base$endpoint" -SkipHttpErrorCheck -StatusCodeVariable "StatusCode" -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $ErrorMessage = "$($_.Exception.Message)"
+                } finally {
+                    if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
                 }
-                #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
-                $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
-                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
-                #$Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
-            } finally {
-                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
+                    if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
+                        if ($StatusCodeObject.Type -ne "Success") {
+                            $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                        }
+                    } else {
+                        $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                    }
+                }
+                if ($ErrorMessage -ne '') {
+                    Write-Log -Level Info "MiningRigRental call: $($ErrorMessage)"
+                }
+            } else {
+                try {
+                    $body = Switch -Regex ($method) {
+                        "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
+                        "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
+                    }
+                    #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
+                    $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+                    #$Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
+                } finally {
+                    if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                }
             }
         }
         if ($Request.success -ne $null -and -not $Request.success) {
