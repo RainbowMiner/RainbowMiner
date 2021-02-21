@@ -49,7 +49,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
 
     if ($ok -and -not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).zellabs.net/api/homestats" -tag $Name -cycletime 120 -timeout 30
+            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).zellabs.net/api/homestats" -tag $Name -cycletime 240 -timeout 30
             if (-not ($Pool_Request.pools.PSObject.Properties.Name | Measure-Object).Count) {$ok = $false}
             else {
                 $Pool_Name      = "$($Pool_Request.pools.PSObject.Properties.Name | Select-Object -First 1)"
