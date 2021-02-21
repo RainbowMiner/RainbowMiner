@@ -2803,7 +2803,9 @@ function Start-Setup {
 
                     if ($Coin_Symbol) {
 
-                        $CoinsPools = @(Get-PoolsInfo "Minable" $Coin_Symbol -AsObjects | Where-Object {-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool"} | Select-Object -ExpandProperty Pool | Sort-Object)
+                        $Coin_Symbol_Base = "$($Coin_Symbol -replace "_\d+$")"
+
+                        $CoinsPools = @(Get-PoolsInfo "Minable" $Coin_Symbol_Base -AsObjects | Where-Object {-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool"} | Select-Object -ExpandProperty Pool | Sort-Object)
                         $CoinsPoolsInUse = @($CoinsPools | Where-Object {$CoinsToPools.$Coin_Symbol -icontains $_} | Select-Object)
 
                         $CoinSetupStepsDone = $false
@@ -2880,13 +2882,13 @@ function Start-Setup {
                                         $PoolsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {
                                             $Pool = $_
                                             $IsInUse = $CoinsPoolsInUse -icontains $Pool
-                                            if ($IsInUse -or $PoolsActual.$Pool.$Coin_Symbol -eq "`$$Coin_Symbol") {
+                                            if ($IsInUse -or $PoolsActual.$Pool.$Coin_Symbol_Base -eq "`$$Coin_Symbol") {
                                                 $PoolsActualSave | Add-Member $Pool ([PSCustomObject]@{}) -Force
                                                 if ($IsInUse) {
-                                                    $PoolsActualSave.$Pool | Add-Member $Coin_Symbol "`$$Coin_Symbol" -Force
-                                                    $PoolsActualSave.$Pool | Add-Member "$($Coin_Symbol)-Params" "$($PoolsActual.$Pool."$($Coin_Symbol)-Params")" -Force
+                                                    $PoolsActualSave.$Pool | Add-Member $Coin_Symbol_Base "`$$Coin_Symbol" -Force
+                                                    $PoolsActualSave.$Pool | Add-Member "$($Coin_Symbol_Base)-Params" "$($PoolsActual.$Pool."$($Coin_Symbol_Base)-Params")" -Force
                                                 }
-                                                $PoolsActual.$Pool.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol -and $_.Name -ne "$($Coin_Symbol)-Params"} | Foreach-Object {$PoolsActualSave.$Pool | Add-Member $_.Name $_.Value -Force}
+                                                $PoolsActual.$Pool.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol_Base -and $_.Name -ne "$($Coin_Symbol_Base)-Params"} | Foreach-Object {$PoolsActualSave.$Pool | Add-Member $_.Name $_.Value -Force}
                                             } else {
                                                 $PoolsActualSave | Add-Member $Pool ($PoolsActual.$Pool) -Force
                                             }
