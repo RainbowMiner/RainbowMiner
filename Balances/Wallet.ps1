@@ -9,12 +9,12 @@ if (-not $Config.ShowWalletBalances) {return}
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 #
-# Bitcoin Wallet
+# Bitcoin wallet
 #
 
-$Wallets = @($Config.Wallet) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.BTC} | Foreach-Object {$_.Wallets.BTC}) | Where-Object {$_ -match "^[13]|^bc1"} | Select-Object -Unique | Sort-Object
+$Wallets = @($Config.Wallet) + @($Config.Coins.PSObject.Properties | Where-Object {"$($_.Name -replace "_\d+$")" -eq "BTC"} | Foreach-Object {$_.Value}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.BTC} | Foreach-Object {$_.Wallets.BTC}) | Where-Object {$_ -match "^[13]|^bc1"} | Select-Object -Unique | Sort-Object
 
-if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains "BTC")) {
+if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains "BTC") -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "BTC")) {
     $Request = [PSCustomObject]@{}
 
     $Success = $true
@@ -48,6 +48,10 @@ if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -o
     }
 }
 
+#
+# Other wallets
+#
+
 $Wallets_Data = @(
     [PSCustomObject]@{symbol = "AE";   match = "^ak_";  rpc = "http://www.aeknow.org/api/account/{w}";                                address = "id";                               balance = "balance";                         received = "";                                 divisor = 1e18}
     [PSCustomObject]@{symbol = "BCH";  match = "^[1q]"; rpc = "https://explorer.api.bitcoin.com/bch/v1/addr/{w}";                     address = "addrStr";                          balance = "balance";                         received = "totalReceived";                    divisor = 1}
@@ -70,7 +74,7 @@ foreach ($Wallet_Data in $Wallets_Data) {
 
     if ((-not $Config.WalletBalances.Count -or $Config.WalletBalances -contains $Wallet_Symbol) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Wallet_Symbol)) {
 
-        @($Config.Coins.PSObject.Properties | Where-Object {$_.Name -eq $Wallet_Symbol -and $_.Value.Wallet -match $Wallet_Data.match} | Foreach-Object {$_.Value.Wallet}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.$Wallet_Symbol -match $Wallet_Data.match} | Foreach-Object {$_.Wallets.$Wallet_Symbol}) | Select-Object -Unique | Sort-Object | Foreach-Object {
+        @($Config.Coins.PSObject.Properties | Where-Object {"$($_.Name -replace "_\d+$")" -eq $Wallet_Symbol -and $_.Value.Wallet -match $Wallet_Data.match} | Foreach-Object {$_.Value.Wallet}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.$Wallet_Symbol -match $Wallet_Data.match} | Foreach-Object {$_.Wallets.$Wallet_Symbol}) | Select-Object -Unique | Sort-Object | Foreach-Object {
 
             $Wallet_Address = $_
 
