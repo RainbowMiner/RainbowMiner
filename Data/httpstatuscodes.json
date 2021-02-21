@@ -1,0 +1,317 @@
+﻿[
+    {
+        "StatusCode":  100,
+        "Type":  "Informational",
+        "Description":  "Continue"
+    },
+    {
+        "StatusCode":  101,
+        "Type":  "Informational",
+        "Description":  "Switching Protocols"
+    },
+    {
+        "StatusCode":  102,
+        "Type":  "Informational",
+        "Description":  "Processing"
+    },
+    {
+        "StatusCode":  200,
+        "Type":  "Success",
+        "Description":  "OK"
+    },
+    {
+        "StatusCode":  201,
+        "Type":  "Success",
+        "Description":  "Created"
+    },
+    {
+        "StatusCode":  202,
+        "Type":  "Success",
+        "Description":  "Accepted"
+    },
+    {
+        "StatusCode":  203,
+        "Type":  "Success",
+        "Description":  "Non-authoritative Information"
+    },
+    {
+        "StatusCode":  204,
+        "Type":  "Success",
+        "Description":  "No Content"
+    },
+    {
+        "StatusCode":  205,
+        "Type":  "Success",
+        "Description":  "Reset Content"
+    },
+    {
+        "StatusCode":  206,
+        "Type":  "Success",
+        "Description":  "Partial Content"
+    },
+    {
+        "StatusCode":  207,
+        "Type":  "Success",
+        "Description":  "Multi-Status"
+    },
+    {
+        "StatusCode":  208,
+        "Type":  "Success",
+        "Description":  "Already Reported"
+    },
+    {
+        "StatusCode":  226,
+        "Type":  "Success",
+        "Description":  "IM Used"
+    },
+    {
+        "StatusCode":  300,
+        "Type":  "Redirection",
+        "Description":  "Multiple Choices"
+    },
+    {
+        "StatusCode":  301,
+        "Type":  "Redirection",
+        "Description":  "Moved Permanently"
+    },
+    {
+        "StatusCode":  302,
+        "Type":  "Redirection",
+        "Description":  "Found"
+    },
+    {
+        "StatusCode":  303,
+        "Type":  "Redirection",
+        "Description":  "See Other"
+    },
+    {
+        "StatusCode":  304,
+        "Type":  "Redirection",
+        "Description":  "Not Modified"
+    },
+    {
+        "StatusCode":  305,
+        "Type":  "Redirection",
+        "Description":  "Use Proxy"
+    },
+    {
+        "StatusCode":  307,
+        "Type":  "Redirection",
+        "Description":  "Temporary Redirect"
+    },
+    {
+        "StatusCode":  308,
+        "Type":  "Redirection",
+        "Description":  "Permanent Redirect"
+    },
+    {
+        "StatusCode":  400,
+        "Type":  "Client Error",
+        "Description":  "Bad Request"
+    },
+    {
+        "StatusCode":  401,
+        "Type":  "Client Error",
+        "Description":  "Unauthorized"
+    },
+    {
+        "StatusCode":  402,
+        "Type":  "Client Error",
+        "Description":  "Payment Required"
+    },
+    {
+        "StatusCode":  403,
+        "Type":  "Client Error",
+        "Description":  "Forbidden"
+    },
+    {
+        "StatusCode":  404,
+        "Type":  "Client Error",
+        "Description":  "Not Found"
+    },
+    {
+        "StatusCode":  405,
+        "Type":  "Client Error",
+        "Description":  "Method Not Allowed"
+    },
+    {
+        "StatusCode":  406,
+        "Type":  "Client Error",
+        "Description":  "Not Acceptable"
+    },
+    {
+        "StatusCode":  407,
+        "Type":  "Client Error",
+        "Description":  "Proxy Authentication Required"
+    },
+    {
+        "StatusCode":  408,
+        "Type":  "Client Error",
+        "Description":  "Request Timeout"
+    },
+    {
+        "StatusCode":  409,
+        "Type":  "Client Error",
+        "Description":  "Conflict"
+    },
+    {
+        "StatusCode":  410,
+        "Type":  "Client Error",
+        "Description":  "Gone"
+    },
+    {
+        "StatusCode":  411,
+        "Type":  "Client Error",
+        "Description":  "Length Required"
+    },
+    {
+        "StatusCode":  412,
+        "Type":  "Client Error",
+        "Description":  "Precondition Failed"
+    },
+    {
+        "StatusCode":  413,
+        "Type":  "Client Error",
+        "Description":  "Payload Too Large"
+    },
+    {
+        "StatusCode":  414,
+        "Type":  "Client Error",
+        "Description":  "Request-URI Too Long"
+    },
+    {
+        "StatusCode":  415,
+        "Type":  "Client Error",
+        "Description":  "Unsupported Media Type"
+    },
+    {
+        "StatusCode":  416,
+        "Type":  "Client Error",
+        "Description":  "Requested Range Not Satisfiable"
+    },
+    {
+        "StatusCode":  417,
+        "Type":  "Client Error",
+        "Description":  "Expectation Failed"
+    },
+    {
+        "StatusCode":  418,
+        "Type":  "Client Error",
+        "Description":  "I\u0027m a teapot"
+    },
+    {
+        "StatusCode":  421,
+        "Type":  "Client Error",
+        "Description":  "Misdirected Request"
+    },
+    {
+        "StatusCode":  422,
+        "Type":  "Client Error",
+        "Description":  "Unprocessable Entity"
+    },
+    {
+        "StatusCode":  423,
+        "Type":  "Client Error",
+        "Description":  "Locked"
+    },
+    {
+        "StatusCode":  424,
+        "Type":  "Client Error",
+        "Description":  "Failed Dependency"
+    },
+    {
+        "StatusCode":  426,
+        "Type":  "Client Error",
+        "Description":  "Upgrade Required"
+    },
+    {
+        "StatusCode":  428,
+        "Type":  "Client Error",
+        "Description":  "Precondition Required"
+    },
+    {
+        "StatusCode":  429,
+        "Type":  "Client Error",
+        "Description":  "Too Many Requests"
+    },
+    {
+        "StatusCode":  431,
+        "Type":  "Client Error",
+        "Description":  "Request Header Fields Too Large"
+    },
+    {
+        "StatusCode":  444,
+        "Type":  "Client Error",
+        "Description":  "Connection Closed Without Response"
+    },
+    {
+        "StatusCode":  451,
+        "Type":  "Client Error",
+        "Description":  "Unavailable For Legal Reasons"
+    },
+    {
+        "StatusCode":  499,
+        "Type":  "Client Error",
+        "Description":  "Client Closed Request"
+    },
+    {
+        "StatusCode":  500,
+        "Type":  "Server Error",
+        "Description":  "Internal Server Error"
+    },
+    {
+        "StatusCode":  501,
+        "Type":  "Server Error",
+        "Description":  "Not Implemented"
+    },
+    {
+        "StatusCode":  502,
+        "Type":  "Server Error",
+        "Description":  "Bad Gateway"
+    },
+    {
+        "StatusCode":  503,
+        "Type":  "Server Error",
+        "Description":  "Service Unavailable"
+    },
+    {
+        "StatusCode":  504,
+        "Type":  "Server Error",
+        "Description":  "Gateway Timeout"
+    },
+    {
+        "StatusCode":  505,
+        "Type":  "Server Error",
+        "Description":  "HTTP Version Not Supported"
+    },
+    {
+        "StatusCode":  506,
+        "Type":  "Server Error",
+        "Description":  "Variant Also Negotiates"
+    },
+    {
+        "StatusCode":  507,
+        "Type":  "Server Error",
+        "Description":  "Insufficient Storage"
+    },
+    {
+        "StatusCode":  508,
+        "Type":  "Server Error",
+        "Description":  "Loop Detected"
+    },
+    {
+        "StatusCode":  510,
+        "Type":  "Server Error",
+        "Description":  "Not Extended"
+    },
+    {
+        "StatusCode":  511,
+        "Type":  "Server Error",
+        "Description":  "Network Authentication Required"
+    },
+    {
+        "StatusCode":  599,
+        "Type":  "Server Error",
+        "Description":  "Network Connect Timeout Error"
+    }
+]
