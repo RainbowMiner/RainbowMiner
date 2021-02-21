@@ -5946,7 +5946,7 @@ Param(
     [Parameter(Mandatory = $False)]   
         [string]$requestmethod = "",
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
         [hashtable]$body,
     [Parameter(Mandatory = $False)]
@@ -6111,7 +6111,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
@@ -6144,7 +6144,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
@@ -6190,7 +6190,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
         [bool]$nocache = $false,
     [Parameter(Mandatory = $False)]
