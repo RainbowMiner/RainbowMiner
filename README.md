@@ -47,9 +47,9 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Central monitoring of all your rigs at [https://rbminer.net](https://rbminer.net)**
 - **Offline notifications via email and/or https://pushover.net**
 
-## REQUIRED PRE-REQUESITES
+## REQUIRED PRE-REQUISITES
 
-### Windows 7/8.1/10 pre-requesites
+### Windows 7/8.1/10 pre-requisites
 
 1. Install PowerShell 7: [Download Installer for version 7.1.2](https://github.com/PowerShell/PowerShell/releases/download/v7.1.2/PowerShell-7.1.2-win-x64.msi)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
@@ -65,7 +65,7 @@ Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not r
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
 
 
-### Ubuntu 18.x Pre-requesites
+### Ubuntu 18.x Pre-requisites
 (This section is WIP! Want to help? Make an [issue](https://github.com/RainbowMiner/RainbowMiner/issues) or a [PR](https://github.com/RainbowMiner/RainbowMiner/pulls)))
 
 Debian-based distros will be more-or-less the same as these instructions.
