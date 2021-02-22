@@ -6041,25 +6041,34 @@ Param(
         $ErrorMessage = ''
         if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
             $StatusCode = $null
+            $oldProgressPreference = $null
+            if ($Global:ProgressPreference -ne "SilentlyContinue") {
+                $oldProgressPreference = $Global:ProgressPreference
+                $Global:ProgressPreference = "SilentlyContinue"
+            }
             try {
-                $ServicePoint = $null
+                $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                $StatusCode = $Response.StatusCode
+
+                $Data = $Data.Content
+
                 if ($method -eq "REST") {
-                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
-                    $Data = Invoke-RestMethod $RequestUrl -SkipHttpErrorCheck -StatusCodeVariable "StatusCode" -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-                } else {
-                    $oldProgressPreference = $Global:ProgressPreference
-                    $Global:ProgressPreference = "SilentlyContinue"
-                    $Data = (Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -StatusCodeVariable "StatusCode" -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-                    $Global:ProgressPreference = $oldProgressPreference
+                    try {
+                        $Data = ConvertFrom-Json $Data -ErrorAction Stop
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
                 }
+
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+
+                $Response = $null
             } catch {
+                $StatusCode = $_.Exception.Response.StatusCode.value__
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $ErrorMessage = "$($_.Exception.Message)"
-            } finally {
-                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
-                $ServicePoint = $null
             }
+            if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
             if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
                 if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
                     if ($StatusCodeObject.Type -ne "Success") {
