@@ -6050,7 +6050,7 @@ Param(
                 $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 $StatusCode = $Response.StatusCode
 
-                $Data = $Data.Content
+                $Data = $Response.Content
 
                 if ($method -eq "REST") {
                     try {
