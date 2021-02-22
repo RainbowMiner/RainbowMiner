@@ -53,6 +53,7 @@ $Pools_Data = [PSCustomObject]@{
     "PYRK"  = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
     "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
+    "SPL"   = [PSCustomObject]@{port = 7028; region = $Pool_Regions}
     "SPRX"  = [PSCustomObject]@{port = 7052; region = $Pool_Regions}
     "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
     "SWAMP" = [PSCustomObject]@{port = 7023; region = $Pool_Regions}
