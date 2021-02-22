@@ -93,7 +93,7 @@ while (-not $AsyncLoader.Stop) {
 
     if ($AsyncLoader.Pause -ne $AsyncLoader_Paused) {
         $AsyncLoader_Paused = $AsyncLoader.Pause
-        Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$(if ($AsyncLoader_Paused) {"Stopping asyncloader due to"} else {"Restarting asyncloader after"}) internet outage" -Append -Timestamp
+        Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$(if ($AsyncLoader_Paused) {"Stopping asyncloader due to"} else {"Restarting asyncloader after"}) pause" -Append -Timestamp
     }
 
     if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
