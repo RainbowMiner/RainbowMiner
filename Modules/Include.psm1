@@ -6038,38 +6038,39 @@ Param(
             if ($ErrorMessage -ne '') {throw $ErrorMessage}
         }
     } else {
+
         $ErrorMessage = ''
+
         if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
             $StatusCode = $null
+            $Data       = $null
+
             $oldProgressPreference = $null
             if ($Global:ProgressPreference -ne "SilentlyContinue") {
                 $oldProgressPreference = $Global:ProgressPreference
                 $Global:ProgressPreference = "SilentlyContinue"
             }
+
             try {
                 $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 $StatusCode = $Response.StatusCode
-                $Data = $Response.Content
 
-                if ($method -eq "REST" -and $StatusCode -eq 200) {
-                    try {
-                        $Data = ConvertFrom-Json $Data -ErrorAction Stop
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                if ($StatusCode -match "^2\d\d$") {
+                    $Data = $Response.Content
+                    if ($method -eq "REST") {
+                        try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
                     }
+                    if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
                 }
 
-                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-
                 if ($Response) {
-                    $Response.Dispose()
                     $Response = $null
                 }
             } catch {
-                $StatusCode = $_.Exception.Response.StatusCode.value__
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $ErrorMessage = "$($_.Exception.Message)"
             }
+
             if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
             if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
                 if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
