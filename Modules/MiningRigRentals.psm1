@@ -156,7 +156,7 @@ param(
                         "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
                     }
 
-                    $Response   = Invoke-WebRequest "$base$endpoint" -SkipHttpErrorCheck -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+                    $Response   = Invoke-WebRequest "$base$endpoint" -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
                     $StatusCode = $Response.StatusCode
 
                     if ($StatusCode -match "^2\d\d$") {

@@ -6052,7 +6052,7 @@ Param(
             }
 
             try {
-                $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 $StatusCode = $Response.StatusCode
 
                 if ($StatusCode -match "^2\d\d$") {
