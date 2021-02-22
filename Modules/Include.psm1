@@ -6049,10 +6049,9 @@ Param(
             try {
                 $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 $StatusCode = $Response.StatusCode
-
                 $Data = $Response.Content
 
-                if ($method -eq "REST") {
+                if ($method -eq "REST" -and $StatusCode -eq 200) {
                     try {
                         $Data = ConvertFrom-Json $Data -ErrorAction Stop
                     } catch {
