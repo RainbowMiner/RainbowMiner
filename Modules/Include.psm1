@@ -6061,7 +6061,10 @@ Param(
 
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
 
-                $Response = $null
+                if ($Response) {
+                    $Response.Dispose()
+                    $Response = $null
+                }
             } catch {
                 $StatusCode = $_.Exception.Response.StatusCode.value__
                 if ($Error.Count){$Error.RemoveAt(0)}
