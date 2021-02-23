@@ -30,7 +30,7 @@ if ($IsLinux) {
             Cuda = "11.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.9.0-xmrig/xmrig-6.9.0-bionic-cuda10_2-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.9.0-xmrig/xmrig-6.9.0-bionic-cuda10_2_2-x64.7z"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
