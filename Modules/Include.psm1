@@ -5925,10 +5925,10 @@ function Get-MD5Hash {
 [cmdletbinding()]
 Param(   
     [Parameter(
-        Mandatory = $True,   
-        Position = 0,   
-        ParameterSetName = '',   
-        ValueFromPipeline = $True)]   
+        Mandatory = $True,
+        Position = 0,
+        ParameterSetName = '',
+        ValueFromPipeline = $True)]
         [string]$value
 )
     $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
@@ -5958,6 +5958,8 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36",
     [Parameter(Mandatory = $False)]
+        [bool]$fixbigint = $false,
+    [Parameter(Mandatory = $False)]
         $JobData,
     [Parameter(Mandatory = $False)]
         [string]$JobKey = "",
@@ -5982,6 +5984,7 @@ Param(
                     tag       = $JobData.tag
                     user      = $JobData.user
                     password  = $JobData.password
+                    fixbigint = $JobData.fixbigint
                     jobkey    = $JobKey
                     machinename = $Session.MachineName
                     myip      = $Session.MyIP
@@ -6000,6 +6003,7 @@ Param(
         $headers  = $JobData.headers
         $user     = $JobData.user
         $password = $JobData.password
+        $fixbigint= $JobData.fixbigint
     }
 
     if ($url -match "^server://(.+)$") {
@@ -6041,7 +6045,7 @@ Param(
 
         $ErrorMessage = ''
 
-        if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+        if ($Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
             $StatusCode = $null
             $Data       = $null
 
@@ -6052,12 +6056,22 @@ Param(
             }
 
             try {
-                $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                }
+
                 $StatusCode = $Response.StatusCode
 
                 if ($StatusCode -match "^2\d\d$") {
                     $Data = $Response.Content
                     if ($method -eq "REST") {
+                        if ($fixbigint) {
+                            try {
+                                $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        }
                         try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
                     }
                     if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
@@ -6125,6 +6139,8 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
+        [switch]$fixbigint,
+    [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
         [switch]$noquickstart,
@@ -6135,7 +6151,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
 }
 
 function Invoke-WebRequestAsync {
@@ -6158,6 +6174,8 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
+        [switch]$fixbigint,
+    [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
         [switch]$noquickstart,
@@ -6166,7 +6184,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
 }
 
 function Get-HashtableAsJson {
@@ -6204,6 +6222,8 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
+        [bool]$fixbigint = $False,
+    [Parameter(Mandatory = $False)]
         [bool]$nocache = $false,
     [Parameter(Mandatory = $False)]
         [bool]$noquickstart = $false,
@@ -6217,7 +6237,7 @@ Param(
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {

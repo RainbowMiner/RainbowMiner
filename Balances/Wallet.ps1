@@ -58,7 +58,7 @@ $Wallets_Data = @(
     [PSCustomObject]@{symbol = "BCH";  match = "^q";    rpc = "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}";       address = "data.{w}.address.cashaddr";        balance = "data.{w}.address.balance";        received = "data.{w}.address.received";        divisor = 1e8; verify = "context.code"; verify_value = "200"}
     [PSCustomObject]@{symbol = "DASH"; match = "^X";    rpc = "https://api.blockcypher.com/v1/dash/main/addrs/{w}";                   address = "address";                          balance = "balance";                         received = "total_received";                   divisor = 1e8}
     [PSCustomObject]@{symbol = "DOGE"; match = "^D";    rpc = "https://api.blockcypher.com/v1/doge/main/addrs/{w}";                   address = "address";                          balance = "balance";                         received = "total_received";                   divisor = 1e8}
-    [PSCustomObject]@{symbol = "ETH";  match = "^0x";   rpc = "https://api.ethplorer.io/getAddressInfo/{w}?apiKey=freekey";           address = "address";                          balance = "ETH.balance";                     received = "";                                 divisor = 1}
+    [PSCustomObject]@{symbol = "ETH";  match = "^0x";   rpc = "https://api.blockcypher.com/v1/eth/main/addrs/{w}";                    address = "address";                          balance = "balance";                         received = "total_received";                   divisor = 1e18}
     [PSCustomObject]@{symbol = "FIRO"; match = "^[aZ]"; rpc = "https://explorer.zcoin.io/insight-api-zcoin/addr/{w}/?noTxList=1";     address = "addrStr";                          balance = "balance";                         received = "totalReceived";                    divisor = 1}
     [PSCustomObject]@{symbol = "LTC";  match = "^[M3]"; rpc = "https://sochain.com/api/v2/get_address_balance/ltc/{w}";               address = "data.address";                     balance = "data.confirmed_balance";          received = "";                                 divisor = 1; verify = "status"; verify_value = "success"}
     [PSCustomObject]@{symbol = "RVN";  match = "^R";    rpc = "https://ravencoin.network/api/addr/{w}/?noTxList=1";                   address = "addrStr";                          balance = "balance";                         received = "totalReceived";                    divisor = 1}
@@ -82,7 +82,7 @@ foreach ($Wallet_Data in $Wallets_Data) {
 
             $Success = $true
             try {
-                $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$Wallet_Address)" -cycletime ($Config.BalanceUpdateMinutes*60)
+                $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$Wallet_Address)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
                 if (($Wallet_Data.verify -eq $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.address -replace "{w}",$Wallet_Address)")" -ne $Wallet_Address) -or 
                     ($Wallet_Data.verify -ne $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.verify -replace "{w}",$Wallet_Address)")" -ne $Wallet_Data.verify_value)
                     ) {$Success = $false}

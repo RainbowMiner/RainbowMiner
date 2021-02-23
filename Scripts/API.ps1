@@ -977,7 +977,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             Remove-Variable "SymbolStr" -ErrorAction Ignore
                         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                     }
-                    $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
+                    if ((Get-Command "Invoke-GetUrlAsync").parameters.fixbigint -eq $null) { #Legacy
+                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
+                    } else {
+                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey -fixbigint $Parameters.fixbigint
+                    }
                     if ($Result) {$Status = $true}
                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                 $Data = [PSCustomObject]@{Status=$Status;Content=if ($Result -is [array]) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
