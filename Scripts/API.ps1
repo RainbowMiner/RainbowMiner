@@ -15,6 +15,8 @@ $BasePath = Join-Path $PWD "web"
 
 Set-OsFlags
 
+$EnableFixBigInt = (Get-Command "Invoke-GetUrlAsync").parameters.fixbigint -ne $null
+
 While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $Data    = $null
     $Context = $null
@@ -977,10 +979,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             Remove-Variable "SymbolStr" -ErrorAction Ignore
                         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                     }
-                    if ((Get-Command "Invoke-GetUrlAsync").parameters.fixbigint -eq $null) { #Legacy
-                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
-                    } else {
+                    if ($EnableFixBigInt) {
                         $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey -fixbigint $Parameters.fixbigint
+                    } else {
+                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                     }
                     if ($Result) {$Status = $true}
                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}
