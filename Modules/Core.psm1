@@ -3751,7 +3751,7 @@ function Invoke-ReportMinerStatus {
     $Version = "RainbowMiner $($Session.Version.ToString())"
     $Status = if ($Session.PauseMiners -or $Session.PauseMinersByScheduler) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
     $ReportRates = [PSCustomObject]@{}
-    $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
+    $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
     [System.Collections.Generic.List[string]]$Including_Strings = @()
     if ($Session.ReportTotals)    {$Including_Strings.Add("totals") > $null}
