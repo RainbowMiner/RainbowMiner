@@ -6254,6 +6254,7 @@ Param(
     if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
 
     if ($JobHost) {
+        if ($JobHost -eq "rbminer.net" -and $AsyncLoader.HostDelays.$JobHost -eq $null) {$AsyncLoader.HostDelays.$JobHost = 200}
         if ($AsyncLoader.HostDelays.$JobHost -eq $null -or $delay -gt $AsyncLoader.HostDelays.$JobHost) {
             $AsyncLoader.HostDelays.$JobHost = $delay
         }
