@@ -18,21 +18,21 @@ $Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
     #[PSCustomObject]@{symbol = "LTHN"; port = 6070; fee = 1.0; rpc = "lethean"; user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "LOKI"; port = 5577; fee = 1.0; rpc = "loki";    user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "MSR";  port = 6060; fee = 1.0; rpc = "msr";     user="%wallet%+%worker%"}
+    #[PSCustomObject]@{symbol = "LOKI"; port = 5577; fee = 1.0; rpc = "loki";    user="%wallet%+%worker%"}
     #[PSCustomObject]@{symbol = "QRL";  port = 7000; fee = 1.0; rpc = "qrl";     user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "RYO";  port = 5555; fee = 1.0; rpc = "ryo";     user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "TUBE"; port = 6040; fee = 1.0; rpc = "bittubecash"; user="%wallet%+%worker%"; divisor = 40}
-    [PSCustomObject]@{symbol = "XWP";  port = 6080; fee = 1.0; rpc = "xfh";     user="%wallet%+%worker%"; divisor = 32}
-    [PSCustomObject]@{symbol = "WOW";  port = 6090; fee = 1.0; rpc = "wow";     user="%wallet%+%worker%"}
-    [PSCustomObject]@{symbol = "XHV";  port = 5566; fee = 1.0; rpc = "xhv";     user="%wallet%+%worker%"}
+    #[PSCustomObject]@{symbol = "TUBE"; port = 6040; fee = 1.0; rpc = "bittubecash";    user="%wallet%+%worker%"; divisor = 40}
+    #[PSCustomObject]@{symbol = "XWP";  port = 6080; fee = 1.0; rpc = "xfh";     user="%wallet%+%worker%"; divisor = 32}
 
-    [PSCustomObject]@{symbol = "DOGX"; port = 7788; fee = 1.0; rpc = "dogx";    user="%wallet%.%worker%"}
-    [PSCustomObject]@{symbol = "ETC";  port = 4444; fee = 1.0; rpc = "etc";     user="%wallet%.%worker%"}
-    [PSCustomObject]@{symbol = "ETP";  port = 6666; fee = 1.0; rpc = "etp";     user="%wallet%.%worker%"}
-    [PSCustomObject]@{symbol = "NUKO"; port = 7777; fee = 1.0; rpc = "nuko";    user="%wallet%.%worker%"}
+    #[PSCustomObject]@{symbol = "DOGX"; port = 7788; fee = 1.0; rpc = "dogx";    user="%wallet%.%worker%"}
+    #[PSCustomObject]@{symbol = "ETC";  port = 4444; fee = 1.0; rpc = "etc";     user="%wallet%.%worker%"}
+    #[PSCustomObject]@{symbol = "ETP";  port = 6666; fee = 1.0; rpc = "etp";     user="%wallet%.%worker%"}
+    #[PSCustomObject]@{symbol = "NUKO"; port = 7777; fee = 1.0; rpc = "nuko";    user="%wallet%.%worker%"}
     #[PSCustomObject]@{symbol = "PGC";  port = 1111; fee = 1.0; rpc = "pgc";     user="%wallet%.%worker%"}
 
+    [PSCustomObject]@{symbol = "MSR";  port = 6060; fee = 1.0; rpc = "msr";     user="%wallet%+%worker%"}
+    [PSCustomObject]@{symbol = "RYO";  port = 5555; fee = 1.0; rpc = "ryo";     user="%wallet%+%worker%"}
+    [PSCustomObject]@{symbol = "WOW";  port = 6090; fee = 1.0; rpc = "wow";     user="%wallet%+%worker%"}
+    [PSCustomObject]@{symbol = "XHV";  port = 5566; fee = 1.0; rpc = "xhv";     user="%wallet%+%worker%"}
     [PSCustomObject]@{symbol = "ZANO"; port = 7020; fee = 1.0; rpc = "zano";    user="%wallet%.%worker%"}
 )
 
@@ -56,8 +56,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/poolStats" -tag $Name -timeout 15 -cycletime 180 -delay $Pool_Delay
-            $Pool_Delay += 100
+            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/poolStats" -tag $Name -timeout 15 -cycletime 180 -delay $(if ($Pool_Delay) {$Pool_Delay} else {0})
+            $Pool_Delay   = 100
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
