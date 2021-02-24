@@ -36,6 +36,7 @@ param(
     [String]$AutoExtendMaximumPercent = "30",
     [String]$AutoBonusExtendForHours = "0",
     [String]$AutoBonusExtendByHours = "0",
+    [String]$AutoBonusExtendTimes = "0",
     [String]$AutoUpdateMinPriceChangePercent = "3",
     [String]$AutoPriceModifierPercent = "0",
     [String]$UpdateInterval = "1h",
@@ -305,9 +306,12 @@ if ($AllRigs_Request) {
                                             $AutoBonusExtendForHours_Value = [Double]("$($AutoBonusExtendForHours_Value)" -replace ",","." -replace "[^0-9\.]+")
                                             $AutoBonusExtendByHours_Value  = if ($MRRConfig.$Worker1.AutoBonusExtendByHours -ne $null -and $MRRConfig.$Worker1.AutoBonusExtendByHours -ne "") {$MRRConfig.$Worker1.AutoBonusExtendByHours} else {$AutoBonusExtendByHours}
                                             $AutoBonusExtendByHours_Value  = [Double]("$($AutoBonusExtendByHours_Value)" -replace ",","." -replace "[^0-9\.]+")
+                                            $AutoBonusExtendTimes_Value  = if ($MRRConfig.$Worker1.AutoBonusExtendTimes -ne $null -and $MRRConfig.$Worker1.AutoBonusExtendTimes -ne "") {$MRRConfig.$Worker1.AutoBonusExtendTimes} else {$AutoBonusExtendTimes}
+                                            $AutoBonusExtendTimes_Value  = [Double]("$($AutoBonusExtendTimes_Value)" -replace ",","." -replace "[^0-9\.]+")
+                                            if ($AutoBonusExtendTimes_Value -le 0) {$AutoBonusExtendTimes_Value = 1000}
 
                                             if ($AutoBonusExtendForHours_Value -gt 0 -and $AutoBonusExtendByHours_Value -gt 0) {
-                                                $Rental_ExtendedBonus = [Math]::Floor([double]$Rental_Result.length/$AutoBonusExtendForHours_Value) * $AutoBonusExtendByHours_Value
+                                                $Rental_ExtendedBonus = [Math]::Min([Math]::Floor([double]$Rental_Result.length/$AutoBonusExtendForHours_Value),$AutoBonusExtendTimes_Value) * $AutoBonusExtendByHours_Value
                                                 if ($Rental_ExtendedBonus -gt $Rental_Extended) {
                                                     $Rental_ExtendedBonus = 0
                                                 }
@@ -532,7 +536,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         $AutoCreateMinProfitBTC = "-1"
 
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PowerDrawFactor","MinHours","MaxHours")) {
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoBonusExtendTimes","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PowerDrawFactor","MinHours","MaxHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -572,6 +576,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             }
         }
 
+        if ($MRRConfig.$RigName.AutoBonusExtendTimes -le 0) {$MRRConfig.$RigName.AutoBonusExtendTimes = 1000}
         if ($MRRConfig.$RigName.MinHours -lt 3) {$MRRConfig.$RigName.MinHours = 3}
         if ($MRRConfig.$RigName.MaxHours -lt $MRRConfig.$RigName.MinHours) {$MRRConfig.$RigName.MaxHours = $MRRConfig.$RigName.MinHours}
         if ($MRRConfig.$RigName.AutoCreateMaxMinHours -lt 3) {$MRRConfig.$RigName.AutoCreateMaxMinHours = 3}
@@ -590,7 +595,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         foreach ($RigName in $Workers) {
             if (-not $MRRConfig.$RigName.AutoBonusExtendForHours -or -not $MRRConfig.$RigName.AutoBonusExtendByHours) {continue}
             $Rental_Result | Where-Object {$_.rig.description -match "\[$RigName\]"} | Foreach-Object {
-                $ExtendBy = [Math]::Floor([double]$_.length/$MRRConfig.$RigName.AutoBonusExtendForHours) * $MRRConfig.$RigName.AutoBonusExtendByHours - [double]$_.extended
+                $ExtendBy = [Math]::Min([Math]::Floor([double]$_.length/$MRRConfig.$RigName.AutoBonusExtendForHours),$MRRConfig.$RigName.AutoBonusExtendTimes) * $MRRConfig.$RigName.AutoBonusExtendByHours - [double]$_.extended
                 if ($ExtendBy -gt 0) {
                     try {                    
                         $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$($_.rig.id)/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60

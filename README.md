@@ -1694,6 +1694,7 @@ The following are the pool parameters:
 - **AutoExtendMaximumPercent**: Extend rentals maximum to this value in percent of the rental time [default=100]
 - **AutoBonusExtendForHours**: Enter amount of hours, that you want to reward with an automatic bonus extension (e.g. 24) [default=0]
 - **AutoBonusExtendByHours**: Enter bonus extension in hours per each fully rented AutoBonusExtendForHours (e.g. 1) [default=0]
+- **AutoBonusExtendTimes**: Limit the maximum extensions by AutoBonusExtendByHours to a specific number of times (e.g. 1), 0=unlimited [default=0]
 - **AutoCreateMinProfitPercent**: Enter minimum profitability in percent compared to current best profit, for full rigs to be autocreated on MRR [defau
 lt=50]
 - **AutoCreateMinCPUProfitBTC**: Enter minimum one-day revenue in BTC, for a CPU-only rig to be autocreated on MRR [default=0.00001]
