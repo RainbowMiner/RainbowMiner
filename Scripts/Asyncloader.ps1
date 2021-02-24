@@ -74,7 +74,7 @@ while (-not $AsyncLoader.Stop) {
                         $JobHost  = $Job.Host
                         if ($JobHost) {
                             if ($AsyncLoader.HostDelays.$JobHost -and $Hosts_LastCall.$JobHost) {
-                                $JobDelay = [Math]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0)
+                                $JobDelay = [Math]::Max([Math]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0),0)
                                 if ($JobDelay -and $AsyncLoader.Verbose) {
                                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($JobDelay) milliseconds" -Append -Timestamp
                                 }
