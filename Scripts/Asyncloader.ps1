@@ -17,6 +17,8 @@ $StopWatch = [System.Diagnostics.StopWatch]::New()
 
 $AsyncLoader_Paused = $AsyncLoader.Pause
 
+$Hosts_LastCall = [hashtable]@{}
+
 while (-not $AsyncLoader.Stop) {
 
     $StopWatch.Restart()
@@ -32,8 +34,6 @@ while (-not $AsyncLoader.Stop) {
     }
 
     if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
-
-        $LastJobTag = $null
 
         $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
 
@@ -70,15 +70,23 @@ while (-not $AsyncLoader.Stop) {
                     if ($Job.Tag -eq "MiningRigRentals" -and $Job.endpoint) {
                         Invoke-MiningRigRentalRequestAsync -Jobkey $Jobkey -force -quiet > $null
                     } else {
-                        if ($LastJobTag -ne $null -and $Job.Delay -gt 0 -and $Job.Siblings -contains $LastJobTag) {
-                            if ($AsyncLoader.Verbose) {
-                                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($Job.Delay) seconds" -Append -Timestamp
+                        $JobDelay = 0
+                        $JobHost  = $Job.Host
+                        if ($JobHost) {
+                            if ($AsyncLoader.HostDelays.$JobHost -and $Hosts_LastCall.$JobHost) {
+                                $JobDelay = [Math]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0)
+                                if ($JobDelay -and $AsyncLoader.Verbose) {
+                                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($JobDelay) milliseconds" -Append -Timestamp
+                                }
                             }
-                            Start-Sleep -Milliseconds $Job.Delay
                         }
-                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet > $null
+
+                        Invoke-GetUrlAsync -Jobkey $Jobkey -delay $JobDelay -force -quiet > $null
+
+                        if ($JobHost) {
+                            $Hosts_LastCall.$JobHost = $Job.LastRequest
+                        }
                     }
-                    $LastJobTag = $Job.Tag
                     if ($AsyncLoader.Jobs.$Jobkey.Error) {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($AsyncLoader.Jobs.$Jobkey.Error)" -Append -Timestamp}
                 }
                 catch {

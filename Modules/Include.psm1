@@ -5980,7 +5980,8 @@ Param(
                     headers   = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
                     cycletime = $JobData.cycletime
                     retry     = $JobData.retry
-                    retrywait = $Jobdata.retrywait
+                    retrywait = $JobData.retrywait
+                    delay     = $JobData.delay
                     tag       = $JobData.tag
                     user      = $JobData.user
                     password  = $JobData.password
@@ -6239,7 +6240,8 @@ Param(
     $IsNewJob   = -not $AsyncLoader.Jobs.$Jobkey
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
-        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Siblings=@($tag);Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
+        $JobHost = try{([System.Uri]$url).Host}catch{if ($Error.Count){$Error.RemoveAt(0)}}
+        $JobData = [PSCustomObject]@{Url=$url;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
@@ -6251,16 +6253,21 @@ Param(
 
     if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
 
-    if (-not $StaticJobKey -and -not $IsNewJob -and $AsyncLoader.Jobs.$Jobkey.Tag -ne $tag -and $AsyncLoader.Jobs.$Jobkey.Siblings -notcontains $tag) {
-        $AsyncLoader.Jobs.$Jobkey.Siblings += $tag
-        if ($delay -gt $AsyncLoader.Jobs.$Jobkey.Delay) {
-            $AsyncLoader.Jobs.$Jobkey.Delay = $delay
+    if ($JobHost) {
+        if ($AsyncLoader.HostDelays.$JobHost -eq $null -or $delay -gt $AsyncLoader.HostDelays.$JobHost) {
+            $AsyncLoader.HostDelays.$JobHost = $delay
+        }
+
+        if ($AsyncLoader.HostTags.$JobHost -eq $null) {
+            $AsyncLoader.HostTags.$JobHost = @($tag)
+        } elseif ($AsyncLoader.HostTags.$JobHost -notcontains $tag) {
+            $AsyncLoader.HostTags.$JobHost += $tag
         }
     }
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
-    if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy")) {
+    if ($force -or $IsNewJob -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy")) {
         $Quickstart = $false
         if ($IsNewJob) {
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -and (Test-Path ".\Cache\$($Jobkey).asy")
@@ -6289,8 +6296,7 @@ Param(
                     }
                 }
                 if (-not $Quickstart) {
-                    if ($IsNewJob -and $delay -gt 0) {Start-Sleep -Milliseconds $delay}
-                    #Write-Log -Level Info "GetUrl $($AsyncLoader.Jobs.$Jobkey.Url)" 
+                    if ($delay -gt 0) {Start-Sleep -Milliseconds $delay}
                     $Request = Invoke-GetUrl -JobData $AsyncLoader.Jobs.$Jobkey -JobKey $JobKey
                 }
                 if ($Request) {
@@ -6314,7 +6320,7 @@ Param(
                 if (-not $RequestError) {$retry = 0}
                 else {
                     $Passed = $StopWatch.ElapsedMilliseconds
-                    if ($AsyncLoader.Jobs.$Jobkey.RetryWait -gt $Passed) {
+                    if (($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed) -gt 50) {
                         Start-Sleep -Milliseconds ($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed)
                     }
                 }

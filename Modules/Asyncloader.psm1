@@ -15,6 +15,8 @@ Param(
     $AsyncLoader.Stop       = $false
     $AsyncLoader.Pause      = $true
     $AsyncLoader.Jobs       = [hashtable]@{}
+    $AsyncLoader.HostDelays = [hashtable]@{}
+    $AsyncLoader.HostTags   = [hashtable]@{}
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = $Quickstart
@@ -66,12 +68,12 @@ Param(
 )
     if (-not (Test-Path Variable:Global:Asyncloader)) {return}
     foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
-        if ($AsyncLoader.Jobs.$Jobkey.Siblings -contains $tag) {
-            if ($AsyncLoader.Jobs.$Jobkey.Siblings.Count -eq 1) {
-                $AsyncLoader.Jobs.$Jobkey.Paused = $true
-            } else {
-                $AsyncLoader.Jobs.$Jobkey.Siblings = @($AsyncLoader.Jobs.$Jobkey.Siblings | Where-Object {$_ -ne $tag} | Select-Object)
-            }
+        $JobHost = $AsyncLoader.Jobs.$Jobkey.Host
+        if ($JobHost -and $AsyncLoader.HostTags.$JobHost -and ($AsyncLoader.HostTags.$JobHost -contains $tag)) {
+            $AsyncLoader.HostTags.$JobHost = @($AsyncLoader.HostTags.$JobHost | Where-Object {$_ -ne $tag})
+        }
+        if (-not $JobHost -or ($AsyncLoader.HostTags.$JobHost | Measure-Object).Count -eq 0) {
+            $AsyncLoader.Jobs.$Jobkey.Paused = $true
         }
     }
 }
