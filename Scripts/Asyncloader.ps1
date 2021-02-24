@@ -33,7 +33,10 @@ while (-not $AsyncLoader.Stop) {
 
     if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
 
+        $LastJobTag = $null
+
         $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
+
         foreach ($JobKey in $JobKeys) {
 
             if ($AsyncLoader.Pause) {
@@ -67,8 +70,15 @@ while (-not $AsyncLoader.Stop) {
                     if ($Job.Tag -eq "MiningRigRentals" -and $Job.endpoint) {
                         Invoke-MiningRigRentalRequestAsync -Jobkey $Jobkey -force -quiet > $null
                     } else {
+                        if ($LastJobTag -ne $null -and $Job.Delay -gt 0 -and $Job.Siblings -contains $LastJobTag) {
+                            if ($AsyncLoader.Verbose) {
+                                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($Job.Delay) seconds" -Append -Timestamp
+                            }
+                            Start-Sleep -Milliseconds $Job.Delay
+                        }
                         Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet > $null
                     }
+                    $LastJobTag = $Job.Tag
                     if ($AsyncLoader.Jobs.$Jobkey.Error) {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($AsyncLoader.Jobs.$Jobkey.Error)" -Append -Timestamp}
                 }
                 catch {

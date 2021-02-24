@@ -6236,8 +6236,10 @@ Param(
 
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
-    if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
+    $IsNewJob   = -not $AsyncLoader.Jobs.$Jobkey
+
+    if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
+        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Siblings=@($tag);Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
@@ -6246,22 +6248,24 @@ Param(
         $JobData.LastCacheWrite = (Get-Date).ToUniversalTime()
         return
     }
-    
+
     if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
+
+    if (-not $StaticJobKey -and -not $IsNewJob -and $AsyncLoader.Jobs.$Jobkey.Tag -ne $tag -and $AsyncLoader.Jobs.$Jobkey.Siblings -notcontains $tag) {
+        $AsyncLoader.Jobs.$Jobkey.Siblings += $tag
+        if ($delay -gt $AsyncLoader.Jobs.$Jobkey.Delay) {
+            $AsyncLoader.Jobs.$Jobkey.Delay = $delay
+        }
+    }
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy")) {
         $Quickstart = $false
-        if (-not $AsyncLoader.Jobs.$Jobkey) {
-            $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
-            if (-not $Quickstart -and $delay) {Start-Sleep -Milliseconds $delay}
+        if ($IsNewJob) {
+            $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -and (Test-Path ".\Cache\$($Jobkey).asy")
             $AsyncLoader.Jobs.$Jobkey = $JobData
             $AsyncLoader.Jobs.$Jobkey.Index = $AsyncLoader.Jobs.Count
-            if ($Quickstart) {
-                $AsyncLoader.Quickstart += $delay
-                if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
-            }
             #Write-Log -Level Info "New job $($Jobkey): $($JobData.Url)" 
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
@@ -6282,10 +6286,10 @@ Param(
                             try {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)}}
                         }
                         $Quickstart = $false
-                        if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Start-Sleep -Milliseconds $delay}
                     }
                 }
                 if (-not $Quickstart) {
+                    if ($IsNewJob -and $delay -gt 0) {Start-Sleep -Milliseconds $delay}
                     #Write-Log -Level Info "GetUrl $($AsyncLoader.Jobs.$Jobkey.Url)" 
                     $Request = Invoke-GetUrl -JobData $AsyncLoader.Jobs.$Jobkey -JobKey $JobKey
                 }
