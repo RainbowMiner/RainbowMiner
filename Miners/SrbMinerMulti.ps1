@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.6.7"
+$Version = "0.6.8"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.7-srbminermulti/SRBMiner-Multi-0-6-7-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.8-srbminermulti/SRBMiner-Multi-0-6-8-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.7-srbminermulti/SRBMiner-Multi-0-6-7-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.8-srbminermulti/SRBMiner-Multi-0-6-8-win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
@@ -37,6 +37,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "randomwow"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomWow
     [PSCustomObject]@{MainAlgorithm = "randomx"        ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomX
     [PSCustomObject]@{MainAlgorithm = "randomxl"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomXL
+    [PSCustomObject]@{MainAlgorithm = "rx2"            ;              Params = ""; Fee = 1.25;               Vendor = @("CPU")} #RX2/Luxcoin
     [PSCustomObject]@{MainAlgorithm = "scryptn2"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #scyptn2/Verium
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr16
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr32
