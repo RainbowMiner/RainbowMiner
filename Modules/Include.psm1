@@ -20,6 +20,7 @@
         }
         $Session.IsAdmin            = Test-IsElevated
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
+        $Session.IsPS7              = $PSVersionTable.PSVersion -ge (Get-Version "7.0")
         $Session.MachineName        = [System.Environment]::MachineName
         $Session.MyIP               = Get-MyIP
         $Session.MainPath           = "$PWD"
@@ -562,6 +563,11 @@ function Set-Total {
 }
 
 function Set-TotalsAvg {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$CleanupOnly = $false
+    )
 
     $Updated        = (Get-Date).ToUniversalTime()
     $Path0          = "Stats\Totals"
@@ -574,6 +580,8 @@ function Set-TotalsAvg {
     $Last1w = (Get-Date).AddDays(-7)
 
     Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -lt $LastValid_File} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+
+    if ($CleanupOnly) {return}
 
     $Totals = [PSCustomObject]@{}
     Get-ChildItem "Stats\Totals" -Filter "*_TotalAvg.txt" | Foreach-Object {
@@ -2809,7 +2817,7 @@ function Get-Device {
                     [PSCustomObject]@{
                         Name        = $_.Name
                         InstanceId  = $_.PNPDeviceId
-                        BusId       = $(if ($BusId -ne $null-and $BusId.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusId,([int]$DeviceAddress -shr 16)})
+                        BusId       = $(if ($BusId -ne $null -and $BusId.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusId,([int]$DeviceAddress -shr 16)})
                         Vendor      = switch -Regex ([String]$_.AdapterCompatibility) { 
                                         "Advanced Micro Devices" {"AMD"}
                                         "Intel"  {"INTEL"}
@@ -3999,6 +4007,20 @@ function Get-Coin {
     }
 }
 
+function Get-HttpStatusCode {
+    [CmdletBinding()]
+    param(
+        [Parameter(
+            Position = 0,
+            ParameterSetName = '',   
+            ValueFromPipeline = $True,
+            Mandatory = $false)]
+        [String]$Code = ""
+    )
+    if (-not (Test-Path Variable:Global:GlobalHttpStatusCodes)) {Get-HttpStatusCodes -Silent}
+    $Global:GlobalHttpStatusCodes | Where StatusCode -eq $Code
+}
+
 function Get-MappedAlgorithm {
     [CmdletBinding()]
     param(
@@ -4183,6 +4205,20 @@ function Get-EthDAGSizes {
     }
 
     if (-not $Silent) {$Global:GlobalEthDAGSizes}
+}
+
+function Get-HttpStatusCodes {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalHttpStatusCodes)) {
+        $Global:GlobalHttpStatusCodes = Get-ContentByStreamReader "Data\httpstatuscodes.json" | ConvertFrom-Json -ErrorAction Ignore
+    }
+    if (-not $Silent) {
+        $Global:GlobalHttpStatusCodes
+    }
 }
 
 function Get-NimqHashrates {
@@ -5889,10 +5925,10 @@ function Get-MD5Hash {
 [cmdletbinding()]
 Param(   
     [Parameter(
-        Mandatory = $True,   
-        Position = 0,   
-        ParameterSetName = '',   
-        ValueFromPipeline = $True)]   
+        Mandatory = $True,
+        Position = 0,
+        ParameterSetName = '',
+        ValueFromPipeline = $True)]
         [string]$value
 )
     $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
@@ -5910,7 +5946,7 @@ Param(
     [Parameter(Mandatory = $False)]   
         [string]$requestmethod = "",
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
         [hashtable]$body,
     [Parameter(Mandatory = $False)]
@@ -5921,6 +5957,8 @@ Param(
         [string]$password = "",
     [Parameter(Mandatory = $False)]
         [string]$useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36",
+    [Parameter(Mandatory = $False)]
+        [bool]$fixbigint = $false,
     [Parameter(Mandatory = $False)]
         $JobData,
     [Parameter(Mandatory = $False)]
@@ -5942,10 +5980,12 @@ Param(
                     headers   = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
                     cycletime = $JobData.cycletime
                     retry     = $JobData.retry
-                    retrywait = $Jobdata.retrywait
+                    retrywait = $JobData.retrywait
+                    delay     = $JobData.delay
                     tag       = $JobData.tag
                     user      = $JobData.user
                     password  = $JobData.password
+                    fixbigint = $JobData.fixbigint
                     jobkey    = $JobKey
                     machinename = $Session.MachineName
                     myip      = $Session.MyIP
@@ -5964,6 +6004,7 @@ Param(
         $headers  = $JobData.headers
         $user     = $JobData.user
         $password = $JobData.password
+        $fixbigint= $JobData.fixbigint
     }
 
     if ($url -match "^server://(.+)$") {
@@ -6002,24 +6043,79 @@ Param(
             if ($ErrorMessage -ne '') {throw $ErrorMessage}
         }
     } else {
+
         $ErrorMessage = ''
-        try {
-            if ($method -eq "REST") {
-                $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
-                $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-            } else {
+
+        if ($Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
+            $StatusCode = $null
+            $Data       = $null
+
+            $oldProgressPreference = $null
+            if ($Global:ProgressPreference -ne "SilentlyContinue") {
                 $oldProgressPreference = $Global:ProgressPreference
                 $Global:ProgressPreference = "SilentlyContinue"
-                $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-                $Global:ProgressPreference = $oldProgressPreference
             }
-            if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $ErrorMessage = "$($_.Exception.Message)"
-        } finally {
-            if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
-            $ServicePoint = $null
+
+            try {
+                if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                }
+
+                $StatusCode = $Response.StatusCode
+
+                if ($StatusCode -match "^2\d\d$") {
+                    $Data = $Response.Content
+                    if ($method -eq "REST") {
+                        if ($fixbigint) {
+                            try {
+                                $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        }
+                        try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    }
+                    if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+                }
+
+                if ($Response) {
+                    $Response = $null
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ErrorMessage = "$($_.Exception.Message)"
+            }
+
+            if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
+            if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
+                if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
+                    if ($StatusCodeObject.Type -ne "Success") {
+                        $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                    }
+                } else {
+                    $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                }
+            }
+        } else {
+            try {
+                $ServicePoint = $null
+                if ($method -eq "REST") {
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
+                    $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $oldProgressPreference = $Global:ProgressPreference
+                    $Global:ProgressPreference = "SilentlyContinue"
+                    $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                    $Global:ProgressPreference = $oldProgressPreference
+                }
+                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ErrorMessage = "$($_.Exception.Message)"
+            } finally {
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                $ServicePoint = $null
+            }
         }
         if ($ErrorMessage -eq '') {$Data}
         if ($ErrorMessage -ne '') {throw $ErrorMessage}
@@ -6042,7 +6138,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
+    [Parameter(Mandatory = $False)]
+        [switch]$fixbigint,
     [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
@@ -6054,7 +6152,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
 }
 
 function Invoke-WebRequestAsync {
@@ -6075,7 +6173,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
+    [Parameter(Mandatory = $False)]
+        [switch]$fixbigint,
     [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
@@ -6085,7 +6185,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers -fixbigint $fixbigint
 }
 
 function Get-HashtableAsJson {
@@ -6121,7 +6221,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10,
+        [int]$timeout = 15,
+    [Parameter(Mandatory = $False)]
+        [bool]$fixbigint = $False,
     [Parameter(Mandatory = $False)]
         [bool]$nocache = $false,
     [Parameter(Mandatory = $False)]
@@ -6135,8 +6237,11 @@ Param(
 
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
-    if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
+    $IsNewJob   = -not $AsyncLoader.Jobs.$Jobkey
+
+    if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
+        $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{if ($Error.Count){$Error.RemoveAt(0)}}} else {"server"}
+        $JobData = [PSCustomObject]@{Url=$url;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
@@ -6145,22 +6250,30 @@ Param(
         $JobData.LastCacheWrite = (Get-Date).ToUniversalTime()
         return
     }
-    
+
     if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
+
+    if ($JobHost) {
+        if ($JobHost -eq "rbminer.net" -and $AsyncLoader.HostDelays.$JobHost -eq $null) {$AsyncLoader.HostDelays.$JobHost = 200}
+        if ($AsyncLoader.HostDelays.$JobHost -eq $null -or $delay -gt $AsyncLoader.HostDelays.$JobHost) {
+            $AsyncLoader.HostDelays.$JobHost = $delay
+        }
+
+        if ($AsyncLoader.HostTags.$JobHost -eq $null) {
+            $AsyncLoader.HostTags.$JobHost = @($tag)
+        } elseif ($AsyncLoader.HostTags.$JobHost -notcontains $tag) {
+            $AsyncLoader.HostTags.$JobHost += $tag
+        }
+    }
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
-    if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy")) {
+    if ($force -or $IsNewJob -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy")) {
         $Quickstart = $false
-        if (-not $AsyncLoader.Jobs.$Jobkey) {
-            $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
-            if (-not $Quickstart -and $delay) {Start-Sleep -Milliseconds $delay}
+        if ($IsNewJob) {
+            $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -and (Test-Path ".\Cache\$($Jobkey).asy")
             $AsyncLoader.Jobs.$Jobkey = $JobData
             $AsyncLoader.Jobs.$Jobkey.Index = $AsyncLoader.Jobs.Count
-            if ($Quickstart) {
-                $AsyncLoader.Quickstart += $delay
-                if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
-            }
             #Write-Log -Level Info "New job $($Jobkey): $($JobData.Url)" 
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
@@ -6181,11 +6294,10 @@ Param(
                             try {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)}}
                         }
                         $Quickstart = $false
-                        if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Start-Sleep -Milliseconds $delay}
                     }
                 }
                 if (-not $Quickstart) {
-                    #Write-Log -Level Info "GetUrl $($AsyncLoader.Jobs.$Jobkey.Url)" 
+                    if ($delay -gt 0) {Start-Sleep -Milliseconds $delay}
                     $Request = Invoke-GetUrl -JobData $AsyncLoader.Jobs.$Jobkey -JobKey $JobKey
                 }
                 if ($Request) {
@@ -6209,7 +6321,7 @@ Param(
                 if (-not $RequestError) {$retry = 0}
                 else {
                     $Passed = $StopWatch.ElapsedMilliseconds
-                    if ($AsyncLoader.Jobs.$Jobkey.RetryWait -gt $Passed) {
+                    if (($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed) -gt 50) {
                         Start-Sleep -Milliseconds ($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed)
                     }
                 }

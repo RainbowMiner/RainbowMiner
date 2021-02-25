@@ -28,7 +28,7 @@ $Count = 0
 $Payout_Currencies | Where-Object {@("BTC") + @($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     $Currency = $_.Name
     try {
-        $Request = Invoke-RestMethodAsync "http://blockmasters.co/api/walletEx?address=$($_.Value)" -delay $(if ($Count){2000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "http://blockmasters.co/api/walletEx?address=$($_.Value)" -delay $(if ($Count){1000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -tag $Name
         $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
             Write-Log -Level Info "Pool Balance API ($Name) for $Currency returned nothing. "

@@ -74,6 +74,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average
+            EthMode       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} else {$null}
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1

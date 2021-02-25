@@ -24,16 +24,18 @@
     function updateProfitHead() {
         var profit = $("#profit").attr("btc");
         var earnings = $("#earnings").attr("btc");
-        var currency = $("#profit_currency option:selected").val();
 
-        if (currency == "BTC" || currency == "mBTC" || currency == "sat") {
-            $("#profit").html(formatBTC(profit,currency));
-            $("#earnings").html(formatBTC(earnings,currency));
+        selected_currency.currency = $("#profit_currency option:selected").val();
+        selected_currency.rate     = parseFloat($("#profit_currency option:selected").attr("rate"));
+
+        if (selected_currency.currency == "BTC" || selected_currency.currency == "mBTC" || selected_currency.currency == "sat") {
+            $("#profit").html(formatBTC(profit,selected_currency.currency));
+            $("#earnings").html(formatBTC(earnings,selected_currency.currency));
         } else {
-            $("#profit").html((parseFloat(profit) * parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
-            $("#earnings").html((parseFloat(earnings) * parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
+            $("#profit").html((parseFloat(profit) * selected_currency.rate).toFixed(2));
+            $("#earnings").html((parseFloat(earnings) * selected_currency.rate).toFixed(2));
         }
-        window.localStorage.setItem("currency", currency);
+        window.localStorage.setItem("currency", selected_currency.currency);
     }
 
 $(function () {

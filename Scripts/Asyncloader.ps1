@@ -15,9 +15,15 @@ $Cycle = -1
 
 $StopWatch = [System.Diagnostics.StopWatch]::New()
 
+$AsyncLoader_Paused = $AsyncLoader.Pause
+
+$Hosts_LastCall = [hashtable]@{}
+
 while (-not $AsyncLoader.Stop) {
+
     $StopWatch.Restart()
     $Cycle++
+    $AsyncLoader.Timestamp = (Get-Date).ToUniversalTime()
 
     if ($AsyncLoader.Verbose) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start cycle" -Append -Timestamp
@@ -30,8 +36,18 @@ while (-not $AsyncLoader.Stop) {
     if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
 
         $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
+
         foreach ($JobKey in $JobKeys) {
+
+            if ($AsyncLoader.Pause) {
+                break
+            }
+
             $Job = $AsyncLoader.Jobs.$JobKey
+
+            if (-not $Job) {
+                continue
+            }
 
             if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
 
@@ -54,7 +70,22 @@ while (-not $AsyncLoader.Stop) {
                     if ($Job.Tag -eq "MiningRigRentals" -and $Job.endpoint) {
                         Invoke-MiningRigRentalRequestAsync -Jobkey $Jobkey -force -quiet > $null
                     } else {
-                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet > $null
+                        $JobDelay = 0
+                        $JobHost  = $Job.Host
+                        if ($JobHost) {
+                            if ($AsyncLoader.HostDelays.$JobHost -and $Hosts_LastCall.$JobHost) {
+                                $JobDelay = [Math]::Max([Math]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0),0)
+                                if ($JobDelay -and $AsyncLoader.Verbose) {
+                                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($JobDelay) milliseconds" -Append -Timestamp
+                                }
+                            }
+                        }
+
+                        Invoke-GetUrlAsync -Jobkey $Jobkey -delay $JobDelay -force -quiet > $null
+
+                        if ($JobHost) {
+                            $Hosts_LastCall.$JobHost = $Job.LastRequest
+                        }
                     }
                     if ($AsyncLoader.Jobs.$Jobkey.Error) {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($AsyncLoader.Jobs.$Jobkey.Error)" -Append -Timestamp}
                 }
@@ -72,10 +103,15 @@ while (-not $AsyncLoader.Stop) {
     }
     if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Error.Clear()}
 
-    $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
+    $Delta = [Math]::Min([Math]::Max($AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds,1),30)
 
     if ($AsyncLoader.Verbose) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End cycle $(if ($Delta -gt 0) {"(wait $Delta s)"})" -Append -Timestamp
+    }
+
+    if ($AsyncLoader.Pause -ne $AsyncLoader_Paused) {
+        $AsyncLoader_Paused = $AsyncLoader.Pause
+        Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$(if ($AsyncLoader_Paused) {"Stopping asyncloader due to"} else {"Restarting asyncloader after"}) pause" -Append -Timestamp
     }
 
     if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}

@@ -14,8 +14,8 @@ $DevFee = 1.0
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-lolminer/lolMiner_v1.24_Lin64.tar.gz"
-    $Version = "1.24"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24a-lolminer/lolMiner_v1.24a_Lin64.tar.gz"
+    $Version = "1.24a"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.21-lolminer/lolMiner_v1.21_Win64.zip"

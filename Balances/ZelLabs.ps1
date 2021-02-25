@@ -23,7 +23,7 @@ $Pools_Data | Where-Object {($Config.Pools.$Name.Wallets."$($_.symbol)" -or ($_.
     $Pool_Request = [PSCustomObject]@{}
 
     try {
-        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).zellabs.net/api/worker_stats2?address=$($Pool_Wallet)&dataPoints=720&numSeconds=0" -tag $Name -cycletime 120
+        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).zellabs.net/api/worker_stats2?address=$($Pool_Wallet)&dataPoints=720&numSeconds=0" -tag $Name -cycletime 240 -timeout 30
         if (-not $Pool_Request) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {

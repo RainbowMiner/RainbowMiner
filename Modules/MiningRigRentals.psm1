@@ -15,7 +15,7 @@
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{UseWorkerName="";ExcludeWorkerName="";EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoExtend="";AutoExtendTargetPercent="";AutoExtendMaximumPercent="";AutoBonusExtendForHours="";AutoBonusExtendByHours="";EnableAutoPrice="";EnableMinimumPrice="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PowerDrawFactor="";MinHours="";MaxHours="";AllowExtensions="";PriceCurrencies="";Title = "";Description = "";ProfitAverageTime = ""}
+            $Default = [PSCustomObject]@{UseWorkerName="";ExcludeWorkerName="";EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoExtend="";AutoExtendTargetPercent="";AutoExtendMaximumPercent="";AutoBonusExtendForHours="";AutoBonusExtendByHours="";AutoBonusExtendTimes="";EnableAutoPrice="";EnableMinimumPrice="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PowerDrawFactor="";MinHours="";MaxHours="";AllowExtensions="";PriceCurrencies="";Title = "";Description = "";ProfitAverageTime = ""}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
             
             foreach ($RigName in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Workers) | Select-Object -Unique)) {
@@ -117,7 +117,7 @@ param(
                 }
                 try {
                     $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getmrr" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
-                    if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+                    if ($Result.Status) {$Data = $Result.Content;$Remote = $true}
                     #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
@@ -137,28 +137,82 @@ param(
 	            'x-api-nonce'= $nonce
                 'Cache-Control' = 'no-cache'
             }
-            try {
-                $body = Switch -Regex ($method) {
-                    "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
-                    "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
+
+            $ErrorMessage = ''
+
+            if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+                $StatusCode   = $null
+                $Data         = $null
+
+                $oldProgressPreference = $null
+                if ($Global:ProgressPreference -ne "SilentlyContinue") {
+                    $oldProgressPreference = $Global:ProgressPreference
+                    $Global:ProgressPreference = "SilentlyContinue"
                 }
-                #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
-                $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
-                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
-                #$Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
-            } finally {
-                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+
+                try {
+                    $body = Switch -Regex ($method) {
+                        "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
+                        "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
+                    }
+
+                    $Response   = Invoke-WebRequest "$base$endpoint" -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+                    $StatusCode = $Response.StatusCode
+
+                    if ($StatusCode -match "^2\d\d$") {
+                        try {$Data = ConvertFrom-Json $Response.Content -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    }
+
+                    if ($Response) {
+                        $Response = $null
+                    }
+
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $ErrorMessage = "$($_.Exception.Message)"
+                }
+
+                if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
+
+                if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
+                    if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
+                        if ($StatusCodeObject.Type -ne "Success") {
+                            $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                        }
+                    } else {
+                        $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                    }
+                }
+
+            } else {
+                $ServicePoint = $null
+                try {
+                    $body = Switch -Regex ($method) {
+                        "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
+                        "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
+                    }
+                    #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
+                    $Data = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+                    #$Data = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $ErrorMessage = "MiningRigRental call: $($_.Exception.Message)"
+                } finally {
+                    if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                }
+            }
+
+            if ($ErrorMessage -ne '') {
+                Write-Log -Level Info "MiningRigRental call: $($ErrorMessage)"
             }
         }
-        if ($Request.success -ne $null -and -not $Request.success) {
-            Write-Log -Level Warn "MiningRigRental error: $(if ($Request.data.message) {$Request.data.message} else {"unknown"})"
+        if ($Data.success -ne $null -and -not $Data.success) {
+            Write-Log -Level Warn "MiningRigRental error: $(if ($Data.data.message) {$Data.data.message} else {"unknown"})"
         }
 
-        if (-not $Session.MRRCache[$JobKey] -or ($Request -and $Request.success)) {
-            $Session.MRRCache[$JobKey] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
+        if (-not $Session.MRRCache[$JobKey] -or ($Data -and $Data.success)) {
+            $Session.MRRCache[$JobKey] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Data; cachetime = $Cache}
         }
     }
     if ($Raw) {$Session.MRRCache[$JobKey].request}

@@ -17,7 +17,7 @@ if (-not $Payout_Currencies) {
 
 $PoolCoins_Request = [PSCustomObject]@{}
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -tag $Name -cycletime 120 -timeout 20
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -27,7 +27,7 @@ catch {
 $Count = 0
 $Payout_Currencies | Where-Object {@("BTC", "DASH", "LTC") + @($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name} | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_} | Foreach-Object {
     try {
-        $Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/walletEx?address=$($_.Value)" -delay $(if ($Count){2000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/walletEx?address=$($_.Value)" -delay $(if ($Count){1000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -tag $Name
         $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "

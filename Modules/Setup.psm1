@@ -214,14 +214,14 @@ function Start-Setup {
             Write-Host " "
             Write-Host "- Wallet: setup wallet addresses, worker- and username, API-keys" -ForegroundColor Yellow
             Write-Host "- Common: setup the most common RainbowMiner settings and flags" -ForegroundColor Yellow
-            Write-Host "- Energycosts: setup energy consumtion values" -ForegroundColor Yellow
-            Write-Host "- Selection: select which pools, miners, algorithm to use" -ForegroundColor Yellow
+            Write-Host "- Energycosts: setup energy consumption values" -ForegroundColor Yellow
+            Write-Host "- Selection: select which pools, miners, algorithms to use" -ForegroundColor Yellow
             Write-Host "- All: step through the full setup, configuring all" -ForegroundColor Yellow
-            Write-Host "- Miners: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
+            Write-Host "- Miners: finetune miners, add command-line arguments, penalty values and more (only for the technical savvy user)" -ForegroundColor Yellow
             Write-Host "- Pools: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
             Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
-            Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hasrate and more" -ForegroundColor Yellow
-            Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hasrate and more" -ForegroundColor Yellow
+            Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hashrate and more" -ForegroundColor Yellow
+            Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hashrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
             if (@(Get-ConfigArray $Config.PoolName) -contains "MiningRigRentals") {
                 Write-Host "- MRR: list and delete rigs at MiningRigRentals" -ForegroundColor Yellow
@@ -2803,7 +2803,9 @@ function Start-Setup {
 
                     if ($Coin_Symbol) {
 
-                        $CoinsPools = @(Get-PoolsInfo "Minable" $Coin_Symbol -AsObjects | Where-Object {-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool"} | Select-Object -ExpandProperty Pool | Sort-Object)
+                        $Coin_Symbol_Base = "$($Coin_Symbol -replace "_\d+$")"
+
+                        $CoinsPools = @(Get-PoolsInfo "Minable" $Coin_Symbol_Base -AsObjects | Where-Object {-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool"} | Select-Object -ExpandProperty Pool | Sort-Object)
                         $CoinsPoolsInUse = @($CoinsPools | Where-Object {$CoinsToPools.$Coin_Symbol -icontains $_} | Select-Object)
 
                         $CoinSetupStepsDone = $false
@@ -2880,13 +2882,13 @@ function Start-Setup {
                                         $PoolsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {
                                             $Pool = $_
                                             $IsInUse = $CoinsPoolsInUse -icontains $Pool
-                                            if ($IsInUse -or $PoolsActual.$Pool.$Coin_Symbol -eq "`$$Coin_Symbol") {
+                                            if ($IsInUse -or $PoolsActual.$Pool.$Coin_Symbol_Base -eq "`$$Coin_Symbol") {
                                                 $PoolsActualSave | Add-Member $Pool ([PSCustomObject]@{}) -Force
                                                 if ($IsInUse) {
-                                                    $PoolsActualSave.$Pool | Add-Member $Coin_Symbol "`$$Coin_Symbol" -Force
-                                                    $PoolsActualSave.$Pool | Add-Member "$($Coin_Symbol)-Params" "$($PoolsActual.$Pool."$($Coin_Symbol)-Params")" -Force
+                                                    $PoolsActualSave.$Pool | Add-Member $Coin_Symbol_Base "`$$Coin_Symbol" -Force
+                                                    $PoolsActualSave.$Pool | Add-Member "$($Coin_Symbol_Base)-Params" "$($PoolsActual.$Pool."$($Coin_Symbol_Base)-Params")" -Force
                                                 }
-                                                $PoolsActual.$Pool.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol -and $_.Name -ne "$($Coin_Symbol)-Params"} | Foreach-Object {$PoolsActualSave.$Pool | Add-Member $_.Name $_.Value -Force}
+                                                $PoolsActual.$Pool.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol_Base -and $_.Name -ne "$($Coin_Symbol_Base)-Params"} | Foreach-Object {$PoolsActualSave.$Pool | Add-Member $_.Name $_.Value -Force}
                                             } else {
                                                 $PoolsActualSave | Add-Member $Pool ($PoolsActual.$Pool) -Force
                                             }

@@ -489,4 +489,109 @@
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
     }
+    'Profile1-RTX3070' = [PSCustomObject]@{
+        PowerLimit = 0
+        ThermalLimit = 0
+        MemoryClockBoost = "*"
+        CoreClockBoost = "*"
+        LockVoltagePoint = "*"
+    }
+    'Profile2-RTX3070' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "1000"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile3-RTX3070' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "500"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile4-RTX3070' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "-1000"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile5-RTX3070' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "875"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile1-RTX3080' = [PSCustomObject]@{
+        PowerLimit = 0
+        ThermalLimit = 0
+        MemoryClockBoost = "*"
+        CoreClockBoost = "*"
+        LockVoltagePoint = "*"
+    }
+    'Profile2-RTX3080' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "1000"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile3-RTX3080' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "500"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile4-RTX3080' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "-1000"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile5-RTX3080' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "875"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile1-RTX3090' = [PSCustomObject]@{
+        PowerLimit = 0
+        ThermalLimit = 0
+        MemoryClockBoost = "*"
+        CoreClockBoost = "*"
+        LockVoltagePoint = "*"
+    }
+    'Profile2-RTX3090' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "1000"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile3-RTX3090' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "500"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile4-RTX3090' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "-1000"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile5-RTX3090' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "875"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
 }

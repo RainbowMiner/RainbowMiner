@@ -323,6 +323,13 @@
             Currencies=@("BTC")
             Yiimp=$true
         }
+        "PhiPhiPool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
+            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
+            Currencies=@("BTC")
+            Autoexchange=$true
+            Yiimp=$true
+        }
         "Poolin" = [PSCustomObject]@{
             Currencies=@("ETH","RVN")
         }
