@@ -1768,8 +1768,8 @@ The profit switcher can be controlled like follows. To be able to compare the po
   - **Price**: live price, the moving average time defaults to 10 minutes. It can be changed for all pools in config.txt, with parameter **PoolStatAverage**, or per pool in pools.config.txt with parameter **StatAverage**
   - **StablePrice**: stable price, the moving average time defaults to 1 week. It can be changed for all pools in config.txt, with parameter **PoolStatAverageStable**, or per pool in pools.config.txt with parameter **StatAverageStable**
 - PFC is the price for comparison. It starts at either the pool's StablePrice or Price:
-  - StablePrice: if **EnableFastSwitching** is "0" (=disabled) and either **ForceStablePrice** is "1" (=enabled) or the pool is internally marked as PaysLive (like Nicehash is)
-  - live Price: all other cases
+  - StablePrice: if **EnableFastSwitching** is "0" (=disabled) and either **ForceStablePrice** is "1" (=enabled) or the pool isn't internally marked as PaysLive (like Nicehash is)
+  - live Price: all other cases (especially NiceHash)
 - all available config parameters are marked as **bold**
 - if **EnableFastSwitching** is set to "0" (=disabled) in config.txt:
   - for Pools, that _aren't_ currently being mined, comparison prices will be _decreased_
