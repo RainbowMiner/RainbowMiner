@@ -10,6 +10,7 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$AEcurrency = ""
 )
 
@@ -82,7 +83,7 @@ $Pool_Request.return | Where-Object {$_.current_mining_coin_symbol -and ($_.curr
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = $Pool_Host

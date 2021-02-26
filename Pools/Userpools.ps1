@@ -10,6 +10,7 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$Name = ""
 )
 

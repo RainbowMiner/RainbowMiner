@@ -11,6 +11,7 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$AEcurrency = ""
 )
 
@@ -80,7 +81,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
                 CoinSymbol    = $Pool_Symbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = "$(if ($Pool_Region -ne "eu") {"$($Pool_Region)."})$($Pool_Host)"

@@ -10,6 +10,7 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$Email = ""
 )
 
@@ -74,7 +75,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.Week
+                    StablePrice   = $Stat.$StatAverageStable
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
                     Host          = "$($Matches[1].Trim())"

@@ -6,7 +6,10 @@ param(
     [String]$Worker, 
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
-    [Bool]$InfoOnly = $false
+    [Bool]$InfoOnly = $false,
+    [Bool]$AllowZero = $false,
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

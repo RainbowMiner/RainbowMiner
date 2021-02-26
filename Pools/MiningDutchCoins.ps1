@@ -10,6 +10,7 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$AEcurrency = ""
 )
 

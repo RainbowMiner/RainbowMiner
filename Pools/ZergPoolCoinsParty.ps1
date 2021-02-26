@@ -9,6 +9,7 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$PartyPassword = "",
     [String]$AECurrency = ""
 )
@@ -156,7 +157,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_ExCurrency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}

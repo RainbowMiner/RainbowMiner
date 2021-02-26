@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -82,7 +83,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             CoinSymbol    = $Pool_CoinSymbol
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live
-            StablePrice   = $Stat.Week
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
             Host          = "$($Pool_Region).gos.cx"

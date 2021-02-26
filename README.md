@@ -793,7 +793,8 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 - **ShowWalletBalances** = set to 1 to let RainbowMiner fetch and show available wallet balances [default=1]
 - **WalletBalances** = enter list of which coin's wallets should be listed. Leave empty for all [default=]
 - **PoolDataWindow** = set global default for all pool data windows [default=estimate_current]
-- **PoolStatAverage** = set global default for all pool moving average price trend
+- **PoolStatAverage** = set global default for all pool moving average live price trend [default=Minute_10]
+- **PoolStatAverageStable** = set global default for all pool moving average stable price trend [default=Week]
 - **EnableErrorRatio** = Enable yiimp pool price auto-correction [default=1]
 - **MaxErrorRatio** = Maxium error ratio for yiimp pool price auto-correction [default=1.5]
 
@@ -1059,9 +1060,12 @@ Example:
     }
 
 
-#### Change a pool's moving average (stat average)
+#### Change a pool's moving average (stat average for live and stable price)
 
-The price pulled from the pool's API is being averaged down with a defined moving average trend line. The averaging time can be defined, using the parameter "StatAverage". It overrides the global default set by the config.txt parameter "PoolStatAverage".
+The price pulled from the pool's API is being averaged down with a defined moving average trend line.
+The averaging time can be defined:
+- for live price: using the parameter "StatAverage". It overrides the global default set by the config.txt parameter "PoolStatAverage" [default=Minute_10]
+- for stable price: using the parameter "StatAverageStabe". It overrides the global default set by the config.txt parameter "PoolStatAverageStable" [default=Week]
 
 Possible values are:
 - Live: the live price
@@ -1079,7 +1083,8 @@ Example:
         "Worker": "$WorkerName",
         "Penalty": "0",
         "DataWindow": "minimum3",
-        "StatAverage": "Hour"
+        "StatAverage": "Hour",
+        "StatAverageStable": "ThreeDay"
     }
 
 

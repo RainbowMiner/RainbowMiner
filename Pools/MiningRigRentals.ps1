@@ -11,6 +11,7 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$User = "",
     [String]$API_Key = "",
     [String]$API_Secret = "",
@@ -409,7 +410,7 @@ if ($AllRigs_Request) {
                         CoinSymbol    = $Pool_CoinSymbol
                         Currency      = $Pool_Currency
                         Price         = $Pool_Price
-                        StablePrice   = $Stat.Week
+                        StablePrice   = $Stat.$StatAverageStable
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = $Miner_Server

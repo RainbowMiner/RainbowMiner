@@ -8,7 +8,8 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_5",
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$Platform = ""
 )
 
@@ -97,7 +98,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                     CoinSymbol    = "$Pool_CoinSymbol"
                     Currency      = "BTC"
                     Price         = $Stat.$StatAverage
-                    StablePrice   = $Stat.Week
+                    StablePrice   = $Stat.$StatAverageStable
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = $Pool_Protocol
                     Host          = $This_Host

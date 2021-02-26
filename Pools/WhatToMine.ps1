@@ -3,7 +3,9 @@
 param(
     $Pools,
     [TimeSpan]$StatSpan,
-    [Bool]$InfoOnly = $false
+    [Bool]$InfoOnly = $false,
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -80,8 +82,8 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             CoinSymbol    = $Pool_Currency
-            Price         = $Stat.Minute_10 #instead of .Live
-            StablePrice   = $Stat.Week
+            Price         = $Stat.$StatAverage #instead of .Live
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Updated       = $Stat.Updated
         }
@@ -158,8 +160,8 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Request.coins
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinSymbol    = $Pool_Currency
-                Price         = $Stat.Minute_10 #instead of .Live
-                StablePrice   = $Stat.Week
+                Price         = $Stat.$StatAverage #instead of .Live
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Updated       = $Stat.Updated
             }
@@ -205,8 +207,8 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin} | Foreach-Object {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             CoinSymbol    = $Pool_Currency
-            Price         = $Stat.Minute_10 #instead of .Live
-            StablePrice   = $Stat.Week
+            Price         = $Stat.$StatAverage #instead of .Live
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Updated       = $Stat.Updated
         }

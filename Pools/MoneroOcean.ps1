@@ -8,7 +8,8 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_5",
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$Password = ""
 )
 
@@ -57,7 +58,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
             CoinSymbol    = $Pool_CoinSymbol
             Currency      = "XMR"
             Price         = $Stat.$StatAverage
-            StablePrice   = $Stat.Week
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = $Pool_Protocol
             Host          = "gulf.moneroocean.stream"

@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Pool_Currency  = "XMR"
@@ -107,7 +108,7 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$(if ($Pool_Region -eq "eu") {"pool"} else {$Pool_Region}).minexmr.com"

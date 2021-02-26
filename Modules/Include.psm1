@@ -5225,9 +5225,9 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools","WhatToMine")})
+            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools")})
             $Userpools = @()
             if ($UserpoolsPathToFile) {
                 $UserpoolsConfig = Get-ConfigContent $UserpoolsConfigName
@@ -5243,19 +5243,21 @@ function Set-PoolsConfigDefault {
                         $Setup_Content = $Preset.$Pool_Name
                     } else {
                         $Setup_Content = [PSCustomObject]@{}
-                        if ($Pool_Name -in $Userpools) {
-                            $Setup_Currencies = @($UserpoolsConfig | Where-Object {$_.Name -eq $Pool_Name} | Select-Object -ExpandProperty Currency -Unique)
-                            if (-not $Setup_Currencies) {$Setup_Currencies = @("BTC")}
-                        } else {
-                            $Setup_Currencies = @("BTC")
-                            if ($Setup.$Pool_Name) {
-                                if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
-                                $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
+                        if ($Pool_Name -ne "WhatToMine") {
+                            if ($Pool_Name -in $Userpools) {
+                                $Setup_Currencies = @($UserpoolsConfig | Where-Object {$_.Name -eq $Pool_Name} | Select-Object -ExpandProperty Currency -Unique)
+                                if (-not $Setup_Currencies) {$Setup_Currencies = @("BTC")}
+                            } else {
+                                $Setup_Currencies = @("BTC")
+                                if ($Setup.$Pool_Name) {
+                                    if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
+                                    $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
+                                }
                             }
-                        }
-                        $Setup_Currencies | Foreach-Object {
-                            $Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force
-                            $Setup_Content | Add-Member "$($_)-Params" "" -Force
+                            $Setup_Currencies | Foreach-Object {
+                                $Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force
+                                $Setup_Content | Add-Member "$($_)-Params" "" -Force
+                            }
                         }
                     }
                     if ($Setup.$Pool_Name.Fields -ne $null) {
