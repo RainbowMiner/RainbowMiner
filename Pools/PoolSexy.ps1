@@ -50,7 +50,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         
         try {
             $Pool_Request = Invoke-RestMethodAsync "http://mining-$($Pool_RpcPath).pool.sexy/api/stats" -tag $Name -cycletime 120
-            $Pool_RequestBlocks = Invoke-RestMethodAsync "http://mining-$($Pool_RpcPath).pool.sexy/api/blocks" -tag $Name -cycletime 120
+            $Pool_RequestBlocks = Invoke-RestMethodAsync "http://mining-$($Pool_RpcPath).pool.sexy/api/blocks" -tag $Name -cycletime 120 -fixbigint
             if ($Pool_Request.now) {$ok=$true}
         }
         catch {
