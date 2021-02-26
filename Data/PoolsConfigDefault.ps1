@@ -97,6 +97,9 @@
         "FairPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
+        "FlexPool" = [PSCustomObject]@{
+            Currencies=@("ETH")
+        }
         "FlyPool" = [PSCustomObject]@{
             Currencies=@("BEAM","YEC")
         }
