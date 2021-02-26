@@ -21,8 +21,7 @@ $Pool_PaymentsRequest = [PSCustomObject]@{}
 try {
     $Pool_BalanceRequest = Invoke-RestMethodAsync "https://flexpool.io/api/v1/miner/$($PoolConfig.$Pool_Currency)/balance" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
     $Pool_TotalRequest   = Invoke-RestMethodAsync "https://flexpool.io/api/v1/miner/$($PoolConfig.$Pool_Currency)/totalPaid" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
-    $Pool_PaymentsResult = Invoke-RestMethodAsync "https://flexpool.io/api/v1/miner/$($PoolConfig.$Pool_Currency)/payments?page=0" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
-    $ok = -not $Pool_BalanceRequest.error -and -not $Pool_TotalRequest.error -and -not $Pool_PaymentsResult.error
+    $ok = -not $Pool_BalanceRequest.error -and -not $Pool_TotalRequest.error
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -32,6 +31,23 @@ if (-not $ok) {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
     return
 }
+
+$Pool_PaymentsData = @()
+
+$page = 0
+do {
+    $ok = $false
+    try {
+        $Pool_PaymentsResult = Invoke-RestMethodAsync "https://flexpool.io/api/v1/miner/$($PoolConfig.$Pool_Currency)/payments?page=$($page)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
+        $ok = -not $Pool_PaymentsResult.error -and (++$page -lt $Pool_PaymentsResult.result.total_pages)
+        if (-not $Pool_PaymentsResult.error) {
+            $Pool_PaymentsResult.result.data | Foreach-Object {$Pool_PaymentsData += $_}
+        }
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+} until (-not $ok)
 
 $Pool_Divisor = 1e18
 
@@ -47,6 +63,8 @@ $Paid   = [Decimal]$Pool_TotalRequest.result / $Pool_Divisor
         Total       = $Unpaid
         Paid        = $Paid
         Earned      = $Unpaid + $Paid
-        Payouts     = @(Get-BalancesPayouts $Pool_PaymentsResult.result.data -Divisor $Pool_Divisor | Select-Object)
+        Payouts     = @(Get-BalancesPayouts $Pool_PaymentsData -Divisor $Pool_Divisor | Select-Object)
         LastUpdated = (Get-Date).ToUniversalTime()
 }
+
+$Pool_PaymentsData = $null

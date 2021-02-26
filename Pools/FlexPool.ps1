@@ -20,27 +20,6 @@ $Pool_User     = $Wallets.$Pool_Currency
 
 if (-not $Pool_User -and -not $InfoOnly) {return}
 
-$Pool_HashRate = [PSCustomObject]@{}
-$Pool_Workers  = [PSCustomObject]@{}
-$Pool_BlocksResult = [PSCustomObject]@{}
-
-$ok = $false
-try {
-    $Pool_HashRate = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/hashrate" -tag $Name -cycletime 120
-    $Pool_Workers = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/workersOnline" -tag $Name -cycletime 120
-    $Pool_BlocksResult = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/blocks?page=0" -retry 3 -retrywait 1000 -tag $Name -cycletime 180 -fixbigint
-    $ok = -not $Pool_HashRate.error -and -not $Pool_Workers.error -and -not $Pool_BlocksResult.error
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "$($_.Exception.Message)"
-}
-
-if (-not $ok) {
-    Write-Log -Level Warn "Pool API ($Name) has failed. "
-    return
-}
-
 $Pool_Regions = @("us-east","us-west","de","sg","au","br","in")
 
 [hashtable]$Pool_RegionsTable = @{}
@@ -54,10 +33,52 @@ $Pool_Coin = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
 if (-not $InfoOnly) {
-    $timestamp    = Get-UnixTimestamp
-    $timestamp24h = $timestamp - 24*3600
 
-    $blocks = @($Pool_BlocksResult.result.data | Where-Object {$_.timestamp -gt $timestamp24h} | Foreach-Object {$_.timestamp})
+    $Pool_HashRate = [PSCustomObject]@{}
+    $Pool_Workers  = [PSCustomObject]@{}
+
+    $ok = $false
+    try {
+        $Pool_HashRate = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/hashrate" -tag $Name -cycletime 120
+        $Pool_Workers = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/workersOnline" -tag $Name -cycletime 120
+        $ok = -not $Pool_HashRate.error -and -not $Pool_Workers.error
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "$($_.Exception.Message)"
+    }
+
+    if (-not $ok) {
+        Write-Log -Level Warn "Pool API ($Name) has failed. "
+        return
+    }
+
+    $blocks = @()
+
+    $page   = 0
+    $number = 0
+    do {
+        $ok = $false
+        try {
+            $Pool_BlocksResult = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/blocks?page=$($page)" -retry 3 -retrywait 1000 -tag $Name -cycletime 180 -fixbigint
+
+            $timestamp    = Get-UnixTimestamp
+            $timestamp24h = $timestamp - 24*3600
+
+            $ok = -not $Pool_BlocksResult.error -and (++$page -lt $Pool_BlocksResult.result.total_pages)
+            if (-not $Pool_BlocksResult.error) {
+                $Pool_BlocksResult.result.data | Where-Object {$_.number -lt $number -or -not $number} | Foreach-Object {
+                    if ($_.timestamp -gt $timestamp24h) {$blocks += $_.timestamp} else {$ok = $false}
+                    $number = $_.number
+                }
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    } until (-not $ok)
+
+    $timestamp    = Get-UnixTimestamp
 
     $blocks_measure = $blocks | Measure-Object -Minimum -Maximum
     $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
