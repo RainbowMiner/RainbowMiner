@@ -1786,7 +1786,7 @@ The profit switcher can be controlled like follows. To be able to compare the po
 - all prices will be decreased by a reverse exponential function, that will set hashrates into comparison to the maximum possible Algorithm+CoinSymbol hashrates
   _PfC_ = _PfC_ x ( 1 - (1 - (Hashrate/MaximumHashrate(Algorithm+CoinSymbol))^(**HashrateWeightStrength(%)**/100)) x (**HashrateWeight(%)**/100) )
 
-- if **MaxAllowedLuck** is set to a value greater than 0 (is floating point number, 1 equals to 100%, 1.2 equals to 120% etc.)
+- if **MaxAllowedLuck** is set to a value greater than 0 (floating point number, 1 equals to 100%, 1.2 equals to 120% ...)
   - with _Luck_ = _TimeSinceLast_/_TimeToFind_
   - _PfC_ = _PfC_ / (_Luck_ - **MaxAllowedLuck** + 1)
   - ![image](https://user-images.githubusercontent.com/39437538/94287435-9462e180-ff56-11ea-8457-4f075689b612.png)
