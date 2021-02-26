@@ -60,6 +60,7 @@ if (-not $InfoOnly) {
     do {
         $ok = $false
         try {
+            $Pool_BlocksResult  = [PSCustomObject]@{}
             $Pool_BlocksResult = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/blocks?page=$($page)" -retry 3 -retrywait 1000 -tag $Name -cycletime 180 -fixbigint
 
             $timestamp    = Get-UnixTimestamp
