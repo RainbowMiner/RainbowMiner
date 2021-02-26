@@ -29,7 +29,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "http://cortexmint.com/api/stats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
     if (-not $Pool_Request.now) {$ok = $false}
     else {
-        $Pool_BlocksRequest = Invoke-RestMethodAsync "http://cortexmint.com/api/blocks" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
+        $Pool_BlocksRequest = Invoke-RestMethodAsync "http://cortexmint.com/api/blocks" -tag $Name -retry 3 -retrywait 1000 -cycletime 120 -fixbigint
         if (-not $Pool_BlocksRequest.matured) {$ok = $false}
         #$Pool_NetworkRequest = Invoke-RestMethodAsync "https://cerebro.cortexlabs.ai/mysql?type=basicInfo" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
         #if ($Pool_NetworkRequest.status -ne "success") {$ok = $false}
