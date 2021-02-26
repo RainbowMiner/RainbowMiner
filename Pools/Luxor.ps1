@@ -24,7 +24,6 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ARRR";    port = 700; fee = 3.0; rpc = "arrr"}
-    [PSCustomObject]@{symbol = "XMR";     port = 700; fee = 2.0; rpc = "xmr"}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User -or $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
@@ -41,8 +40,8 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "http://mining.luxor.tech/api/$($Pool_Currency)/stats" -tag $Name -timeout 15 -cycletime 120
-            $Pool_Request_Blocks = Invoke-RestMethodAsync "http://mining.luxor.tech/api/$($Pool_Currency)/blocks" -tag $Name -timeout 15 -cycletime 120
+            $Pool_Request = Invoke-RestMethodAsync "https://mining.luxor.tech/api/$($Pool_Currency)/stats" -tag $Name -timeout 15 -cycletime 120
+            $Pool_Request_Blocks = Invoke-RestMethodAsync "https://mining.luxor.tech/api/$($Pool_Currency)/blocks" -tag $Name -timeout 15 -cycletime 120
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
