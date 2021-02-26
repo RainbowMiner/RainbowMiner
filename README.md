@@ -1786,12 +1786,14 @@ The profit switcher can be controlled like follows. To be able to compare the po
 - all prices will be decreased by a reverse exponential function, that will set hashrates into comparison to the maximum possible Algorithm+CoinSymbol hashrates
   _PfC_ = _PfC_ x ( 1 - (1 - (Hashrate/MaximumHashrate(Algorithm+CoinSymbol))^(**HashrateWeightStrength(%)**/100)) x (**HashrateWeight(%)**/100) )
 
-- if **MaxAllowedLuck** is set to a value greater than 0
-  - _PfC_ = _PfC_ / (PoolLuck - **MaxAllowedLuck** + 1)
-  - ![image](https://user-images.githubusercontent.com/39437538/94273131-480ea600-ff44-11ea-8428-7b1d7880351c.png)
+- if **MaxAllowedLuck** is set to a value greater than 0 (is floating point number, 1 equals to 100%, 1.2 equals to 120% etc.)
+  - with _Luck_ = _TimeSinceLast_/_TimeToFind_
+  - _PfC_ = _PfC_ / (_Luck_ - **MaxAllowedLuck** + 1)
+  - ![image](https://user-images.githubusercontent.com/39437538/94287435-9462e180-ff56-11ea-8457-4f075689b612.png)
 
-- if **MaxTimeSinceLastBlock** is greater than 0 and the pool's time since last block is greater than **MaxTimeSinceLastBlock**, the comparison price will be decreased:
-  - _PfC_ =  _PfC_ / ( (PoolTimeSinceLastBlock - **MaxTimeSinceLastBlock**)/3600 + 1 )
+- if **MaxTimeSinceLastBlock** is greater than 0 (in seconds) and the pool's time since last block is greater than **MaxTimeSinceLastBlock**, the comparison price will be decreased:
+  - _PfC_ =  _PfC_ / ( (_PoolTimeSinceLastBlock_ - **MaxTimeSinceLastBlock**)/3600 + 1 )
+  - ![image](https://user-images.githubusercontent.com/39437538/94286009-be1b0900-ff54-11ea-9d3e-b3211b3c3ab1.png)
 
 - all prices will be decreased by an inverse logarithmic function, depending on how far a pool is out of sync (current-time minus last-price-or-hashrate-update time)
 
