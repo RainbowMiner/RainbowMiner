@@ -1764,13 +1764,16 @@ More info can be [found here](https://github.com/RainbowMiner/RainbowMiner#copy-
 #### The Profit Switcher Beast
 
 The profit switcher can be controlled like follows. To be able to compare the pools (a "pool" is basically each available PoolName+Algorithm+CoinSymbol), an internal comparison price is being calculated.
+- all available config parameters are marked as **bold** in the following
+
 - the profit switcher uses two different price moving averages:
-  - **Price**: live price, the moving average time defaults to 10 minutes. It can be changed for all pools in config.txt, with parameter **PoolStatAverage**, or per pool in pools.config.txt with parameter **StatAverage**
-  - **StablePrice**: stable price, the moving average time defaults to 1 week. It can be changed for all pools in config.txt, with parameter **PoolStatAverageStable**, or per pool in pools.config.txt with parameter **StatAverageStable**
+  - _Price_: live price, the moving average time defaults to 10 minutes. It can be changed for all pools in config.txt, with parameter **PoolStatAverage**, or per pool in pools.config.txt with parameter **StatAverage**
+  - _StablePrice_: stable price, the moving average time defaults to 1 week. It can be changed for all pools in config.txt, with parameter **PoolStatAverageStable**, or per pool in pools.config.txt with parameter **StatAverageStable**
+
 - PFC is the price for comparison. It starts at either the pool's StablePrice or Price:
   - StablePrice: if **EnableFastSwitching** is "0" (=disabled) and either **ForceStablePrice** is "1" (=enabled) or the pool isn't internally marked as PaysLive (like Nicehash is)
   - live Price: all other cases (especially NiceHash)
-- all available config parameters are marked as **bold**
+
 - if **EnableFastSwitching** is set to "0" (=disabled) in config.txt:
   - for Pools, that _aren't_ currently being mined, comparison prices will be _decreased_
     - PFC = PFC x ( 1 - ErrorMargin(%)/100 x DecayFactor(t) x **PoolAccuracyWeight(%)**/100 )
@@ -1779,12 +1782,16 @@ The profit switcher can be controlled like follows. To be able to compare the po
       - PFC = PFC x ( 1 + **SwitchingHysteresis(%)**/100 )
     - else if **PoolSwitchingHysteresis** is set in config.txt
       - PFC = PFC x ( 1 + **PoolSwitchingHysteresis(%)**/100 )
+
 - all prices will be decreased by a reverse exponential function, that will set hashrates into comparison to the maximum possible Algorithm+CoinSymbol hashrates
   PFC = PFC x ( 1 - (1 - (Hashrate/MaximumHashrate(Algorithm+CoinSymbol))^(**HashrateWeightStrength(%)**/100)) x (**HashrateWeight(%)**/100) )
+
 - if **MaxAllowedLuck** is set to a value greater than 0
   - PFC = PFC / (PoolLuck - **MaxAllowedLuck** + 1)
+
 - if **MaxTimeSinceLastBlock** is greater than 0 and the pool's time since last block is greater than **MaxTimeSinceLastBlock**, the comparison price will be decreased:
   - PFC =  PFC / ( (PoolTimeSinceLastBlock - **MaxTimeSinceLastBlock**)/3600 + 1 )
+
 - all prices will be decreased by an inverse logarithmic function, depending on how far a pool is out of sync (current-time minus last-price-or-hashrate-update time)
 
 
