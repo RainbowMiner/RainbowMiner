@@ -85,17 +85,28 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
         if (-not ($Pool_Ports | Where-Object {$_} | Measure-Object).Count) {$ok = $false}
     }
 
+
     if ($ok -and -not $InfoOnly) {
         $Pool_Fee = $Pool_Request.config.fee
 
-        $timestamp  = Get-UnixTimestamp
+        $timestamp = Get-UnixTimestamp
 
-        $Pool_StatFn = "$($Name)_$($_.symbol)_Profit"
-        $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
-        $Pool_Reward = "Live" #if ($dayData) {"Day"} else {"Live"}
-        $Pool_Data   = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -addBlockData
+        if ($Pool_Request.config.soloMiningPrefix -and $Wallets.$Pool_Currency -match "^$($Pool_Request.config.soloMiningPrefix)") {
+            $Pool_BlockField = "solo"
+            $Pool_Workers    = [int]$Pool_Request.pool.soloWorkers
+            $Pool_Hashrate   = [decimal]$Pool_Request.pool.soloHashrate
+            $Pool_TSL        = [int]($timestamp - ([decimal]$PooL_Request.pool.stats.lastSoloBlockFound/1000))
+        } else {
+            $Pool_BlockField = "blocks"
+            $Pool_Workers    = [int]$Pool_Request.pool.workers
+            $Pool_Hashrate   = [decimal]$Pool_Request.pool.hashrate
+            $Pool_TSL        = [int]($timestamp - ([decimal]$PooL_Request.pool.stats.lastBlockFound/1000))
+        }
 
-        $Stat = Set-Stat -Name $Pool_StatFn -Value ($Pool_Data.$Pool_Reward.reward/1e8) -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -HashRate $Pool_Data.$Pool_Reward.hashrate -BlockRate $Pool_Data.BLK -ChangeDetection $dayData -Quiet
+        $Pool_BLK = [int]($Pool_Request.charts.blocks.PSObject.Properties.Value | Select-Object -Last 2 | Foreach-Object {$_.$Pool_BlockField} | Measure-Object -Average).Average
+
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
@@ -112,9 +123,9 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                         CoinName      = $Pool_Coin.Name
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
-                        Price         = $Stat.$StatAverage #instead of .Live
-                        StablePrice   = $Stat.$StatAverageStable
-                        MarginOfError = $Stat.Week_Fluctuation
+                        Price         = 0
+                        StablePrice   = 0
+                        MarginOfError = 0
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = "$(if (-not $First) {"$($Pool_Region)."})$($Pool_HostPath).herominers.com"
                         Port          = if ($Pool_Port.CPU -ne $null) {$Pool_Port.CPU} else {$_.port}
@@ -125,10 +136,11 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                         SSL           = $Pool_SSL
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_Fee
-                        Workers       = $Pool_Data.Workers
+                        Workers       = $Pool_Workers
                         Hashrate      = $Stat.HashRate_Live
-                        TSL           = $Pool_Data.TSL
+                        TSL           = $Pool_TSL
                         BLK           = $Stat.BlockRate_Average
+                        WTM           = $true
                         EthMode       = $Pool_EthProxy
                         Name          = $Name
                         Penalty       = 0
