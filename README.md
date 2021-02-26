@@ -1770,27 +1770,27 @@ The profit switcher can be controlled like follows. To be able to compare the po
   - _StablePrice_: stable price, the moving average time defaults to 1 week. It can be changed for all pools in config.txt, with parameter **PoolStatAverageStable**, or per pool in pools.config.txt with parameter **StatAverageStable**
   - _Price_: live price, the moving average time defaults to 10 minutes. It can be changed for all pools in config.txt, with parameter **PoolStatAverage**, or per pool in pools.config.txt with parameter **StatAverage**
 
-- PFC is the price for comparison. It starts at either the pool's StablePrice or Price:
+- _PfC_ is the price for comparison. It starts at either the pool's StablePrice or Price:
   - _StablePrice_: if **EnableFastSwitching** is "0" (=disabled) and either **ForceStablePrice** is "1" (=enabled) or the pool isn't internally marked as PaysLive (like Nicehash is)
   - _Price_: all other cases (especially NiceHash)
 
 - if **EnableFastSwitching** is set to "0" (=disabled) in config.txt:
   - for Pools, that _aren't_ currently being mined, comparison prices will be _decreased_
-    - PFC = PFC x ( 1 - ErrorMargin(%)/100 x DecayFactor(t) x **PoolAccuracyWeight(%)**/100 )
+    - _PfC_ = _PfC_ x ( 1 - ErrorMargin(%)/100 x DecayFactor(t) x **PoolAccuracyWeight(%)**/100 )
   - for Pools, that _are_ currently being mined, comparison prices will be _increased_
     - if **SwitchingHysteresis** is set in pools.config.txt
-      - PFC = PFC x ( 1 + **SwitchingHysteresis(%)**/100 )
+      - _PfC_ = _PfC_ x ( 1 + **SwitchingHysteresis(%)**/100 )
     - else if **PoolSwitchingHysteresis** is set in config.txt
-      - PFC = PFC x ( 1 + **PoolSwitchingHysteresis(%)**/100 )
+      - _PfC_ = _PfC_ x ( 1 + **PoolSwitchingHysteresis(%)**/100 )
 
 - all prices will be decreased by a reverse exponential function, that will set hashrates into comparison to the maximum possible Algorithm+CoinSymbol hashrates
-  PFC = PFC x ( 1 - (1 - (Hashrate/MaximumHashrate(Algorithm+CoinSymbol))^(**HashrateWeightStrength(%)**/100)) x (**HashrateWeight(%)**/100) )
+  _PfC_ = _PfC_ x ( 1 - (1 - (Hashrate/MaximumHashrate(Algorithm+CoinSymbol))^(**HashrateWeightStrength(%)**/100)) x (**HashrateWeight(%)**/100) )
 
 - if **MaxAllowedLuck** is set to a value greater than 0
-  - PFC = PFC / (PoolLuck - **MaxAllowedLuck** + 1)
+  - _PfC_ = _PfC_ / (PoolLuck - **MaxAllowedLuck** + 1)
 
 - if **MaxTimeSinceLastBlock** is greater than 0 and the pool's time since last block is greater than **MaxTimeSinceLastBlock**, the comparison price will be decreased:
-  - PFC =  PFC / ( (PoolTimeSinceLastBlock - **MaxTimeSinceLastBlock**)/3600 + 1 )
+  - _PfC_ =  _PfC_ / ( (PoolTimeSinceLastBlock - **MaxTimeSinceLastBlock**)/3600 + 1 )
 
 - all prices will be decreased by an inverse logarithmic function, depending on how far a pool is out of sync (current-time minus last-price-or-hashrate-update time)
 
