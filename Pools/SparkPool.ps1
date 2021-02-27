@@ -25,7 +25,7 @@ $Pool_RegionsTable["asia"] = Get-Region "sea"
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/pool/stats?pool=SPARK_POOL_CN" -tag $Name -retry 5 -retrywait 250 -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/pool/stats" -tag $Name -retry 5 -retrywait 250 -cycletime 120
     if ($Pool_Request.code -ne 200) {throw}
 }
 catch {
