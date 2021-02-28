@@ -6061,9 +6061,9 @@ Param(
 
             try {
                 if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
-                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 } else {
-                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 }
 
                 $StatusCode = $Response.StatusCode
