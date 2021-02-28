@@ -160,8 +160,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Protocol      = "stratum+tcp"
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
-                User          = $Wallets.$Pool_ExCurrency
-                Pass          = "{workername:$Worker},c=$Pool_ExCurrency,mc=$Pool_Currency{diff:,sd=`$difficulty}$Pool_Params"
+                User          = "$($Wallets.$Pool_ExCurrency).{workername:$Worker}"
+                Pass          = "c=$Pool_ExCurrency,mc=$Pool_Currency{diff:,sd=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
