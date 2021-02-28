@@ -2595,6 +2595,7 @@ function Invoke-Exe {
             $out = $process.StandardOutput.ReadToEnd()
             $process.WaitForExit($WaitForExit*1000)>$null
             if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
+            $Global:LASTEXEEXITCODE = $process.ExitCode
         } else {
             if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
             if (Test-OCDaemon) {
@@ -6026,7 +6027,6 @@ Param(
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
     if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
-    if (-not $headers_local.ContainsKey("Connection"))    {$headers_local["Connection"]    = "close"}
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
     if ($AsJob) {
