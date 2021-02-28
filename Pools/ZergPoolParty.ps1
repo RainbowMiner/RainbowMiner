@@ -111,7 +111,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                Pass          = "c=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params"
+                Pass          = "ID={workername:$Worker},c=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
