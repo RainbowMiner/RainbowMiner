@@ -3032,7 +3032,7 @@ function Get-Device {
                         $Index++
                         if ($Vendor_Name -in @("NVIDIA","AMD")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                         if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
-                            $Device.BusId = $Matches[1]
+                            $Device.BusId = [int]"0x$($Matches[1])"
                         }
                         if ($IsWindows) {
                             $Global:WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
