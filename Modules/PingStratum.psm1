@@ -77,7 +77,7 @@ param(
                 if ($Result.id -eq 1 -and -not $Result.error) {$true}
             }
         } else {
-            Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet -WriteOnly > $null
+            Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet > $null
             $true
         }
     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
