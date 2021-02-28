@@ -2832,7 +2832,7 @@ function Get-Device {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "WDDM device detection has failed. "
             }
-            $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object -Property BusId)
+            $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"})
         }
 
         [System.Collections.Generic.List[string]]$AllPlatforms = @()
@@ -3031,8 +3031,8 @@ function Get-Device {
                         }
                         $Index++
                         if ($Vendor_Name -in @("NVIDIA","AMD")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
-                        if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+):[A-F0-9]+$") {
-                            $Device.BusId = [int]"0x$($Matches[1])"
+                        if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
+                            $Device.BusId = $Matches[1]
                         }
                         if ($IsWindows) {
                             $Global:WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
@@ -3110,7 +3110,7 @@ function Get-Device {
         #Roundup and add sort order by PCI busid
         $Index = 0
         $MineableIndex = 0
-        $Global:GlobalCachedDevices | Sort-Object BusId,Index | Foreach-Object {
+        $Global:GlobalCachedDevices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | Foreach-Object {
             $_.BusId_Index = $Index++
             $_.BusId_Mineable_Index = $MineableIndex
             if ($_.Vendor -in @("AMD","NVIDIA")) {$MineableIndex++}
