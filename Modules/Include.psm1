@@ -2648,7 +2648,7 @@ function Invoke-TcpRequest {
         $Writer.AutoFlush = $true
 
         if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
-        if (-not $WriteOnly -and $Stream.DataAvailable) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
+        if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -5937,6 +5937,209 @@ Param(
     $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
     $utf8 = new-object -TypeName System.Text.UTF8Encoding
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
+}
+
+function Invoke-GetUrlCurl {
+[cmdletbinding()]
+Param(   
+    [Parameter(Mandatory = $False)]   
+        [string]$url = "",
+    [Parameter(Mandatory = $False)]   
+        [string]$method = "REST",
+    [Parameter(Mandatory = $False)]   
+        [string]$requestmethod = "",
+    [Parameter(Mandatory = $False)]
+        [int]$timeout = 15,
+    [Parameter(Mandatory = $False)]
+        $body,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$headers,
+    [Parameter(Mandatory = $False)]
+        [string]$user = "",
+    [Parameter(Mandatory = $False)]
+        [string]$password = "",
+    [Parameter(Mandatory = $False)]
+        [string]$useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36",
+    [Parameter(Mandatory = $False)]
+        [bool]$fixbigint = $false,
+    [Parameter(Mandatory = $False)]
+        $JobData,
+    [Parameter(Mandatory = $False)]
+        [string]$JobKey = "",
+    [Parameter(Mandatory = $False)]
+        [switch]$ForceLocal,
+    [Parameter(Mandatory = $False)]
+        [switch]$AsJob
+)
+    if ($JobKey -and $JobData) {
+        if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
+            $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                $serverbody = @{
+                    url       = $JobData.url
+                    method    = $JobData.method
+                    timeout   = $JobData.timeout
+                    body      = $JobData.body | ConvertTo-Json -Depth 10 -Compress
+                    headers   = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
+                    cycletime = $JobData.cycletime
+                    retry     = $JobData.retry
+                    retrywait = $JobData.retrywait
+                    delay     = $JobData.delay
+                    tag       = $JobData.tag
+                    user      = $JobData.user
+                    password  = $JobData.password
+                    fixbigint = $JobData.fixbigint
+                    jobkey    = $JobKey
+                    machinename = $Session.MachineName
+                    myip      = $Session.MyIP
+                }
+                #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Config.ServerName):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
+                $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
+                if ($Result.Status) {return $Result.Content}
+            }
+        }
+
+        $url      = $JobData.url
+        $method   = $JobData.method
+        $timeout  = $JobData.timeout
+        $body     = $JobData.body
+        $headers  = $JobData.headers
+        $user     = $JobData.user
+        $password = $JobData.password
+        $fixbigint= $JobData.fixbigint
+    }
+
+    if ($url -match "^server://(.+)$") {
+        $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+        if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+            $url           = "http://$($Config.ServerName):$($Config.ServerPort)/$($Matches[1])"
+            $user          = $Config.ServerUser
+            $password      = $Config.ServerPassword
+        } else {
+            return
+        }
+    }
+
+    if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
+    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -replace "{unixtimestamp}",(Get-UnixTimestamp)
+
+    $headers_local = @{}
+    if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
+    if ($method -eq "REST" -and -not $headers_local.ContainsKey("Accept")) {$headers_local["Accept"] = "application/json"}
+    if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+    if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
+
+    $ErrorMessage = ''
+
+    if ($IsWindows) {
+        $StatusCode = $null
+
+        try {
+            $CurlHeaders = [String]::Join(" ",@($headers_local.GetEnumerator() | Sort-Object Name | Foreach-Object {"--header `"$($_.Name): $($_.Value)`""}))
+            $CurlBody    = ""
+            if ($body) {
+                if ($body -is [hashtable]) {
+                    $body = [String]::Join("&",@($body.GetEnumerator() | Sort-Object Name | Foreach-Object {"$($_.Name)=$(Get-UrlEncode $_.Value)"}))
+                }
+                $CurlBody = " -d `"$($body -replace '"','\"')`""
+            }
+            $Data = Invoke-Exe ".\Includes\curl\$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\curl.exe" -ArgumentList "-X $($requestmethod)$($CurlBody) `"$($url)`" $($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q" -WaitForExit $Timeout
+            if ($Global:LASTEXEEXITCODE -eq 0) {
+                if ($method -eq "REST") {
+                    if ($fixbigint) {
+                        try {
+                            $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    }
+                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                }
+                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+            } else {
+                $ErrorMessage = "$($url): Curl-Error $($Global:LASTEXEEXITCODE)"
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $ErrorMessage = "$($_.Exception.Message)"
+        }
+
+    } else {
+
+        if ($Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
+            $StatusCode = $null
+            $Data       = $null
+
+            $oldProgressPreference = $null
+            if ($Global:ProgressPreference -ne "SilentlyContinue") {
+                $oldProgressPreference = $Global:ProgressPreference
+                $Global:ProgressPreference = "SilentlyContinue"
+            }
+
+            try {
+                if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                }
+
+                $StatusCode = $Response.StatusCode
+
+                if ($StatusCode -match "^2\d\d$") {
+                    $Data = $Response.Content
+                    if ($method -eq "REST") {
+                        if ($fixbigint) {
+                            try {
+                                $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        }
+                        try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    }
+                    if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+                }
+
+                if ($Response) {
+                    $Response = $null
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ErrorMessage = "$($_.Exception.Message)"
+            }
+
+            if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
+            if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
+                if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
+                    if ($StatusCodeObject.Type -ne "Success") {
+                        $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                    }
+                } else {
+                    $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                }
+            }
+        } else {
+            try {
+                $ServicePoint = $null
+                if ($method -eq "REST") {
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
+                    $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $oldProgressPreference = $Global:ProgressPreference
+                    $Global:ProgressPreference = "SilentlyContinue"
+                    $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                    $Global:ProgressPreference = $oldProgressPreference
+                }
+                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ErrorMessage = "$($_.Exception.Message)"
+            } finally {
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                $ServicePoint = $null
+            }
+        }
+    }
+
+    if ($ErrorMessage -eq '') {$Data}
+    if ($ErrorMessage -ne '') {throw $ErrorMessage}
 }
 
 function Invoke-GetUrl {
