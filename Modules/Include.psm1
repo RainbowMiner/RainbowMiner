@@ -2639,7 +2639,7 @@ function Invoke-TcpRequest {
     #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
         $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
-        $Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
+        #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
         $Stream = $Client.GetStream()
         $Writer = [System.IO.StreamWriter]::new($Stream)
         if (-not $WriteOnly) {$Reader = [System.IO.StreamReader]::new($Stream)}
