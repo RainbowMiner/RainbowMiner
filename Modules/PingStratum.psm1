@@ -13,7 +13,6 @@
         [Switch]$WriteOnly
     )
     $Response = $null
-    if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     try {
         $Client = [System.Net.Sockets.TcpClient]::new()
         #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
@@ -35,7 +34,6 @@
         if ($Reader) {$Reader.Dispose()}
         if ($Writer) {$Writer.Dispose()}
         if ($Stream) {$Stream.Dispose()}
-
     }
 
     $Response

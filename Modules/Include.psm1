@@ -2636,7 +2636,6 @@ function Invoke-TcpRequest {
     )
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
-    #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
         $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
         #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
@@ -2648,7 +2647,7 @@ function Invoke-TcpRequest {
         $Writer.AutoFlush = $true
 
         if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
-        if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
+        if (-not $WriteOnly -and $Stream.DataAvailable) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -6062,9 +6061,9 @@ Param(
 
             try {
                 if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
-                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 } else {
-                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 }
 
                 $StatusCode = $Response.StatusCode
