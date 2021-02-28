@@ -2638,10 +2638,11 @@ function Invoke-TcpRequest {
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
-        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
+        $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
+        $Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
         $Stream = $Client.GetStream()
-        $Writer = New-Object System.IO.StreamWriter $Stream
-        if (-not $WriteOnly) {$Reader = New-Object System.IO.StreamReader $Stream}
+        $Writer = [System.IO.StreamWriter]::new($Stream)
+        if (-not $WriteOnly) {$Reader = [System.IO.StreamReader]::new($Stream)}
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
@@ -2654,10 +2655,10 @@ function Invoke-TcpRequest {
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not request from $($Server):$($Port)"
     }
     finally {
-        if ($Reader) {$Reader.Close();$Reader.Dispose()}
-        if ($Writer) {$Writer.Close();$Writer.Dispose()}
-        if ($Stream) {$Stream.Close();$Stream.Dispose()}
         if ($Client) {$Client.Close();$Client.Dispose()}
+        if ($Reader) {$Reader.Dispose()}
+        if ($Writer) {$Writer.Dispose()}
+        if ($Stream) {$Stream.Dispose()}
     }
 
     $Response
@@ -2679,9 +2680,9 @@ function Invoke-TcpRead {
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
-        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
+        $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
         $Stream = $Client.GetStream()
-        $Reader = New-Object System.IO.StreamReader $Stream
+        $Reader = [System.IO.StreamReader]::new($Stream)
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Response = $Reader.ReadToEnd()
@@ -2691,9 +2692,9 @@ function Invoke-TcpRead {
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not read from $($Server):$($Port)"
     }
     finally {
-        if ($Reader) {$Reader.Close();$Reader.Dispose()}
-        if ($Stream) {$Stream.Close();$Stream.Dispose()}
         if ($Client) {$Client.Close();$Client.Dispose()}
+        if ($Reader) {$Reader.Dispose()}
+        if ($Stream) {$Stream.Dispose()}
     }
 
     $Response
@@ -6026,6 +6027,7 @@ Param(
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
     if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+    if (-not $headers_local.ContainsKey("Connection"))    {$headers_local["Connection"]    = "close"}
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
     if ($AsJob) {

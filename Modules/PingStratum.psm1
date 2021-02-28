@@ -10,36 +10,32 @@
         [Parameter(Mandatory = $false)]
         [Int]$Timeout = 10, #seconds,
         [Parameter(Mandatory = $false)]
-        [Switch]$DoNotSendNewline,
-        [Parameter(Mandatory = $false)]
-        [Switch]$Quiet,
-        [Parameter(Mandatory = $false)]
-        [Switch]$WriteOnly,
-        [Parameter(Mandatory = $false)]
-        [Switch]$ReadToEnd
+        [Switch]$WriteOnly
     )
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     try {
-        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
+        $Client = [System.Net.Sockets.TcpClient]::new()
+        $Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
+        $Client.Connect($Server, $Port)
         $Stream = $Client.GetStream()
-        $Writer = New-Object System.IO.StreamWriter $Stream
-        if (-not $WriteOnly) {$Reader = New-Object System.IO.StreamReader $Stream}
+        $Writer = [System.IO.StreamWriter]::new($Stream)
+        if (-not $WriteOnly) {$Reader = [System.IO.StreamReader]::new($Stream)}
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
-
-        if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
-        if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
+        if ($Request) {$Writer.WriteLine($Request)}
+        if (-not $WriteOnly -and $Stream.DataAvailable) {$Response = $Reader.ReadLine()}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
     }
     finally {
-        if ($Reader) {$Reader.Close();$Reader.Dispose()}
-        if ($Writer) {$Writer.Close();$Writer.Dispose()}
-        if ($Stream) {$Stream.Close();$Stream.Dispose()}
         if ($Client) {$Client.Close();$Client.Dispose()}
+        if ($Reader) {$Reader.Dispose()}
+        if ($Writer) {$Writer.Dispose()}
+        if ($Stream) {$Stream.Dispose()}
+
     }
 
     $Response
@@ -77,7 +73,7 @@ param(
                 if ($Result.id -eq 1 -and -not $Result.error) {$true}
             }
         } else {
-            Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet > $null
+            Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -WriteOnly > $null
             $true
         }
     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
