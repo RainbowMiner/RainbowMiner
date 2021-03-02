@@ -6046,14 +6046,19 @@ Param(
             if ($body -and ($body -isnot [hashtable] -or $body.Count)) {
                 if ($body -is [hashtable]) {
                     $out = [ordered]@{}
-                    $body.GetEnumerator() | Sort-Object Name | Foreach-Object {
-                        $out[$_.Name] = if ($_.Value -is [object] -and $_.Value.FullName) {"@$($_.Value.FullName)"} else {$_.Value -replace '"','\"'}
+                    if (($body.GetEnumerator() | Where-Object {$_.Value -is [object] -and $_.Value.FullName} | Measure-Object).Count) {
+                        $body.GetEnumerator() | Sort-Object Name | Foreach-Object {
+                            $out[$_.Name] = if ($_.Value -is [object] -and $_.Value.FullName) {"@$($_.Value.FullName)"} else {$_.Value -replace '"','\"'}
+                        }
+                        $outcmd = if ($requestmethod -eq "GET") {"-d"} else {"-F"}
+                        $CurlBody = [String]::Join(" ",@($out.GetEnumerator() | Foreach-Object {"$($outcmd) `"$($_.Name)=$($_.Value)`""}))
+                        $CurlBody = "$CurlBody "
+                    } else {
+                        $body = [String]::Join('&',($body.GetEnumerator() | Sort-Object Name | Foreach-Object {"$($_.Name)=$([System.Web.HttpUtility]::UrlEncode($_.Value))"}))
                     }
-                    $outcmd = if ($requestmethod -eq "GET") {"-d"} else {"-F"}
-                    $CurlBody = [String]::Join(" ",@($out.GetEnumerator() | Foreach-Object {"$($outcmd) `"$($_.Name)=$($_.Value)`""}))
-                    $CurlBody = "$CurlBody "
-                } else {
-                    if ($body.Length -gt 16384) {
+                } 
+                if ($body -isnot [hashtable]) {
+                    if ($body.Length -gt 30000) {
                         $TmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "$([System.Guid]::NewGuid()).txt"
                         Set-Content -Value $body -Path $TmpFile
                         $body = "@$($TmpFile)"
@@ -6064,7 +6069,7 @@ Param(
 
             $Data = (Invoke-Exe $Session.Curl -ArgumentList "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`"" -WaitForExit $Timeout) -split "#~#"
 
-            Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q `"#~#%{response_code}`""
+            Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
 
             if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^2\d\d") {
                 $Data = if ($Data.Count -eq 2) {$Data[0]} else {$Data[0..($Data.Count-2)] -join '#~#'}
