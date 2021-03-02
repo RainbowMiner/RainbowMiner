@@ -276,9 +276,10 @@ function Start-Core {
     }
 
     if ($Session.Curl) {
-        Write-Host "ok" -ForegroundColor Green
-        Write-Log -Level Info "Curl found: $($Session.Curl)"
-        if (-not (Test-Path ".\curl.txt")) {$Session.Curl = $false}
+        $IsCurl = if (Test-Path ".\curl.txt") {"enabled"} else {"disabled"}
+        Write-Host "ok ($($IsCurl))" -ForegroundColor Green
+        Write-Log -Level Info "Curl $($IsCurl): $($Session.Curl)"
+        if ($IsCurl -ne "enabled") {$Session.Curl = $false}
     } else {
         Write-Host "not found" -ForegroundColor Red
     }
