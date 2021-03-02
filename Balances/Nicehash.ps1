@@ -16,7 +16,7 @@ $Request_Balance = [PSCustomObject]@{}
 
 if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.OrganizationID) {
     try {
-        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
+        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -params @{extendedResponse = "true"}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}

@@ -39,7 +39,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $WebRequest = (Invoke-WebRequestAsync "https://6block.com/en" -tag $Name -timeout 15 -cycletime 120).Content
+            $WebRequest = Invoke-WebRequestAsync "https://6block.com/en" -tag $Name -timeout 15 -cycletime 120
             $WebParams = if ($WebRequest -match "}}\(([^\)]+)\)") {$Matches[1] -split ',' | Foreach-Object {$_  -replace '^"' -replace '"$'}} else {@()}
             $WebIndex  = New-Object System.Collections.Hashtable
             if ($WebRequest -match "function\((a,b,c,[^\)]+)\)") {$i=0;$Matches[1] -split ',' | Foreach-Object {$WebIndex["$_"] = $i;$i++}}
