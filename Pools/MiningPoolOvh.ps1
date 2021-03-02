@@ -43,7 +43,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         try {
             $Network_Request = Invoke-RestMethodAsync "https://veriumstats.vericoin.info/stats.json" -tag "veriumstats" -timeout 15 -cycletime 120
-            $Pool_Request = ((Invoke-RestMethodAsync "https://www.mining-pool.ovh/index.php?page=statistics&action=pool" -tag $Name -timeout 15 -cycletime 120) -split 'General Statistics' | Select-Object -Last 1) -split '</table>' | Select-Object -First 1
+            $Pool_Request = ((Invoke-WebRequestAsync "https://www.mining-pool.ovh/index.php?page=statistics&action=pool" -tag $Name -timeout 15 -cycletime 120).Content -split 'General Statistics' | Select-Object -Last 1) -split '</table>' | Select-Object -First 1
             ([regex]'(?si)id="b-(\w+)".*?>[\s\r\n]*([\d.,]+)(.*?)</td>').Matches($Pool_Request) | Foreach-Object {
                 $match = $_
                 Switch ($match.Groups[1].value) {
