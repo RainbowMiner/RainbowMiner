@@ -41,7 +41,6 @@ $Pools_Data = [PSCustomObject]@{
     "CRP"   = [PSCustomObject]@{port = 3335; region = $Pool_Regions}
     "CURVE" = [PSCustomObject]@{port = 7058; region = $Pool_Regions}
     "DMS"   = [PSCustomObject]@{port = 7047; region = $Pool_Regions}
-    "GLEEC" = [PSCustomObject]@{port = 7051; region = $Pool_Regions}
     "GOLD"  = [PSCustomObject]@{port = 7057; region = $Pool_Regions}
     "GXX"   = [PSCustomObject]@{port = 7025; region = $Pool_Regions}
     "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
@@ -50,10 +49,10 @@ $Pools_Data = [PSCustomObject]@{
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
-    "NOON"  = [PSCustomObject]@{port = 7063; region = $Pool_Regions}
     "PYRK"  = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
     "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
+    "RTM"   = [PSCustomObject]@{port = 7056; region = $Pool_Regions}
     "SPLD"  = [PSCustomObject]@{port = 7028; region = $Pool_Regions}
     "SPRX"  = [PSCustomObject]@{port = 7052; region = $Pool_Regions}
     "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
