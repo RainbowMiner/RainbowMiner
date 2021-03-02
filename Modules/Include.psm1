@@ -5967,9 +5967,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$JobKey = "",
     [Parameter(Mandatory = $False)]
-        [switch]$ForceLocal,
-    [Parameter(Mandatory = $False)]
-        [switch]$AsJob
+        [switch]$ForceLocal
 )
     if ($JobKey -and $JobData) {
         if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
@@ -6063,9 +6061,13 @@ Param(
                     $CurlBody = "-d `"$($body -replace '"','\"')`" "
                 }
             }
-            $Data = Invoke-Exe $Session.Curl -ArgumentList "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q" -WaitForExit $Timeout
-            Write-Log -Level Info "CURL $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q"
-            if ($Global:LASTEXEEXITCODE -eq 0) {
+
+            $Data = (Invoke-Exe $Session.Curl -ArgumentList "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`"" -WaitForExit $Timeout) -split "#~#"
+
+            Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q `"#~#%{response_code}`""
+
+            if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^2\d\d") {
+                $Data = if ($Data.Count -eq 2) {$Data[0]} else {$Data[0..($Data.Count-2)] -join '#~#'}
                 if ($method -eq "REST") {
                     if ($fixbigint) {
                         try {
@@ -6076,7 +6078,7 @@ Param(
                 }
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
             } else {
-                $ErrorMessage = "Curl-Error $($Global:LASTEXEEXITCODE)"
+                $ErrorMessage = "cURL $($Global:LASTEXEEXITCODE) / $(if ($Data -and $Data.Count -gt 1){"HTTP $($Data[-1])"} else {"Timeout after $($timeout)s"})"
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
