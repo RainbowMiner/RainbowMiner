@@ -1025,6 +1025,10 @@ try {
         $AddAlgorithm += @("Autolykos2","VertHash")
     }
 
+    if ($Version -le (Get-Version "4.6.9.6")) {
+        $AddAlgorithm += @("Take2")
+    }
+
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
 
