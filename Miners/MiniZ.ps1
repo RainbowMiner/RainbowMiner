@@ -35,7 +35,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                  MinMemGB = 5; Params = "--par=beam3";    ExtendInterval = 3; AutoPers = $false; Fee = $DevFee} #BeamHash3 (BEAM)
     #[PSCustomObject]@{MainAlgorithm = "EtcHash";       DAG = $true; MinMemGB = 2; Params = "--par=etchash";  ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Etchash (ETC)
-    [PSCustomObject]@{MainAlgorithm = "Ethash";        DAG = $true; MinMemGB = 2; Params = "--par=ethash";   ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Ethash (ETH)
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";        DAG = $true; MinMemGB = 2; Params = "--par=ethash";   ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";               MinMemGB = 1; Params = "--par=96,5";     ExtendInterval = 2; AutoPers = $true;  Fee = $DevFee} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";               MinMemGB = 2; Params = "--par=144,5";    ExtendInterval = 2; AutoPers = $true;  Fee = $DevFee} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";               MinMemGB = 2; Params = "--par=192,7";    ExtendInterval = 2; AutoPers = $true;  Fee = $DevFee} #Equihash 192,7 
