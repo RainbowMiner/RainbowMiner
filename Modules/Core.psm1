@@ -278,7 +278,7 @@ function Start-Core {
     if ($Session.Curl) {
         Write-Host "ok" -ForegroundColor Green
         Write-Log -Level Info "Curl found: $($Session.Curl)"
-        if (-not $IsWindows) {$Session.Curl = $false}
+        if (-not $IsWindows -or -not (Test-Path ".\curl.txt")) {$Session.Curl = $false}
     } else {
         Write-Host "not found" -ForegroundColor Red
     }
