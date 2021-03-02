@@ -403,6 +403,8 @@ if ($AllRigs_Request) {
                     
                     $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
+                    $Rigs_UserSep   = if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
+
                     [PSCustomObject]@{
                         Algorithm     = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
 					    Algorithm0    = $Pool_Algorithm_Norm
@@ -415,7 +417,7 @@ if ($AllRigs_Request) {
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = $Miner_Server
                         Port          = $Miner_Port
-                        User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
+                        User          = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable."$($_.region)"
                         SSL           = $Pool_SSL
@@ -428,7 +430,7 @@ if ($AllRigs_Request) {
                                 Protocol = "stratum+tcp"
                                 Host     = $_
                                 Port     = if ($Miner_Port -match "^33\d\d$") {$Miner_Port} else {3333}
-                                User     = "$($User).$($Pool_RigId)"
+                                User     = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
                                 Pass     = "x"
                             }
                         })
