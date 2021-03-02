@@ -5939,7 +5939,7 @@ Param(
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
 }
 
-function Invoke-GetUrlCurl {
+function Invoke-GetUrl {
 [cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $False)]   
@@ -6032,19 +6032,39 @@ Param(
 
     $ErrorMessage = ''
 
-    if ($IsWindows) {
-        $StatusCode = $null
+    if ($Session.Curl) {
+
+        $TmpFile = $null
 
         try {
             $CurlHeaders = [String]::Join(" ",@($headers_local.GetEnumerator() | Sort-Object Name | Foreach-Object {"--header `"$($_.Name): $($_.Value)`""}))
             $CurlBody    = ""
-            if ($body) {
-                if ($body -is [hashtable]) {
-                    $body = [String]::Join("&",@($body.GetEnumerator() | Sort-Object Name | Foreach-Object {"$($_.Name)=$(Get-UrlEncode $_.Value)"}))
-                }
-                $CurlBody = " -d `"$($body -replace '"','\"')`""
+
+            if (($pos = $url.IndexOf('?')) -gt 0) {
+                $body = $url.Substring($pos+1)
+                $url  = $url.Substring(0,$pos)
             }
-            $Data = Invoke-Exe ".\Includes\curl\$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\curl.exe" -ArgumentList "-X $($requestmethod)$($CurlBody) `"$($url)`" $($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q" -WaitForExit $Timeout
+
+            if ($body -and ($body -isnot [hashtable] -or $body.Count)) {
+                if ($body -is [hashtable]) {
+                    $out = [ordered]@{}
+                    $body.GetEnumerator() | Sort-Object Name | Foreach-Object {
+                        $out[$_.Name] = if ($_.Value -is [object] -and $_.Value.FullName) {"@$($_.Value.FullName)"} else {$_.Value -replace '"','\"'}
+                    }
+                    $outcmd = if ($requestmethod -eq "GET") {"-d"} else {"-F"}
+                    $CurlBody = [String]::Join(" ",@($out.GetEnumerator() | Foreach-Object {"$($outcmd) `"$($_.Name)=$($_.Value)`""}))
+                    $CurlBody = "$CurlBody "
+                } else {
+                    if ($body.Length -gt 16384) {
+                        $TmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "$([System.Guid]::NewGuid()).txt"
+                        Set-Content -Value $body -Path $TmpFile
+                        $body = "@$($TmpFile)"
+                    }
+                    $CurlBody = "-d `"$($body -replace '"','\"')`" "
+                }
+            }
+            $Data = Invoke-Exe $Session.Curl -ArgumentList "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q" -WaitForExit $Timeout
+            Write-Log -Level Info "CURL $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q"
             if ($Global:LASTEXEEXITCODE -eq 0) {
                 if ($method -eq "REST") {
                     if ($fixbigint) {
@@ -6052,15 +6072,19 @@ Param(
                             $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
                         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                     }
-                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}; $method = "WEB"}
                 }
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
             } else {
-                $ErrorMessage = "$($url): Curl-Error $($Global:LASTEXEEXITCODE)"
+                $ErrorMessage = "Curl-Error $($Global:LASTEXEEXITCODE)"
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             $ErrorMessage = "$($_.Exception.Message)"
+        } finally {
+            if ($TmpFile -and (Test-Path $TmpFile)) {
+                Remove-Item $TmpFile -Force -ErrorAction Ignore
+            }
         }
 
     } else {
@@ -6076,10 +6100,19 @@ Param(
             }
 
             try {
+                $IsForm = $body -is [hashtable] -and ($body.GetEnumerator() | Where-Object {$_.Value -is [object] -and $_.Value.FullName} | Measure-Object).Count
                 if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
-                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    if ($IsForm) {
+                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                    } else {
+                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    }
                 } else {
-                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    if ($IsForm) {
+                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                    } else {
+                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    }
                 }
 
                 $StatusCode = $Response.StatusCode
@@ -6142,7 +6175,7 @@ Param(
     if ($ErrorMessage -ne '') {throw $ErrorMessage}
 }
 
-function Invoke-GetUrl {
+function Invoke-GetUrlOld {
 [cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $False)]   
