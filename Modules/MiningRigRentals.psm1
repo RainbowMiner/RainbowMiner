@@ -145,11 +145,11 @@ param(
                     "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10 -Compress;Break}
                     "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
                 }
-                #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
+                #Write-Log -Level Info "MiningRigRental call: $($endpoint) $($body)"
                 $Data = Invoke-GetUrl "$base$endpoint" -useragent $useragent -timeout $Timeout -headers $headers -requestmethod $method -body $body
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                $ErrorMessage = "MiningRigRental call: $($_.Exception.Message)"
+                $ErrorMessage = "$($_.Exception.Message)"
             }
 
             if ($ErrorMessage -ne '') {
