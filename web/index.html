@@ -3,7 +3,7 @@
     <h1 id="title" data-navbaractive="navdashboard" class="h2">Dashboard</h1>
 </div>
 
-<h3 id="h-miners" class="h-selector">Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a> <a href="#" id="lockminers" class="btn btn-primary">Lock / Unlock</a></h3>
+<h3 id="h-miners" class="h-selector">Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a> <a href="#" id="lockminers" class="btn btn-primary">Lock / Unlock</a> <a href="#" id="reboot" class="btn btn-danger">Reboot</a></h3>
 <table id="miners" class="table mb-4"
        data-toggle="table"
        data-url="/runningminers"
@@ -198,6 +198,19 @@ $(function () {
                 $("#lockminers").html(result ? "Unlock" : "Lock");
             }
         })
+    });
+
+    $("#reboot").click(function (event) {
+        event.stopPropagation()
+        if (confirm("Do you really want to reboot this machine?")) {
+            $.ajax({
+                url: '/reboot', success: function (result) {
+                    $('.modal-body').text(result);
+                    $('.modal-title').text('Reboot');
+                    $('#myModal').modal({ show: true });
+                }
+            })
+        }
     });
 
     $("#updatebalance").click(function (event) {

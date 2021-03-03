@@ -7664,6 +7664,27 @@ param(
     $Global:NHCache[$keystr].request
 }
 
+function Invoke-Reboot {
+    if ($IsLinux) {
+        if (Test-OCDaemon) {
+            Invoke-OCDaemon -Cmd "reboot" -Quiet > $null
+        } else {
+            Invoke-Exe -FilePath "reboot" -Runas > $null
+        }
+    } else {
+        try {
+            Restart-Computer -Force -ErrorAction Stop
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Restart-Computer command failed. Falling back to shutdown."
+            shutdown /r /f /t 10 /c "RainbowMiner scheduled restart" 2>$null
+            if ($LastExitCode -ne 0) {
+                throw "shutdown cannot reboot $($Session.MachineName) ($LastExitCode)"
+            }
+        }
+    }
+}
+
 function Get-WalletWithPaymentId {
     [CmdletBinding()]
     param (

@@ -3467,24 +3467,7 @@ function Invoke-Core {
     if ($Session.Config.EnableRestartComputer -and ($Session.RestartComputer -or $Session.Config.RestartComputerHours -gt 0 -and $Session.StartTimeCore.AddHours($Session.Config.RestartComputerHours) -le (Get-Date).ToUniversalTime())) {
         Write-Log -Level Warn "Restarting computer now."
         try {
-            if ($IsLinux) {
-                if (Test-OCDaemon) {
-                    Invoke-OCDaemon -Cmd "reboot" -Quiet > $null
-                } else {
-                    Invoke-Exe -FilePath "reboot" -Runas > $null
-                }
-            } else {
-                try {
-                    Restart-Computer -Force -ErrorAction Stop
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Info "Restart-Computer command failed. Falling back to shutdown."
-                    shutdown /r /f /t 10 /c "RainbowMiner scheduled restart" 2>$null
-                    if ($LastExitCode -ne 0) {
-                        throw "shutdown cannot reboot $($Session.MachineName) ($LastExitCode)"
-                    }
-                }
-            }
+            Invoke-Reboot
             $Session.Stopp = $Session.RestartComputer = $true
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
