@@ -3437,13 +3437,13 @@ function Start-Setup {
                         try {
                             Switch ($MRRSetupSteps[$MRRSetupStep]) {
                                 "workername" {
-                                    $MRR_Delete_WorkerName = Read-HostArray -Prompt "Select workernames for deletion ($(if ($MRR_Delete_WorkerName.Count) {"enter clear"} else {"leave empty"}) for all)" -Valid $Pool_Workers -Default $MRR_Delete_WorkerName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $MRR_Delete_WorkerName = Read-HostArray -Prompt "Select workernames for deletion ($(if ($MRR_Delete_WorkerName.Count) {"enter clear"} else {"leave empty"}) for all, wildcards allowed)" -Valid $Pool_Workers -Default $MRR_Delete_WorkerName -Characters "A-Z0-9\-_" -AllowWildcards | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "algorithm" {
                                     $Valid_Rigs = @($Pool_Rigs | Where-Object {-not $MRR_Delete_WorkerName.Count -or $_.description -match "\[($($MRR_Delete_WorkerName -join "|"))\]"} | Select-Object)
                                     $Valid_Algorithms = @($Valid_Rigs | Foreach-Object {Get-Algorithm $_.type} | Select-Object -Unique)
                                     $MRR_Delete_Algorithms = @($MRR_Delete_Algorithms | Where-Object {$Valid_Algorithms -contains "$(Get-Algorithm $_)"} | Select-Object)
-                                    $MRR_Delete_Algorithms = Read-HostArray -Prompt "Select algorithms for deletion ($(if ($MRR_Delete_Algorithms.Count) {"enter clear"} else {"leave empty"}) for all)" -Valid $Valid_Algorithms -Default $MRR_Delete_Algorithms | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $MRR_Delete_Algorithms = Read-HostArray -Prompt "Select algorithms for deletion ($(if ($MRR_Delete_Algorithms.Count) {"enter clear"} else {"leave empty"}) for all, wildcards allowed)" -Valid $Valid_Algorithms -Default $MRR_Delete_Algorithms -AllowWildcards | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "rigid" {
                                     $Valid_Rigs = @($Pool_Rigs | Where-Object {(-not $MRR_Delete_WorkerName.Count -or $_.description -match "\[($($MRR_Delete_WorkerName -join "|"))\]") -and (-not $MRR_Delete_Algorithms.Count -or $MRR_Delete_Algorithms -contains "$(Get-Algorithm $_.type)")} | Select-Object)

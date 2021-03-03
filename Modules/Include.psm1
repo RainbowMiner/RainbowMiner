@@ -4660,6 +4660,8 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Switch]$AllowDuplicates = $False,
         [Parameter(Mandatory = $False)]
+        [Switch]$AllowWildcards = $False,
+        [Parameter(Mandatory = $False)]
         [Array]$Controls = @("exit","cancel","back","save","done","<")
     )
     if ($Default.Count -eq 1 -and $Default[0] -match "[,;]") {[Array]$Default = @([regex]::split($Default[0].Trim(),"\s*[,;]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
@@ -4680,7 +4682,14 @@ function Read-HostArray {
                 $Result = $Matches[2]
             }
             if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
-            [Array]$Result = @($Result -replace "[^$($Characters),;]+","" -split "\s*[,;]+\s*" | Where-Object {$_ -ne ""} | Select-Object)
+            if ($AllowWildcards -and $Valid.Count) {
+                [Array]$Result = @($Result -replace "[^$($Characters)\*\?,;]+","" -split "\s*[,;]+\s*" | Where-Object {$_ -ne ""} | Foreach-Object {
+                    $m = $_
+                    if ($found = $Valid | Where-Object {$_ -like $m} | Select-Object) {$found} else {$m}
+                } | Select-Object)
+            } else {
+                [Array]$Result = @($Result -replace "[^$($Characters),;]+","" -split "\s*[,;]+\s*" | Where-Object {$_ -ne ""} | Select-Object)
+            }
             Switch ($Mode) {
                 "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object); break}
                 "-" {$Result = @($Default | Where-Object {$Result -inotcontains $_}); break}
