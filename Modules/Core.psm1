@@ -1847,7 +1847,7 @@ function Invoke-Core {
         if (($Pools_WTM | Measure-Object).Count) {
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading WhatToMine " -NoNewline}
             $start = Get-UnixTimestamp -Milliseconds
-            Get-PoolsContent "WhatToMine" -Parameters @{Pools = $Pools_WTM; StatSpan = $RoundSpan; InfoOnly = $false} | Foreach-Object {
+            Get-PoolsContent "WhatToMine" -Parameters @{Pools = $Pools_WTM; StatSpan = $RoundSpan; InfoOnly = $false; StatAverage = $UserConfig.Pools.WhatToMiner.StatAverage; StatAverageStable = $UserConfig.Pools.WhatToMiner.StatAverageStable} | Foreach-Object {
                 $Pool_WTM = $_
                 $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
                    $_.Price         = $Pool_WTM.Price * $_.PenaltyFactor
