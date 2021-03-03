@@ -2277,7 +2277,7 @@ function Stop-SubProcess {
                     $oldProgressPreference = $Global:ProgressPreference
                     $Global:ProgressPreference = "SilentlyContinue"
                     try {
-                        $Response = Invoke-WebRequest $ShutdownUrl -UseBasicParsing -TimeoutSec 20 -ErrorAction Stop
+                        $Response = Invoke-TcpRequest $ShutdownUrl -Timeout 20 -ErrorAction Stop -Quiet
                         #$Data = $Response | ConvertFrom-Json -ErrorAction Stop
 
                         $StopWatch.Reset()
@@ -2620,7 +2620,7 @@ function Invoke-TcpRequest {
     param(
         [Parameter(Mandatory = $true)]
         [String]$Server = "localhost", 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [String]$Port, 
         [Parameter(Mandatory = $false)]
         [String]$Request = "",
@@ -2638,6 +2638,11 @@ function Invoke-TcpRequest {
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     try {
+        if ($Server -match "^http") {
+            $Uri = [System.Uri]::New($Server)
+            $Server = $Uri.Host
+            $Port   = $Uri.Port
+        }
         $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
         #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
         $Stream = $Client.GetStream()
@@ -2647,12 +2652,28 @@ function Invoke-TcpRequest {
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
 
-        if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
-        if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
+        if ($Uri) {
+            $Writer.WriteLine("GET $($Uri.PathAndQuery) HTTP/1.1")
+            $Writer.WriteLine("Host: $($Uri.Host)")
+            $Writer.WriteLine("Connection: close")
+            $Writer.WriteLine("")
+            $Writer.WriteLine("")
+
+            if (-not $WriteOnly) {
+                $Response = "$($Reader.ReadToEnd())" -split "`r`n`r`n",2,"MultiLine"
+                if ($Response.Count -ne 2) {throw "empty response"}
+                if (-not ($HttpCheck = ([regex]"(?m)HTTP/[0-9\.]+\s+(\d{3}.*)").Match($Response[0]))) {throw "invalid response"}
+                if ($HttpCheck.Groups[1].Value -notmatch "^2") {throw $HttpCheck.Groups[1].Value}
+                $Response = [String]$Response[1]
+            }
+        } else {
+            if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
+            if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
+        }
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not request from $($Server):$($Port)"
+        Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "TCP request to $($Server):$($Port) failed: $($_.Exception.Message)"
     }
     finally {
         if ($Client) {$Client.Close();$Client.Dispose()}
