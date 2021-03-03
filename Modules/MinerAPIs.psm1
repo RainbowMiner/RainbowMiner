@@ -833,8 +833,7 @@ class BMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/v1/status/solver" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status/solver" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -843,8 +842,8 @@ class BMiner : Miner {
         }
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/v1/status/stratum" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data | Add-member stratums ($Response | ConvertFrom-Json -ErrorAction Stop).stratums
+            $Data2 = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/v1/status/stratum" -Timeout $Timeout
+            $Data | Add-member stratums $Data2.stratums
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -893,8 +892,7 @@ class Cast : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1123,8 +1121,7 @@ class Eminer : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/v1/stats" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/stats" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1164,8 +1161,7 @@ class EnemyZ : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/summary?gpuinfo=1" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary?gpuinfo=1" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1400,8 +1396,7 @@ class Fireice : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1441,7 +1436,7 @@ class Gminer : Miner {
         $Timeout = 10 #seconds
 
         $Request = ""
-        $Data = ""
+        $Response = ""
 
         $HashRate = [PSCustomObject]@{}
 
@@ -1547,8 +1542,7 @@ class GrinPro : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/status" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/status" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1617,8 +1611,7 @@ class Jceminer : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1663,8 +1656,7 @@ class Lol : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1873,8 +1865,7 @@ class NBminer : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/v1/status" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1976,8 +1967,7 @@ class NoncerPro : Miner {
         $HashRate   = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2014,8 +2004,7 @@ class Nqminer : Miner {
         $HashRate   = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2053,8 +2042,7 @@ class Prospector : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/v0/hashrates" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v0/hashrates" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2244,8 +2232,7 @@ class SrbMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2286,8 +2273,7 @@ class SrbMinerMulti : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
             $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
         }
         catch {
@@ -2410,8 +2396,7 @@ class Trex : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2645,8 +2630,7 @@ class Xmrig : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2795,8 +2779,7 @@ class Xmrig3 : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
