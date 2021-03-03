@@ -1483,7 +1483,7 @@ class Gminer : Miner {
             }
         }
 
-        $this.AddMinerData($Response,$HashRate,$null,$PowerDraw)
+        $this.AddMinerData("",$HashRate,$null,$PowerDraw)
 
         $this.CleanupMinerData()
     }
