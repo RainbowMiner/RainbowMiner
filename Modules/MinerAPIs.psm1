@@ -1447,7 +1447,7 @@ class Gminer : Miner {
 
         try {
             $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response.Content | ConvertFrom-Json -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
