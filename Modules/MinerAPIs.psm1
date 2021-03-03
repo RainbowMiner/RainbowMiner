@@ -1446,7 +1446,7 @@ class Gminer : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ErrorAction Stop
+            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ErrorAction Stop -Quiet
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
