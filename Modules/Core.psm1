@@ -256,11 +256,11 @@ function Start-Core {
         $Session.Curl = $null
         Write-Host "Checking for cURL .. " -NoNewline
         if ($IsWindows) {
-            if ($CurlCmd = Get-Command "curl.exe" -ErrorAction Ignore) {
-                $CurlPath = $CurlCmd.Source
-            } else {
+            #if ($CurlCmd = Get-Command "curl.exe" -ErrorAction Ignore) {
+            #    $CurlPath = $CurlCmd.Source
+            #} else {
                 $CurlPath = ".\Includes\curl\$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\curl.exe"
-            }
+            #}
         } else {
             if ($CurlCmd = Get-Command "curl" -ErrorAction Ignore) {
                 if ($CurlCmd.CommandType -eq "Application") {
