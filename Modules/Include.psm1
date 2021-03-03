@@ -6099,7 +6099,9 @@ Param(
 
             $Data = (Invoke-Exe $Session.Curl -ArgumentList "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`"" -WaitForExit $Timeout) -split "#~#"
 
-            Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+            if ($Session.LogLevel -eq "Debug") {
+                Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+            }
 
             if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^2\d\d") {
                 $Data = if ($Data.Count -eq 2) {$Data[0]} else {$Data[0..($Data.Count-2)] -join '#~#'}
