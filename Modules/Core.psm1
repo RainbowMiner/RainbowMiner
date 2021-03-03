@@ -181,9 +181,9 @@ function Start-Core {
         Write-Log -Level Error "VM detection failed: $($_.Exception.Message)"
     }
     if ($Session.IsVM) {
-        Write-Host "found, some miners will be excluded." -ForegroundColor Red
+        Write-Host "found (some miners will be excluded)" -ForegroundColor Red
     } else {
-        Write-Host "ok, not in a VM" -ForegroundColor Green
+        Write-Host "ok (not in a VM)" -ForegroundColor Green
     }
 
     if ($IsWindows -and $false) {
@@ -256,7 +256,11 @@ function Start-Core {
         $Session.Curl = $null
         Write-Host "Checking for cURL .. " -NoNewline
         if ($IsWindows) {
-            $CurlPath = ".\Includes\curl\$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\curl.exe"
+            if ($CurlCmd = Get-Command "curl.exe" -ErrorAction Ignore) {
+                $CurlPath = $CurlCmd.Source
+            } else {
+                $CurlPath = ".\Includes\curl\$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\curl.exe"
+            }
         } else {
             if ($CurlCmd = Get-Command "curl" -ErrorAction Ignore) {
                 if ($CurlCmd.CommandType -eq "Application") {
