@@ -2277,7 +2277,7 @@ function Stop-SubProcess {
                     $oldProgressPreference = $Global:ProgressPreference
                     $Global:ProgressPreference = "SilentlyContinue"
                     try {
-                        $Response = Invoke-TcpRequest $ShutdownUrl -Timeout 20 -ErrorAction Stop -Quiet
+                        $Response = Invoke-GetUrl $ShutdownUrl -Timeout 20 -ErrorAction Stop
                         #$Data = $Response | ConvertFrom-Json -ErrorAction Stop
 
                         $StopWatch.Reset()
@@ -2678,7 +2678,6 @@ function Invoke-TcpRequest {
             if (-not $HttpCheck) {throw "invalid response"}
             if ($HttpCheck -notmatch "^2") {throw $HttpCheck}
 
-            if (-not $closed) {$Writer.WriteLine("")}
             $Response = $Reader.ReadToEnd()
         } else {
             if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}

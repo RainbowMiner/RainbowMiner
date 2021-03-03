@@ -1441,13 +1441,12 @@ class Gminer : Miner {
         $Timeout = 10 #seconds
 
         $Request = ""
-        $Response = ""
+        $Data = ""
 
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stat" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
