@@ -2627,6 +2627,8 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $false)]
         [Int]$Timeout = 10, #seconds,
         [Parameter(Mandatory = $false)]
+        [hashtable]$Headers = @{},
+        [Parameter(Mandatory = $false)]
         [Switch]$DoNotSendNewline,
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet,
@@ -2647,25 +2649,37 @@ function Invoke-TcpRequest {
         #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
         $Stream = $Client.GetStream()
         $Writer = [System.IO.StreamWriter]::new($Stream)
-        if (-not $WriteOnly) {$Reader = [System.IO.StreamReader]::new($Stream)}
+        if (-not $WriteOnly -or $Uri) {$Reader = [System.IO.StreamReader]::new($Stream)}
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
 
         if ($Uri) {
+            $Writer.NewLine = "`r`n"
             $Writer.WriteLine("GET $($Uri.PathAndQuery) HTTP/1.1")
-            $Writer.WriteLine("Host: $($Uri.Host)")
+            $Writer.WriteLine("Host: $($Server):$($Port)")
+            $Writer.WriteLine("Cache-Control: no-cache")
+            if ($headers -and $headers.Keys) {
+                $headers.Keys | Foreach-Object {$Writer.WriteLine("$($_): $($headers[$_])")}
+            }
             $Writer.WriteLine("Connection: close")
             $Writer.WriteLine("")
-            $Writer.WriteLine("")
 
-            if (-not $WriteOnly) {
-                $Response = "$($Reader.ReadToEnd())" -split "`r`n`r`n",2,"MultiLine"
-                if ($Response.Count -ne 2) {throw "empty response"}
-                if (-not ($HttpCheck = ([regex]"(?m)HTTP/[0-9\.]+\s+(\d{3}.*)").Match($Response[0]))) {throw "invalid response"}
-                if ($HttpCheck.Groups[1].Value -notmatch "^2") {throw $HttpCheck.Groups[1].Value}
-                $Response = [String]$Response[1]
+            $cnt = 0
+            $closed = $false
+            while ($cnt -lt 20 -and -not $Reader.EndOfStream -and ($line = $Reader.ReadLine())) {
+                $line = $line.Trim()
+                if ($line -match "HTTP/[0-9\.]+\s+(\d{3}.*)") {$HttpCheck = $Matches[1]}
+                elseif ($line -match "Connection:\s+close") {$closed = $true}
+                $cnt++
             }
+
+            if ($line -eq $null) {throw "empty response"}
+            if (-not $HttpCheck) {throw "invalid response"}
+            if ($HttpCheck -notmatch "^2") {throw $HttpCheck}
+
+            if (-not $closed) {$Writer.WriteLine("")}
+            $Response = $Reader.ReadToEnd()
         } else {
             if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
             if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
