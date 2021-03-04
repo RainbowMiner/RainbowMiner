@@ -107,6 +107,8 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = $Algorithm_Norm_0
+                    MiningPriority = -2
+                    MiningAffinity = "0x1"
 				}
 			}
 		}
