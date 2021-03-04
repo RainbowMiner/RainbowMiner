@@ -3473,6 +3473,7 @@ function Invoke-Core {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Failed to restart computer: $($_.Exception.Message) on item $($_.Exception.ItemName)"
         }
+        $API.Reboot = $Session.RestartComputer = $false
     }
 
     if ($Session.IsBenchmarkingRun -and -not $Session.Benchmarking) {$Session.IsBenchmarkingRun = $false}

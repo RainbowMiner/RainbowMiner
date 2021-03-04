@@ -818,15 +818,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         "/reboot" {
             if ($Session.Config.EnableRestartComputer) {
                 try {
-                    if ($IsWindows) {
-                        Invoke-Reboot
-                    } else {
-                        $API.Reboot = $true
-                    }
+                    $API.Reboot = $true
+                    Invoke-Reboot
                     $Data = "Rebooting now!"
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
-                    $Data = "Failed to reboot, sorry!"
+                    $Data = if ($IsLinux) {"Rebooting in some moments"} else {"Failed to reboot, sorry!"}
                 }
             } else {
                 $Data = "Reboot is disabled. Set `"EnableRestartComputer`": `"1`" in config.txt to enable."

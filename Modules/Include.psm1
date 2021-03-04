@@ -7480,10 +7480,12 @@ param(
 
 function Invoke-Reboot {
     if ($IsLinux) {
-        if (Test-OCDaemon) {
+        if ((Get-Command "Test-OCDaemon" -ErrorAction Ignore) -and (Test-OCDaemon)) {
             Invoke-OCDaemon -Cmd "reboot" -Quiet > $null
+        } elseif (Test-IsElevated) {
+            Invoke-Exe -FilePath "reboot" -RunAs > $null
         } else {
-            Invoke-Exe -FilePath "reboot" -Runas > $null
+            throw "need to be root to reboot $($Session.MachineName)"
         }
     } else {
         try {
