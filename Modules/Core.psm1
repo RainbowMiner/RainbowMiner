@@ -1120,7 +1120,7 @@ function Invoke-Core {
                     ([ordered]@{
                         Enable        = Get-Yes $UPool.Enable
                         SSL           = Get-Yes $UPool.SSL
-                        PoolFee       = [double](ConvertTo-Float "$($Upool.PoolFee)")
+                        PoolFee       = [double]"$($Upool.PoolFee -replace ",","." -replace "[^\d\.]")"
                         Currency      = "$(if ($UPool.Currency) {$UPool.Currency} else {$UPool.CoinSymbol})".ToUpper()
                         CoinSymbol    = "$(if ($UPool.CoinSymbol) {$UPool.CoinSymbol} else {$UPool.Currency})".ToUpper()
                     }).GetEnumerator() | Foreach-Object {
