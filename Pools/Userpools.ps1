@@ -71,8 +71,8 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         HasMinerExclusions = $false
         Price_Bias    = 0.0
         Price_Unbias  = 0.0
-        Wallet        = $Pool_Wallet
-        Worker        = "{workername:$Worker}"
+        Wallet        = $Pool_Params["Wallet"]
+        Worker        = $Pool_Params["WorkerName"]
         Email         = $Email
     }
 }
