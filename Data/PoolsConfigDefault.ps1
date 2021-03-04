@@ -37,6 +37,8 @@
             Currencies=@("ETH","RVN")
         }
         "Binance" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{API_Key="";API_Secret="";EnableShowWallets="0"}
+            SetupFields=[PSCustomObject]@{API_Key = "Enter your Binance API key (adds balance)";API_Secret = "Enter your Binance API secret (pulls balance)";EnableShowWallets="List your Binance wallets (0=no, 1=yes)"}
             Currencies=@("ETH")
         }
         "BlazePool" = [PSCustomObject]@{

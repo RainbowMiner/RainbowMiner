@@ -6010,7 +6010,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$JobKey = "",
     [Parameter(Mandatory = $False)]
-        [switch]$ForceLocal
+        [switch]$ForceLocal,
+    [Parameter(Mandatory = $False)]
+        [switch]$NoExtraHeaderData
 )
     if ($JobKey -and $JobData) {
         if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
@@ -6067,8 +6069,10 @@ Param(
 
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
-    if ($method -eq "REST" -and -not $headers_local.ContainsKey("Accept")) {$headers_local["Accept"] = "application/json"}
-    if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+    if (-not $NoExtraHeaderData) {
+        if ($method -eq "REST" -and -not $headers_local.ContainsKey("Accept")) {$headers_local["Accept"] = "application/json"}
+        if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+    }
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
     $ErrorMessage = ''
@@ -6078,7 +6082,7 @@ Param(
         $TmpFile = $null
 
         try {
-            $CurlHeaders = [String]::Join(" ",@($headers_local.GetEnumerator() | Sort-Object Name | Foreach-Object {"--header `"$($_.Name): $($_.Value)`""}))
+            $CurlHeaders = [String]::Join(" ",@($headers_local.GetEnumerator() | Sort-Object Name | Foreach-Object {"-H `"$($_.Name): $($_.Value)`""}))
             $CurlBody    = ""
 
             if (($pos = $url.IndexOf('?')) -gt 0) {
@@ -6110,10 +6114,14 @@ Param(
                 }
             }
 
-            $Data = (Invoke-Exe $Session.Curl -ArgumentList "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`"" -WaitForExit $Timeout) -split "#~#"
+            if ($useragent -ne "") {$useragent = "-A `"$($useragent)`" "}
+
+            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)-m $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+
+            $Data = (Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit $Timeout) -split "#~#"
 
             if ($Session.LogLevel -eq "Debug") {
-                Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) --user-agent `"$($useragent)`" --max-time $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+                Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $($CurlCommand)"
             }
 
             if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^2\d\d") {
@@ -6141,18 +6149,32 @@ Param(
 
     } else {
 
+        $IsForm = $false
+
+        try {
+            if ($body -and ($body -isnot [hashtable] -or $body.Count)) {
+                if ($body -is [hashtable]) {
+                    $IsForm = ($body.GetEnumerator() | Where-Object {$_.Value -is [object] -and $_.Value.FullName} | Measure-Object).Count -gt 0
+                } elseif ($requestmethod -eq "GET") {
+                    $RequestUrl = "$($RequestUrl)$(if ($RequestUrl.IndexOf('?') -gt 0) {'&'} else {'?'})$body"
+                    $body = $null
+                }
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+
+        $oldProgressPreference = $null
+        if ($Global:ProgressPreference -ne "SilentlyContinue") {
+            $oldProgressPreference = $Global:ProgressPreference
+            $Global:ProgressPreference = "SilentlyContinue"
+        }
+
         if ($Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
             $StatusCode = $null
             $Data       = $null
 
-            $oldProgressPreference = $null
-            if ($Global:ProgressPreference -ne "SilentlyContinue") {
-                $oldProgressPreference = $Global:ProgressPreference
-                $Global:ProgressPreference = "SilentlyContinue"
-            }
-
             try {
-                $IsForm = $body -is [hashtable] -and ($body.GetEnumerator() | Where-Object {$_.Value -is [object] -and $_.Value.FullName} | Measure-Object).Count
                 if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
                     if ($IsForm) {
                         $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
@@ -6190,7 +6212,6 @@ Param(
                 $ErrorMessage = "$($_.Exception.Message)"
             }
 
-            if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
             if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
                 if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
                     if ($StatusCodeObject.Type -ne "Success") {
@@ -6207,10 +6228,7 @@ Param(
                     $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
                     $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 } else {
-                    $oldProgressPreference = $Global:ProgressPreference
-                    $Global:ProgressPreference = "SilentlyContinue"
                     $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-                    $Global:ProgressPreference = $oldProgressPreference
                 }
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
             } catch {
@@ -6221,6 +6239,8 @@ Param(
                 $ServicePoint = $null
             }
         }
+
+        if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
     }
 
     if ($ErrorMessage -eq '') {$Data}
@@ -6228,7 +6248,7 @@ Param(
 }
 
 function Invoke-RestMethodAsync {
-[cmdletbinding()]   
+[cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $True)]
         [string]$url,
@@ -7376,6 +7396,87 @@ param (
         for ($i=0; $i -lt $key.Length; $i+=32) {$s="$s$($key.Substring($i,8))-$($key.Substring($i+4,4))-$($key.Substring($i+8,4))-$($key.Substring($i+12,4))-$($key.Substring($i+16,12))"}
         $s
     }
+}
+
+function Invoke-BinanceRequest {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $True)]
+    [String]$endpoint,
+    [Parameter(Mandatory = $False)]
+    [String]$key,
+    [Parameter(Mandatory = $False)]
+    [String]$secret,
+    [Parameter(Mandatory = $False)]
+    $params = @{},
+    [Parameter(Mandatory = $False)]
+    [String]$method = "GET",
+    [Parameter(Mandatory = $False)]
+    [String]$base = "https://api.binance.com",
+    [Parameter(Mandatory = $False)]
+    [int]$Timeout = 15,
+    [Parameter(Mandatory = $False)]
+    [int]$Cache = 0,
+    [Parameter(Mandatory = $False)]
+    [switch]$ForceLocal
+)
+
+    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
+    if (-not (Test-Path Variable:Global:BinanceCache)) {$Global:BinanceCache = [hashtable]@{}}
+    if (-not $Cache -or -not $Global:BinanceCache[$keystr] -or -not $Global:BinanceCache[$keystr].request -or $Global:BinanceCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+
+        $Remote = $false
+
+        if (-not $ForceLocal) {
+            $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                $serverbody = @{
+                    endpoint  = $endpoint
+                    key       = $key
+                    secret    = $secret
+                    params    = $params | ConvertTo-Json -Depth 10 -Compress
+                    method    = $method
+                    base      = $base
+                    timeout   = $timeout
+                    machinename = $Session.MachineName
+                    workername  = $Config.Workername
+                    myip      = $Session.MyIP
+                }
+                try {
+                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                    if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Info "Binance server call: $($_.Exception.Message)"
+                }
+            }
+        }
+
+        if (-not $Remote -and $key -and $secret) {
+            $params["timestamp"] = Get-UnixTimestamp -Milliseconds
+            $paramstr = "$(($params.Keys | Sort-Object | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
+            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA256")
+            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
+            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${paramstr})))
+
+            $headers = [hashtable]@{
+                'X-MBX-APIKEY'  = $key
+            }
+            try {
+                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body "$($paramstr)&signature=$(($sign -replace '\-').ToLower())"
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                "Binance API call: $($_.Exception.Message)"
+                Write-Log -Level Info "Binance API call: $($_.Exception.Message)"
+            }
+        }
+
+        if (-not $Global:BinanceCache[$keystr] -or $Request) {
+            $Global:BinanceCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        }
+    }
+    $Global:BinanceCache[$keystr].request
 }
 
 function Invoke-NHRequest {

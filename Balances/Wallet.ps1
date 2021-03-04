@@ -127,3 +127,34 @@ foreach ($Wallet_Data in $Wallets_Data) {
         }
     }
 }
+
+#
+# Binance Wallets
+#
+
+if ($Config.Pools.Binance.EnableShowWallets -and $Config.Pools.Binance.API_Key -and $Config.Pools.Binance.API_Secret) {
+    $Request = @()
+    try {
+        $Request = Invoke-BinanceRequest "/sapi/v1/capital/config/getall" $Config.Pools.Binance.API_Key $Config.Pools.Binance.API_Secret | Where-Object {[decimal]$_.free -gt 0 -or [decimal]$_.locked -gt 0 -or [decimal]$_.freeze -gt 0}
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Verbose "Binance Wallet API has failed ($Name) "
+    }
+
+    $Request | Foreach-Object {
+        $Total_Free   = [decimal]$_.free
+        $Total_Locked = [decimal]$_.locked + [decimal]$_.freeze
+        [PSCustomObject]@{
+                Caption     = "$Name $($_.coin) (Binance)"
+		        BaseName    = $Name
+                Info        = " Binance"
+                Currency    = $_.coin
+                Balance     = $Total_Free
+                Pending     = $Total_Locked
+                Total       = $Total_Free + $Total_Locked
+                Payouts     = @()
+                LastUpdated = (Get-Date).ToUniversalTime()
+        }
+    }
+}

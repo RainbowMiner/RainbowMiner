@@ -1035,6 +1035,35 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             }
             break
         }
+        "/getbinance" {
+            if ($API.IsServer) {
+                $Status = $false
+                if ($Parameters.workername -and $Parameters.machinename) {
+                    $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                    if ($Client) {
+                        $Client.machineip = $Parameters.myip
+                        $Client.timestamp = Get-UnixTimestamp
+                    }
+                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                }
+                $Result = $null
+                try {
+                    if (-not $Parameters.key -and $Session.Config.Pools.Binance.API_Key  -and $Session.Config.Pools.Binance.API_Secret) {
+                        $Parameters | Add-Member key    $Session.Config.Pools.Binance.API_Key -Force
+                        $Parameters | Add-Member secret $Session.Config.Pools.Binance.API_Secret -Force
+                    }
+                    if ($Parameters.key -and $Parameters.secret) {
+                        $Params = [hashtable]@{}
+                        ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
+                        $Result = Invoke-BinanceRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30
+                        $Status = $true
+                    }
+                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
+                if ($Result -ne $null) {Remove-Variable "Result" -ErrorAction Ignore}
+            }
+            break
+        }
         "/getnh" {
             if ($API.IsServer) {
                 $Status = $false
@@ -1056,7 +1085,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     if ($Parameters.key -and $Parameters.secret -and $Parameters.orgid) {
                         $Params = [hashtable]@{}
                         ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
-                        $Result = Invoke-NHRequest $Parameters.endpoint $Parameters.key $Parameters.secret $Parameters.orgid -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
+                        $Result = Invoke-NHRequest $Parameters.endpoint $Parameters.key $Parameters.secret $Parameters.orgid -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30
                         $Status = $true
                     }
                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}
