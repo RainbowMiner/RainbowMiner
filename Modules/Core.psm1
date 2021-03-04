@@ -3465,10 +3465,10 @@ function Invoke-Core {
     }
 
     if ($Session.Config.EnableRestartComputer -and ($Session.RestartComputer -or $Session.Config.RestartComputerHours -gt 0 -and $Session.StartTimeCore.AddHours($Session.Config.RestartComputerHours) -le (Get-Date).ToUniversalTime())) {
-        Write-Log -Level Warn "Restarting computer now."
+        Write-Log -Level Warn "Restarting computer in 10 seconds."
+        1..10 | Foreach-Object {Start-Sleep -Seconds 1;Write-Log -Level Warn "$(10-$_)"}
         try {
             Invoke-Reboot
-            $Session.Stopp = $Session.RestartComputer = $true
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Failed to restart computer: $($_.Exception.Message) on item $($_.Exception.ItemName)"
