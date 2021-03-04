@@ -62,11 +62,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         SSL           = $_.SSL
         WTM           = $true
         Updated       = (Get-Date).ToUniversalTime()
-        Workers       = $null
         PoolFee       = $_.PoolFee
-        Hashrate      = $null
-        TSL           = $null
-        BLK           = $null
         EthMode       = "$(if ($_.EthMode) {$_.EthMode} else {$Pool_EthProxy})"
         Name          = $Name
         Penalty       = 0
