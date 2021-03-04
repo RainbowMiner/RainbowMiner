@@ -3941,24 +3941,26 @@ function Invoke-ReportMinerStatus {
 
     # Create crash alerts
     $CrashData = $null
-    try {
-        ConvertTo-Json @($Global:CrashCounter | Foreach-Object {[PSCustomObject]@{
-            Timestamp      = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.TimeStamp
-            Start          = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.Start
-            End            = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.End
-            Runtime        = $_.Runtime
-            Name           = $_.Name
-            Device         = $_.Device
-            Algorithm      = $_.Algorithm
-            Pool           = $_.Pool
-        }}) -Depth 10 -Compress | Set-Content ".\Data\crashdata.json"
-        if (Test-Path ".\Data\crashdata.json") {
-            $CrashData = Get-Item ".\Data\crashdata.json"
-            if ($CrashData.Length -le 4) {$CrashData = $null}
+    if ($Session.IsCore -or $Session.Curl) {
+        try {
+            ConvertTo-Json @($Global:CrashCounter | Foreach-Object {[PSCustomObject]@{
+                Timestamp      = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.TimeStamp
+                Start          = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.Start
+                End            = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.End
+                Runtime        = $_.Runtime
+                Name           = $_.Name
+                Device         = $_.Device
+                Algorithm      = $_.Algorithm
+                Pool           = $_.Pool
+            }}) -Depth 10 -Compress | Set-Content ".\Data\crashdata.json"
+            if (Test-Path ".\Data\crashdata.json") {
+                $CrashData = Get-Item ".\Data\crashdata.json"
+                if ($CrashData.Length -le 4) {$CrashData = $null}
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Miner Status $($ReportUrl) failed to create crash alerts. "
         }
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Info "Miner Status $($ReportUrl) failed to create crash alerts. "
     }
 
     $CrashAlert = if ($Session.Config.MinerStatusMaxCrashesPerHour -ge 0 -and $Global:CrashCounter.Count -gt $Session.Config.MinerStatusMaxCrashesPerHour) {$Global:CrashCounter.Count} else {0}
@@ -3969,7 +3971,11 @@ function Invoke-ReportMinerStatus {
         try {
             ConvertTo-Json $Global:GlobalCachedDevices -Depth 10 -Compress | Set-Content ".\Data\devicedata.json"
             if (Test-Path ".\Data\devicedata.json") {
-                $DeviceData = Get-Item ".\Data\devicedata.json"
+                if ($Session.IsCore -or $Session.Curl) {
+                    $DeviceData = Get-Item ".\Data\devicedata.json"
+                } else {
+                    $DeviceData = Get-ContentByStreamReader ".\Data\devicedata.json"
+                }
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -4024,7 +4030,7 @@ function Invoke-ReportMinerStatus {
             $ReportDone = $true
             
             #Upload statistics as separate files
-            if ($Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
+            if ($Session.IsCore -or $Session.Curl) {
                 if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {
                     $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; minerdata = Get-Item ".\Data\minerdata.json"}
                     $Session.ReportMinerData = $false
