@@ -818,7 +818,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         "/reboot" {
             if ($Session.Config.EnableRestartComputer) {
                 try {
-                    Invoke-Reboot
+                    if ($IsWindows) {
+                        Invoke-Reboot
+                    } else {
+                        $API.Reboot = $true
+                    }
                     $Data = "Rebooting now!"
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
