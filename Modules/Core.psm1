@@ -2824,7 +2824,7 @@ function Invoke-Core {
         if ($Session.Config.Watchdog -and $_.Profit -ne $null) {
             $Miner_Name = $_.Name
             $Miner_DeviceModel = $_.DeviceModel
-            $_.Algorithm | ForEach-Object {
+            $_.Algorithm | Where-Object {-not (Compare-Object @($Miner_Name,$_,$Pools.$_.Name) $Session.Config.ExcludeFromWatchdog -IncludeEqual -ExcludeDifferent)} | ForEach-Object {
                 $Miner_Algorithm = $_
                 $WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                 if (-not $WatchdogTimer) {
