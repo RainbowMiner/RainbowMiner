@@ -366,7 +366,7 @@
             Currencies=@("ETC","ETH","SAFE","SEL","XMR","XWP","ZERO")
         }
         "SparkPool" = [PSCustomObject]@{
-            Currencies=@("ETH","GRIN","BEAM","XMR")
+            Currencies=@("ETH","CKB","BEAM")
         }
         "Sunpool" = [PSCustomObject]@{
             Currencies=@("GRIMM","BEAM","ATOMI")
