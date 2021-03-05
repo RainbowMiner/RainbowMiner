@@ -7421,11 +7421,11 @@ param (
 function Get-HMACSignature {
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $False)]
+    [Parameter(Mandatory = $true)]
     [String]$string,
-    [Parameter(Mandatory = $True)]
+    [Parameter(Mandatory = $true)]
     [String]$secret,
-    [Parameter(Mandatory = $True)]
+    [Parameter(Mandatory = $false)]
     [String]$hash = "HMACSHA256"
 )
 
