@@ -3024,7 +3024,7 @@ function Get-Device {
                         BusId_Index               = 0
                         BusId_Type_Index          = 0
                         BusId_Type_Vendor_Index   = 0
-                        BusId_Mineable_Index      = 0
+                        BusId_Type_Mineable_Index = 0
                         BusId_Vendor_Index        = 0
 
                         OpenCL = $Device_OpenCL
@@ -3151,14 +3151,14 @@ function Get-Device {
         $BusId_Index = 0
         $BusId_Type_Index = @{}
         $BusId_Type_Vendor_Index = @{}
-        $BusId_Mineable_Index = @{}
+        $BusId_Type_Mineable_Index = @{}
         $BusId_Vendor_Index = @{}
 
         $Global:GlobalCachedDevices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | Foreach-Object {
             $_.BusId_Index               = $BusId_Index++
             $_.BusId_Type_Index          = [int]$BusId_Type_Index."$($_.Type)"
             $_.BusId_Type_Vendor_Index   = [int]$BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"
-            $_.BusId_Mineable_Index      = [int]$BusId_Mineable_Index."$($_.Type)"
+            $_.BusId_Type_Mineable_Index = [int]$BusId_Type_Mineable_Index."$($_.Type)"
             $_.BusId_Vendor_Index        = [int]$BusId_Vendor_Index."$($_.Vendor)"
 
             if (-not $BusId_Type_Vendor_Index."$($_.Type)") { 
@@ -3168,7 +3168,7 @@ function Get-Device {
             $BusId_Type_Index."$($_.Type)"++
             $BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"++
             $BusId_Vendor_Index."$($_.Vendor)"++
-            if ($_.Vendor -in @("AMD","NVIDIA")) {$BusId_Mineable_Index."$($_.Type)"++}
+            if ($_.Vendor -in @("AMD","NVIDIA")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
         }
 
         #CPU detection

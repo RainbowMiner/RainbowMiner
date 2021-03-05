@@ -135,7 +135,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Pass      = $Pools.$Algorithm_Norm.Pass
                         Email     = $Pools.$Algorithm_Norm.Email
                         Threads   = if ($Miner_Vendor -eq "CPU") {$CPUThreads} else {$null}
-                        Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.BusId_Mineable_Index} else {$null}
+                        Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.BusId_Type_Mineable_Index} else {$null}
 				    }
 
 				    [PSCustomObject]@{
