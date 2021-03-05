@@ -128,8 +128,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         BaseName         = $Name
                         BaseAlgorithm    = $Algorithm_Norm_0
                         PrerequisitePath = $DatFile
-                        PrerequisiteURI  = "https://vtc.suprnova.cc/verthash.dat"
-                        PrerequisiteMsg  = "$($Name): Downloading verthash.dat (1.2GB) in the background, please wait!"
+                        PrerequisiteURI  = "https://github.com/RainbowMiner/RainbowMiner/releases/download/v1.0-verthash/verthash.dat"
+                        PrerequisiteMsg  = "Downloading verthash.dat (1.2GB) in the background, please wait!"
 				    }
 			    }
 		    }
