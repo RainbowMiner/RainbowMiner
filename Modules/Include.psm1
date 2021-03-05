@@ -2544,7 +2544,21 @@ function Expand-WebRequest {
             Remove-Item $Path_Old -Recurse -Force
         }
         if (Test-Path $Path_Bak) {
-            $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {Copy-Item $_ $Path_New -Force}}
+            $ProtectedFiles | Foreach-Object {
+                $CheckForFile_Path = Split-Path $_
+                $CheckForFile_Name = Split-Path $_ -Leaf
+                Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {
+                    if ($CheckForFile_Path) {
+                        $CopyToPath = Join-Path $Path_New $CheckForFile_Path
+                        if (-not (Test-Path $CopyToPath)) {
+                            New-Item $CopyToPath -ItemType Directory -ErrorAction Ignore > $null
+                        }
+                    } else {
+                        $CopyToPath = $Path_New
+                    }
+                    Copy-Item $_ $CopyToPath -Force
+                }
+            }
             $SkipBackups = if ($EnableMinerBackups) {3} else {0}
             Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {Remove-Item $_ -Recurse -Force}
         }
