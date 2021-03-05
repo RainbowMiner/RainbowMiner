@@ -128,11 +128,8 @@ param(
 
         if (-not $Remote) {
             $str = "$key$nonce$endpoint"
-            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
-            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
             $headers = [hashtable]@{
-	            'x-api-sign' = ($sign -replace '\-').ToLower()
+	            'x-api-sign' = Get-HMACSignature $str $secret "HMACSHA1"
 	            'x-api-key'  = $key
 	            'x-api-nonce'= $nonce
                 'Cache-Control' = 'no-cache'

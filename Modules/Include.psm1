@@ -7418,6 +7418,22 @@ param (
     }
 }
 
+function Get-HMACSignature {
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $True)]
+    [String]$string,
+    [Parameter(Mandatory = $True)]
+    [String]$secret,
+    [Parameter(Mandatory = $True)]
+    [String]$hash = "HMACSHA256"
+)
+
+    $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create($hash)
+    $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
+    [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${string}))).ToLower() -replace "[^0-9a-z]"
+}
+
 function Invoke-BinanceRequest {
 [cmdletbinding()]   
 param(    
@@ -7474,17 +7490,18 @@ param(
         }
 
         if (-not $Remote -and $key -and $secret) {
-            $params["timestamp"] = Get-UnixTimestamp -Milliseconds
+            $timestamp = 0
+            try {$timestamp = (Invoke-GetUrl "$($base)/api/v3/time" -timeout 3).serverTime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            if (-not $timestamp) {$timestamp = Get-UnixTimestamp -Milliseconds}
+
+            $params["timestamp"] = $timestamp
             $paramstr = "$(($params.Keys | Sort-Object | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
-            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA256")
-            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${paramstr})))
 
             $headers = [hashtable]@{
                 'X-MBX-APIKEY'  = $key
             }
             try {
-                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body "$($paramstr)&signature=$(($sign -replace '\-').ToLower())"
+                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body "$($paramstr)&signature=$(Get-HMACSignature $paramstr $secret)"
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 "Binance API call: $($_.Exception.Message)"
@@ -7563,20 +7580,18 @@ param(
 
         if (-not $Remote -and $key -and $secret -and $organizationid) {
             $uuid = [string]([guid]::NewGuid())
-            $timestamp = Get-UnixTimestamp -Milliseconds
-            #$timestamp_nh = Invoke-GetUrl "$($base)/main/api/v2/time" -timeout $Timeout | Select-Object -ExpandProperty serverTime
-            #if ([Math]::Abs($timestamp_nh - $timestamp) -gt 3000) {$timestamp = $timestamp_nh}
+            $timestamp = 0
+            try {$timestamp = (Invoke-GetUrl "$($base)/api/v2/time" -timeout 3).serverTime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            if (-not $timestamp) {$timestamp = Get-UnixTimestamp -Milliseconds}
+
             $paramstr = "$(($params.Keys | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
             $str = "$key`0$timestamp`0$uuid`0`0$organizationid`0`0$($method.ToUpper())`0$endpoint`0$(if ($method -eq "GET") {$paramstr} else {"`0$($params | ConvertTo-Json -Depth 10 -Compress)"})"
-            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA256")
-            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))
 
             $headers = [hashtable]@{
                 'X-Time'            = $timestamp
                 'X-Nonce'           = $uuid
                 'X-Organization-Id' = $organizationid
-                'X-Auth'            = "$($key):$(($sign -replace '\-').ToLower())"
+                'X-Auth'            = "$($key):$(Get-HMACSignature $str $secret)"
                 'Cache-Control'     = 'no-cache'
             }
             try {
