@@ -7421,7 +7421,7 @@ param (
 function Get-HMACSignature {
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $True)]
+    [Parameter(Mandatory = $False)]
     [String]$string,
     [Parameter(Mandatory = $True)]
     [String]$secret,
