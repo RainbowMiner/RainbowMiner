@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.6.8"
+$Version = "0.6.9"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.8-srbminermulti/SRBMiner-Multi-0-6-8-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.9-srbminermulti/SRBMiner-Multi-0-6-9-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.8-srbminermulti/SRBMiner-Multi-0-6-8-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.9-srbminermulti/SRBMiner-Multi-0-6-9-win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
@@ -78,6 +78,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "keccak"         ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "phi5"           ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #PHI5/CBE
     [PSCustomObject]@{MainAlgorithm = "ubqhash"        ;              Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
+    [PSCustomObject]@{MainAlgorithm = "verthash"       ;              Params = ""; Fee = 1.25;               Vendor = @("AMD","CPU")} #Verthash
     [PSCustomObject]@{MainAlgorithm = "verushash"      ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Verushash
     [PSCustomObject]@{MainAlgorithm = "yescrypt"       ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #yescrypt
 )
