@@ -3021,6 +3021,12 @@ function Get-Device {
                         Type = [String]$Device_OpenCL.Type
                         Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
                         Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
+                        BusId_Index               = 0
+                        BusId_Type_Index          = 0
+                        BusId_Type_Vendor_Index   = 0
+                        BusId_Type_Mineable_Index = 0
+                        BusId_Vendor_Index        = 0
+
                         OpenCL = $Device_OpenCL
                         Model = $Model
                         Model_Base = $Model
@@ -3028,9 +3034,8 @@ function Get-Device {
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
                         BusId = $null
-                        BusId_Index = 0
-                        BusId_Mineable_Index = 0
                         GpuGroup = ""
+
                         Data = [PSCustomObject]@{
                                         AdapterId         = 0  #amd
                                         Utilization       = 0  #amd/nvidia
@@ -3143,12 +3148,27 @@ function Get-Device {
         }
 
         #Roundup and add sort order by PCI busid
-        $Index = 0
-        $MineableIndex = 0
+        $BusId_Index = 0
+        $BusId_Type_Index = @{}
+        $BusId_Type_Vendor_Index = @{}
+        $BusId_Type_Mineable_Index = @{}
+        $BusId_Vendor_Index = @{}
+
         $Global:GlobalCachedDevices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | Foreach-Object {
-            $_.BusId_Index = $Index++
-            $_.BusId_Mineable_Index = $MineableIndex
-            if ($_.Vendor -in @("AMD","NVIDIA")) {$MineableIndex++}
+            $_.BusId_Index               = $BusId_Index++
+            $_.BusId_Type_Index          = [int]$BusId_Type_Index."$($_.Type)"
+            $_.BusId_Type_Vendor_Index   = [int]$BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"
+            $_.BusId_Type_Mineable_Index = [int]$BusId_Type_Mineable_Index."$($_.Type)"
+            $_.BusId_Vendor_Index        = [int]$BusId_Vendor_Index."$($_.Vendor)"
+
+            if (-not $BusId_Type_Vendor_Index."$($_.Type)") { 
+                $BusId_Type_Vendor_Index."$($_.Type)" = @{}
+            }
+
+            $BusId_Type_Index."$($_.Type)"++
+            $BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"++
+            $BusId_Vendor_Index."$($_.Vendor)"++
+            if ($_.Vendor -in @("AMD","NVIDIA")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
         }
 
         #CPU detection
