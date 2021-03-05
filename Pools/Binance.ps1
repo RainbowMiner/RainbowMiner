@@ -15,7 +15,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Fee = 0.0
+$Pool_Fee = 0.5
 $Pool_Default_Region = Get-Region "asia"
 
 $Pools_Request = [PSCustomObject]@{}
@@ -30,8 +30,9 @@ catch {
 
 $Pools_Request.data.algoList | ForEach-Object {
     $Pool_Algorithm = $_.algoName.ToLower()
-    $Pool_HashRate = $_.poolHash
-    $Pool_Workers  = $_.effectiveCount
+    $Pool_HashRate  = $_.poolHash
+    $Pool_Workers   = $_.effectiveCount
+    $Pool_Fee       = [decimal]$_.rate * 100
 
     $_.symbolInfos | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | Foreach-Object {
 
