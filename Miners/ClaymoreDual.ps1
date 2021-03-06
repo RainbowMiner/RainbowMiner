@@ -142,7 +142,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             $Miner_BaseAlgo = $MainAlgorithm_Norm_0
 				            $Miner_Name = ((@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
                         }
-                        $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
+                        $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.BusId_Type_Vendor_Index} ) -join ''
                         $First = $false
                     }
 
