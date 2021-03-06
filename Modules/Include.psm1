@@ -2556,7 +2556,11 @@ function Expand-WebRequest {
                     } else {
                         $CopyToPath = $Path_New
                     }
-                    Copy-Item $_ $CopyToPath -Force
+                    if ($_.Length -lt 10MB) {
+                        Copy-Item $_ $CopyToPath -Force
+                    } else {
+                        Move-Item $_ $CopyToPath -Force
+                    }
                 }
             }
             $SkipBackups = if ($EnableMinerBackups) {3} else {0}
