@@ -28,7 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
     [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @(); ExcludePoolName = "^SuprNova"} #ProgPow
 )
-$CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1"
+$CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1 -gbase 0"
 
 $CoinXlat = [PSCustomObject]@{
     "AKA" = "akroma"
@@ -106,7 +106,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 			            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-			            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index}) -join ''
+			            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.BusId_Type_Vendor_Index}) -join ''
                         $First = $false
                     }
                     $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
