@@ -109,7 +109,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-			            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+			            $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ' '
                         $First = $false
                     }
 					$Miner_Protocol = "stratum"
@@ -146,6 +146,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = $Algorithm_Norm_0
+                        ListDevices    = "--list-devices"
 					}
 				}
 			}
