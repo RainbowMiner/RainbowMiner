@@ -3727,8 +3727,6 @@ function Update-DeviceInformation {
                         if ($Global:GlobalGPUMethod.$Method -eq "fail") {Continue}
                         if ($Method -eq "Afterburner" -and -not ($UseAfterburner -and $Script:abMonitor -and $Script:abControl)) {Continue}
 
-                        if (-not ($Devices | Where-Object {$_.Data.Method -eq ""} | Measure-Object).Count) {Break}
-
                         try {
 
                             Switch ($Method) {
@@ -3764,11 +3762,12 @@ function Update-DeviceInformation {
 
                                         $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
                                             $NF = $_.Data.Method -eq ""
+                                            $Changed = $false
                                             foreach($Value in @($Data.PSObject.Properties.Name)) {
-                                                if ($NF -or $_.Data.$Value -le 0) {$_.Data.$Value = $Data.$Value}
+                                                if ($NF -or $_.Data.$Value -le 0 -or ($Value -match "^Clock" -and $Data.$Value -gt 0)) {$_.Data.$Value = $Data.$Value;$Changed = $true}
                                             }
 
-                                            if ($_.Data.FanSpeed -gt 0 -and $_.Data.Temperature -gt 0 -and $_.Data.PowerDraw -gt 0) {
+                                            if ($Changed) {
                                                 $_.Data.Method = "$(if ($_.Data.Method) {";"})ab"
                                             }
                                         }
@@ -3812,11 +3811,12 @@ function Update-DeviceInformation {
 
                                             $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
                                                 $NF = $_.Data.Method -eq ""
+                                                $Changed = $false
                                                 foreach($Value in @($Data.PSObject.Properties.Name)) {
-                                                    if ($NF -or $_.Data.$Value -le 0) {$_.Data.$Value = $Data.$Value}
+                                                    if ($NF -or $_.Data.$Value -le 0 -or ($Value -notmatch "^Clock" -and $Data.$Value -gt 0)) {$_.Data.$Value = $Data.$Value;$Changed = $true}
                                                 }
 
-                                                if ($_.Data.FanSpeed -gt 0 -and $_.Data.Temperature -gt 0 -and $_.Data.PowerDraw -gt 0) {
+                                                if ($Changed) {
                                                     $_.Data.Method = "$(if ($_.Data.Method) {";"})odvii8"
                                                 }
                                             }
