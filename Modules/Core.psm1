@@ -1896,7 +1896,7 @@ function Invoke-Core {
         $NewPools.ForEach({
             $Pool_Ix = "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"
             if ($Pools_PriceCmp[$Pool_Ix] -eq $null) {
-                $Price_Cmp =  $_."$(if (-not $Session.Config.EnableFastSwitching -and ($Session.Config.ForceStablePrice -or -not $_.PaysLive)) {"Stable"})Price"
+                $Price_Cmp  =  $_."$(if (-not $Session.Config.EnableFastSwitching -and ($Session.Config.ForceStablePrice -or -not $_.PaysLive)) {"Stable"})Price"
                 if (-not $_.Exclusive) {
                     $Pool_Rounds = $Pools_Running[$Pool_Ix]
                     if ($Pool_Rounds -ne $null -and ($Session.IsBenchmarkingRun -and $Pools_Benchmarking[$Pool_Ix] -or $Pool_Rounds -lt $Session.Config.MinimumMiningIntervals)) {

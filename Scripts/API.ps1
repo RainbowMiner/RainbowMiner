@@ -369,7 +369,138 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 Out-File -InputObject $PurgeString -FilePath $NewFile
             }
 
-            @(".\Data\lscpu.txt", ".\Data\gpu-count.txt") | Where-Object {Test-Path $_} | Foreach-Object {
+            $TestFileName = ".\Data\gpu-test.txt"
+
+            "GPU-TEST $((Get-Date).ToUniversalTime())" | Out-File $TestFileName -Encoding utf8
+            "="*80 | Out-File $TestFileName -Append -Encoding utf8
+            " " | Out-File $TestFileName -Append -Encoding utf8
+
+            if ($IsLinux) {
+
+                try {
+                    Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+
+                if ($API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"}) {
+
+                    try {
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        "[nvidia-smi]" | Out-File $TestFileName -Append -Encoding utf8
+                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        $Arguments = @(
+                            '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
+                            '--format=csv,noheader'
+                        )
+                        Invoke-Exe "nvidia-smi" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                }
+            } elseif ($IsWindows) {
+
+                if (Test-IsElevated) {
+
+                    try {
+                        Invoke-Expression ".\Includes\pci\lspci.exe" | Select-String "VGA compatible controller" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-Null
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                }
+               
+                if ($API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "AMD"}) {
+
+                    try {
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        "[OverdriveN]" | Out-File $TestFileName -Append -Encoding utf8
+                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                    try {
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        "[OverdriveNTool]" | Out-File $TestFileName -Append -Encoding utf8
+                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        $Arguments = @('-console-only','-getcurrent')
+                        Invoke-Exe ".\Includes\overdriventool.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                    try {
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        "[OdVII]" | Out-File $TestFileName -Append -Encoding utf8
+                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        $Arguments = @('s')
+                        Invoke-Exe ".\Includes\odvii.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                    try {
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        "[OdVII 8]" | Out-File $TestFileName -Append -Encoding utf8
+                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                }
+                
+                if ($API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"}) {
+
+                    try {    
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        "[nvidia-smi]" | Out-File $TestFileName -Append -Encoding utf8
+                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        $Arguments = @(
+                            '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
+                            '--format=csv,noheader'
+                        )
+                        Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                }
+            }
+
+            if ($API.AllDevices) {Set-ContentJson -PathToFile ".\Data\alldevices.json" -Data $API.AllDevices > $null} else {"[]" > ".\Data\alldevices.json"}
+
+            $TestFileName = ".\Data\gpu-minerlist.txt"
+
+            "GPU-MINERLIST $((Get-Date).ToUniversalTime())" | Out-File $TestFileName -Encoding utf8
+            "="*80 | Out-File $TestFileName -Append -Encoding utf8
+            " " | Out-File $TestFileName -Append -Encoding utf8
+
+            $API.Miners | Where-Object {$_.ListDevices -ne $null} | Select-Object -Unique -Property BaseName,Path,ListDevices,ListPlatforms | Sort-Object -Property BaseName | Where-Object {Test-Path $_.Path} | Foreach-Object {
+                try {
+                    " " | Out-File $TestFileName -Append -Encoding utf8
+                    "[$($_.BaseName)]" | Out-File $TestFileName -Append -Encoding utf8
+                    "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                    " " | Out-File $TestFileName -Append -Encoding utf8
+                    if ($_.ListPlatforms) {
+                        Invoke-Exe $_.Path -ArgumentList $_.ListPlatforms -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
+                    }
+                    Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+            }
+
+            @(".\Data\lscpu.txt", ".\Data\gpu-count.txt", ".\Data\gpu-minerlist.txt", ".\Data\gpu-test.txt", ".\Data\alldevices.json") | Where-Object {Test-Path $_} | Foreach-Object {
                 Copy-Item $_ $DebugPath -ErrorAction Ignore
             }
 

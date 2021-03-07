@@ -158,6 +158,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = $Algorithm_Norm_0
+                        #ListDevices    = "-d"
 				    }
 			    }
 		    }
