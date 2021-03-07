@@ -3764,7 +3764,7 @@ function Update-DeviceInformation {
                                 $PowerLimitPercent = [int]$($Script:abControl.GpuEntries[$_.Index].PowerLimitCur)
                                 $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                                 $AdapterId   = $_.Index
-                                $PCIBusId    = if ($_.GpuId -match "&BUS_([0-9A-F]+)&DEV=([0-9A-F]+)") {"$(if ($Matches[1].Length -lt 2) {"0"})$($Matches[1].ToLower()):$(if ($Matches[2].Length -lt 2) {"0"})$($Matches[2].ToLower())"} else {$null}
+                                $PCIBusId    = if ($_.GpuId -match "&BUS_([0-9A-F]+)&DEV_([0-9A-F]+)") {"$(if ($Matches[1].Length -lt 2) {"0"})$($Matches[1].ToLower()):$(if ($Matches[2].Length -lt 2) {"0"})$($Matches[2].ToLower())"} else {$null}
 
                                 $Devices | Where-Object {$_.Vendor -eq $Vendor -and (($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId)))} | Foreach-Object {
                                     $_.Data.AdapterId         = [int]$AdapterId
