@@ -3724,6 +3724,8 @@ function Update-DeviceInformation {
 
                     foreach ($Method in @("Afterburner","odvii8")) {
 
+                        if (-not $Global:GlobalGPUMethod.ContainsKey($Method)) {$Global:GlobalGPUMethod.$Method = ""}
+
                         if ($Global:GlobalGPUMethod.$Method -eq "fail") {Continue}
                         if ($Method -eq "Afterburner" -and -not ($UseAfterburner -and $Script:abMonitor -and $Script:abControl)) {Continue}
 
@@ -3774,7 +3776,7 @@ function Update-DeviceInformation {
                                         $DeviceId++
                                     }
                                     if ($DeviceId) {
-                                        $Global:GlobalGPUMethod.Afterburner = "ok"
+                                        $Global:GlobalGPUMethod.$Method = "ok"
                                         $Success++
                                     }
                                     break
@@ -3824,7 +3826,7 @@ function Update-DeviceInformation {
                                             $DeviceId++
                                         }
                                         if ($DeviceId) {
-                                            $Global:GlobalGPUMethod.odvii8 = "ok"
+                                            $Global:GlobalGPUMethod.$Method = "ok"
                                             $Success++
                                         }
                                     }
@@ -3833,16 +3835,17 @@ function Update-DeviceInformation {
                                 }
 
                             }
+
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                         }
+
+                        if ($Global:GlobalGPUMethod.$Method -eq "") {$Global:GlobalGPUMethod.$Method = "fail"}
                     }
 
                     if (-not $Success) {
                         Write-Log -Level Warn "Could not read power data from AMD"
                     }
-
-                    $Global:GlobalGPUMethod.Keys | Where-Object {$Global:GlobalGPUMethod.$_ -eq ""} | Foreach-Object {$Global:GlobalGPUMethod.$_ = "fail"}
                 }
                 elseif ($IsLinux) {
                     if (Get-Command "rocm-smi" -ErrorAction Ignore) {
