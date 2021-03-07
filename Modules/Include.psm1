@@ -3779,7 +3779,6 @@ function Update-DeviceInformation {
                                         $Global:GlobalGPUMethod.$Method = "ok"
                                         $Success++
                                     }
-                                    break
                                 }
 
                                 "odvii8" {
@@ -3830,8 +3829,6 @@ function Update-DeviceInformation {
                                             $Success++
                                         }
                                     }
-
-                                    break
                                 }
 
                             }
