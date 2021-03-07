@@ -130,8 +130,8 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ','
-                        $DeviceIntensity = ($Miner_Device | % {"0"}) -join ','
+                        $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ';'
+                        $DeviceIntensity = ($Miner_Device | % {"0"}) -join ';'
                         $First = $false
                     }
 
@@ -169,6 +169,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                         BaseName       = $Name
                         BaseAlgorithm  = $Algorithm_Norm_0
                         SetLDLIBRARYPATH = $false
+                        ListDevices    = "--list-devices"
 				    }
 			    }
 		    }
