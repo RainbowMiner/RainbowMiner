@@ -3928,7 +3928,7 @@ function Update-DeviceInformation {
                                     }
                                     if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
 
-                                    $Devices | Where-Object {$_.BusId_Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
+                                    $Devices | Where-Object {$_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
                                         $Data = [PSCustomObject]@{
                                             FanSpeed    = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
                                             Clock       = [int]($AdlResultSplit[3] / 100)
