@@ -3776,7 +3776,6 @@ function Update-DeviceInformation {
                                     $_.Data.Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
                                     $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
                                     $_.Data.PowerLimitPercent = $PowerLimitPercent
-                                    #$_.Data.PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                                     $_.Data.Method            = "ab"
                                 }
                                 $DeviceId++
@@ -3879,8 +3878,10 @@ function Update-DeviceInformation {
 
                                     $DeviceId++
                                 }
-                                $Global:GlobalGPUMethod.odvii8 = "ok"
-                                $Success++
+                                if ($DeviceId) {
+                                    $Global:GlobalGPUMethod.odvii8 = "ok"
+                                    $Success++
+                                }
                             }
 
                         } catch {
