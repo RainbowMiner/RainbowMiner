@@ -3585,7 +3585,7 @@ function Get-DeviceName {
                     DeviceName = $DeviceName
                     InstanceId = $_.GpuId
                     SubId      = $SubId
-                    PCIBusId   = if ($_.GpuId -match "&BUS_([0-9A-F]+)&DEV_([0-9A-F]+)") {"$(if ($Matches[1].Length -lt 2) {"0"})$($Matches[1].ToLower()):$(if ($Matches[2].Length -lt 2) {"0"})$($Matches[2].ToLower())"} else {$null}
+                    PCIBusId   = if ($_.GpuId -match "&BUS_(\d+)&DEV_(\d+)") {"{0:x2}:{1:x2}" -f [int]$Matches[1],[int]$Matches[2]} else {$null}
                 }
                 $DeviceId++
             }
@@ -3817,7 +3817,7 @@ function Update-DeviceInformation {
                                 $CardData    = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
                                 $PowerLimitPercent = [int]$($Script:abControl.GpuEntries[$_.Index].PowerLimitCur)
                                 $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
-                                $PCIBusId    = if ($_.GpuId -match "&BUS_([0-9A-F]+)&DEV_([0-9A-F]+)") {"$(if ($Matches[1].Length -lt 2) {"0"})$($Matches[1].ToLower()):$(if ($Matches[2].Length -lt 2) {"0"})$($Matches[2].ToLower())"} else {$null}
+                                $PCIBusId    = if ($_.GpuId -match "&BUS_(\d+)&DEV_(\d+)") {"{0:x2}:{1:x2}" -f [int]$Matches[1],[int]$Matches[2]} else {$null}
 
                                 $Data = [PSCustomObject]@{
                                     Clock       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
