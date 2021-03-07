@@ -3737,106 +3737,16 @@ function Update-DeviceInformation {
 
                 if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-                $Devices | Foreach-Object {$_.Data.Method = ""}
+                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = 0}
 
                 if ($IsWindows) {
 
                     $Success = 0
 
                     #
-                    # 1. try Afterburner
+                    # 1. try odvii8
                     #
-                    if ($UseAfterburner -and $Script:abMonitor -and $Script:abControl -and $Global:GlobalGPUMethod.Afterburner -ne "fail") {
-                        try {
-                            if ($abReload) {
-                                if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
-                                if ($Script:abControl) {$Script:abControl.ReloadAll()}
-                                $abReload = $false
-                            }
-                            $DeviceId = 0
-                            $Pattern = @{
-                                AMD    = '*Radeon*'
-                                NVIDIA = '*GeForce*'
-                                Intel  = '*Intel*'
-                            }
-                            @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
-                                $CardData    = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
-                                $PowerLimitPercent = [int]$($Script:abControl.GpuEntries[$_.Index].PowerLimitCur)
-                                $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
-                                $AdapterId   = $_.Index
-                                $PCIBusId    = if ($_.GpuId -match "&BUS_([0-9A-F]+)&DEV_([0-9A-F]+)") {"$(if ($Matches[1].Length -lt 2) {"0"})$($Matches[1].ToLower()):$(if ($Matches[2].Length -lt 2) {"0"})$($Matches[2].ToLower())"} else {$null}
 
-                                $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
-                                    $_.Data.AdapterId         = [int]$AdapterId
-                                    $_.Data.Utilization       = $Utilization
-                                    $_.Data.UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
-                                    $_.Data.Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
-                                    $_.Data.ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
-                                    $_.Data.FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
-                                    $_.Data.Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                                    $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
-                                    $_.Data.PowerLimitPercent = $PowerLimitPercent
-                                    $_.Data.Method            = "ab"
-                                }
-                                $DeviceId++
-                            }
-                            if ($DeviceId) {
-                                $Global:GlobalGPUMethod.Afterburner = "ok"
-                                $Success++
-                            }
-                        } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
-                        }
-                    }
-
-                    #
-                    # 2. try odvii.exe
-                    #
-                    if ($Global:GlobalGPUMethod.odvii -ne "fail") {
-                        try {
-                            Invoke-Exe ".\Includes\odvii.exe" -ArgumentList "s" -WorkingDirectory $Pwd | Tee-Object -Variable AdlResult | Out-Null
-
-                            if ($AdlResult -match "Gpu" -and $AdlResult -notmatch "Failed") {
-                                $AdlStats = $AdlResult | ConvertFrom-StringData
-
-                                $Data = @{}
-                                $AdlStats.GetEnumerator() | Where-Object {$_.Name -match "Gpu (\d+)"} | Foreach-Object {
-                                    $DeviceId = [int]$Matches[1]
-                                    if (-not $Data.ContainsKey($DeviceId)) {$Data[$DeviceId] = [PSCustomObject]@{}}
-                                    $Data[$DeviceId] | Add-Member ($_.Name -replace "Gpu\s+\d+\s*") ($_.Value) -Force
-                                }
-
-                                if ($Data.Count) {
-                                    $Devices | Where-Object {$Data.ContainsKey($_.BusId_Type_Vendor_Index)} | Foreach-Object {
-                                        $DeviceId = $_.BusId_Type_Vendor_Index
-                                        $Data = [PSCustomObject]@{
-                                            FanSpeed    = [int]($Data[$DeviceId].Fan)
-                                            Clock       = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Core Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
-                                            ClockMem    = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Mem Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
-                                            Temperature = [int]($Data[$DeviceId].Temp)
-                                            PowerDraw   = [int]($Data[$DeviceId].Watts)
-                                        }
-                                        $NF = $_.Data.Method -eq ""
-                                        if ($NF) {$_.Data.AdapterId   = ''}
-                                        if ($NF -or -not $_.Data.FanSpeed)    {$_.Data.FanSpeed    = $Data.FanSpeed}
-                                        if ($NF -or -not $_.Data.Clock)       {$_.Data.Clock       = $Data.Clock}
-                                        if ($NF -or -not $_.Data.ClockMem)    {$_.Data.ClockMem    = $Data.ClockMem}
-                                        if ($NF -or -not $_.Data.Temperature) {$_.Data.Temperature = $Data.Temperature}
-                                        if ($NF -or      $Data.PowerDraw)     {$_.Data.PowerDraw   = $Data.PowerDraw}
-                                        $_.Data.Method = "$(if (-not $NF) {"$($_.Data.Method);"})odvii"
-                                    }
-                                    $Global:GlobalGPUMethod.odvii = "ok"
-                                    $Success++
-                                }
-                            }
-                        } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
-                        }
-                    }
-
-                    #
-                    # 3. try odvii8
-                    #
                     if ($Global:GlobalGPUMethod.odvii8 -ne "fail") {
                         try {
 
@@ -3852,28 +3762,26 @@ function Update-DeviceInformation {
                                 $DeviceId = 0
 
                                 $AdlStats | Foreach-Object {
+                                    $CPstateMax = [Math]::max([int]($_."Core P_States")-1,0)
+                                    $MPstateMax = [Math]::max([int]($_."Memory P_States")-1,0)
+                                    $PCIBusId   = "$($_."Bus Id" -replace "\..+$")"
 
-                                    $Data = $_
+                                    $Data = [PSCustomObject]@{
+                                        Clock       = [int]($_."Clock Defaults"."Clock P_State $CPstatemax")
+                                        ClockMem    = [int]($_."Memory Defaults"."Clock P_State $MPstatemax")
+                                        FanSpeed    = [int]($_."Fan Speed %")
+                                        Temperature = [int]($_.Temperature)
+                                        PowerDraw   = [int]($_.Wattage)
+                                    }
 
-                                    $Devices | Where-Object {($_.BusId -and $Data."Bus Id" -and ($_.BusId -eq "$($Data."Bus Id" -replace "\..+$")")) -or ((-not $_.BusId -or -not $Data."Bus Id") -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
-                                        $CPstateMax = [Math]::max([int]($Data."Core P_States")-1,0)
-                                        $MPstateMax = [Math]::max([int]($Data."Memory P_States")-1,0)
-                                        $Data = [PSCustomObject]@{
-                                            FanSpeed    = [int]($Data."Fan Speed %")
-                                            Clock       = [int]($Data."Clock Defaults"."Clock P_State $CPstatemax")
-                                            ClockMem    = [int]($Data."Memory Defaults"."Clock P_State $MPstatemax")
-                                            Temperature = [int]($Data.Temperature)
-                                            PowerDraw   = [int]($Data.Wattage)
+                                    $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
+                                        foreach($Value in @($Data.PSObject.Properties.Name)) {
+                                            $_.Data.$Value = $Data.$Value
                                         }
 
-                                        $NF = $_.Data.Method -eq ""
-                                        if ($NF) {$_.Data.AdapterId   = ''}
-                                        if ($NF -or $Data.FanSpeed)    {$_.Data.FanSpeed    = $Data.FanSpeed}
-                                        if ($NF -or $Data.Clock)       {$_.Data.Clock       = $Data.Clock}
-                                        if ($NF -or $Data.ClockMem)    {$_.Data.ClockMem    = $Data.ClockMem}
-                                        if ($NF -or $Data.Temperature) {$_.Data.Temperature = $Data.Temperature}
-                                        if ($NF -or $Data.PowerDraw)   {$_.Data.PowerDraw   = $Data.PowerDraw}
-                                        $_.Data.Method = "$(if (-not $NF) {"$($_.Data.Method);"})odvii8"
+                                        if ($_.Data.FanSpeed -gt 0 -and $_.Data.Temperature -gt 0 -and $_.Data.PowerDraw -gt 0) {
+                                            $_.Data.Method = "odvii8"
+                                        }
                                     }
 
                                     $DeviceId++
@@ -3890,9 +3798,106 @@ function Update-DeviceInformation {
                     }
 
                     #
+                    # 2. try Afterburner
+                    #
+                    if ($UseAfterburner -and $Script:abMonitor -and $Script:abControl -and $Global:GlobalGPUMethod.Afterburner -ne "fail" -and ($Devices | Where-Object {$_.Data.Method -eq ""} | Measure-Object).Count) {
+                        try {
+                            if ($abReload) {
+                                if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
+                                if ($Script:abControl) {$Script:abControl.ReloadAll()}
+                                $abReload = $false
+                            }
+                            $DeviceId = 0
+                            $Pattern = @{
+                                AMD    = '*Radeon*'
+                                NVIDIA = '*GeForce*'
+                                Intel  = '*Intel*'
+                            }
+                            @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
+                                $CardData    = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
+                                $PowerLimitPercent = [int]$($Script:abControl.GpuEntries[$_.Index].PowerLimitCur)
+                                $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
+                                $PCIBusId    = if ($_.GpuId -match "&BUS_([0-9A-F]+)&DEV_([0-9A-F]+)") {"$(if ($Matches[1].Length -lt 2) {"0"})$($Matches[1].ToLower()):$(if ($Matches[2].Length -lt 2) {"0"})$($Matches[2].ToLower())"} else {$null}
+
+                                $Data = [PSCustomObject]@{
+                                    Clock       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
+                                    ClockMem    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
+                                    FanSpeed    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
+                                    Temperature = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
+                                    PowerDraw   = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
+                                }
+
+                                $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
+                                    $NF = $_.Data.Method -eq ""
+                                    foreach($Value in @($Data.PSObject.Properties.Name)) {
+                                        if ($NF -or $_.Data.$Value -le 0) {$_.Data.$Value = $Data.$Value}
+                                    }
+
+                                    if ($_.Data.FanSpeed -gt 0 -and $_.Data.Temperature -gt 0 -and $_.Data.PowerDraw -gt 0) {
+                                        $_.Data.Method = "$(if ($_.Data.Method) {";"})ab"
+                                    }
+                                }
+                                $DeviceId++
+                            }
+                            if ($DeviceId) {
+                                $Global:GlobalGPUMethod.Afterburner = "ok"
+                                $Success++
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+                    }
+
+                    #
+                    # 3. try odvii.exe
+                    #
+                    if ($Global:GlobalGPUMethod.odvii -ne "fail" -and ($Devices | Where-Object {$_.Data.Method -eq ""} | Measure-Object).Count) {
+                        try {
+                            Invoke-Exe ".\Includes\odvii.exe" -ArgumentList "s" -WorkingDirectory $Pwd | Tee-Object -Variable AdlResult | Out-Null
+
+                            if ($AdlResult -match "Gpu" -and $AdlResult -notmatch "Failed") {
+                                $AdlStats = $AdlResult | ConvertFrom-StringData
+
+                                $Values = @{}
+                                $AdlStats.GetEnumerator() | Where-Object {$_.Name -match "Gpu (\d+)"} | Foreach-Object {
+                                    $DeviceId = [int]$Matches[1]
+                                    if (-not $Values.ContainsKey($DeviceId)) {$Values[$DeviceId] = [PSCustomObject]@{}}
+                                    $Values[$DeviceId] | Add-Member ($_.Name -replace "Gpu\s+\d+\s*") ($_.Value) -Force
+                                }
+
+                                if ($Values.Count) {
+
+                                    $Devices | Where-Object {$Values.ContainsKey($_.BusId_Type_Vendor_Index)} | Foreach-Object {
+                                        $DeviceId = $_.BusId_Type_Vendor_Index
+                                        $Data = [PSCustomObject]@{
+                                            FanSpeed    = [int]($Values[$DeviceId].Fan)
+                                            Clock       = [int]($Values[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Core Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
+                                            ClockMem    = [int]($Values[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Mem Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
+                                            Temperature = [int]($Values[$DeviceId].Temp)
+                                            PowerDraw   = [int]($Values[$DeviceId].Watts)
+                                        }
+                                        $NF = $_.Data.Method -eq ""
+                                        foreach($Value in @($Data.PSObject.Properties.Name)) {
+                                            if ($NF -or $_.Data.$Value -le 0) {$_.Data.$Value = $Data.$Value}
+                                        }
+
+                                        if ($_.Data.FanSpeed -gt 0 -and $_.Data.Temperature -gt 0 -and $_.Data.PowerDraw -gt 0) {
+                                            $_.Data.Method = "$(if ($_.Data.Method) {";"})odvii"
+                                        }
+                                    }
+                                    $Global:GlobalGPUMethod.odvii = "ok"
+                                    $Success++
+                                }
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+                    }
+
+                    #
                     # 4. try overdriven
                     #
-                    if ($Global:GlobalGPUMethod.OverdriveN -ne "fail") {
+                    if ($Global:GlobalGPUMethod.OverdriveN -ne "fail" -and ($Devices | Where-Object {$_.Data.Method -eq ""} | Measure-Object).Count) {
                         try {
 
                             $DeviceId = 0
@@ -3932,17 +3937,14 @@ function Update-DeviceInformation {
                                             PowerDraw   = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)
                                         }
 
-                                        $_.Data.AdapterId         = $AdlResultSplit[0]
-                                        $_.Data.Utilization       = [int]$AdlResultSplit[5]
-                                        $_.Data.PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-
                                         $NF = $_.Data.Method -eq ""
-                                        if ($NF -or -not $_.Data.FanSpeed)    {$_.Data.FanSpeed    = $Data.FanSpeed}
-                                        if ($NF -or -not $_.Data.Clock)       {$_.Data.Clock       = $Data.Clock}
-                                        if ($NF -or -not $_.Data.ClockMem)    {$_.Data.ClockMem    = $Data.ClockMem}
-                                        if ($NF -or -not $_.Data.Temperature) {$_.Data.Temperature = $Data.Temperature}
-                                        if ($NF -or -not $_.Data.PowerDraw)   {$_.Data.PowerDraw   = $Data.PowerDraw}
-                                        $_.Data.Method = "$(if (-not $NF) {"$($_.Data.Method);"})tdp"
+                                        foreach($Value in @($Data.PSObject.Properties.Name)) {
+                                            if ($NF -or $_.Data.$Value -le 0) {$_.Data.$Value = $Data.$Value}
+                                        }
+
+                                        if ($_.Data.FanSpeed -gt 0 -and $_.Data.Temperature -gt 0 -and $_.Data.PowerDraw -gt 0) {
+                                            $_.Data.Method = "$(if ($_.Data.Method) {";"})tdp"
+                                        }
                                     }
                                     $DeviceId++
                                 }
