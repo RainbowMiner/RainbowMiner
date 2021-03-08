@@ -1,0 +1,66 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 id="title" data-navbaractive="navconsole" class="h2">Console</h1>
+</div>
+<div class="card-group mb-4">
+    <div class="card">
+        <div class="card-header">
+            <div id="cmdmenu"></div>
+        </div>
+        <div class="card-body small">
+            <pre id="console">
+            </pre>
+        </div>
+    </div>
+</div>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+
+    var cmdkey = '';
+    var cmdts  = 0;
+
+    function setButtonColors() {
+        $.each($(".cmdkey"),function () {
+            var key = $(this).attr('key');
+            var cl = cmdkey == key? 'bg-success' : (cmdkey == ''? '' : 'bg-secondary')
+            var rm = false
+            if ($(this).hasClass('bg-success') && cl != 'bg-success') {$(this).removeClass('bg-success');rm = true}
+            if ($(this).hasClass('bg-secondary') && cl != 'bg-secondary') {$(this).removeClass('bg-secondary');rm = true}
+            if (!rm && cl != '') {$(this).addClass(cl)}
+        })
+    }
+
+    (function updateConsole() {
+        $.ajax({
+            url: '/console?ts=' + cmdts, success: function (result) {
+                cmdkey = result.CmdKey.toUpperCase()
+                cmdts  = result.Timestamp
+                var buttons = new Array();
+                $("#cmdmenu").empty()
+                $.each(result.CmdMenu,function(ix,item) {
+                    var k = item.match(/\[([A-Za-z])\]/)
+                    if (k) {
+                        var key = (k[1]).toUpperCase()
+                        buttons.push('<button class="cmdkey" key="'+ key +'">' + item + "</button>")
+                    }
+                })
+                $("#cmdmenu").html(buttons.join(" "))
+                setButtonColors()
+                if (result.Content != '*') {
+                    $("#console").text(result.Content);
+                }
+                $(".cmdkey").click(function (event) {
+                    event.stopPropagation()
+                    if (cmdkey == '') {
+                        cmdkey = $(this).attr('key')
+                        setButtonColors()
+                        $.get('/cmdkey?CmdKey=' + cmdkey);
+                    }
+                });
+                window.setTimeout(updateConsole, 5000);
+            }
+        });
+    })();
+</script>
+<!--#include file="/parts/foot.html" -->

@@ -70,6 +70,28 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = $API.Info
             break
         }
+        "/console" {
+            $CountLines = 0
+            $ConsoleTimestamp = if (Test-Path ".\Logs\console.txt") {Get-UnixTimestamp (Get-Item ".\Logs\console.txt" -ErrorAction Ignore).LastWriteTime} else {0}
+            
+            $CurrentConsole = if (-not $Parameters.ts -or ($ConsoleTimestamp -ne $Parameters.ts)) {[String]::Join("`n",@(Get-ContentByStreamReader -FilePath ".\Logs\console.txt" -ExpandLines | Where-Object {
+                if ($_ -match "^\*+$") {$CountLines++}
+                else {
+                    $CountLines -eq 2 -and $_ -notmatch "console.txt"
+                }
+            } | Foreach-Object {
+                $_ -replace "$([char]27)\[\d+m"
+            }))} else {'*'}
+
+            $Data = ConvertTo-Json ([PSCustomObject]@{Content = $CurrentConsole; Timestamp = $ConsoleTimestamp; CmdMenu = $API.CmdMenu; CmdKey = $API.CmdKey})
+            $CurrentConsole = $null
+            break
+        }
+        "/cmdkey" {
+            $API.CmdKey = $Parameters.CmdKey
+            $Data = ConvertTo-Json $API.CmdKey
+            break
+        }
         "/sysinfo" {
             $Data = if ($Session.SysInfo) {ConvertTo-Json $Session.SysInfo -ErrorAction Ignore -Depth 10} else {"{}"}
             break

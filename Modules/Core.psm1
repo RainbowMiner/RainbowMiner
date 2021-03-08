@@ -45,6 +45,10 @@ function Start-Core {
 
         Clear-Host
 
+        if (-not $SetupOnly) {
+            Start-Transcript ".\Logs\console.txt" > $null
+        }
+
         Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
         Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
         Write-Host " |       _/\__  \ |  |/    \| __ \ /  _ \ \/ \/ /  \ /  \|  |/    \_/ __ \_  __ \" -ForegroundColor Yellow
@@ -553,6 +557,10 @@ function Start-Core {
     #Load databases, that only need updates once in a while
     Get-WorldCurrencies -Silent -EnableRemoteUpdate
 
+    if (-not $SetupOnly) {
+        Stop-Transcript > $null
+    }
+
     $true
 }
 
@@ -851,6 +859,8 @@ function Invoke-Core {
         $API.APIPassword = $Session.Config.APIPassword
         $API.MachineName = $Session.MachineName
     }
+
+    $API.CmdKey = ''
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {$Session.SysInfo = Get-SysInfo}
 
@@ -2867,6 +2877,11 @@ function Invoke-Core {
     #
     Clear-Host
 
+    #
+    #Capture the current console output
+    #
+    Start-Transcript ".\Logs\console.txt" > $null
+
     if ([Math]::Abs($Session.TimeDiff) -gt 60) {
         Write-Host " "
         Write-Log -Level Warn "This rig's system time is off by $($Session.TimeDiff) seconds. Please adjust and restart RainbowMiner!"
@@ -3202,6 +3217,10 @@ function Invoke-Core {
     if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and -not $Session.IsServerDonationRun) {$cmdMenu.Add("$(if ($LockMiners){"Un[l]ock"} else {"[L]ock"})") > $null}
     Write-Host "Waiting $($WaitSeconds)s until next run: $($cmdMenu -join ", ")"
 
+    Stop-Transcript > $null
+
+    $API.CmdMenu = $cmdMenu
+
     $SamplesPicked = 0
     $WaitRound = 0
     $SomeMinersFailed = $false
@@ -3266,12 +3285,21 @@ function Invoke-Core {
                             elseif ($API.Update) {"U"}
                             elseif ($API.UpdateBalance) {"B"}
                             elseif ($API.WatchdogReset) {"W"}
-                            elseif ($(try {[console]::KeyAvailable} catch {if ($Error.Count) {$Error.RemoveAt(0)}})) {
-                                $key = [System.Console]::ReadKey($true)
-                                if (-not $key.Modifiers) {$key.key} elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
+                            elseif ($API.CmdKey -ne '') {$API.CmdKey}
+                            else {
+                                try {
+                                    if ([System.Console]::KeyAvailable) {
+                                        $key = [System.Console]::ReadKey($true)
+                                        if (-not $key.Modifiers) {$key.key} elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
+                                    }
+                                } catch {
+                                    if ($Error.Count) {$Error.RemoveAt(0)}
+                                    Write-Log -Level Warn "Console not available. Please use the web console. ($($_.Exception.Message))"
+                                }
                             }
 
         if ($keyPressedValue) {
+            $API.CmdKey = $keyPressedValue
             switch ($keyPressedValue) {
                 "S" { 
                     $Session.SkipSwitchingPrevention = $true

@@ -17,6 +17,8 @@
     $API.ApplyOC     = $false
     $API.LockMiners  = $false
     $API.IsVirtual   = $false
+    $API.CmdMenu     = @()
+    $API.CmdKey      = ''
     $API.APIport     = $Session.Config.APIport
     $API.RandTag     = Get-MD5Hash("$((Get-Date).ToUniversalTime())$(Get-Random)")
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
