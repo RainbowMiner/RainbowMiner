@@ -16,7 +16,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.2-xlarig/XLArig-v5.2.2-linux-x86_64.zip"
     $DevFee = 0.0
 } else {
-    $Path = ".\Bin\CPU-Xlarig\xlarig520.exe"
+    $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.2-xlarig/XLArig-v5.2.2-win64.zip"
     $DevFee = 0.0
 }
