@@ -92,6 +92,8 @@
             Currencies=@("ETH")
         }
         "Ezil" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{EnableNanominerDual="1"}
+            SetupFields=[PSCustomObject]@{EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms"}
             Currencies=@("ETH","ETC","ZIL")
         }
         "F2pool" = [PSCustomObject]@{

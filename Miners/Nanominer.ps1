@@ -11,17 +11,17 @@ $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "10.0"
 $DevFee = 3.0
-$Version = "3.3.0"
+$Version = "3.3.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.0-nanominer/nanominer-linux-3.3.0-cuda11.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.1-nanominer/nanominer-linux-3.3.1-cuda11.tar.gz"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.0-nanominer/nanominer-linux-3.3.0.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.1-nanominer/nanominer-linux-3.3.1.tar.gz"
             Cuda = "10.0"
         }
     )
@@ -29,11 +29,11 @@ if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.0-nanominer/nanominer-windows-3.3.0-cuda11.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.1-nanominer/nanominer-windows-3.3.1-cuda11.zip"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.0-nanominer/nanominer-windows-3.3.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.1-nanominer/nanominer-windows-3.3.1.zip"
             Cuda = "10.0"
         }
     )
@@ -42,12 +42,12 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "autolykos";               Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.5} #Autolycos/Ergo
+    [PSCustomObject]@{MainAlgorithm = "autolykos";               Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
-    [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; ExcludePoolName = "^F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "EtcHash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0} #EtcHash
-    [PSCustomObject]@{MainAlgorithm = "KawPow";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #KawPOW
-    #[PSCustomObject]@{MainAlgorithm = "Octopus";    DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("NVIDIA");       ExtendInterval = 2; DevFee = 2.0} #Octopus/Conflux
+    [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "^F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true} #EtcHash
+    [PSCustomObject]@{MainAlgorithm = "KawPow";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "Octopus";    DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("NVIDIA");       ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #Octopus/Conflux
     [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0} #RandomX
     [PSCustomObject]@{MainAlgorithm = "Verushash";               Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes")} #Verushash
     [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "^F2Pool"} #UbqHash
@@ -92,6 +92,11 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $First = $true
             $Algorithm_Norm_0 = if ($_.Algorithm) {Get-Algorithm $_.Algorithm} else {Get-Algorithm $_.MainAlgorithm}
 
+            if ($_.DualZIL -and $Pools.ZilliqaETH) {
+                $ZilWallet = $Pools.ZilliqaETH.Wallet
+                $ZilPool   = "$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
+            }
+
             if ($Miner_Vendor -eq "CPU") {
                 $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
                 $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
@@ -121,7 +126,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                             $PaymentId = "0"
                         }
                     }
-
+                    
 				    $Arguments = [PSCustomObject]@{
                         Algo      = $_.MainAlgorithm
                         Coin      = $Pools.$Algorithm_Norm.CoinSymbol
@@ -129,6 +134,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    Port      = $Pools.$Algorithm_Norm.Port
 					    SSL       = $Pools.$Algorithm_Norm.SSL
 					    Wallet    = $Wallet
+                        ZilWallet = $ZilWallet
+                        ZilPool   = $ZilPool
                         PaymentId = $PaymentId
                         Worker    = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
                         Pass      = $Pools.$Algorithm_Norm.Pass

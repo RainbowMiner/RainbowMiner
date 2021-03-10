@@ -1802,6 +1802,14 @@ class Nanominer : Miner {
             if ($Parameters.Coin)                {$FileC += "coin=$($Parameters.Coin)"}
             if ($Parameters.Protocol)            {$FileC += "protocol=$($Parameters.Protocol)"}
 
+            if ($Parameters.ZilWallet -and $Parameters.ZilPool) {
+                $FileC += ""
+                $FileC += "[zil]"
+                $FileC += "wallet = $($Parameters.ZilWallet)"
+                $FileC += "zilEpoch = 0 ; number of DAG epoch for caching"
+                $FileC += "pool1 = $($Parameters.ZilPool)"
+            }
+
             $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
         }
 

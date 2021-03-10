@@ -9,6 +9,7 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
+    [Bool]$EnableNanominerDual = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week"
 )
@@ -24,18 +25,20 @@ $Pools_Data = @(
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
-if ((-not $Pool_Currencies -or -not $Wallets.ZIL) -and -not $InfoOnly) {return}
+if (((-not $EnableNanominerDual -and -not $Pool_Currencies) -or -not $Wallets.ZIL) -and -not $InfoOnly) {return}
 
-$Pool_RequestCalc = [PSCustomObject]@{}
-$Pool_RequestStat = [PSCustomObject]@{}
+if ($Pool_Currencies) {
+    $Pool_RequestCalc = [PSCustomObject]@{}
+    $Pool_RequestStat = [PSCustomObject]@{}
 
-try {
-    $Pool_RequestCalc = Invoke-RestMethodAsync "https://calculator.ezil.me/api/ezil_calculator?hashrate=100" -cycletime 120 -tag $Name
-    $Pool_RequestStat = Invoke-RestMethodAsync "https://stats.ezil.me/current_stats/by_coin" -cycletime 120 -tag $Name
-} catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool API ($Name) has failed. "
-    return
+    try {
+        $Pool_RequestCalc = Invoke-RestMethodAsync "https://calculator.ezil.me/api/ezil_calculator?hashrate=100" -cycletime 120 -tag $Name
+        $Pool_RequestStat = Invoke-RestMethodAsync "https://stats.ezil.me/current_stats/by_coin" -cycletime 120 -tag $Name
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool API ($Name) has failed. "
+        return
+    }
 }
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -48,7 +51,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_Request = [PSCustomObject]@{}
 
-    if (-not $InfoOnly) {
+    if (-not $InfoOnly -and $Pool_Currencies) {
         $timestamp      = Get-UnixTimestamp
         $timestamp24h   = $timestamp - 86400
 
@@ -72,40 +75,77 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         $Pool_Ssl = $false
         foreach($Pool_Port in $Pool_Ports) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.$StatAverageStable
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
-                Host          = "$($Pool_Region).ezil.me"
-                Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).$($Wallets.ZIL)"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $Pool_Ssl
-                Updated       = (Get-Date).ToUniversalTime()
-                PoolFee       = 1.0
-                DataWindow    = $DataWindow
-                Workers       = $Pool_RequestStat.$Pool_Currency.workers_count
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
-                EthMode       = $Pool_EthProxy
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = "$($Wallets.$Pool_Currency).$($Wallets.ZIL)"
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+            if ($Pool_Currencies) {
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    Algorithm0    = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = $Stat.$StatAverage #instead of .Live
+                    StablePrice   = $Stat.$StatAverageStable
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
+                    Host          = "$($Pool_Region).ezil.me"
+                    Port          = $Pool_Port
+                    User          = "$($Wallets.$Pool_Currency).$($Wallets.ZIL)"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_Ssl
+                    Updated       = $Stat.Updated
+                    PoolFee       = 1.0
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_RequestStat.$Pool_Currency.workers_count
+                    Hashrate      = $Stat.HashRate_Live
+                    TSL           = $Pool_TSL
+                    BLK           = $Stat.BlockRate_Average
+                    EthMode       = $Pool_EthProxy
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = "$($Wallets.$Pool_Currency).$($Wallets.ZIL)"
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
+            }
+            if ($EnableNanominerDual) {
+                [PSCustomObject]@{
+                    Algorithm     = "Zilliqa$($Pool_Currency)"
+                    Algorithm0    = "Zilliqa$($Pool_Currency)"
+                    CoinName      = "Zilliqa"
+                    CoinSymbol    = "ZIL"
+                    Currency      = "ZIL"
+                    Price         = 1e-15
+                    StablePrice   = 1e-15
+                    MarginOfError = 0
+                    Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
+                    Host          = "$($Pool_Region).ezil.me"
+                    Port          = $Pool_Port
+                    User          = $Wallets.ZIL
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_Ssl
+                    Updated       = (Get-Date).ToUniversalTime()
+                    PoolFee       = 1.0
+                    DataWindow    = $DataWindow
+                    Workers       = $null
+                    Hashrate      = $null
+                    EthMode       = $Pool_EthProxy
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Wallets.ZIL
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
             }
             $Pool_Ssl = $true
         }
