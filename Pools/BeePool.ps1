@@ -63,7 +63,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
     $Pool_Wallet    = "$($Wallets.$Pool_Currency)"
     $Pool_PP        = ""
 
-    if ($Pool_Wallet -match "@(pps|pplns)$") {        
+    if ($Pool_Wallet -match "@(pps|pplns)$") {
         if ($Matches[1] -ne "pplns" -or $_.fee_pplns -ne $null) {
             $Pool_PP = $Matches[1]
             if ($Matches[1] -eq "pplns") {$Pool_Fee = $_.fee_pplns}

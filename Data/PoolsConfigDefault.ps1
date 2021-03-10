@@ -91,6 +91,9 @@
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
         }
+        "Ezil" = [PSCustomObject]@{
+            Currencies=@("ETH","ETC","ZIL")
+        }
         "F2pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{UserName=""}
             SetupFields=[PSCustomObject]@{UserName="Enter your f2pool username, if you want to see balances"}
@@ -354,6 +357,12 @@
         }
         "PoolSexy" = [PSCustomObject]@{
             Currencies=@("DBIX")
+        }
+        "ProHashing" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{User="";API_Key="";AECurrency="BTC"}
+            SetupFields=[PSCustomObject]@{User="Enter your ProHashing username";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency"}
+            Currencies=@()
+            Autoexchange=$true
         }
         "Ravenminer" = [PSCustomObject]@{
             Currencies=@("RVN")

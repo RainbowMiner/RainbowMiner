@@ -5,13 +5,13 @@ param(
     [PSCustomObject]$Params,
     [alias("WorkerName")]
     [String]$Worker,
-    [alias("UserName")]
-    [String]$User,
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
+    [alias("UserName")]
+    [String]$User,
     [String]$AEcurrency = ""
 )
 
