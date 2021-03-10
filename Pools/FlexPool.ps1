@@ -92,7 +92,7 @@ if (-not $InfoOnly) {
 
 foreach($Pool_Region in $Pool_Regions) {
     $Pool_SSL = $false
-    foreach($Pool_Port in $Pool_Regions) {
+    foreach($Pool_Port in $Pool_Ports) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
