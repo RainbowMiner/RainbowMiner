@@ -41,7 +41,7 @@ if ($Pool_Currencies) {
     }
 }
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$EnableNanominerDual -or $Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Coin  = Get-Coin $_.symbol
     $Pool_Ports = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
