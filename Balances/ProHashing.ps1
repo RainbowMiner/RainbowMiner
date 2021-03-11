@@ -18,7 +18,7 @@ catch {
     if ($Error.Count){$Error.RemoveAt(0)}
 }
 
-if ($Request.code -eq 200) {
+if ($Request.code -ne 200) {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
