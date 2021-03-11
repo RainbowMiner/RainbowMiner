@@ -2869,6 +2869,12 @@ function Invoke-Core {
     #
     Clear-Host
 
+    if (-not $Session.ConsoleCapture) {
+        #Begin capture of the current console output
+        Start-Transcript ".\Logs\console.txt" > $null
+        $Session.ConsoleCapture = $true
+    }
+
     if ([Math]::Abs($Session.TimeDiff) -gt 60) {
         Write-Host " "
         Write-Log -Level Warn "This rig's system time is off by $($Session.TimeDiff) seconds. Please adjust and restart RainbowMiner!"

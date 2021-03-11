@@ -381,40 +381,45 @@ if ($IsWindows -and $Session.IsAdmin) {
 }
 
 #Begin capture of the current console output
-if (-not $SetupOnly) {Start-Transcript ".\Logs\console.txt" > $null}
-
-$StartCore_Status = Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly
-
-#End capture of the current console output
-if (-not $SetupOnly) {Stop-Transcript > $null}
-
-if (-not $StartCore_Status) {exit}
-
-while (-not $Session.Stopp) {
-
-    #Begin capture of the current console output
-    if (-not $SetupOnly) {Start-Transcript ".\Logs\console.txt" > $null}
-
-    Invoke-Core
-
-    #End capture of the current console output
-    if (-not $SetupOnly) {Stop-Transcript > $null}
-
-    if (-not $Session.Stopp) {
-        Write-Log "Starting next run..."
-        if ($ForceFullCollection) {
-            [System.GC]::Collect()
-            [System.GC]::WaitForPendingFinalizers()
-            [System.GC]::Collect()
-            Get-MemoryUsage -ForceFullCollection >$null
-        } else {
-            [System.GC]::Collect()
-        }
-        Write-Log (Get-MemoryUsage -Reset).MemText
-    }
+if (-not $SetupOnly) {
+    Start-Transcript ".\Logs\console.txt" > $null
+    $Session.ConsoleCapture = $true
 }
 
-Stop-Core
+if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
+
+    while (-not $Session.Stopp) {
+
+        Invoke-Core
+
+        #Stop the console capture
+        if ($Session.ConsoleCapture) {
+            Stop-Transcript > $null
+            $Session.ConsoleCapture = $false
+        }
+
+        if (-not $Session.Stopp) {
+            Write-Log "Starting next run..."
+            if ($ForceFullCollection) {
+                [System.GC]::Collect()
+                [System.GC]::WaitForPendingFinalizers()
+                [System.GC]::Collect()
+                Get-MemoryUsage -ForceFullCollection >$null
+            } else {
+                [System.GC]::Collect()
+            }
+            Write-Log (Get-MemoryUsage -Reset).MemText
+        }
+    }
+
+    Stop-Core
+}
+
+#Stop the console capture
+if ($Session.ConsoleCapture) {
+    Stop-Transcript > $null
+    $Session.ConsoleCapture = $false
+}
 
 #Stop the log
 if (-not $psISE -and $Session.LogLevel -ne "Silent") {
