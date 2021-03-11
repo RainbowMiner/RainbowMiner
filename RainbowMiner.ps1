@@ -380,11 +380,25 @@ if ($IsWindows -and $Session.IsAdmin) {
     }
 }
 
-if (-not (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly)) {Exit}
+#Begin capture of the current console output
+if (-not $SetupOnly) {Start-Transcript ".\Logs\console.txt" > $null}
+
+$StartCore_Status = Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly
+
+#End capture of the current console output
+if (-not $SetupOnly) {Stop-Transcript > $null}
+
+if (-not $StartCore_Status) {exit}
 
 while (-not $Session.Stopp) {
 
+    #Begin capture of the current console output
+    if (-not $SetupOnly) {Start-Transcript ".\Logs\console.txt" > $null}
+
     Invoke-Core
+
+    #End capture of the current console output
+    if (-not $SetupOnly) {Stop-Transcript > $null}
 
     if (-not $Session.Stopp) {
         Write-Log "Starting next run..."
