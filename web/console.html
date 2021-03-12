@@ -14,22 +14,43 @@
     </div>
 </div>
 
+<div id="miners">
+    <h3 class="mt-4 h-selector" id="h-minerboxes">Running Miners</a></h3>
+    <div id="minerboxes" class="card-deck"></div>
+</div>
+
 <!-- End of page scripts -->
+<script id="miner_template" type="text/x-handlebars-template">
+    <div class="mb-2 card {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 400px">
+        <div class="card-header">
+            <h5>{{name}}</h5>
+        </div>
+        <div class="card-body small">
+            <pre>
+                {{content}}
+            </pre>
+        </div>
+    </div>
+</script>
+
 <script type="text/javascript">
 
-    var cmdkey = '';
-    var cmdts  = 0;
+var cmdkey = '';
+var cmdts  = 0;
 
-    function setButtonColors() {
-        $.each($(".cmdkey"),function () {
-            var key = $(this).attr('key');
-            var cl = cmdkey == key? 'bg-success' : (cmdkey == ''? '' : 'bg-secondary')
-            var rm = false
-            if ($(this).hasClass('bg-success') && cl != 'bg-success') {$(this).removeClass('bg-success');rm = true}
-            if ($(this).hasClass('bg-secondary') && cl != 'bg-secondary') {$(this).removeClass('bg-secondary');rm = true}
-            if (!rm && cl != '') {$(this).addClass(cl)}
-        })
-    }
+function setButtonColors() {
+    $.each($(".cmdkey"),function () {
+        var key = $(this).attr('key');
+        var cl = cmdkey == key? 'bg-success' : (cmdkey == ''? '' : 'bg-secondary')
+        var rm = false
+        if ($(this).hasClass('bg-success') && cl != 'bg-success') {$(this).removeClass('bg-success');rm = true}
+        if ($(this).hasClass('bg-secondary') && cl != 'bg-secondary') {$(this).removeClass('bg-secondary');rm = true}
+        if (!rm && cl != '') {$(this).addClass(cl)}
+    })
+}
+
+$(function () {
+    var template = Handlebars.compile($("#miner_template").html());
 
     (function updateConsole() {
         $.ajax({
@@ -58,9 +79,18 @@
                         $.get('/cmdkey?CmdKey=' + cmdkey);
                     }
                 });
+
+                $("#minerboxes").empty()
+                if (result.Miners && result.Miners.length) {
+                    $.each(result.Miners,function(ix,item) {
+                        $("#minerboxes").append(template({name: item.Name, content: item.Content, dark: theme == "dark"}));
+                    })
+                }
+
                 window.setTimeout(updateConsole, 5000);
             }
         });
     })();
+})
 </script>
 <!--#include file="/parts/foot.html" -->

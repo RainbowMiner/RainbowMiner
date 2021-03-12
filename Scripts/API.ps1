@@ -72,7 +72,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/console" {
             $CountLines = 0
-            $ConsoleTimestamp = if (Test-Path ".\Logs\console.txt") {Get-UnixTimestamp (Get-Item ".\Logs\console.txt" -ErrorAction Ignore).LastWriteTime} else {0}
+            $ConsoleTimestamp = [int]$(if (Test-Path ".\Logs\console.txt") {Get-UnixTimestamp (Get-Item ".\Logs\console.txt" -ErrorAction Ignore).LastWriteTime} else {0})
             
             $CurrentConsole = if (-not $Parameters.ts -or ($ConsoleTimestamp -ne $Parameters.ts)) {[String]::Join("`n",@(Get-ContentByStreamReader -FilePath ".\Logs\console.txt" -ExpandLines | Where-Object {
                 if ($_ -match "^\*+$") {$CountLines++}
@@ -83,8 +83,19 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $_ -replace "$([char]27)\[\d+m"
             }))} else {'*'}
 
-            $Data = ConvertTo-Json ([PSCustomObject]@{Content = $CurrentConsole; Timestamp = $ConsoleTimestamp; CmdMenu = $API.CmdMenu; CmdKey = $API.CmdKey})
-            $CurrentConsole = $null
+            $CurrentMiners = @()
+            if (($IsLinux -or -not $Session.Config.ShowMinerWindow) -and $API.RunningMiners) {
+                $CurrentMiners = @($API.RunningMiners | Where-Object {$_.LogFile -and (Test-Path $_.LogFile)} | Sort-Object -Property Name | Foreach-Object {
+                    [PSCustomObject]@{
+                        Name = "$($_.DeviceModel) $($_.BaseName): $(@(for($i=0;$i -lt $_.BaseAlgorithm.Count; $i++) {"$(Get-MappedAlgorithm $_.BaseAlgorithm[$i])@$($_.Pool[$i])"}) -join ', ')"
+                        Content = [String]::Join("`n",@(Get-Content $_.LogFile -Tail 20 -ErrorAction Ignore | Foreach-Object {$_ -replace "$([char]27)\[\d+m"}))
+                    }
+                })
+            }
+
+            $Data = ConvertTo-Json ([PSCustomObject]@{Content = $CurrentConsole; Miners = $CurrentMiners; Timestamp = $ConsoleTimestamp; CmdMenu = $API.CmdMenu; CmdKey = $API.CmdKey})
+            Remove-Variable "CurrentMiners"
+            Remove-Variable "CurrentConsole"
             break
         }
         "/cmdkey" {
