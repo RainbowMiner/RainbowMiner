@@ -158,3 +158,46 @@ if ($Config.Pools.Binance.EnableShowWallets -and $Config.Pools.Binance.API_Key -
         }
     }
 }
+
+#
+# Nicehash Wallets
+#
+
+if ($Config.Pools.Nicehash.EnableShowWallets -and $Config.Pools.Nicehash.API_Key -and $Config.Pools.Nicehash.API_Secret -and $Config.Pools.Nicehash.OrganizationID) {
+
+    $ShowBTCWallet = $true
+
+    if ($Config.Pools.Nicehash.BTC) {
+        $Request = [PSCustomObject]@{}
+        try {
+            $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($Config.Pools.Nicehash.BTC)/rigs2/" -cycletime ($Config.BalanceUpdateMinutes*60)
+            $ShowBTCWallet = $Request.externalAddress
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    }
+
+    $Request = @()
+    try {
+        $Request = (Invoke-NHRequest "/main/api/v2/accounting/accounts2" $Config.Pools.Nicehash.API_Key $Config.Pools.Nicehash.API_Secret $Config.Pools.Nicehash.OrganizationID).currencies | Where-Object {$_.active -and [decimal]$_.totalBalance -and ($ShowBTCWallet -or $_.currency -ne "BTC")}
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Verbose "Nicehash Wallet API has failed ($Name) "
+    }
+
+    $Request | Foreach-Object {
+        [PSCustomObject]@{
+                Caption     = "$Name $($_.currency) (Nicehash)"
+		        BaseName    = $Name
+                Info        = " Nicehash"
+                Currency    = $_.currency
+                Balance     = [decimal]$_.totalBalance
+                Pending     = [decimal]$_.pending
+                Total       = [decimal]$_.totalBalance
+                Payouts     = @()
+                LastUpdated = (Get-Date).ToUniversalTime()
+        }
+    }
+}
