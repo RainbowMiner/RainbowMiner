@@ -14,7 +14,7 @@ if (-not $PoolConfig.BTC) {
 
 if (-not (Test-Path "Variable:Global:NHWallets")) {$Global:NHWallets = [hashtable]@{}}
 
-if (-not $Global:NHWallets.ContainsKey($Wallets.BTC) -or $Global:NHWallets[$PoolConfig.BTC]) {
+if (-not $Global:NHWallets.ContainsKey($PoolConfig.BTC) -or $Global:NHWallets[$PoolConfig.BTC]) {
     $Request = [PSCustomObject]@{}
     try {
         $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs2/" -cycletime ($Config.BalanceUpdateMinutes*60) -tag $Name
