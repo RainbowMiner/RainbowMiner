@@ -23,7 +23,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, 572133Club, 666Pool, 6Block, Acepool, AHashPool, BaikalMiner, BeePool, Binance, BlazePool, BlockCruncher, BlockMasters, Bsod, BtcPrivate, Cortexmint, EthashPool, Ethermine, F2pool, FairPool, FlexPool, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, MinerRocks, MiningDutch, MiningPoolHub, MiningPoolOvh, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, MoneroOcean, Nanopool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhiPhiPool, Poolin, Poolium, PoolmineXyz, Ravenminer, SoloPool, SparkPool, Sunpool, SuprNova, UUpool, WoolyPooly, ZelLabs, Zergpool and Zpool)**
+- **Profit auto-switch between pools (2Miners, 572133Club, 666Pool, 6Block, Acepool, AHashPool, BaikalMiner, BeePool, Binance, BlazePool, BlockCruncher, BlockMasters, Bsod, BtcPrivate, Cortexmint, EthashPool, Ethermine, Ezil.me, F2pool, FairPool, FlexPool, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, MinerRocks, MiningDutch, MiningPoolHub, MiningPoolOvh, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, MoneroOcean, Nanopool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhiPhiPool, Poolin, Poolium, PoolmineXyz, Ravenminer, SoloPool, SparkPool, Sunpool, SuprNova, UUpool, WoolyPooly, ZelLabs, Zergpool and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -234,7 +234,7 @@ Alternative: start as Linux `screen`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersSolo, 572133Club, 666Pool, 6Block, Acepool, AHashPool, Aionmine, BaikalMine, BaikalMineSolo, BeePool, Binance, BlazePool, BlockMasters, BlockMastersCoins, Bsod, BsodParty, BsodSolo, BtcPrivate, Cortexmint, CpuPool, EthashPool, Ethermine, F2pool, FairPool, FlexPool, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Minexmr, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningPoolOvh, MiningRigRentals, Mintpond, MoneroOcean, Nanopool, NiceHash, NLpool, PhiPhiPool, Poolin, Poolium, PoolmineXyz, PoolmineXyzSolo, PoolSexy, ProHashing, Ravenminer, RPlant, SoloPool, SparkPool, Sunpool, SuprNova, Tecracoin, UUpool, WhatToMine, WoolyPooly, WoolyPoolySolo, ZelLabs, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersSolo, 572133Club, 666Pool, 6Block, Acepool, AHashPool, Aionmine, BaikalMine, BaikalMineSolo, BeePool, Binance, BlazePool, BlockMasters, BlockMastersCoins, Bsod, BsodParty, BsodSolo, BtcPrivate, Cortexmint, CpuPool, EthashPool, Ethermine, Ezil, F2pool, FairPool, FlexPool, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, MinerRocks, Minexmr, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningPoolOvh, MiningRigRentals, Mintpond, MoneroOcean, Nanopool, NiceHash, NLpool, PhiPhiPool, Poolin, Poolium, PoolmineXyz, PoolmineXyzSolo, PoolSexy, ProHashing, Ravenminer, RPlant, SoloPool, SparkPool, Sunpool, SuprNova, Tecracoin, UUpool, WhatToMine, WoolyPooly, WoolyPoolySolo, ZelLabs, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -384,6 +384,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>CpuPool</summary> http://cpu-pool.com/ specialized on CPU mining, no auto-exchange, a separate wallet is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>EthashPool</summary> https://ethashpool.com/ auto-exchange to ETH and BTC, registration is mandatory for autoexchange to work. Either set wallet address or username (autoexchange) in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a separate wallet address is needed for each coin (ETH, ETC) you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>Ethermine</summary> [https://ezil.me](https://ezil.me/?p=dcf9) no auto-exchange, a ZIL wallet plus either an ETH or an ETC wallet is needed. For more info on dual mining ZIL, see the FAQ below. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>F2Pool</summary> https://www.f2pool.com/ no auto-exchange, either enter your f2pool username as wallet address, or a real wallet address for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>FlexPool</summary> https://flexpool.io/ no auto-exchange, pays in ETH. Set wallet in pools configuration or edit pools.config.txt</details>
@@ -411,7 +412,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>MiningPoolHub</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm</details>
 <details><summary>MiningPooHubCoins</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).</details>
 <details><summary>MiningPoolOvh</summary> https://www.mining-pool.ovh/ no auto-exchange registration is mandatory, mines VRM (VeriumReserve). Set Mining-Pool.ovh user plus worker (e.g. "miner.001") as wallet address and your worker password in pools configuration or edit pools.config.txt</details>
-<details><summary>MiningRigRentals</summary> https://www.miningrigrentals.com/?ref=2598069 rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
+<details><summary>MiningRigRentals</summary> [https://www.miningrigrentals.com/](https://www.miningrigrentals.com/?ref=2598069) rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
 <details><summary>Mintpond</summary> https://mintpond.com/ if you are totally in Zcoin, then this pool might be the best choice. A separate wallet address is needed for XZC. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>MoneroOcean</summary> https://moneroocean.stream/ auto-exchange and payout in XMR, enter your Monero wallet address and a password (either a real password or your email-address) into pools.config.txt to start mining</details>
 <details><summary>NanoPool</summary> https://nanopool.org/ no auto-exchange, a separate wallet address is needed for each coin (ETH, ETC, ZEC, ETN, SIA, PASC) you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -1760,6 +1761,18 @@ lt=50]
 RainbowMiner comes with easy setup configuration. Download a setup.json at http://localhost:4000/setup.json from your current rig, copy it into the new rig's RainbowMiner folder *before first start* (you may easily reset RainbowMiner by simply deleting the complete `".\Config"` folder). Now answer two inputs and off you go.
 More info can be [found here](https://github.com/RainbowMiner/RainbowMiner#copy-current-configuration-to-new-rigs).
 
+### How can I dual mine ETH/ETC with ZIL?
+
+Most info can be found on the FAQ page at [https://ezil.me](https://ezil.me/?p=dcf9). But there is more.
+- first of all, get a ZIL wallet address. 
+- set your wallet address(es) in pools.config.txt section "Ezil"
+- add "Ezil" to the "PoolName" list in config.txt
+- if you want to mine ETC/ETH + ZIL on [https://ezil.me](https://ezil.me/?p=dcf9) only, you are done. You will mine ETH/ETC most of the time and the pool will switch to ZIL mining every 1,5h for a short period of time. ZIL uses the same Ethash algorithm.
+- here is the extra: it is possible to mine ZIL only on ezil.me pool and with other algorithms on other pools with miner Nanominer (currently Autolycos2, Etchash, Ethash, KawPow and Octopus):
+  - set the ZIL wallet in pools.config.txt, only. No ETH nor ETC.
+  - set `"EnableNanominerDual": "1",` in pools.config.txt
+  - done. Now Nanominer will switch to Ezil.me just in time to catch the next ZIL mining rounds and switch back, afterwards.
+  - it will use the dummy ETH address 0xffffffffffffffffffffffffffffffffffffffff to auth on Ezil.me
 
 ### How does the profit switcher work and how can I change it's behavior?
 
