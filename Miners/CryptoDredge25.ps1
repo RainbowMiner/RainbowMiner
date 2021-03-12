@@ -64,7 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnzls";       MinMemGb = 3.3; Params = ""} #CryptonightZelerius, new with v0.23.0
     #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 3.3; Params = ""; ExtendInterval = 2} #Cuckaroo29
     [PSCustomObject]@{MainAlgorithm = "hmq1725";     MinMemGb = 1; Params = ""; Legacy = $true} #HMQ1725 (new in 0.10.0)
-    [PSCustomObject]@{MainAlgorithm = "lux";         MinMemGb = 1; Params = ""; Algorithm = "phi2"; Legacy = $true} #Lux/PHI2
+    #[PSCustomObject]@{MainAlgorithm = "lux";         MinMemGb = 1; Params = ""; Algorithm = "phi2"; Legacy = $true} #Lux/PHI2
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";     MinMemGb = 1; Params = ""; Legacy = $true} #Lyra2Re3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban"; MinMemGb = 1; Params = ""; Legacy = $true} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";      MinMemGb = 1; Params = ""; Legacy = $true} #Lyra2z
