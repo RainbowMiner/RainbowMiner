@@ -85,6 +85,11 @@ $(function () {
                     $.each(result.Miners,function(ix,item) {
                         $("#minerboxes").append(template({name: item.Name, content: item.Content, dark: theme == "dark"}));
                     })
+                    if ($("#miners").is(":hidden"))
+                        $("#miners").show()
+                } else {
+                    if (!$("#miners").is(":hidden"))
+                        $("#miners").hide()
                 }
 
                 window.setTimeout(updateConsole, 5000);
