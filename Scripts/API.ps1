@@ -87,7 +87,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if (($IsLinux -or -not $Session.Config.ShowMinerWindow) -and $API.RunningMiners) {
                 $CurrentMiners = @($API.RunningMiners | Where-Object {$_.LogFile -and (Test-Path $_.LogFile)} | Sort-Object -Property Name | Foreach-Object {
                     [PSCustomObject]@{
-                        Name = "$($_.DeviceModel) $($_.BaseName): $(@(for($i=0;$i -lt $_.BaseAlgorithm.Count; $i++) {"$(Get-MappedAlgorithm $_.BaseAlgorithm[$i])@$($_.Pool[$i])"}) -join ', ')"
+                        Name = "$($_.DeviceModel) $($_.BaseName)"
                         Content = [String]::Join("`n",@(Get-Content $_.LogFile -Tail 20 -ErrorAction Ignore | Foreach-Object {$_ -replace "$([char]27)\[\d+m"}))
                     }
                 })
