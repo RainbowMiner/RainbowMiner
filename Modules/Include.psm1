@@ -2954,7 +2954,7 @@ function Get-Device {
             $Platform_Devices | Foreach-Object {
                 $PlatformId = $_.PlatformId
                 $PlatformVendor = $_.Vendor
-                $_.Devices | Foreach-Object {    
+                $_.Devices | Where-Object {$_} | Foreach-Object {    
                     $Device_OpenCL = $_
 
                     $Vendor_Name = [String]$Device_OpenCL.Vendor
