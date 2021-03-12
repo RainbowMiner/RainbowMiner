@@ -18,8 +18,22 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 $Pool_MiningRequest = [PSCustomObject]@{}
 
+if (-not (Test-Path "Variable:Global:NHWallets")) {$Global:NHWallets = [hashtable]@{}}
+
 if (-not $InfoOnly) {
     if (-not $Wallets.BTC) {return}
+
+    if (-not $Global:NHWallets.ContainsKey($Wallets.BTC)) {
+        $Request = [PSCustomObject]@{}
+        try {
+            $Request = Invoke-GetUrl "https://api2.nicehash.com/main/api/v2/mining/external/$($Wallets.BTC)/rigs2/"
+            $Global:NHWallets[$Wallets.BTC] = $Request.externalAddress
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Pool Mining API ($Name) has failed. "
+        }
+    }
 }
 
 try {

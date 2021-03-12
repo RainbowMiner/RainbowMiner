@@ -12,17 +12,22 @@ if (-not $PoolConfig.BTC) {
     return
 }
 
-$Request = [PSCustomObject]@{}
-try {
-    $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs2/" -cycletime ($Config.BalanceUpdateMinutes*60)
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
-    return
+if (-not (Test-Path "Variable:Global:NHWallets")) {$Global:NHWallets = [hashtable]@{}}
+
+if (-not $Global:NHWallets[$PoolConfig.BTC]) {
+    $Request = [PSCustomObject]@{}
+    try {
+        $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs2/" -cycletime ($Config.BalanceUpdateMinutes*60) -tag $Name
+        $Global:NHWallets[$PoolConfig.BTC] = $Request.externalAddress
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
+        return
+    }
 }
 
-if ($Request.externalAddress) {
+if ($Global:NHWallets[$PoolConfig.BTC]) {
 
     [PSCustomObject]@{
         Caption     = "$($Name) (BTC)"
