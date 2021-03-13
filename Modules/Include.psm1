@@ -5268,7 +5268,7 @@ function Set-PoolsConfigDefault {
             }
             $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
             if ($Pools.Count -gt 0 -or $Userpools.Count -gt 0) {
-                $Pools + $Userpools | Sort-Object | Foreach-Object {
+                $Pools + $Userpools | Select-Object -Unique | Sort-Object | Foreach-Object {
                     $Pool_Name = $_
                     if ($Preset -and $Preset.PSObject.Properties.Name -icontains $Pool_Name) {
                         $Setup_Content = $Preset.$Pool_Name
