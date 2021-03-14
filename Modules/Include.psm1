@@ -2281,7 +2281,7 @@ function Stop-SubProcess {
                         #$Data = $Response | ConvertFrom-Json -ErrorAction Stop
 
                         $StopWatch.Reset()
-                        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 20) {
+                        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 20) {
                             Start-Sleep -Milliseconds 500
                         }
                         if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
@@ -2333,7 +2333,7 @@ function Stop-SubProcess {
                                 }
 
                                 $StopWatch.Restart()
-                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 10) {
+                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
                                     Start-Sleep -Milliseconds 500
                                 }
 
@@ -2383,8 +2383,8 @@ function Stop-SubProcess {
                 # Wait for miner to shutdown
                 #
 
-                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le $WaitForExit) {
-                    Write-Log -Level Info "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.Seconds)s elapsed)$(if ($Name) {": $($Name)"})"
+                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
+                    Write-Log -Level Info "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.TotalSeconds)s elapsed)$(if ($Name) {": $($Name)"})"
                     Start-Sleep -Seconds 1
                 }
 
