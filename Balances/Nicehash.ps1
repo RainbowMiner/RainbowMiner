@@ -12,10 +12,39 @@ if (-not $PoolConfig.BTC) {
     return
 }
 
+$Request = [PSCustomObject]@{}
+
 if (-not (Test-Path "Variable:Global:NHWallets")) {$Global:NHWallets = [hashtable]@{}}
 
-if (-not $Global:NHWallets.ContainsKey($PoolConfig.BTC) -or $Global:NHWallets[$PoolConfig.BTC]) {
-    $Request = [PSCustomObject]@{}
+if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.OrganizationID) {
+
+    try {
+        $Request = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
+    }
+
+    if ($Request.active) {
+
+        $Global:NHWallets[$PoolConfig.BTC] = $false
+
+        [PSCustomObject]@{
+            Caption     = "$($Name) ($($Request.currency))"
+            BaseName    = $Name
+            Currency    = $Request.currency
+            Balance     = [Decimal]$Request.available
+            Pending     = [Decimal]$Request.pending
+            Total       = [Decimal]$Request.totalBalance
+            Payouts     = @()
+            LastUpdated = (Get-Date).ToUniversalTime()
+        }        
+    }
+}
+
+if (-not $Request.active) {
+
     try {
         $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs2/" -cycletime ($Config.BalanceUpdateMinutes*60) -tag $Name
         $Global:NHWallets[$PoolConfig.BTC] = $Request.externalAddress
@@ -25,9 +54,6 @@ if (-not $Global:NHWallets.ContainsKey($PoolConfig.BTC) -or $Global:NHWallets[$P
         Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
         return
     }
-}
-
-if ($Global:NHWallets[$PoolConfig.BTC]) {
 
     [PSCustomObject]@{
         Caption     = "$($Name) (BTC)"
@@ -40,28 +66,4 @@ if ($Global:NHWallets[$PoolConfig.BTC]) {
         LastUpdated = (Get-Date).ToUniversalTime()
     }
 
-} elseif ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.OrganizationID) {
-
-    $Request = [PSCustomObject]@{}
-
-    try {
-        $Request = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
-    }
-
-    if ($Request.active) {
-        [PSCustomObject]@{
-            Caption     = "$($Name) ($($Request.currency))"
-            BaseName    = $Name
-            Currency    = $Request.currency
-            Balance     = [Decimal]$Request.available
-            Pending     = [Decimal]$Request.pending
-            Total       = [Decimal]$Request.totalBalance
-            Payouts     = @()
-            LastUpdated = (Get-Date).ToUniversalTime()
-        }        
-    }
 }
