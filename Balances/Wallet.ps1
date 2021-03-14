@@ -171,17 +171,17 @@ if ($Config.Pools.Nicehash.EnableShowWallets -and $Config.Pools.Nicehash.API_Key
 
         if (-not (Test-Path "Variable:Global:NHWallets")) {$Global:NHWallets = [hashtable]@{}}
 
-        if (-not $Global:NHWallets.ContainsKey($Wallets.BTC)) {
+        if (-not $Global:NHWallets.ContainsKey($Config.Pools.Nicehash.BTC)) {
             $Request = [PSCustomObject]@{}
             try {
                 $Request = Invoke-GetUrl "https://api2.nicehash.com/main/api/v2/mining/external/$($Config.Pools.Nicehash.BTC)/rigs2/"
-                $Global:NHWallets[$Wallets.BTC] = $Request.externalAddress
+                $Global:NHWallets[$Config.Pools.Nicehash.BTC] = $Request.externalAddress
             }
             catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
         }
-        $ShowBTCWallet = $Global:NHWallets[$Wallets.BTC]
+        $ShowBTCWallet = $Global:NHWallets[$Config.Pools.Nicehash.BTC]
     }
 
     $Request = @()
