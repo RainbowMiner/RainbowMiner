@@ -10,7 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "326{0:d2}"
 $DevFee = 1.0
-$Version = "0.19.11"
+$Version = "0.19.12"
 $DeviceCapability = "5.0"
 
 # use cuda 10, if cuda 11.1 is installed. Otherwise do not use this miner module.
@@ -19,7 +19,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexGTX\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-linux-cuda10.0.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.12-trex/t-rex-0.19.12-linux-cuda10.0.tar.gz"
             Cuda   = "11.1"
         }
     )
@@ -27,7 +27,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TrexGTX\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-win-cuda10.0.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.12-trex/t-rex-0.19.12-win-cuda10.0.zip"
             Cuda   = "11.1"
         }
     )
@@ -102,8 +102,9 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                                     $Pools.$Algorithm_Norm.Protocol
                                  } else {
                                     Switch($Pools.$Algorithm_Norm.EthMode) {
-                                        "qtminer"      {"stratum1+tcp"}
-                                        "ethstratumnh" {"stratum2+tcp"}
+                                        "qtminer"      {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                                        "ethstratumnh" {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                                        "ethproxy"     {"stratum+http"}
                                         default {$Pools.$Algorithm_Norm.Protocol}
                                     }
                                 }
