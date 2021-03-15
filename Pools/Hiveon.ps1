@@ -76,7 +76,7 @@ $Pool_Request.cryptoCurrencies | Where-Object {$Wallets."$($_.name)" -or $InfoOn
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = $Pool_Server.host
-                    Port          = $Pool_Server.$Pool_Port | Select-Object -First 1
+                    Port          = if ($Pool_Currency -eq "ETH") {$Pool_Server.$Pool_Port | Select-Object -Last 1} else {$Pool_Server.$Pool_Port | Select-Object -First 1}
                     User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                     Pass          = "x"
                     Region        = Get-Region $Pool_Server.region
