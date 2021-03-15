@@ -17,7 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://hiveon.net/api/v1/stats/pool"  -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://hiveon.net/api/v1/stats/pool" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -34,23 +34,19 @@ $Pool_Request.cryptoCurrencies | Where-Object {$Wallets."$($_.name)" -or $InfoOn
     if (-not $InfoOnly) {
         $Pool_Profit   = 0
         $Pool_Workers  = $null
-        $Pool_TSL      = 0
-        $Pool_BLK      = $Pool_Request.stats.$Pool_Coin.blocksFound
-        $Pool_Reward   = $Pool_Request.stats.$Pool_Coin.expectedReward24H
-        $Pool_Hashrate = $Pool_Request.stats.$Pool_Coin.hashrate
-        $Pool_Divisor  = $_.profitPerPower
+        $Pool_BLK      = [int]$Pool_Request.stats.$Pool_Currency.blocksFound
+        $Pool_Reward   = [decimal]$Pool_Request.stats.$Pool_Currency.expectedReward24H
+        $Pool_Hashrate = [decimal]$Pool_Request.stats.$Pool_Currency.hashrate
+        $Pool_Divisor  = [decimal]$_.profitPerPower
 
-        if ($Pool_Currency -eq "ETH" -and (-not $Pool_BLK -or -not $Pool_Reward)) {
+        $Pool_TSL      = if ($Pool_BLK) {43200/$Pool_BLK} else {0}
+
+        if ($Pool_Currency -eq "ETH") {
             $Pool_Request_Eth = [PSCustomObject]@{}
             try {
-                $Pool_Request_Eth = Invoke-RestMethodAsync "https://hiveon.net/api/v0/pool/stats"  -tag $Name -cycletime 120
-                if ($Pool_Request_Eth.status -eq 200) {
-                    $Pool_Stat     = $Pool_Request_Eth.stats | Select-Object -First 1
-                    $Pool_BLK      = $Pool_Stat.blocks
-                    $Pool_Reward   = $Pool_Stat.income
-                    $Pool_Hashrate = $Pool_Stat.hashrate
-                    $Pool_Divisor  = $Pool_Stat.incomeHashrate
-                    $Pool_Workers  = $Pool_Stat.workers
+                $Pool_Request_Eth = Invoke-RestMethodAsync "https://hiveon.net/api/v1/pool/stats"  -tag $Name -cycletime 120
+                if ($Pool_Request_Eth.stats) {
+                    $Pool_Workers  = [int]($Pool_Request_Eth.stats | Select-Object -First 1).workers
                 }
             }
             catch {
