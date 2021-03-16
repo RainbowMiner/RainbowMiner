@@ -6018,7 +6018,7 @@ Param(
                     tag       = $JobData.tag
                     user      = $JobData.user
                     password  = $JobData.password
-                    fixbigint = $JobData.fixbigint
+                    fixbigint = [bool]$JobData.fixbigint
                     jobkey    = $JobKey
                     machinename = $Session.MachineName
                     myip      = $Session.MyIP
@@ -6037,7 +6037,7 @@ Param(
         $headers  = $JobData.headers
         $user     = $JobData.user
         $password = $JobData.password
-        $fixbigint= $JobData.fixbigint
+        $fixbigint= [bool]$JobData.fixbigint
     }
 
     if ($url -match "^server://(.+)$") {
