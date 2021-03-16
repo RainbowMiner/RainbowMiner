@@ -6,8 +6,8 @@
 ###### **Central monitoring for all of your rigs: [https://rbminer.net](https://rbminer.net)**
 [![miners](https://img.shields.io/endpoint?url=https%3A%2F%2Frbminer.net%2Fapi%2Fshio.php%3Fid%3Dminers)](https://rbminer.net/monitoring) [![profit](https://img.shields.io/endpoint?url=https%3A%2F%2Frbminer.net%2Fapi%2Fshio.php%3Fid%3Dprofit)](https://rbminer.net/monitoring)
 
-###### **Discord: [https://discord.gg/DUJqjfk4](https://discord.gg/DUJqjfk4)**
-[![online](https://img.shields.io/discord/513274071010508800)](https://discord.gg/DUJqjfk4)
+###### **Discord: [https://discord.gg/znzQpJWWQH](https://discord.gg/znzQpJWWQH)**
+[![online](https://img.shields.io/discord/513274071010508800)](https://discord.gg/znzQpJWWQH)
 
 
 ## INTRODUCTION
