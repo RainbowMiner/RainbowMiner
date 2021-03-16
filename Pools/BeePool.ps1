@@ -21,18 +21,14 @@ $Pool_Region_Default = "asia"
 @("asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "CFX";  port = @(9555,9556); fee = 2.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "ETH";  port = @(9530);      fee = 1.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "ETC";  port = @(9518);      fee = 1.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "AE";   port = @(9505);      fee = 1.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "SERO"; port = @(9515);      fee = 2.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "BEAM"; port = @(9507);      fee = 2.0; fee_pplns = 1.0}
-    #[PSCustomObject]@{symbol = "GRIN29"; port = @(9510);    fee = 2.0}
-    #[PSCustomObject]@{symbol = "GRIN31"; port = @(9510);    fee = 2.0}
-    #[PSCustomObject]@{symbol = "GRIN32"; port = @(9510);    fee = 2.0}
     [PSCustomObject]@{symbol = "RVN";  port = @(9531);      fee = 2.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "PGN";  port = @(9560);      fee = 2.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "MOAC"; port = @(9540);      fee = 1.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "CFX";  port = @(9555,9556); fee = 2.0; fee_pplns = $null}
+    [PSCustomObject]@{symbol = "SERO"; port = @(9515);      fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "AE";   port = @(9505);      fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "BEAM"; port = @(9507);      fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "MOAC"; port = @(9540);      fee = 1.0; fee_pplns = $null}
 )
 
 $Pool_Request = [PSCustomObject]@{}
@@ -80,7 +76,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
         if ($TZ_China_Standard_Time) {
             $Pool_Blocks = [PSCustomObject]@{}
             try {
-                $Pool_Blocks = Invoke-RestMethodAsync "https://www.beepool.org/detail/get_blocks" -tag $Name -cycletime 120 -body @{coin=$Pool_Data.coin} -timeout 20
+                $Pool_Blocks = Invoke-RestMethodAsync "https://www.beepool.org/detail/get_blocks?coin=$($Pool_Data.coin)" -tag $Name -cycletime 120 -timeout 20
                 if ("$($Pool_Blocks.code)" -eq "0" -and ($Pool_Blocks.data.blocks | Measure-Object).Count) {
                     $Pool_TSL = ((Get-Date).ToUniversalTime() - [System.TimeZoneInfo]::ConvertTimeToUtc("$((Get-Date).Year)-$(($Pool_Blocks.data.blocks | Select-Object -First 1).time)", $TZ_China_Standard_Time)).TotalSeconds
                 }
