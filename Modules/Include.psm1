@@ -1461,10 +1461,11 @@ function Get-ChildItemContent {
             }
         }
         elseif ($Quick) {
-            $Content = try {
-                Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
+            $Content = $null
+            try {
+                $Content = Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            if ($Content -eq $null) {$Content = Get-ContenByStreamReader $_.FullName}
+            if ($Content -eq $null) {$Content = Get-ContentByStreamReader $_.FullName}
         }
         else {
             $Content = & {
@@ -1534,7 +1535,8 @@ function Get-PoolsData {
         [String]$PoolName
     )
     if (Test-Path ".\Data\Pools\$($PoolName).json") {
-        Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
+        $Data = Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
+        $Data
     }
 }
 
@@ -5262,6 +5264,9 @@ function Set-PoolsConfigDefault {
             $Userpools = @()
             if ($UserpoolsPathToFile) {
                 $UserpoolsConfig = Get-ConfigContent $UserpoolsConfigName
+                if ($UserpoolsConfig -isnot [array] -and $UserpoolsConfig.value -ne $null) {
+                    $UserpoolsConfig = $UserpoolsConfig.value
+                }
                 if ($Session.ConfigFiles[$UserpoolsConfigName].Healthy) {
                     $Userpools = @($UserpoolsConfig | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique)
                 }
@@ -5582,7 +5587,8 @@ function Get-ConfigContent {
                     $Result = $Result -replace "\`$[A-Z0-9_]+"
                 }
             }
-            $Result | ConvertFrom-Json -ErrorAction Stop
+            $Data = $Result | ConvertFrom-Json -ErrorAction Stop
+            $Data
             if (-not $WorkerName) {
                 $Session.ConfigFiles[$ConfigName].Healthy=$true
             }
@@ -6499,7 +6505,8 @@ Param(
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
                 if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
-                    Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                    $Data = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                    $Data
                 } else {
                     Get-ContentByStreamReader ".\Cache\$($Jobkey).asy"
                 }
