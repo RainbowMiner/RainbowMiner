@@ -393,6 +393,9 @@
         "Tecracoin" = [PSCustomObject]@{
             Currencies=@("TCR")
         }
+        "unMineable" = [PSCustomObject]@{
+            Currencies=@("BTT","ETH","TRX","UNI","XTZ","YFI")
+        }
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
