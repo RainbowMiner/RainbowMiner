@@ -57,7 +57,7 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 $Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_PoolFee = if ($Global:NHWallets[$Wallets.BTC]) {5.0} else {2.0}
+$Pool_PoolFee = if (-not $InfoOnly -and $Global:NHWallets[$Wallets.BTC]) {5.0} else {2.0}
 
 $Grin29_Algorithm = (Get-Coin "GRIN").algo
 
