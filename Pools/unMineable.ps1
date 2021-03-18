@@ -38,10 +38,10 @@ $Pool_Regions = @("us","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "ethash";  port = 3333; rpc = "ethash";  divisor = 1e6; region = @("us","eu","asia")}
-    [PSCustomObject]@{algo = "etchash"; port = 3333; rpc = "etchash"; divisor = 1e6; region = @("us")}
-    [PSCustomObject]@{algo = "randomx"; port = 3333; rpc = "rx";      divisor = 1;   region = @("us","eu","asia")}
-    [PSCustomObject]@{algo = "kawpow";  port = 3333; rpc = "kp";      divisor = 1e6; region = @("us"); rewardalgo = "x16rv2"}
+    [PSCustomObject]@{algo = "ethash";  port = 3333; ethproxy = "ethstratumnh"; rpc = "ethash";  divisor = 1e6; region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "etchash"; port = 3333; ethproxy = "ethstratumnh"; rpc = "etchash"; divisor = 1e6; region = @("us")}
+    [PSCustomObject]@{algo = "randomx"; port = 3333; ethproxy = $null;          rpc = "rx";      divisor = 1;   region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "kawpow";  port = 3333; ethproxy = "stratum";      rpc = "kp";      divisor = 1e6; region = @("us"); rewardalgo = "x16rv2"}
 )
 
 $Pool_Referrals = [PSCustomObject]@{
@@ -102,6 +102,7 @@ $Pool_Currencies = $Pool_CoinsRequest.coins | Where-Object {$Symbol = $_.symbol;
 $Pools_Data | ForEach-Object {
     $Pool_RewardAlgo = if ($_.rewardalgo) {$_.rewardalgo} else {$_.algo}
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_EthProxy = $_.ethproxy
 
     foreach($Pool_CurrencyData in $Pool_Currencies) {
 
@@ -151,6 +152,7 @@ $Pools_Data | ForEach-Object {
                     PoolFee       = if ($Pool_Referrals.$Pool_Currency) {0.75} else {1.0}
                     DataWindow    = $DataWindow
 				    ErrorRatio    = $Stat.ErrorRatio
+                    EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
