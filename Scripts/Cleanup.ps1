@@ -1029,6 +1029,10 @@ try {
         $AddAlgorithm += @("Take2")
     }
 
+    if ($Version -le (Get-Version "4.7.0.5")) {
+        $RemoveMinerStats += @("*-Trex*_EtcHash_HashRate.txt","*-Trex*_Ethash_HashRate.txt")
+    }
+
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
 
