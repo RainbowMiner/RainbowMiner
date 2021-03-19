@@ -1535,8 +1535,12 @@ function Get-PoolsData {
         [String]$PoolName
     )
     if (Test-Path ".\Data\Pools\$($PoolName).json") {
-        $Data = Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
-        $Data
+        if (Test-IsCore) {
+            Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
+        } else {
+            $Data = Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
+            $Data
+        }
     }
 }
 
@@ -2280,7 +2284,6 @@ function Stop-SubProcess {
                     $Global:ProgressPreference = "SilentlyContinue"
                     try {
                         $Response = Invoke-GetUrl $ShutdownUrl -Timeout 20 -ErrorAction Stop
-                        #$Data = $Response | ConvertFrom-Json -ErrorAction Stop
 
                         $StopWatch.Reset()
                         while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 20) {
@@ -5587,8 +5590,12 @@ function Get-ConfigContent {
                     $Result = $Result -replace "\`$[A-Z0-9_]+"
                 }
             }
-            $Data = $Result | ConvertFrom-Json -ErrorAction Stop
-            $Data
+            if (Test-IsCore) {
+                $Result | ConvertFrom-Json -ErrorAction Stop
+            } else {
+                $Data = $Result | ConvertFrom-Json -ErrorAction Stop
+                $Data
+            }
             if (-not $WorkerName) {
                 $Session.ConfigFiles[$ConfigName].Healthy=$true
             }
@@ -6163,12 +6170,12 @@ Param(
             $Global:ProgressPreference = "SilentlyContinue"
         }
 
-        if ($Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
+        if (Test-IsCore) {
             $StatusCode = $null
             $Data       = $null
 
             try {
-                if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
+                if (Test-IsPS7) {
                     if ($IsForm) {
                         $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
                     } else {
@@ -6185,10 +6192,7 @@ Param(
                 $StatusCode = $Response.StatusCode
 
                 if ($StatusCode -match "^2\d\d$") {
-                    $Data = $Response.Content
-                    if ($Data -is [byte[]]) {
-                        $Data = [System.Text.Encoding]::UTF8.GetString($Data)
-                    }
+                    $Data = if ($Response.Content -is [byte[]]) {[System.Text.Encoding]::UTF8.GetString($Response.Content)} else {$Response.Content}
                     if ($method -eq "REST") {
                         if ($fixbigint) {
                             try {
@@ -6508,8 +6512,12 @@ Param(
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
                 if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
-                    $Data = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
-                    $Data
+                    if (Test-IsCore) {
+                        Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                    } else {
+                        $Data = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                        $Data
+                    }
                 } else {
                     Get-ContentByStreamReader ".\Cache\$($Jobkey).asy"
                 }
@@ -7048,6 +7056,16 @@ function Test-IsElevated
             (whoami) -match "root"
         }
     }
+}
+
+function Test-IsCore
+{
+    $Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))
+}
+
+function Test-IsPS7
+{
+    $Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))
 }
 
 function Set-OsFlags {
