@@ -6186,6 +6186,9 @@ Param(
 
                 if ($StatusCode -match "^2\d\d$") {
                     $Data = $Response.Content
+                    if ($Data -is [byte[]]) {
+                        $Data = [System.Text.Encoding]::UTF8.GetString($Data)
+                    }
                     if ($method -eq "REST") {
                         if ($fixbigint) {
                             try {
