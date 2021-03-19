@@ -2439,7 +2439,7 @@ class Trex : Miner {
     }
 
     [String]GetShutdownUrl() {
-        return "http://127.0.0.1:$($this.Port)/control?command=shutdown"
+        return "$(if ($Global:IsLinux) {"http://127.0.0.1:$($this.Port)/control?command=shutdown"})"
     }
 }
 
