@@ -49,11 +49,11 @@ $Pools_Data = [PSCustomObject]@{
     "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
+    "OBTC"  = [PSCustomObject]@{port = 7064; region = $Pool_Regions}
     "PYRK"  = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
     "RNG"   = [PSCustomObject]@{port = 7018; region = $Pool_Regions}
     "RTM"   = [PSCustomObject]@{port = 7056; region = $Pool_Regions}
-    "SPLD"  = [PSCustomObject]@{port = 7028; region = $Pool_Regions}
     "SPRX"  = [PSCustomObject]@{port = 7052; region = $Pool_Regions}
     "SUGAR" = [PSCustomObject]@{port = 7042; region = $Pool_Regions}
     "SWAMP" = [PSCustomObject]@{port = 7023; region = $Pool_Regions}
