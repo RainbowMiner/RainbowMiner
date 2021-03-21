@@ -19,7 +19,8 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.47-gminer/gminer_2_47_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.47-gminer/gminer_2_47_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.48-gminer/gminer_2_48_beta_windows64.zip"
+    $Version = "2.48b"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
