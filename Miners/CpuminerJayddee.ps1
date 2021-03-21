@@ -175,7 +175,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     $PrerequisitePath = $null
 
                     if ($Algorithm_Norm_0 -eq "Verthash") {
-                        $VerthashDatFile_Miner = Join-Path $Session.MainPath "\Bin\CPU-JayDDee\verthash.dat"
+                        $VerthashDatFile_Miner = Join-Path $Session.MainPath "Bin\CPU-JayDDee\verthash.dat"
                         if (-not (Test-Path $VerthashDatFile_Miner)) {
                             $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
                             if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
