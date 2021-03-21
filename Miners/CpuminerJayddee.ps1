@@ -156,6 +156,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
     $First = $true
     $Miner_Model = $_.Model
     $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU.Where({$_.Model -eq $Miner_Model})
+    $VerthashDatFile_Miner = Join-Path $Session.MainPath "Bin\CPU-JayDDee\verthash.dat"
 
     $Commands.ForEach({
 
@@ -171,33 +172,30 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                    $First = $false
+                }
+                $PrerequisitePath = $null
 
-                    $PrerequisitePath = $null
-
-                    if ($Algorithm_Norm_0 -eq "Verthash") {
-                        $VerthashDatFile_Miner = Join-Path $Session.MainPath "Bin\CPU-JayDDee\verthash.dat"
-                        if (-not (Test-Path $VerthashDatFile_Miner)) {
-                            $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
+                if ($Algorithm_Norm_0 -eq "Verthash") {
+                    if (-not (Test-Path $VerthashDatFile_Miner)) {
+                        $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
+                        if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
+                            $VerthashDatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
                             if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
-                                $VerthashDatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
-                                if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
-                                    $VerthashDatFile = $null
-                                }
-                            }
-                            if ($VerthashDatFile) {
-                                if ($IsLinux) {
-                                    $LinkProcess = Start-Process "ln" -ArgumentList "-s $($VerthashDatFile_Miner) $($VerhashDatFile)" -PassThru
-                                    $LinkProcess.WaitForExit(1000) > $null
-                                } else {
-                                    Copy-Item -Path $VerthashDatFile -Destination $VerthashDatFile_Miner
-                                }
-                            } else {
-                                $PrerequisitePath = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
+                                $VerthashDatFile = $null
                             }
                         }
+                        if ($VerthashDatFile) {
+                            if ($IsLinux) {
+                                $LinkProcess = Start-Process "ln" -ArgumentList "-s $($VerthashDatFile_Miner) $($VerhashDatFile)" -PassThru
+                                $LinkProcess.WaitForExit(1000) > $null
+                            } else {
+                                Copy-Item -Path $VerthashDatFile -Destination $VerthashDatFile_Miner
+                            }
+                        } else {
+                            $PrerequisitePath = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
+                        }
                     }
-
-                    $First = $false
                 }
 				[PSCustomObject]@{
 					Name           = $Miner_Name
