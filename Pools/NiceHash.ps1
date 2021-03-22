@@ -53,9 +53,15 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
+[hashtable]$Pool_FailoverRegionsTable = @{}
 
 $Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+foreach($Pool_Region in $Pool_Regions) {
+    $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
+    [array]::Reverse($Pool_FailoverRegions)
+    $Pool_FailoverRegionsTable.$Pool_Region = $Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Sort-Object -Descending {$Pool_FailoverRegions.IndexOf($Pool_RegionsTable.$_)} | Select-Object -Unique -First 3
+}
 
 $Pool_PoolFee = if (-not $InfoOnly -and $Global:NHWallets[$Wallets.BTC]) {5.0} else {2.0}
 
@@ -103,7 +109,8 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
     foreach($Pool_Region in $Pool_Regions) {
         if ($Wallets.BTC -or $InfoOnly) {
             $This_Host = "$Pool_Algorithm.$Pool_Region$Pool_Host"
-            $Pool_Failover = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {"$Pool_Algorithm.$_$Pool_Host"})
+            $Pool_Failover = @($Pool_FailoverRegionsTable.$Pool_Region | Foreach-Object {"$Pool_Algorithm.$_$Pool_Host"})
+
             foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
@@ -125,14 +132,14 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                     PoolFee       = $Pool_PoolFee
                     PaysLive      = $true
                     Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
-                        [PSCustomObject]@{
-                            Protocol = $Pool_Protocol
-                            Host     = $_
-                            Port     = $Pool_Port
-                            User     = "$($Wallets.BTC).{workername:$Worker}"
-                            Pass     = "x"
-                        }
-                    })
+                                        [PSCustomObject]@{
+                                            Protocol = $Pool_Protocol
+                                            Host     = $_
+                                            Port     = $Pool_Port
+                                            User     = "$($Wallets.BTC).{workername:$Worker}"
+                                            Pass     = "x"
+                                        }
+                                    })
                     EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
