@@ -150,6 +150,7 @@ $Pools_Data | ForEach-Object {
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = if ($Pool_Referrals.$Pool_Currency) {0.75} else {1.0}
+                    PaysLive      = $true
                     DataWindow    = $DataWindow
 				    ErrorRatio    = $Stat.ErrorRatio
                     EthMode       = $Pool_EthProxy
