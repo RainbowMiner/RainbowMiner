@@ -5,6 +5,7 @@
 	"Europe": ["Germany", "UK", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
     "Finland": ["Europe", "UK", "Germany", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
     "Germany": ["Europe", "UK", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
+    "HongKong": ["SoutheastAsia","Asia","India","Japan"],
     "India": ["SoutheastAsia","HongKong","Japan","Asia"],
 	"Japan": ["Korea","Taiwan", "HongKong", "Asia", "SoutheastAsia", "India"],
     "Korea": ["Japan","Taiwan", "HongKong", "Asia", "SoutheastAsia", "India"],
