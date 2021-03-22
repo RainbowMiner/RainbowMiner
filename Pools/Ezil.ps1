@@ -133,7 +133,6 @@ $Pools_Data | Where-Object {$EnableNanominerDual -or $Wallets."$($_.symbol)" -or
                     PoolFee       = 1.0
                     DataWindow    = $DataWindow
                     Workers       = $null
-                    Hashrate      = $null
                     EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
