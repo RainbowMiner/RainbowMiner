@@ -44,9 +44,15 @@ catch {
 
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
+[hashtable]$Pool_FailoverRegionsTable = @{}
 
 $Pool_Regions = @("eu","us","asia","ru")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+foreach($Pool_Region in $Pool_Regions) {
+    $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
+    [array]::Reverse($Pool_FailoverRegions)
+    $Pool_FailoverRegionsTable.$Pool_Region = $Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Sort-Object -Descending {$Pool_FailoverRegions.IndexOf($Pool_RegionsTable.$_)} | Select-Object -Unique -First 3
+}
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | ForEach-Object {
 
@@ -113,7 +119,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             TSL           = $Pool_TSL
             SoloMining    = $true
 			ErrorRatio    = $Stat.ErrorRatio
-            Failover      = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
+            Failover      = @($Pool_FailoverRegionsTable.$Pool_Region | Foreach-Object {
                 [PSCustomObject]@{
                     Protocol      = "stratum+tcp"
                     Host          = "$($_).bsod.pw"
