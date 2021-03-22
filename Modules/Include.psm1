@@ -6527,17 +6527,10 @@ Param(
     }
 }
 
-function Get-MinerStatusKey {    
-    try {
-        $Response = Invoke-GetUrl "https://rbminer.net/api/getuserid.php"
-        if ($Response) {$Response = $Response -split "[\r\n]+" | select-object -first 1}
-        Write-Log "Miner Status key created: $Response"
-        $Response
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Miner Status $($Session.Config.MinerStatusURL) has failed. "
-    }
+function Get-MinerStatusKey {
+    $Response = "$(New-Guid)"
+    Write-Log "Miner Status key created: $Response"
+    $Response
 }
 
 function Initialize-User32Dll {
