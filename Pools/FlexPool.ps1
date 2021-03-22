@@ -20,10 +20,16 @@ $Pool_User     = $Wallets.$Pool_Currency
 
 if (-not $Pool_User -and -not $InfoOnly) {return}
 
-$Pool_Regions = @("us-east","us-west","de","sg","au","br","in")
-
 [hashtable]$Pool_RegionsTable = @{}
+[hashtable]$Pool_FailoverRegionsTable = @{}
+
+$Pool_Regions = @("us-east","us-west","de","sg","au","br","in")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+foreach($Pool_Region in $Pool_Regions) {
+    $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
+    [array]::Reverse($Pool_FailoverRegions)
+    $Pool_FailoverRegionsTable.$Pool_Region = $Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Sort-Object -Descending {$Pool_FailoverRegions.IndexOf($Pool_RegionsTable.$_)} | Select-Object -Unique -First 3
+}
 
 $Pool_PoolFee = 1.0
 $Pool_Divisor = 1e18
@@ -93,6 +99,7 @@ if (-not $InfoOnly) {
 foreach($Pool_Region in $Pool_Regions) {
     $Pool_SSL = $false
     foreach($Pool_Port in $Pool_Ports) {
+        $Pool_Protocol = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
@@ -102,7 +109,7 @@ foreach($Pool_Region in $Pool_Regions) {
             Price         = 0
             StablePrice   = 0
             MarginOfError = 0
-            Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+            Protocol      = $Pool_Protocol
             Host          = "eth-$($Pool_Region).flexpool.io"
             Port          = $Pool_Port
             User          = "$($Pool_User).{workername:$Worker}"
@@ -111,6 +118,15 @@ foreach($Pool_Region in $Pool_Regions) {
             SSL           = $Pool_SSL
             Updated       = $Stat.Updated
             PoolFee       = $Pool_PoolFee
+            Failover      = @($Pool_FailoverRegionsTable.$Pool_Region | Foreach-Object {
+                                [PSCustomObject]@{
+                                    Protocol = $Pool_Protocol
+                                    Host     = "eth-$($_).flexpool.io"
+                                    Port     = $Pool_Port
+                                    User     = "$($Pool_User).{workername:$Worker}"
+                                    Pass     = "x"
+                                }
+                            })
             DataWindow    = $DataWindow
             Workers       = $Pool_Workers.result
             Hashrate      = $Stat.HashRate_Live
