@@ -274,6 +274,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             $DataSaved = [hashtable]@{}
 
+            $SaveArrays = @($Parameters.savearrays | Select-Object)
+
             $ConfigChanged = 0
 
             if ($ConfigName -eq "Config") {
@@ -291,7 +293,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
 
                 #reset checkbox-arrays
-                @("ExcludePoolName","ExcludeDeviceName") | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
+                $SaveArrays | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
                     $DataSaved[$_] = ""
                     if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
                         $ConfigChanged++
