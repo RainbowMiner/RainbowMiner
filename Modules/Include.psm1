@@ -3026,6 +3026,27 @@ function Get-Device {
 
                     $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
 
+                    if ($Model -eq "") { #alas! empty
+                        if ($Device_OpenCL.Architecture) {
+                            $Model = "$($Device_OpenCL.Architecture)"
+                            $Device_Name = "$($Device_Name)$(if ($Device_Name) {" "})$($Model)"
+                        } elseif ($InstanceId -and $InstanceId -match "VEN_([0-9A-F]{4}).+DEV_([0-9A-F]{4}).+SUBSYS_([0-9A-F]{4,8})") {
+                            try {
+                                $Result = Invoke-GetUrl "https://rbminer.net/api/pciids.php?ven=$($Matches[1])&dev=$($Matches[2])&subsys=$($Matches[3])"
+                                if ($Result.status) {
+                                    $Device_Name = if ($Result.data -match "\[(.+)\]") {$Matches[1]} else {$Result.data}
+                                    if ($Vendor_Name -eq "AMD" -and $Device_Name -notmatch "Radeon") {$Device_Name = "Radeon $($Device_Name)"}
+                                    $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
+                                }
+                            } catch {
+                            }
+                        }
+                        if ($Model -eq "") {
+                            $Model = "Unknown"
+                            $Device_Name = "$($Device_Name)$(if ($Device_Name) {" "})$($Model)"
+                        }
+                    }
+
                     if ($Vendor_Name -eq "NVIDIA") {
                         $Device_OpenCL.Architecture = Get-NvidiaArchitecture $Model
                     }
@@ -6528,7 +6549,7 @@ Param(
 }
 
 function Get-MinerStatusKey {
-    $Response = "$(New-Guid)"
+    $Response = [guid]::NewGuid().ToString()
     Write-Log "Miner Status key created: $Response"
     $Response
 }
