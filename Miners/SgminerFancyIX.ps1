@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0
-$Version = "v0.7.3"
+$Version = "v0.7.4"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-FancyIX\sgminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.3-fancyix/sgminer-fancyIX-linux-amd64-0.7.3.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.4-fancyix/sgminer-fancyIX-linux-amd64-0.7.4.tar.gz"
 } else {
     $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.3-fancyix/sgminer-fancyIX-win64-0.7.3.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.4-fancyix/sgminer-fancyIX-win64-0.7.4.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
@@ -26,6 +26,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
     [PSCustomObject]@{MainAlgorithm = "allium_navi";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
     [PSCustomObject]@{MainAlgorithm = "argon2d";        Params = "--gpu-threads 2 --worksize 64"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "groestlcoin";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "groestlcoin_navi"; Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";        Params = "--gpu-threads 1 --worksize 256 -I 24"; ExcludePoolName = "^Nicehash"}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
     [PSCustomObject]@{MainAlgorithm = "lyra2z_navi";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
