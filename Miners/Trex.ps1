@@ -163,9 +163,9 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                                     $Pools.$Algorithm_Norm.Protocol
                                  } else {
                                     Switch($Pools.$Algorithm_Norm.EthMode) {
-                                        "qtminer"      {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-                                        "ethstratumnh" {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-                                        #"ethproxy"     {"stratum+http"}
+                                        "qtminer"       {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                                        "ethstratumnh"  {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                                        "ethlocalproxy" {"stratum+http"}
                                         default {$Pools.$Algorithm_Norm.Protocol}
                                     }
                                 }
