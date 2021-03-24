@@ -394,7 +394,7 @@
             Currencies=@("TCR")
         }
         "unMineable" = [PSCustomObject]@{
-            Currencies=@("BTT","ETH","TRX","UNI","XTZ","YFI")
+            Currencies=@("BTC","BTT","ETH","TRX","UNI","XTZ","YFI")
         }
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
