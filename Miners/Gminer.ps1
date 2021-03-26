@@ -11,16 +11,15 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "2.47"
+$Version = "2.49"
 $DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.47-gminer/gminer_2_47_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.49-gminer/gminer_2_49_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.48-gminer/gminer_2_48_windows64.zip"
-    $Version = "2.48"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.49-gminer/gminer_2_49_windows64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
