@@ -1043,15 +1043,17 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                                     #temporary fix
                                                     @($RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Select-Object) + @($RigPools[$RigPools_Id] | Where-Object {$_.pass -match "ID=mrx"} | Select-Object -Skip 1) | Foreach-Object {
-                                                        try {
-                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
-                                                            if ($Result.success) {
-                                                                $RigCreated++
+                                                        if ($RigCreated -lt $MaxAPICalls) {
+                                                            try {
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
+                                                                if ($Result.success) {
+                                                                    $RigCreated++
+                                                                }
+                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            } catch {
+                                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                                Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                             }
-                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
-                                                        } catch {
-                                                            if ($Error.Count){$Error.RemoveAt(0)}
-                                                            Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                         }
                                                     }
                                                 }
