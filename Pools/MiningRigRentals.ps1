@@ -1017,7 +1017,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 }
 
                                                 if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
-                                                    $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
+                                                    $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"  -or $_.pass -match "=mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
                                                     if ((-not $RigPoolCurrent -and ($RigPools[$RigPools_Id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
                                                         try {
                                                             $RigPriority = [int]$(if ($RigPoolCurrent) {
