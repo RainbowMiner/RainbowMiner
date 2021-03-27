@@ -157,14 +157,14 @@ param(
             Write-Log -Level Warn "MiningRigRental error: $(if ($Data.data.message) {$Data.data.message} else {"unknown"})"
         }
 
-        if ($Cache -and (-not $Session.MRRCache[$JobKey] -or ($Data -and $Data.success))) {
+        if (-not $Session.MRRCache[$JobKey] -or ($Data -and $Data.success)) {
             $Session.MRRCache[$JobKey] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Data; cachetime = $Cache}
         }
-    } else {
-        $Data = $Session.MRRCache[$JobKey].request
     }
-
-    if ($Raw) {$Data} elseif ($Data -and $Data.success) {$Data.data}
+    if ($Raw) {$Session.MRRCache[$JobKey].request}
+    else {
+        if ($Session.MRRCache[$JobKey].request -and $Session.MRRCache[$JobKey].request.success) {$Session.MRRCache[$JobKey].request.data}
+    }
 
     try {
         if ($Session.MRRCacheLastCleanup -eq $null -or $Session.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
