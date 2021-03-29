@@ -43,7 +43,7 @@ $Payout_Currencies | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count 
     $Request = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_Data.rpc)/accounts/$($_.Value)" -tag $Name -timeout 15 $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_Data.rpc)/accounts/$($_.Value)" -tag $Name -timeout 15 -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         if ($Request.stats) {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
