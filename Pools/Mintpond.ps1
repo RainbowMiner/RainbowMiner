@@ -21,7 +21,6 @@ $Pool_Regions = @("eu","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "BEAM"; url = "beam";      port = 3025; fee = 0.9; ssl = $true;  protocol = "stratum+ssl"}
     [PSCustomObject]@{symbol = "RVN";  url = "ravencoin"; port = 3010; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
     [PSCustomObject]@{symbol = "FIRO"; url = "firo";      port = 3000; fee = 0.9; ssl = $false; protocol = "stratum+tcp"; altsymbol = "XZC"}
 )
@@ -42,9 +41,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
     $Pool_Request = [PSCustomObject]@{}
     $Pool_RequestBlockstats = [PSCustomObject]@{}
     $Pool_RequestBlocks = [PSCustomObject]@{}
-
-    $Pool_TSL  = $timestamp = Get-UnixTimestamp
-    $timestamp24h = $timestamp - 86400
+    $Pool_LastBlocks = @()
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -56,6 +53,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
                 if (-not $Pool_RequestBlockstats.pool.blockStats) {throw}
                 $Pool_RequestBlocks = Invoke-RestMethodAsync "$($Pool_Url)/pool/recentblocks" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250
                 if (-not $Pool_RequestBlocks.pool.recentBlocks) {throw}
+                $Pool_LastBlocks = $Pool_RequestBlocks.pool.recentBlocks | Sort-Object height | Select-Object -Last 3
             } else {$ok = $false}
         }
         catch {
@@ -65,12 +63,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
         }
 
         if ($ok) {
-            $blocks_measure = $Pool_RequestBlocks.pool.recentBlocks | Where-Object {$_.time -gt $timestamp24h} | Measure-Object time -Maximum -Minimum
-            $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$Pool_TSL}
-            $lastBlock      = $Pool_RequestBlocks.pool.recentBlocks | Sort-Object height | Select-Object -Last 1
+            $Pool_TSL       = Get-UnixTimestamp
+            $lastBlock      = $Pool_LastBlocks | Select-Object -Last 1
             $Pool_TSL      -= if ($lastBlock.time) {$lastBlock.time} else {$Pool_Request.pool.lastBlockTime*1000}
             $Pool_BLK       = $Pool_RequestBlockstats.pool.blockStats.valid24h
-            $reward         = 14 #if ($lastBlock.reward) {$lastBlock.reward} else {14}
+            $reward         = if ($Pool_LastBlocks) {($Pool_LastBlocks.reward | Measure-Object -Average).Average} else {6.25}
             $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}            
             $btcRewardLive  = if ($Pool_Request.pool.hashrate -gt 0) {$btcPrice * $reward * 86400 / $Pool_Request.pool.estTime / $Pool_Request.pool.hashrate} else {0}
             $Divisor        = 1
