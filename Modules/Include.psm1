@@ -6385,6 +6385,10 @@ Param(
 
     $IsNewJob   = -not $AsyncLoader.Jobs.$Jobkey
 
+    $retry     = [Math]::Min([Math]::Max($retry,0),5)
+    $retrywait = [Math]::Min([Math]::Max($retrywait,0),5000)
+    $delay     = [Math]::Min([Math]::Max($delay,0),5000)
+
     if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
         $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{if ($Error.Count){$Error.RemoveAt(0)}}} else {"server"}
         $JobData = [PSCustomObject]@{Url=$url;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
