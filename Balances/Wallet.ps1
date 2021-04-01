@@ -56,6 +56,7 @@ $Wallets_Data = @(
     [PSCustomObject]@{symbol = "AE";   match = "^ak_";  rpc = "http://www.aeknow.org/api/account/{w}";                                address = "id";                               balance = "balance";                         received = "";                                 divisor = 1e18}
     [PSCustomObject]@{symbol = "BCH";  match = "^1";    rpc = "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}";       address = "data.{w}.address.legacy";          balance = "data.{w}.address.balance";        received = "data.{w}.address.received";        divisor = 1e8; verify = "context.code"; verify_value = "200"}
     [PSCustomObject]@{symbol = "BCH";  match = "^q";    rpc = "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}";       address = "data.{w}.address.cashaddr";        balance = "data.{w}.address.balance";        received = "data.{w}.address.received";        divisor = 1e8; verify = "context.code"; verify_value = "200"}
+    [PSCustomObject]@{symbol = "CRO";  match = "^cro";  rpc = "https://crypto.org/explorer/api/v1/accounts/{w}";                      address = "result.address";                   balance = "data.result.totalBalance[denom=basecro].amount"; received = "";                  divisor = 1e8}
     [PSCustomObject]@{symbol = "DASH"; match = "^X";    rpc = "https://api.blockcypher.com/v1/dash/main/addrs/{w}";                   address = "address";                          balance = "balance";                         received = "total_received";                   divisor = 1e8}
     [PSCustomObject]@{symbol = "DOGE"; match = "^D";    rpc = "https://api.blockcypher.com/v1/doge/main/addrs/{w}";                   address = "address";                          balance = "balance";                         received = "total_received";                   divisor = 1e8}
     [PSCustomObject]@{symbol = "DOT";  match = "^1";    rpc = "https://explorer-32.polkascan.io/api/v1/polkadot/account/{w}";         address = "data.attributes.address";          balance = "data.attributes.balance_total";   received = "";                                 divisor = 1e10; verify = "data.type"; verify_value = "account"}
@@ -107,7 +108,17 @@ foreach ($Wallet_Data in $Wallets_Data) {
                 default {
                     $val = $null
                     $Wallet_Data.balance -replace "{w}",$Wallet_Address -split "\." | Foreach-Object {
-                        $val = if ($val -ne $null) {$val.$_} else {$Request.$_}
+                        if ($_ -match '^(.+)\[([^\]]+)\]$') {
+                            $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
+                            $arrp = $Matches[2].Split("=",2)
+                            if ($arrp[0] -match '^\d+$') {
+                                $val = $val[[int]$arrp[0]]
+                            } else {
+                                $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                            }
+                        } else {
+                            $val = if ($val -ne $null) {$val.$_} else {$Request.$_}
+                        }
                     }
                     $val
                 }
