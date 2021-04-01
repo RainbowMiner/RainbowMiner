@@ -778,6 +778,8 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 - **MinerName** = list of miner, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
 - **ExcludeMinerName** = list of miner names, you want to exclude from mining
 - **ExcludeMinersWithFee** = exclude all miners, that have a developer fee built-in [default=0]
+- **PreferMinerName** = list of miner names, that you prefer (see PreferMinerMargin)
+- **PreferMinerMargin** = Choose one of your preferred miners, if it's hashrate is not lower than xx% of the top miner's (in percent) [default=5]
 - **EnableCheckMiningConflict** = Enable conflict check if running CPU hungry GPU miners (for weak CPUs) [default=0]
 - **EnableEthashZombieMode** = Enable Ethash mining with slower hashrate, even if the current DAG size doesn't fit into the GPU memory [default=0]
 - **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]

@@ -785,6 +785,7 @@ function Invoke-Core {
         $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.PoolSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
         $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.MinerSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
         $Session.Config.MaxErrorRatio = [Math]::Max([double]($Session.Config.MaxErrorRatio -replace ",","." -replace "[^\d\.\-]+"),1.0)
+        $Session.Config.PreferMinerMargin = [Math]::Max([Math]::Min([double]($Session.Config.PreferMinerMargin -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         $Session.Config.PoolStatAverageStable =  Get-StatAverage $Session.Config.PoolStatAverageStable -Default "Week"
         $Session.Config.MaxTimeSinceLastBlock = ConvertFrom-Time $Session.Config.MaxTimeSinceLastBlock
@@ -1872,7 +1873,7 @@ function Invoke-Core {
         $OutOfSyncDivisor  = [Math]::Log($Session.OutofsyncWindow-$Session.SyncWindow) #precalc for sync decay method
         $OutOfSyncLimit    = 1/($Session.OutofsyncWindow-$Session.SyncWindow)
 
-        $PoolSwitchingHysteresis = $Session.Config.PoolSwitchingHysteresis/100
+        $PoolSwitchingHysteresis = 1 + $Session.Config.PoolSwitchingHysteresis/100
         $PoolAccuracyWeight      = $Session.Config.PoolAccuracyWeight/100
         $HashrateWeightStrength  = $Session.Config.HashrateWeightStrength/100
         $HashrateWeight          = $Session.Config.HashrateWeight/100
@@ -1916,8 +1917,8 @@ function Invoke-Core {
                                 }
                             } elseif ($Session.Config.Pools."$($_.Name)".SwitchingHysteresis -ne $null) {
                                 $Price_Cmp *= 1+($Session.Config.Pools."$($_.Name)".SwitchingHysteresis/100)
-                            } elseif ($Session.Config.PoolSwitchingHystereis) {
-                                $Price_Cmp *= 1+$PoolSwitchingHysteresis
+                            } elseif ($Session.Config.PoolSwitchingHystereis -ne 1) {
+                                $Price_Cmp *= $PoolSwitchingHysteresis
                             }
                         }
                         if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
@@ -2384,7 +2385,52 @@ function Invoke-Core {
     #Remove all failed and disabled miners
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
 
-    #Use only use fastest miner per algo and device index, if one miner handles multiple intensities, all intensity instances of the fastest miner will be used
+    #Reset the active miners
+    $Global:ActiveMiners.ForEach({
+        $_.Profit = 0
+        $_.Profit_Bias = 0
+        $_.Profit_Unbias = 0
+        $_.Profit_Cost = 0
+        $_.Profit_Cost_Bias = 0
+        $_.Best = $false
+        $_.Stopped = $false
+        $_.Enabled = $false
+        $_.IsFocusWalletMiner = $false
+        $_.IsExclusiveMiner = $false
+        $_.IsLocked = $false
+        $_.PostBlockMining = 0
+        $_.IsRunningFirstRounds = $_.Status -eq [MinerStatus]::Running -and $_.Rounds -lt $Session.Config.MinimumMiningIntervals -and -not $Session.IsBenchmarkingRun
+    })
+
+    #Don't penalize active miners and apply switching hysteresis (or skip penalize)
+    if ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) {
+        $Miners.Foreach({$_.Profit_Bias = $_.Profit_Unbias})
+    } else {
+        $MinerSwitchingHysteresis = 1 + $Session.Config.MinerSwitchingHysteresis/100
+        $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({
+            $Miner = $_
+            $Miners.Where({
+                    $_.Name -eq $Miner.Name -and
+                    $_.Path -eq $Miner.Path -and
+                    $_.Arguments -eq $Miner.Arguments -and
+                    $_.API -eq $Miner.API -and
+                    (Compare-Object $Miner.Algorithm ($_.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
+                },'First').Foreach({
+                    $_.Profit_Bias = $_.Profit_Unbias * $MinerSwitchingHysteresis
+                    if ($Miner.IsRunningFirstRounds) {$_.Profit_Bias *= 100}
+                })
+        })
+    }
+
+    #Apply preferred miner margin
+    if (($Session.Config.PreferMinerName | Measure-Object).Count -and $PreferMinerMargin -ne 1) {
+        $PreferMinerMargin = 1 - $Session.Config.PreferMinerMargin/100
+        $Miners.Where({$Session.Config.PreferMinerName -notcontains $_.BaseName}).Foreach({
+            $_.Profit_Bias *= $PreferMinerMargin
+        })
+    }
+
+    #Use only fastest miner per algo and device index, if one miner handles multiple intensities, all intensity instances of the fastest miner will be used
     if ($Session.Config.FastestMinerOnly) {
         $Miners = @($Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {[double]$_.Profit_Bias - $_.Profit_Cost_Bias}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {
             if ($_.Group.Count -eq 1) {$_.Group[0]}
@@ -2404,21 +2450,6 @@ function Invoke-Core {
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
 
     #Update the active miners
-    $Global:ActiveMiners.ForEach({
-        $_.Profit = 0
-        $_.Profit_Bias = 0
-        $_.Profit_Unbias = 0
-        $_.Profit_Cost = 0
-        $_.Profit_Cost_Bias = 0
-        $_.Best = $false
-        $_.Stopped = $false
-        $_.Enabled = $false
-        $_.IsFocusWalletMiner = $false
-        $_.IsExclusiveMiner = $false
-        $_.IsLocked = $false
-        $_.PostBlockMining = 0
-        $_.IsRunningFirstRounds = $false
-    })
     $Miners.ForEach({
         $Miner = $_
         $ActiveMiner = $Global:ActiveMiners.Where({
@@ -2578,17 +2609,6 @@ function Invoke-Core {
     if ($Miner_DevFee -ne $null) {Remove-Variable "Miner_DevFee"}
 
     $ActiveMiners_DeviceNames = @(($Global:ActiveMiners | Where-Object {$_.Enabled}).DeviceName | Select-Object -Unique | Sort-Object)
-
-    #Don't penalize active miners and control round behavior
-    $Global:ActiveMiners.Where({$Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching -or ($_.Status -eq [MinerStatus]::Running)}).ForEach({
-        $_.Profit_Bias = $_.Profit_Unbias
-        if (-not ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) -or ($_.Status -eq [MinerStatus]::Running)) {
-            if ($_.Rounds -lt $Session.Config.MinimumMiningIntervals -and -not $Session.IsBenchmarkingRun) {$_.IsRunningFirstRounds=$true}
-            if (-not ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) -and $Session.Config.MinerSwitchingHysteresis) {
-                $_.Profit_Bias *= 1+($Session.Config.MinerSwitchingHysteresis/100)
-            }
-        }
-    })
 
     $Global:ActiveMiners.Where({$_.Profit_Cost_Bias -gt 0}).ForEach({$_.Profit_Bias -= $_.Profit_Cost_Bias})
 
