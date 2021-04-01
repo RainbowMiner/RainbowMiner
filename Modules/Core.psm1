@@ -2423,7 +2423,7 @@ function Invoke-Core {
     }
 
     #Apply preferred miner margin
-    if (($Session.Config.PreferMinerName | Measure-Object).Count -and $PreferMinerMargin -ne 1) {
+    if (($Session.Config.PreferMinerName | Measure-Object).Count -and $Session.Config.PreferMinerMargin) {
         $PreferMinerMargin = 1 - $Session.Config.PreferMinerMargin/100
         $Miners.Where({$Session.Config.PreferMinerName -notcontains $_.BaseName}).Foreach({
             $_.Profit_Bias *= $PreferMinerMargin
