@@ -2402,25 +2402,26 @@ function Invoke-Core {
         $_.IsRunningFirstRounds = $_.Status -eq [MinerStatus]::Running -and $_.Rounds -lt $Session.Config.MinimumMiningIntervals -and -not $Session.IsBenchmarkingRun
     })
 
-    #Don't penalize active miners and apply switching hysteresis (or skip penalize)
+    #If either SkipSwitchingPrevention or EnableFastSwitching is set, simply ignore ErrorMargins
     if ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) {
         $Miners.Foreach({$_.Profit_Bias = $_.Profit_Unbias})
-    } else {
-        $MinerSwitchingHysteresis = 1 + $Session.Config.MinerSwitchingHysteresis/100
-        $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({
-            $Miner = $_
-            $Miners.Where({
-                    $_.Name -eq $Miner.Name -and
-                    $_.Path -eq $Miner.Path -and
-                    $_.Arguments -eq $Miner.Arguments -and
-                    $_.API -eq $Miner.API -and
-                    (Compare-Object $Miner.Algorithm ($_.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
-                },'First').Foreach({
-                    $_.Profit_Bias = $_.Profit_Unbias * $MinerSwitchingHysteresis
-                    if ($Miner.IsRunningFirstRounds) {$_.Profit_Bias *= 100}
-                })
-        })
     }
+
+    #Don't penalize active miners and apply switching hysteresis, also make sure FirstRounds is respected 
+    $MinerSwitchingHysteresis = 1 + $Session.Config.MinerSwitchingHysteresis/100
+    $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({
+        $Miner = $_
+        $Miners.Where({
+                $_.Name -eq $Miner.Name -and
+                $_.Path -eq $Miner.Path -and
+                $_.Arguments -eq $Miner.Arguments -and
+                $_.API -eq $Miner.API -and
+                (Compare-Object $Miner.Algorithm ($_.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
+            },'First').Foreach({
+                $_.Profit_Bias = $_.Profit_Unbias * $MinerSwitchingHysteresis
+                if ($Miner.IsRunningFirstRounds) {$_.Profit_Bias *= 100}
+            })
+    })
 
     #Apply preferred miner margin
     if (($Session.Config.PreferMinerName | Measure-Object).Count -and $Session.Config.PreferMinerMargin) {
