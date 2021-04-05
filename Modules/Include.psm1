@@ -3578,7 +3578,7 @@ function Get-NormalizedDeviceName {
     if ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}                 # HD series
     elseif ($DeviceName -match '.*\s(Vega).*(56|64).*') {"Radeon Vega $($Matches[2])"}        # Vega series
     elseif ($DeviceName -match '.*\s(R\d)\s(\w+).*') {"Radeon $($Matches[1]) $($Matches[2])"} # R3/R5/R7/R9 series
-    elseif ($DeviceName -match '.*Radeon.*(5[567]00.*)') {"Radeon RX $($Matches[1])"}         # RX 5000 series
+    elseif ($DeviceName -match '.*Radeon.*(5[567]00[\w\s]*)') {"Radeon RX $($Matches[1])"}         # RX 5000 series
     elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
     else {$DeviceName}
 }
