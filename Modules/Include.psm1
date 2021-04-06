@@ -3157,38 +3157,43 @@ function Get-Device {
         }
 
         #re-index in case the OpenCL platforms have shifted positions
-        try {
-            $OpenCL_Platforms = @()
-            if (Test-Path ".\Data\openclplatforms.json") {
-                $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
-            }
-
-            $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
-
-            if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current) {
-                Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms_Current > $null
-                $OpenCL_Platforms = $OpenCL_Platforms_Current
-            }
-
-            $Index = 0
-            $Need_Sort = $false
-            $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
-                if ($_.Index -ne $Index) {
-                    $Need_Sort = $true
-                    $_.Index = $Index
-                    $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+        if ($Platfrom_Devices) {
+            try {
+                if (Test-Path ".\Data\openclplatforms.json") {
+                    $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
                 }
-                $Index++
-            }
 
-            if ($Need_Sort) {
-                Write-Log -Level Info "OpenCL platforms have changed from initial run. Resorting indices."
-                $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
-            }
+                if (-not $OpenCL_Platforms) {
+                    $OpenCL_Platforms = @()
+                }
 
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "OpenCL platform detection failed: $($_.Exception.Message)"
+                $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
+
+                if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current) {
+                    Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms_Current > $null
+                    $OpenCL_Platforms = $OpenCL_Platforms_Current
+                }
+
+                $Index = 0
+                $Need_Sort = $false
+                $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
+                    if ($_.Index -ne $Index) {
+                        $Need_Sort = $true
+                        $_.Index = $Index
+                        $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+                    }
+                    $Index++
+                }
+
+                if ($Need_Sort) {
+                    Write-Log -Level Info "OpenCL platforms have changed from initial run. Resorting indices."
+                    $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
+                }
+
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "OpenCL platform detection failed: $($_.Exception.Message)"
+            }
         }
 
         #Roundup and add sort order by PCI busid
