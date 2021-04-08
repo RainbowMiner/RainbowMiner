@@ -27,6 +27,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "etchash"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Etchash
     [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
     [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @(); ExcludePoolName = "^SuprNova"} #ProgPow
+    [PSCustomObject]@{MainAlgorithm = "ubqhash"    ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #UbqHash
 )
 $CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1 -gbase 0"
 
@@ -128,6 +129,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $Coin = if ($Algorithm_Norm -match "ProgPow") {"bci"}
                             elseif ($CoinSymbol -and $CoinXlat.$CoinSymbol) {$CoinXlat.$CoinSymbol}
                             elseif ($Algorithm_Norm_0 -eq "EtcHash") {"etc"}
+                            elseif ($Algorithm_Norm_0 -eq "UbqHash") {"ubq"}
                             else {"auto"}
 
 					[PSCustomObject]@{
