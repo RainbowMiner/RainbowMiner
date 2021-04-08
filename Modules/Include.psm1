@@ -1685,7 +1685,7 @@ function Get-BalancesPayouts {
     )
 
     $Payouts | Foreach-Object {
-        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp})"
+        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp} elseif ($_.createdAt) {$_.createdAt})"
         if ($DateTime) {
             [PSCustomObject]@{
                 Date     = $(if ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
