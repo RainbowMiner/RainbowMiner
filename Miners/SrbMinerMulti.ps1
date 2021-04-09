@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.7.1"
+$Version = "0.7.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.1-srbminermulti/SRBMiner-Multi-0-7-1-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-srbminermulti/SRBMiner-Multi-0-7-2-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.1-srbminermulti/SRBMiner-Multi-0-7-1-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-srbminermulti/SRBMiner-Multi-0-7-2-win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
@@ -38,7 +38,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "randomwow"      ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomWow
     [PSCustomObject]@{MainAlgorithm = "randomx"        ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomX
     [PSCustomObject]@{MainAlgorithm = "randomxl"       ;              Params = "--randomx-use-1gb-pages"; Fee = 0.85; Vendor = @("CPU")} #RandomXL
-    [PSCustomObject]@{MainAlgorithm = "rx2"            ;              Params = ""; Fee = 1.25;               Vendor = @("CPU")} #RX2/Luxcoin
+    [PSCustomObject]@{MainAlgorithm = "rx2"            ;              Params = ""; Fee = 1.00;               Vendor = @("CPU")} #RX2/Luxcoin
     [PSCustomObject]@{MainAlgorithm = "scryptn2"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #scyptn2/Verium
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr16
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"    ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #yescryptr32
@@ -75,12 +75,13 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "eaglesong"      ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #eaglesong
     [PSCustomObject]@{MainAlgorithm = "etchash"        ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
     [PSCustomObject]@{MainAlgorithm = "ethash"         ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
+    [PSCustomObject]@{MainAlgorithm = "heavyhash"      ;              Params = ""; Fee = 2.5;                Vendor = @("AMD")} #HeavyHash/OBTC
     [PSCustomObject]@{MainAlgorithm = "k12"            ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
     [PSCustomObject]@{MainAlgorithm = "kadena"         ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); CoinSymbols = @("KDA")} #blake2s / Kadena
     [PSCustomObject]@{MainAlgorithm = "keccak"         ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "phi5"           ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #PHI5/CBE
     [PSCustomObject]@{MainAlgorithm = "ubqhash"        ;              Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
-    [PSCustomObject]@{MainAlgorithm = "verthash"       ;              Params = ""; Fee = 1.25;               Vendor = @("AMD","CPU")} #Verthash
+    [PSCustomObject]@{MainAlgorithm = "verthash"       ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU")} #Verthash
     [PSCustomObject]@{MainAlgorithm = "verushash"      ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Verushash
     [PSCustomObject]@{MainAlgorithm = "yescrypt"       ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #yescrypt
 )
