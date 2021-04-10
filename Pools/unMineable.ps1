@@ -97,7 +97,7 @@ $Pool_Referrals = [PSCustomObject]@{
     ZRX = "ar8a-rfqo"
 }
 
-$Pool_Currencies = $Pool_CoinsRequest.coins | Where-Object {$Symbol = $_.symbol;($Wallets.$Symbol -and $Wallets.$Symbol -match $_.regex) -or $InfoOnly}
+$Pool_Currencies = $Pool_CoinsRequest.coins | Where-Object {$Symbol = $_.symbol;$Wallets.$Symbol -or $InfoOnly}
 
 $Pools_Data | ForEach-Object {
     $Pool_RewardAlgo = if ($_.rewardalgo) {$_.rewardalgo} else {$_.algo}
