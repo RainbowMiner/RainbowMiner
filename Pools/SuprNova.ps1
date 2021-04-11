@@ -33,6 +33,7 @@ $Pools_Data = @(
 	[PSCustomObject]@{symbol = "GRS"     ; rpc = "grs"     ; port = 5544}
     [PSCustomObject]@{symbol = "HODL"    ; rpc = "hodl"    ; port = 4693}
     [PSCustomObject]@{symbol = "MNX"     ; rpc = "mnx"     ; port = @(7077,7078)}
+    [PSCustomObject]@{symbol = "OBTC"    ; rpc = "obtc"    ; port = [PSCustomObject]@{CPU=4074;GPU=4075}}
 	[PSCustomObject]@{symbol = "RIC"     ; rpc = "ric"     ; port = 5000}
     [PSCustomObject]@{symbol = "ROI"     ; rpc = "roi"     ; port = 4699}
     [PSCustomObject]@{symbol = "RVN"     ; rpc = "rvn"     ; port = 8888}
@@ -83,7 +84,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
             MarginOfError = 0
             Protocol      = if ($Pool_SSL) {"ssl"} else {"stratum+tcp"}
             Host          = "$($_.rpc).suprnova.cc"
-            Port          = $Port
+            Port          = if ($Port.CPU) {$Port.CPU} else {$Port}
+            Ports         = if ($Port.CPU) {$Port} else {$null}
             User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_Region
