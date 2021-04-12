@@ -480,6 +480,7 @@
     "etchash": "EtcHash",
     "eth": "Ethash",
     "ethash": "Ethash",
+    "ethashlowmemory": "EthashLowMemory",
     "exosis": "Exosis",
     "feathercoin": "NeoScrypt",
     "fresh": "Fresh",

@@ -26,6 +26,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash"        ; DAG = $true; MinMemGB = 3;   Params = "-A ETHASH%CUDA%";                   ExtendInterval = 2; ExcludePoolName = "^MiningRigRentals"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory" ; DAG = $true; MinMemGB = 2;   Params = "-A ETHASH%CUDA%";                 ExtendInterval = 2; ExcludePoolName = "^MiningRigRentals"} #Ethash for low memory coins
     #[PSCustomObject]@{MainAlgorithm = "KawPow"        ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA%";                  ExtendInterval = 2; ExcludePoolName = "^MiningPoolHub"} #KAWPOW (RVN,ZELS)
     [PSCustomObject]@{MainAlgorithm = "MTP"           ;              MinMemGB = 5;   Params = "-A MTP%CUDA%";                      ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "MTPTcr"        ;              MinMemGB = 5;   Params = "-A MTP%CUDA% -coin TCR";            ExtendInterval = 2} #MTP-TCR
