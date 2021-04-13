@@ -272,13 +272,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             $ConfigActual = Get-ConfigContent $ConfigName
 
-            $DataSaved = [hashtable]@{}
-
-            $SaveArrays = @($Parameters.savearrays | Select-Object)
-
             $ConfigChanged = 0
 
             if ($ConfigName -eq "Config") {
+                $DataSaved = [hashtable]@{}
+
                 $Parameters.PSObject.Properties.Name | Where-Object {$ConfigActual.$_ -ne $null} | Foreach-Object {
                     $DataSaved[$_] = "$(if ($Parameters.$_ -is [System.Collections.ArrayList]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
                     if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
@@ -293,7 +291,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
 
                 #reset checkbox-arrays
-                $SaveArrays | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
+                $Parameters.savearrays | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
                     $DataSaved[$_] = ""
                     if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
                         $ConfigChanged++
@@ -302,6 +300,55 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             } elseif ($ConfigName -eq "Pools") {
 
+            } elseif ($ConfigName -eq "Coins") {
+                $Parameters.Coins | Foreach-Object {
+                    $CoinSymbol = $_
+                    $CoinSymbol_Real = if ($CoinSymbol -eq "NewCoin") {"$($Parameters."Newcoin--CoinSymbol")".Trim().ToUpper()} else {$CoinSymbol}
+
+                    if ($CoinSymbol_Real) {
+                        if ($CoinSymbol -ne "NewCoin" -and $Parameters."$($CoinSymbol)--RemoveCoin") {
+                            if ($ConfigActual.$CoinSymbol) {
+                                $ConfigActual.PSObject.Properties.Remove($CoinSymbol)
+                                $ConfigChanged++
+                            }
+                        } else {
+                            $DataSaved = [PSCustomObject]@{}
+                            @("Wallet","Penalty","MinHashrate","MinWorkers","MaxTimeToFind","PostBlockMining","MinProfitPercent","EnableAutoPool","Comment") | Foreach-Object {
+                                $Value = $Parameters."$($CoinSymbol)--$($_)"
+                                $Value = Switch ($_) {
+                                    "Penalty"          {"$([double]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
+                                    "MinHashrate"      {"$($Value -replace ",","." -replace "[^0-9kMGTPH`.]+" -replace "([A-Z]{2})[A-Z]+","`$1")"}
+                                    "MinWorkers"       {"$($Value -replace ",","." -replace "[^0-9kMGTPH`.]+" -replace "([A-Z])[A-Z]+","`$1")"}
+                                    "MaxTimeToFind"    {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
+                                    "PostBlockMining"  {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
+                                    "MinProfitPercent" {"$([double]($Value -replace ",","." -replace "[^0-9`.]+"))"}
+                                    "EnableAutoPool"   {"$([int](Get-Yes $Value))"}
+                                    default {$Value.Trim()}
+                                }
+                                
+                                $DataSaved | Add-Member $_ $Value
+
+                                if ($CoinSymbol -eq "NewCoin" -or $Value -ne "$($ConfigActual.$CoinSymbol.$_)") {
+                                    $ConfigChanged++
+                                }
+                            }
+
+                            if ($CoinSymbol -eq "NewCoin") {
+                                $i=0
+                                do {
+                                    $CoinSymbol = "$($CoinSymbol_Real)$(if ($i) {"-$($i)"})"
+                                    $i++
+                                } while ([bool]$ConfigActual.PSObject.Properties["$($CoinSymbol)"])
+                            }
+                            $ConfigActual | Add-Member $CoinSymbol $DataSaved -Force
+                        }
+                    }
+                }
+                $Sorted = [PSCustomObject]@{}
+                $ConfigActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {                
+                    $Sorted | Add-Member $_ $ConfigActual.$_ -Force
+                }
+                $ConfigActual = $Sorted
             }
 
             if ($ConfigChanged -and ($ConfigPath = Get-ConfigPath $ConfigName)) {
@@ -310,8 +357,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             } else {
                 $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
             }
-            Remove-Variable "ConfigActual"
-            Remove-Variable "DataSaved"
+
+            if ($ConfigActual) {Remove-Variable "ConfigActual"}
+            if ($Sorted)       {Remove-Variable "Sorted"}
+            if ($DataSaved)    {Remove-Variable "DataSaved"}
             Break
         }
         "/config" {
