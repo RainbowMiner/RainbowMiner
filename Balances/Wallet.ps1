@@ -68,6 +68,7 @@ $Wallets_Data = @(
     [PSCustomObject]@{symbol = "XLM";  match = "^G";    rpc = "https://horizon.stellar.org/accounts/{w}";                             address = "id";                               balance = "balances";                        received = "";                                 divisor = 1}
 	[PSCustomObject]@{symbol = "XRP";  match = "^r";    rpc = "https://api.xrpscan.com/api/v1/account/{w}";                           address = "account";                          balance = "xrpBalance";                      received = "";                                 divisor = 1}
 	[PSCustomObject]@{symbol = "XTZ";  match = "^tz";   rpc = "https://api.blockchair.com/tezos/raw/account/{w}";                     address = "data.{w}.account.address";         balance = "data.{w}.account.total_balance";  received = "data.{w}.account.total_received";  divisor = 1}
+	[PSCustomObject]@{symbol = "YEC";  match = "^s1";   rpc = "https://yec.safe.trade/api/YEC/mainnet/address/{w}/balance";           address = "";                                 balance = "balance";                         received = "";                                 divisor = 1e8; verify = "exists"; verify_value = "balance"}
     [PSCustomObject]@{symbol = "ZEC";  match = "^t";    rpc = "https://api.zcha.in/v2/mainnet/accounts/{w}";                          address = "address";                          balance = "balance";                         received = "totalRecv";                        divisor = 1}
 )
 
@@ -86,7 +87,8 @@ foreach ($Wallet_Data in $Wallets_Data) {
             try {
                 $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$Wallet_Address)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
                 if (($Wallet_Data.verify -eq $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.address -replace "{w}",$Wallet_Address)")" -ne $Wallet_Address) -or 
-                    ($Wallet_Data.verify -ne $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.verify -replace "{w}",$Wallet_Address)")" -ne $Wallet_Data.verify_value)
+                    ($Wallet_Data.verify -eq "exists" -and "$(Invoke-Expression "`$Request.$($Wallet_Data.verify_value -replace "{w}",$Wallet_Address)")" -eq "") -or
+                    ($Wallet_Data.verify -ne "exists" -and $Wallet_Data.verify -ne $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.verify -replace "{w}",$Wallet_Address)")" -ne $Wallet_Data.verify_value)
                     ) {$Success = $false}
             }
             catch {
