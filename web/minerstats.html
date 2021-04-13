@@ -83,10 +83,13 @@
 <script>
     $(function () {
         $('#resetallbenchmarks').click(function () {
-            $('.modal-body').load('scripts/resetallbenchmarks.ps1', function () {
-                $('.modal-title').text('Reset All Benchmarks');
-                $('#myModal').modal({ show: true });
-            });
+            if (confirm("Do you really want to rebench ALL miners?\n\nThis will delete all your benchmarks, so please think twice.\n\nAre you sure?")) {
+                $('.modal-body').load('scripts/resetallbenchmarks.ps1', function () {
+                    $('.modal-title').text('Reset All Benchmarks');
+                    $('#myModal').modal({ show: true });
+                });
+            }
+            return false
         });
 
         $('#resetneededbenchmarks').click(function () {
