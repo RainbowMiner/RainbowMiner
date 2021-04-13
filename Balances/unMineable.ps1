@@ -30,7 +30,7 @@ $Pool_CoinsRequest.coins | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbo
     $Request = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-WebRequestAsync "https://api.unminable.com/v3/stats/$($Config.Pools.$Name.Wallets.$Pool_Currency)?coin=$($Pool_Currency)"
+        $Request = Invoke-WebRequestAsync "https://api.unminable.com/v3/stats/$($Config.Pools.$Name.Wallets.$Pool_Currency)?coin=$($Pool_Currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
         $Request = ConvertFrom-Json "$($Request -replace ',"hashrate".+$','}}')" -ErrorAction Stop
 
         if (-not $Request.success) {
