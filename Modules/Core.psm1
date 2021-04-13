@@ -2893,7 +2893,7 @@ function Invoke-Core {
 
     if (-not $Session.ConsoleCapture) {
         #Begin capture of the current console output
-        Start-Transcript ".\Logs\console.txt" > $null
+        Start-Transcript ".\Logs\console.txt" -Force > $null
         $Session.ConsoleCapture = $true
     }
 
