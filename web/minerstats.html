@@ -39,7 +39,7 @@
 <div class="card-group mb-4">
   <div class="card">
       <div class="card-header">
-          <h5>Benchmark Status</h5>
+          <h5>Benchmark Status <button class="btn btn-primary" id="benchmarkselected">Benchmark selected</button></h5>
       </div>
       <div class="card-body">
           <table id="minerstats" class="table"
@@ -60,6 +60,7 @@
                  data-detail-formatter="detailFormatter">
               <thead>
                   <tr>
+                      <th data-field="state" data-checkbox="true"></th>
                       <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                       <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
                       <th data-field="Devices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
@@ -106,6 +107,30 @@
             });
         });
 
+        $('#benchmarkselected').click(function() {
+            var sel = $('#minerstats tbody tr td input[data-index]:checked');
+            if (sel.length && confirm("Do you really want to rebench all selected miners?")) {
+                var params = {
+                    name: [],
+                    algorithm: [],
+                    devicemodel: []
+                }
+                $.each(sel,function() {
+                    var ix = $(this).attr('data-index');
+                    var btn = $('#minerstats tbody tr[data-index='+ix+'] td button[data-name]');
+                    params.name.push(btn.attr('data-name').toString());
+                    params.algorithm.push(btn.attr('data-algorithm').toString());
+                    params.devicemodel.push(btn.attr('data-devicemodel').toString());
+                })
+                $.post('scripts/resetselectedbenchmark.ps1',params,function(result) {
+                    $('.modal-body').html(result)
+                    $('.modal-title').text('Reset Selected Benchmarks');
+                    $('#myModal').modal({ show: true });
+                })
+            }
+            return false;
+        });
+
         $('#minerstats').on("post-body.bs.table", function () {
             $('#minerstats button[name=benchmark]').click(function () {
                 var params = {
@@ -121,6 +146,7 @@
         });
 
     });
+
     function formatMinerstats(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
