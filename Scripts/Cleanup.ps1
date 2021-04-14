@@ -1082,7 +1082,7 @@ try {
 
                 if (Test-Path $CombosConfigFile) {
                     $CombosConfigActual  = Get-Content $CombosConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"]) {
+                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"] -and $CombosConfigActual.NVIDIA.PSObject.Properties.Name) {
                         $Changes = 0
                         $CombosSafe = [PSCustomObject]@{}
 
@@ -1156,7 +1156,7 @@ try {
                 $CombosConfigActualPath = Join-Path $($_.FullName) "combos.config.txt"
                 if (Test-Path $CombosConfigActualPath) {
                     $CombosConfigActual  = Get-Content $CombosConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"]) {
+                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"] -and $CombosConfigActual.NVIDIA.PSObject.Properties.Name) {
                         $Changes = 0
                         $CombosSafe = [PSCustomObject]@{}
 
