@@ -1033,6 +1033,64 @@ try {
         $RemoveMinerStats += @("*-Trex*_EtcHash_HashRate.txt","*-Trex*_Ethash_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.7.1.1")) {
+        if (Test-Path "Config") {
+            if (Test-Path $ConfigFile) {
+                $ConfigActual  = Get-Content $ConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                $Changes = 0
+
+                if ([bool]$ConfigActual.PSObject.Properties["DeviceName"]) {
+                    $DeviceName = [string]::Join(",",@([regex]::split($ConfigActual.DeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                    if ($DeviceName -ne $ConfigActual.DeviceName) {
+                        $ConfigActual.DeviceName = $DeviceName
+                        $Changes++
+                    }
+                }
+
+                if ([bool]$ConfigActual.PSObject.Properties["ExcludeDeviceName"]) {
+                    $ExcludeDeviceName = [string]::Join(",",@([regex]::split($ConfigActual.ExcludeDeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                    if ($ExcludeDeviceName -ne $ConfigActual.ExcludeDeviceName) {
+                        $ConfigActual.ExcludeDeviceName = $ExcludeDeviceName
+                        $Changes++
+                    }
+                }
+
+                if ($Changes) {
+                    Set-ContentJson -PathToFile $ConfigFile -Data $ConfigActual > $null
+                    $ChangesTotal += $Changes
+                }
+            }
+
+            Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
+                $ConfigActualPath = Join-Path $($_.FullName) "config.txt"
+                if (Test-Path $ConfigActualPath) {
+                    $ConfigActual  = Get-Content $ConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+
+                    if ([bool]$ConfigActual.PSObject.Properties["DeviceName"]) {
+                        $DeviceName = [string]::Join(",",@([regex]::split($ConfigActual.DeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                        if ($DeviceName -ne $ConfigActual.DeviceName) {
+                            $ConfigActual.DeviceName = $DeviceName
+                            $Changes++
+                        }
+                    }
+
+                    if ([bool]$ConfigActual.PSObject.Properties["ExcludeDeviceName"]) {
+                        $ExcludeDeviceName = [string]::Join(",",@([regex]::split($ConfigActual.ExcludeDeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                        if ($ExcludeDeviceName -ne $ConfigActual.ExcludeDeviceName) {
+                            $ConfigActual.ExcludeDeviceName = $ExcludeDeviceName
+                            $Changes++
+                        }
+                    }
+
+                    if ($Changes) {
+                        Set-ContentJson -PathToFile $ConfigActualPath -Data $ConfigActual > $null
+                        $ChangesTotal += $Changes
+                    }
+                }
+            }
+        }
+    }
+
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
 
