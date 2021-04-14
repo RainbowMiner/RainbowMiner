@@ -3565,27 +3565,35 @@ function Get-NormalizedDeviceName {
         [String]$Vendor = "AMD"
     )
 
-    $DeviceName = "$($DeviceName -replace '\(TM\)|\(R\)')"
+    $DeviceName = "$($DeviceName -replace '\([A-Z0-9 ]+\)?')"
 
-    if ($Vendor -ne "AMD") {return $DeviceName}
+    if ($Vendor -eq "AMD") {
+        $DeviceName = "$($DeviceName `
+                -replace 'ASUS' `
+                -replace 'AMD' `
+                -replace 'Series' `
+                -replace 'Graphics' `
+                -replace 'Adapter' `
+                -replace '\d+GB$' `
+                -replace "\s+", ' '
+        )".Trim()
 
-    $DeviceName = "$($DeviceName `
-            -replace 'ASUS' `
-            -replace 'AMD' `
-            -replace '\([A-Z0-9 ]+\)?' `
-            -replace 'Series' `
-            -replace 'Graphics' `
-            -replace 'Adapter' `
-            -replace '\d+GB$' `
-            -replace "\s+", ' '
-    )".Trim()
-
-    if ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}                 # HD series
-    elseif ($DeviceName -match '.*\s(Vega).*(56|64).*') {"Radeon Vega $($Matches[2])"}        # Vega series
-    elseif ($DeviceName -match '.*\s(R\d)\s(\w+).*') {"Radeon $($Matches[1]) $($Matches[2])"} # R3/R5/R7/R9 series
-    elseif ($DeviceName -match '.*Radeon.*(5[567]00[\w\s]*)') {"Radeon RX $($Matches[1])"}         # RX 5000 series
-    elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
-    else {$DeviceName}
+        if ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}                 # HD series
+        elseif ($DeviceName -match '.*\s(Vega).*(56|64).*') {"Radeon Vega $($Matches[2])"}        # Vega series
+        elseif ($DeviceName -match '.*\s(R\d)\s(\w+).*') {"Radeon $($Matches[1]) $($Matches[2])"} # R3/R5/R7/R9 series
+        elseif ($DeviceName -match '.*Radeon.*(5[567]00[\w\s]*)') {"Radeon RX $($Matches[1])"}         # RX 5000 series
+        elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
+        else {$DeviceName}
+    } elseif ($Vendor) {
+        "$($DeviceName `
+                -replace $Vendor `
+                -replace "\s+", ' '
+        )".Trim()
+    } else {
+        "$($DeviceName `
+                -replace "\s+", ' '
+        )".Trim()
+    }
 }
 
 function Get-DeviceName {
