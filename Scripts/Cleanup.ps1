@@ -1059,6 +1059,25 @@ try {
                     Set-ContentJson -PathToFile $ConfigFile -Data $ConfigActual > $null
                     $ChangesTotal += $Changes
                 }
+
+                $Changes = 0
+                $OCprofilesSafe = [PSCustomObject]@{}
+                $OCprofilesConfigActual  = Get-Content $OCprofilesConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                $OCprofilesConfigActual.PSObject.Properties | Sort-Object {$_.Name -match "-NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
+                    $NewName = $_.Name -replace "-NVIDIA(R|G)TX","-`${1}TX"
+                    $OCprofilesSafe | Add-Member $NewName $_.Value -Force
+                    if ($NewName -ne $_.Name) {$Changes++}
+                }
+
+                if ($Changes) {
+                    $OCprofilesSort = [PSCustomObject]@{}
+                    $OCprofilesSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                        $OCprofilesSort | Add-Member $_.Name $_.Value -Force
+                    }
+                    Set-ContentJson -PathToFile $OCprofilesConfigFile -Data $OCprofilesSort > $null
+                    $ChangesTotal += $Changes
+                }
+
             }
 
             Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
@@ -1084,6 +1103,27 @@ try {
 
                     if ($Changes) {
                         Set-ContentJson -PathToFile $ConfigActualPath -Data $ConfigActual > $null
+                        $ChangesTotal += $Changes
+                    }
+                }
+
+                $OCprofilesConfigActualPath = Join-Path $($_.FullName) "ocprofiles.config.txt"
+                if (Test-Path $OCprofilesConfigActualPath) {
+                    $Changes = 0
+                    $OCprofilesSafe = [PSCustomObject]@{}
+                    $OCprofilesConfigActual  = Get-Content $OCprofilesConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    $OCprofilesConfigActual.PSObject.Properties | Sort-Object {$_.Name -notmatch "-NVIDIA(R|G)TX"},Name | Foreach-Object {
+                        $NewName = $_.Name -replace "-NVIDIA(R|G)TX","-`${1}TX"
+                        $OCprofilesSafe | Add-Member $NewName $_.Value -Force
+                        if ($NewName -ne $_.Name) {$Changes++}
+                    }
+
+                    if ($Changes) {
+                        $OCprofilesSort = [PSCustomObject]@{}
+                        $OCprofilesSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                            $OCprofilesSort | Add-Member $_.Name $_.Value -Force
+                        }
+                        Set-ContentJson -PathToFile $OCprofilesConfigActualPath -Data $OCprofilesSafe > $null
                         $ChangesTotal += $Changes
                     }
                 }
