@@ -1060,22 +1060,47 @@ try {
                     $ChangesTotal += $Changes
                 }
 
-                $Changes = 0
-                $OCprofilesSafe = [PSCustomObject]@{}
-                $OCprofilesConfigActual  = Get-Content $OCprofilesConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-                $OCprofilesConfigActual.PSObject.Properties | Sort-Object {$_.Name -match "-NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
-                    $NewName = $_.Name -replace "-NVIDIA(R|G)TX","-`${1}TX"
-                    $OCprofilesSafe | Add-Member $NewName $_.Value -Force
-                    if ($NewName -ne $_.Name) {$Changes++}
+                if (Test-Path $OCprofilesConfigFile) {
+                    $Changes = 0
+                    $OCprofilesSafe = [PSCustomObject]@{}
+                    $OCprofilesConfigActual  = Get-Content $OCprofilesConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    $OCprofilesConfigActual.PSObject.Properties | Sort-Object {$_.Name -match "-NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
+                        $NewName = $_.Name -replace "-NVIDIA(R|G)TX","-`${1}TX"
+                        $OCprofilesSafe | Add-Member $NewName $_.Value -Force
+                        if ($NewName -ne $_.Name) {$Changes++}
+                    }
+
+                    if ($Changes) {
+                        $OCprofilesSort = [PSCustomObject]@{}
+                        $OCprofilesSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                            $OCprofilesSort | Add-Member $_.Name $_.Value -Force
+                        }
+                        Set-ContentJson -PathToFile $OCprofilesConfigFile -Data $OCprofilesSort > $null
+                        $ChangesTotal += $Changes
+                    }
                 }
 
-                if ($Changes) {
-                    $OCprofilesSort = [PSCustomObject]@{}
-                    $OCprofilesSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
-                        $OCprofilesSort | Add-Member $_.Name $_.Value -Force
+                if (Test-Path $CombosConfigFile) {
+                    $CombosConfigActual  = Get-Content $CombosConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"]) {
+                        $Changes = 0
+                        $CombosSafe = [PSCustomObject]@{}
+
+                        $CombosConfigActual.NVIDIA.PSObject.Properties | Sort-Object {$_.Name -match "NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
+                            $NewName = $_.Name -replace "NVIDIA(R|G)TX","`${1}TX"
+                            $CombosSafe | Add-Member $NewName $_.Value -Force
+                            if ($NewName -ne $_.Name) {$Changes++}
+                        }
+
+                        if ($Changes) {
+                            $CombosConfigActual.NVIDIA = [PSCustomObject]@{}
+                            $CombosSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                                $CombosConfigActual.NVIDIA | Add-Member $_.Name $_.Value -Force
+                            }
+                            Set-ContentJson -PathToFile $CombosConfigFile -Data $CombosConfigActual > $null
+                            $ChangesTotal += $Changes
+                        }
                     }
-                    Set-ContentJson -PathToFile $OCprofilesConfigFile -Data $OCprofilesSort > $null
-                    $ChangesTotal += $Changes
                 }
 
             }
@@ -1125,6 +1150,30 @@ try {
                         }
                         Set-ContentJson -PathToFile $OCprofilesConfigActualPath -Data $OCprofilesSafe > $null
                         $ChangesTotal += $Changes
+                    }
+                }
+
+                $CombosConfigActualPath = Join-Path $($_.FullName) "combos.config.txt"
+                if (Test-Path $CombosConfigActualPath) {
+                    $CombosConfigActual  = Get-Content $CombosConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"]) {
+                        $Changes = 0
+                        $CombosSafe = [PSCustomObject]@{}
+
+                        $CombosConfigActual.NVIDIA.PSObject.Properties | Sort-Object {$_.Name -match "NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
+                            $NewName = $_.Name -replace "NVIDIA(R|G)TX","`${1}TX"
+                            $CombosSafe | Add-Member $NewName $_.Value -Force
+                            if ($NewName -ne $_.Name) {$Changes++}
+                        }
+
+                        if ($Changes) {
+                            $CombosConfigActual.NVIDIA = [PSCustomObject]@{}
+                            $CombosSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                                $CombosConfigActual.NVIDIA | Add-Member $_.Name $_.Value -Force
+                            }
+                            Set-ContentJson -PathToFile $CombosConfigActualPath -Data $CombosConfigActual > $null
+                            $ChangesTotal += $Changes
+                        }
                     }
                 }
             }
