@@ -131,6 +131,7 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
                 Wallet        = $User
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
+                PaysLive      = $true
             }
         }
     }
