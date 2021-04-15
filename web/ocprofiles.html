@@ -31,11 +31,11 @@
       <tr>
           <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true" data-title-tooltip="The name, Rainbowminer uses to identify this profile">Profile</th>
           <th data-field="Device" data-sortable="true" data-filter-control="select" data-filter-strict-search="true" data-title-tooltip="Device (name, pcie, id) that profile applies to">Device</th>
-          <th data-field="tPowerLimit" data-sortable="true" data-align="right" data-title-tooltip="Powerlimit %">Power</th>
-          <th data-field="tClockCore" data-sortable="true" data-align="right" data-title-tooltip="GPU core clock boost in MHz">Core</th>
-          <th data-field="tClockMem" data-sortable="true" data-align="right" data-title-tooltip="Memory clock boost in MHz">Memory</th>
-          <th data-field="tLockVoltagePoint" data-sortable="true" data-align="right" data-title-tooltip="Lock voltage point">LockVoltage</th>
-          <th data-field="tThermalLimit" data-sortable="true" data-align="right" data-title-tooltip="Thermal limit temperature in °C">Temp.</th>
+          <th data-field="tPowerLimit" data-sortable="true" data-align="right" data-title-tooltip="Powerlimit %" data-formatter="formatOCProfilesPowerLimit">Power</th>
+          <th data-field="tClockCore" data-sortable="true" data-align="right" data-title-tooltip="GPU core clock boost in MHz" data-sorter="sortOCProfilesStarsAndNumbers">Core</th>
+          <th data-field="tClockMem" data-sortable="true" data-align="right" data-title-tooltip="Memory clock boost in MHz" data-sorter="sortOCProfilesStarsAndNumbers">Memory</th>
+          <th data-field="tLockVoltagePoint" data-sortable="true" data-align="right" data-title-tooltip="Lock voltage point" data-sorter="sortOCProfilesStarsAndNumbers">LockVoltage</th>
+          <th data-field="tThermalLimit" data-sortable="true" data-align="right" data-title-tooltip="Thermal limit temperature in °C" data-formatter="formatOCProfilesTemperature">Temp.</th>
       </tr>
   </thead>
 </table>
@@ -54,13 +54,30 @@
   // This function can alter the returned data before building the table, formatting it in a way
   // that is easier to display and manipulate in a table
       $.each(data, function (index, item) {
-          item.tPowerLimit = typeof (item.PowerLimit) !== "undefined" && item.PowerLimit? item.PowerLimit + ' %' : '-'
-          item.tThermalLimit = typeof (item.ThermalLimit) !== "undefined" && item.ThermalLimit ? item.ThermalLimit + ' °C' : '-'
+          item.tPowerLimit = typeof (item.PowerLimit) !== "undefined" && item.PowerLimit? Number(item.PowerLimit) : -1
+          item.tThermalLimit = typeof (item.ThermalLimit) !== "undefined" && item.ThermalLimit ? Number(item.ThermalLimit) : -1
           item.tClockCore = typeof (item.CoreClockBoost) !== "undefined" && item.CoreClockBoost ? item.CoreClockBoost : '*'
           item.tClockMem = typeof (item.MemoryClockBoost) !== "undefined" && item.MemoryClockBoost ? item.MemoryClockBoost : '*'
           item.tLockVoltagePoint = typeof (item.LockVoltagePoint) !== "undefined" && item.LockVoltagePoint ? item.LockVoltagePoint : '*'
       });
     return data;
+}
+
+function sortOCProfilesStarsAndNumbers(a,b,rowA,rowB) {
+    var valA = 999, valB = 999
+    if (a != '*') valA = Number(a)
+    if (b != '*') valB = Number(b)
+    if (a > b) return 1
+    if (a < b) return -1
+    return 0
+}
+
+function formatOCProfilesPowerLimit(value) {
+    return value >= 0? value + ' %' : '-'
+}
+
+function formatOCProfilesTemperature(value) {
+    return value >= 0? value + ' °C' : '-'
 }
 </script>
 <!--#include file="/parts/foot.html" -->

@@ -24,6 +24,7 @@ function timeSince(date) {
   if (interval > 1) {
      return interval + " hours ago";
   }
+
   interval = Math.floor(seconds / 60);
   if (interval > 1) {
     return interval + " minutes ago";
@@ -76,6 +77,11 @@ function formatMinerHashRatesValues(value) {
     hashrates.push(formatHashRateValue(value[property]));
   }
   return hashrates.toString();
+}
+
+function formatPower(value) {
+  if (typeof value == "undefined" || value < 0) return "N/A"
+  return value + " W"
 }
 
 function formatPrices(data) {
@@ -194,6 +200,14 @@ function formatVersion(version) {
     return version.Major + '.' + version.Minor + '.' + version.Build + '.' +version.Revision
 }
   
+function sortNumber(a,b,rowA,rowB) {
+    a = Number(a.replace(/[^0-9.-]+/g,""))
+    b = Number(b.replace(/[^0-9.-]+/g,""))
+    
+    if (a > b) return 1
+    if (a < b) return -1
+    return 0    
+}
 
 function setCookie(cname, cvalue, exdays) {
     var expires = "";

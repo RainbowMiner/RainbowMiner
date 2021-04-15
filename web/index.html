@@ -23,13 +23,13 @@
             <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
             <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
-            <th data-field="tProfit" data-align="right" data-sortable="true">Profit</th>
-            <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+            <th data-field="tProfit" data-align="right" data-sortable="true" data-formatter="formatProfit">Profit</th>
+            <th data-field="tPowerDraw" data-align="right" data-sortable="true" data-formatter="formatPower">Power</th>
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
             <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
             <th data-field="tPrimaryShares" data-align="right">Acc/Rej</th>
-            <th data-field="tActive" data-align="right" data-sortable="true">Active</th>
+            <th data-field="tActive" data-align="right" data-sortable="true" data-sorter="sortRunningMinersByActive">Active</th>
             <th data-field="tDonator" data-sortable="true">Mines</th>
         </tr>
     </thead>
@@ -54,11 +54,11 @@
                 <th data-field="worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                 <th data-field="status" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
                 <th data-field="tMachine" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Machine</th>
-                <th data-field="tLastSeen" data-sortable="true">Last seen</th>
-                <th data-field="tUptime" data-sortable="true">Uptime</th>
+                <th data-field="tLastSeen" data-sortable="true" data-sorter="sortRemoteWorkersByLastSeen">Last seen</th>
+                <th data-field="tUptime" data-sortable="true" data-sorter="sortRemoteWorkersByUptime">Uptime</th>
                 <th data-field="tVersion" data-sortable="true">Version</th>
-                <th data-field="tProfit" data-align="right" data-sortable="true">Profit</th>
-                <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+                <th data-field="tProfit" data-align="right" data-sortable="true" data-formatter="formatProfit">Profit</th>
+                <th data-field="tPowerDraw" data-align="right" data-sortable="true" data-formatter="formatPower">Power</th>
                 <th data-field="tMaxTemp" data-align="right" data-sortable="true " data-title-tooltip="Maximum temperature in °C">max °C</th>
             </tr>
         </thead>
@@ -85,13 +85,13 @@
                 <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
                 <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Paid</th>
                 <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
-                <th data-field="tProfit" data-align="right" data-sortable="true">Profit</th>
-                <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+                <th data-field="tProfit" data-align="right" data-sortable="true" data-formatter="formatProfit">Profit</th>
+                <th data-field="tPowerDraw" data-align="right" data-sortable="true" data-formatter="formatPower">Power</th>
                 <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
                 <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
                 <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
                 <th data-field="tPrimaryShares" data-align="right">Acc/Rej</th>
-                <th data-field="tActive" data-align="right" data-sortable="true">Active</th>
+                <th data-field="tActive" data-align="right" data-sortable="true" data-sorter="sortRemoteMinersByActive">Active</th>
                 <th data-field="tDonator" data-sortable="true">Mines</th>
             </tr>
         </thead>
@@ -115,14 +115,14 @@
                 <th data-field="Name" data-sortable="true" data-title-tooltip="The name, Rainbowminer uses to identify this device">Name</th>
                 <th data-field="Vendor" data-sortable="true" data-title-tooltip="Vendor of the device">Vendor</th>
                 <th data-field="Model" data-sortable="true" data-title-tooltip="Modelname of the device">Model</th>
-                <th data-field="tMemory" data-sortable="true" data-title-tooltip="Memory on the device in GB">Mem</th>
-                <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C">°C</th>
-                <th data-field="tTemperatureMax" data-sortable="true" data-title-tooltip="Maximum temperature in °C">max °C</th>
-                <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %">Fan</th>
-                <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt">Power</th>
-                <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz">Clock</th>
-                <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz">Memclk</th>
-                <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %">PL</th>
+                <th data-field="tMemory" data-sortable="true" data-title-tooltip="Memory on the device in GB" data-formatter="formatDevicesMemory">Mem</th>
+                <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C" data-formatter="formatDevicesTemperature">°C</th>
+                <th data-field="tTemperatureMax" data-sortable="true" data-title-tooltip="Maximum temperature in °C" data-formatter="formatDevicesTemperature">max °C</th>
+                <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %" data-formatter="formatDevicesPercent">Fan</th>
+                <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt" data-formatter="formatPower">Power</th>
+                <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz" data-formatter="formatDevicesClock">Clock</th>
+                <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz" data-formatter="formatDevicesClock">Memclk</th>
+                <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %" data-formatter="formatDevicesPercent">PL</th>
             </tr>
         </thead>
     </table>
@@ -267,7 +267,7 @@ $(function () {
                     }
 
                     if (item.BaseName != "Wallet" && item.Name.substr(0,1) != "*") {
-                        var avg_earnings = parseFloat(item.Earnings_Avg_BTC);
+                        var avg_earnings = Number(item.Earnings_Avg_BTC);
                         total_earnings += avg_earnings;
                         boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
                     }
@@ -277,11 +277,11 @@ $(function () {
                         item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
                         var csplit = item[currency].split(".");
                         var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
-                        if (digits != -1) { item[currency] = parseFloat(item[currency]) }
+                        if (digits != -1) { item[currency] = Number(item[currency]) }
                         if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; basecur.push(name); }
                         else if (digits != -1) {
                             if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
-                            boxes[boxes_ix[item.Name]]["balances"][name] += parseFloat(item[currency]);
+                            boxes[boxes_ix[item.Name]]["balances"][name] += Number(item[currency]);
                         }
                     });
 
@@ -291,11 +291,11 @@ $(function () {
                         var csplit = item[currency].split(".");
                         var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
 
-                        if (digits != -1) { item[currency] = parseFloat(item[currency]) }
+                        if (digits != -1) { item[currency] = Number(item[currency]) }
                         if (boxes[boxes_ix[item.Name]]["invalues"][name] === undefined) { boxes[boxes_ix[item.Name]]["invalues"][name] = item[currency]; }
                         else if (digits != -1) {
                             if (boxes[boxes_ix[item.Name]]["invalues"][name] === "-") boxes[boxes_ix[item.Name]]["invalues"][name] = 0.0;
-                            boxes[boxes_ix[item.Name]]["invalues"][name] += parseFloat(item[currency]);
+                            boxes[boxes_ix[item.Name]]["invalues"][name] += Number(item[currency]);
                         }
                     });
                 });
@@ -425,8 +425,8 @@ function formatRunningMiners(data) {
             item.tPrimaryHashRateLive = item.Speed_Live;
         }
 
-        item.tProfit = formatPricesByCurrency(item.Profit,selcur);
-        item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
+        item.tProfit = typeof item.Profit == "undefined"? 0 : Number(item.Profit);
+        item.tPowerDraw = Math.round(Number(item.PowerDraw));
         item.tDonator = item.Donator ? "for dev" : "for you";
         item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== "" ? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== "" ? item.CoinName : '-')
 
@@ -452,6 +452,14 @@ function formatRunningMiners(data) {
         item.tActive = (item.RunningTime.Days ? item.RunningTime.Days + '.' : '') + (item.RunningTime.Hours < 10 ? '0' : '') + item.RunningTime.Hours + ':' + (item.RunningTime.Minutes < 10 ? '0' : '') + item.RunningTime.Minutes + ':' + (item.RunningTime.Seconds < 10 ? '0' : '') + item.RunningTime.Seconds
     });
     return data;
+}
+
+function sortRunningMinersByActive(a,b,rowA,rowB) {
+    var secA = typeof rowA.RunningTime.TotalSeconds !== "undefined"? Number(rowA.RunningTime.TotalSeconds) : 0
+    var secB = typeof rowA.RunningTime.TotalSeconds !== "undefined"? Number(rowB.RunningTime.TotalSeconds) : 0
+    if (secA > secB) return 1
+    if (secA < secB) return -1
+    return 0
 }
 
 function formatRemoteWorkers(data) {
@@ -481,19 +489,35 @@ function formatRemoteWorkers(data) {
                 $.each(item.data, function (dix, ditem) {
                     if (ditem.Benchmarking) { item.status = "Benchmarking" }
                     $.each(ditem.Devices, function (dvix,dvitem) {
-                      if (typeof dvitem.Temp !== "undefined" && parseFloat(dvitem.Temp) > maxtemp) {
-                        maxtemp = parseFloat(dvitem.Temp)
+                      if (typeof dvitem.Temp !== "undefined" && Number(dvitem.Temp) > maxtemp) {
+                        maxtemp = Number(dvitem.Temp)
                       }
                     })
                 })
             }
         }
 
-        item.tProfit = formatPricesByCurrency(item.profit,selcur);
-        item.tPowerDraw = Math.round(parseFloat(item.powerdraw)) + ' W';
+        item.tProfit = typeof item.profit == "undefined"? 0 : Number(item.profit);
+        item.tPowerDraw = Math.round(Number(item.powerdraw));
         item.tMaxTemp   = maxtemp>0? maxtemp + ' °C' : '-';
     });
     return data;
+}
+
+function sortRemoteWorkersByLastSeen(a,b,rowA,rowB) {
+    var secA = typeof (rowA.lastseen) !== "undefined"? Number(rowA.lastseen) : 0
+    var secB = typeof (rowB.lastseen) !== "undefined"? Number(rowB.lastseen) : 0
+    if (secA > secB) return 1
+    if (secA < secB) return -1
+    return 0
+}
+
+function sortRemoteWorkersByUptime(a,b,rowA,rowB) {
+    var secA = typeof (rowA.uptime) !== "undefined"? Number(rowA.uptime) : 0
+    var secB = typeof (rowB.uptime) !== "undefined"? Number(rowB.uptime) : 0
+    if (secA > secB) return 1
+    if (secA < secB) return -1
+    return 0
 }
 
 function formatRemoteMiners(data) {
@@ -558,8 +582,8 @@ function formatRemoteMiners(data) {
             item.tPrimaryShares = (typeof item.Accepted !== "undefined"? item.Accepted : '-') + ' / ' + (typeof item.Rejected !== "undefined"? item.Rejected : '-')
         }
 
-        item.tProfit = formatPricesByCurrency(item.Profit,selcur);
-        item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
+        item.tProfit = item.Profit == "undefined"? 0 : Number(item.Profit);
+        item.tPowerDraw = Math.round(Number(item.PowerDraw));
         item.tDonator = item.Donator ? "for dev" : "for you";
         item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== "" ? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== "" ? item.CoinName : '-')
 
@@ -578,6 +602,21 @@ function formatRemoteMiners(data) {
         }
     });
     return data;
+}
+
+function sortRemoteMinersByActive(a,b,rowA,rowB) {
+    var minA = 0, minB = 0;
+    var active_data = rowA.Active.split(/\s+/)
+    if (active_data.length >= 6) {
+        minA = parseInt(active_data[0]) * 1440 + parseInt(active_data[2]) * 60 + parseInt(active_data[4])
+    }
+    active_data = rowB.Active.split(/\s+/)
+    if (active_data.length >= 6) {
+        minB = parseInt(active_data[0]) * 1440 + parseInt(active_data[2]) * 60 + parseInt(active_data[4])
+    }
+    if (minA > minB) return 1
+    if (minA < minB) return -1
+    return 0
 }
 
 function colorStatus(row, index) {
@@ -602,7 +641,7 @@ function detailFormatterRemoteWorkers(index, row) {
         html.push('<td>' + formatPricesByCurrency(value.Profit,selcur) + '</td>');
         html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
         html.push('<td>' + formatHashRate(value.EstimatedSpeed) + '</td>');
-        html.push('<td>' + Math.round(parseFloat(value.PowerDraw)) + ' W</td>');
+        html.push('<td>' + Math.round(Number(value.PowerDraw)) + ' W</td>');
         html.push('<td>' + value.Active.replace(/\s+Days/i,"d").replace(/\s+Hours\s+/i,":").replace(/\s+Minutes/i,"") + '</td>');
         html.push('<td>' + (value.Donator? "for dev":"for you") + '</td>');
         html.push('</tr>');
@@ -617,25 +656,47 @@ function formatDevices(data) {
     $.each(data, function (index, item) {
         // Format the device(s)
         if (item.OpenCL) {
-            item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
+            item.tMemory = typeof item.OpenCL.GlobalMemSize !== "undefined" ? item.OpenCL.GlobalMemSize * 1.0 : -1
             item.tDriverVersion = item.OpenCL.DriverVersion
             item.tCores = item.OpenCL.MaxComputeUnits
         } else {
-            item.tMemory = formatBytes(item.Data.CacheL3 * 1024 * 1024)
+            item.tMemory = typeof item.Data.CacheL3 !== "undefined" ? item.Data.CacheL3 * 1024 * 1024 : -1
             item.tDriverVersion = "N/A"
             item.tCores = item.Data.Cores ? item.Data.Cores + "/" + item.Data.Threads : "N/A"
         }
 
-        item.tPowerDraw = typeof (item.Data.PowerDraw) !== "undefined" ? Math.round(parseFloat(item.Data.PowerDraw)) + ' W' : "N/A"
-        item.tFanSpeed = typeof (item.Data.FanSpeed) !== "undefined" ? item.Data.FanSpeed + ' %' : "N/A"
-        item.tClock = typeof (item.Data.Clock) !== "undefined" ? item.Data.Clock + ' MHz' : "N/A"
-        item.tClockMem = typeof (item.Data.ClockMem) !== "undefined" ? item.Data.ClockMem + ' MHz' : "N/A"
-        item.tPowerLimitPercent = typeof (item.Data.PowerLimitPercent) !== "undefined" ? item.Data.PowerLimitPercent + ' %' : "N/A"
-        item.tTemperature = typeof (item.Data.Temperature) !== "undefined" && item.Data.Temperature ? item.Data.Temperature + ' °C' : "N/A"
-        item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" && item.Data.Temperature ? item.DataMax.Temperature + ' °C' : "N/A"
-        item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? item.Data.Utilization + ' %' : "N/A"
+        item.tPowerDraw = typeof (item.Data.PowerDraw) !== "undefined" ? Math.round(Number(item.Data.PowerDraw)) : -1
+        item.tFanSpeed = typeof (item.Data.FanSpeed) !== "undefined" ? Number(item.Data.FanSpeed) : -1
+        item.tClock = typeof (item.Data.Clock) !== "undefined" ? Number(item.Data.Clock) : -1
+        item.tClockMem = typeof (item.Data.ClockMem) !== "undefined" ? Number(item.Data.ClockMem) : -1
+        item.tPowerLimitPercent = typeof (item.Data.PowerLimitPercent) !== "undefined" ? Number(item.Data.PowerLimitPercent) : -1
+        item.tTemperature = typeof (item.Data.Temperature) !== "undefined" && item.Data.Temperature ? Number(item.Data.Temperature) : -1
+        item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" && item.Data.Temperature ? Number(item.DataMax.Temperature) : -1
+        item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? Number(item.Data.Utilization) : -1
     });
     return data;
 }
+
+function formatDevicesClock(value) {
+    return value >= 0? value + ' MHz' : "N/A"
+}
+
+function formatDevicesMemory(value) {
+    return value >= 0? formatBytes(value) : "N/A"
+}
+
+function formatDevicesPercent(value) {
+    return value >= 0? value + ' %' : "N/A"
+}
+
+function formatDevicesTemperature(value) {
+    return value >= 0? value + ' °C' : "N/A"
+}
+
+function formatProfit(value) {
+    var selcur = getSelectedCurrency()
+    return formatPricesByCurrency(value,selcur);
+}
+
 </script>
 <!--#include file="/parts/foot.html" -->

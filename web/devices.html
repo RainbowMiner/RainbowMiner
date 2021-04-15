@@ -21,14 +21,14 @@
           <th data-field="Name" data-sortable="true" data-title-tooltip="The name, Rainbowminer uses to identify this device">Name</th>
           <th data-field="Vendor" data-sortable="true" data-title-tooltip="Vendor of the device">Vendor</th>
           <th data-field="Model" data-sortable="true" data-title-tooltip="Modelname of the device">Model</th>
-          <th data-field="tMemory" data-sortable="true" data-title-tooltip="Memory on the device in GB">Mem</th>
-          <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C">°C</th>
-          <th data-field="tTemperatureMax" data-sortable="true" data-title-tooltip="Maximum temperature in °C">max °C</th>
-          <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %">Fan</th>
-          <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt">Power</th>
-          <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz">Clock</th>
-          <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz">Memclk</th>
-          <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %">PL</th>
+          <th data-field="tMemory" data-sortable="true" data-title-tooltip="Memory on the device in GB" data-formatter="formatDevicesMemory">Mem</th>
+          <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C" data-formatter="formatDevicesTemperature">°C</th>
+          <th data-field="tTemperatureMax" data-sortable="true" data-title-tooltip="Maximum temperature in °C" data-formatter="formatDevicesTemperature">max °C</th>
+          <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %" data-formatter="formatDevicesPercent">Fan</th>
+          <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt" data-formatter="formatPower">Power</th>
+          <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz" data-formatter="formatDevicesClock">Clock</th>
+          <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz" data-formatter="formatDevicesClock">Memclk</th>
+          <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %" data-formatter="formatDevicesPercent">PL</th>
       </tr>
   </thead>
 </table>
@@ -39,27 +39,43 @@
   // This function can alter the returned data before building the table, formatting it in a way
   // that is easier to display and manipulate in a table
   $.each(data, function(index, item) {
-    // Format the device(s)
-    if (item.OpenCL) {
-        item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
-        item.tDriverVersion = item.OpenCL.DriverVersion
-        item.tCores = item.OpenCL.MaxComputeUnits
-    } else {
-        item.tMemory = formatBytes(item.Data.CacheL3 * 1024 * 1024)
-        item.tDriverVersion = "N/A"
-        item.tCores = item.Data.Cores ? item.Data.Cores + "/" + item.Data.Threads : "N/A"
-    }
-    
-    item.tPowerDraw = typeof(item.Data.PowerDraw) !== "undefined"? Math.round(parseFloat(item.Data.PowerDraw)) + ' W' : "N/A"
-    item.tFanSpeed = typeof(item.Data.FanSpeed) !== "undefined"? item.Data.FanSpeed + ' %' : "N/A"
-    item.tClock = typeof(item.Data.Clock) !== "undefined"? item.Data.Clock + ' MHz' : "N/A"
-    item.tClockMem = typeof(item.Data.ClockMem) !== "undefined"? item.Data.ClockMem + ' MHz' : "N/A"
-    item.tPowerLimitPercent = typeof(item.Data.PowerLimitPercent) !== "undefined"? item.Data.PowerLimitPercent + ' %' : "N/A"
-    item.tTemperature = typeof (item.Data.Temperature) !== "undefined" && item.Data.Temperature? item.Data.Temperature + ' °C' : "N/A"
-    item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" && item.Data.Temperature? item.DataMax.Temperature + ' °C' : "N/A"
-    item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? item.Data.Utilization + ' %' : "N/A"
+        // Format the device(s)
+        if (item.OpenCL) {
+            item.tMemory = typeof item.OpenCL.GlobalMemSize !== "undefined" ? item.OpenCL.GlobalMemSize * 1.0 : -1
+            item.tDriverVersion = item.OpenCL.DriverVersion
+            item.tCores = item.OpenCL.MaxComputeUnits
+        } else {
+            item.tMemory = typeof item.Data.CacheL3 !== "undefined" ? item.Data.CacheL3 * 1024 * 1024 : -1
+            item.tDriverVersion = "N/A"
+            item.tCores = item.Data.Cores ? item.Data.Cores + "/" + item.Data.Threads : "N/A"
+        }
+
+        item.tPowerDraw = typeof (item.Data.PowerDraw) !== "undefined" ? Math.round(Number(item.Data.PowerDraw)) : -1
+        item.tFanSpeed = typeof (item.Data.FanSpeed) !== "undefined" ? Number(item.Data.FanSpeed) : -1
+        item.tClock = typeof (item.Data.Clock) !== "undefined" ? Number(item.Data.Clock) : -1
+        item.tClockMem = typeof (item.Data.ClockMem) !== "undefined" ? Number(item.Data.ClockMem) : -1
+        item.tPowerLimitPercent = typeof (item.Data.PowerLimitPercent) !== "undefined" ? Number(item.Data.PowerLimitPercent) : -1
+        item.tTemperature = typeof (item.Data.Temperature) !== "undefined" && item.Data.Temperature ? Number(item.Data.Temperature) : -1
+        item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" && item.Data.Temperature ? Number(item.DataMax.Temperature) : -1
+        item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? Number(item.Data.Utilization) : -1
   });
   return data;
+}
+
+function formatDevicesClock(value) {
+    return value >= 0? value + ' MHz' : "N/A"
+}
+
+function formatDevicesMemory(value) {
+    return value >= 0? formatBytes(value) : "N/A"
+}
+
+function formatDevicesPercent(value) {
+    return value >= 0? value + ' %' : "N/A"
+}
+
+function formatDevicesTemperature(value) {
+    return value >= 0? value + ' °C' : "N/A"
 }
 </script>
 <!--#include file="/parts/foot.html" -->
