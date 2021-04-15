@@ -115,6 +115,7 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee
+                PaysLive      = $true
                 DataWindow    = $DataWindow
                 Hashrate      = $Stat.HashRate_Live
                 Workers       = $null
@@ -131,7 +132,6 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
                 Wallet        = $User
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
-                PaysLive      = $true
             }
         }
     }
