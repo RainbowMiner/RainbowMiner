@@ -46,9 +46,9 @@ $Pools_Data = [PSCustomObject]@{
     "ISO"   = [PSCustomObject]@{port = 7030; region = $Pool_Regions}
     "KVA"   = [PSCustomObject]@{port = 7061; region = @("us"); stratum = "randomx"}
     "KOTO"  = [PSCustomObject]@{port = 3032; region = $Pool_Regions}
-    "KYF"   = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "LITB"  = [PSCustomObject]@{port = 7041; region = $Pool_Regions}
     "MBC"   = [PSCustomObject]@{port = 7022; region = $Pool_Regions}
+    "MGPC"  = [PSCustomObject]@{port = 7049; region = $Pool_Regions}
     "OBTC"  = [PSCustomObject]@{port = 7064; region = $Pool_Regions}
     "PYRK"  = [PSCustomObject]@{port = 7043; region = $Pool_Regions}
     "RES"   = [PSCustomObject]@{port = 7040; region = $Pool_Regions}
