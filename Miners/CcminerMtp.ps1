@@ -7,6 +7,10 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+$ManualUri = "https://github.com/tecracoin/ccminer/releases"
+$Port = "126{0:d2}"
+$DevFee = 0.0
+
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer_linux_cuda"
     $UriCuda = @(
@@ -19,7 +23,6 @@ if ($IsLinux) {
     $UseCPUAffinity = $true
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.11-ccminertcr/ccminertcr-v1.2.11-win.7z"
@@ -29,10 +32,6 @@ if ($IsLinux) {
     )
     $UseCPUAffinity = $false
 }
-
-$ManualUri = "https://github.com/tecracoin/ccminer/releases"
-$Port = "126{0:d2}"
-$DevFee = 0.0
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -66,9 +65,7 @@ for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     }
 }
 
-if (-not $Cuda) {
-    $Uri = $UriCuda[0].Uri
-}
+if (-not $Cuda) {return}
 
 if ($IsLinux) {$Path += $Cuda -replace "\."}
 

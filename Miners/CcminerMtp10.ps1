@@ -7,6 +7,10 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+$ManualUri = "https://github.com/tecracoin/ccminer/releases"
+$Port = "127{0:d2}"
+$DevFee = 0.0
+
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP10\ccminer_linux_cuda"
     $UriCuda = @(
@@ -29,7 +33,6 @@ if ($IsLinux) {
     $UseCPUAffinity = $true
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP10\ccminer.exe"
-
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.10-ccminertcr/ccminertcr-v1.2.10-win.7z"
@@ -39,10 +42,6 @@ if ($IsLinux) {
     )
     $UseCPUAffinity = $false
 }
-
-$ManualUri = "https://github.com/tecracoin/ccminer/releases"
-$Port = "127{0:d2}"
-$DevFee = 0.0
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
