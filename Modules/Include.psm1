@@ -1645,10 +1645,12 @@ function Get-MinersContent {
                         Name     = if ($c.Name) {$c.Name} else {$Name}
                         BaseName = $Name
                     } -Force -PassThru
-                } else {
+                } elseif ($c.PowerDraw -eq 0) {
                     $c.PowerDraw = $Global:StatsCache."$($c.Name)_$($c.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
                     if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$c.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
                     $c
+                } else {
+                    Write-Log -Level Warn "Miner module $($Name) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
                 }
             }
         }
