@@ -37,12 +37,12 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "EtcHash";       DAG = $true; MinMemGB = 2; Params = "--par=etchash";  ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Etchash (ETC)
     #[PSCustomObject]@{MainAlgorithm = "Ethash";        DAG = $true; MinMemGB = 2; Params = "--par=ethash";   ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Ethash (ETH)
     #[PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = "--par=ethash";   ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Ethash (ETH) for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5";               MinMemGB = 1; Params = "--par=96,5";     ExtendInterval = 2; AutoPers = $true;  Fee = $DevFee} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5";               MinMemGB = 2; Params = "--par=144,5";    ExtendInterval = 2; AutoPers = $true;  Fee = $DevFee} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";               MinMemGB = 2; Params = "--par=192,7";    ExtendInterval = 2; AutoPers = $true;  Fee = $DevFee} #Equihash 192,7 
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5";               MinMemGB = 1; Params = "--par=96,5";     ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5";               MinMemGB = 2; Params = "--par=144,5";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";               MinMemGB = 2; Params = "--par=192,7";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 192,7 
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";              MinMemGB = 2; Params = "--par=125,4";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 125,4,0 (ZelCash)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";              MinMemGB = 3; Params = "--par=150,5";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 150,5,0 (GRIMM)
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";               MinMemGB = 2; Params = "--par=210,9";    ExtendInterval = 2; AutoPers = $true;  Fee = $DevFee} #Equihash 210,9 (AION)
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";               MinMemGB = 2; Params = "--par=210,9";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 210,9 (AION)
     [PSCustomObject]@{MainAlgorithm = "KawPoW";        DAG = $true; MinMemGB = 2; Params = "--par=kawpow";   ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #KawPow (RVN)
     [PSCustomObject]@{MainAlgorithm = "ProgPowSero";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowSero (SERO)
     [PSCustomObject]@{MainAlgorithm = "ProgPowVeil";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowVeil (VEIL)
