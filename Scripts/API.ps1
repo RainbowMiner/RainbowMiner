@@ -500,16 +500,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
                     try {
                         " " | Out-File $TestFileName -Append -Encoding utf8
-                        "[OverdriveN]" | Out-File $TestFileName -Append -Encoding utf8
-                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
-                        " " | Out-File $TestFileName -Append -Encoding utf8
-                        Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                    }
-
-                    try {
-                        " " | Out-File $TestFileName -Append -Encoding utf8
                         "[OverdriveNTool]" | Out-File $TestFileName -Append -Encoding utf8
                         "-"*80 | Out-File $TestFileName -Append -Encoding utf8
                         " " | Out-File $TestFileName -Append -Encoding utf8
