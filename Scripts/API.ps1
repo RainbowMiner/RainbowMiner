@@ -500,28 +500,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
                     try {
                         " " | Out-File $TestFileName -Append -Encoding utf8
-                        "[OverdriveNTool]" | Out-File $TestFileName -Append -Encoding utf8
-                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
-                        " " | Out-File $TestFileName -Append -Encoding utf8
-                        $Arguments = @('-console-only','-getcurrent')
-                        Invoke-Exe ".\Includes\overdriventool.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                    }
-
-                    try {
-                        " " | Out-File $TestFileName -Append -Encoding utf8
-                        "[OdVII]" | Out-File $TestFileName -Append -Encoding utf8
-                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
-                        " " | Out-File $TestFileName -Append -Encoding utf8
-                        $Arguments = @('s')
-                        Invoke-Exe ".\Includes\odvii.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                    }
-
-                    try {
-                        " " | Out-File $TestFileName -Append -Encoding utf8
                         "[OdVII 8]" | Out-File $TestFileName -Append -Encoding utf8
                         "-"*80 | Out-File $TestFileName -Append -Encoding utf8
                         " " | Out-File $TestFileName -Append -Encoding utf8
