@@ -72,9 +72,6 @@ if (-not $Cuda) {
 
 if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
     $DatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
-    if ((Test-Path $DatFile) -and (Get-Item $DatFile).length -lt 1.19GB) {
-        Remove-Item $DatFile -ErrorAction Ignore
-    }
 }
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {

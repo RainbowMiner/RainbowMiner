@@ -152,6 +152,14 @@ if ($InfoOnly) {
     return
 }
 
+$VerthashDatFile = Join-Path $Session.MainPath "Bin\CPU-JayDDee\verthash.dat"    
+if (-not (Test-Path $VerthashDatFile)) {
+    $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
+    if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
+        $VerthashDatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
+    }
+}
+
 $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
     $Miner_Model = $_.Model
@@ -164,19 +172,9 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
         $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
         $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
 
-        $VerthashDatFile = $null
+        $IsVerthash = $Algorithm_Norm_0 -eq "Verthash"
 
-        if ($Algorithm_Norm_0 -eq "Verthash") {
-            $VerthashDatFile = Join-Path $Session.MainPath "Bin\CPU-JayDDee\verthash.dat"    
-            if (-not (Test-Path $VerthashDatFile)) {
-                $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
-                if (-not (Test-Path $VerthashDatFile) -or (Get-Item $VerthashDatFile).length -lt 1.19GB) {
-                    $VerthashDatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
-                }
-            }
-        }
-
-        $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})$(if ($VerthashDatFile) {" --data-file '$($VerthashDatFile)'"})"
+        $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})$(if ($IsVerthash) {" --data-file '$($VerthashDatFile)'"})"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
@@ -205,9 +203,9 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = $Algorithm_Norm_0
-                    PrerequisitePath = $VerthashDatFile
-                    PrerequisiteURI  = "$(if ($VerthashDatFile) {"https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"})"
-                    PrerequisiteMsg  = "$(if ($VerthashDatFile) {"Downloading verthash.dat (1.2GB) in the background, please wait!"})"
+                    PrerequisitePath = if ($IsVerthash) {$VerthashDatFile} else {$null}
+                    PrerequisiteURI  = "$(if ($IsVerthash) {"https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"})"
+                    PrerequisiteMsg  = "$(if ($IsVerthash) {"Downloading verthash.dat (1.2GB) in the background, please wait!"})"
 				}
 			}
 		}

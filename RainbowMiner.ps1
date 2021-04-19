@@ -314,16 +314,16 @@ param(
 $ForceFullCollection = $true
 $EnableMinerStatus = $true
 
+if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
+
 Initialize-Session
 
-$Session.Version         = "4.7.1.2"
+$Session.Version         = "4.7.1.3"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
 
 $Session.SupportedPSVersion = "7.1.3"
-
-if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 #Add-Type -Path .\DotNet\Tools\RBMTools.cs
