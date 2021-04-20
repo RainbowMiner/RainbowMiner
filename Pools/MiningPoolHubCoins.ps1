@@ -43,7 +43,7 @@ $Pool_Fee = 0.9 + 0.2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
-$Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
+$Pool_Request.return | Where-Object {$_.algo -and $_.symbol} | ForEach-Object {
     $Pool_Hosts     = if ($_.host -match "^hub") {$_.host} else {$_.host_list.split(";")}
     $Pool_Port      = $_.port
     $Pool_CoinSymbol= $_.symbol

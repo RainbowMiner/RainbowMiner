@@ -45,7 +45,7 @@ $Pool_Fee = 0.9 + 0.2
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
 #temp. fix VTC on port 17032 doesn't work 2021/02/06
-$Pool_Request.return | Where-Object {$_.current_mining_coin_symbol -and ($_.current_mining_coin_symbol -ne "VTC")} | ForEach-Object {
+$Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol -and ($_.current_mining_coin_symbol -ne "VTC")} | ForEach-Object {
     $Pool_Hosts     = $_.all_host_list.split(";")
     $Pool_Port      = $_.algo_switch_port
     $Pool_CoinSymbol= $_.current_mining_coin_symbol
