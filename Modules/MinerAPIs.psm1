@@ -2906,9 +2906,12 @@ class Xmrig6 : Miner {
                                 $Parameters.Config.$Device.$Algo[$i] = @($(if ($cix["k$thr"]) {$cix["k$thr"]} else {1}),$thr)
                             }
                         }
+                        $Parameters.Config | Add-Member cuda   ([PSCustomObject]@{enabled=$false}) -Force
+                        $Parameters.Config | Add-Member opencl ([PSCustomObject]@{enabled=$false}) -Force
                     } else { #device is cuda or opencl
                         $Parameters.Config.$Device | Add-Member $Algo ([Array](@($ThreadsConfig.$Algo | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
                         $Parameters.Config | Add-Member cpu ([PSCustomObject]@{enabled=$false}) -Force
+                        $Parameters.Config | Add-Member "$(if ($Device -eq "cuda") {"opencl"} else {"cuda"})" ([PSCustomObject]@{enabled=$false}) -Force
                     }
                     $Parameters.Config | Add-Member autosave $false -Force
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
