@@ -10,14 +10,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.8.1.1"
+$Version = "0.8.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1.1-teamred/teamredminer-v0.8.1.1-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-teamred/teamredminer-v0.8.2-linux.tgz"
+    $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1.1-teamred/teamredminer-v0.8.1.1-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-teamred/teamredminer-v0.8.2-win.zip"
+    $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
@@ -46,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "nimiq";                         MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "phi2";                          MinMemGb = 1.5; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";                   MinMemGb = 1.5; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "verthash";                      MinMemGb = 1.5; Params = ""; DevFee = 2.0}
     [PSCustomObject]@{MainAlgorithm = "trtl_chukwa2";                  MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeArchitecture = @("gfx1010","gfx1011","gfx1012","gfx1030","gfx1031","gfx1032")}
     [PSCustomObject]@{MainAlgorithm = "x16r";                          MinMemGb = 3.3; Params = ""; DevFee = 2.5; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "x16rt";                         MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExtendInterval = 2}
@@ -67,6 +70,10 @@ if ($InfoOnly) {
         Commands  = $Commands
     }
     return
+}
+
+if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
+    $DatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
 }
 
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
@@ -105,6 +112,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                     $Pool_User = $Pools.$Algorithm_Norm_0.User
                     $Pool_Protocol = $Pools.$Algorithm_Norm_0.Protocol
 
+                    $IsVerthash = $Algorithm_Norm_0 -eq "Verthash"
+
                     $AdditionalParams = @("--watchdog_disabled")
                     if ($Pools.$Algorithm_Norm_0.Name -match "^bsod" -and $Algorithm_Norm_0 -eq "x16rt") {
                         $AdditionalParams += "--no_ntime_roll"
@@ -119,6 +128,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                         #if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
                         #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
                         #}
+                    } elsif ($IsVerthash) {
+                        $AdditionalParams += "--verthash_file='$($DatFile)'"
                     }
                     $First = $False
                 }
@@ -144,6 +155,9 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                     PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = $Algorithm_Norm_0
+                    PrerequisitePath = if ($IsVerthash) {$DatFile} else {$null}
+                    PrerequisiteURI  = "$(if ($IsVerthash) {"https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"})"
+                    PrerequisiteMsg  = "$(if ($IsVerthash) {"Downloading verthash.dat (1.2GB) in the background, please wait!"})"
                     ListDevices    = "--list_devices"
 				}
 			}
