@@ -60,9 +60,9 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     $First = $false
                 }
 
+                $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                 $Arguments = [PSCustomObject]@{
-                    Algorithm    = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
-                    PoolParams   = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --keepalive$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})"
+                    Algorithm    = $Algorithm
                     APIParams    = "--http-enabled --http-host=127.0.0.1 --http-port=`$mport"
                     Config = [PSCustomObject]@{
                         "api" = [PSCustomObject]@{
@@ -77,6 +77,19 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                         "retries"      = 5
                         "retry-pause"  = 1
                     }
+                    Pools = @(
+                        [PSCustomObject]@{
+                            "algo"      = $Algorithm
+                            "coin"      = $null
+                            "url"       = "$($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)"
+                            "user"      = $Pools.$Algorithm_Norm.User
+                            "pass"      = if ($Pools.$Algorithm_Norm.Pass) {$Pools.$Algorithm_Norm.Pass} else {"x"}
+                            "nicehash"  = $Pools.$Algorithm_Norm.Name -match "NiceHash"
+                            "keepalive" = $true
+                            "enabled"   = $true
+                            "tls"       = $Pools.$Algorithm_Norm.SSL
+                        }
+                    )
                     Params  = $Params
                     HwSig   = "$(($Global:DeviceCache.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"
                     Threads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}  else {$Global:GlobalCPUInfo.Threads}
@@ -90,7 +103,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 					Path           = $Path
 					Arguments      = $Arguments
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
-					API            = "XMRig3"
+					API            = "XMRig6"
 					Port           = $Miner_Port
 					Uri            = $Uri
                     FaultTolerance = $_.FaultTolerance
