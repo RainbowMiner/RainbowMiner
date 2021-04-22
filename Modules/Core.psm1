@@ -300,7 +300,7 @@ function Start-Core {
         $NVFound    = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count
         $AMDFound   = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"} | Measure-Object).Count
         $INTELFound = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "INTEL"} | Measure-Object).Count
-        if ($CPUsFound -or $NVFound -or $AMDFound -or $INTELFound) {
+        if ($CPUFound -or $NVFound -or $AMDFound -or $INTELFound) {
             $DevicesFound = @()
             if ($CPUFound)   {$DevicesFound += "$($CPUFound) CPU"}
             if ($NVFound)    {$DevicesFound += "$($NVFound) Nvidia"}
