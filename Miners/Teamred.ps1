@@ -128,7 +128,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                         #if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
                         #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
                         #}
-                    } elsif ($IsVerthash) {
+                    } elseif ($IsVerthash) {
                         $AdditionalParams += "--verthash_file='$($DatFile)'"
                     }
                     $First = $False
