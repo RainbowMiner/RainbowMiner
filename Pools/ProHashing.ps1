@@ -13,7 +13,9 @@ param(
     [String]$StatAverageStable = "Week",
     [alias("UserName")]
     [String]$User = "",
-    [String]$AECurrency = ""
+    [String]$AECurrency = "",
+    [String]$API_Key = "",
+    [Bool]$EnableAPIKeyForMiners = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -71,6 +73,8 @@ $PoolCoins_Request.data.PSObject.Properties.Value | Where-Object {$_.port -and $
     }
 }
 
+$Pool_APIKey = "$(if ($EnableAPIKeyForMiners -and $API_Key) {",k=$($API_Key)"})"
+
 $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.ContainsKey($_)} | ForEach-Object {
     $Pool_Port      = $Pool_Request.data.$_.port
     $Pool_Algorithm = $Pool_Request.data.$_.name
@@ -96,7 +100,10 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
 
     foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Currency in $Pool_Currencies) {
-            $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
+            $Pool_Params = if ($Params.$Pool_Currency) {
+                $Pool_ParamsCurrency = "$(if ($Pool_APIKey) {$Params.$Pool_Currency -replace "k=[0-9a-f]+" -replace ",+","," -replace "^,+" -replace ",+$"} else {$Params.$Pool_Currency})"
+                if ($Pool_ParamsCurrency) {",$($Pool_ParamsCurrency)"}
+            }
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 Algorithm0    = $Pool_Algorithm_Norm
@@ -110,7 +117,7 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
                 Host          = "$(if ($Pool_Region -eq "eu") {"eu."})$Pool_Host"
                 Port          = $Pool_Port
                 User          = $User
-                Pass          = "a=$($_),n={workername:$Worker}{diff:,d=`$difficulty}$Pool_Params"
+                Pass          = "a=$($_),n={workername:$Worker}{diff:,d=`$difficulty}$($Pool_APIKey)$($Pool_Params)"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
