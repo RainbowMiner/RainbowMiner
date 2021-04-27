@@ -88,6 +88,7 @@ $Pool_Referrals = [PSCustomObject]@{
     VIA = "ik6e-brmn"
     WAVES = "k9oe-8z69"
     WBTC = "dsos-mr20"
+    WIN = "2czl-sedo"
     XLM = "mvri-yw11"
     XMR = "b4xt-40za"
     XRP = "1kp2-2sxz"
