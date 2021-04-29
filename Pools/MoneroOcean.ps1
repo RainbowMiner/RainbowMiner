@@ -30,10 +30,10 @@ catch {
 
 $Pool_PoolFee = 0.68 # cost for exchange
 
-$Pool_CPUPort_Test = $Global:GlobalCPUInfo.Cores * ($Global:GlobalCPUInfo.MaxClockSpeed * 20 / 1000) * 5
-$Pool_CPUPort_Base = if ($Pool_CPUPort_Test -gt 0) {[Math]::Min([Math]::Pow(2,1+[Math]::Floor([Math]::Log($Pool_CPUPort_Test / 50,2))),8192)} else {1}
+$Pool_CPUPort_Test = $Global:GlobalCPUInfo.Cores * $Global:GlobalCPUInfo.MaxClockSpeed * 4 / 1000
+$Pool_CPUPort_Base = if ($Pool_CPUPort_Test -gt 0) {[Math]::Min([Math]::Pow(2,1+[Math]::Floor([Math]::Log($Pool_CPUPort_Test,2))),8192)} else {16}
 $Pool_GPUPost_Test = $Global:DeviceCache.Devices.Where({$_.type -eq "gpu"}).Count
-$Pool_GPUPort_Base = 64
+$Pool_GPUPort_Base = if ($Pool_GPUPost_Test -gt 1) {8192} else {1024}
 
 $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashrate -gt 0)) -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
