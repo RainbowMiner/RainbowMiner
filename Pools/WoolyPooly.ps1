@@ -52,6 +52,8 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ERG"; port = 3100; host = "erg"; rpc = "ergo-1"}
     [PSCustomObject]@{symbol = "ETC"; port = 35000; host = "etc"; rpc = "etc-1"}
     [PSCustomObject]@{symbol = "ETH"; port = 3096; host = "eth"; rpc = "eth-1"}
+    [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "zcoin"; rpc = "zcoin-1"}
+    [PSCustomObject]@{symbol = "FLUX"; port = 3092; host = "zel"; rpc = "zel-1"}
     #[PSCustomObject]@{symbol = "GRIN-SEC"; port = 12000; host = "grin"; rpc = "grin-1"}
     [PSCustomObject]@{symbol = "GRIN-PRI"; port = 12000; host = "grin"; rpc = "grin-1"}
     #[PSCustomObject]@{symbol = "MWC-SEC"; port = 11000; host = "mwc"; rpc = "mwc-1"}
@@ -59,8 +61,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "RVN"; port = 55555; host = "rvn"; rpc = "raven-1"}
     [PSCustomObject]@{symbol = "SERO"; port = 8008; host = "sero"; rpc = "sero-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
-    [PSCustomObject]@{symbol = "XZC"; port = 3098; host = "zcoin"; rpc = "zcoin-1"}
-    [PSCustomObject]@{symbol = "ZEL"; port = 3092; host = "zel"; rpc = "zel-1"}
 )
 
 $Pool_PayoutScheme = "PPLNS"
