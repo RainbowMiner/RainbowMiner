@@ -107,6 +107,9 @@
         "FlexPool" = [PSCustomObject]@{
             Currencies=@("ETH")
         }
+        "FluxPools" = [PSCustomObject]@{
+            Currencies=@("FLUX","FIRO","TCR")
+        }
         "FlyPool" = [PSCustomObject]@{
             Currencies=@("BEAM","YEC")
         }
@@ -404,9 +407,6 @@
         }
         "WoolyPoolySolo" = [PSCustomObject]@{
             Currencies=@("CFX","ETH","VEIL")
-        }
-        "ZelLabs" = [PSCustomObject]@{
-            Currencies=@("TCR","ZEL")
         }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}

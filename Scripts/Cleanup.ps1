@@ -1180,6 +1180,93 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.7.1.6")) {
+        $ConfigActualUpdate = @()
+        $PoolsConfigActualUpdate = @()
+
+        if (Test-Path $ConfigFile) {
+            $ConfigActualUpdate += $ConfigFile
+        }
+        if (Test-Path $PoolsConfigFile) {
+            $PoolsConfigActualUpdate += $PoolsConfigFile
+        }
+
+        Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
+            $ConfigActualPath = Join-Path $($_.FullName) "config.txt"
+            if (Test-Path $ConfigActualPath) {
+                $ConfigActualUpdate += $ConfigActualPath
+            }
+            $PoolsConfigActualPath = Join-Path $($_.FullName) "pools.config.txt"
+            if (Test-Path $PoolsConfigActualPath) {
+                $PoolsConfigActualUpdate += $PoolsConfigActualPath
+            }
+        }
+
+        $ConfigActualUpdate | Foreach-Object {
+            $ConfigActualPath = $_
+            try {
+                $ConfigActual  = Get-Content $ConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
+
+                $Changes = 0
+                if ($ConfigActual.PoolName) {
+                    $PoolNames = $ConfigActual.PoolName -replace "ZelLabs","FluxPools"
+                    if ($PoolNames -ne $ConfigActual.PoolName) {
+                        $ConfigActual.PoolName = $PoolNames
+                        $Changes++
+                    }
+                }
+                if ($ConfigActual.ExcludePoolName) {
+                    $PoolNames = $ConfigActual.ExcludePoolName -replace "ZelLabs","FluxPools"
+                    if ($PoolNames -ne $ConfigActual.ExcludePoolName) {
+                        $ConfigActual.ExcludePoolName = $PoolNames
+                        $Changes++
+                    }
+                }
+                if ($Changes) {
+                    $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigActualPath -Encoding UTF8
+                    $ChangesTotal += $Changes
+                }
+            } catch { }
+        }
+
+        $PoolsConfigActualUpdate | Foreach-Object {
+            $PoolsConfigActualPath = $_
+
+            try {
+                $PoolsActual  = Get-Content $PoolsConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
+
+                $Changes = 0
+
+                if ([bool]$PoolsActual.PSObject.Properties["ZelLabs"]) {
+                    $ZelCopy = $PoolsActual.ZelLabs | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+                    $PoolsActual | Add-Member FluxPools $ZelCopy -Force
+                    $PoolsActual.PSObject.Properties.Remove("ZelLabs")
+                    $Changes++
+                }
+
+                @("WoolyPooly","WoolyPoolySolo","ZelLabs") | Foreach-Object {
+                    $PoolToChange = $_
+                    if ([bool]$PoolsActual.PSObject.Properties[$PoolToChange]) {
+                        @([PSCustomObject]@{from="ZEL";to="FLUX"},[PSCustomObject]@{from="ZEL-Params";to="FLUX-Params"},[PSCustomObject]@{from="XZC";to="FIRO"},[PSCustomObject]@{from="XZC-Params";to="FIRO-Params"}) | Where-Object {[bool]$ZelCopy.PSObject.Properties[$_.from]} | Foreach-Object {
+                            $PoolsActual.$PoolToChange | Add-Member "$($_.to)" $PoolsActual.$PoolToChange."$($_.from)" -Force
+                            $PoolsActual.$PoolToChange.PSObject.Properties.Remove($_.from)
+                        }
+                        $Changes++
+                    }
+                }
+
+                if ($Changes) {
+                    $PoolsActualSort = [PSCustomObject]@{}
+                    $PoolsActual.PSObject.Properties | Sort-Object Name | Foreach-Object {
+                        $PoolsActualSort | Add-Member $_.Name $_.Value -Force
+                    }
+                    $PoolsActualSort | ConvertTo-Json -Depth 10 | Set-Content $PoolsConfigActualPath -Encoding UTF8
+                    $ChangesTotal += $Changes
+                }
+            } catch { }
+        }
+    }
+
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
 

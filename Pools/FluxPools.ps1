@@ -19,9 +19,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "TCR";  port = 2200; fee = 0.5; rpc = "tcr"; regions = @("eu","us")}
-    [PSCustomObject]@{symbol = "FIRO";  port = 7017; fee = 1.0; rpc = "zcoin"; regions = @("eu","us"); altsymbol = "XZC"}
-    [PSCustomObject]@{symbol = "ZEL";  port = 7011; fee = 1.0; rpc = "zel"; regions = @("eu","us")}
+    [PSCustomObject]@{symbol = "FLUX"; port = @(7011,7111); fee = 1.0; rpc = "flux";  regions = @("eu","us"); altsymbol = "ZEL"}
+    [PSCustomObject]@{symbol = "TCR";  port = @(2200);      fee = 0.5; rpc = "tcr";   regions = @("eu","us")}
+    [PSCustomObject]@{symbol = "FIRO"; port = @(7017);      fee = 1.0; rpc = "zcoin"; regions = @("eu","us"); altsymbol = "XZC"}
 )
 
 $Pools_Requests = [hashtable]@{}
@@ -30,7 +30,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
     $Pool_Coin          = Get-Coin $_.symbol
     $Pool_Currency      = $_.symbol
     $Pool_Fee           = $_.fee
-    $Pool_Port          = $_.port
     $Pool_RpcPath       = $_.rpc
     $Pool_Name          = $Pool_RpcPath
 
@@ -50,7 +49,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
 
     if ($ok -and -not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).zellabs.net/api/homestats" -tag $Name -cycletime 240 -timeout 30
+            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fluxpools.net/api/homestats" -tag $Name -cycletime 240 -timeout 30
             if (-not ($Pool_Request.pools.PSObject.Properties.Name | Measure-Object).Count) {$ok = $false}
             else {
                 $Pool_Name      = "$($Pool_Request.pools.PSObject.Properties.Name | Select-Object -First 1)"
@@ -79,39 +78,43 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
 
     if ($ok -or $InfoOnly) {
         foreach($Pool_Region in $Pool_Regions) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-				Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+tcp"
-                Host          = "$($Pool_Region)-$($Pool_RpcPath).zellabs.net"
-                Port          = $Pool_Port
-                User          = "$($Pool_Wallet).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_Fee
-                Workers       = $Pool_Request.pools.$Pool_Name.workerCount
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
-                WTM           = $true
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-				Disabled      = $false
-				HasMinerExclusions = $false
-				Price_Bias    = 0.0
-				Price_Unbias  = 0.0
-                Wallet        = $Pool_Wallet
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+            $SSL = $false
+            foreach($Pool_Port in $_.port) {
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+				    Algorithm0    = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = 0
+                    StablePrice   = 0
+                    MarginOfError = 0
+                    Protocol      = "stratum+$(if ($SSL) {"ssl"} else {"tcp"})"
+                    Host          = "$($Pool_Region)-$($Pool_RpcPath).zellabs.net"
+                    Port          = $Pool_Port
+                    User          = "$($Pool_Wallet).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $Pool_Fee
+                    Workers       = $Pool_Request.pools.$Pool_Name.workerCount
+                    Hashrate      = $Stat.HashRate_Live
+                    TSL           = $Pool_TSL
+                    BLK           = $Stat.BlockRate_Average
+                    WTM           = $true
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+				    Disabled      = $false
+				    HasMinerExclusions = $false
+				    Price_Bias    = 0.0
+				    Price_Unbias  = 0.0
+                    Wallet        = $Pool_Wallet
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
+                $SSL = $true
             }
         }
     }
