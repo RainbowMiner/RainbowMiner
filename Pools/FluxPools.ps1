@@ -19,9 +19,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "FLUX"; port = @(7011,7111); fee = 1.0; rpc = "flux";  regions = @("eu","us"); altsymbol = "ZEL"}
-    [PSCustomObject]@{symbol = "TCR";  port = @(2200);      fee = 0.5; rpc = "tcr";   regions = @("eu","us")}
-    [PSCustomObject]@{symbol = "FIRO"; port = @(7017);      fee = 1.0; rpc = "zcoin"; regions = @("eu","us"); altsymbol = "XZC"}
+    [PSCustomObject]@{symbol = "FLUX"; port = @(7011,7111); fee = 1.0; rpc = "flux";  stratum = "flux.fluxpools.net"; regions = @("eu","us"); altsymbol = "ZEL"}
+    [PSCustomObject]@{symbol = "TCR";  port = @(2200);      fee = 0.5; rpc = "tcr";   stratum = "tcr.zellabs.net";    regions = @("eu","us")}
+    [PSCustomObject]@{symbol = "FIRO"; port = @(7017);      fee = 1.0; rpc = "firo";  stratum = "zcoin.zellabs.net";  regions = @("eu","us"); altsymbol = "XZC"}
 )
 
 $Pools_Requests = [hashtable]@{}
@@ -50,6 +50,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
     if ($ok -and -not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fluxpools.net/api/homestats" -tag $Name -cycletime 240 -timeout 30
+            if ($Pool_Request -is [string]) {
+                $Pool_Request = $Pool_Request -replace '"currentRoundShares":{[^}]+},*' | ConvertFrom-Json -ErrorAction Stop
+            }
             if (-not ($Pool_Request.pools.PSObject.Properties.Name | Measure-Object).Count) {$ok = $false}
             else {
                 $Pool_Name      = "$($Pool_Request.pools.PSObject.Properties.Name | Select-Object -First 1)"
@@ -90,7 +93,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
                     StablePrice   = 0
                     MarginOfError = 0
                     Protocol      = "stratum+$(if ($SSL) {"ssl"} else {"tcp"})"
-                    Host          = "$($Pool_Region)-$($Pool_RpcPath).zellabs.net"
+                    Host          = "$($Pool_Region)-$($_.stratum)"
                     Port          = $Pool_Port
                     User          = "$($Pool_Wallet).{workername:$Worker}"
                     Pass          = "x"
