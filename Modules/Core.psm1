@@ -778,6 +778,7 @@ function Invoke-Core {
             }
         }
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
+        if ($Session.Config.Currency -notcontains "BTC") {$Session.Config.Currency += "BTC"}
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -like "f*") {"full"} else {"lite"}
         $Session.Config.UIsorting = if ($Session.Config.UIsorting -like "p*") {"profit"} else {"biased"}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
