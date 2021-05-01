@@ -897,6 +897,10 @@ function Start-Setup {
                         }
                         "currency" {
                             $Config.Currency = Read-HostArray -Prompt "Enter all currencies to be displayed (e.g. EUR,USD,BTC)" -Default $Config.Currency -Mandatory -Characters "A-Z" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            if ($Config.Currency -notcontains "BTC") {
+                                Write-Host "BTC is mandatory - adding it automatically" -ForegroundColor Yellow
+                                $Config.Currency += "BTC"
+                            }
                         }
                         "benchmarkintervalsetup" {
                             if ($IsInitialSetup) {
