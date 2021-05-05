@@ -15,7 +15,8 @@ $Version = "1.26"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.26-lolminer/lolMiner_v1.26_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.27-lolminer/lolMiner_v1.27_Lin64.tar.gz"
+    $Version = "1.27"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.26-lolminer/lolMiner_v1.26_Win64.zip"
