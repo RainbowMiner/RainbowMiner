@@ -4017,7 +4017,7 @@ function Invoke-ReportMinerStatus {
     }
 
     # Create out-of-space alert
-    $DiskMinGBAlert = @($Session.SysInfo.Disks | Where-Object {($IsLinux -or "$PWD" -match "^$($_.Drive)") -and ($_.TotalGB - $_.UsedGB) -lt $Session.Config.DiskMinGB} | Select-Object)
+    $DiskMinGBAlert = ConvertTo-Json @($Session.SysInfo.Disks | Where-Object {($IsLinux -or "$PWD" -match "^$($_.Drive)") -and ($_.TotalGB - $_.UsedGB) -lt $Session.Config.DiskMinGB} | Select-Object) -Compress
 
     # Add current console.txt
     $Console = $null
