@@ -4016,6 +4016,9 @@ function Invoke-ReportMinerStatus {
         }
     }
 
+    # Create out-of-space alert
+    $DiskMinGBAlert = @($Session.SysInfo.Disks | Where-Object {($IsLinux -or "$PWD" -match "^$($_.Drive)") -and ($_.TotalGB - $_.UsedGB) -lt $Session.Config.DiskMinGB} | Select-Object)
+
     # Add current console.txt
     $Console = $null
     if ($Session.IsCore -or $Session.Curl) {
@@ -4064,7 +4067,7 @@ function Invoke-ReportMinerStatus {
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
             Write-Log -Level Info "Go report, go! $($ReportUrl)"
-            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)"; cputemp = "$(($Session.SysInfo.Cpus.Temperature | Measure-Object -Average).Average)"; cpuload = "$($Session.SysInfo.CpuLoad)"; cpupower = "$(($Session.SysInfo.Cpus.PowerDraw | Measure-Object -Sum).Sum)"; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Depth 10 -Compress; rates = ConvertTo-Json $ReportRates -Depth 10 -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; maxcrashes = "$($Session.Config.MinerStatusMaxCrashesPerHour)"; crashalert=$CrashAlert; crashdata=$CrashData; console=$Console; devices=$DeviceData; data = $minerreport}
+            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)"; cputemp = "$(($Session.SysInfo.Cpus.Temperature | Measure-Object -Average).Average)"; cpuload = "$($Session.SysInfo.CpuLoad)"; cpupower = "$(($Session.SysInfo.Cpus.PowerDraw | Measure-Object -Sum).Sum)"; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Depth 10 -Compress; rates = ConvertTo-Json $ReportRates -Depth 10 -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; maxcrashes = "$($Session.Config.MinerStatusMaxCrashesPerHour)"; crashalert=$CrashAlert; crashdata=$CrashData; diskmingbalert=$DiskMinGBAlert; console=$Console; devices=$DeviceData; data = $minerreport}
             Write-Log -Level Info "Done report, done."
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | Select-Object -first 1}
             else {

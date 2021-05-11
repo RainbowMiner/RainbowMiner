@@ -7413,7 +7413,7 @@ function Get-SysInfo {
                 $HDData | Where-Object {$_.Size -gt 0} | Foreach-Object {             
                     [PSCustomObject]@{ 
                         Drive = $_.Name 
-                        Name = $_.VolumeName 
+                        Name = $_.VolumeName
                         TotalGB = [decimal][Math]::Round($_.Size/1GB,1)
                         UsedGB  = [decimal][Math]::Round(($_.Size-$_.FreeSpace)/1GB,1)
                         UsedPercent = if ($_.Size -gt 0) {[decimal][Math]::Round(($_.Size-$_.FreeSpace)/$_.Size * 100,2)} else {0}
