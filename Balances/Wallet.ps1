@@ -69,6 +69,8 @@ $Wallets_Data = @(
 	[PSCustomObject]@{symbol = "XRP";  match = "^r";    rpc = "https://api.xrpscan.com/api/v1/account/{w}";                           address = "account";                          balance = "xrpBalance";                      received = "";                                 divisor = 1}
 	[PSCustomObject]@{symbol = "XTZ";  match = "^tz";   rpc = "https://api.blockchair.com/tezos/raw/account/{w}";                     address = "data.{w}.account.address";         balance = "data.{w}.account.total_balance";  received = "data.{w}.account.total_received";  divisor = 1}
 	[PSCustomObject]@{symbol = "YEC";  match = "^s1";   rpc = "https://yec.safe.trade/api/YEC/mainnet/address/{w}/balance";           address = "";                                 balance = "balance";                         received = "";                                 divisor = 1e8; verify = "exists"; verify_value = "balance"}
+    [PSCustomObject]@{symbol = "VRSC"; match = "^R";    rpc = "https://explorer.verus.io/ext/getaddress/{w}";                         address = "address";                          balance = "balance";                         received = "received";                         divisor = 1}
+    [PSCustomObject]@{symbol = "YTN";  match = "^Y";    rpc = "http://ytn.ccore.online/ext/getaddress/{w}";                           address = "address";                          balance = "balance";                         received = "received";                         divisor = 1}
     [PSCustomObject]@{symbol = "ZEC";  match = "^t";    rpc = "https://api.zcha.in/v2/mainnet/accounts/{w}";                          address = "address";                          balance = "balance";                         received = "totalRecv";                        divisor = 1}
 )
 
