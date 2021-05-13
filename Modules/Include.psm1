@@ -4831,6 +4831,10 @@ function Set-ContentJson {
         try {
             $Exists = $false
             if ([System.IO.File]::Exists($PathToFile)) {
+                    if ((Get-ChildItem $PathToFile -File).IsReadOnly) {
+                        Write-Log -Level Warn "Unable to write to read-only file $PathToFile"
+                        return $false
+                    }
                     $FileStream = [System.IO.File]::Open($PathToFile,'Open','Write')
                     $FileStream.Close()
                     $FileStream.Dispose()
@@ -4843,7 +4847,7 @@ function Set-ContentJson {
                     ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
                 }
             } elseif ($Exists) {
-                (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
+                (Get-ChildItem $PathToFile -File).LastWriteTime = Get-Date
             }
             return $true
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
