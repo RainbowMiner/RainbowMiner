@@ -15,8 +15,8 @@ $Version = "2.3.1"
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.1-tpruvot/ccminer-2.3.1-cuda10.7z"
-        Cuda = "10.0"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.1-tpruvot/ccminer-2.3.1-cuda10.1.7z"
+        Cuda = "10.1"
     }
 )
 
@@ -24,7 +24,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
-    [PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
+    #[PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""; ExtendInterval = 2; CoinSymbols = @("TNET")} #Blake2b
