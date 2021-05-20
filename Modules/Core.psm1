@@ -1434,16 +1434,18 @@ function Invoke-Core {
         $Global:DeviceCache.Devices = @()
         if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName).ForEach({$_})}
         $Global:DeviceCache.DevicesByTypes = [PSCustomObject]@{
-            NVIDIA = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"})
-            AMD    = $Global:DeviceCache.Devices.Where({$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"})
-            CPU    = $Global:DeviceCache.Devices.Where({$_.Type -eq "CPU"})
+            NVIDIA = $Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"})
+            AMD    = $Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "AMD"})
+            CPU    = $Global:DeviceCache.Devices.Where({$_.Type -eq "Cpu"})
             Combos = [PSCustomObject]@{}
             FullComboModels = [PSCustomObject]@{}
         }
         [hashtable]$Global:DeviceCache.DevicesToVendors = @{}
 
+        $CUDAVersion = "$($Global:GlobalCachedDevices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA" -and $_.OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)"},"First").ForEach({$Matches[1]}))"
+
         $Session.Config | Add-Member DeviceModel @($Global:DeviceCache.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
-        $Session.Config | Add-Member CUDAVersion $(if ($Global:DeviceCache.DevicesByTypes.NVIDIA -and $Global:DeviceCache.DevicesByTypes.NVIDIA[0].OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
+        $Session.Config | Add-Member CUDAVersion $(if ($CUDAVersion -ne "") {$CUDAVersion}else{$false}) -Force
         $Session.Config | Add-Member DotNETRuntimeVersion $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}}) -Force
 
         if ($IsLinux) {

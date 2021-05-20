@@ -158,9 +158,9 @@ if ($InfoOnly) {
 }
 
 $Cuda = $null
-if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
+if ($Session.Config.CUDAVersion) {
     for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
-        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if (($i -lt $UriCuda.Count-1) -or -not $Global:DeviceCache.DevicesByTypes.NVIDIA) {""}else{$Name})) {
             $Uri = $UriCuda[$i].Uri
             $Cuda= $UriCuda[$i].Cuda
         }
