@@ -105,7 +105,7 @@
             [PSCustomObject]@{MainAlgorithm = "equihash24x7"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
         )
         "Gminer" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "equihashr25x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "equihashr25x5";   SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "equihashr25x5x3"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
         )
         "lolMiner" = [PSCustomObject[]]@(
@@ -135,10 +135,7 @@
             [PSCustomObject]@{MainAlgorithm = "timetravel10"; SecondaryAlgorithm = ""; Params = "--intensity 19"; OCprofile = "Profile4"; MSIAprofile = "4"}
         )
         "SgminerFancyIX" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "allium"; SecondaryAlgorithm = ""; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = "Profile4"; MSIAprofile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "x22i"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 256 -I 22"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile4"; MSIAprofile = "4"}
         )
         "SgminerKl" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "aergo"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = ""}
