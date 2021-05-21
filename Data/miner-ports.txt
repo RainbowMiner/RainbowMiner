@@ -45,11 +45,7 @@
 144	CcminerZP
 145	CcminerXaja
 
-200	ClaymoreCryptonightAmd
-201	ClaymoreEquihashAmd
-202	ClaymoreNeoscryptAmd
-203	ClaymoreEthash
-204	ClaymoreEthash9
+200	ClaymoreMoreEpoch
 205	ClaymoreDual
 
 300	Nsfminer
@@ -88,7 +84,7 @@
 333	TTminer
 334	Energiminer
 335	GrinProMiner
-336	LolMiner06
+336	VioletMiner
 337	SwapMiner
 338	CryptoDredge16
 339	MultiMiner
