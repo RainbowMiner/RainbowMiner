@@ -39,6 +39,7 @@ if ($IsWindows) {
             $_.CimInstanceProperties | Where-Object Value | Foreach-Object {
                 "  $($_.Name)=$($_.Value)" | Out-File $TestFileName -Append
             }
+            $CPUNo++
         }
     } catch {
         "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
