@@ -2199,7 +2199,7 @@ function Start-Setup {
                         $PoolSetupSteps.Add("save") > $null                                        
 
                         $PoolsSetup.$Pool_Name.Fields.PSObject.Properties.Name | Select-Object | Foreach-Object {                                                                                
-                            if ($PoolConfig.PSObject.Properties.Name -inotcontains $_) {$PoolConfig | Add-Member $_ ($PoolsSetup.$Pool_Name.Fields.$_) -Force}
+                            if (-not [bool]$PoolConfig.PSObject.Properties[$_]) {$PoolConfig | Add-Member $_ ($PoolsSetup.$Pool_Name.Fields.$_) -Force}
                         }
                         foreach($SetupName in $PoolsDefault.PSObject.Properties.Name) {if ($PoolConfig.$SetupName -eq $null){$PoolConfig | Add-Member $SetupName $PoolsDefault.$SetupName -Force}}
 
