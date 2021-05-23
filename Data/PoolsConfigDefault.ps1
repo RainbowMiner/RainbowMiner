@@ -336,13 +336,6 @@
             Currencies=@("BTC")
             Yiimp=$true
         }
-        "PhiPhiPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
-            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
-            Currencies=@("BTC")
-            Autoexchange=$true
-            Yiimp=$true
-        }
         "Poolin" = [PSCustomObject]@{
             Currencies=@("ETH","RVN")
         }
@@ -350,15 +343,6 @@
             Fields=[PSCustomObject]@{API_Key="";Password="x"}
             SetupFields=[PSCustomObject]@{API_Key="Enter your poolium.win API-Key";Password="Enter your poolium.win password"}
             Currencies=@("VRM")
-        }
-        "PoolmineXyz" = [PSCustomObject]@{
-            Currencies=@("KYAN")
-            Yiimp=$true
-        }
-        "PoolmineXyzSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1"}
-            Currencies=@("KYAN")
-            Yiimp=$true
         }
         "PoolSexy" = [PSCustomObject]@{
             Currencies=@("DBIX")
