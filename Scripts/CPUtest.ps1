@@ -71,12 +71,12 @@ if ($IsWindows) {
     }
 
     " " | Out-File $TestFileName -Append
-    "4. Get-CPUFeatures" | Out-File $TestFileName -Append
+    "4. list_cpu_features.exe" | Out-File $TestFileName -Append
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
 
-   try {
-        Get-CPUFeatures | Foreach-Object {$CPUInfo.Features.$_ = $true}
+    try {
+        (Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop).flags | Foreach-Object {$CPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
     } catch {
         "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
         "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append

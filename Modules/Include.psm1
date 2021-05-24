@@ -3229,18 +3229,6 @@ function Get-Device {
                 $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
                 if ($IsWindows) {
-                    #try {$chkcpu = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                    #if ($chkcpu.physical_cpus) {
-                    #    $Global:GlobalCPUInfo | Add-Member Name          $chkcpu.cpu_name
-                    #    $Global:GlobalCPUInfo | Add-Member Manufacturer  $chkcpu.cpu_vendor
-                    #    $Global:GlobalCPUInfo | Add-Member Cores         $chkcpu.cores
-                    #    $Global:GlobalCPUInfo | Add-Member Threads       $chkcpu.threads
-                    #    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $chkcpu.physical_cpus
-                    #    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
-                    #    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
-                    #    $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    #    $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                    #} else {
                     $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
                     $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
                     $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
@@ -3250,8 +3238,21 @@ function Get-Device {
                     $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
                     $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
                     $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                    #}
+
+                    try {
+                        (Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop).flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                    if (-not $Global:GlobalCPUInfo.Features.Count) {
+                        $chkcpu = @{}
+                        try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                    }
+
+                    $Global:GlobalCPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
+
                 } elseif ($IsLinux) {
                     try {
                         Write-ToFile -FilePath ".\Data\lscpu.txt" -Message "$(Invoke-Exe "lscpu")" -NoCR > $null
@@ -3271,8 +3272,6 @@ function Get-Device {
 
                         "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
 
-                        if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
-
                         $Processors = ($Data | Where-Object {$_ -match "^processor"} | Measure-Object).Count
 
                         if ($Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
@@ -3288,6 +3287,8 @@ function Get-Device {
                         }
                     }
                 }
+
+                if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
 
                 $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
                             "(AMD|Advanced Micro Devices)" {"AMD"}
@@ -3362,116 +3363,6 @@ function Get-Device {
             $Device
         }
     }
-}
-
-function Get-CPUFeatures { 
-
-    Add-Type -Path .\DotNet\Tools\CPUID.cs
-
-    $features = @{}
-    $info = [CpuID]::Invoke(0)
-    #convert 16 bytes to 4 ints for compatibility with existing code
-    $info = [int[]]@(
-        [BitConverter]::ToInt32($info, 0 * 4)
-        [BitConverter]::ToInt32($info, 1 * 4)
-        [BitConverter]::ToInt32($info, 2 * 4)
-        [BitConverter]::ToInt32($info, 3 * 4)
-    )
-
-    $nIds = $info[0]
-
-    $info = [CpuID]::Invoke(0x80000000)
-    $nExIds = [BitConverter]::ToUInt32($info, 0 * 4) #not sure as to why 'nExIds' is unsigned; may not be necessary
-    #convert 16 bytes to 4 ints for compatibility with existing code
-    $info = [int[]]@(
-        [BitConverter]::ToInt32($info, 0 * 4)
-        [BitConverter]::ToInt32($info, 1 * 4)
-        [BitConverter]::ToInt32($info, 2 * 4)
-        [BitConverter]::ToInt32($info, 3 * 4)
-    )
-
-    #Detect Features
-    if ($nIds -ge 0x00000001) { 
-
-        $info = [CpuID]::Invoke(0x00000001)
-        #convert 16 bytes to 4 ints for compatibility with existing code
-        $info = [int[]]@(
-            [BitConverter]::ToInt32($info, 0 * 4)
-            [BitConverter]::ToInt32($info, 1 * 4)
-            [BitConverter]::ToInt32($info, 2 * 4)
-            [BitConverter]::ToInt32($info, 3 * 4)
-        )
-
-        $features.mmx = ($info[3] -band ([int]1 -shl 23)) -ne 0
-        $features.sse = ($info[3] -band ([int]1 -shl 25)) -ne 0
-        $features.sse2 = ($info[3] -band ([int]1 -shl 26)) -ne 0
-        $features.sse3 = ($info[2] -band ([int]1 -shl 00)) -ne 0
-
-        $features.ssse3 = ($info[2] -band ([int]1 -shl 09)) -ne 0
-        $features.sse41 = ($info[2] -band ([int]1 -shl 19)) -ne 0
-        $features.sse42 = ($info[2] -band ([int]1 -shl 20)) -ne 0
-        $features.aes = ($info[2] -band ([int]1 -shl 25)) -ne 0
-
-        $features.avx = ($info[2] -band ([int]1 -shl 28)) -ne 0
-        $features.fma3 = ($info[2] -band ([int]1 -shl 12)) -ne 0
-
-        $features.rdrand = ($info[2] -band ([int]1 -shl 30)) -ne 0
-    }
-
-    if ($nIds -ge 0x00000007) { 
-
-        $info = [CpuID]::Invoke(0x00000007)
-        #convert 16 bytes to 4 ints for compatibility with existing code
-        $info = [int[]]@(
-            [BitConverter]::ToInt32($info, 0 * 4)
-            [BitConverter]::ToInt32($info, 1 * 4)
-            [BitConverter]::ToInt32($info, 2 * 4)
-            [BitConverter]::ToInt32($info, 3 * 4)
-        )
-
-        $features.avx2 = ($info[1] -band ([int]1 -shl 05)) -ne 0
-
-        $features.bmi1 = ($info[1] -band ([int]1 -shl 03)) -ne 0
-        $features.bmi2 = ($info[1] -band ([int]1 -shl 08)) -ne 0
-        $features.adx = ($info[1] -band ([int]1 -shl 19)) -ne 0
-        $features.mpx = ($info[1] -band ([int]1 -shl 14)) -ne 0
-        $features.sha = ($info[1] -band ([int]1 -shl 29)) -ne 0
-        $features.prefetchwt1 = ($info[2] -band ([int]1 -shl 00)) -ne 0
-
-        $features.avx512_f = ($info[1] -band ([int]1 -shl 16)) -ne 0
-        $features.avx512_cd = ($info[1] -band ([int]1 -shl 28)) -ne 0
-        $features.avx512_pf = ($info[1] -band ([int]1 -shl 26)) -ne 0
-        $features.avx512_er = ($info[1] -band ([int]1 -shl 27)) -ne 0
-        $features.avx512_vl = ($info[1] -band ([int]1 -shl 31)) -ne 0
-        $features.avx512_bw = ($info[1] -band ([int]1 -shl 30)) -ne 0
-        $features.avx512_dq = ($info[1] -band ([int]1 -shl 17)) -ne 0
-        $features.avx512_ifma = ($info[1] -band ([int]1 -shl 21)) -ne 0
-        $features.avx512_vbmi = ($info[2] -band ([int]1 -shl 01)) -ne 0
-        $features.avx512_vbmi2 = ($info[2] -band ([int]1 -shl 06)) -ne 0
-
-        $features.vaes = ($info[2] -band ([int]1 -shl 09)) -ne 0
-
-        $features.avx512 = $features.avx512_f -and $features.avx512_vl -and $features.avx512_dq -and $features.avx512_bw
-    }
-
-    if ($nExIds -ge 0x80000001) { 
-
-        $info = [CpuID]::Invoke(0x80000001)
-        #convert 16 bytes to 4 ints for compatibility with existing code
-        $info = [int[]]@(
-            [BitConverter]::ToInt32($info, 0 * 4)
-            [BitConverter]::ToInt32($info, 1 * 4)
-            [BitConverter]::ToInt32($info, 2 * 4)
-            [BitConverter]::ToInt32($info, 3 * 4)
-        )
-
-        $features.x64 = ($info[3] -band ([int]1 -shl 29)) -ne 0
-        $features.abm = ($info[2] -band ([int]1 -shl 05)) -ne 0
-        $features.sse4a = ($info[2] -band ([int]1 -shl 06)) -ne 0
-        $features.fma4 = ($info[2] -band ([int]1 -shl 16)) -ne 0
-        $features.xop = ($info[2] -band ([int]1 -shl 11)) -ne 0
-    }
-    $features.Keys | Where-Object {$features.$_} | Select-Object
 }
 
 function Get-DevicePowerDraw {
