@@ -2194,28 +2194,33 @@ function Invoke-Core {
                     foreach ($p in @(" $Miner_Arguments" -split '\s+-')) {
                         if (-not $p) {continue}
                         $p="-$p"
-                        if ($p -match "^([-\w]+)([\s=]*)(.*)$") {
+                        if ($p -match "^([-\w]+)(=|\s)?(.*)$") {
                             $pcmd = $matches[1]
-                            $pdiv = $matches[2].Trim(); if ($pdiv -eq "") {$pdiv = " "}
+                            $pdiv = "$($matches[2])".Trim(); if ($pdiv -eq "") {$pdiv = " "}
                             $parg = $matches[3].Trim()
-                            if ($Miner.Arguments -is [string]) {
-                                $psub = $Miner.Arguments -replace "$($pcmd)[\s=]+[^\s]+\s*"
-                                $pchg = $psub -ne $Miner.Arguments
-                                $Miner.Arguments = $psub
-                            } else {
-                                $psub = $Miner.Arguments.Params -replace "$($pcmd)[\s=]+[^\s]+\s*"
-                                $pchg = $psub -ne $Miner.Arguments.Params
-                                $Miner.Arguments.Params = $psub
+
+                            $Current_Miner_Arguments = "$(if ($Miner.Arguments -is [string]) {$Miner.Arguments} else {$Miner.Arguments.Params})"
+
+                            $psub = $Current_Miner_Arguments -replace "$($pcmd)(=|\s)[^-\s][^\s]*\s*"
+                            if ($psub -match "$($pcmd)=?(\s+|$)") {
+                                $psub = $psub -replace "$($pcmd)=?(\s+|$)"
                             }
-                            if (-not $pchg -or $parg -ne "") {
+                            $psub = $psub -replace "\s+$"
+
+                            if ($psub -ne $Current_Miner_Arguments) {
+                                if ($Miner.Arguments -is [string]) {$Miner.Arguments = $psub} else {$Miner.Arguments.Params = $psub}
+                            }
+
+                            if ($parg -ne "#") {
                                 $Miner_Arguments_List.Add("$($pcmd)$(if ($parg) {"$($pdiv)$($parg)"})")>$null
                             }
                         } else {
                             $Miner_Arguments_List.Add($p)>$null
                         }
                     }
-                    if ($Miner.Arguments -is [string]) {$Miner.Arguments = "$($Miner.Arguments.Trim()) $($Miner_Arguments_List -join ' ')"}
-                    else {$Miner.Arguments.Params = "$($Miner.Arguments.Params.Trim()) $($Miner_Arguments_List -join ' ')"}                
+                    $Miner_Arguments = "$(if ($Miner_Arguments_List.Count) {" $($Miner_Arguments_List -join ' ')"})"
+                    if ($Miner.Arguments -is [string]) {$Miner.Arguments = "$($Miner.Arguments.Trim())$($Miner_Arguments)"}
+                    else {$Miner.Arguments.Params = "$($Miner.Arguments.Params.Trim())$($Miner_Arguments)"}                
                 }
             }
 
