@@ -3159,7 +3159,7 @@ function Get-Device {
         }
 
         #re-index in case the OpenCL platforms have shifted positions
-        if ($Platfrom_Devices) {
+        if ($Platform_Devices) {
             try {
                 if (Test-Path ".\Data\openclplatforms.json") {
                     $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
