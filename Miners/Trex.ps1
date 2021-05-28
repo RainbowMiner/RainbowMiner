@@ -7,17 +7,17 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$ManualUri = "https://github.com/trexminer/T-Rex/releases"
+$ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.20.3"
+$Version = "0.20.4"
 $DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.3-trex/t-rex-0.20.3-linux.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.4-trex/t-rex-0.20.4-linux.tar.gz"
             Cuda   = "9.2"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.3-trex/t-rex-0.20.3-win.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.4-trex/t-rex-0.20.4-win.zip"
             Cuda   = "9.2"
         }
     )
