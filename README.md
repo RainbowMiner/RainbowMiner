@@ -75,6 +75,8 @@ Other distros will have settings in different places (hugepages) and the softwar
 ###### Huge Pages
 By default, linux sets memory-chunk size fairly small. This is to save RAM useage for low-requirement sofware (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is call 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is a how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)
 
+On newer Ubuntu distros (Ubuntu 18.04 - Bionic Beaver and up), the value can be added to `/etc/sysctl.conf` and you need to be root do it (ie: `sudo emacs -wm /etc/sysctl.conf` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.) The system will need to be rebooted to load the new kernel parameters or you can run `sudo sysctl -p` to load any new or changed parameters at runtime. 
+
 On my system (@ParalegicRacehorse), xmr-stak will not run with hugepages<1024. Setting it to 2048 did gain me anything more than 1024, but experience in the verium/vericoin community have shown hugepages as large as 4096 can be beneficial. YMMV. Tuning is left to the rig operator, but I recommend keeping it as low as you can get away with so your other programs can run lean.
 
 #### Video Cards
@@ -612,7 +614,7 @@ Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### 1. setup overclocking profiles
 
-Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (ï¿½C), MemoryClockBoost (MHz), CoreClockBoost (MHz) and LockVoltagePoint (ï¿½V) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
@@ -1554,10 +1556,10 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
     }
 
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
-- ThermalLimit: in °C, set to 0, if you do not want this to be changed
+- ThermalLimit: in ï¿½C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
-- LockVoltagePoint: in µV set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- LockVoltagePoint: in ï¿½V set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 - PreCmd/PreCmdArguments: define a command to be executed before the miner starts. PreCmd is the path to the binary, PreCmdArguments are optional arguments for that command.
 - PostCmd/PostCmdArguments: define a command to be executed after the miner has finished. PostCmd is the path to the binary, PostCmdArguments are optional arguments for that command.
 
@@ -1657,6 +1659,16 @@ Tab "Actions":
 - Program/Script=`cmd`
 - Add Arguments=`/c "C:\Users\RainbowMiner\Desktop\current-version\Start.bat"`
 - Start In=`C:\Users\RainbowMiner\Desktop\current-version\`
+
+### How do I add RainbowMiner's start script to crontab on Linux for autostart?
+
+As the user that will be running RainbowMiner, edit the crontab file using `crontab -e`. 
+You will be promped to select the editor you want to use (emacs, vi, etc.)
+Add one of the following lines to the end of the file and save: 
+- `@reboot /PATH_TO_RAINBOWMINER/start-screen.sh` If you want RainbowMiner to start in a separate screen
+- `@reboot /PATH_TO_RAINBOWMINER/start-nohup.sh` If you want RainbowMiner to run as a background process
+
+Where `PATH_TO_RAINBOWMINER` is the RainbowMiner installation directory.
 
 ### How can I rent my rig to someone at [MiningRigRentals.com](https://www.miningrigrentals.com?ref=2598069)?
 
