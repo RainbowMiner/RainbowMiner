@@ -1267,6 +1267,13 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.7.2.0")) {
+        Get-ChildItem "Data\openclplatforms.json" -ErrorAction Ignore | Where-Object {$_.LastWriteTimeUtc -lt (Get-Date "May 27, 2021")} | Foreach-Object {
+            $ChangesTotal++
+            Remove-Item $_.FullName -Force -ErrorAction Ignore
+        }
+    }
+
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
 
