@@ -893,6 +893,7 @@ function Invoke-Core {
                                 OCmode                 = $Session.OCmode
                                 UsePowerPrice          = $Session.Config.UsePowerPrice
                                 PowerPriceCurrency     = $Session.Config.PowerPriceCurrency
+                                FixedCostPerDay        = $Session.Config.FixedCostPerDay
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
                                 IsWindows              = $Global:IsWindows
                                 IsLinux                = $Global:IsLinux
@@ -1008,7 +1009,7 @@ function Invoke-Core {
         }
     }
 
-    #Check for powerprice config
+    #Check for scheduler config
     if (Set-ConfigDefault "Scheduler") {
         if ($CheckConfig -or $Session.Config.Scheduler -eq $null -or (Test-Config "Scheduler" -LastWriteTime)) {
             if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating scheduler config data"}
@@ -2720,7 +2721,7 @@ function Invoke-Core {
 
         if (($NewPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
             $PowerOffset_Watt = $Session.Config.PowerOffset
-            $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $Session.CurrentPowerPriceBTC)
+            $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $Session.CurrentPowerPriceBTC) + $Session.Config.FixedCostPerDay
             if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
                 if ($Session.Config.CheckProfitability -and ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner -or $_.IsLocked} | Measure-Object).Count -eq 0) {$Session.Profitable = $false}
                 if (-not $Session.Profitable -or -not $Session.Config.CheckProfitability) {
@@ -3096,7 +3097,7 @@ function Invoke-Core {
     #Get worker specific profits without cost
 
     $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit | Measure-Object -Sum).Sum
-    if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost;$CurrentProfitWithoutCostTotal += ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit_Cost | Measure-Object -Sum).Sum}
+    if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost + $Session.Config.FixedCostPerDay;$CurrentProfitWithoutCostTotal += ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit_Cost | Measure-Object -Sum).Sum}
 
     #Display exchange rates
     [System.Collections.Generic.List[string]]$StatusLine = @()
