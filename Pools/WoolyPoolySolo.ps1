@@ -29,7 +29,7 @@ catch {
     return
 }
 
-$Pool_Regions = @("eu","us","sg")
+$Pool_Regions = @("eu","us","sg","au")
 
 [hashtable]$Pool_RegionsTable = @{}
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
