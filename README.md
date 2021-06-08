@@ -43,6 +43,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Pause mining without exiting the RainbowMiner**
 - **Full automatic update**
 - **Easy replication and setup configuration**
+- **Very small minimum developer fee of 0.7% (10 minutes per day) to support my work**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
 - **Central monitoring of all your rigs at [https://rbminer.net](https://rbminer.net)**
 - **Offline notifications via email and/or https://pushover.net**
