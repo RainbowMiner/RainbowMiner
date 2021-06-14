@@ -1877,13 +1877,15 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$Vendor = "",
         [Parameter(Mandatory = $false)]
+        [String]$WinTitle = "",
+        [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -WinTitle $WinTitle
     } else {
         Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     }
@@ -1965,6 +1967,8 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
+        [String]$WinTitle = "",
+        [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false
     )
 
@@ -1992,6 +1996,18 @@ function Start-SubProcessInConsole {
     if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
 
     Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
+
+    if ($IsWindows -and $JobOutput.ProcessId -and $WinTitle -ne "") {
+        try {
+            if ($Process = Get-Process -Id $JobOutput.ProcessId -ErrorAction Stop) {
+                Initialize-User32Dll
+                [User32.WindowManagement]::SetWindowText($Process.mainWindowHandle, $WinTitle) > $null
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not set process window title: $($_.Exception.Message)"
+        }
+    }
     
     [PSCustomObject]@{
         ScreenName = ""
@@ -5277,13 +5293,13 @@ function Set-OCProfilesConfigDefault {
                 $Devices = Get-Device "amd","nvidia" -IgnoreOpenCL
                 $Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object | Foreach-Object {
                     $Model = $_
-                    For($i=1;$i -le 5;$i++) {
+                    For($i=1;$i -le 7;$i++) {
                         $Profile = "Profile$($i)-$($Model)"
                         if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
                     }
                 }
                 if (-not $Devices) {
-                    For($i=1;$i -le 5;$i++) {
+                    For($i=1;$i -le 7;$i++) {
                         $Profile = "Profile$($i)"
                         if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
                     }
@@ -6482,6 +6498,8 @@ namespace User32
         public static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, IntPtr lclassName, string windowTitle);
         [DllImport("user32.dll")] 
         public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")]
+        public static extern int SetWindowText(IntPtr hWnd, string strTitle);
     }
 }
 "@
@@ -6704,7 +6722,7 @@ param(
                         @(Get-Process).Where({$_.Path -and $_.Path -like "$(Join-Path $FileDir "*")" -and $_.ProcessName -like $FileName -and (-not $ArgumentList -or $_.CommandLine -like "* $($ArgumentList)")}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
                     }
 
-                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH
+                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH -WinTitle "$FilePath $ArgumentList".Trim()
                     if ($Job) {
                         $Job | Add-Member FilePath $FilePath -Force
                         $Job | Add-Member Arguments $ArgumentList -Force

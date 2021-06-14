@@ -186,13 +186,13 @@ class Miner {
                         $Command = ".\Includes\OhGodAnETHlargementPill-r2.exe"
                     }
                     $Command = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Command)
-                    $this.EthPillJob = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH
+                    $this.EthPillJob = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH -WinTitle "OhGodAnETHlargementPill-r2 --$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')"
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
             $this.StartTime = (Get-Date).ToUniversalTime()
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH -WinTitle "$($this.Name -replace "-.+$") on $($this.DeviceModel) at $($this.Pool -join '+') with $($this.BaseAlgorithm -join '+')".Trim()
 
             if ($this.Job.XJob) {
                 $this.Status = [MinerStatus]::Running
