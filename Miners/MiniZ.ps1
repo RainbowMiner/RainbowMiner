@@ -34,7 +34,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                  MinMemGB = 5; Params = "--par=beam3";    ExtendInterval = 3; AutoPers = $false; Fee = $DevFee} #BeamHash3 (BEAM)
-    #[PSCustomObject]@{MainAlgorithm = "EtcHash";       DAG = $true; MinMemGB = 2; Params = "--par=etchash";  ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Etchash (ETC)
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";       DAG = $true; MinMemGB = 2; Params = "--par=etchash --pers=etchash";  ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Etchash (ETC)
     #[PSCustomObject]@{MainAlgorithm = "Ethash";        DAG = $true; MinMemGB = 2; Params = "--par=ethash";   ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Ethash (ETH)
     #[PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = "--par=ethash";   ExtendInterval = 3; AutoPers = $false; Fee = 0.75} #Ethash (ETH) for low memory coins
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";               MinMemGB = 1; Params = "--par=96,5";     ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 96,5
@@ -103,7 +103,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Pools.$Algorithm_Norm.SSL) {"ssl://"})$($Pools.$Algorithm_Norm.User)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Name -eq "MiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params)"
+					Arguments      = "--telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Pools.$Algorithm_Norm.Name -eq "MiningRigRentals" -and $Algorithm_Norm_0 -match "^etc?hash") {"stratum2://"} elseif ($Pools.$Algorithm_Norm.SSL) {"ssl://"})$($Pools.$Algorithm_Norm.User)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Name -eq "MiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					API            = "MiniZ"
 					Port           = $Miner_Port
