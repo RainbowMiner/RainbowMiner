@@ -23,7 +23,7 @@ if (-not $Pool_User -and -not $InfoOnly) {return}
 [hashtable]$Pool_RegionsTable = @{}
 [hashtable]$Pool_FailoverRegionsTable = @{}
 
-$Pool_Regions = @("us-east","us-west","de","sg","au","br","in")
+$Pool_Regions = @("us-east","us-west","de","sg","au","br","kr")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 foreach($Pool_Region in $Pool_Regions) {
     $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
