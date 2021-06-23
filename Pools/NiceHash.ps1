@@ -77,6 +77,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
+        "Autolykos2"        {"ERG"}
         "BeamHash3"         {"BEAM"}
         "CuckooCycle"       {"AE"}
         "Cuckaroo29"        {"XBG"}
