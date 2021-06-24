@@ -1355,6 +1355,15 @@ Example:
 
 .. this adds a static pool difficulty of 1000 to Sgminer's Neoscrypt
 
+To _remove_ a certain parameter from the RainbowMiner's miner commandline, use the `#`-method:
+- find out, which parameters are being used (e.g. `--cpu-affinity` for affinity and `-t` for threads) by looking at the command line, RainbowMiner is using
+- edit miners.config.txt and find the miner
+- now add the paramters, that you want to have removed to "Params", each followed by a blank and #
+
+e.g.
+```
+  "Params": "--cpu-affinity # -t #",
+```
 
 ### Config\devices.config.txt
 
