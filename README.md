@@ -257,6 +257,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 
 - Set your Windows virtual memory size to a fixed size, to the sum of your GPU memories x 1.1, e.g. if you have 6x GTX1070 8GB installed, use at least 53000 (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
+- Find a lot of additional information and documentation here: https://github.com/RainbowMiner/RainbowMiner/issues?q=is%3Aissue+label%3Adocumentation
 - if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to set "Force P2-State" to "Off", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
 - Important: **NEVER EDIT THE "Start.bat" !** It will break the autoupdate. If you want to add commands to the start, edit .\Config\autoexec.txt
 - the root directory of RainbowMiner contains the following, additional batch files:
