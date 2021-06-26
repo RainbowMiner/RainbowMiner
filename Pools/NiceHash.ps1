@@ -54,13 +54,20 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 [hashtable]$Pool_FailoverRegionsTable = @{}
+[hashtable]$Pool_FailoverRegionsTable2 = @{}
 
-$Pool_Regions = @("eu-west", "eu-east", "usa-west", "usa-east") #@("eu", "usa", "hk", "jp", "in", "br")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions  = @("eu", "usa", "hk", "jp", "in", "br")
+$Pool_Regions2 = @("eu-west", "eu-north", "usa-west", "usa-east")
+$Pool_Regions + $Pool_Regions2 | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 foreach($Pool_Region in $Pool_Regions) {
     $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
     [array]::Reverse($Pool_FailoverRegions)
     $Pool_FailoverRegionsTable.$Pool_Region = $Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Sort-Object -Descending {$Pool_FailoverRegions.IndexOf($Pool_RegionsTable.$_)} | Select-Object -Unique -First 3
+}
+foreach($Pool_Region in $Pool_Regions2) {
+    $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
+    [array]::Reverse($Pool_FailoverRegions)
+    $Pool_FailoverRegionsTable2.$Pool_Region = $Pool_Regions2 | Where-Object {$_ -ne $Pool_Region} | Sort-Object -Descending {$Pool_FailoverRegions.IndexOf($Pool_RegionsTable.$_)} | Select-Object -Unique -First 3
 }
 
 $Pool_PoolFee = if (-not $InfoOnly -and $Global:NHWallets[$Wallets.BTC]) {5.0} else {2.0}
@@ -77,7 +84,6 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
-        "Autolykos2"        {"ERG"}
         "BeamHash3"         {"BEAM"}
         "CuckooCycle"       {"AE"}
         "Cuckaroo29"        {"XBG"}
@@ -107,10 +113,13 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
     }
 
-    foreach($Pool_Region in $Pool_Regions) {
+    $Pool_Regions_Use = if ($Pool_Algorithm -eq "autolycos") {$Pool_Regions2} else {$Pool_Regions}
+    $Pool_FailoverRegionsTable_Use = if ($Pool_Algorithm -eq "autolycos") {$Pool_FailoverRegionsTable2} else {$Pool_FailoverRegionsTable}
+
+    foreach($Pool_Region in $Pool_Regions_Use) {
         if ($Wallets.BTC -or $InfoOnly) {
             $This_Host = "$Pool_Algorithm.$Pool_Region$Pool_Host"
-            $Pool_Failover = @($Pool_FailoverRegionsTable.$Pool_Region | Foreach-Object {"$Pool_Algorithm.$_$Pool_Host"})
+            $Pool_Failover = @($Pool_FailoverRegionsTable_Use.$Pool_Region | Foreach-Object {"$Pool_Algorithm.$_$Pool_Host"})
 
             foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
                 [PSCustomObject]@{
