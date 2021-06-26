@@ -113,8 +113,8 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
     }
 
-    $Pool_Regions_Use = if ($Pool_Algorithm -eq "autolycos") {$Pool_Regions2} else {$Pool_Regions}
-    $Pool_FailoverRegionsTable_Use = if ($Pool_Algorithm -eq "autolycos") {$Pool_FailoverRegionsTable2} else {$Pool_FailoverRegionsTable}
+    $Pool_Regions_Use = if ($Pool_Algorithm -eq "autolykos") {$Pool_Regions2} else {$Pool_Regions}
+    $Pool_FailoverRegionsTable_Use = if ($Pool_Algorithm -eq "autolykos") {$Pool_FailoverRegionsTable2} else {$Pool_FailoverRegionsTable}
 
     foreach($Pool_Region in $Pool_Regions_Use) {
         if ($Wallets.BTC -or $InfoOnly) {
