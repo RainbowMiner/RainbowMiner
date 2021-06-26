@@ -55,7 +55,7 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 [hashtable]$Pool_RegionsTable = @{}
 [hashtable]$Pool_FailoverRegionsTable = @{}
 
-$Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
+$Pool_Regions = @("eu-west", "eu-east", "usa-west", "usa-east") #@("eu", "usa", "hk", "jp", "in", "br")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 foreach($Pool_Region in $Pool_Regions) {
     $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
