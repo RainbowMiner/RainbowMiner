@@ -9,12 +9,12 @@ if ((-not $IsWindows -or -not $Session.IsWin10) -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BMiner\bminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.3.6-bminer/bminer-v16.3.6-b37c2ec-amd64.tar.xz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.4.6-bminer/bminer-v16.4.6-d77cc9b-amd64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-BMiner\bminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.3.6-bminer/bminer-lite-v16.3.6-b37c2ec-amd64.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v16.4.6-bminer/bminer-lite-v16.4.6-d77cc9b-amd64.zip"
 }
-$Version = "16.3.6"
+$Version = "16.4.6"
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
 $DevFee = 2.0
@@ -27,12 +27,12 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "beamhash2";                 SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #" -nofee" #Old
     #[PSCustomObject]@{MainAlgorithm = "beam";                      SecondaryAlgorithm = ""; MinMemGb = 5;  Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #" -nofee" #BEAM
     #[PSCustomObject]@{MainAlgorithm = "bfc";                       SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #BFC
-    #[PSCustomObject]@{MainAlgorithm = "conflux";      DAG = $true; SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #CFX/Octopus
+    #[PSCustomObject]@{MainAlgorithm = "conflux";      DAG = $true; SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExcludePoolName = "^Nicehash"} #" -nofee" #CFX/Octopus
     #[PSCustomObject]@{MainAlgorithm = "cuckaroo29z";               SecondaryAlgorithm = ""; MinMemGb = 5; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; ExcludePoolName = "^EthashPool"} #" -nofee" #Cuckaroom29/GRIN
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo31";                SecondaryAlgorithm = ""; MinMemGb = 8; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo31
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo32";                SecondaryAlgorithm = ""; MinMemGb = 6; Params = ""; DevFee = 1.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckatoo32
     #[PSCustomObject]@{MainAlgorithm = "equihash1445";              SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "ethash";       DAG = $true; SecondaryAlgorithm = ""; MinMemGb = 3; Params = ""; DevFee = 0.65; Vendor = @("AMD","NVIDIA"); ExcludePoolName = "^Nicehash"} #Ethash (ethminer is faster and no dev fee)
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       DAG = $true; SecondaryAlgorithm = ""; MinMemGb = 3; Params = ""; DevFee = 0.65; Vendor = @("AMD","NVIDIA")} #Ethash (ethminer is faster and no dev fee)
     #[PSCustomObject]@{MainAlgorithm = "qitmeer";                   SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 1.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #QitMeer
     #[PSCustomObject]@{MainAlgorithm = "raven";        DAG = $true; SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #KawPOW (RVN)
     #[PSCustomObject]@{MainAlgorithm = "sero";                      SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #ProgPOW (SERO)
@@ -93,9 +93,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $Stratum = if ($MainAlgorithm -eq "equihash") {"stratum"}
                                elseif ($MainAlgorithm -match $Global:RegexAlgoHasEthproxy) {
                                     Switch($Pools.$MainAlgorithm_Norm.EthMode) {
-                                        "minerproxy" {"ethstratum"}
-                                        "ethproxy"   {"ethproxy"}
-                                        default {"ethash"}
+                                        "ethstratumnh" {"ethstratum"}
+                                        "minerproxy"   {"ethstratum"}
+                                        "ethproxy"     {"ethproxy"}
+                                        "qtminer"      {"ethproxy"}
+                                        default        {"ethash"}
                                     }
                                }
                                else {$MainAlgorithm}
