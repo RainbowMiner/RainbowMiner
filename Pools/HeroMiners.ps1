@@ -16,7 +16,7 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 [hashtable]$Pool_RegionsTable = @{}
-@("de","fi","ca","us","hk","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("de","fi","ca","us","hk","sg","tr") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AEON";  port = 10651; fee = 0.9; rpc = "aeon"; region = @("de","fi","hk")}
