@@ -4747,10 +4747,20 @@ function Set-ContentJson {
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
-                if ($Data -is [array]) {
-                    ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                if ($Session.IsCore -or ($PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
+                    if ($Data -is [array]) {
+                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                    } else {
+                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                    }
                 } else {
-                    ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                    $JsonOut = if ($Data -is [array]) {
+                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10
+                    } else {
+                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10
+                    }
+                    $utf8 = New-Object System.Text.UTF8Encoding $false
+                    Set-Content -Value $utf8.GetBytes($JsonOut) -Encoding Byte -Path $PathToFile
                 }
             } elseif ($Exists) {
                 (Get-ChildItem $PathToFile -File).LastWriteTime = Get-Date
