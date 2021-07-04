@@ -94,6 +94,47 @@ try {
             Get-ChildItem ".\*.sh" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
+        } elseif ($IsWindows) {
+            #Handle write locks
+            try {
+                if (-not (Test-Path "_update")) {New-Item "_update" -ItemType "directory" > $null}
+                $Params = @{
+                    FilePath     = "7z"
+                    ArgumentList = "x `"$FromFullPath`" -o`"$(Join-Path $ToFullPath "_update")`" 7z.exe 7z.dll `"Includes\curl\x32\curl.exe`" `"Includes\curl\x64\curl.exe`" `"Includes\curl\x32\libcurl.dll`" `"Includes\curl\x64\libcurl-x64.dll`" `"Includes\getcpu\GetCPU.exe`" `"Includes\getcpu\OpenHardwareMonitorLib.dll`" -y -spe"
+                    PassThru     = $true
+                }
+                (Start-Process @Params).WaitForExit() > $null
+                Get-ChildItem "_update" -Recurse -File | Foreach-Object {
+                    $FileNameTo   = $_.FullName -replace "^.+\\_update\\"
+                    if (-not (Test-Path $FileNameTo) -or ((Get-FileHash $FileNameTo -Algorithm MD5).Hash -ne (Get-FileHash $_.FullName -Algorithm MD5).Hash)) {
+                        Write-Host "Update $FileNameTo"
+                        try {
+                            $RetryLock = 20
+                            $IsLocked  = $true
+                            do {
+                                Try {
+                                    Copy-Item -Path $_.FullName -Destination $FileNameTo -Force
+                                    $IsLocked = $False
+                                } Catch {
+                                    $RetryLock--
+                                    if ($RetryLock -gt 0) {Sleep -Milliseconds 250}
+                                }
+                            } while ($IsLocked -and ($RetryLock -gt 0))
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+                        if ($IsLocked) {
+                            Write-Host "Failed to update $FileNameTo. Please download manually from Github." -ForegroundColor Yellow
+                        }
+                    }
+                }
+                if (Test-Path "_update") {
+                    Remove-Item "_update" -Force -Recurse
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Host "Failed to update exe files. Please download manually from Github." -ForegroundColor Yellow
+            }
         }
 
         if (-not $DownloaderConfig.EnableKeepDownloads -and (Test-Path $FileName)) {
