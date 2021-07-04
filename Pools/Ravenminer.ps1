@@ -18,7 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/status" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -27,7 +27,7 @@ catch {
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
