@@ -7,11 +7,9 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "BBR";   port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
+    [PSCustomObject]@{symbol = "BBR";   port = 5577; fee = 0.5; rpc = "bbr"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
     [PSCustomObject]@{symbol = "TUBE";  port = 5577; fee = 0.9; rpc = "tube4"; divisor = 40; region = @("eu")}
     [PSCustomObject]@{symbol = "VBK";   port = 9501; fee = 1.0; rpc = "veriblock"; region = @("eu")}
-    [PSCustomObject]@{symbol = "XCASH"; port = 4477; fee = 0.9; rpc = "xcash"; region = @("eu")}
-    [PSCustomObject]@{symbol = "XLA";   port = 6677; fee = 0.9; rpc = "scala"; region = @("eu")}
     [PSCustomObject]@{symbol = "XWP";   port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
     [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano"; region = @("eu")}
     [PSCustomObject]@{symbol = "ZELS";  port = 4502; fee = 0.9; rpc = "zelantus"; region = @("eu")}
