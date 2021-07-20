@@ -102,7 +102,7 @@
 351	FireIceRXAmd (linux)
 352	FireIceRXCpu (linux)
 353	FireIceRXNvidia (linux)
-354	Gminer183
+354	Gminer258
 355	ProgPOWSeroNvidia
 356	6Miner
 357	ProgPOWEthercoreNvidia
