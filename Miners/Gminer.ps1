@@ -28,13 +28,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Aeternity";                    MinMemGb = 4;                     Params = "--algo aeternity";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckoo29/Aeternity
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                    MinMemGb = 3;                     Params = "--algo BeamHashIII"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $false} #BeamHash3 (BEAM)
     [PSCustomObject]@{MainAlgorithm = "Cortex";                       MinMemGb = 8;                     Params = "--algo cortex";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $false; Fee = 5.0} #Cortex
-    #[PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";                  MinMemGb = 4;                     Params = "--algo cuckaroo29b"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 4.0} #Cuckaroo29b/TUBE (from July 29th 2020) removed v2.59
-    #[PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";                  MinMemGb = 4;                     Params = "--algo swap";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true; ExcludePoolName = "^MoneroOcean"} #Cuckaroo29s/SWAP removed v2.59
-    #[PSCustomObject]@{MainAlgorithm = "Cuckatoo31";                   MinMemGb = 8;                     Params = "--algo grin31";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $true} #Cuckatoo31/GRIN31 removed v2.56
-    #[PSCustomObject]@{MainAlgorithm = "Cuckatoo32";                   MinMemGb = 6;                     Params = "--algo grin32";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $true} #Cuckatoo32/GRIN32 removed v2.56
-    #[PSCustomObject]@{MainAlgorithm = "Cuckarood29";                  MinMemGb = 4;                     Params = "--algo cuckarood29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckarood29 upto 01/16/2020
-    #[PSCustomObject]@{MainAlgorithm = "Cuckarood29v";                 MinMemGb = 4;                     Params = "--algo cuckarood29v";Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckarood29v/MoneroV
-    #[PSCustomObject]@{MainAlgorithm = "Cuckarooz29";                  MinMemGb = 4;                     Params = "--algo cuckarooz29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 3.0; ExcludeCoinSymbol = @("PMEER")} #Cuckarooz29/GRIN from 07/16/2020
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";                 MinMemGb = 2;                     Params = "--algo 144_5";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $true} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";                MinMemGb = 2;                     Params = "--algo 125_4";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $true} #Equihash 125,4/ZelHash
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";                 MinMemGb = 3.0;                   Params = "--algo 192_7";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $true} #Equihash 192,7
@@ -43,9 +36,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 0.65; ExcludePoolName = ""} #Ethash
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 0.65; ExcludePoolName = ""} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 1.00; ExcludePoolName = ""} #KawPOW
-    #[PSCustomObject]@{MainAlgorithm = "ProgPoWSero";     DAG = $true; MinMemGb = 3;                     Params = "--algo sero";        Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = ""} #ProgPow Sero
-    #[PSCustomObject]@{MainAlgorithm = "ProgPoWZ";        DAG = $true; MinMemGb = 3;                     Params = "--algo progpowz";    Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = ""} #ProgPow Zano
-    #[PSCustomObject]@{MainAlgorithm = "vProgPoW";        DAG = $true; MinMemGb = 3;                     Params = "--algo vprogpow";    Vendor = @("NVIDIA");       ExtendInterval = 2; ExcludePoolName = ""} #ProgPow Veriblock
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
