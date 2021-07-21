@@ -1731,15 +1731,15 @@ class MiniZ : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = '{"id":"1", "method":"getstat"}'
+        $Request = '{ "id":"0", "method":"getstat" }'
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet -ReadToEnd
+            $Data = "$($Response -replace "(?smi)^.*?{","{")" | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
