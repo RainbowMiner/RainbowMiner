@@ -2091,7 +2091,7 @@ function Invoke-Core {
     if ($ComboAlgos -ne $null) {Remove-Variable "ComboAlgos"}
 
     #Handle fastlane benchmarks
-    if ($Session.Config.EnableFastlaneBenchmark) {
+    if (-not ($Session.RoundCounter % 10) -and $Session.Config.EnableFastlaneBenchmark) {
         $SkipBenchmarksData = [PSCustomObject]@{}
         $SkipBenchmarksCount = 0
         $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.HashRates.PSObject.Properties.Name.Count -eq 1}).ForEach({
