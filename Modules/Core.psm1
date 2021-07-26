@@ -2122,6 +2122,7 @@ function Invoke-Core {
                         miners = @($_.Value | Select-Object)
                     }
                 } | Select-Object) -Compress -Depth 10
+                Write-Log -Level Info $Request
                 $Response = Invoke-GetUrl "https://rbminer.net/api/qbench.php" -body @{q=$Request} -timeout 10
                 if ($Response.status) {
                     $Miner_Models = @{}
@@ -2144,10 +2145,10 @@ function Invoke-Core {
             }
             if ($Response.status) {
                 Write-Log -Level Info "Fastlane benchmarks: $Fastlane_Success x success, $Fastlane_Failed x failed"
-                Write-Host "ok ($Fastlane_Success x success, $Fastlane_Failed x failed)" -ForegroundColor Green
+                if ($Session.RoundCounter -eq 0) {Write-Host "ok ($Fastlane_Success x success, $Fastlane_Failed x failed)" -ForegroundColor Green}
             } else {
                 Write-Log -Level Info "Failed to get fastlane benchmark results from rbminer.net"
-                Write-Host "failed" -ForegroundColor Red
+                if ($Session.RoundCounter -eq 0) {Write-Host "failed" -ForegroundColor Red}
             }
 
             if ($Response -ne $null) {Remove-Variable "Response"}
