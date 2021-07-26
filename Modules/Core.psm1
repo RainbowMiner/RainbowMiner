@@ -2122,7 +2122,7 @@ function Invoke-Core {
                         miners = @($_.Value | Select-Object)
                     }
                 } | Select-Object) -Compress -Depth 10
-                Write-Log -Level Info $Request
+
                 $Response = Invoke-GetUrl "https://rbminer.net/api/qbench.php" -body @{q=$Request} -timeout 10
                 if ($Response.status) {
                     $Miner_Models = @{}
