@@ -536,6 +536,46 @@
                         </div>
                     </div>
                     <div class="form-group row">
+                        <label for="inputEnableFastlaneBenchmark" class="col-sm-2 col-form-label">Fastlane for Benchmark</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableFastlaneBenchmark" name="EnableFastlaneBenchmark">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputEnableFastlaneBenchmarkHelp" class="form-text text-muted">If enabled, RainbowMiner will skip all benchmarks and try to download live values from rbminer.net. This is VERY inaccurate.</div>
+                        </div>
+                    </div>
+                    <div class="form-group row is--fastlane">
+                        <label for="inputFastlaneBenchmarkTypeCPU" class="col-sm-2 col-form-label">Fastlane CPU values</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputFastlaneBenchmarkTypeCPU" name="FastlaneBenchmarkTypeCPU">
+                                <option value="avg">live average</option>
+                                <option value="min">live minimum</option>
+                                <option value="max">live maximum</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row is--fastlane">
+                        <label for="inputFastlaneBenchmarkTypeGPU" class="col-sm-2 col-form-label">Fastlane GPU values</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputFastlaneBenchmarkTypeGPU" name="FastlaneBenchmarkTypeGPU">
+                                <option value="avg">live average</option>
+                                <option value="min">live minimum</option>
+                                <option value="max">live maximum</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row is--fastlane">
+                        <label for="inputEnableFastlaneBenchmarkMissing" class="col-sm-2 col-form-label">Fastlane missing</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableFastlaneBenchmarkMissing" name="EnableFastlaneBenchmarkMissing">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputEnableFastlaneBenchmarkMissing" class="form-text text-muted">If enabled, the fastlane benchmark downloader will benchmark missing device/miner/algos on the machine, instead of setting them to "Failed Benchmark"</div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
                         <label for="inputSwitchingPrevention" class="col-sm-2 col-form-label">Switching Prevention</label>
                         <div class="col-sm-10">
                             <input type="number" min="0" max="10" step="1" class="form-control" id="inputSwitchingPrevention" name="SwitchingPrevention" placeholder="Adjust switching prevention: the higher, the less switching of miners (0 to disable)">
@@ -731,11 +771,20 @@
                     $(".is--ocprofiles").hide();
                 }
               });
+              $("#inputEnableFastlaneBenchmark").change(function() {
+                if ($(this).val()=="1") {
+                    $(".is--fastlane").show();
+                } else {
+                    $(".is--fastlane").hide();
+                }
+              });
 
               $("#inputAPIauth").trigger("change");
               $("#inputRunMode").trigger("change");
               $("#inputEnableServerConfig").trigger("change");
               $("#inputEnableMinerStatus").trigger("change");
+              $("#inputEnableOCProfiles").trigger("change");
+              $("#inputEnableFastlaneBenchmark").trigger("change");
           }
       });
       $.ajax({

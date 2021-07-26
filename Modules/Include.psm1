@@ -1343,6 +1343,8 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Balances = $false,
         [Parameter(Mandatory = $false)]
+        [Switch]$Poolstats = $false,
+        [Parameter(Mandatory = $false)]
         [Switch]$All = $false,
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
@@ -1356,6 +1358,7 @@ function Get-Stat {
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"; $Cached = $true}
         elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
         elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
+        elseif ($Name -match '_Poolstats$') {$Path = "Stats\Pools"}
         else {$Path = "Stats"}
 
         if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
@@ -1373,7 +1376,7 @@ function Get-Stat {
 
         if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
         if (($Disabled -or $All) -and -not (Test-Path "Stats\Disabled")) {New-Item "Stats\Disabled" -ItemType "directory" > $null}
-        if (($Pools  -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+        if (($Pools -or $Poolstats -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
@@ -1381,6 +1384,7 @@ function Get-Stat {
         if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
         if ($Disabled)  {$MatchArray.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
         if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
+        if ($Poolstats) {$MatchArray.Add("Poolstats") > $null;$Path = "Stats\Pools"}
         if ($Totals)    {$MatchArray.Add("Total") > $null;$Path = "Stats\Totals"}
         if ($TotalAvgs) {$MatchArray.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
         if ($Balances)  {$MatchArray.Add("Balance") > $null;$Path = "Stats\Balances"}

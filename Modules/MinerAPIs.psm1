@@ -1739,7 +1739,7 @@ class MiniZ : Miner {
 
         try {
             $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet -ReadToEnd
-            $Data = "$($Response -replace "(?smi)^.*?{","{")" | ConvertFrom-Json -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}

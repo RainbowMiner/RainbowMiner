@@ -790,6 +790,8 @@ function Invoke-Core {
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         $Session.Config.PoolStatAverageStable =  Get-StatAverage $Session.Config.PoolStatAverageStable -Default "Week"
         $Session.Config.MaxTimeSinceLastBlock = ConvertFrom-Time $Session.Config.MaxTimeSinceLastBlock
+        $Session.Config.FastlaneBenchmarkTypeCPU = if ($Session.Config.FastlaneBenchmarkTypeCPU -in @("avg","min","max")) {$Session.Config.FastlaneBenchmarkTypeCPU} else {"avg"}
+        $Session.Config.FastlaneBenchmarkTypeCPU = if ($Session.Config.FastlaneBenchmarkTypeCPU -in @("avg","min","max")) {$Session.Config.FastlaneBenchmarkTypeCPU} else {"avg"}
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
         Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.APIport} > $null
@@ -2044,8 +2046,6 @@ function Invoke-Core {
     }
     if ($MinersNeedSdk -ne $null) {Remove-Variable "MinersNeedSdk"}
 
-    if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best miners .."}
-
     if ($Session.Config.MiningMode -eq "combo") {
         if ($AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'})) {
             #Benchmarking is still ongoing - remove device combos from miners and make sure no combo stat is left over
@@ -2089,6 +2089,75 @@ function Invoke-Core {
     }
 
     if ($ComboAlgos -ne $null) {Remove-Variable "ComboAlgos"}
+
+    #Handle fastlane benchmarks
+    if ($Session.Config.EnableFastlaneBenchmark) {
+        $SkipBenchmarksData = [PSCustomObject]@{}
+        $SkipBenchmarksCount = 0
+        $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.HashRates.PSObject.Properties.Name.Count -eq 1}).ForEach({
+            $Miner = $_
+            $Miner.DeviceModel -split "-" | Foreach-Object {
+                if (-not [bool]$SkipBenchmarksData.PSObject.Properties[$_]) {$SkipBenchmarksData | Add-Member $_ @() -Force}
+                if (-not ($SkipBenchmarksData.$_.Where({$_.name -eq $Miner.BaseName -and $_.ver -eq $Miner.Version}) | Measure-Object).Count) {
+                    $SkipBenchmarksData.$_ += [PSCustomObject]@{
+                        name    = $Miner.BaseName
+                        ver     = $Miner.Version
+                    }
+                    $SkipBenchmarksCount++
+                }
+            }
+        })
+
+        if ($SkipBenchmarksCount) {
+            if ($Session.RoundCounter -eq 0) {Write-Host "Downloading fastlane benchmarks .." -NoNewline}
+            $Response = [PSCustomObject]@{}
+            $Fastlane_Success = 0
+            $Fastlane_Failed  = 0
+            try {
+                $Request = ConvertTo-Json @($SkipBenchmarksData.PSObject.Properties | Foreach-Object {
+                    [PSCustomObject]@{
+                        device = "$(if ($_.Name -eq "CPU") {$Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique} else {$_.Name})"
+                        isgpu  = $_.Name -ne "CPU"
+                        type   = if ($_.Name -eq "CPU") {$Session.Config.FastlaneBenchmarkTypeCPU} else {$Session.Config.FastlaneBenchmarkTypeGPU}
+                        miners = @($_.Value | Select-Object)
+                    }
+                } | Select-Object) -Compress -Depth 10
+                $Response = Invoke-GetUrl "https://rbminer.net/api/qbench.php" -body @{q=$Request} -timeout 10
+                if ($Response.status) {
+                    $Miner_Models = @{}
+                    $Global:DeviceCache.Devices.ForEach({$Miner_Models[$_.Name] = $_.Model})
+                    $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.HashRates.PSObject.Properties.Name.Count -eq 1}).ForEach({
+                        $Miner_Name = $_.Name
+                        $Miner_Algo = $_.HashRates.PSObject.Properties.Name -replace '\-.*$'
+                        $Miner_HR   = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.hr} | Measure-Object -Sum).Sum
+
+                        if ($Miner_HR -gt 0 -or -not $Session.Config.EnableFastlaneBenchmarkMissing) {
+                            $_.HashRates."$($_.HashRates.PSObject.Properties.Name)" = $Miner_HR
+                            $_.PowerDraw             = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.pd} | Measure-Object -Sum).Sum
+                            Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 10) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -Quiet > $null
+                        }
+                        if ($Miner_HR -gt 0) {$Fastlane_Success++} else {$Fastlane_Failed++}
+                    })
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+            if ($Response.status) {
+                Write-Log -Level Info "Fastlane benchmarks: $Fastlane_Success x success, $Fastlane_Failed x failed"
+                Write-Host "ok ($Fastlane_Success x success, $Fastlane_Failed x failed)" -ForegroundColor Green
+            } else {
+                Write-Log -Level Info "Failed to get fastlane benchmark results from rbminer.net"
+                Write-Host "failed" -ForegroundColor Red
+            }
+
+            if ($Response -ne $null) {Remove-Variable "Response"}
+            if ($Request -ne $null)  {Remove-Variable "Request"}
+        }
+
+        Remove-Variable "SkipBenchmarksData"
+    }
+
+    if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best miners .."}
 
     #Remove all miners, that need benchmarks during donation run
     if ($Session.IsDonationRun -or $Session.IsServerDonationRun) {
@@ -3850,6 +3919,10 @@ function Set-MinerStats {
                         $Miner_Failed = $true
                     }
                 }
+
+                #Update pool statistics
+                Set-ContentJson -PathToFile ".\Stats\Pools\$($Miner.Pool[$Miner_Index])_Poolstats.txt" -Data ([PSCustomObject]@{Updated=(Get-Date).ToUniversalTime()}) > $null
+
                 $Miner_PowerDraw = 0
                 $Miner_Index++
             }
