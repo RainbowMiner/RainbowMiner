@@ -2109,7 +2109,7 @@ function Invoke-Core {
         })
 
         if ($SkipBenchmarksCount) {
-            if ($Session.RoundCounter -eq 0) {Write-Host "Downloading fastlane benchmarks .." -NoNewline}
+            if ($Session.RoundCounter -eq 0) {Write-Host "Downloading fastlane benchmarks .. " -NoNewline}
             $Response = [PSCustomObject]@{}
             $Fastlane_Success = 0
             $Fastlane_Failed  = 0
@@ -2124,26 +2124,26 @@ function Invoke-Core {
                 } | Select-Object) -Compress -Depth 10
 
                 $Response = Invoke-GetUrl "https://rbminer.net/api/qbench.php" -body @{q=$Request} -timeout 10
-                if ($Response.status) {
-                    $Miner_Models = @{}
-                    $Global:DeviceCache.Devices.ForEach({$Miner_Models[$_.Name] = $_.Model})
-                    $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.HashRates.PSObject.Properties.Name.Count -eq 1}).ForEach({
-                        $Miner_Name = $_.BaseName
-                        $Miner_Algo = "$($_.HashRates.PSObject.Properties.Name -replace '\-.*$')"
-                        $Miner_HR   = ($_.DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.hr} | Measure-Object -Sum).Sum
-
-                        if (($Miner_HR -gt 0) -or -not $Session.Config.EnableFastlaneBenchmarkMissing) {
-                            $_.HashRates."$($_.HashRates.PSObject.Properties.Name)" = $Miner_HR
-                            $_.PowerDraw             = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.pd} | Measure-Object -Sum).Sum
-                            Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 1) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -Quiet > $null
-                        }
-                        if ($Miner_HR -gt 0) {$Fastlane_Success++} else {$Fastlane_Failed++}
-                    })
-                }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
+
             if ($Response.status) {
+                $Miner_Models = @{}
+                $Global:DeviceCache.Devices.ForEach({$Miner_Models[$_.Name] = $_.Model_Base})
+
+                $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.HashRates.PSObject.Properties.Name.Count -eq 1}).ForEach({
+                    $Miner_Name = $_.BaseName
+                    $Miner_Algo = "$($_.HashRates.PSObject.Properties.Name -replace '\-.*$')"
+                    $Miner_HR   = ($_.DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.hr} | Measure-Object -Sum).Sum
+
+                    if (($Miner_HR -gt 0) -or -not $Session.Config.EnableFastlaneBenchmarkMissing) {
+                        $_.HashRates."$($_.HashRates.PSObject.Properties.Name)" = $Miner_HR
+                        $_.PowerDraw             = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.pd} | Measure-Object -Sum).Sum
+                        Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 10) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -Quiet > $null
+                    }
+                    if ($Miner_HR -gt 0) {$Fastlane_Success++} else {$Fastlane_Failed++}
+                })
                 Write-Log -Level Info "Fastlane benchmarks: $Fastlane_Success x success, $Fastlane_Failed x failed"
                 if ($Session.RoundCounter -eq 0) {Write-Host "ok ($Fastlane_Success x success, $Fastlane_Failed x failed)" -ForegroundColor Green}
             } else {
