@@ -2130,9 +2130,9 @@ function Invoke-Core {
                     $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.HashRates.PSObject.Properties.Name.Count -eq 1}).ForEach({
                         $Miner_Name = $_.BaseName
                         $Miner_Algo = "$($_.HashRates.PSObject.Properties.Name -replace '\-.*$')"
-                        $Miner_HR   = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.hr} | Measure-Object -Sum).Sum
+                        $Miner_HR   = ($_.DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.hr} | Measure-Object -Sum).Sum
 
-                        if ($Miner_HR -gt 0 -or -not $Session.Config.EnableFastlaneBenchmarkMissing) {
+                        if (($Miner_HR -gt 0) -or -not $Session.Config.EnableFastlaneBenchmarkMissing) {
                             $_.HashRates."$($_.HashRates.PSObject.Properties.Name)" = $Miner_HR
                             $_.PowerDraw             = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.pd} | Measure-Object -Sum).Sum
                             Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 1) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -Quiet > $null
