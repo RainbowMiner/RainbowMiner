@@ -22,6 +22,7 @@ class Miner {
     [string]$DeviceModel
     [Bool]$Enabled = $false
     [string[]]$Pool
+    [string[]]$Wallet
     $Profit
     $Profit_Bias
     $Profit_Unbias

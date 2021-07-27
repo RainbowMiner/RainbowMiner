@@ -23,6 +23,7 @@
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "Aionmine" = [PSCustomObject]@{
             Currencies=@("AION")
@@ -52,11 +53,13 @@
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "BlockmastersCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=50}
             Currencies=@("BTC")
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "Bsod" = [PSCustomObject]@{
             Currencies=@("RVN","SIN")
@@ -325,16 +328,19 @@
             SetupFields=[PSCustomObject]@{OrganizationID="Enter your Nicehash Organization ID (pulls and adds NH balance)";API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)";EnableShowWallets="List your Nicehash wallets (0=no, 1=yes)"}
             Currencies=@("BTC")
             Autoexchange=$true
+            BalancesKeepAlive="180d"
         }
         "NLPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=16}
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+            BalancesKeepAlive="30d"
         }
         "NLPoolCoins" = [PSCustomObject]@{
             Currencies=@("BTC")
             Yiimp=$true
+            BalancesKeepAlive="30d"
         }
         "Poolin" = [PSCustomObject]@{
             Currencies=@("ETH","RVN")
@@ -352,6 +358,7 @@
             SetupFields=[PSCustomObject]@{User="Enter your ProHashing username";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
             Autoexchange=$true
+            BalancesKeepAlive="90d"
         }
         "Ravenminer" = [PSCustomObject]@{
             Currencies=@("RVN")
@@ -398,24 +405,28 @@
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "ZergPoolCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "ZergPoolCoinsParty" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "ZergPoolCoinsSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "ZergPoolParty" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency="";Penalty=12}
@@ -423,6 +434,7 @@
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "ZergPoolSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";Penalty=12}
@@ -430,6 +442,7 @@
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "Zpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=16}
@@ -437,11 +450,13 @@
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
         "ZpoolCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=16}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
             Yiimp=$true
+            BalancesKeepAlive="90d"
         }
 }

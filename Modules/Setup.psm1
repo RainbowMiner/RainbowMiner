@@ -93,7 +93,7 @@ function Start-Setup {
         $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions=""}
         $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
         $MRRDefault        = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
-        $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region=""}
+        $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region="";SSL="";BalancesKeepAlive=""}
         $UserpoolsDefault  = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
 
         $Controls = @("cancel","exit","back","save","done","<")
@@ -258,7 +258,7 @@ function Start-Setup {
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","fixedcostperday","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","preferminername","preferminermargin","disabledualmining","enablecheckminingconflict","enableethashzombiemode","algorithm","excludealgorithm","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enablefastlanebenchmark","fastlanebenchmarktypecpu","fastlanebenchmarktypegpu","enablefastlanebenchmarkmissing","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","preferminername","preferminermargin","algorithm","excludealgorithm","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","enableethashzombiemode","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","staticcpuminerport","staticgpuminerport","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","uistyle","uisorting","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","excludefromwatchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","fixedcostperday","usepowerprice","checkprofitability","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","enabledebugmode","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enablefastlanebenchmark","fastlanebenchmarktypecpu","fastlanebenchmarktypegpu","enablefastlanebenchmarkmissing","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","preferminername","preferminermargin","algorithm","excludealgorithm","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","enableethashzombiemode","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","staticcpuminerport","staticgpuminerport","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","uistyle","uisorting","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","excludefromwatchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","fixedcostperday","usepowerprice","checkprofitability","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","enabledebugmode","ssl","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null
 
@@ -570,14 +570,14 @@ function Start-Setup {
                         }
                         "minerstatusemail" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.MinerStatusEmail = Read-HostString -Prompt "Enter a offline notification eMail ($(if ($Config.MinerStatusEmail) {"clear"} else {"leave empty"}) to disable)" -Default $Config.MinerStatusEmail -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusEmail = Read-HostString -Prompt "Enter a offline notification eMail ($(if ($Config.MinerStatusEmail) {"enter 'clear'"} else {"leave empty"}) to disable)" -Default $Config.MinerStatusEmail -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "pushoveruserkey" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.PushOverUserKey = Read-HostString -Prompt "Enter your https://pushover.net user key ($(if ($Config.PushOverUserKey) {"clear"} else {"leave empty"}) to disable)" -Default $Config.PushOverUserKey -Characters "A-Z0-9" -MinLength 30 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.PushOverUserKey = Read-HostString -Prompt "Enter your https://pushover.net user key ($(if ($Config.PushOverUserKey) {"enter 'clear'"} else {"leave empty"}) to disable)" -Default $Config.PushOverUserKey -Characters "A-Z0-9" -MinLength 30 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -641,14 +641,14 @@ function Start-Setup {
                         }
                         "apiuser" {
                             if (Get-Yes $Config.APIauth) {
-                                $Config.APIuser = Read-HostString -Prompt "Enter an API username ($(if ($Config.APIuser) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIuser -Characters "A-Z0-9" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.APIuser = Read-HostString -Prompt "Enter an API username ($(if ($Config.APIuser) {"enter 'clear'"} else {"leave empty"}) to disable auth)" -Default $Config.APIuser -Characters "A-Z0-9" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "apipassword" {
                             if (Get-Yes $Config.APIauth) {
-                                $Config.APIpassword = Read-HostString -Prompt "Enter an API password ($(if ($Config.APIpassword) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIpassword -Characters "" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.APIpassword = Read-HostString -Prompt "Enter an API password ($(if ($Config.APIpassword) {"enter 'clear'"} else {"leave empty"}) to disable auth)" -Default $Config.APIpassword -Characters "" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -697,28 +697,28 @@ function Start-Setup {
                                     Write-Host "Now let us continue with your server's credentials" -ForegroundColor Cyan
                                     Write-Host " "
                                 }
-                                $Config.ServerName = Read-HostString -Prompt "Enter the server's $(if ($IsWindows) {"name or "})IP-address ($(if ($Config.ServerName) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName -Characters "A-Z0-9-_\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ServerName = Read-HostString -Prompt "Enter the server's $(if ($IsWindows) {"name or "})IP-address ($(if ($Config.ServerName) {"enter 'clear'"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName -Characters "A-Z0-9-_\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "serverport" {
                             if ($Config.RunMode -eq "client") {
-                                $Config.ServerPort = Read-HostInt -Prompt "Enter the server's API port ($(if ($Config.ServerPort) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerPort -Min 0 -Max 9999 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ServerPort = Read-HostInt -Prompt "Enter the server's API port ($(if ($Config.ServerPort) {"enter 'clear'"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerPort -Min 0 -Max 9999 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "serveruser" {
                             if ($Config.RunMode -eq "client") {
-                                $Config.ServerUser = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the username ($(if ($Config.ServerUser) {"clear"} else {"leave empty"}) for no auth)" -Default $Config.ServerUser -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ServerUser = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the username ($(if ($Config.ServerUser) {"enter 'clear'"} else {"leave empty"}) for no auth)" -Default $Config.ServerUser -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "serverpassword" {
                             if ($Config.RunMode -eq "client") {
-                                $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password ($(if ($Config.ServerPassword) {"clear"} else {"leave empty"}) for no auth)" -Default $Config.ServerPassword -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password ($(if ($Config.ServerPassword) {"enter 'clear'"} else {"leave empty"}) for no auth)" -Default $Config.ServerPassword -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -781,7 +781,7 @@ function Start-Setup {
                         }
                         "groupname" {
                             if ($Config.RunMode -eq "client" -and (Get-Yes $Config.EnableServerConfig)) {
-                                $Config.GroupName = Read-HostString -Prompt "Enter a group name, if clients should be grouped together for shared config (($(if ($Config.ServerUser) {"clear"} else {"leave empty"}) for no group)" -Default $Config.GroupName -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.GroupName = Read-HostString -Prompt "Enter a group name, if clients should be grouped together for shared config (($(if ($Config.ServerUser) {"enter 'clear'"} else {"leave empty"}) for no group)" -Default $Config.GroupName -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 if ($IsInitialSetup -and $Config.GroupName) {
                                     Write-Host " "
                                     Write-Host "HINT:" -Foreground Cyan
@@ -1003,7 +1003,7 @@ function Start-Setup {
                                 $Skip = Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 if ($Skip) {throw "Goto devicenamebegin"}
                             }
-                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($Config.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($Config.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "excludeminername" {
                             $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1015,7 +1015,7 @@ function Start-Setup {
                             $Config.PreferMinerMargin = Read-HostDouble -Prompt "Choose one of your preferred miners, if it's hashrate is not lower than xx% of the top miner's (in percent)" -Default $Config.PreferMinerMargin -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "algorithm" {
-                            $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine ($(if ($Config.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine ($(if ($Config.Algorithm) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "excludealgorithm" {
                             $Config.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude " -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1176,7 +1176,7 @@ function Start-Setup {
                         }
                         "cpuminingthreads" {
                             if ($Config.DeviceName -icontains "CPU") {
-                                $Config.CPUMiningThreads = Read-HostInt -Prompt "How many softwarethreads should be used for CPU mining? (0 or $(if ($Config.CPUMiningThreads) {"clear"} else {"leave empty"}) for auto)" -Default $Config.CPUMiningThreads -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.CPUMiningThreads = Read-HostInt -Prompt "How many softwarethreads should be used for CPU mining? (0 or $(if ($Config.CPUMiningThreads) {"enter 'clear'"} else {"leave empty"}) for auto)" -Default $Config.CPUMiningThreads -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1196,7 +1196,7 @@ function Start-Setup {
                                     Write-Host " (no affinity set)"
                                 }
                                 Write-Host " "
-                                $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"clear"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"enter 'clear'"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 $Config.CPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
                                 if (Compare-Object @($NewAffinity|Select-Object) @($CurrentAffinity|Select-Object)) {
                                     Write-Host "Now mining on the green threads: " -ForegroundColor Yellow -NoNewline
@@ -1234,7 +1234,7 @@ function Start-Setup {
                                 Write-Host " (no affinity set)"
                             }
                             Write-Host " "
-                            $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"clear"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"enter 'clear'"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             $Config.GPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
                             if (Compare-Object @($NewAffinity|Select-Object) @($CurrentAffinity|Select-Object)) {
                                 Write-Host "GPU miners now validating on the green threads: " -ForegroundColor Yellow -NoNewline
@@ -1258,7 +1258,7 @@ function Start-Setup {
 
                             Write-HostSetupDataWindowHints
 
-                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used ($(if ($Config.PoolDataWindow) {"clear"} else {"leave empty"}) for automatic)" -Default $Config.PoolDataWindow -Characters "A-Z0-9_-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used ($(if ($Config.PoolDataWindow) {"enter 'clear'"} else {"leave empty"}) for automatic)" -Default $Config.PoolDataWindow -Characters "A-Z0-9_-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enableerrorratio" {
                             $Config.EnableErrorRatio = Read-HostBool -Prompt "Enable pool price auto-correction" -Default $Config.EnableErrorRatio | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1276,7 +1276,7 @@ function Start-Setup {
 
                             Write-HostSetupStatAverageHints
 
-                            $Config.PoolStatAverage = Read-HostString -Prompt "Enter which default moving average is to be used ($(if ($Config.PoolStatAverage) {"clear"} else {"leave empty"}) for default)" -Default $Config.PoolStatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.PoolStatAverage = Read-HostString -Prompt "Enter which default moving average is to be used ($(if ($Config.PoolStatAverage) {"enter 'clear'"} else {"leave empty"}) for default)" -Default $Config.PoolStatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "poolstataveragestable" {
                             Write-Host " "
@@ -1284,7 +1284,7 @@ function Start-Setup {
 
                             Write-HostSetupStatAverageHints
 
-                            $Config.PoolStatAverageStable = Read-HostString -Prompt "Enter which default moving average is to be used ($(if ($Config.PoolStatAverageStable) {"clear"} else {"leave empty"}) for default)" -Default $Config.PoolStatAverageStable -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.PoolStatAverageStable = Read-HostString -Prompt "Enter which default moving average is to be used ($(if ($Config.PoolStatAverageStable) {"enter 'clear'"} else {"leave empty"}) for default)" -Default $Config.PoolStatAverageStable -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "hashrateweight" {
                             Write-Host " "
@@ -1369,7 +1369,7 @@ function Start-Setup {
                         }
                         "excludecoinsymbolbalances" {
                             if ($Config.ShowPoolBalances) {
-                                $Config.ExcludeCoinsymbolBalances = Read-HostArray -Prompt "Exclude coinsymbols from balances ($(if ($Config.ExcludeCoinsymbolBalances) {"clear"} else {"leave empty"}) for none)" -Default $Config.ExcludeCoinsymbolBalances -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ExcludeCoinsymbolBalances = Read-HostArray -Prompt "Exclude coinsymbols from balances ($(if ($Config.ExcludeCoinsymbolBalances) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $Config.ExcludeCoinsymbolBalances -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1379,7 +1379,7 @@ function Start-Setup {
                         }
                         "walletbalances" {
                             if ($Config.ShowWalletBalances) {
-                                $Config.WalletBalances = Read-HostArray -Prompt "Select which coin's wallets should be listed ($(if ($Config.WalletBalances) {"clear"} else {"leave empty"}) for all)" -Default $Config.WalletBalances -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.WalletBalances = Read-HostArray -Prompt "Select which coin's wallets should be listed ($(if ($Config.WalletBalances) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Config.WalletBalances -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1678,6 +1678,9 @@ function Start-Setup {
                         "donate" {
                             $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
+                        "ssl" {
+                            $Config.SSL = Read-HostBool -Prompt "Enable use SSL stratum connection, if available" -Default $Config.SSL | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                        }
                         "save" {
                             Write-Host " "
                             if (-not $DownloadServerNow) {
@@ -1832,6 +1835,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableRestartComputer $(if (Get-Yes $Config.EnableRestartComputer){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableDebugMode $(if (Get-Yes $Config.EnableDebugMode){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member RestartComputerHours $Config.RestartComputerHours -Force
+                            $ConfigActual | Add-Member SSL $(if (Get-Yes $Config.SSL){"1"}else{"0"}) -Force
 
                             $ConfigActual | ConvertTo-Json -Depth 10 | Out-File $ConfigFiles["Config"].Path -Encoding utf8
 
@@ -2060,7 +2064,7 @@ function Start-Setup {
                             "ocprofile" {
                                 $MinerSetupStepStore = $false
                                 if (Get-Yes $Config.EnableOCProfiles) {
-                                    $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($EditMinerConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $EditMinerConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($EditMinerConfig.OCprofile) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $EditMinerConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     $MinerSetupStepStore = $true
                                 }
                             }
@@ -2073,7 +2077,7 @@ function Start-Setup {
                                 }
                             }
                             "difficulty" {
-                                $EditMinerConfig.Difficulty = Read-HostDouble -Prompt "Set static difficulty ($(if ($EditMinerConfig.Difficulty) {"clear"} else {"leave empty"}) or set to 0 for automatic)" -Default $EditMinerConfig.Difficulty | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $EditMinerConfig.Difficulty = Read-HostDouble -Prompt "Set static difficulty ($(if ($EditMinerConfig.Difficulty) {"enter 'clear'"} else {"leave empty"}) or set to 0 for automatic)" -Default $EditMinerConfig.Difficulty | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 $EditMinerConfig.Difficulty = $EditMinerConfig.Difficulty -replace ",","." -replace "[^\d\.]+"
                             }
                             "extendinterval" {
@@ -2102,7 +2106,7 @@ function Start-Setup {
                                         "NBminer" {0..10 | %{"$_"}}
                                     }
                                     if ($Valid_Values) {
-                                        $EditMinerConfig.Intensity = Read-HostArray -Prompt "Enter allowed intensities as comma list ($(if ($EditMinerConfig.Intensity) {"clear"} else {"leave empty"}) for all)" -Default $EditMinerConfig.Intensity -Valid $Valid_Values | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $EditMinerConfig.Intensity = Read-HostArray -Prompt "Enter allowed intensities as comma list ($(if ($EditMinerConfig.Intensity) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $EditMinerConfig.Intensity -Valid $Valid_Values | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $EditMinerConfig.Intensity = "$($EditMinerConfig.Intensity -join ",")"
                                         $MinerSetupStepStore = $true
                                     }
@@ -2226,7 +2230,7 @@ function Start-Setup {
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
-                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage","stataveragestable","maxmarginoferror","switchinghysteresis")) > $null
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage","stataveragestable","maxmarginoferror","switchinghysteresis","maxallowedluck","maxtimesincelastblock","region","ssl","balanceskeepalive")) > $null
                         if ($IsYiimpPool) {$PoolSetupSteps.AddRange(@("datawindow")) > $null}
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0 -and $Pool_Name -notmatch "miningpoolhub") {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
@@ -2259,7 +2263,7 @@ function Start-Setup {
                                         if ($PoolConfig.AECurrency.Trim() -eq '') {$PoolConfig.AECurrency = $PoolsSetup.$Pool_Name.Fields.AECurrency}
                                     }
                                     "algorithm" {
-                                        $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($PoolConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($PoolConfig.Algorithm) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "allowzero" {                                                    
                                         $PoolConfig.AllowZero = Read-HostBool -Prompt "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)" -Default $PoolConfig.AllowZero | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2277,16 +2281,20 @@ function Start-Setup {
                                         $PoolConfig.API_Secret = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_Secret -Default ($PoolConfig.API_Secret -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.API_Secret.Trim() -eq '') {$PoolConfig.API_Secret = $PoolsSetup.$Pool_Name.Fields.API_Secret}
                                     }
+                                    "balanceskeepalive" {
+                                        $PoolConfig.BalancesKeepAlive = Read-HostString -Prompt "Enter maximum time of mining inactivity until an account is purged (units allowed, e.h. 1h=one hour, default unit is s=seconds, empty=never)" -Default $PoolConfig.BalancesKeepAlive -Characters "0-9smhdw`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.BalancesKeepAlive = $PoolConfig.BalancesKeepAlive -replace "([A-Z])[A-Z]+","`$1"
+                                    }
                                     "coinname" {
                                         if ($Pool_Avail_CoinName) {
-                                            $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins by name, you want to mine ($(if ($PoolConfig.CoinName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                            $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins by name, you want to mine ($(if ($PoolConfig.CoinName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         } else {
                                             $PoolSetupStepStore = $false
                                         }
                                     }
                                     "coinsymbol" {
                                         if ($Pool_Avail_CoinSymbol) {
-                                            $PoolConfig.CoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you want to mine ($(if ($PoolConfig.CoinSymbol) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                            $PoolConfig.CoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you want to mine ($(if ($PoolConfig.CoinSymbol) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         } else {
                                             $PoolSetupStepStore = $false
                                         }
@@ -2355,7 +2363,7 @@ function Start-Setup {
                                         Write-Host "*** Define the pool's datawindow ***" -ForegroundColor Green
 
                                         Write-HostSetupDataWindowHints
-                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool ($(if ($PoolConfig.DataWindow) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}                                        
+                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool ($(if ($PoolConfig.DataWindow) {"enter 'clear'"} else {"leave empty"}) for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}                                        
                                     }
                                     "description" {
                                         $PoolConfig.Description = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Description -Default $PoolConfig.Description -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2415,12 +2423,21 @@ function Start-Setup {
                                         $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
                                         $PoolConfig.FocusWallet = Read-HostArray -Prompt "Force mining for one or more of this pool's wallets" -Default $PoolConfig.FocusWallet -Characters "A-Z0-9" -Valid $Pool_Avail_Currency | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
+                                    "maxallowedluck" {
+                                        $Pool_Actual_MaxAllowedLuck = if ($PoolConfig.MaxAllowedLuck -ne "") {$PoolConfig.MaxAllowedLuck*100} else {-1}
+                                        $Pool_Actual_MaxAllowedLuck = Read-HostDouble -Prompt "Maximum pool luck in % (0=allow any luck, -1=use value in config.txt)" -Default $Pool_Actual_MaxAllowedLuck -Min -1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.MaxAllowedLuck = "$(if ($Config.MaxAllowedLuck -ne -1) {$Pool_Actual_MaxAllowedLuck / 100})"
+                                    }
+                                    "maxtimesincelastblock" {
+                                        $PoolConfig.MaxTimeSinceLastBlock = Read-HostString -Prompt "Enter allowed maximum time since last found block (units allowed, e.h. 1h=one hour, default unit is s=seconds, $(if ($PoolConfig.MaxTimeSinceLastBlock) {"enter 'clear'"} else {"leave empty"}) to use value in config.txt)" -Default $PoolConfig.MaxTimeSinceLastBlock -Characters "0-9smhdw`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.MaxTimeSinceLastBlock = "$($PoolConfig.MaxTimeSinceLastBlock -replace "([A-Z])[A-Z]+","`$1")"
+                                    }
                                     "maxmarginoferror" {
                                         $PoolConfig.MaxMarginOfError = Read-HostDouble -Prompt "Enter the maximum allowed fluctuation of pool prices in percent" -Default $PoolConfig.MaxMarginOfError -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $PoolConfig.MaxMarginOfError = "$($PoolConfig.MaxMarginOfError)"
                                     }
                                     "minername" {
-                                        $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "organizationid" {
                                         $PoolConfig.OrganizationID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.OrganizationID -Default ($PoolConfig.OrganizationID -replace "^\`$.+") -Characters "A-Z0-9-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
@@ -2452,19 +2469,28 @@ function Start-Setup {
                                         $PoolConfig.PriceFactor = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceFactor -Default $PoolConfig.PriceFactor -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $PoolConfig.PriceFactor = "$($PoolConfig.PriceFactor)"
                                     }
+                                    "region" {
+                                        $Regions = Get-Regions -AsHash
+                                        $PoolConfig.Region = Read-HostString -Prompt "Enter the stratum server's home region ($(if ($PoolConfig.Region) {"enter 'clear'"} else {"leave empty"}) to use value in config.txt)" -Default $PoolConfig.Region -Characters "A-Z" -Valid ($Regions.Keys + $Regions.Values | Foreach-Object {$_.ToLower()} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "ssl" {
+                                        $Pool_Actual_SSL = if ($PoolConfig.SSL -ne "") {$PoolConfig.SSL} else {-1}
+                                        $Pool_Actual_SSL = Read-HostInt -Prompt "Enable use SSL stratum connection, if available (-1=use value in config.txt)" -Default $Pool_Actual_SSL -Min -1 -Max 1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.SSL = "$(if ($Pool_Actual_SSL -ne -1) {Get-Yes $Pool_Actual_SSL})"
+                                    }
                                     "stataverage" {
                                         Write-Host " "
                                         Write-Host "*** Define the pool's moving average live price trendline" -ForegroundColor Green
 
                                         Write-HostSetupStatAverageHints
-                                        $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used ($(if ($PoolConfig.StatAverage) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used ($(if ($PoolConfig.StatAverage) {"enter 'clear'"} else {"leave empty"}) for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "stataveragestable" {
                                         Write-Host " "
                                         Write-Host "*** Define the pool's moving average stable price trendline" -ForegroundColor Green
 
                                         Write-HostSetupStatAverageHints
-                                        $PoolConfig.StatAverageStable = Read-HostString -Prompt "Enter which moving average is to be used ($(if ($PoolConfig.StatAverageStable) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.StatAverageStable -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.StatAverageStable = Read-HostString -Prompt "Enter which moving average is to be used ($(if ($PoolConfig.StatAverageStable) {"enter 'clear'"} else {"leave empty"}) for default)" -Default $PoolConfig.StatAverageStable -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "switchinghysteresis" {
                                         if (-not "$($PoolConfig.SwitchingHysteresis)") {$PoolConfig.SwitchingHysteresis = -1}
@@ -2483,7 +2509,7 @@ function Start-Setup {
                                         if ($PoolConfig.UserName.Trim() -eq '') {$PoolConfig.UserName = $PoolsSetup.$Pool_Name.Fields.UserName}
                                     }
                                     "worker" {
-                                        $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name ($(if ($PoolConfig.Worker) {"clear"} else {"leave empty"}) to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name ($(if ($PoolConfig.Worker) {"enter 'clear'"} else {"leave empty"}) to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.Worker.Trim() -eq '') {$PoolConfig.Worker = "`$WorkerName"}
                                     }
                                     "save" {
@@ -2594,13 +2620,13 @@ function Start-Setup {
                             try {
                                 Switch ($DeviceSetupSteps[$DeviceSetupStep]) {
                                     "algorithm" {
-                                        $DeviceConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($DeviceConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $DeviceConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($DeviceConfig.Algorithm) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $DeviceConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "excludealgorithm" {
                                         $DeviceConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude " -Default $DeviceConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "minername" {
-                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($DeviceConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($DeviceConfig.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "excludeminername" {
                                         $DeviceConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $DeviceConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2609,7 +2635,7 @@ function Start-Setup {
                                         $DeviceConfig.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $DeviceConfig.DisableDualMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "defaultocprofile" {                                                        
-                                        $DeviceConfig.DefaultOCprofile = Read-HostString -Prompt "Select the default overclocking profile for this device ($(if ($DeviceConfig.DefaultOCprofile) {"clear"} else {"leave empty"}) for none)" -Default $DeviceConfig.DefaultOCprofile -Characters "A-Z0-9" -Valid @($OCprofilesActual.PSObject.Properties.Name | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.DefaultOCprofile = Read-HostString -Prompt "Select the default overclocking profile for this device ($(if ($DeviceConfig.DefaultOCprofile) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $DeviceConfig.DefaultOCprofile -Characters "A-Z0-9" -Valid @($OCprofilesActual.PSObject.Properties.Name | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "poweradjust" {                                                        
                                         $DeviceConfig.PowerAdjust = Read-HostDouble -Prompt "Adjust power consumption to this value in percent, e.g. 75 would result in Power x 0.75 (enter 100 for original value)" -Default $DeviceConfig.PowerAdjust -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2733,7 +2759,7 @@ function Start-Setup {
                                     "ocprofile" {
                                         $AlgorithmSetupStepStore = $false
                                         if (Get-Yes $Config.EnableOCProfiles) {
-                                            $AlgorithmConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($AlgorithmConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $AlgorithmConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                            $AlgorithmConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($AlgorithmConfig.OCprofile) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $AlgorithmConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             $AlgorithmSetupStepStore = $true
                                         }
                                     }
@@ -2745,7 +2771,7 @@ function Start-Setup {
                                         }
                                     }
                                     "mrrpricemodifierpercent" {
-                                        $AlgorithmConfig.MRRPriceModifierPercent = Read-HostString -Prompt "MiningRigRentals autoprice modifier in percent (e.g. +10 will increase suggested prices by 10%, valid range is -30 .. 30, $(if ($AlgorithmConfig.MRRPriceModifierPercent) {"clear"} else {"leave empty"}) to use global value AutoPriceModifierPercent in pools.config.txt)" -Default $AlgorithmConfig.MRRPriceModifierPercent | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MRRPriceModifierPercent = Read-HostString -Prompt "MiningRigRentals autoprice modifier in percent (e.g. +10 will increase suggested prices by 10%, valid range is -30 .. 30, $(if ($AlgorithmConfig.MRRPriceModifierPercent) {"enter 'clear'"} else {"leave empty"}) to use global value AutoPriceModifierPercent in pools.config.txt)" -Default $AlgorithmConfig.MRRPriceModifierPercent | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $AlgorithmConfig.MRRPriceModifierPercent = "$($AlgorithmConfig.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
                                     }
                                     "save" {
@@ -3314,12 +3340,12 @@ function Start-Setup {
                                     $Schedule.EnableUpdate = Read-HostBool -Prompt "Enable automatic updates? (if EnableUpdateWhenScheduled is set to 1 in config.txt)" -Default $Schedule.EnableUpdate | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "enableminingheatcontrol" {
-                                    $Schedule.EnableMiningHeatControl = Read-HostString -Prompt "Enable mining heat control (0=off, 1=on, $(if ($Schedule.EnableMiningHeatControl -ne '') {"clear"} else {"leave empty"}) for global default)" -Default $Schedule.EnableMiningHeatControl -Valid @("0","1") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.EnableMiningHeatControl = Read-HostString -Prompt "Enable mining heat control (0=off, 1=on, $(if ($Schedule.EnableMiningHeatControl -ne '') {"enter 'clear'"} else {"leave empty"}) for global default)" -Default $Schedule.EnableMiningHeatControl -Valid @("0","1") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "miningheatcontrol" {
                                     $mhc = $null
                                     while ($mhc -eq $null) {
-                                        $Schedule.MiningHeatControl = Read-HostString -Prompt "Adjust heat vs. profit (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat, $(if ($Schedule.MiningHeatControl -ne '') {"clear"} else {"leave empty"}) for global default)" -Default $Schedule.MiningHeatControl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $Schedule.MiningHeatControl = Read-HostString -Prompt "Adjust heat vs. profit (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat, $(if ($Schedule.MiningHeatControl -ne '') {"enter 'clear'"} else {"leave empty"}) for global default)" -Default $Schedule.MiningHeatControl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         if ($Schedule.MiningHeatControl -ne "") {
                                             $Schedule.MiningHeatControl = $Schedule.MiningHeatControl -replace ",","."
                                             try {$mhc = [double]$Schedule.MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)}}
@@ -3329,13 +3355,13 @@ function Start-Setup {
                                     }
                                 }
                                 "algorithm" {
-                                    $Schedule.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine during this schedule ($(if ($Schedule.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $Schedule.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine during this schedule ($(if ($Schedule.Algorithm) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Schedule.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "excludealgorithm" {
                                     $Schedule.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude from this schedule" -Default $Schedule.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "coinsymbol" {
-                                    $Schedule.CoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to mine during this schedule ($(if ($Schedule.CoinSymbol) {"clear"} else {"leave empty"}) for all)" -Default $Schedule.CoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.CoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to mine during this schedule ($(if ($Schedule.CoinSymbol) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Schedule.CoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "excludecoinsymbol" {
                                     $Schedule.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to exclude from this schedule" -Default $Schedule.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}

@@ -1222,6 +1222,7 @@ function Invoke-Core {
             $Pool_SwHyst                = "$($Session.Config.Pools.$p.SwitchingHysteresis -replace "[^\d\.\-]+")"
             $Pool_MaxAllowedLuck        = "$($Session.Config.Pools.$p.MaxAllowedLuck -replace "[^\d\.]+")"
             $Pool_MaxTimeSinceLastBlock = "$($Session.Config.Pools.$p.MaxTimeSinceLastBlock -replace "[^\d\.mhdw]+")"
+            $Pool_BalancesKeepAlive     = "$($Session.Config.Pools.$p.BalancesKeepAlive -replace "[^\d]+")"
 
             ([ordered]@{
                 DataWindow            = (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)
@@ -1234,6 +1235,7 @@ function Invoke-Core {
                 MaxTimeSinceLastBlock = $(if ($Pool_MaxTimeSinceLastBlock) {ConvertFrom-Time $Pool_MaxTimeSinceLastBlock} else {$null})
                 Region                = $(if ($Session.Config.Pools.$p.Region) {Get-Region $Session.Config.Pools.$p.Region} else {$null})
                 SSL                   = $(if ("$($Session.Config.Pools.$p.SSL)" -ne '') {Get-Yes $Session.Config.Pools.$p.SSL} else {$Session.Config.SSL})
+                BalancesKeepAlive     = $(if ($Pool_BalancesKeepAlive) {ConvertFrom-Time $Pool_BalancesKeepAlive} else {$null})
             }).GetEnumerator() | Foreach-Object {
                 if ([bool]$Session.Config.Pools.$p.PSObject.Properties["$($_.Name)"]) {
                     $Session.Config.Pools.$p."$($_.Name)" = $_.Value
@@ -2625,6 +2627,7 @@ function Invoke-Core {
                     Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
                     CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
                     CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
+                    Wallet               = $Miner.Pools.PSObject.Properties.Value.Wallet
                     DeviceName           = $Miner.DeviceName
                     DeviceModel          = $Miner.DeviceModel
                     Profit               = $Miner.Profit
@@ -3920,9 +3923,6 @@ function Set-MinerStats {
                         $Miner_Failed = $true
                     }
                 }
-
-                #Update pool statistics
-                Set-ContentJson -PathToFile ".\Stats\Pools\$($Miner.Pool[$Miner_Index])_Poolstats.txt" -Data ([PSCustomObject]@{Updated=(Get-Date).ToUniversalTime()}) > $null
 
                 $Miner_PowerDraw = 0
                 $Miner_Index++
