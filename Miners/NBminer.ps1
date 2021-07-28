@@ -18,7 +18,8 @@ if ($IsLinux) {
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v38.1-nbminer/NBMiner_38.1_Linux.tgz"
 } else {
     $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v38.1-nbminer/NBMiner_38.1_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v38.2-nbminer/NBMiner_38.2_Win.zip"
+    $Version = "38.2"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
