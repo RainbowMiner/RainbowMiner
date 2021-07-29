@@ -377,7 +377,7 @@ if ($AllRigs_Request) {
                     }
 
                     try {
-                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-2) -gt [DateTime]::Parse("$($Rental_Result.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
+                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-15) -gt [DateTime]::Parse("$($Rental_Result.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
 
                             #Manual override to end rentals in case of server failure
 
