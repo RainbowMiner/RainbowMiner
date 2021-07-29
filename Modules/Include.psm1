@@ -2591,7 +2591,14 @@ function Expand-WebRequest {
                 }
             }
             $SkipBackups = if ($EnableMinerBackups) {3} else {0}
-            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {Remove-Item $_ -Recurse -Force}
+            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {
+                try {
+                    Remove-Item $_ -Recurse -Force
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Downloader: Could not to remove backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
+                }
+            }
         }
     }
     if (-not $EnableKeepDownloads -and (Test-Path $FileName)) {
