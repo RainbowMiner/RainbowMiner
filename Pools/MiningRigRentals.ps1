@@ -258,9 +258,9 @@ if ($AllRigs_Request) {
 
                 if ($_.status.status -eq "rented" -or $_.status.rented) {
 
-                    $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
-
                     $Rental_Result  = $null
+
+                    $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
 
                     $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
                     $Rental_CheckForExtensionMessage = $AllowExtensions -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
@@ -268,17 +268,28 @@ if ($AllRigs_Request) {
                     $Rental_Check = ($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage
 
                     try {
-                        $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60 -Cache $(if ($Rental_Check) {0} else {[double]$_.status.hours*3600})
-                        if ($Rig_RentalPrice = [Double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)")) {
-                            $Pool_Price = $Rig_RentalPrice
-                            if ($Rental_Result.price_converted.currency -ne "BTC") {
-                                $Pool_Currency = $Rental_Result.price_converted.currency
-                                $Pool_Price *= $_.price.BTC.price/$_.price."$($Rental_Result.price.currency)".price
+                        try {
+                            $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60 -Cache $(if ($Rental_Check) {0} else {[double]$_.status.hours*3600})
+                            if ($Rental_Result.id -eq $_.rental_id) {
+                                Set-MiningRigRentalStat $Worker1 $Rental_Result
                             }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            $Rental_Result = Get-MiningRigRentalStat $Worker1 $_.rental_id
                         }
-                        if ($Rental_Check) {
-                            $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
-                            $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
+
+                        if ($Rental_Result) {
+                            if ($Rig_RentalPrice = [Double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)")) {
+                                $Pool_Price = $Rig_RentalPrice
+                                if ($Rental_Result.price_converted.currency -ne "BTC") {
+                                    $Pool_Currency = $Rental_Result.price_converted.currency
+                                    $Pool_Price *= $_.price.BTC.price/$_.price."$($Rental_Result.price.currency)".price
+                                }
+                            }
+                            if ($Rental_Check) {
+                                $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
+                                $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
+                            }
                         }
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
@@ -364,6 +375,19 @@ if ($AllRigs_Request) {
                             Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
+
+                    try {
+                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-2) -gt [DateTime]::Parse("$($Rental_Result.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
+
+                            #Manual override to end rentals in case of server failure
+
+                            if ($_.status.rented) {$_.status.rented = $false}
+                            if ($_.status.status -eq "rented") {$_.status.status = "available"}
+                            $Pool_RigEnable = $false
+
+                            Write-Log -Level Warn "MiningRigRentals: cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1)"
+                        }
+                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
                     $Pool_RigStatus = $null
                 }

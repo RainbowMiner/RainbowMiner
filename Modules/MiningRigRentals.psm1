@@ -392,6 +392,65 @@ function Set-MiningRigStat {
     }
 }
 
+function Get-MiningRigRentalStat {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name,
+        [Parameter(Mandatory = $false)]
+        [Int]$RentalId
+    )
+
+    $Path   = "Stats\MRR"
+
+    if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+
+    $Path = "$($Path)\$($Name)_rental.txt"
+
+    $RentalError = $null
+
+    try {
+        $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
+        if ($RentalId -and ($Stat.id -ne $RentalId)) {
+            $RentalError = "obsolete"
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $RentalError = "corrupt"
+    }
+    if ($RentalError) {
+        if (Test-Path $Path) {
+            Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is $($RentalError) and will be removed. "
+            Remove-Item -Path $Path -Force -Confirm:$false
+        }
+    } else {
+        $Stat
+    }
+}
+
+function Set-MiningRigRentalStat {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Data
+    )
+
+    $Path = "Stats\MRR"
+
+    if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+
+    $Path = "$($Path)\$($Name)_rental.txt"
+
+    try {
+        $Data | ConvertTo-Json -Depth 10 -ErrorAction Stop | Set-Content $Path
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Could not write MRR rental stat file for worker $Name, rental id $($Data.id)"
+    }
+}
+
 function Get-MiningRigInfo {
 [cmdletbinding()]   
 param(
