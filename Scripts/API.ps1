@@ -54,8 +54,50 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $ContentFileName = ""
 
     if ($Path -match $API.RandTag) {$Path = "/stop";$API.APIauth = $false}
-            
-    if($API.RemoteAPI -and $API.APIauth -and (-not $Context.User.Identity.IsAuthenticated -or $Context.User.Identity.Name -ne $API.APIuser -or $Context.User.Identity.Password -ne $API.APIpassword)) {
+
+    $IsAuth = $true
+    
+    if ($API.RemoteAPI -and $API.APIauth) {
+
+        $IsAuth = $Context.User.Identity.IsAuthenticated -and $Context.User.Identity.Name -eq $API.APIuser -and $Context.User.Identity.Password -eq $API.APIpassword
+
+        $RemoteIP = "$($Request.RemoteEndPoint)" -replace ":\d+$"
+
+        if ($API.MaxLoginAttempts -gt 0 -and $RemoteIP -ne "") {
+
+            $AuthNow = (Get-Date).ToUniversalTime()
+
+            if ($IsAuth) {
+                if ($APIAccessDB.ContainsKey($RemoteIP)) {
+                    if ($APIAccessDB[$RemoteIP].BlockedUntil -ne $null -and ($APIAccessDB[$RemoteIP].BlockedUntil -ge $AuthNow)) {
+                        $IsAuth = $false
+                    } else {
+                        $APIAccessDB.Remove($RemoteIP)
+                    }
+                }
+            } else {
+                if (-not $APIAccessDB.ContainsKey($RemoteIP)) {
+                    $APIAccessDB[$RemoteIP] = [PSCustomObject]@{
+                        FailedCount  = 0
+                        LastFailed   = $null
+                        BlockedUntil = $null
+                    }
+                } elseif ($APIAccessDB[$RemoteIP].LastFailed -ne $null -and ($APIAccessDB[$RemoteIP].LastFailed -lt $AuthNow.AddSeconds(-$API.BlockLoginAttemptsTime))) {
+                    $APIAccessDB[$RemoteIP].FailedCount = 0
+                    $APIAccessDB[$RemoteIP].BlockedUntil = $null
+                }
+
+                $APIAccessDB[$RemoteIP].FailedCount++
+                $APIAccessDB[$RemoteIP].LastFailed = $AuthNow
+
+                if ($APIAccessDB[$RemoteIP].FailedCount -gt $API.MaxLoginAttempts) {
+                    $APIAccessDB[$RemoteIP].BlockedUntil = $AuthNow.AddSeconds($API.BlockLoginAttemptsTime)
+                }
+            }
+        }
+    }
+
+    if(-not $IsAuth) {
         $Data        = "Access denied"
         $StatusCode  = [System.Net.HttpStatusCode]::Unauthorized
         $ContentType = "text/html"

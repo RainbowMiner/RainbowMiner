@@ -839,7 +839,8 @@ For Server (Runmode=server) setup:
 - **APIauth** = set to "1" for username/password auth on localhost [default=0]
 - **APIuser** = enter an username for localhost accessability
 - **APIpassword** = enter a password for localhost accessability
-
+- **APImaxLoginAttemps** = Maximum number of failed login attempts, until IP gets blocked (0=turn off) [default=3]
+- **APIblockLoginAttemptsTime** = Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds) [default=30m]
 
 
 #### Set electricity cost handling ####

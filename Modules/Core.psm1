@@ -853,6 +853,8 @@ function Invoke-Core {
         $API.APIport = $Session.Config.APIport
         $API.APIUser = $Session.Config.APIUser
         $API.APIPassword = $Session.Config.APIPassword
+        $API.MaxLoginAttemps = $Session.Config.APImaxLoginAttemps
+        $API.BlockLoginAttemptsTime = ConvertFrom-Time $Session.Config.APIblockLoginAttemptsTime
         $API.MachineName = $Session.MachineName
     }
 
