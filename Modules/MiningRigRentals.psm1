@@ -532,12 +532,13 @@ param(
         elseif ($Status -eq "extended") {$Session.MRRStatus[$RigKey].extended = $true}
         elseif ($Status -eq "notextended") {$Session.MRRStatus[$RigKey].extended = $false}
         elseif ($Status -eq "extensionmessagesent") {$Session.MRRStatus[$RigKey].extensionmessagesent = $true}
+        elseif ($Status -eq "startmessagesent") {$Session.MRRStatus[$RigKey].startmessagesent = $true}
         elseif ($Status -eq "online") {$Session.MRRStatus[$RigKey].next = $time;$Session.MRRStatus[$RigKey].wait = $false;$Session.MRRStatus[$RigKey].enable = $true}
         elseif ($time -ge $Session.MRRStatus[$RigKey].next) {
             if ($Session.MRRStatus[$RigKey].wait) {$Session.MRRStatus[$RigKey].next = $time.AddMinutes(15);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $false}
             else {$Session.MRRStatus[$RigKey].next = $time.AddMinutes(3);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $true}
         }
-    } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true; extended = $(if ($Status -eq "extended") {$true} else {$false}); extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false})}}
+    } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true; extended = $(if ($Status -eq "extended") {$true} else {$false}); extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false}); startmessagesent = $(if ($Status -eq "startmessagesent") {$true} else {$false})}}
     
     if (-not $Stop) {$Session.MRRStatus[$RigKey].enable}
 }

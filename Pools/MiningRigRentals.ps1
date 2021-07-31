@@ -54,6 +54,7 @@ param(
     [String]$PauseBetweenRentals = "0",
     [String]$Title = "",
     [String]$Description = "",
+    [String]$StartMessage = "",
     [String]$ExtensionMessage = "",
     [String]$ExtensionMessageTime = "",
     [String]$UseHost = ""
@@ -95,6 +96,7 @@ $Workers     = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Dev
 $UseWorkerName_Array     = @($UseWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 
+$StartMessage = "$StartMessage".Trim()
 $ExtensionMessage = "$ExtensionMessage".Trim()
 
 if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
@@ -293,6 +295,23 @@ if ($AllRigs_Request) {
                         }
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
+                    if ($StartMessage -ne "" -and -not $Pool_RigStatus.startmessagesent) {
+                        try {
+                            $StartMessage_Result = $null
+
+                            if ($Rental_Result.length -and (([double]$Rental_Result.length + [double]$Rental_Result.extended - [double]$Rental_Result.rig.status.hours) -lt 5/60)) {
+                                $StartMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$StartMessage} -method "PUT" -Timeout 60
+                            }
+
+                            Write-Log -Level Info "$($Name): Start message $(if (-not $StartMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+
+                            Set-MiningRigRentalStatus $Pool_RigId -Status "startmessagesent" > $null
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-Log -Level Warn "$($Name): Unable to handle start message for rental #$($_.rental_id): $($_.Exception.Message)"
+                        }
+                    }
+
                     if ($EnableAutoExtend) {
                         if ($Rental_CheckForAutoExtend) {
                             try {
@@ -372,7 +391,7 @@ if ($AllRigs_Request) {
                             Set-MiningRigRentalStatus $Pool_RigId -Status "extensionmessagesent" > $null
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
-                            Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
+                            Write-Log -Level Warn "$($Name): Unable to handle extension message for rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
 
