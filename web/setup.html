@@ -349,6 +349,17 @@
                             <div id="inputAPIthreadsHelp" class="form-text text-muted">Enter the maximum parallel API threads (or set to 0 for automatic)</div>
                         </div>
                     </div>
+                    <div class="form-group row">
+                        <label for="inputAPIlockConfig" class="col-sm-2 col-form-label">Lock Config</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputAPIlockConfig" name="APIlockConfig">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputAPIlockConfigHelp" class="form-text text-muted">Lock config files, so that API/localhost cannot change them anymore. Warning: you need to edit config.txt manually to reset value "APIlockConfig"</div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -722,7 +733,7 @@
         $("span#inputMiningHeatControlValue").text(val)
     }
 
-  $(function() {
+    $(function() {
       $.ajax({
           url: '/userconfig', success: function (result) {
               $("input.form-control,select.form-control,input.custom-range").each(function(index) {
@@ -815,6 +826,13 @@
       $("#formConfig").submit(function (event) {
           // Stop form from submitting normally
           event.preventDefault();
+          if (globalconfig.IsLocked) {
+              alert('Warning: config lock is enabled. To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt');
+              return false;
+          } else if ($("#inputAPIlockConfig").val() == "1") {
+              if (!confirm("Warning: you are about to lock the config.\nYou will have to manually set parameter \"APIlockConfig\" to \"0\" in config.txt to reset this.\n\nDo you really want to proceed?"))
+              return false;
+          }
           $.post("/saveconfig", $(this).serialize()).done(function (data) {
               $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
               $('.modal-title').text('Configuration saved!');

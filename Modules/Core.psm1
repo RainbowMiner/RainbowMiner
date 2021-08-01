@@ -853,6 +853,7 @@ function Invoke-Core {
         $API.APIport = $Session.Config.APIport
         $API.APIUser = $Session.Config.APIUser
         $API.APIPassword = $Session.Config.APIPassword
+        $API.LockConfig = $Session.Config.APIlockConfig
         $API.MaxLoginAttemps = $Session.Config.APImaxLoginAttemps
         $API.BlockLoginAttemptsTime = ConvertFrom-Time $Session.Config.APIblockLoginAttemptsTime
         $API.MachineName = $Session.MachineName
@@ -901,6 +902,7 @@ function Invoke-Core {
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
                                 IsWindows              = $Global:IsWindows
                                 IsLinux                = $Global:IsLinux
+                                IsLocked               = $Session.Config.APIlockConfig
                             }) -Depth 10
     }
     if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Session.PauseMiners)) {$Session.PauseMiners = $API.Pause = $true}

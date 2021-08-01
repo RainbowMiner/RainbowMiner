@@ -25,6 +25,7 @@
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
     $API.MachineName = $Session.MachineName
     $API.Debug       = $Session.LogLevel -eq "Debug"
+    $API.LockConfig  = $Session.Config.APIlockConfig
     $API.MaxLoginAttempts = $Session.Config.APImaxLoginAttemps
     $API.BlockLoginAttemptsTime = ConvertFrom-Time $Session.Config.APIblockLoginAttemptsTime
 

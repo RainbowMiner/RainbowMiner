@@ -127,6 +127,10 @@ $(function() {
     $("#formConfig").submit(function (event) {
         // Stop form from submitting normally
         event.preventDefault();
+        if (globalconfig.IsLocked) {
+            alert('Warning: config lock is enabled. To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt');
+            return false;
+        }
         $.post("/saveconfig", $(this).serialize()).done(function (data) {
             $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
             $('.modal-title').text('Configuration saved!');

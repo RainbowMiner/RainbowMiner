@@ -310,6 +310,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/saveconfig" {
+            if ($API.LockConfig) {
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
+                Break;
+            }
+
             $ConfigName = if ($Parameters.ConfigName) {$Parameters.ConfigName} else {"Config"}
 
             $ConfigActual = Get-ConfigContent $ConfigName
