@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/dashboard.css" />
     <link rel="stylesheet" href="/css/theme-nop.css" id="themecss" />
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
-    <script src="/js/utilities-1.5.js"></script>
+    <script src="/js/utilities-1.6.js"></script>
     <script>
         var theme = getCookie("rbm-theme");
         $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
@@ -74,6 +74,11 @@
                     <li class="nav-item">
                         <a id="navdashboard" class="nav-link" href="/">
                             <i class="fas fa-home" data-feather="home"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navconsole" class="nav-link" href="console.html">
+                            <i class="fas fa-terminal"></i>Console
                         </a>
                     </li>
                     <li class="nav-item">
@@ -177,6 +182,11 @@
                     <li class="nav-item">
                         <a id="navsetup" class="nav-link" href="setup.html">
                             <i class="fas fa-cog"></i>Setup
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navsetupcoins" class="nav-link" href="setupcoins.html">
+                            <i class="fas fa-cog"></i>Setup Coins
                         </a>
                     </li>
                     <li class="nav-item">

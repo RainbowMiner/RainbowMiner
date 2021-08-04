@@ -3,14 +3,16 @@
 param(
     $Pools,
     [TimeSpan]$StatSpan,
-    [Bool]$InfoOnly = $false
+    [Bool]$InfoOnly = $false,
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync (Get-WhatToMineUrl) -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync (Get-WhatToMineUrl -Factor 1000) -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -35,7 +37,7 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
 
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm
+    $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm -Factor 1000
 
     if ($Pool_Algorithm -eq "ProgPow") {
         $Pool_Algorithm = "ProgPow$($Pool_Currency)"
@@ -80,8 +82,8 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -iconta
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             CoinSymbol    = $Pool_Currency
-            Price         = $Stat.Minute_10 #instead of .Live
-            StablePrice   = $Stat.Week
+            Price         = $Stat.$StatAverage #instead of .Live
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Updated       = $Stat.Updated
         }
@@ -115,7 +117,7 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Request.coins
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
 
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm
+    $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm -Factor 1000
 
     if ($Pool_Algorithm -eq "ProgPow") {
         $Pool_Algorithm = "ProgPow$($Pool_Currency)"
@@ -127,7 +129,7 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Request.coins
 
         $Pool_CoinRequest = [PSCustomObject]@{}
         try {
-            $Pool_CoinRequest = Invoke-RestMethodAsync "https://whattomine.com/coins/$($Pool_Request.coins.$_.id).json?hr=10&p=0&fee=0.0&cost=0.0&hcost=0.0" -tag $Name -cycletime 120
+            $Pool_CoinRequest = Invoke-RestMethodAsync "https://whattomine.com/coins/$($Pool_Request.coins.$_.id).json?hr=1000&p=0&fee=0.0&cost=0.0&hcost=0.0" -tag $Name -cycletime 120
         } catch {
            if ($Error.Count){$Error.RemoveAt(0)}
         }
@@ -150,6 +152,11 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Request.coins
             }
 
             if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
+                $diff   = [decimal]$Pool_CoinRequest.difficulty
+                $diff24 = [decimal]$Pool_CoinRequest.difficulty24
+                if ($diff24 -gt 0 -and $diff -gt 0) {
+                    $btc_revenue *=  $diff/$diff24
+                }
                 $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
             } else {
                 $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
@@ -158,8 +165,8 @@ $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Request.coins
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinSymbol    = $Pool_Currency
-                Price         = $Stat.Minute_10 #instead of .Live
-                StablePrice   = $Stat.Week
+                Price         = $Stat.$StatAverage #instead of .Live
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Updated       = $Stat.Updated
             }
@@ -205,8 +212,8 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin} | Foreach-Object {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             CoinSymbol    = $Pool_Currency
-            Price         = $Stat.Minute_10 #instead of .Live
-            StablePrice   = $Stat.Week
+            Price         = $Stat.$StatAverage #instead of .Live
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Updated       = $Stat.Updated
         }

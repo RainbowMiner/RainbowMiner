@@ -12,26 +12,18 @@ $Count = 0
 @("ETH","ETC") | Where-Object {$Config.Pools.$Name.Wallets.$_ -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
     $Pool_Wallet = "$($Config.Pools.$Name.Wallets."$($_)" -replace "^0x")".ToLower()
     try {
-        if ($_ -ne "ETH") {
-            Write-Log -Level Warn "Pool Balance API ($Name) for $($_) not implemented. Please open an issue with your $_ wallet address on github.com"
-        } else {
-            $Request = Invoke-RestMethodAsync "https://hiveon.net/api/v0/miner/$($Pool_Wallet)/bill?currency=ETH" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
-            if ($Request.status -ne 200) {
-                Write-Log -Level Info "Pool Balance API ($Name) for $($_) returned nothing. "            
-            } else {
-                [PSCustomObject]@{
-                    Caption     = "$($Name) ($($_))"
-				    BaseName    = $Name
-                    Currency    = $_
-                    Balance     = [Decimal]$Request.stats.balance
-                    Pending     = [Decimal]$Request.stats.penddingBalance
-                    Total       = [Decimal]$Request.stats.balance + [Decimal]$Request.stats.penddingBalance
-                    Paid        = [Decimal]$Request.stats.totalPaid
-                    Earned      = [Decimal]0
-                    Payouts     = @(Get-BalancesPayouts $Request.list | Select-Object)
-                    LastUpdated = (Get-Date).ToUniversalTime()
-                }
-            }
+        $Request = Invoke-RestMethodAsync "https://hiveon.net/api/v1/stats/miner/$($Pool_Wallet)/$($_)/billing-acc" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        [PSCustomObject]@{
+            Caption     = "$($Name) ($($_))"
+			BaseName    = $Name
+            Currency    = $_
+            Balance     = [Decimal]$Request.totalUnpaid
+            Pending     = 0
+            Total       = [Decimal]$Request.totalUnpaid
+            Paid        = [Decimal]$Request.totalPaid
+            Earned      = [Decimal]0
+            Payouts     = @(Get-BalancesPayouts $Request.pendingPayouts | Select-Object) + @(Get-BalancesPayouts $Request.succeedPayouts | Select-Object)
+            LastUpdated = (Get-Date).ToUniversalTime()
         }
     }
     catch {

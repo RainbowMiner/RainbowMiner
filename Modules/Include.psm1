@@ -25,9 +25,9 @@
         $Session.MyIP               = Get-MyIP
         $Session.MainPath           = "$PWD"
 
-        Set-Variable RegexAlgoHasEthproxy -Option Constant -Scope Global -Value "^Etc?hash|ProgPow"
-        Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|Octopus"
-        Set-Variable RegexAlgoIsEthash -Option Constant -Scope Global -Value "^Etc?hash"
+        Set-Variable RegexAlgoHasEthproxy -Option Constant -Scope Global -Value "^Etc?hash|ProgPow|UbqHash"
+        Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|UbqHash|Octopus"
+        Set-Variable RegexAlgoIsEthash -Option Constant -Scope Global -Value "^Etc?hash|UbqHash"
         Set-Variable RegexAlgoIsProgPow -Option Constant -Scope Global -Value "^KawPow|ProgPow"
     }
 }
@@ -141,7 +141,7 @@ function Get-PoolPayoutCurrencies {
     $Payout_Currencies = [PSCustomObject]@{}
     if (-not (Test-Path Variable:Global:GlobalPoolFields)) {
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-        $Global:GlobalPoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
+        $Global:GlobalPoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Sort-Object -Unique
     }
     @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:GlobalPoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
@@ -1343,6 +1343,8 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Balances = $false,
         [Parameter(Mandatory = $false)]
+        [Switch]$Poolstats = $false,
+        [Parameter(Mandatory = $false)]
         [Switch]$All = $false,
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
@@ -1356,6 +1358,7 @@ function Get-Stat {
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"; $Cached = $true}
         elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
         elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
+        elseif ($Name -match '_Poolstats$') {$Path = "Stats\Pools"}
         else {$Path = "Stats"}
 
         if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
@@ -1373,7 +1376,7 @@ function Get-Stat {
 
         if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
         if (($Disabled -or $All) -and -not (Test-Path "Stats\Disabled")) {New-Item "Stats\Disabled" -ItemType "directory" > $null}
-        if (($Pools  -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+        if (($Pools -or $Poolstats -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
@@ -1381,6 +1384,7 @@ function Get-Stat {
         if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
         if ($Disabled)  {$MatchArray.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
         if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
+        if ($Poolstats) {$MatchArray.Add("Poolstats") > $null;$Path = "Stats\Pools"}
         if ($Totals)    {$MatchArray.Add("Total") > $null;$Path = "Stats\Totals"}
         if ($TotalAvgs) {$MatchArray.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
         if ($Balances)  {$MatchArray.Add("Balance") > $null;$Path = "Stats\Balances"}
@@ -1461,10 +1465,11 @@ function Get-ChildItemContent {
             }
         }
         elseif ($Quick) {
-            $Content = try {
-                Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
+            $Content = $null
+            try {
+                $Content = Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            if ($Content -eq $null) {$Content = Get-ContenByStreamReader $_.FullName}
+            if ($Content -eq $null) {$Content = Get-ContentByStreamReader $_.FullName}
         }
         else {
             $Content = & {
@@ -1534,7 +1539,12 @@ function Get-PoolsData {
         [String]$PoolName
     )
     if (Test-Path ".\Data\Pools\$($PoolName).json") {
-        Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
+        if (Test-IsCore) {
+            Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
+        } else {
+            $Data = Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
+            $Data
+        }
     }
 }
 
@@ -1639,10 +1649,12 @@ function Get-MinersContent {
                         Name     = if ($c.Name) {$c.Name} else {$Name}
                         BaseName = $Name
                     } -Force -PassThru
-                } else {
+                } elseif ($c.PowerDraw -eq 0) {
                     $c.PowerDraw = $Global:StatsCache."$($c.Name)_$($c.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
                     if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$c.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
                     $c
+                } else {
+                    Write-Log -Level Warn "Miner module $($Name) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
                 }
             }
         }
@@ -1679,7 +1691,7 @@ function Get-BalancesPayouts {
     )
 
     $Payouts | Foreach-Object {
-        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp})"
+        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp} elseif ($_.createdAt) {$_.createdAt})"
         if ($DateTime) {
             [PSCustomObject]@{
                 Date     = $(if ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
@@ -1869,13 +1881,15 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$Vendor = "",
         [Parameter(Mandatory = $false)]
+        [String]$WinTitle = "",
+        [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -WinTitle $WinTitle
     } else {
         Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
     }
@@ -1910,7 +1924,7 @@ function Start-SubProcessInBackground {
 
     if ($ArgumentList) {
         $ArgumentListToBlock = $ArgumentList
-        ([regex]"\s-+[\w\-_]+[\s=]+(\w[=\w]*,[,=\w]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value)'"}
+        ([regex]"\s-+[\w\-_]+[\s=]+([^'`"][^\s]*,[^\s]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value -replace "'","``'")'"}
         if ($ArgumentList -ne $ArgumentListToBlock) {
             Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
             $ArgumentList = $ArgumentListToBlock
@@ -1957,6 +1971,8 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
+        [String]$WinTitle = "",
+        [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false
     )
 
@@ -1984,6 +2000,18 @@ function Start-SubProcessInConsole {
     if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
 
     Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
+
+    if ($IsWindows -and $JobOutput.ProcessId -and $WinTitle -ne "") {
+        try {
+            if ($Process = Get-Process -Id $JobOutput.ProcessId -ErrorAction Stop) {
+                Initialize-User32Dll
+                [User32.WindowManagement]::SetWindowText($Process.mainWindowHandle, $WinTitle) > $null
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not set process window title: $($_.Exception.Message)"
+        }
+    }
     
     [PSCustomObject]@{
         ScreenName = ""
@@ -2277,11 +2305,10 @@ function Stop-SubProcess {
                     $oldProgressPreference = $Global:ProgressPreference
                     $Global:ProgressPreference = "SilentlyContinue"
                     try {
-                        $Response = Invoke-WebRequest $ShutdownUrl -UseBasicParsing -TimeoutSec 20 -ErrorAction Stop
-                        #$Data = $Response | ConvertFrom-Json -ErrorAction Stop
+                        $Response = Invoke-GetUrl $ShutdownUrl -Timeout 20 -ErrorAction Stop
 
                         $StopWatch.Reset()
-                        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 20) {
+                        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 20) {
                             Start-Sleep -Milliseconds 500
                         }
                         if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
@@ -2333,7 +2360,7 @@ function Stop-SubProcess {
                                 }
 
                                 $StopWatch.Restart()
-                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 10) {
+                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
                                     Start-Sleep -Milliseconds 500
                                 }
 
@@ -2383,8 +2410,8 @@ function Stop-SubProcess {
                 # Wait for miner to shutdown
                 #
 
-                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le $WaitForExit) {
-                    Write-Log -Level Info "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.Seconds)s elapsed)$(if ($Name) {": $($Name)"})"
+                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
+                    Write-Log -Level Info "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.TotalSeconds)s elapsed)$(if ($Name) {": $($Name)"})"
                     Start-Sleep -Seconds 1
                 }
 
@@ -2544,9 +2571,34 @@ function Expand-WebRequest {
             Remove-Item $Path_Old -Recurse -Force
         }
         if (Test-Path $Path_Bak) {
-            $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {Copy-Item $_ $Path_New -Force}}
+            $ProtectedFiles | Foreach-Object {
+                $CheckForFile_Path = Split-Path $_
+                $CheckForFile_Name = Split-Path $_ -Leaf
+                Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {
+                    if ($CheckForFile_Path) {
+                        $CopyToPath = Join-Path $Path_New $CheckForFile_Path
+                        if (-not (Test-Path $CopyToPath)) {
+                            New-Item $CopyToPath -ItemType Directory -ErrorAction Ignore > $null
+                        }
+                    } else {
+                        $CopyToPath = $Path_New
+                    }
+                    if ($_.Length -lt 10MB) {
+                        Copy-Item $_ $CopyToPath -Force
+                    } else {
+                        Move-Item $_ $CopyToPath -Force
+                    }
+                }
+            }
             $SkipBackups = if ($EnableMinerBackups) {3} else {0}
-            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {Remove-Item $_ -Recurse -Force}
+            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {
+                try {
+                    Remove-Item $_ -Recurse -Force
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Downloader: Could not to remove backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
+                }
+            }
         }
     }
     if (-not $EnableKeepDownloads -and (Test-Path $FileName)) {
@@ -2595,6 +2647,7 @@ function Invoke-Exe {
             $out = $process.StandardOutput.ReadToEnd()
             $process.WaitForExit($WaitForExit*1000)>$null
             if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
+            $Global:LASTEXEEXITCODE = $process.ExitCode
         } else {
             if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
             if (Test-OCDaemon) {
@@ -2619,12 +2672,14 @@ function Invoke-TcpRequest {
     param(
         [Parameter(Mandatory = $true)]
         [String]$Server = "localhost", 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [String]$Port, 
         [Parameter(Mandatory = $false)]
         [String]$Request = "",
         [Parameter(Mandatory = $false)]
         [Int]$Timeout = 10, #seconds,
+        [Parameter(Mandatory = $false)]
+        [hashtable]$Headers = @{},
         [Parameter(Mandatory = $false)]
         [Switch]$DoNotSendNewline,
         [Parameter(Mandatory = $false)]
@@ -2636,28 +2691,60 @@ function Invoke-TcpRequest {
     )
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
-    #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
-        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
+        if ($Server -match "^http") {
+            $Uri = [System.Uri]::New($Server)
+            $Server = $Uri.Host
+            $Port   = $Uri.Port
+        }
+        $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
+        #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
         $Stream = $Client.GetStream()
-        $Writer = New-Object System.IO.StreamWriter $Stream
-        if (-not $WriteOnly) {$Reader = New-Object System.IO.StreamReader $Stream}
+        $Writer = [System.IO.StreamWriter]::new($Stream)
+        if (-not $WriteOnly -or $Uri) {$Reader = [System.IO.StreamReader]::new($Stream)}
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
 
-        if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
-        if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
+        if ($Uri) {
+            $Writer.NewLine = "`r`n"
+            $Writer.WriteLine("GET $($Uri.PathAndQuery) HTTP/1.1")
+            $Writer.WriteLine("Host: $($Server):$($Port)")
+            $Writer.WriteLine("Cache-Control: no-cache")
+            if ($headers -and $headers.Keys) {
+                $headers.Keys | Foreach-Object {$Writer.WriteLine("$($_): $($headers[$_])")}
+            }
+            $Writer.WriteLine("Connection: close")
+            $Writer.WriteLine("")
+
+            $cnt = 0
+            $closed = $false
+            while ($cnt -lt 20 -and -not $Reader.EndOfStream -and ($line = $Reader.ReadLine())) {
+                $line = $line.Trim()
+                if ($line -match "HTTP/[0-9\.]+\s+(\d{3}.*)") {$HttpCheck = $Matches[1]}
+                elseif ($line -match "Connection:\s+close") {$closed = $true}
+                $cnt++
+            }
+
+            if ($line -eq $null) {throw "empty response"}
+            if (-not $HttpCheck) {throw "invalid response"}
+            if ($HttpCheck -notmatch "^2") {throw $HttpCheck}
+
+            $Response = $Reader.ReadToEnd()
+        } else {
+            if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
+            if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
+        }
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not request from $($Server):$($Port)"
+        Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "TCP request to $($Server):$($Port) failed: $($_.Exception.Message)"
     }
     finally {
-        if ($Reader) {$Reader.Close();$Reader.Dispose()}
-        if ($Writer) {$Writer.Close();$Writer.Dispose()}
-        if ($Stream) {$Stream.Close();$Stream.Dispose()}
         if ($Client) {$Client.Close();$Client.Dispose()}
+        if ($Reader) {$Reader.Dispose()}
+        if ($Writer) {$Writer.Dispose()}
+        if ($Stream) {$Stream.Dispose()}
     }
 
     $Response
@@ -2679,9 +2766,9 @@ function Invoke-TcpRead {
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
-        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
+        $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
         $Stream = $Client.GetStream()
-        $Reader = New-Object System.IO.StreamReader $Stream
+        $Reader = [System.IO.StreamReader]::new($Stream)
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Response = $Reader.ReadToEnd()
@@ -2691,9 +2778,9 @@ function Invoke-TcpRead {
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not read from $($Server):$($Port)"
     }
     finally {
-        if ($Reader) {$Reader.Close();$Reader.Dispose()}
-        if ($Stream) {$Stream.Close();$Stream.Dispose()}
         if ($Client) {$Client.Close();$Client.Dispose()}
+        if ($Reader) {$Reader.Dispose()}
+        if ($Stream) {$Stream.Dispose()}
     }
 
     $Response
@@ -2832,7 +2919,7 @@ function Get-Device {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "WDDM device detection has failed. "
             }
-            $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object -Property BusId)
+            $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"})
         }
 
         [System.Collections.Generic.List[string]]$AllPlatforms = @()
@@ -2901,7 +2988,7 @@ function Get-Device {
             $Platform_Devices | Foreach-Object {
                 $PlatformId = $_.PlatformId
                 $PlatformVendor = $_.Vendor
-                $_.Devices | Foreach-Object {    
+                $_.Devices | Where-Object {$_} | Foreach-Object {    
                     $Device_OpenCL = $_
 
                     $Vendor_Name = [String]$Device_OpenCL.Vendor
@@ -2968,6 +3055,27 @@ function Get-Device {
 
                     $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
 
+                    if ($Model -eq "") { #alas! empty
+                        if ($Device_OpenCL.Architecture) {
+                            $Model = "$($Device_OpenCL.Architecture)"
+                            $Device_Name = "$($Device_Name)$(if ($Device_Name) {" "})$($Model)"
+                        } elseif ($InstanceId -and $InstanceId -match "VEN_([0-9A-F]{4}).+DEV_([0-9A-F]{4}).+SUBSYS_([0-9A-F]{4,8})") {
+                            try {
+                                $Result = Invoke-GetUrl "https://rbminer.net/api/pciids.php?ven=$($Matches[1])&dev=$($Matches[2])&subsys=$($Matches[3])"
+                                if ($Result.status) {
+                                    $Device_Name = if ($Result.data -match "\[(.+)\]") {$Matches[1]} else {$Result.data}
+                                    if ($Vendor_Name -eq "AMD" -and $Device_Name -notmatch "Radeon") {$Device_Name = "Radeon $($Device_Name)"}
+                                    $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
+                                }
+                            } catch {
+                            }
+                        }
+                        if ($Model -eq "") {
+                            $Model = "Unknown"
+                            $Device_Name = "$($Device_Name)$(if ($Device_Name) {" "})$($Model)"
+                        }
+                    }
+
                     if ($Vendor_Name -eq "NVIDIA") {
                         $Device_OpenCL.Architecture = Get-NvidiaArchitecture $Model
                     }
@@ -2986,6 +3094,12 @@ function Get-Device {
                         Type = [String]$Device_OpenCL.Type
                         Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
                         Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
+                        BusId_Index               = 0
+                        BusId_Type_Index          = 0
+                        BusId_Type_Vendor_Index   = 0
+                        BusId_Type_Mineable_Index = 0
+                        BusId_Vendor_Index        = 0
+
                         OpenCL = $Device_OpenCL
                         Model = $Model
                         Model_Base = $Model
@@ -2993,9 +3107,8 @@ function Get-Device {
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
                         BusId = $null
-                        BusId_Index = 0
-                        BusId_Mineable_Index = 0
                         GpuGroup = ""
+
                         Data = [PSCustomObject]@{
                                         AdapterId         = 0  #amd
                                         Utilization       = 0  #amd/nvidia
@@ -3073,47 +3186,67 @@ function Get-Device {
         }
 
         #re-index in case the OpenCL platforms have shifted positions
-        try {
-            $OpenCL_Platforms = @()
-            if (Test-Path ".\Data\openclplatforms.json") {
-                $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
-            }
-
-            $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
-
-            if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current) {
-                Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms_Current > $null
-                $OpenCL_Platforms = $OpenCL_Platforms_Current
-            }
-
-            $Index = 0
-            $Need_Sort = $false
-            $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
-                if ($_.Index -ne $Index) {
-                    $Need_Sort = $true
-                    $_.Index = $Index
-                    $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+        if ($Platform_Devices) {
+            try {
+                if (Test-Path ".\Data\openclplatforms.json") {
+                    $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
                 }
-                $Index++
-            }
 
-            if ($Need_Sort) {
-                Write-Log -Level Info "OpenCL platforms have changed from initial run. Resorting indices."
-                $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
-            }
+                if (-not $OpenCL_Platforms) {
+                    $OpenCL_Platforms = @()
+                }
 
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "OpenCL platform detection failed: $($_.Exception.Message)"
+                $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
+
+                if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current) {
+                    Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms_Current > $null
+                    $OpenCL_Platforms = $OpenCL_Platforms_Current
+                }
+
+                $Index = 0
+                $Need_Sort = $false
+                $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
+                    if ($_.Index -ne $Index) {
+                        $Need_Sort = $true
+                        $_.Index = $Index
+                        $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+                    }
+                    $Index++
+                }
+
+                if ($Need_Sort) {
+                    Write-Log -Level Info "OpenCL platforms have changed from initial run. Resorting indices."
+                    $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
+                }
+
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "OpenCL platform detection failed: $($_.Exception.Message)"
+            }
         }
 
         #Roundup and add sort order by PCI busid
-        $Index = 0
-        $MineableIndex = 0
-        $Global:GlobalCachedDevices | Sort-Object BusId,Index | Foreach-Object {
-            $_.BusId_Index = $Index++
-            $_.BusId_Mineable_Index = $MineableIndex
-            if ($_.Vendor -in @("AMD","NVIDIA")) {$MineableIndex++}
+        $BusId_Index = 0
+        $BusId_Type_Index = @{}
+        $BusId_Type_Vendor_Index = @{}
+        $BusId_Type_Mineable_Index = @{}
+        $BusId_Vendor_Index = @{}
+
+        $Global:GlobalCachedDevices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | Foreach-Object {
+            $_.BusId_Index               = $BusId_Index++
+            $_.BusId_Type_Index          = [int]$BusId_Type_Index."$($_.Type)"
+            $_.BusId_Type_Vendor_Index   = [int]$BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"
+            $_.BusId_Type_Mineable_Index = [int]$BusId_Type_Mineable_Index."$($_.Type)"
+            $_.BusId_Vendor_Index        = [int]$BusId_Vendor_Index."$($_.Vendor)"
+
+            if (-not $BusId_Type_Vendor_Index."$($_.Type)") { 
+                $BusId_Type_Vendor_Index."$($_.Type)" = @{}
+            }
+
+            $BusId_Type_Index."$($_.Type)"++
+            $BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"++
+            $BusId_Vendor_Index."$($_.Vendor)"++
+            if ($_.Vendor -in @("AMD","NVIDIA")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
         }
 
         #CPU detection
@@ -3123,18 +3256,6 @@ function Get-Device {
                 $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
                 if ($IsWindows) {
-                    #try {$chkcpu = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                    #if ($chkcpu.physical_cpus) {
-                    #    $Global:GlobalCPUInfo | Add-Member Name          $chkcpu.cpu_name
-                    #    $Global:GlobalCPUInfo | Add-Member Manufacturer  $chkcpu.cpu_vendor
-                    #    $Global:GlobalCPUInfo | Add-Member Cores         $chkcpu.cores
-                    #    $Global:GlobalCPUInfo | Add-Member Threads       $chkcpu.threads
-                    #    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $chkcpu.physical_cpus
-                    #    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
-                    #    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
-                    #    $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    #    $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                    #} else {
                     $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
                     $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
                     $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
@@ -3144,8 +3265,21 @@ function Get-Device {
                     $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
                     $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
                     $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                    #}
+
+                    try {
+                        (Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop).flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+
+                    if (-not $Global:GlobalCPUInfo.Features.Count) {
+                        $chkcpu = @{}
+                        try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                    }
+
+                    $Global:GlobalCPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
+
                 } elseif ($IsLinux) {
                     try {
                         Write-ToFile -FilePath ".\Data\lscpu.txt" -Message "$(Invoke-Exe "lscpu")" -NoCR > $null
@@ -3165,8 +3299,6 @@ function Get-Device {
 
                         "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
 
-                        if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
-
                         $Processors = ($Data | Where-Object {$_ -match "^processor"} | Measure-Object).Count
 
                         if ($Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
@@ -3182,6 +3314,8 @@ function Get-Device {
                         }
                     }
                 }
+
+                if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
 
                 $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
                             "(AMD|Advanced Micro Devices)" {"AMD"}
@@ -3256,116 +3390,6 @@ function Get-Device {
             $Device
         }
     }
-}
-
-function Get-CPUFeatures { 
-
-    Add-Type -Path .\DotNet\Tools\CPUID.cs
-
-    $features = @{}
-    $info = [CpuID]::Invoke(0)
-    #convert 16 bytes to 4 ints for compatibility with existing code
-    $info = [int[]]@(
-        [BitConverter]::ToInt32($info, 0 * 4)
-        [BitConverter]::ToInt32($info, 1 * 4)
-        [BitConverter]::ToInt32($info, 2 * 4)
-        [BitConverter]::ToInt32($info, 3 * 4)
-    )
-
-    $nIds = $info[0]
-
-    $info = [CpuID]::Invoke(0x80000000)
-    $nExIds = [BitConverter]::ToUInt32($info, 0 * 4) #not sure as to why 'nExIds' is unsigned; may not be necessary
-    #convert 16 bytes to 4 ints for compatibility with existing code
-    $info = [int[]]@(
-        [BitConverter]::ToInt32($info, 0 * 4)
-        [BitConverter]::ToInt32($info, 1 * 4)
-        [BitConverter]::ToInt32($info, 2 * 4)
-        [BitConverter]::ToInt32($info, 3 * 4)
-    )
-
-    #Detect Features
-    if ($nIds -ge 0x00000001) { 
-
-        $info = [CpuID]::Invoke(0x00000001)
-        #convert 16 bytes to 4 ints for compatibility with existing code
-        $info = [int[]]@(
-            [BitConverter]::ToInt32($info, 0 * 4)
-            [BitConverter]::ToInt32($info, 1 * 4)
-            [BitConverter]::ToInt32($info, 2 * 4)
-            [BitConverter]::ToInt32($info, 3 * 4)
-        )
-
-        $features.mmx = ($info[3] -band ([int]1 -shl 23)) -ne 0
-        $features.sse = ($info[3] -band ([int]1 -shl 25)) -ne 0
-        $features.sse2 = ($info[3] -band ([int]1 -shl 26)) -ne 0
-        $features.sse3 = ($info[2] -band ([int]1 -shl 00)) -ne 0
-
-        $features.ssse3 = ($info[2] -band ([int]1 -shl 09)) -ne 0
-        $features.sse41 = ($info[2] -band ([int]1 -shl 19)) -ne 0
-        $features.sse42 = ($info[2] -band ([int]1 -shl 20)) -ne 0
-        $features.aes = ($info[2] -band ([int]1 -shl 25)) -ne 0
-
-        $features.avx = ($info[2] -band ([int]1 -shl 28)) -ne 0
-        $features.fma3 = ($info[2] -band ([int]1 -shl 12)) -ne 0
-
-        $features.rdrand = ($info[2] -band ([int]1 -shl 30)) -ne 0
-    }
-
-    if ($nIds -ge 0x00000007) { 
-
-        $info = [CpuID]::Invoke(0x00000007)
-        #convert 16 bytes to 4 ints for compatibility with existing code
-        $info = [int[]]@(
-            [BitConverter]::ToInt32($info, 0 * 4)
-            [BitConverter]::ToInt32($info, 1 * 4)
-            [BitConverter]::ToInt32($info, 2 * 4)
-            [BitConverter]::ToInt32($info, 3 * 4)
-        )
-
-        $features.avx2 = ($info[1] -band ([int]1 -shl 05)) -ne 0
-
-        $features.bmi1 = ($info[1] -band ([int]1 -shl 03)) -ne 0
-        $features.bmi2 = ($info[1] -band ([int]1 -shl 08)) -ne 0
-        $features.adx = ($info[1] -band ([int]1 -shl 19)) -ne 0
-        $features.mpx = ($info[1] -band ([int]1 -shl 14)) -ne 0
-        $features.sha = ($info[1] -band ([int]1 -shl 29)) -ne 0
-        $features.prefetchwt1 = ($info[2] -band ([int]1 -shl 00)) -ne 0
-
-        $features.avx512_f = ($info[1] -band ([int]1 -shl 16)) -ne 0
-        $features.avx512_cd = ($info[1] -band ([int]1 -shl 28)) -ne 0
-        $features.avx512_pf = ($info[1] -band ([int]1 -shl 26)) -ne 0
-        $features.avx512_er = ($info[1] -band ([int]1 -shl 27)) -ne 0
-        $features.avx512_vl = ($info[1] -band ([int]1 -shl 31)) -ne 0
-        $features.avx512_bw = ($info[1] -band ([int]1 -shl 30)) -ne 0
-        $features.avx512_dq = ($info[1] -band ([int]1 -shl 17)) -ne 0
-        $features.avx512_ifma = ($info[1] -band ([int]1 -shl 21)) -ne 0
-        $features.avx512_vbmi = ($info[2] -band ([int]1 -shl 01)) -ne 0
-        $features.avx512_vbmi2 = ($info[2] -band ([int]1 -shl 06)) -ne 0
-
-        $features.vaes = ($info[2] -band ([int]1 -shl 09)) -ne 0
-
-        $features.avx512 = $features.avx512_f -and $features.avx512_vl -and $features.avx512_dq -and $features.avx512_bw
-    }
-
-    if ($nExIds -ge 0x80000001) { 
-
-        $info = [CpuID]::Invoke(0x80000001)
-        #convert 16 bytes to 4 ints for compatibility with existing code
-        $info = [int[]]@(
-            [BitConverter]::ToInt32($info, 0 * 4)
-            [BitConverter]::ToInt32($info, 1 * 4)
-            [BitConverter]::ToInt32($info, 2 * 4)
-            [BitConverter]::ToInt32($info, 3 * 4)
-        )
-
-        $features.x64 = ($info[3] -band ([int]1 -shl 29)) -ne 0
-        $features.abm = ($info[2] -band ([int]1 -shl 05)) -ne 0
-        $features.sse4a = ($info[2] -band ([int]1 -shl 06)) -ne 0
-        $features.fma4 = ($info[2] -band ([int]1 -shl 16)) -ne 0
-        $features.xop = ($info[2] -band ([int]1 -shl 11)) -ne 0
-    }
-    $features.Keys | Where-Object {$features.$_} | Select-Object
 }
 
 function Get-DevicePowerDraw {
@@ -3461,27 +3485,35 @@ function Get-NormalizedDeviceName {
         [String]$Vendor = "AMD"
     )
 
-    $DeviceName = "$($DeviceName -replace '\(TM\)|\(R\)')"
+    $DeviceName = "$($DeviceName -replace '\([A-Z0-9 ]+\)?')"
 
-    if ($Vendor -ne "AMD") {return $DeviceName}
+    if ($Vendor -eq "AMD") {
+        $DeviceName = "$($DeviceName `
+                -replace 'ASUS' `
+                -replace 'AMD' `
+                -replace 'Series' `
+                -replace 'Graphics' `
+                -replace 'Adapter' `
+                -replace '\d+GB$' `
+                -replace "\s+", ' '
+        )".Trim()
 
-    $DeviceName = "$($DeviceName `
-            -replace 'ASUS' `
-            -replace 'AMD' `
-            -replace '\([A-Z0-9 ]+\)?' `
-            -replace 'Series' `
-            -replace 'Graphics' `
-            -replace 'Adapter' `
-            -replace '\d+GB$' `
-            -replace "\s+", ' '
-    )".Trim()
-
-    if ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}                 # HD series
-    elseif ($DeviceName -match '.*\s(Vega).*(56|64).*') {"Radeon Vega $($Matches[2])"}        # Vega series
-    elseif ($DeviceName -match '.*\s(R\d)\s(\w+).*') {"Radeon $($Matches[1]) $($Matches[2])"} # R3/R5/R7/R9 series
-    elseif ($DeviceName -match '.*Radeon.*(5[567]00.*)') {"Radeon RX $($Matches[1])"}         # RX 5000 series
-    elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
-    else {$DeviceName}
+        if ($DeviceName -match '.*\s(HD)\s?(\w+).*') {"Radeon HD $($Matches[2])"}                 # HD series
+        elseif ($DeviceName -match '.*\s(Vega).*(56|64).*') {"Radeon Vega $($Matches[2])"}        # Vega series
+        elseif ($DeviceName -match '.*\s(R\d)\s(\w+).*') {"Radeon $($Matches[1]) $($Matches[2])"} # R3/R5/R7/R9 series
+        elseif ($DeviceName -match '.*Radeon.*(5[567]00[\w\s]*)') {"Radeon RX $($Matches[1])"}         # RX 5000 series
+        elseif ($DeviceName -match '.*Radeon.*([4-5]\d0).*') {"Radeon RX $($Matches[1])"}         # RX 400/500 series
+        else {$DeviceName}
+    } elseif ($Vendor) {
+        "$($DeviceName `
+                -replace $Vendor `
+                -replace "\s+", ' '
+        )".Trim()
+    } else {
+        "$($DeviceName `
+                -replace "\s+", ' '
+        )".Trim()
+    }
 }
 
 function Get-DeviceName {
@@ -3508,11 +3540,11 @@ function Get-DeviceName {
                 $SubId = if ($_.GpuId -match "&DEV_([0-9A-F]+?)&") {$Matches[1]} else {"noid"}
                 if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
                 [PSCustomObject]@{
-                    Index = $DeviceId
+                    Index      = $DeviceId
                     DeviceName = $DeviceName
                     InstanceId = $_.GpuId
-                    SubId = $SubId
-                    PCIBusId = if ($_.GpuId -match "&BUS_(\d+)") {"$("{0:x2}" -f [int]$Matches[1]):00"}
+                    SubId      = $SubId
+                    PCIBusId   = if ($_.GpuId -match "&BUS_(\d+)&DEV_(\d+)") {"{0:x2}:{1:x2}" -f [int]$Matches[1],[int]$Matches[2]} else {$null}
                 }
                 $DeviceId++
             }
@@ -3544,27 +3576,6 @@ function Get-DeviceName {
                             CardId = -1
                         }
                         $DeviceId++
-                    }
-                } else {
-
-                    $DeviceId = 0
-                
-                    $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
-                    $AdlResult | Foreach-Object {
-                        $AdlResultSplit = @($_ -split ',' | Select-Object)
-                        if ($AdlResultSplit.Count -ge 9) {
-                            $DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
-                            $SubId = if ($AdlResultSplit.Count -ge 10 -and $AdlResultSplit[9] -match "&DEV_([0-9A-F]+?)&") {$Matches[1]} else {"noid"}
-                            if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
-                            [PSCustomObject]@{
-                                Index = $DeviceId
-                                DeviceName = $DeviceName
-                                InstanceId = $AdlResultSplit[9]
-                                SubId = $SubId
-                                CardId = -1
-                            }
-                            $DeviceId++
-                        }
                     }
                 }
             }
@@ -3651,210 +3662,172 @@ function Update-DeviceInformation {
         if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
     }
 
+    if (-not (Test-Path "Variable:Global:GlobalGPUMethod")) {
+        $Global:GlobalGPUMethod = @{}
+    }
+
     $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
 
         try { #AMD
             if ($Vendor -eq 'AMD') {
-                if ($IsWindows -and $UseAfterburner -and $Script:abMonitor -and $Script:abControl) {
-                    if ($abReload) {
-                        if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
-                        if ($Script:abControl) {$Script:abControl.ReloadAll()}
-                        $abReload = $false
-                    }
-                    $DeviceId = 0
-                    $Pattern = @{
-                        AMD    = '*Radeon*'
-                        NVIDIA = '*GeForce*'
-                        Intel  = '*Intel*'
-                    }
-                    @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
-                        $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
-                        $PowerLimitPercent = [int]$($Script:abControl.GpuEntries[$_.Index].PowerLimitCur)
-                        $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
-                        $AdapterId = $_.Index
 
-                        if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-                        $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
-                            $_.Data.AdapterId         = [int]$AdapterId
-                            $_.Data.Utilization       = $Utilization
-                            $_.Data.UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
-                            $_.Data.Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
-                            $_.Data.ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
-                            $_.Data.FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
-                            $_.Data.Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                            $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
-                            $_.Data.PowerLimitPercent = $PowerLimitPercent
-                            #$_.Data.PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
-                            $_.Data.Method            = "ab"
+                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = 0}
 
-                            $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                            $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                            $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                            $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                            $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                        }
-                        $DeviceId++
-                    }
-                } else {
+                if ($IsWindows) {
 
-                    if ($IsWindows) {
-                        Invoke-Exe ".\Includes\odvii.exe" -ArgumentList "s" -WorkingDirectory $Pwd | Tee-Object -Variable AdlResult | Out-Null
+                    $Success = 0
 
-                        if ($AdlResult -match "Gpu" -and $AdlResult -notmatch "Failed") {
-                            $AdlStats = $AdlResult | ConvertFrom-StringData
+                    foreach ($Method in @("Afterburner","odvii8")) {
 
-                            $Data = @{}
-                            $AdlStats.GetEnumerator() | Where-Object {$_.Name -match "Gpu (\d+)"} | Foreach-Object {
-                                $DeviceId = [int]$Matches[1]
-                                if (-not $Data.ContainsKey($DeviceId)) {$Data[$DeviceId] = [PSCustomObject]@{}}
-                                $Data[$DeviceId] | Add-Member ($_.Name -replace "Gpu\s+\d+\s*") ($_.Value) -Force
-                            }
+                        if (-not $Global:GlobalGPUMethod.ContainsKey($Method)) {$Global:GlobalGPUMethod.$Method = ""}
 
-                            $Devices | Where-Object {$Data.ContainsKey($_.Type_Vendor_Index)} | Foreach-Object {
-                                $DeviceId = $_.Type_Vendor_Index
-                                $_.Data.AdapterId         = ''
-                                $_.Data.FanSpeed          = [int]($Data[$DeviceId].Fan)
-                                $_.Data.Clock             = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Core Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
-                                $_.Data.ClockMem          = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Mem Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
-                                $_.Data.Temperature       = [int]($Data[$DeviceId].Temp)
-                                $_.Data.PowerDraw         = [int]($Data[$DeviceId].Watts)
-                                $_.Data.Method            = "odvii"
+                        if ($Global:GlobalGPUMethod.$Method -eq "fail") {Continue}
+                        if ($Method -eq "Afterburner" -and -not ($UseAfterburner -and $Script:abMonitor -and $Script:abControl)) {Continue}
 
-                                $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                                $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                                $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                                $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                            }
-                        } else {
-                            $AdlStats = $null
+                        try {
 
-                            try {
-                                $AdlResult = Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd
-                                if ($AdlResult -notmatch "Failed") {
-                                    $AdlStats = $AdlResult | ConvertFrom-Json -ErrorAction Stop
-                                }
-                            } catch {
-                                if ($Error.Count){$Error.RemoveAt(0)}
-                            }
-                        
-                            if ($AdlStats -and $AdlStats.Count) {
+                            Switch ($Method) {
 
-                                $DeviceId = 0
-
-                                $AdlStats | Foreach-Object {
-
-                                    $Data = $_
-
-                                    $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-
-                                        $CPstateMax = [Math]::max([int]($Data."Core P_States")-1,0)
-                                        $MPstateMax = [Math]::max([int]($Data."Memory P_States")-1,0)
-
-                                        $_.Data.AdapterId         = ''
-                                        $_.Data.FanSpeed          = [int]($Data."Fan Speed %")
-                                        $_.Data.Clock             = [int]($Data."Clock Defaults"."Clock P_State $CPstatemax")
-                                        $_.Data.ClockMem          = [int]($Data."Memory Defaults"."Clock P_State $MPstatemax")
-                                        $_.Data.Temperature       = [int]($Data.Temperature)
-                                        $_.Data.PowerDraw         = [int]($Data.Wattage)
-                                        $_.Data.Method            = "odvii8"
-
-                                        $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                                        $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                                        $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                                        $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                        $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                "Afterburner" {
+                                    #
+                                    # try Afterburner
+                                    #
+                                    if ($abReload) {
+                                        if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
+                                        if ($Script:abControl) {$Script:abControl.ReloadAll()}
+                                        $abReload = $false
                                     }
+                                    $DeviceId = 0
+                                    $Pattern = @{
+                                        AMD    = '*Radeon*'
+                                        NVIDIA = '*GeForce*'
+                                        Intel  = '*Intel*'
+                                    }
+                                    @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
+                                        $CardData    = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
+                                        $PowerLimitPercent = [int]$($Script:abControl.GpuEntries[$_.Index].PowerLimitCur)
+                                        $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
+                                        $PCIBusId    = if ($_.GpuId -match "&BUS_(\d+)&DEV_(\d+)") {"{0:x2}:{1:x2}" -f [int]$Matches[1],[int]$Matches[2]} else {$null}
 
-                                    $DeviceId++
+                                        $Data = [PSCustomObject]@{
+                                            Clock       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
+                                            ClockMem    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
+                                            FanSpeed    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
+                                            Temperature = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
+                                            PowerDraw   = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
+                                        }
+
+                                        $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
+                                            $NF = $_.Data.Method -eq ""
+                                            $Changed = $false
+                                            foreach($Value in @($Data.PSObject.Properties.Name)) {
+                                                if ($NF -or $_.Data.$Value -le 0 -or ($Value -match "^Clock" -and $Data.$Value -gt 0)) {$_.Data.$Value = $Data.$Value;$Changed = $true}
+                                            }
+
+                                            if ($Changed) {
+                                                $_.Data.Method = "$(if ($_.Data.Method) {";"})ab"
+                                            }
+                                        }
+                                        $DeviceId++
+                                    }
+                                    if ($DeviceId) {
+                                        $Global:GlobalGPUMethod.$Method = "ok"
+                                        $Success++
+                                    }
                                 }
-                            } else {
 
-                                $DeviceId = 0
+                                "odvii8" {
+                                    #
+                                    # try odvii8
+                                    #
 
-                                $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+                                    $AdlStats = $null
 
-                                if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                                    $AdlResult = Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd
+                                    if ($AdlResult -notmatch "Failed") {
+                                        $AdlStats = $AdlResult | ConvertFrom-Json -ErrorAction Stop
+                                    }
+                        
+                                    if ($AdlStats -and $AdlStats.Count) {
 
-                                if ($null -ne $AdlResult) {
-                                    $AdlResult | ForEach-Object {
-                                        [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
-                                        $i=0
-                                        foreach($v in @($_ -split ',')) {
-                                            if ($i -ge $AdlResultSplit.Count) {break}
-                                            if ($i -eq 0) {
-                                                $AdlResultSplit[0] = $v
-                                            } elseif ($i -lt 8) {
-                                                $v = $v -replace "[^\-\d\.]"
-                                                if ($v -match "^-?(\d+|\.\d+|\d+\.\d+)$") {
-                                                    $ibak = $AdlResultSplit[$i]
-                                                    try {
-                                                        if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
-                                                    } catch {
-                                                        if ($Error.Count){$Error.RemoveAt(0)}
-                                                        $AdlResultSplit[$i] = $ibak
-                                                    }
+                                        $DeviceId = 0
+
+                                        $AdlStats | Foreach-Object {
+                                            $CPstateMax = [Math]::max([int]($_."Core P_States")-1,0)
+                                            $MPstateMax = [Math]::max([int]($_."Memory P_States")-1,0)
+                                            $PCIBusId   = "$($_."Bus Id" -replace "\..+$")"
+
+                                            $Data = [PSCustomObject]@{
+                                                Clock       = [int]($_."Clock Defaults"."Clock P_State $CPstatemax")
+                                                ClockMem    = [int]($_."Memory Defaults"."Clock P_State $MPstatemax")
+                                                FanSpeed    = [int]($_."Fan Speed %")
+                                                Temperature = [int]($_.Temperature)
+                                                PowerDraw   = [int]($_.Wattage)
+                                            }
+
+                                            $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
+                                                $NF = $_.Data.Method -eq ""
+                                                $Changed = $false
+                                                foreach($Value in @($Data.PSObject.Properties.Name)) {
+                                                    if ($NF -or $_.Data.$Value -le 0 -or ($Value -notmatch "^Clock" -and $Data.$Value -gt 0)) {$_.Data.$Value = $Data.$Value;$Changed = $true}
+                                                }
+
+                                                if ($Changed) {
+                                                    $_.Data.Method = "$(if ($_.Data.Method) {";"})odvii8"
                                                 }
                                             }
-                                            $i++
+
+                                            $DeviceId++
                                         }
-                                        if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
-
-                                        $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                                            $_.Data.AdapterId         = $AdlResultSplit[0]
-                                            $_.Data.FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
-                                            $_.Data.Clock             = [int]($AdlResultSplit[3] / 100)
-                                            $_.Data.ClockMem          = [int]($AdlResultSplit[4] / 100)
-                                            $_.Data.Utilization       = [int]$AdlResultSplit[5]
-                                            $_.Data.Temperature       = [int]$AdlResultSplit[6] / 1000
-                                            $_.Data.PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                            $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
-                                            $_.Data.Method            = "tdp"
-
-                                            $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                                            $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                                            $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                                            $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                            $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                        if ($DeviceId) {
+                                            $Global:GlobalGPUMethod.$Method = "ok"
+                                            $Success++
                                         }
                                     }
-                                    $DeviceId++
                                 }
+
+                            }
+
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+
+                        if ($Global:GlobalGPUMethod.$Method -eq "") {$Global:GlobalGPUMethod.$Method = "fail"}
+                    }
+
+                    if (-not $Success) {
+                        Write-Log -Level Warn "Could not read power data from AMD"
+                    }
+                }
+                elseif ($IsLinux) {
+                    if (Get-Command "rocm-smi" -ErrorAction Ignore) {
+                        try {
+                            $Rocm = Invoke-Exe -FilePath "rocm-smi" -ArgumentList "-f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+
+                        if ($Rocm) {
+                            $DeviceId = 0
+
+                            $Rocm.Psobject.Properties | Sort-Object -Property {[int]($_.Name -replace "[^\d]")} | Foreach-Object {
+                                $Data = $_.Value
+                                $Card = [int]($_.Name -replace "[^\d]")
+                                $Devices | Where-Object {$_.CardId -eq $Card -or ($_.CardId -eq -1 -and $_.Type_Vendor_Index -eq $DeviceId)} | Foreach-Object {
+                                    $_.Data.Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature" -and $_.Name -notmatch "junction"} | Foreach-Object {[decimal]$_.Value} | Measure-Object -Average).Average
+                                    $_.Data.PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -First 1 -ExpandProperty Value)
+                                    $_.Data.FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -First 1 -ExpandProperty Value)
+                                    $_.Data.Method            = "rocm"
+                                }
+                                $DeviceId++
                             }
                         }
                     }
-                    elseif ($IsLinux) {
-                        if (Get-Command "rocm-smi" -ErrorAction Ignore) {
-                            try {
-                                $Rocm = Invoke-Exe -FilePath "rocm-smi" -ArgumentList "-f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
-                            } catch {
-                                if ($Error.Count){$Error.RemoveAt(0)}
-                            }
 
-                            if ($Rocm) {
-                                $DeviceId = 0
-
-                                $Rocm.Psobject.Properties | Sort-Object -Property {[int]($_.Name -replace "[^\d]")} | Foreach-Object {
-                                    $Data = $_.Value
-                                    $Card = [int]($_.Name -replace "[^\d]")
-                                    $Devices | Where-Object {$_.CardId -eq $Card -or ($_.CardId -eq -1 -and $_.Type_Vendor_Index -eq $DeviceId)} | Foreach-Object {
-                                        $_.Data.Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature" -and $_.Name -notmatch "junction"} | Foreach-Object {[decimal]$_.Value} | Measure-Object -Average).Average
-                                        $_.Data.PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -First 1 -ExpandProperty Value)
-                                        $_.Data.FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -First 1 -ExpandProperty Value)
-                                        $_.Data.Method            = "rocm"
-
-                                        $_.DataMax.Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)
-                                        $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                        $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                                    }
-                                    $DeviceId++
-                                }
-                            }
-                        }
-                    }
                 }
             }
         } catch {
@@ -3886,21 +3859,29 @@ function Update-DeviceInformation {
 
                         if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
                         if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
-                        if ($_.Data.PowerDraw) {$_.Data.PowerDraw *= ($PowerAdjust[$_.Model] / 100)}
-
-                        $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                        $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                        $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                        $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                        $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-
-                        $DeviceId++
                     }
+                    $DeviceId++
                 }
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from NVIDIA"
+        }
+
+        try {
+            $Devices | Foreach-Object {
+                if ($_.Data.Clock -ne $null)       {$_.DataMax.Clock    = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)}
+                if ($_.Data.ClockMem -ne $null)    {$_.DataMax.ClockMem = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)}
+                if ($_.Data.Temperature -ne $null) {$_.DataMax.Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)}
+                if ($_.Data.FanSpeed -ne $null)    {$_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)}
+                if ($_.Data.PowerDraw -ne $null)   {
+                    $_.Data.PowerDraw    *= ($PowerAdjust[$_.Model] / 100)
+                    $_.DataMax.PowerDraw  = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                }
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not calculate GPU maxium values"
         }
     }
 
@@ -4125,7 +4106,7 @@ function Get-Algorithms {
         $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object}
+        if ($Values) {$Global:GlobalAlgorithms.Values | Sort-Object -Unique}
         else {$Global:GlobalAlgorithms.Keys | Sort-Object}
     }
 }
@@ -4146,7 +4127,7 @@ function Get-CoinsDB {
         $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Global:GlobalCoinsDB.Values | Select-Object -Unique | Sort-Object}
+        if ($Values) {$Global:GlobalCoinsDB.Values | Sort-Object -Unique}
         else {$Global:GlobalCoinsDB.Keys | Sort-Object}
     }
 }
@@ -4244,9 +4225,8 @@ function Test-VRAM {
         [Parameter(Mandatory = $false)]
         $MinMemGB = 0.0
     )
-    $MinMemGB *= 0.965
     if ($IsWindows -and $Session.IsWin10) {
-        $Device.OpenCL.GlobalMemsize*0.835 -ge ($MinMemGB * 1Gb)
+        $Device.OpenCL.GlobalMemsize*0.865 -ge ($MinMemGB * 1Gb)
     } else {
         $Device.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb)
     }
@@ -4659,6 +4639,8 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Switch]$AllowDuplicates = $False,
         [Parameter(Mandatory = $False)]
+        [Switch]$AllowWildcards = $False,
+        [Parameter(Mandatory = $False)]
         [Array]$Controls = @("exit","cancel","back","save","done","<")
     )
     if ($Default.Count -eq 1 -and $Default[0] -match "[,;]") {[Array]$Default = @([regex]::split($Default[0].Trim(),"\s*[,;]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
@@ -4679,7 +4661,14 @@ function Read-HostArray {
                 $Result = $Matches[2]
             }
             if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
-            [Array]$Result = @($Result -replace "[^$($Characters),;]+","" -split "\s*[,;]+\s*" | Where-Object {$_ -ne ""} | Select-Object)
+            if ($AllowWildcards -and $Valid.Count) {
+                [Array]$Result = @($Result -replace "[^$($Characters)\*\?,;]+","" -split "\s*[,;]+\s*" | Where-Object {$_ -ne ""} | Foreach-Object {
+                    $m = $_
+                    if ($found = $Valid | Where-Object {$_ -like $m} | Select-Object) {$found} else {$m}
+                } | Select-Object)
+            } else {
+                [Array]$Result = @($Result -replace "[^$($Characters),;]+","" -split "\s*[,;]+\s*" | Where-Object {$_ -ne ""} | Select-Object)
+            }
             Switch ($Mode) {
                 "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object); break}
                 "-" {$Result = @($Default | Where-Object {$Result -inotcontains $_}); break}
@@ -4759,19 +4748,33 @@ function Set-ContentJson {
         try {
             $Exists = $false
             if ([System.IO.File]::Exists($PathToFile)) {
+                    if ((Get-ChildItem $PathToFile -File).IsReadOnly) {
+                        Write-Log -Level Warn "Unable to write to read-only file $PathToFile"
+                        return $false
+                    }
                     $FileStream = [System.IO.File]::Open($PathToFile,'Open','Write')
                     $FileStream.Close()
                     $FileStream.Dispose()
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
-                if ($Data -is [array]) {
-                    ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                if ($Session.IsCore -or ($PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
+                    if ($Data -is [array]) {
+                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                    } else {
+                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                    }
                 } else {
-                    ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                    $JsonOut = if ($Data -is [array]) {
+                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10
+                    } else {
+                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10
+                    }
+                    $utf8 = New-Object System.Text.UTF8Encoding $false
+                    Set-Content -Value $utf8.GetBytes($JsonOut) -Encoding Byte -Path $PathToFile
                 }
             } elseif ($Exists) {
-                (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
+                (Get-ChildItem $PathToFile -File).LastWriteTime = Get-Date
             }
             return $true
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
@@ -5225,37 +5228,42 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region="";SSL="";BalancesKeepAlive=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools","WhatToMine")})
+            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools")})
             $Userpools = @()
             if ($UserpoolsPathToFile) {
                 $UserpoolsConfig = Get-ConfigContent $UserpoolsConfigName
+                if ($UserpoolsConfig -isnot [array] -and $UserpoolsConfig.value -ne $null) {
+                    $UserpoolsConfig = $UserpoolsConfig.value
+                }
                 if ($Session.ConfigFiles[$UserpoolsConfigName].Healthy) {
                     $Userpools = @($UserpoolsConfig | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique)
                 }
             }
             $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
             if ($Pools.Count -gt 0 -or $Userpools.Count -gt 0) {
-                $Pools + $Userpools | Sort-Object | Foreach-Object {
+                $Pools + $Userpools | Sort-Object -Unique | Foreach-Object {
                     $Pool_Name = $_
                     if ($Preset -and $Preset.PSObject.Properties.Name -icontains $Pool_Name) {
                         $Setup_Content = $Preset.$Pool_Name
                     } else {
                         $Setup_Content = [PSCustomObject]@{}
-                        if ($Pool_Name -in $Userpools) {
-                            $Setup_Currencies = @($UserpoolsConfig | Where-Object {$_.Name -eq $Pool_Name} | Select-Object -ExpandProperty Currency -Unique)
-                            if (-not $Setup_Currencies) {$Setup_Currencies = @("BTC")}
-                        } else {
-                            $Setup_Currencies = @("BTC")
-                            if ($Setup.$Pool_Name) {
-                                if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
-                                $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
+                        if ($Pool_Name -ne "WhatToMine") {
+                            if ($Pool_Name -in $Userpools) {
+                                $Setup_Currencies = @($UserpoolsConfig | Where-Object {$_.Name -eq $Pool_Name} | Select-Object -ExpandProperty Currency -Unique)
+                                if (-not $Setup_Currencies) {$Setup_Currencies = @("BTC")}
+                            } else {
+                                $Setup_Currencies = @("BTC")
+                                if ($Setup.$Pool_Name) {
+                                    if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
+                                    $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
+                                }
                             }
-                        }
-                        $Setup_Currencies | Foreach-Object {
-                            $Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force
-                            $Setup_Content | Add-Member "$($_)-Params" "" -Force
+                            $Setup_Currencies | Foreach-Object {
+                                $Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force
+                                $Setup_Content | Add-Member "$($_)-Params" "" -Force
+                            }
                         }
                     }
                     if ($Setup.$Pool_Name.Fields -ne $null) {
@@ -5305,13 +5313,13 @@ function Set-OCProfilesConfigDefault {
                 $Devices = Get-Device "amd","nvidia" -IgnoreOpenCL
                 $Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object | Foreach-Object {
                     $Model = $_
-                    For($i=1;$i -le 5;$i++) {
+                    For($i=1;$i -le 7;$i++) {
                         $Profile = "Profile$($i)-$($Model)"
                         if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
                     }
                 }
                 if (-not $Devices) {
-                    For($i=1;$i -le 5;$i++) {
+                    For($i=1;$i -le 7;$i++) {
                         $Profile = "Profile$($i)"
                         if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
                     }
@@ -5549,7 +5557,12 @@ function Get-ConfigContent {
                     $Result = $Result -replace "\`$[A-Z0-9_]+"
                 }
             }
-            $Result | ConvertFrom-Json -ErrorAction Stop
+            if (Test-IsCore) {
+                $Result | ConvertFrom-Json -ErrorAction Stop
+            } else {
+                $Data = $Result | ConvertFrom-Json -ErrorAction Stop
+                $Data
+            }
             if (-not $WorkerName) {
                 $Session.ConfigFiles[$ConfigName].Healthy=$true
             }
@@ -5948,7 +5961,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 15,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body,
+        $body,
     [Parameter(Mandatory = $False)]
         [hashtable]$headers,
     [Parameter(Mandatory = $False)]
@@ -5966,7 +5979,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$ForceLocal,
     [Parameter(Mandatory = $False)]
-        [switch]$AsJob
+        [switch]$NoExtraHeaderData
 )
     if ($JobKey -and $JobData) {
         if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
@@ -5985,7 +5998,7 @@ Param(
                     tag       = $JobData.tag
                     user      = $JobData.user
                     password  = $JobData.password
-                    fixbigint = $JobData.fixbigint
+                    fixbigint = [bool]$JobData.fixbigint
                     jobkey    = $JobKey
                     machinename = $Session.MachineName
                     myip      = $Session.MyIP
@@ -6004,7 +6017,7 @@ Param(
         $headers  = $JobData.headers
         $user     = $JobData.user
         $password = $JobData.password
-        $fixbigint= $JobData.fixbigint
+        $fixbigint= [bool]$JobData.fixbigint
     }
 
     if ($url -match "^server://(.+)$") {
@@ -6023,50 +6036,130 @@ Param(
 
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
-    if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+    if (-not $NoExtraHeaderData) {
+        if ($method -eq "REST" -and -not $headers_local.ContainsKey("Accept")) {$headers_local["Accept"] = "application/json"}
+        if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+    }
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
-    if ($AsJob) {
-        $Job = Start-Job -FilePath .\Scripts\GetUrl.ps1 -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body
+    $ErrorMessage = ''
 
-        if ($Job) {
-            $Job | Wait-Job -Timeout ($timeout*2) > $null
-            $ErrorMessage = ''
-            if ($Job.state -eq 'Running') {
-                $ErrorMessage = "Time-out while loading $($RequestUrl)"
-                try {$Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            } else {
-                try {$Data = Receive-Job -Job $Job} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                if ($Data -and $Data.Data.ErrorMessage -ne $null)  {$ErrorMessage = $Data.Data.ErrorMessage} else {$Data.Data}
+    if ($Session.Curl) {
+
+        $TmpFile = $null
+
+        try {
+            $CurlHeaders = [String]::Join(" ",@($headers_local.GetEnumerator() | Sort-Object Name | Foreach-Object {"-H `"$($_.Name): $($_.Value)`""}))
+            $CurlBody    = ""
+
+            if (($pos = $url.IndexOf('?')) -gt 0) {
+                $body = $url.Substring($pos+1)
+                $url  = $url.Substring(0,$pos)
             }
-            try {Remove-Job $Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            if ($ErrorMessage -ne '') {throw $ErrorMessage}
+
+            if ($body -and ($body -isnot [hashtable] -or $body.Count)) {
+                if ($body -is [hashtable]) {
+                    $out = [ordered]@{}
+                    if (($body.GetEnumerator() | Where-Object {$_.Value -is [object] -and $_.Value.FullName} | Measure-Object).Count) {
+                        $body.GetEnumerator() | Sort-Object Name | Foreach-Object {
+                            $out[$_.Name] = if ($_.Value -is [object] -and $_.Value.FullName) {"@$($_.Value.FullName)"} else {$_.Value -replace '"','\"'}
+                        }
+                        $outcmd = if ($requestmethod -eq "GET") {"-d"} else {"-F"}
+                        $CurlBody = [String]::Join(" ",@($out.GetEnumerator() | Foreach-Object {"$($outcmd) `"$($_.Name)=$($_.Value)`""}))
+                        $CurlBody = "$CurlBody "
+                    } else {
+                        $body = [String]::Join('&',($body.GetEnumerator() | Sort-Object Name | Foreach-Object {"$($_.Name)=$([System.Web.HttpUtility]::UrlEncode($_.Value))"}))
+                    }
+                } 
+                if ($body -isnot [hashtable]) {
+                    if ($body.Length -gt 30000) {
+                        $TmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "$([System.Guid]::NewGuid()).txt"
+                        Set-Content -Value $body -Path $TmpFile
+                        $body = "@$($TmpFile)"
+                    }
+                    $CurlBody = "-d `"$($body -replace '"','\"')`" "
+                }
+            }
+
+            if ($useragent -ne "") {$useragent = "-A `"$($useragent)`" "}
+
+            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)-m $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+
+            $Data = (Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit $Timeout) -split "#~#"
+
+            if ($Session.LogLevel -eq "Debug") {
+                Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $($CurlCommand)"
+            }
+
+            if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^2\d\d") {
+                $Data = if ($Data.Count -eq 2) {$Data[0]} else {$Data[0..($Data.Count-2)] -join '#~#'}
+                if ($method -eq "REST") {
+                    if ($fixbigint) {
+                        try {
+                            $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    }
+                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}; $method = "WEB"}
+                }
+                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+            } else {
+                $ErrorMessage = "cURL $($Global:LASTEXEEXITCODE) / $(if ($Data -and $Data.Count -gt 1){"HTTP $($Data[-1])"} else {"Timeout after $($timeout)s"})"
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $ErrorMessage = "$($_.Exception.Message)"
+        } finally {
+            if ($TmpFile -and (Test-Path $TmpFile)) {
+                Remove-Item $TmpFile -Force -ErrorAction Ignore
+            }
         }
+
     } else {
 
-        $ErrorMessage = ''
+        $IsForm = $false
 
-        if ($Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
+        try {
+            if ($body -and ($body -isnot [hashtable] -or $body.Count)) {
+                if ($body -is [hashtable]) {
+                    $IsForm = ($body.GetEnumerator() | Where-Object {$_.Value -is [object] -and $_.Value.FullName} | Measure-Object).Count -gt 0
+                } elseif ($requestmethod -eq "GET") {
+                    $RequestUrl = "$($RequestUrl)$(if ($RequestUrl.IndexOf('?') -gt 0) {'&'} else {'?'})$body"
+                    $body = $null
+                }
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+
+        $oldProgressPreference = $null
+        if ($Global:ProgressPreference -ne "SilentlyContinue") {
+            $oldProgressPreference = $Global:ProgressPreference
+            $Global:ProgressPreference = "SilentlyContinue"
+        }
+
+        if (Test-IsCore) {
             $StatusCode = $null
             $Data       = $null
 
-            $oldProgressPreference = $null
-            if ($Global:ProgressPreference -ne "SilentlyContinue") {
-                $oldProgressPreference = $Global:ProgressPreference
-                $Global:ProgressPreference = "SilentlyContinue"
-            }
-
             try {
-                if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
-                    $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                if (Test-IsPS7) {
+                    if ($IsForm) {
+                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                    } else {
+                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    }
                 } else {
-                    $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    if ($IsForm) {
+                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                    } else {
+                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    }
                 }
 
                 $StatusCode = $Response.StatusCode
 
                 if ($StatusCode -match "^2\d\d$") {
-                    $Data = $Response.Content
+                    $Data = if ($Response.Content -is [byte[]]) {[System.Text.Encoding]::UTF8.GetString($Response.Content)} else {$Response.Content}
                     if ($method -eq "REST") {
                         if ($fixbigint) {
                             try {
@@ -6086,7 +6179,6 @@ Param(
                 $ErrorMessage = "$($_.Exception.Message)"
             }
 
-            if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
             if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
                 if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
                     if ($StatusCodeObject.Type -ne "Success") {
@@ -6103,10 +6195,7 @@ Param(
                     $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
                     $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                 } else {
-                    $oldProgressPreference = $Global:ProgressPreference
-                    $Global:ProgressPreference = "SilentlyContinue"
                     $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-                    $Global:ProgressPreference = $oldProgressPreference
                 }
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
             } catch {
@@ -6117,13 +6206,16 @@ Param(
                 $ServicePoint = $null
             }
         }
-        if ($ErrorMessage -eq '') {$Data}
-        if ($ErrorMessage -ne '') {throw $ErrorMessage}
+
+        if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
     }
+
+    if ($ErrorMessage -eq '') {$Data}
+    if ($ErrorMessage -ne '') {throw $ErrorMessage}
 }
 
 function Invoke-RestMethodAsync {
-[cmdletbinding()]   
+[cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $True)]
         [string]$url,
@@ -6238,6 +6330,10 @@ Param(
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     $IsNewJob   = -not $AsyncLoader.Jobs.$Jobkey
+
+    $retry     = [Math]::Min([Math]::Max($retry,0),5)
+    $retrywait = [Math]::Min([Math]::Max($retrywait,0),5000)
+    $delay     = [Math]::Min([Math]::Max($delay,0),5000)
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
         $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{if ($Error.Count){$Error.RemoveAt(0)}}} else {"server"}
@@ -6387,7 +6483,12 @@ Param(
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
                 if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
-                    Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                    if (Test-IsCore) {
+                        Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                    } else {
+                        $Data = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                        $Data
+                    }
                 } else {
                     Get-ContentByStreamReader ".\Cache\$($Jobkey).asy"
                 }
@@ -6397,17 +6498,10 @@ Param(
     }
 }
 
-function Get-MinerStatusKey {    
-    try {
-        $Response = Invoke-GetUrl "https://rbminer.net/api/getuserid.php"
-        if ($Response) {$Response = $Response -split "[\r\n]+" | select-object -first 1}
-        Write-Log "Miner Status key created: $Response"
-        $Response
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Miner Status $($Session.Config.MinerStatusURL) has failed. "
-    }
+function Get-MinerStatusKey {
+    $Response = [guid]::NewGuid().ToString()
+    Write-Log "Miner Status key created: $Response"
+    $Response
 }
 
 function Initialize-User32Dll {
@@ -6424,6 +6518,8 @@ namespace User32
         public static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, IntPtr lclassName, string windowTitle);
         [DllImport("user32.dll")] 
         public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")]
+        public static extern int SetWindowText(IntPtr hWnd, string strTitle);
     }
 }
 "@
@@ -6646,7 +6742,7 @@ param(
                         @(Get-Process).Where({$_.Path -and $_.Path -like "$(Join-Path $FileDir "*")" -and $_.ProcessName -like $FileName -and (-not $ArgumentList -or $_.CommandLine -like "* $($ArgumentList)")}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
                     }
 
-                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH
+                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH -WinTitle "$FilePath $ArgumentList".Trim()
                     if ($Job) {
                         $Job | Add-Member FilePath $FilePath -Force
                         $Job | Add-Member Arguments $ArgumentList -Force
@@ -6926,6 +7022,16 @@ function Test-IsElevated
             (whoami) -match "root"
         }
     }
+}
+
+function Test-IsCore
+{
+    $Session.IsCore -or ($Session.IsCore -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "6.1"))
+}
+
+function Test-IsPS7
+{
+    $Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))
 }
 
 function Set-OsFlags {
@@ -7240,7 +7346,7 @@ function Get-SysInfo {
                 $HDData | Where-Object {$_.Size -gt 0} | Foreach-Object {             
                     [PSCustomObject]@{ 
                         Drive = $_.Name 
-                        Name = $_.VolumeName 
+                        Name = $_.VolumeName
                         TotalGB = [decimal][Math]::Round($_.Size/1GB,1)
                         UsedGB  = [decimal][Math]::Round(($_.Size-$_.FreeSpace)/1GB,1)
                         UsedPercent = if ($_.Size -gt 0) {[decimal][Math]::Round(($_.Size-$_.FreeSpace)/$_.Size * 100,2)} else {0}
@@ -7271,6 +7377,104 @@ param (
         for ($i=0; $i -lt $key.Length; $i+=32) {$s="$s$($key.Substring($i,8))-$($key.Substring($i+4,4))-$($key.Substring($i+8,4))-$($key.Substring($i+12,4))-$($key.Substring($i+16,12))"}
         $s
     }
+}
+
+function Get-HMACSignature {
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $true)]
+    [String]$string,
+    [Parameter(Mandatory = $true)]
+    [String]$secret,
+    [Parameter(Mandatory = $false)]
+    [String]$hash = "HMACSHA256"
+)
+
+    $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create($hash)
+    $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
+    [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${string}))).ToLower() -replace "[^0-9a-z]"
+}
+
+function Invoke-BinanceRequest {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $True)]
+    [String]$endpoint,
+    [Parameter(Mandatory = $False)]
+    [String]$key,
+    [Parameter(Mandatory = $False)]
+    [String]$secret,
+    [Parameter(Mandatory = $False)]
+    $params = @{},
+    [Parameter(Mandatory = $False)]
+    [String]$method = "GET",
+    [Parameter(Mandatory = $False)]
+    [String]$base = "https://api.binance.com",
+    [Parameter(Mandatory = $False)]
+    [int]$Timeout = 15,
+    [Parameter(Mandatory = $False)]
+    [int]$Cache = 0,
+    [Parameter(Mandatory = $False)]
+    [switch]$ForceLocal
+)
+
+    $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
+    if (-not (Test-Path Variable:Global:BinanceCache)) {$Global:BinanceCache = [hashtable]@{}}
+    if (-not $Cache -or -not $Global:BinanceCache[$keystr] -or -not $Global:BinanceCache[$keystr].request -or $Global:BinanceCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+
+        $Remote = $false
+
+        if (-not $ForceLocal) {
+            $Config = if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}
+
+            if ($Config.RunMode -eq "Client" -and $Config.ServerName -and $Config.ServerPort -and (Test-TcpServer $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                $serverbody = @{
+                    endpoint  = $endpoint
+                    key       = $key
+                    secret    = $secret
+                    params    = $params | ConvertTo-Json -Depth 10 -Compress
+                    method    = $method
+                    base      = $base
+                    timeout   = $timeout
+                    machinename = $Session.MachineName
+                    workername  = $Config.Workername
+                    myip      = $Session.MyIP
+                }
+                try {
+                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                    if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Info "Binance server call: $($_.Exception.Message)"
+                }
+            }
+        }
+
+        if (-not $Remote -and $key -and $secret) {
+            $timestamp = 0
+            try {$timestamp = (Invoke-GetUrl "$($base)/api/v3/time" -timeout 3).serverTime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            if (-not $timestamp) {$timestamp = Get-UnixTimestamp -Milliseconds}
+
+            $params["timestamp"] = $timestamp
+            $paramstr = "$(($params.Keys | Sort-Object | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
+
+            $headers = [hashtable]@{
+                'X-MBX-APIKEY'  = $key
+            }
+            try {
+                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body "$($paramstr)&signature=$(Get-HMACSignature $paramstr $secret)"
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                "Binance API call: $($_.Exception.Message)"
+                Write-Log -Level Info "Binance API call: $($_.Exception.Message)"
+            }
+        }
+
+        if (-not $Global:BinanceCache[$keystr] -or $Request) {
+            $Global:BinanceCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        }
+    }
+    $Global:BinanceCache[$keystr].request
 }
 
 function Invoke-NHRequest {
@@ -7337,20 +7541,18 @@ param(
 
         if (-not $Remote -and $key -and $secret -and $organizationid) {
             $uuid = [string]([guid]::NewGuid())
-            $timestamp = Get-UnixTimestamp -Milliseconds
-            #$timestamp_nh = Invoke-GetUrl "$($base)/main/api/v2/time" -timeout $Timeout | Select-Object -ExpandProperty serverTime
-            #if ([Math]::Abs($timestamp_nh - $timestamp) -gt 3000) {$timestamp = $timestamp_nh}
+            $timestamp = 0
+            try {$timestamp = (Invoke-GetUrl "$($base)/api/v2/time" -timeout 3).serverTime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            if (-not $timestamp) {$timestamp = Get-UnixTimestamp -Milliseconds}
+
             $paramstr = "$(($params.Keys | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
             $str = "$key`0$timestamp`0$uuid`0`0$organizationid`0`0$($method.ToUpper())`0$endpoint`0$(if ($method -eq "GET") {$paramstr} else {"`0$($params | ConvertTo-Json -Depth 10 -Compress)"})"
-            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA256")
-            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))
 
             $headers = [hashtable]@{
                 'X-Time'            = $timestamp
                 'X-Nonce'           = $uuid
                 'X-Organization-Id' = $organizationid
-                'X-Auth'            = "$($key):$(($sign -replace '\-').ToLower())"
+                'X-Auth'            = "$($key):$(Get-HMACSignature $str $secret)"
                 'Cache-Control'     = 'no-cache'
             }
             try {
@@ -7371,6 +7573,29 @@ param(
         }
     }
     $Global:NHCache[$keystr].request
+}
+
+function Invoke-Reboot {
+    if ($IsLinux) {
+        if ((Get-Command "Test-OCDaemon" -ErrorAction Ignore) -and (Test-OCDaemon)) {
+            Invoke-OCDaemon -Cmd "reboot" -Quiet > $null
+        } elseif (Test-IsElevated) {
+            Invoke-Exe -FilePath "reboot" -RunAs > $null
+        } else {
+            throw "need to be root to reboot $($Session.MachineName)"
+        }
+    } else {
+        try {
+            Restart-Computer -Force -ErrorAction Stop
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Restart-Computer command failed. Falling back to shutdown."
+            shutdown /r /f /t 10 /c "RainbowMiner scheduled restart" 2>$null
+            if ($LastExitCode -ne 0) {
+                throw "shutdown cannot reboot $($Session.MachineName) ($LastExitCode)"
+            }
+        }
+    }
 }
 
 function Get-WalletWithPaymentId {

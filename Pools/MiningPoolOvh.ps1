@@ -10,6 +10,7 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$Password
 )
 
@@ -42,7 +43,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         try {
             $Network_Request = Invoke-RestMethodAsync "https://veriumstats.vericoin.info/stats.json" -tag "veriumstats" -timeout 15 -cycletime 120
-            $Pool_Request = ((Invoke-RestMethodAsync "https://www.mining-pool.ovh/index.php?page=statistics&action=pool" -tag $Name -timeout 15 -cycletime 120) -split 'General Statistics' | Select-Object -Last 1) -split '</table>' | Select-Object -First 1
+            $Pool_Request = ((Invoke-WebRequestAsync "https://www.mining-pool.ovh/index.php?page=statistics&action=pool" -tag $Name -timeout 15 -cycletime 120) -split 'General Statistics' | Select-Object -Last 1) -split '</table>' | Select-Object -First 1
             ([regex]'(?si)id="b-(\w+)".*?>[\s\r\n]*([\d.,]+)(.*?)</td>').Matches($Pool_Request) | Foreach-Object {
                 $match = $_
                 Switch ($match.Groups[1].value) {
@@ -102,7 +103,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$Pool_Region.$Pool_RpcPath.mining-pool.ovh"

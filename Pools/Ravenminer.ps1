@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "avg",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -17,7 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/status" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -26,7 +27,7 @@ catch {
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -75,7 +76,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$_ -eq $Pool_Algorithm} |
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.Week
+                    StablePrice   = $Stat.$StatAverageStable
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = "$($Pool_Region).$($Pool_Host)"

@@ -5,6 +5,10 @@
 <div class="alert alert-info" role="alert">Ever growing setup page. We will start with HeatMyFlat :)</div>
 
 <form id="formConfig">
+    <input type="hidden" name="savearrays[]" value="DeviceName" />
+    <input type="hidden" name="savearrays[]" value="ExcludeDeviceName" />
+    <input type="hidden" name="savearrays[]" value="PoolName" />
+    <input type="hidden" name="savearrays[]" value="ExcludePoolName" />
     <div id="accordion">
 
         <div class="card mb-3">
@@ -246,6 +250,15 @@
                         </div>
                     </div>
                     <div class="form-group row">
+                        <label for="inputFixedCostPerDay" class="col-sm-2 col-form-label">Fixed Cost per Day</label>
+                        <div class="input-group col-sm-10">
+                            <input type="number" class="form-control" id="inputFixedCostPerDay" name="FixedCostPerDay" min="0" step="0.00000001" data-number-to-fixed="8" data-number-stepfactor="100000000" placeholder="enter cumulative fixed costs per day" aria-describedby="addto-inputFixedCostPerDay">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="addto-inputFixedCostPerDay">per day</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
                         <label for="inputUsePowerPrice" class="col-sm-2 col-form-label">Use Powerprice</label>
                         <div class="col-sm-10">
                             <select class="form-control mr-sm-2" id="inputUsePowerPrice" name="UsePowerPrice">
@@ -291,7 +304,7 @@
                     <div class="form-group row">
                         <label for="inputAPIport" class="col-sm-2 col-form-label">Machine's API port</label>
                         <div class="input-group col-sm-10">
-                            <input type="number" min="1000" max="65535" step="1" class="form-control" id="inputAPIport" name="APIport" placeholder="If needed, choose a different API port">
+                            <input type="number" min="80" max="65535" step="1" class="form-control" id="inputAPIport" name="APIport" placeholder="If needed, choose a different API port">
                         </div>
                     </div>
                     <div class="form-group row">
@@ -306,7 +319,7 @@
                     <div class="form-group row is--auth">
                         <label for="inputAPIuser" class="col-sm-2 col-form-label">Machine's Username</label>
                         <div class="input-group col-sm-10">
-                            <input type="text" class="form-control" id="inputAPIuser" name="MinerAPIuser" placeholder="Enter an API username">
+                            <input type="text" class="form-control" id="inputAPIuser" name="APIuser" placeholder="Enter an API username">
                         </div>
                     </div>
                     <div class="form-group row is--auth">
@@ -315,13 +328,38 @@
                             <input type="password" class="form-control" id="inputAPIpassword" name="APIpassword">
                         </div>
                     </div>
+                    <div class="form-group row is--auth">
+                        <label for="inputAPImaxLoginAttemps" class="col-sm-2 col-form-label">Max. Login Attempts</label>
+                        <div class="col-sm-10">
+                            <input type="number" min="0" step="1" class="form-control" id="inputAPImaxLoginAttemps" name="APImaxLoginAttemps" placeholder="Maximum number of failed login attempts">
+                            <div id="inputAPImaxLoginAttempsHelp" class="form-text text-muted">Maximum number of failed login attempts, until IP gets blocked (0=turn off)</div>
+                        </div>
+                    </div>
+                    <div class="form-group row is--auth">
+                        <label for="inputAPIblockLoginAttemptsTime" class="col-sm-2 col-form-label">Block IP Time</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputAPIblockLoginAttemptsTime" name="APIblockLoginAttemptsTime" placeholder="Enter an API username">
+                            <div id="inputAPIblockLoginAttemptsTime" class="form-text text-muted">Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds)</div>
+                        </div>
+                    </div>
                     <div class="form-group row">
                         <label for="inputAPIthreads" class="col-sm-2 col-form-label">Parallel API Threads</label>
-                        <div class="input-group col-sm-10">
+                        <div class="col-sm-10">
                             <input type="number" min="0" max="100" step="1" class="form-control" id="inputAPIthreads" name="APIthreads" placeholder="Maximum number of parallel API threads (0=automatic)">
                             <div id="inputAPIthreadsHelp" class="form-text text-muted">Enter the maximum parallel API threads (or set to 0 for automatic)</div>
                         </div>
                     </div>
+                    <div class="form-group row">
+                        <label for="inputAPIlockConfig" class="col-sm-2 col-form-label">Lock Config</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputAPIlockConfig" name="APIlockConfig">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputAPIlockConfigHelp" class="form-text text-muted">Lock config files, so that API/localhost cannot change them anymore. Warning: you need to edit config.txt manually to reset value "APIlockConfig"</div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -349,7 +387,7 @@
                         <div class="form-group row">
                             <label for="inputServerPort" class="col-sm-2 col-form-label">Servers's API port</label>
                             <div class="input-group col-sm-10">
-                                <input type="number" min="1000" max="65535" step="1" class="form-control" id="inputServerPort" name="ServerPort" placeholder="Enter the server's API port">
+                                <input type="number" min="80" max="65535" step="1" class="form-control" id="inputServerPort" name="ServerPort" placeholder="Enter the server's API port">
                             </div>
                         </div>
                         <div class="form-group row">
@@ -439,6 +477,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-group row is--reporting">
+                        <label for="inputDiskMinGB" class="col-sm-2 col-form-label">Hard Disk min. free space</label>
+                        <div class="input-group col-sm-10">
+                            <input type="number" min="0" step="0.5" class="form-control" id="inputDiskMinGB" name="DiskMinGB" placeholder="Enter minimum free space on Hard Drive" aria-describedby="addto-inputDiskMinGB">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="addto-inputDiskMinGB">GB</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -511,6 +558,46 @@
                                 </div>
                             </div>
                             <div id="inputBenchmarkIntervalHelp" class="form-text text-muted">Enter the script's loop interval in seconds, used for benchmarks</div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="inputEnableFastlaneBenchmark" class="col-sm-2 col-form-label">Fastlane for Benchmark</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableFastlaneBenchmark" name="EnableFastlaneBenchmark">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputEnableFastlaneBenchmarkHelp" class="form-text text-muted">If enabled, RainbowMiner will skip all benchmarks and try to download live values from rbminer.net. This is VERY inaccurate.</div>
+                        </div>
+                    </div>
+                    <div class="form-group row is--fastlane">
+                        <label for="inputFastlaneBenchmarkTypeCPU" class="col-sm-2 col-form-label">Fastlane CPU values</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputFastlaneBenchmarkTypeCPU" name="FastlaneBenchmarkTypeCPU">
+                                <option value="avg">live average</option>
+                                <option value="min">live minimum</option>
+                                <option value="max">live maximum</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row is--fastlane">
+                        <label for="inputFastlaneBenchmarkTypeGPU" class="col-sm-2 col-form-label">Fastlane GPU values</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputFastlaneBenchmarkTypeGPU" name="FastlaneBenchmarkTypeGPU">
+                                <option value="avg">live average</option>
+                                <option value="min">live minimum</option>
+                                <option value="max">live maximum</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row is--fastlane">
+                        <label for="inputEnableFastlaneBenchmarkMissing" class="col-sm-2 col-form-label">Fastlane missing</label>
+                        <div class="col-sm-10">
+                            <select class="form-control mr-sm-2" id="inputEnableFastlaneBenchmarkMissing" name="EnableFastlaneBenchmarkMissing">
+                                <option value="0">disable</option>
+                                <option value="1">enable</option>
+                            </select>
+                            <div id="inputEnableFastlaneBenchmarkMissing" class="form-text text-muted">If enabled, the fastlane benchmark downloader will benchmark missing device/miner/algos on the machine, instead of setting them to "Failed Benchmark"</div>
                         </div>
                     </div>
                     <div class="form-group row">
@@ -646,7 +733,7 @@
         $("span#inputMiningHeatControlValue").text(val)
     }
 
-  $(function() {
+    $(function() {
       $.ajax({
           url: '/userconfig', success: function (result) {
               $("input.form-control,select.form-control,input.custom-range").each(function(index) {
@@ -709,11 +796,20 @@
                     $(".is--ocprofiles").hide();
                 }
               });
+              $("#inputEnableFastlaneBenchmark").change(function() {
+                if ($(this).val()=="1") {
+                    $(".is--fastlane").show();
+                } else {
+                    $(".is--fastlane").hide();
+                }
+              });
 
               $("#inputAPIauth").trigger("change");
               $("#inputRunMode").trigger("change");
               $("#inputEnableServerConfig").trigger("change");
               $("#inputEnableMinerStatus").trigger("change");
+              $("#inputEnableOCProfiles").trigger("change");
+              $("#inputEnableFastlaneBenchmark").trigger("change");
           }
       });
       $.ajax({
@@ -730,6 +826,13 @@
       $("#formConfig").submit(function (event) {
           // Stop form from submitting normally
           event.preventDefault();
+          if (globalconfig.IsLocked) {
+              alert('Warning: config lock is enabled. To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt');
+              return false;
+          } else if ($("#inputAPIlockConfig").val() == "1") {
+              if (!confirm("Warning: you are about to lock the config.\nYou will have to manually set parameter \"APIlockConfig\" to \"0\" in config.txt to reset this.\n\nDo you really want to proceed?"))
+              return false;
+          }
           $.post("/saveconfig", $(this).serialize()).done(function (data) {
               $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
               $('.modal-title').text('Configuration saved!');

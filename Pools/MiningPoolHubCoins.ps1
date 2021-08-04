@@ -10,6 +10,7 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$AEcurrency = ""
 )
 
@@ -42,21 +43,23 @@ $Pool_Fee = 0.9 + 0.2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
-$Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
+$Pool_Request.return | Where-Object {$_.algo -and $_.symbol} | ForEach-Object {
     $Pool_Hosts     = if ($_.host -match "^hub") {$_.host} else {$_.host_list.split(";")}
     $Pool_Port      = $_.port
     $Pool_CoinSymbol= $_.symbol
 
-    $Pool_Coin      = Get-Coin "$($Pool_CoinSymbol)$(if ($_.coin_name -match '-') {"-$($_.algo)"})"
+    $Pool_Algorithm = $_.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+
+    $Pool_Coin      = Get-Coin "$($Pool_CoinSymbol)$(if ($_.coin_name -match '-') {"-$($Pool_Algorithms.$Pool_Algorithm)"})"
     if ($Pool_Coin) {
         $Pool_Algorithm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     } else {
-        $Pool_Algorithm = $_.algo
         $Pool_CoinName  = (Get-Culture).TextInfo.ToTitleCase($_.coin_name -replace "-.+$")
     }
 
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
@@ -83,7 +86,7 @@ $Pool_Request.return | Where-Object {$_.symbol} | ForEach-Object {
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = $Pool_Host

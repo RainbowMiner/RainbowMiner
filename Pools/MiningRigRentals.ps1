@@ -11,6 +11,7 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$User = "",
     [String]$API_Key = "",
     [String]$API_Secret = "",
@@ -53,6 +54,7 @@ param(
     [String]$PauseBetweenRentals = "0",
     [String]$Title = "",
     [String]$Description = "",
+    [String]$StartMessage = "",
     [String]$ExtensionMessage = "",
     [String]$ExtensionMessageTime = "",
     [String]$UseHost = ""
@@ -94,6 +96,7 @@ $Workers     = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Dev
 $UseWorkerName_Array     = @($UseWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 
+$StartMessage = "$StartMessage".Trim()
 $ExtensionMessage = "$ExtensionMessage".Trim()
 
 if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
@@ -257,9 +260,9 @@ if ($AllRigs_Request) {
 
                 if ($_.status.status -eq "rented" -or $_.status.rented) {
 
-                    $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
-
                     $Rental_Result  = $null
+
+                    $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
 
                     $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
                     $Rental_CheckForExtensionMessage = $AllowExtensions -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
@@ -267,19 +270,47 @@ if ($AllRigs_Request) {
                     $Rental_Check = ($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage
 
                     try {
-                        $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60 -Cache $(if ($Rental_Check) {0} else {[double]$_.status.hours*3600})
-                        if ($Rig_RentalPrice = [Double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)")) {
-                            $Pool_Price = $Rig_RentalPrice
-                            if ($Rental_Result.price_converted.currency -ne "BTC") {
-                                $Pool_Currency = $Rental_Result.price_converted.currency
-                                $Pool_Price *= $_.price.BTC.price/$_.price."$($Rental_Result.price.currency)".price
+                        try {
+                            $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60 -Cache $(if ($Rental_Check) {0} else {[double]$_.status.hours*3600})
+                            if ($Rental_Result.id -eq $_.rental_id) {
+                                Set-MiningRigRentalStat $Worker1 $Rental_Result
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            $Rental_Result = Get-MiningRigRentalStat $Worker1 $_.rental_id
+                        }
+
+                        if ($Rental_Result) {
+                            if ($Rig_RentalPrice = [Double]$Rental_Result.price_converted.advertised / (ConvertFrom-Hash "1$($Rental_Result.price_converted.type)")) {
+                                $Pool_Price = $Rig_RentalPrice
+                                if ($Rental_Result.price_converted.currency -ne "BTC") {
+                                    $Pool_Currency = $Rental_Result.price_converted.currency
+                                    $Pool_Price *= $_.price.BTC.price/$_.price."$($Rental_Result.price.currency)".price
+                                }
+                            }
+                            if ($Rental_Check) {
+                                $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
+                                $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
                             }
                         }
-                        if ($Rental_Check) {
-                            $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
-                            $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
-                        }
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+
+                    if ($StartMessage -ne "" -and -not $Pool_RigStatus.startmessagesent) {
+                        try {
+                            $StartMessage_Result = $null
+
+                            if ($Rental_Result.length -and (([double]$Rental_Result.length + [double]$Rental_Result.extended - [double]$Rental_Result.rig.status.hours) -lt 5/60)) {
+                                $StartMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$StartMessage} -method "PUT" -Timeout 60
+                            }
+
+                            Write-Log -Level Info "$($Name): Start message $(if (-not $StartMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+
+                            Set-MiningRigRentalStatus $Pool_RigId -Status "startmessagesent" > $null
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-Log -Level Warn "$($Name): Unable to handle start message for rental #$($_.rental_id): $($_.Exception.Message)"
+                        }
+                    }
 
                     if ($EnableAutoExtend) {
                         if ($Rental_CheckForAutoExtend) {
@@ -360,9 +391,22 @@ if ($AllRigs_Request) {
                             Set-MiningRigRentalStatus $Pool_RigId -Status "extensionmessagesent" > $null
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
-                            Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
+                            Write-Log -Level Warn "$($Name): Unable to handle extension message for rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
+
+                    try {
+                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-15) -gt [DateTime]::Parse("$($Rental_Result.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
+
+                            #Manual override to end rentals in case of server failure
+
+                            if ($_.status.rented) {$_.status.rented = $false}
+                            if ($_.status.status -eq "rented") {$_.status.status = "available"}
+                            $Pool_RigEnable = $false
+
+                            Write-Log -Level Warn "MiningRigRentals: cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1)"
+                        }
+                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
                     $Pool_RigStatus = $null
                 }
@@ -402,6 +446,8 @@ if ($AllRigs_Request) {
                     
                     $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
+                    $Rigs_UserSep   = if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
+
                     [PSCustomObject]@{
                         Algorithm     = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
 					    Algorithm0    = $Pool_Algorithm_Norm
@@ -409,12 +455,12 @@ if ($AllRigs_Request) {
                         CoinSymbol    = $Pool_CoinSymbol
                         Currency      = $Pool_Currency
                         Price         = $Pool_Price
-                        StablePrice   = $Stat.Week
+                        StablePrice   = $Stat.$StatAverageStable
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                         Host          = $Miner_Server
                         Port          = $Miner_Port
-                        User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
+                        User          = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable."$($_.region)"
                         SSL           = $Pool_SSL
@@ -427,7 +473,7 @@ if ($AllRigs_Request) {
                                 Protocol = "stratum+tcp"
                                 Host     = $_
                                 Port     = if ($Miner_Port -match "^33\d\d$") {$Miner_Port} else {3333}
-                                User     = "$($User).$($Pool_RigId)"
+                                User     = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
                                 Pass     = "x"
                             }
                         })
@@ -1014,7 +1060,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 }
 
                                                 if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
-                                                    $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
+                                                    $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"  -or $_.pass -match "=mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
                                                     if ((-not $RigPoolCurrent -and ($RigPools[$RigPools_Id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
                                                         try {
                                                             $RigPriority = [int]$(if ($RigPoolCurrent) {
@@ -1039,16 +1085,18 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     }
 
                                                     #temporary fix
-                                                    $RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Foreach-Object {
-                                                        try {
-                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
-                                                            if ($Result.success) {
-                                                                $RigCreated++
+                                                    @($RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Select-Object) + @($RigPools[$RigPools_Id] | Where-Object {$_.pass -match "ID=mrx"} | Select-Object -Skip 1) | Foreach-Object {
+                                                        if ($RigCreated -lt $MaxAPICalls) {
+                                                            try {
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
+                                                                if ($Result.success) {
+                                                                    $RigCreated++
+                                                                }
+                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            } catch {
+                                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                                Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                             }
-                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
-                                                        } catch {
-                                                            if ($Error.Count){$Error.RemoveAt(0)}
-                                                            Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                         }
                                                     }
                                                 }

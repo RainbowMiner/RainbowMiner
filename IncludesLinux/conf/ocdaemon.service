@@ -17,7 +17,7 @@ Restart=on-failure
 RestartSec=42
 
 StandardOutput=null
-StandardError=/opt/rainbowminer/ocdcmd/ocdaemon.error.log
+StandardError=null
 
 [Install]
 WantedBy=multi-user.target

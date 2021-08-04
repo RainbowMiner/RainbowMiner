@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 #https://api.woolypooly.com/api/stats
@@ -28,11 +29,6 @@ catch {
     return
 }
 
-$Pool_Regions = @("eu","us","sg")
-
-[hashtable]$Pool_RegionsTable = @{}
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-
 #$Result = (Invoke-WebRequest "http://www.woolypooly.com/js/app.d2102344.js").Content
 #if ($Result -match "JSON.parse\('(\[{.+}\])'\)") {
 #    $Tech = ConvertFrom-Json $Matches[1]
@@ -43,26 +39,25 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 #}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "AE"; port = 20000; host = "ae"; rpc = "aeternity-1"}
+    [PSCustomObject]@{symbol = "AE";   port = 20000; host = "ae"; rpc = "aeternity-1"}
     [PSCustomObject]@{symbol = "AION"; port = 33333; host = "aion"; rpc = "aion-1"}
-    [PSCustomObject]@{symbol = "BTG"; port = 3090; host = "btg"; rpc = "btg-1"}
-    [PSCustomObject]@{symbol = "CFX"; port = 3094; host = "cfx"; rpc = "cfx-1"}
+    [PSCustomObject]@{symbol = "BTG";  port = 3090; host = "btg"; rpc = "btg-1"}
+    [PSCustomObject]@{symbol = "CFX";  port = 3094; host = "cfx"; rpc = "cfx-1"}
     [PSCustomObject]@{symbol = "CTXC"; port = 40000; host = "cortex"; rpc = "cortex-1"}
-    [PSCustomObject]@{symbol = "ERG"; port = 3100; host = "erg"; rpc = "ergo-1"}
-    [PSCustomObject]@{symbol = "ETC"; port = 35000; host = "etc"; rpc = "etc-1"}
-    [PSCustomObject]@{symbol = "ETH"; port = 3096; host = "eth"; rpc = "eth-1"}
-    #[PSCustomObject]@{symbol = "GRIN-SEC"; port = 12000; host = "grin"; rpc = "grin-1"}
-    [PSCustomObject]@{symbol = "GRIN-PRI"; port = 12000; host = "grin"; rpc = "grin-1"}
-    #[PSCustomObject]@{symbol = "MWC-SEC"; port = 11000; host = "mwc"; rpc = "mwc-1"}
+    [PSCustomObject]@{symbol = "ERG";  port = 3100; host = "erg"; rpc = "ergo-1"}
+    [PSCustomObject]@{symbol = "ETC";  port = 35000; host = "etc"; rpc = "etc-1"}
+    [PSCustomObject]@{symbol = "ETH";  port = 3096; host = "eth"; rpc = "eth-1"}
+    [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "zcoin"; rpc = "zcoin-1"}
+    [PSCustomObject]@{symbol = "FLUX"; port = 3092; host = "zel"; rpc = "zel-1"}
+    [PSCustomObject]@{symbol = "GRIN-PRI";  port = 12000; host = "grin"; rpc = "grin-1"}
     [PSCustomObject]@{symbol = "MWC-PRI"; port = 11000; host = "mwc"; rpc = "mwc-1"}
-    [PSCustomObject]@{symbol = "RVN"; port = 55555; host = "rvn"; rpc = "raven-1"}
+    [PSCustomObject]@{symbol = "RVN";  port = 55555; host = "rvn"; rpc = "raven-1"}
     [PSCustomObject]@{symbol = "SERO"; port = 8008; host = "sero"; rpc = "sero-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
-    [PSCustomObject]@{symbol = "XZC"; port = 3098; host = "zcoin"; rpc = "zcoin-1"}
-    [PSCustomObject]@{symbol = "ZEL"; port = 3092; host = "zel"; rpc = "zel-1"}
 )
 
 $Pool_PayoutScheme = "SOLO"
+$Pool_Region = Get-Region "eu"
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Request."$($_.rpc)" -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
     $Pool_Coin      = Get-Coin $_.symbol
@@ -72,7 +67,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
-    $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} else {$null}
+    $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} else {$null}
 
     $Pool_Data      = ($Pools_Request.$Pool_RpcPath.modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}).algo_stats
     $Pool_AlgoStats = if ($Pool_Data) {$Pool_Data.PSObject.Properties | Where-Object {$_.Name -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm} | Foreach-Object {$_.Value}}
@@ -100,7 +95,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_SSL in @($false,$true)) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
 		    Algorithm0    = $Pool_Algorithm_Norm
@@ -110,13 +105,13 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
             Price         = 0
             StablePrice   = 0
             MarginOfError = 0
-            Protocol      = "stratum+tcp"
-            Host          = "$($Pool_HostPath)$(if ($Pool_Region -ne "eu") {".$($Pool_Region)"}).woolypooly.com"
+            Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+            Host          = "pool.woolypooly.com"
             Port          = $Pool_Port
             User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
             Pass          = "x"
-            Region        = $Pool_RegionsTable.$Pool_Region
-            SSL           = $false
+            Region        = $Pool_Region
+            SSL           = $Pool_SSL
             WTM           = $true
             Updated       = $Stat.Updated
             Workers       = $Pool_AlgoStats.minersTotal

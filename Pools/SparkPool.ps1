@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -24,7 +25,7 @@ $Pool_RegionsTable["asia"] = Get-Region "sea"
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/pool/stats?pool=SPARK_POOL_CN" -tag $Name -retry 5 -retrywait 250 -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/pool/stats" -tag $Name -retry 5 -retrywait 250 -cycletime 120
     if ($Pool_Request.code -ne 200) {throw}
 }
 catch {
@@ -72,7 +73,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "_.+$";$Wallets.
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$(if ($Pool_RegionWithID) {$Pool_ID})$(if ($Pool_RegionWithID -and $Pool_Region -ne "cn") {"-"})$(if ($Pool_Region -ne "cn" -or -not $Pool_RegionWithID) {$Pool_Region}).sparkpool.com"

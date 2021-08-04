@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -49,7 +50,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         
         try {
             $Pool_Request = Invoke-RestMethodAsync "http://mining-$($Pool_RpcPath).pool.sexy/api/stats" -tag $Name -cycletime 120
-            $Pool_RequestBlocks = Invoke-RestMethodAsync "http://mining-$($Pool_RpcPath).pool.sexy/api/blocks" -tag $Name -cycletime 120
+            $Pool_RequestBlocks = Invoke-RestMethodAsync "http://mining-$($Pool_RpcPath).pool.sexy/api/blocks" -tag $Name -cycletime 120 -fixbigint
             if ($Pool_Request.now) {$ok=$true}
         }
         catch {
@@ -91,7 +92,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live
-            StablePrice   = $Stat.Week
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
             Host          = "$($Pool_RpcPath).pool.sexy"

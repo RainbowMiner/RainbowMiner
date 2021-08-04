@@ -10,7 +10,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -28,7 +29,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "http://cortexmint.com/api/stats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
     if (-not $Pool_Request.now) {$ok = $false}
     else {
-        $Pool_BlocksRequest = Invoke-RestMethodAsync "http://cortexmint.com/api/blocks" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
+        $Pool_BlocksRequest = Invoke-RestMethodAsync "http://cortexmint.com/api/blocks" -tag $Name -retry 3 -retrywait 1000 -cycletime 120 -fixbigint
         if (-not $Pool_BlocksRequest.matured) {$ok = $false}
         #$Pool_NetworkRequest = Invoke-RestMethodAsync "https://cerebro.cortexlabs.ai/mysql?type=basicInfo" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
         #if ($Pool_NetworkRequest.status -ne "success") {$ok = $false}
@@ -83,7 +84,7 @@ $Pools_Data | ForEach-Object {
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live
-            StablePrice   = $Stat.Week
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
             Host          = "cuckoo.cortexmint.com"

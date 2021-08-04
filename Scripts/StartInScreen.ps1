@@ -120,7 +120,7 @@ do {
         }
 
         $StopWatch.Restart()
-        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.Seconds -le 10) {
+        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
             Start-Sleep -Milliseconds 500
         }
 

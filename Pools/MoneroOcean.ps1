@@ -8,7 +8,8 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_5",
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$Password = ""
 )
 
@@ -29,10 +30,10 @@ catch {
 
 $Pool_PoolFee = 0.68 # cost for exchange
 
-$Pool_CPUPort_Test = $Global:GlobalCPUInfo.Cores * ($Global:GlobalCPUInfo.MaxClockSpeed * 20 / 1000) * 5
-$Pool_CPUPort_Base = if ($Pool_CPUPort_Test -gt 0) {[Math]::Min([Math]::Pow(2,1+[Math]::Floor([Math]::Log($Pool_CPUPort_Test / 50,2))),8192)} else {1}
+$Pool_CPUPort_Test = $Global:GlobalCPUInfo.Cores * $Global:GlobalCPUInfo.MaxClockSpeed * 4 / 1000
+$Pool_CPUPort_Base = if ($Pool_CPUPort_Test -gt 0) {[Math]::Min([Math]::Pow(2,1+[Math]::Floor([Math]::Log($Pool_CPUPort_Test,2))),8192)} else {16}
 $Pool_GPUPost_Test = $Global:DeviceCache.Devices.Where({$_.type -eq "gpu"}).Count
-$Pool_GPUPort_Base = if ($Pool_GPUPost_Test -ge 8) {256} elseif ($Pool_GPUPost_Test -ge 4) {128} else {64}
+$Pool_GPUPort_Base = if ($Pool_GPUPost_Test -gt 1) {8192} else {1024}
 
 $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashrate -gt 0)) -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
@@ -57,7 +58,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
             CoinSymbol    = $Pool_CoinSymbol
             Currency      = "XMR"
             Price         = $Stat.$StatAverage
-            StablePrice   = $Stat.Week
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = $Pool_Protocol
             Host          = "gulf.moneroocean.stream"

@@ -15,8 +15,8 @@ $Version = "2.3.1"
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.1-tpruvot/ccminer-2.3.1-cuda10.7z"
-        Cuda = "10.0"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.1-tpruvot/ccminer-2.3.1-cuda10.1.7z"
+        Cuda = "10.1"
     }
 )
 
@@ -24,7 +24,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
-    [PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
+    #[PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""; ExtendInterval = 2; CoinSymbols = @("TNET")} #Blake2b
@@ -38,7 +38,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
     #[PSCustomObject]@{MainAlgorithm = "graft"; Params = ""; ExcludePoolName = "^Nicehash"} #CryptoNightV7
-    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
+    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""; FaultTolerance = 0.5} #Groestl
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"; FaultTolerance = 0.5} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = "-N 1"} #JHA
@@ -149,7 +149,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 -b `$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
+					Arguments      = "-T 50000 -R 1 -b `$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					API            = "Ccminer"
 					Port           = $Miner_Port

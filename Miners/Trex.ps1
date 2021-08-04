@@ -7,46 +7,26 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$ManualUri = "https://github.com/trexminer/T-Rex/releases"
+$ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.19.11"
+$Version = "0.21.5"
 $DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-linux-cuda11.1.tar.gz"
-            Cuda   = "11.1"
-        },
-        [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-linux-cuda10.0.tar.gz"
-            Cuda   = "10.0"
-            IsGtx  = $true
-        },
-        [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-linux-cuda9.2.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.5-trex/t-rex-0.21.5-linux.tar.gz"
             Cuda   = "9.2"
-            IsGtx  = $true
         }
     )
 } else {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-win-cuda11.1.zip"
-            Cuda   = "11.1"
-        },
-        [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-win-cuda10.0.zip"
-            Cuda   = "10.0"
-            IsGtx  = $true
-        },
-        [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.11-trex/t-rex-0.19.11-win-cuda9.2.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.5-trex/t-rex-0.21.5-win.zip"
             Cuda   = "9.2"
-            IsGtx  = $true
         }
     )
 }
@@ -54,51 +34,19 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "astralhash"; Params = ""} #GLTAstralHash (new with v0.8.6)
-    [PSCustomObject]@{MainAlgorithm = "balloon"; Params = ""} #Balloon
-    [PSCustomObject]@{MainAlgorithm = "bcd"; Params = ""} #Bcd
-    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
-    [PSCustomObject]@{MainAlgorithm = "dedal"; Params = ""} #Dedal (re-added with v0.13.0)
+    [PSCustomObject]@{MainAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DevFee = 2.0} #Autolykos2 (new with 0.21.0)
     [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Etchash (new with 0.18.8)
     [PSCustomObject]@{MainAlgorithm = "ethash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
-    [PSCustomObject]@{MainAlgorithm = "geek"; Params = ""} #Geek (new with v0.7.5)
-    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725 (new with v0.6.4)
-    [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb (new with v0.12.0)
-    [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
-    [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
-    [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = ""; ExtendInterval = 2} #KawPOW (new with v0.15.2)
-    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
-    [PSCustomObject]@{MainAlgorithm = "megabtx"; Params = ""; IsGtx = $true} #MegaBTX (Bitcore) (new with v0.18.1)
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2; ExtendInterval = 3; Algorithm = "ethash"} #Ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = ""; ExtendInterval = 3} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP-TCR (new with v0.15.2)
-    [PSCustomObject]@{MainAlgorithm = "octopus"; Params = ""; ExtendInterval = 2; DevFee = 2.0; IsGtx = $true} #Octopus  (new with v0.19.0)
-    [PSCustomObject]@{MainAlgorithm = "padihash"; Params = ""} #GLTPadiHash  (new with v0.8.6)
-    [PSCustomObject]@{MainAlgorithm = "pawelhash"; Params = ""} #GLTPawelHash  (new with v0.8.6)
-    [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
-    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "octopus"; Params = ""; ExtendInterval = 2; DevFee = 2.0} #Octopus  (new with v0.19.0)
     [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Params = ""; ExtendInterval = 2} #ProgPowVeil (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "progpow-veriblock"; DAG = $true; Params = ""; ExtendInterval = 2} #vProgPow (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "progpowsero"; DAG = $true; Params = "--coin sero"; ExtendInterval = 2; Algorithm = "progpow"} #ProgPow  (new with v0.15.2)
-    [PSCustomObject]@{MainAlgorithm = "progpowz"; DAG = $true; Params = ""; ExtendInterval = 2; IsGtx = $true} #ProgpowZ (new with v0.17.2)
-    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""; IsGtx = $true} #SHA256q (Pyrite)
-    [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""; IsGtx = $true} #SHA256t
-    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
-    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
-    [PSCustomObject]@{MainAlgorithm = "tensority"; Params = ""; DevFee = 3.0} #Tensority
-    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
-    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
-    #[PSCustomObject]@{MainAlgorithm = "veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #Veil
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r (fastest)
-    [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2 (fastest)
-    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt (Veil)
-    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16s
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
-    [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s (broken in v0.8.6, fixed in v0.8.8)
-    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #X22i
-    [PSCustomObject]@{MainAlgorithm = "x25x"; Params = ""} #X25X
-    [PSCustomObject]@{MainAlgorithm = "x33"; Params = ""} #X33 (new with v0.17.3)
+    [PSCustomObject]@{MainAlgorithm = "progpowz"; DAG = $true; Params = ""; ExtendInterval = 2} #ProgpowZ (new with v0.17.2)
+    [PSCustomObject]@{MainAlgorithm = "tensority"; Params = ""} #Tensority
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -122,7 +70,6 @@ for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
         $Uri  = $UriCuda[$i].Uri
         $Cuda = $UriCuda[$i].Cuda
-        $IsGtx= $UriCuda[$i].IsGtx
     }
 }
 
@@ -146,9 +93,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
             $MinMemGB = $_.MinMemGB
         }
 
-        $Miner_IsGtx = $_.IsGtx
-
-        $Miner_Device = $Device | Where-Object {($IsGtx -or -not $Miner_IsGtx -or $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")) -and (Test-VRAM $_ $MinMemGB)}
+        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
@@ -163,8 +108,9 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                                     $Pools.$Algorithm_Norm.Protocol
                                  } else {
                                     Switch($Pools.$Algorithm_Norm.EthMode) {
-                                        "qtminer"      {"stratum1+tcp"}
-                                        "ethstratumnh" {"stratum2+tcp"}
+                                        "qtminer"       {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                                        "ethstratumnh"  {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                                        "ethlocalproxy" {"stratum+http"}
                                         default {$Pools.$Algorithm_Norm.Protocol}
                                     }
                                 }

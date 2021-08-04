@@ -7,9 +7,9 @@ param(
 
 if (-not $IsWindows) {return}
 
-$Path = ".\Bin\NVIDIA-CcminerXaya\ccminer-64bit.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1-ccminerxaya/ccminerxaya-0.1-win.7z"
-$Cuda = "9.0"
+$Path = ".\Bin\NVIDIA-CcminerXaya\ccminer.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2-ccminerxaya/neoscryptxayaV02.7z"
+$Cuda = "11.1.1"
 $ManualUri = "https://github.com/xaya/ccminer/releases"
 $Port = "145{0:d2}"
 $DevFee = 0.0

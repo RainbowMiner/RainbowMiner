@@ -19,13 +19,13 @@
 118	CcminerXevan
 119	CcminerXevan75
 120	CcminerDumax
-121	CcminerRaven
+121	CcminerRX2
 122	CcminerSupr
 123	CcminerAlexis78x64
 124	CcminerX22i
 125	CcminerX21s
 126	CcminerMtp
-127	CcminerThe1
+127	CcminerMtp10
 128	CcminerDyn
 129	CcminerYescrypt
 130	CcminerRfv2
@@ -43,15 +43,12 @@
 142	CcminerKlausT825
 143	CcminerSha3d
 144	CcminerZP
+145	CcminerXaja
 
-200	ClaymoreCryptonightAmd
-201	ClaymoreEquihashAmd
-202	ClaymoreNeoscryptAmd
-203	ClaymoreEthash
-204	ClaymoreEthash9
+200	ClaymoreMoreEpoch
 205	ClaymoreDual
 
-300	Bminer7
+300	Nsfminer
 301	Ethminer
 302	EnemyZealot
 303	XmrigNvidia
@@ -67,18 +64,18 @@
 313	CryptoDredge
 314	CuBalloon
 315	SRBMiner
-316	T-Rex
+316	Trex
 317	lolMiner
 318	Eminer
-319	Funakoshi
+319	Trex19
 320	JceminerCpu
 321	JceminerAmd
 322	Ethminer16
-323	Phoenix30
+323	UbqMiner
 324	ZjazzNvidia
 325	FireIce247
-326	TrexOctopus
-327	Ethminer17
+326	TrexGTX
+327	TrexGTX19
 328	Phoenix35
 329	Gminer
 330	MiniZ
@@ -87,7 +84,7 @@
 333	TTminer
 334	Energiminer
 335	GrinProMiner
-336	LolMiner06
+336	VioletMiner
 337	SwapMiner
 338	CryptoDredge16
 339	MultiMiner
@@ -98,14 +95,14 @@
 344	Phoenix42
 345	GrinGoldMiner
 346	TTminer3
-347	Gminer155
+347	Gminer255
 348	NinjaRig
 349	SrbMinerMulti
 350	FireIceRX
 351	FireIceRXAmd (linux)
 352	FireIceRXCpu (linux)
 353	FireIceRXNvidia (linux)
-354	Gminer183
+354	Gminer258
 355	ProgPOWSeroNvidia
 356	6Miner
 357	ProgPOWEthercoreNvidia
@@ -115,6 +112,7 @@
 361	Nqminer
 362	MiniZRTX
 363	CryptoDredge25
+364	VertHash
 
 400	Sgminer
 401	SgminerBitcore
@@ -137,7 +135,7 @@
 
 500	CpuminerJayddee
 501	CpuminerRplantPW
-502
+502	CpuminerRX2
 503	
 504	CpuminerOptBF
 510	

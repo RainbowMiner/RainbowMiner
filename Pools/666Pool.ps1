@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -21,7 +22,7 @@ $CoinXlat = [PSCustomObject]@{
 }
 
 try {
-    $Request = (((Invoke-RestMethodAsync "https://www.666pool.cn/pool2/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
+    $Request = (((Invoke-WebRequestAsync "https://www.666pool.cn/pool2/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
     $Pools_Data = $Request -replace '<!--.+?-->' -split '<tr>' | Foreach-Object {
         if ($Data = ([regex]'(?si)pool2/block/([-\w]+?)[^-\w].+?(\w+?).666pool.cn:(\d+)<').Matches($_)) {
             $Columns = $_ -replace '</td>' -split '[\s\r\n]*<td[^>]*>[\s\r\n]*'
@@ -80,7 +81,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://www.666pool.cn/pool2/block/$($_.id)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
+            $Pool_BlocksRequest = (Invoke-WebrequestAsync "https://www.666pool.cn/pool2/block/$($_.id)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
             if ($Pool_BlocksRequest.Count -ne 3) {$ok = $false}
             else {
                 $Pool_Power = ([regex]'(?si)djs-power">([^<]+)<').Matches($Pool_BlocksRequest[0])
@@ -118,7 +119,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live
-            StablePrice   = $Stat.Week
+            StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
             Host          = "$Pool_RpcPath.666pool.cn"

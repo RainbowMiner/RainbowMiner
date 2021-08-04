@@ -53,6 +53,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory" ; MinMemGB = 2; Params = @(); ExtendInterval = 3} #Ethash for low memory coins
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -72,9 +73,9 @@ if ($InfoOnly) {
 }
 
 $Cuda = $null
-if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
+if ($Session.Config.CUDAVersion) {
     for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
-        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if (($i -lt $UriCuda.Count-1) -or -not $Global:DeviceCache.DevicesByTypes.NVIDIA) {""}else{$Name})) {
             $Uri  = $UriCuda[$i].Uri
             $Cuda = $UriCuda[$i].Cuda
         }
@@ -109,7 +110,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-			            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+			            $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ' '
                         $First = $false
                     }
 					$Miner_Protocol = "stratum"
@@ -146,6 +147,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = $Algorithm_Norm_0
+                        ListDevices    = "--list-devices"
 					}
 				}
 			}

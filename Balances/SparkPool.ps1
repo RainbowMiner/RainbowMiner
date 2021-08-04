@@ -9,7 +9,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/pool/stats?pool=SPARK_POOL_CN" -tag $Name -retry 5 -retrywait 250 -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/pool/stats" -tag $Name -retry 5 -retrywait 250 -cycletime 120
     if ($Pool_Request.code -ne 200) {throw}
 }
 catch {
@@ -23,7 +23,7 @@ $Pool_Request.data | Where-Object {$Pool_Currency = $_.currency -replace "_.+$";
     $Request = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/bill/stats?miner=$(Get-UrlEncode $Config.Pools.$Name.Wallets.$Pool_Currency)&pool=$($_.pool)&currency=$($_.currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://www.sparkpool.com/v1/bill/stats?miner=$(Get-UrlEncode $Config.Pools.$Name.Wallets.$Pool_Currency)&currency=$($_.currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
         if ($Request.code -ne 200) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {

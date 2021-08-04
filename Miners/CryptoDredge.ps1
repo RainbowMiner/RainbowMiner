@@ -40,7 +40,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 1; Params = ""} #Argon2d250
     [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 3.3; Params = ""} #Argon2d4096
     [PSCustomObject]@{MainAlgorithm = "chukwa";      MinMemGb = 1.5; Params = ""} #Chukwa, new with v0.21.0
-    [PSCustomObject]@{MainAlgorithm = "chukwa2";     MinMemGb = 1.5; Params = ""} #ChukwaV2, new with v0.26.0
+    [PSCustomObject]@{MainAlgorithm = "chukwa2";     MinMemGb = 1.5; Params = ""; ExtendInterval = 2; FaultTolerance = 0.5} #ChukwaV2, new with v0.26.0
     [PSCustomObject]@{MainAlgorithm = "cnconceal";   MinMemGb = 1.5; Params = ""} #CryptonighConceal, new with v0.21.0
     [PSCustomObject]@{MainAlgorithm = "cnfast2";     MinMemGb = 1.5; Params = ""} #CryptonightFast2 / Masari
     [PSCustomObject]@{MainAlgorithm = "cngpu";       MinMemGb = 3.3; Params = ""} #CryptonightGPU

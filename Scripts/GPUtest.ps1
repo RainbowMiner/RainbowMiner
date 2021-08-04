@@ -32,16 +32,16 @@ if ($IsWindows) {
 
     Get-AfterburnerDevices "AMD" | Out-File $TestFileName -Encoding utf8 -Append
 
-    " " | Out-File $TestFileName -Append
-    "3. OverdriveN" | Out-File $TestFileName -Append
-    "-"*80 | Out-File $TestFileName -Append
-    " " | Out-File $TestFileName -Append
+    #" " | Out-File $TestFileName -Append
+    #"3. OverdriveN" | Out-File $TestFileName -Append
+    #"-"*80 | Out-File $TestFileName -Append
+    #" " | Out-File $TestFileName -Append
 
-    Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
+    #Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
 
 
     " " | Out-File $TestFileName -Append
-    "4. nvidia-smi" | Out-File $TestFileName -Append
+    "3. nvidia-smi" | Out-File $TestFileName -Append
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
 
@@ -53,7 +53,7 @@ if ($IsWindows) {
     Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
 
     " " | Out-File $TestFileName -Append
-    "5. OpenCL" | Out-File $TestFileName -Append
+    "4. OpenCL" | Out-File $TestFileName -Append
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
 
@@ -63,21 +63,21 @@ if ($IsWindows) {
         "."*80 | Out-File $TestFileName -Append
     }
 
-    "6. OverdriveNTool" | Out-File $TestFileName -Append
+    "5. OverdriveNTool" | Out-File $TestFileName -Append
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
    
-   $Arguments = @('-console-only','-getcurrent')
-   Invoke-Exe ".\Includes\overdriventool.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+    $Arguments = @('-console-only','-getcurrent')
+    Invoke-Exe ".\Includes\overdriventool.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
 
-    "7. OdVII" | Out-File $TestFileName -Append
-    "-"*80 | Out-File $TestFileName -Append
-    " " | Out-File $TestFileName -Append
+    #"7. OdVII" | Out-File $TestFileName -Append
+    #"-"*80 | Out-File $TestFileName -Append
+    #" " | Out-File $TestFileName -Append
    
-   $Arguments = @('s')
-   Invoke-Exe ".\Includes\odvii.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+    #$Arguments = @('s')
+    #Invoke-Exe ".\Includes\odvii.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
 
-    "8. OdVII 8" | Out-File $TestFileName -Append
+    "6. OdVII 8" | Out-File $TestFileName -Append
     "-"*80 | Out-File $TestFileName -Append
     " " | Out-File $TestFileName -Append
    

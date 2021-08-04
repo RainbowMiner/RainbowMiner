@@ -10,6 +10,7 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week",
     [String]$AEcurrency = ""
 )
 
@@ -43,22 +44,23 @@ $Pool_Fee = 0.9 + 0.2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
-#temp. fix VTC on port 17032 doesn't work 2021/02/06
-$Pool_Request.return | Where-Object {$_.current_mining_coin_symbol -and ($_.current_mining_coin_symbol -ne "VTC")} | ForEach-Object {
+$Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol} | ForEach-Object {
     $Pool_Hosts     = $_.all_host_list.split(";")
-    $Pool_Port      = $_.algo_switch_port
+    $Pool_Port      = if ($_.current_mining_coin_symbol -eq "VTC") {20534} else {$_.algo_switch_port} #temp. fix VTC on port 17032 doesn't work 2021/02/06
     $Pool_CoinSymbol= $_.current_mining_coin_symbol
 
-    $Pool_Coin      = Get-Coin "$($Pool_CoinSymbol)$(if ($_.current_mining_coin -match '-') {"-$($_.algo)"})"
+    $Pool_Algorithm = $_.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+
+    $Pool_Coin      = Get-Coin "$($Pool_CoinSymbol)$(if ($_.current_mining_coin -match '-') {"-$($Pool_Algorithms.$Pool_Algorithm)"})"
     if ($Pool_Coin) {
         $Pool_Algorithm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     } else {
-        $Pool_Algorithm = $_.algo
         $Pool_CoinName  = (Get-Culture).TextInfo.ToTitleCase($_.coin_name -replace "-.+$")
     }
 
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
@@ -82,7 +84,7 @@ $Pool_Request.return | Where-Object {$_.current_mining_coin_symbol -and ($_.curr
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
+                StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = $Pool_Host

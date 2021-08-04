@@ -1025,6 +1025,262 @@ try {
         $AddAlgorithm += @("Autolykos2","VertHash")
     }
 
+    if ($Version -le (Get-Version "4.6.9.6")) {
+        $AddAlgorithm += @("Take2")
+    }
+
+    if ($Version -le (Get-Version "4.7.0.5")) {
+        $RemoveMinerStats += @("*-Trex*_EtcHash_HashRate.txt","*-Trex*_Ethash_HashRate.txt")
+    }
+
+    if ($Version -le (Get-Version "4.7.1.1")) {
+        if (Test-Path "Config") {
+            if (Test-Path $ConfigFile) {
+                $ConfigActual  = Get-Content $ConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                $Changes = 0
+
+                if ([bool]$ConfigActual.PSObject.Properties["DeviceName"]) {
+                    $DeviceName = [string]::Join(",",@([regex]::split($ConfigActual.DeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                    if ($DeviceName -ne $ConfigActual.DeviceName) {
+                        $ConfigActual.DeviceName = $DeviceName
+                        $Changes++
+                    }
+                }
+
+                if ([bool]$ConfigActual.PSObject.Properties["ExcludeDeviceName"]) {
+                    $ExcludeDeviceName = [string]::Join(",",@([regex]::split($ConfigActual.ExcludeDeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                    if ($ExcludeDeviceName -ne $ConfigActual.ExcludeDeviceName) {
+                        $ConfigActual.ExcludeDeviceName = $ExcludeDeviceName
+                        $Changes++
+                    }
+                }
+
+                if ($Changes) {
+                    Set-ContentJson -PathToFile $ConfigFile -Data $ConfigActual > $null
+                    $ChangesTotal += $Changes
+                }
+
+                if (Test-Path $OCprofilesConfigFile) {
+                    $Changes = 0
+                    $OCprofilesSafe = [PSCustomObject]@{}
+                    $OCprofilesConfigActual  = Get-Content $OCprofilesConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    $OCprofilesConfigActual.PSObject.Properties | Sort-Object {$_.Name -match "-NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
+                        $NewName = $_.Name -replace "-NVIDIA(R|G)TX","-`${1}TX"
+                        $OCprofilesSafe | Add-Member $NewName $_.Value -Force
+                        if ($NewName -ne $_.Name) {$Changes++}
+                    }
+
+                    if ($Changes) {
+                        $OCprofilesSort = [PSCustomObject]@{}
+                        $OCprofilesSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                            $OCprofilesSort | Add-Member $_.Name $_.Value -Force
+                        }
+                        Set-ContentJson -PathToFile $OCprofilesConfigFile -Data $OCprofilesSort > $null
+                        $ChangesTotal += $Changes
+                    }
+                }
+
+                if (Test-Path $CombosConfigFile) {
+                    $CombosConfigActual  = Get-Content $CombosConfigFile -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"] -and $CombosConfigActual.NVIDIA.PSObject.Properties.Name) {
+                        $Changes = 0
+                        $CombosSafe = [PSCustomObject]@{}
+
+                        $CombosConfigActual.NVIDIA.PSObject.Properties | Sort-Object {$_.Name -match "NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
+                            $NewName = $_.Name -replace "NVIDIA(R|G)TX","`${1}TX"
+                            $CombosSafe | Add-Member $NewName $_.Value -Force
+                            if ($NewName -ne $_.Name) {$Changes++}
+                        }
+
+                        if ($Changes) {
+                            $CombosConfigActual.NVIDIA = [PSCustomObject]@{}
+                            $CombosSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                                $CombosConfigActual.NVIDIA | Add-Member $_.Name $_.Value -Force
+                            }
+                            Set-ContentJson -PathToFile $CombosConfigFile -Data $CombosConfigActual > $null
+                            $ChangesTotal += $Changes
+                        }
+                    }
+                }
+
+            }
+
+            Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
+                $ConfigActualPath = Join-Path $($_.FullName) "config.txt"
+                if (Test-Path $ConfigActualPath) {
+                    $ConfigActual  = Get-Content $ConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+
+                    if ([bool]$ConfigActual.PSObject.Properties["DeviceName"]) {
+                        $DeviceName = [string]::Join(",",@([regex]::split($ConfigActual.DeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                        if ($DeviceName -ne $ConfigActual.DeviceName) {
+                            $ConfigActual.DeviceName = $DeviceName
+                            $Changes++
+                        }
+                    }
+
+                    if ([bool]$ConfigActual.PSObject.Properties["ExcludeDeviceName"]) {
+                        $ExcludeDeviceName = [string]::Join(",",@([regex]::split($ConfigActual.ExcludeDeviceName.Trim(),"\s*[,;]+\s*") | Where-Object {$_} | Foreach-Object {$_ -replace "^NVIDIA(R|G)TX","`${1}TX"} | Select-Object -Unique))
+                        if ($ExcludeDeviceName -ne $ConfigActual.ExcludeDeviceName) {
+                            $ConfigActual.ExcludeDeviceName = $ExcludeDeviceName
+                            $Changes++
+                        }
+                    }
+
+                    if ($Changes) {
+                        Set-ContentJson -PathToFile $ConfigActualPath -Data $ConfigActual > $null
+                        $ChangesTotal += $Changes
+                    }
+                }
+
+                $OCprofilesConfigActualPath = Join-Path $($_.FullName) "ocprofiles.config.txt"
+                if (Test-Path $OCprofilesConfigActualPath) {
+                    $Changes = 0
+                    $OCprofilesSafe = [PSCustomObject]@{}
+                    $OCprofilesConfigActual  = Get-Content $OCprofilesConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    $OCprofilesConfigActual.PSObject.Properties | Sort-Object {$_.Name -notmatch "-NVIDIA(R|G)TX"},Name | Foreach-Object {
+                        $NewName = $_.Name -replace "-NVIDIA(R|G)TX","-`${1}TX"
+                        $OCprofilesSafe | Add-Member $NewName $_.Value -Force
+                        if ($NewName -ne $_.Name) {$Changes++}
+                    }
+
+                    if ($Changes) {
+                        $OCprofilesSort = [PSCustomObject]@{}
+                        $OCprofilesSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                            $OCprofilesSort | Add-Member $_.Name $_.Value -Force
+                        }
+                        Set-ContentJson -PathToFile $OCprofilesConfigActualPath -Data $OCprofilesSafe > $null
+                        $ChangesTotal += $Changes
+                    }
+                }
+
+                $CombosConfigActualPath = Join-Path $($_.FullName) "combos.config.txt"
+                if (Test-Path $CombosConfigActualPath) {
+                    $CombosConfigActual  = Get-Content $CombosConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                    if ([bool]$CombosConfigActual.PSObject.Properties["NVIDIA"] -and $CombosConfigActual.NVIDIA.PSObject.Properties.Name) {
+                        $Changes = 0
+                        $CombosSafe = [PSCustomObject]@{}
+
+                        $CombosConfigActual.NVIDIA.PSObject.Properties | Sort-Object {$_.Name -match "NVIDIA(R|G)TX"},{$_.Name} | Foreach-Object {
+                            $NewName = $_.Name -replace "NVIDIA(R|G)TX","`${1}TX"
+                            $CombosSafe | Add-Member $NewName $_.Value -Force
+                            if ($NewName -ne $_.Name) {$Changes++}
+                        }
+
+                        if ($Changes) {
+                            $CombosConfigActual.NVIDIA = [PSCustomObject]@{}
+                            $CombosSafe.PSObject.Properties | Sort-Object {$_.Name} | Foreach-Object {
+                                $CombosConfigActual.NVIDIA | Add-Member $_.Name $_.Value -Force
+                            }
+                            Set-ContentJson -PathToFile $CombosConfigActualPath -Data $CombosConfigActual > $null
+                            $ChangesTotal += $Changes
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if ($Version -le (Get-Version "4.7.1.6")) {
+        $ConfigActualUpdate = @()
+        $PoolsConfigActualUpdate = @()
+
+        if (Test-Path $ConfigFile) {
+            $ConfigActualUpdate += $ConfigFile
+        }
+        if (Test-Path $PoolsConfigFile) {
+            $PoolsConfigActualUpdate += $PoolsConfigFile
+        }
+
+        Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
+            $ConfigActualPath = Join-Path $($_.FullName) "config.txt"
+            if (Test-Path $ConfigActualPath) {
+                $ConfigActualUpdate += $ConfigActualPath
+            }
+            $PoolsConfigActualPath = Join-Path $($_.FullName) "pools.config.txt"
+            if (Test-Path $PoolsConfigActualPath) {
+                $PoolsConfigActualUpdate += $PoolsConfigActualPath
+            }
+        }
+
+        $ConfigActualUpdate | Foreach-Object {
+            $ConfigActualPath = $_
+            try {
+                $ConfigActual  = Get-Content $ConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
+
+                $Changes = 0
+                if ($ConfigActual.PoolName) {
+                    $PoolNames = $ConfigActual.PoolName -replace "ZelLabs","FluxPools"
+                    if ($PoolNames -ne $ConfigActual.PoolName) {
+                        $ConfigActual.PoolName = $PoolNames
+                        $Changes++
+                    }
+                }
+                if ($ConfigActual.ExcludePoolName) {
+                    $PoolNames = $ConfigActual.ExcludePoolName -replace "ZelLabs","FluxPools"
+                    if ($PoolNames -ne $ConfigActual.ExcludePoolName) {
+                        $ConfigActual.ExcludePoolName = $PoolNames
+                        $Changes++
+                    }
+                }
+                if ($Changes) {
+                    $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigActualPath -Encoding UTF8
+                    $ChangesTotal += $Changes
+                }
+            } catch { }
+        }
+
+        $PoolsConfigActualUpdate | Foreach-Object {
+            $PoolsConfigActualPath = $_
+
+            try {
+                $PoolsActual  = Get-Content $PoolsConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
+
+                $Changes = 0
+
+                if ([bool]$PoolsActual.PSObject.Properties["ZelLabs"]) {
+                    $ZelCopy = $PoolsActual.ZelLabs | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+                    $PoolsActual | Add-Member FluxPools $ZelCopy -Force
+                    $PoolsActual.PSObject.Properties.Remove("ZelLabs")
+                    $Changes++
+                }
+
+                @("WoolyPooly","WoolyPoolySolo","ZelLabs") | Foreach-Object {
+                    $PoolToChange = $_
+                    if ([bool]$PoolsActual.PSObject.Properties[$PoolToChange]) {
+                        @([PSCustomObject]@{from="ZEL";to="FLUX"},[PSCustomObject]@{from="ZEL-Params";to="FLUX-Params"},[PSCustomObject]@{from="XZC";to="FIRO"},[PSCustomObject]@{from="XZC-Params";to="FIRO-Params"}) | Where-Object {[bool]$ZelCopy.PSObject.Properties[$_.from]} | Foreach-Object {
+                            $PoolsActual.$PoolToChange | Add-Member "$($_.to)" $PoolsActual.$PoolToChange."$($_.from)" -Force
+                            $PoolsActual.$PoolToChange.PSObject.Properties.Remove($_.from)
+                        }
+                        $Changes++
+                    }
+                }
+
+                if ($Changes) {
+                    $PoolsActualSort = [PSCustomObject]@{}
+                    $PoolsActual.PSObject.Properties | Sort-Object Name | Foreach-Object {
+                        $PoolsActualSort | Add-Member $_.Name $_.Value -Force
+                    }
+                    $PoolsActualSort | ConvertTo-Json -Depth 10 | Set-Content $PoolsConfigActualPath -Encoding UTF8
+                    $ChangesTotal += $Changes
+                }
+            } catch { }
+        }
+    }
+
+    if ($Version -le (Get-Version "4.7.2.0")) {
+        Get-ChildItem "Data\openclplatforms.json" -ErrorAction Ignore | Where-Object {$_.LastWriteTimeUtc -lt (Get-Date "May 27, 2021")} | Foreach-Object {
+            $ChangesTotal++
+            Remove-Item $_.FullName -Force -ErrorAction Ignore
+        }
+    }
+
+    if ($Version -le (Get-Version "4.7.2.6")) {
+        Get-ChildItem "Bin\ANY-Xmrig" -Filter "run_*.json" -File -ErrorAction Ignore | Foreach-Object {
+            $ChangesTotal++
+            Remove-Item $_.FullName -Force -ErrorAction Ignore
+        }
+    }
+
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
 

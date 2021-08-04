@@ -1,0 +1,143 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navsetupcoins" class="h2">Setup Coins</h1>
+</div>
+
+<form id="formConfig">
+    <input type="hidden" name="ConfigName" value="Coins" />
+    <div id="accordion"></div>
+    <div class="card mb-3">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
+
+<script id="coinsetup_template" type="text/x-handlebars-template">
+    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}">
+        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapse{{coinsymbol}}" aria-expanded="true" aria-controls="collapse{{coinsymbol}}"><div class="card-header" id="heading{{coinsymbol}}"><h5>{{title}}</h5></div></button>
+        <div id="collapse{{coinsymbol}}" class="collapse" aria-labelledby="heading{{coinsymbol}}" data-parent="#accordion">
+            <div class="card-body">
+                <input type="hidden" name="Coins[]" value="{{coinsymbol}}" />
+                {{#each common}}
+                {{#if (eq this.type "text")}}
+                <div class="form-group row">
+                    <label for="{{this.coinsymbol}}--input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}" value="{{this.value}}">
+                        <div class="small">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "bool")}}
+                <div class="form-group row">
+                    <label for="{{this.coinsymbol}}--input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <select class="form-control mr-sm-2" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}">
+                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
+                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
+                        </select>
+                        <div class="small">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "checkbox")}}
+                <div class="form-group row">
+                    <div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}" value="{{this.value}}"><label class="custom-control-label" for="{{this.coinsymbol}}--input{{this.key}}">{{this.text}}</label></div>
+                </div>
+                {{/if}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</script>
+
+<style>
+    .custom-control-input {
+        position:static;
+    }
+</style>
+
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+
+$(function() {
+
+    Handlebars.registerHelper('eq', function (a, b) {
+        if (a == b) { return true; }
+        return false;
+    });
+
+    Handlebars.registerHelper('noteq', function (a, b) {
+        if (a != b) { return true; }
+        return false;
+    });
+
+    var template = Handlebars.compile($("#coinsetup_template").html());
+
+    function loadconfig() {
+        $('#accordion').empty();
+        $.ajax({
+            url: '/loadconfig',
+            data: {ConfigName: "Coins"},
+            success: function (result) {
+                var common = {
+                    Wallet: "Enter global wallet address (optional, will substitute string \"\${{coinsymbol}}\" in pools.config.txt)",
+                    Penalty: "Enter penalty in percent. This value will decrease all reported values.",
+                    MinHashrate: "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)",
+                    MinWorkers: "Enter minimum amount of workers at a pool (units allowed, e.g. 5k)",
+                    MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
+                    MinProfitPercent: "Enter allowed minimum profit for post block mining (in percent of best miner's profit)",
+                    EnableAutoPool: "Automatically enable \"{{coinsymbol}}\" for pools activated in pools.config.txt with EnableAutoCoin=\"1\"",
+                    PostBlockMining: "Enter timespan to force mining, after a block has been found at enabled pools (units allowed, e.h. 1h=one hour, default unit is s=seconds)",
+                    Comment: "Optionally enter a comment (e.g. name of exchange)"
+                }
+
+                for(var i=1; i<2; i++) {
+                    var item = {
+                        title: "Enter a new coin",
+                        coinsymbol: "Newcoin",
+                        dark: theme=="dark",
+                        common: [{coinsymbol:"Newcoin",key:"CoinSymbol",text:"Enter a valid coin symbol (no spaces!)",value:"",type:"text"}]
+                    }
+                    $.each(common,function(key,val) {
+                        item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,'???'),value:"",type:key.match(/Enable|Disable/)? "bool":"text"})
+                    })
+                    $('#accordion').append(template(item))
+                }
+                $.each(result, function( coinsymbol, data ) {
+                    var item = {
+                        title: coinsymbol,
+                        coinsymbol: coinsymbol,
+                        dark: theme=="dark",
+                        common: []
+                    }
+                    $.each(common,function(key,val) {
+                        if (typeof data[key] !== "undefined") {
+                            item.common.push({coinsymbol:item.coinsymbol,key:key,text:val.replace(/{{coinsymbol}}/,item.coinsymbol),value:data[key],type:key.match(/Enable|Disable/)? "bool":"text"})
+                        }
+                    })
+                    item.common.push({coinsymbol:item.coinsymbol,key:"RemoveCoin",text:"remove coin",value:"1",type:"checkbox"})
+                
+                    $('#accordion').append(template(item))                
+                })
+            }
+        });
+    }
+
+    loadconfig();
+
+    $("#formConfig").submit(function (event) {
+        // Stop form from submitting normally
+        event.preventDefault();
+        if (globalconfig.IsLocked) {
+            alert('Warning: config lock is enabled. To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt');
+            return false;
+        }
+        $.post("/saveconfig", $(this).serialize()).done(function (data) {
+            $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
+            $('.modal-title').text('Configuration saved!');
+            $('#myModal').modal({ show: true });
+            loadconfig();
+        });
+    })
+});
+</script>
+<!--#include file="/parts/foot.html" -->

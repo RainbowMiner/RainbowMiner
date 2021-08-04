@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -46,7 +47,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
 
     $ok = $false
     try {
-        $Pool_HelpPage = Invoke-RestMethodAsync "https://$_.solopool.org/help" -tag $Name -cycletime 86400
+        $Pool_HelpPage = Invoke-WebRequestAsync "https://$_.solopool.org/help" -tag $Name -cycletime 86400
         if ($Pool_HelpPage -match 'meta\s+name="arts-pool/config/environment"\s+content="(.+?)"') {
             $Pool_MetaVars = [System.Web.HttpUtility]::UrlDecode($Matches[1]) | ConvertFrom-Json -ErrorAction Stop
             $ok = $true

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 PKG_MANAGER=$( command -v yum || command -v apt-get || command -v pacman)
-if [ $PKG_MANAGER == 'pacman' ]
+if [[ $PKG_MANAGER == *'pacman' ]]
  then
   sudo $PKG_MANAGER -S libc-ares2 --noconfirm
  else

@@ -37,6 +37,14 @@
         <a href="/config">/config</a>
         <p>Shows the full configuration for the running script, after all variable substitution and pool entries are added</p>
 
+        <h3>Load Config</h3>
+        <a href="/loadconfig">/loadconfig?ConfigName=&lt;nameprefix of config file&gt;</a>
+        <p>Returns the JSON encoded contents of a specific config file in folder .\Config (config, pools, devices, ...)</p>
+
+        <h3>Save Config</h3>
+        <a href="/saveconfig">/saveconfig</a>
+        <p>Save values into a specific config file. Send the data as POST request. Parameter ConfigFile needs to contain the nameprefix of the config file.</p>
+
         <h3>setup.json</h3>
         <a href="/setup.json">/setup.json</a>
         <p>Download a setup.json - put this file into the RainbowMiner root folder, before first start.</p>

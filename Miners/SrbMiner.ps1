@@ -134,7 +134,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 							double_threads   = $false
 							timeout          = 10
 							retry_time       = 10
-							gpu_conf         = @($Miner_Device.Type_Vendor_Index | Foreach-Object {
+							gpu_conf         = @($Miner_Device.BusId_Type_Vendor_Index | Foreach-Object {
 								[PSCustomObject]@{
 									"id"        = $_  
 									"intensity" = 0

@@ -128,11 +128,8 @@ param(
 
         if (-not $Remote) {
             $str = "$key$nonce$endpoint"
-            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
-            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
             $headers = [hashtable]@{
-	            'x-api-sign' = ($sign -replace '\-').ToLower()
+	            'x-api-sign' = Get-HMACSignature $str $secret "HMACSHA1"
 	            'x-api-key'  = $key
 	            'x-api-nonce'= $nonce
                 'Cache-Control' = 'no-cache'
@@ -140,67 +137,16 @@ param(
 
             $ErrorMessage = ''
 
-            if ($Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))) {
-                $StatusCode   = $null
-                $Data         = $null
-
-                $oldProgressPreference = $null
-                if ($Global:ProgressPreference -ne "SilentlyContinue") {
-                    $oldProgressPreference = $Global:ProgressPreference
-                    $Global:ProgressPreference = "SilentlyContinue"
+            try {
+                $body = Switch -Regex ($method) {
+                    "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10 -Compress;Break}
+                    "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
                 }
-
-                try {
-                    $body = Switch -Regex ($method) {
-                        "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
-                        "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
-                    }
-
-                    $Response   = Invoke-WebRequest "$base$endpoint" -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
-                    $StatusCode = $Response.StatusCode
-
-                    if ($StatusCode -match "^2\d\d$") {
-                        try {$Data = ConvertFrom-Json $Response.Content -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                    }
-
-                    if ($Response) {
-                        $Response = $null
-                    }
-
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    $ErrorMessage = "$($_.Exception.Message)"
-                }
-
-                if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
-
-                if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
-                    if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
-                        if ($StatusCodeObject.Type -ne "Success") {
-                            $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
-                        }
-                    } else {
-                        $ErrorMessage = "$StatusCode Very bad! Code not found :("
-                    }
-                }
-
-            } else {
-                $ServicePoint = $null
-                try {
-                    $body = Switch -Regex ($method) {
-                        "^(POST|PUT)$"   {$params_local | ConvertTo-Json -Depth 10;Break}
-                        "^(DELETE|GET)$" {if ($params_local.Count) {$params_local} else {$null};Break}
-                    }
-                    #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
-                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
-                    $Data = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $useragent -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
-                    #$Data = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    $ErrorMessage = "MiningRigRental call: $($_.Exception.Message)"
-                } finally {
-                    if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
-                }
+                #Write-Log -Level Info "MiningRigRental call: $($endpoint) $($body)"
+                $Data = Invoke-GetUrl "$base$endpoint" -useragent $useragent -timeout $Timeout -headers $headers -requestmethod $method -body $body
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $ErrorMessage = "$($_.Exception.Message)"
             }
 
             if ($ErrorMessage -ne '') {
@@ -446,6 +392,65 @@ function Set-MiningRigStat {
     }
 }
 
+function Get-MiningRigRentalStat {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name,
+        [Parameter(Mandatory = $false)]
+        [Int]$RentalId
+    )
+
+    $Path   = "Stats\MRR"
+
+    if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+
+    $Path = "$($Path)\$($Name)_rental.txt"
+
+    $RentalError = $null
+
+    try {
+        $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
+        if ($RentalId -and ($Stat.id -ne $RentalId)) {
+            $RentalError = "obsolete"
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $RentalError = "corrupt"
+    }
+    if ($RentalError) {
+        if (Test-Path $Path) {
+            Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is $($RentalError) and will be removed. "
+            Remove-Item -Path $Path -Force -Confirm:$false
+        }
+    } else {
+        $Stat
+    }
+}
+
+function Set-MiningRigRentalStat {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Data
+    )
+
+    $Path = "Stats\MRR"
+
+    if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+
+    $Path = "$($Path)\$($Name)_rental.txt"
+
+    try {
+        $Data | ConvertTo-Json -Depth 10 -ErrorAction Stop | Set-Content $Path
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Could not write MRR rental stat file for worker $Name, rental id $($Data.id)"
+    }
+}
+
 function Get-MiningRigInfo {
 [cmdletbinding()]   
 param(
@@ -527,12 +532,13 @@ param(
         elseif ($Status -eq "extended") {$Session.MRRStatus[$RigKey].extended = $true}
         elseif ($Status -eq "notextended") {$Session.MRRStatus[$RigKey].extended = $false}
         elseif ($Status -eq "extensionmessagesent") {$Session.MRRStatus[$RigKey].extensionmessagesent = $true}
+        elseif ($Status -eq "startmessagesent") {$Session.MRRStatus[$RigKey].startmessagesent = $true}
         elseif ($Status -eq "online") {$Session.MRRStatus[$RigKey].next = $time;$Session.MRRStatus[$RigKey].wait = $false;$Session.MRRStatus[$RigKey].enable = $true}
         elseif ($time -ge $Session.MRRStatus[$RigKey].next) {
             if ($Session.MRRStatus[$RigKey].wait) {$Session.MRRStatus[$RigKey].next = $time.AddMinutes(15);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $false}
             else {$Session.MRRStatus[$RigKey].next = $time.AddMinutes(3);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $true}
         }
-    } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true; extended = $(if ($Status -eq "extended") {$true} else {$false}); extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false})}}
+    } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true; extended = $(if ($Status -eq "extended") {$true} else {$false}); extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false}); startmessagesent = $(if ($Status -eq "startmessagesent") {$true} else {$false})}}
     
     if (-not $Stop) {$Session.MRRStatus[$RigKey].enable}
 }

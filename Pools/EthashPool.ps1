@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$StatAverageStable = "Week"
 )
 
 if (-not $InfoOnly -and -not (Compare-Object @("ETH","ETC","ETP") @($Wallets.PSObject.Properties.Name | Select-Object) -IncludeEqual -ExcludeDifferent)) {return}

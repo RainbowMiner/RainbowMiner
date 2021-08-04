@@ -22,6 +22,7 @@ class Miner {
     [string]$DeviceModel
     [Bool]$Enabled = $false
     [string[]]$Pool
+    [string[]]$Wallet
     $Profit
     $Profit_Bias
     $Profit_Unbias
@@ -186,13 +187,13 @@ class Miner {
                         $Command = ".\Includes\OhGodAnETHlargementPill-r2.exe"
                     }
                     $Command = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Command)
-                    $this.EthPillJob = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH
+                    $this.EthPillJob = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH -WinTitle "OhGodAnETHlargementPill-r2 --$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')"
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
             $this.StartTime = (Get-Date).ToUniversalTime()
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+            $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH -WinTitle "$($this.Name -replace "-.+$") on $($this.DeviceModel) at $($this.Pool -join '+') with $($this.BaseAlgorithm -join '+')".Trim()
 
             if ($this.Job.XJob) {
                 $this.Status = [MinerStatus]::Running
@@ -832,11 +833,8 @@ class BMiner : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status/solver" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status/solver" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -845,13 +843,12 @@ class BMiner : Miner {
         }
 
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status/stratum" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data | Add-member stratums ($Response | ConvertFrom-Json -ErrorAction Stop).stratums
+            $Data2 = Invoke-TcpRequest "http://$($Server):$($this.Port)/api/v1/status/stratum" -Timeout $Timeout
+            $Data | Add-member stratums $Data2.stratums
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $Index = 0
         $this.Algorithm | Select-Object -Unique | ForEach-Object {
@@ -895,18 +892,14 @@ class Cast : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.devices.hash_rate | Measure-Object -Sum).Sum / 1000
@@ -1128,18 +1121,14 @@ class Eminer : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/stats" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/stats" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
         
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.total_hashrate_mean | Measure-Object -Sum).Sum
@@ -1172,18 +1161,14 @@ class EnemyZ : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary?gpuinfo=1" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary?gpuinfo=1" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
 
@@ -1411,18 +1396,14 @@ class Fireice : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api.json" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]$Data.hashrate.total[0]
@@ -1460,18 +1441,14 @@ class Gminer : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/stat" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response.Content | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stat" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         #$Version = if ($Data.miner -match "(\d\.[\d\.]+)") {$Matches[1]} else {$null}
 
@@ -1502,7 +1479,7 @@ class Gminer : Miner {
             }
         }
 
-        $this.AddMinerData($Response,$HashRate,$null,$PowerDraw)
+        $this.AddMinerData("",$HashRate,$null,$PowerDraw)
 
         $this.CleanupMinerData()
     }
@@ -1565,19 +1542,14 @@ class GrinPro : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/status" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            if ($Response.StatusCode -ne 200) {throw}
-            $Data = $Response.Content | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/status" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.workers | Where-Object status -eq "ONLINE" | Select-Object -ExpandProperty graphsPerSecond | Measure-Object -Sum).Sum
@@ -1639,18 +1611,14 @@ class Jceminer : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api.json" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $Data.algo))
         if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix
@@ -1688,19 +1656,14 @@ class Lol : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            if ($Response.StatusCode -ne 200) {throw}
-            $Data = $Response.Content | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name  = [String]$this.Algorithm[0]
         $HashRate_Value = [Double](ConvertFrom-Hash "$($Data.Session.Performance_Summary)$($Data.Session.Performance_Unit -replace "g?/s$")")
@@ -1769,14 +1732,14 @@ class MiniZ : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = '{"id":"1", "method":"getstat"}'
+        $Request = '{ "id":"0", "method":"getstat" }'
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet -ReadToEnd
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
@@ -1840,6 +1803,14 @@ class Nanominer : Miner {
             if ($Parameters.Coin)                {$FileC += "coin=$($Parameters.Coin)"}
             if ($Parameters.Protocol)            {$FileC += "protocol=$($Parameters.Protocol)"}
 
+            if ($Parameters.ZilWallet -and $Parameters.ZilPool) {
+                $FileC += ""
+                $FileC += "[zil]"
+                $FileC += "wallet = $($Parameters.ZilWallet)"
+                $FileC += "zilEpoch = 0 ; number of DAG epoch for caching"
+                $FileC += "pool1 = $($Parameters.ZilPool)"
+            }
+
             $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
         }
 
@@ -1902,18 +1873,14 @@ class NBminer : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $ix = if ($this.Algorithm[1]) {1} else {0}
 
@@ -2008,18 +1975,14 @@ class NoncerPro : Miner {
 
         $HashRate   = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.totalHashrate
@@ -2049,18 +2012,14 @@ class Nqminer : Miner {
 
         $HashRate   = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.totalHashrate
@@ -2091,18 +2050,14 @@ class Prospector : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v0/hashrates" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v0/hashrates" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $Data.coin | Select-Object -Unique | ForEach-Object {
             $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_))
@@ -2285,18 +2240,14 @@ class SrbMiner : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [double]$Data.HashRate_total_5min
@@ -2330,11 +2281,8 @@ class SrbMinerMulti : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
             $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
         }
         catch {
@@ -2342,7 +2290,6 @@ class SrbMinerMulti : Miner {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [double]$Data.hashrate."5min"
@@ -2457,18 +2404,14 @@ class Trex : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
 
@@ -2497,7 +2440,7 @@ class Trex : Miner {
     }
 
     [String]GetShutdownUrl() {
-        return "http://127.0.0.1:$($this.Port)/control?command=shutdown"
+        return "$(if ($Global:IsLinux) {"http://127.0.0.1:$($this.Port)/control?command=shutdown"})"
     }
 }
 
@@ -2695,18 +2638,14 @@ class Xmrig : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api.json" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
         
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.hashrate.total[0]
@@ -2848,18 +2787,14 @@ class Xmrig3 : Miner {
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api.json" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.hashrate.total[0]
@@ -2883,6 +2818,170 @@ class Xmrig3 : Miner {
     }
 }
 
+class Xmrig6 : Miner {
+
+    [String]GetArguments() {
+        $Arguments = $this.Arguments -replace "\`$mport",$this.Port
+        if ($Arguments -notlike "{*}") {return $Arguments}
+
+        $ThreadsConfig     = $null
+
+        $Miner_Path        = Split-Path $this.Path
+        $Parameters        = $Arguments | ConvertFrom-Json
+
+        $ConfigName        = "$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig)$(if ($Parameters.Affinity -ne $null) {"_$($Parameters.Affinity)"})_$($Parameters.Threads)"
+
+        $ConfigFN          = "config_$($ConfigName).json"
+        $ThreadsConfigFN   = "threads_$($Parameters.HwSig).json"
+        $RunConfigFN       = "run_$(Get-MD5Hash "$($ConfigName)$(ConvertTo-Json $Parameters.Pools -Compress)").json"
+        $ConfigFile        = Join-Path $Miner_Path $ConfigFN
+        $ThreadsConfigFile = Join-Path $Miner_Path $ThreadsConfigFN
+        $RunConfigFile     = Join-Path $Miner_Path $RunConfigFN
+        $LogFile           = "log_$($ConfigName).txt"
+
+        $Algo              = $Parameters.Algorithm
+        $Algo0             = $Parameters.Algorithm -replace "/.+$"
+        $Device            = Switch($Parameters.Vendor) {"AMD" {"opencl"}; "NVIDIA" {"cuda"}; default {"cpu"}}
+
+        try {
+            if (Test-Path $ThreadsConfigFile) {
+                $ThreadsConfig = Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            }
+            if (-not ($ThreadsConfig.$Algo | Measure-Object).Count -and -not ($ThreadsConfig.$Algo0 | Measure-Object).Count) {
+                $InitConfig = $Parameters.Config | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+                $InitConfig | Add-Member pools $Parameters.Pools -Force -PassThru | ConvertTo-Json -Depth 10 | Set-Content $ThreadsConfigFile -Force
+
+                $ArgumentList = ("--algo=$($Parameters.Algorithm) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+                if ($Job.XJob) {
+                    $wait = 0
+                    While ($wait -lt 60) {
+                        if (($ThreadsConfig = @(Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).$Device | Select-Object)) {
+                            ConvertTo-Json $ThreadsConfig -Depth 10 | Set-Content $ThreadsConfigFile -Force
+                            break
+                        }
+                        Start-Sleep -Milliseconds 500
+                        $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
+                        if ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
+                    }
+                }
+                if ($Job) {
+                    Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
+                    Remove-Variable "Job"
+                }
+                if ((Test-Path $ThreadsConfigFile) -and -not ($ThreadsConfig.$Algo | Measure-Object).Count -and -not ($ThreadsConfig.$Algo0 | Measure-Object).Count) {
+                    Remove-Item $ThreadsConfigFile -ErrorAction Ignore -Force
+                }
+                $ThreadsConfig = Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            }
+
+            $Config = Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+
+            if (-not $Config.$Device -and -not ($Config.$Device.$Algo | Measure-Object).Count -and -not ($Config.$Device.$Algo0 | Measure-Object).Count) {
+                if ($ThreadsConfig.$Algo -or $ThreadsConfig.$Algo0) {
+                    $Parameters.Config | Add-Member $Device ([PSCustomObject]@{}) -Force
+                    $ThreadsConfig.PSObject.Properties | Where-Object {$_.Name -notmatch "/0$" -and $_.Value -isnot [array]} | Foreach-Object {
+                        $n = $_.Name; $v = $_.Value
+                        $Parameters.Config.$Device | Add-Member $n $v -Force
+                    }
+                    $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
+
+                    if ($Device -eq "cpu") {
+                        $cix = @{}
+                        $ThreadsAffinity = $ThreadsConfig.$Algo | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
+
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
+
+                        $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
+                        if ($AffCount = ($Aff | Measure-Object).Count) {
+                            $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
+                            $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
+                            if ($AffThreads.Count -lt $ThreadsCount) {
+                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
+                            }
+                            $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
+                        }
+                        if ($cix.Count) {
+                            for ($i=0; $i -lt $Parameters.Config.$Device.$Algo.Count; $i++) {
+                                $thr = $Parameters.Config.$Device.$Algo[$i]
+                                $Parameters.Config.$Device.$Algo[$i] = @($(if ($cix["k$thr"]) {$cix["k$thr"]} else {1}),$thr)
+                            }
+                        }
+                        $Parameters.Config | Add-Member cuda   ([PSCustomObject]@{enabled=$false}) -Force
+                        $Parameters.Config | Add-Member opencl ([PSCustomObject]@{enabled=$false}) -Force
+                    } else { #device is cuda or opencl
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array](@($ThreadsConfig.$Algo | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
+                        $Parameters.Config | Add-Member cpu ([PSCustomObject]@{enabled=$false}) -Force
+                        $Parameters.Config | Add-Member "$(if ($Device -eq "cuda") {"opencl"} else {"cuda"})" ([PSCustomObject]@{enabled=$false}) -Force
+                    }
+                    $Parameters.Config | Add-Member autosave $false -Force
+                    $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
+                }
+                else {
+                    Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})$(if ($Error.Count){"[Error: '$($Error[0])'].";$Error.RemoveAt(0)})"
+                }                
+            }
+
+            $LastModified = (Get-Item $ConfigFile -ErrorAction Ignore).LastWriteTime
+
+            if (-not (Test-Path $RunConfigFile) -or (Test-Path $RunConfigFile -OlderThan $LastModified)) {
+                $RunConfig = Get-Content $ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                $RunConfig | Add-Member pools $Parameters.Pools -Force
+
+                Set-ContentJson -PathToFile $RunConfigFile -Data $RunConfig > $null
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
+        }
+
+
+        return ("--algo=$($Parameters.Algorithm) --config=$RunConfigFN $($Parameters.DeviceParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+    }
+
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "localhost"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
+
+        try {
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            return
+        }
+
+        $HashRate_Name = $this.Algorithm[0]
+        $HashRate_Value = [Double]$Data.hashrate.total[0]
+        if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[1]} #fix
+        if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[2]} #fix
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.results.diff_current
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Double]$Data.results.shares_good
+            $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData($Response,$HashRate,$Difficulty)
+
+        $this.CleanupMinerData()
+    }
+}
 
 class XmrigWrapper : Miner {
 
