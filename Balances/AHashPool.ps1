@@ -15,7 +15,7 @@ if (!$PoolConfig.BTC) {
 $Request = [PSCustomObject]@{}
 
 try {
-    $Request = Invoke-RestMethodAsync "https://www.ahashpool.com/api/wallet?addressEx=$($PoolConfig.BTC)" -cycletime ($Config.BalanceUpdateMinutes*60)
+    $Request = Invoke-RestMethodAsync "https://www.ahashpool.com/api/wallet?addressEx=$($PoolConfig.BTC)" -cycletime ($Config.BalanceUpdateMinutes*60) -tag $Name -delay 1000
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
