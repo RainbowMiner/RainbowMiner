@@ -15,37 +15,23 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$CoinXlat = [PSCustomObject]@{
-    PM = "PMEER"
+$CoinXlat = [hashtable]@{
     ERGO = "ERG"
     VDS = "VOLLAR"
 }
 
+$Pool_Request = [PSCustomObject]@{}
+
+$ok = $false
 try {
-    $Request = (((Invoke-WebRequestAsync "https://www.666pool.cn/pool2/" -tag $Name -cycletime 120) -split '<tbody>' | Select-Object -Last 1) -split '</tbody>' | Select-Object -First 1) -replace '<!--.+-->'
-    $Pools_Data = $Request -replace '<!--.+?-->' -split '<tr>' | Foreach-Object {
-        if ($Data = ([regex]'(?si)pool2/block/([-\w]+?)[^-\w].+?(\w+?).666pool.cn:(\d+)<').Matches($_)) {
-            $Columns = $_ -replace '</td>' -split '[\s\r\n]*<td[^>]*>[\s\r\n]*'
-            if ($Data[0].Groups.Count -gt 3 -and $Columns.Count -ge 6) {
-                $Symbol = $Data[0].Groups[1].Value -replace "-.+$"
-                $Algo   = "$($Data[0].Groups[1].value -replace "^.+-")"
-                if ($Symbol -ne "PM" -or $Algo -ne "KecK") {
-                    [PSCustomObject]@{
-                        id       = "$($Data[0].Groups[1].Value)"
-                        symbol   = "$(if ($CoinXlat.$Symbol) {$CoinXlat.$Symbol} else {$Symbol})"
-                        rpc      = $Data[0].Groups[2].Value
-                        port     = $Data[0].Groups[3].Value
-                        hashrate = ConvertFrom-Hash "$($Columns[3])"
-                        workers  = $null #[int]"$($Columns[4])"
-                        profit   = "$(if (($Columns[4] -replace "&nbsp;"," ") -match "([\d\.]+)[\s\w\/]+(\w)") {[double]$Matches[1]/(ConvertFrom-Hash "1$($Matches[2])")} else {$null})"
-                        fee      = [double]"$(if ($Columns[5] -match "(\d+)%$") {$Matches[1]})"
-                    }
-                }
-            }
-        }
+    $Request = Invoke-RestMethodAsync "https://server.666pool.cn/server/v1/getCoinList" -tag $Name -cycletime 120 -headers $headers
+    if ("$Request".Trim() -match "(?smi)^[^{]*({.+})[^}]*$") {
+        $Pool_Request = ConvertFrom-Json $Matches[1] -ErrorAction Stop
     }
-} catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    $ok = $Pool_Request.retCode -eq 200
+} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+
+if (-not $ok) {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -55,22 +41,10 @@ $Pool_Region_Default = "asia"
 [hashtable]$Pool_RegionsTable = @{}
 @("asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$TZ_China_Standard_Time = [System.TimeZoneInfo]::GetSystemTimeZones() | Where-Object {$_.Id -match "Shanghai" -or $_.Id -match "^China" -or $_.StandardName -match "^China"} | Select-Object -First 1
-
-$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Coin      = Get-Coin $_.symbol
-    $Pool_Currency  = $_.symbol
-    $Pool_Fee       = $_.fee
-    $Pool_Port      = $_.port
-    $Pool_RpcPath   = $_.rpc
-    $Pool_Workers   = $_.workers
-    $Pool_Wallet    = "$($Wallets.$Pool_Currency)"
-    $Pool_PP        = "@pplns"
-
-    if ($Pool_Wallet -match "@(pps|pplns)$") {
-        if ($Matches[1] -eq "pps") {$Pool_PP = ""}
-        $Pool_Wallet = $Pool_Wallet -replace "@(pps|pplns)$"
-    }
+$Pool_Request.param | Where-Object {$Pool_Currency = if ($CoinXlat[$_.coin]) {$CoinXlat[$_.coin]} else {$_.coin};$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin       = Get-Coin $Pool_Currency
+    $Pool_Fee        = [double]"$($_.pplnsRate -replace "[^\d,\.]+" -replace ",",".")"
+    $Pool_Wallet     = "$($Wallets.$Pool_Currency)" -replace "@(pps|pplns)$"
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
@@ -78,21 +52,26 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_BlocksRequest  = [PSCustomObject]@{}
 
+    $Pool_Rate = 0
+    $Pool_TSL  = $null
+    $Pool_BLK  = $null
+    $Pool_Worker = $null
+
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_BlocksRequest = (Invoke-WebrequestAsync "https://www.666pool.cn/pool2/block/$($_.id)" -tag $Name -timeout 15 -cycletime 120) -split '</*table[^>]*>'
-            if ($Pool_BlocksRequest.Count -ne 3) {$ok = $false}
-            else {
-                $Pool_Power = ([regex]'(?si)djs-power">([^<]+)<').Matches($Pool_BlocksRequest[0])
-                if (-not $Pool_Workers -and $Pool_Power.Count -gt 1) {
-                    $Pool_Workers = [int]$Pool_Power[1].groups[1].Value
-                }
-                $Pool_BLK = [int]"$(if ($Pool_BlocksRequest[0] -match "green[^>]+>(\d+)<") {$Matches[1]} else {0})"
-                $Pool_BlocksRequest = $Pool_BlocksRequest[1] -split "<tbody[^>]*>"
-                $Pool_TSL = if ($TZ_China_Standard_Time -and $Pool_BlocksRequest.Count -ge 2 -and (($Pool_BlocksRequest[1] -split "<tr>")[1] -match "(\d+-\d+-\d+\s+\d+:\d+)")) {
-                                ((Get-Date).ToUniversalTime() - [System.TimeZoneInfo]::ConvertTimeToUtc($Matches[1], $TZ_China_Standard_Time)).TotalSeconds
-                            }
+            $Request = Invoke-RestMethodAsync "https://server.666pool.cn/server/v1/getCoinDetail/?coin=$($_.coin)" -tag $Name -timeout 15 -cycletime 120
+            if ("$Request".Trim() -match "(?smi)^[^{]*({.+})[^}]*$") {
+                $Pool_BlocksRequest = ConvertFrom-Json $Matches[1] -ErrorAction Stop
+            }
+            if ($Pool_BlocksRequest.retCode -eq 200) {
+                $timestamp    = Get-UnixTimestamp
+                $timestamp24h = $Pool_Now - 86400
+                $blocks = @($Pool_BlocksRequest.data.block | Foreach-Object {$_.uptime} | Sort-Object -Descending)
+                $blocks_measure = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
+                $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+                $Pool_TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
+                $Pool_Worker = $Pool_BlocksRequest.data.poolWorks
             }
         }
         catch {
@@ -105,8 +84,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
 
     if ($ok -and -not $InfoOnly) {
-        $Pool_Rate = if ($Global:Rates.$Pool_Currency) {$_.profit / $Global:Rates.$Pool_Currency} else {0}
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Rate -Duration $StatSpan -HashRate $_.hashrate -BlockRate $Pool_BLK -ChangeDetection ($Pool_Rate -gt 0) -Quiet
+        $Pool_Rate = if ($Global:Rates.$Pool_Currency) {$_.dailyIncome/($Global:Rates.$Pool_Currency*(ConvertFrom-Hash "1$($_.dailyIncomeUnit)"))} else {0}
+        $Pool_Hashrate = ConvertFrom-Hash "$($_.poolHash)$($_.poolHashUnit)"
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Rate -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection ($Pool_Rate -gt 0) -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -122,15 +102,15 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-            Host          = "$Pool_RpcPath.666pool.cn"
-            Port          = $Pool_Port
-            User          = "$($Pool_Wallet)$($Pool_PP).{workername:$Worker}"
+            Host          = "$($_.address -replace ":\d+$")"
+            Port          = $_.address -replace "^.+:"
+            User          = "$($Pool_Wallet).{workername:$Worker}"
             Pass          = "x{diff:,d=`$difficulty}"
             Region        = $Pool_RegionsTable[$Pool_Region_Default]
             SSL           = $Pool_SSL
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee
-            Workers       = $Pool_Workers
+            Workers       = $Pool_Worker
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average
