@@ -847,6 +847,10 @@ function Set-Stat {
         try {
             if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
 
+            if ($Mode -eq "Miners") {
+                $Benchmarked = if ($Stat.Benchmarked -ne $null) {$Stat.Benchmarked} else {[DateTime]$Stat.Updated - [TimeSpan]$Stat.Duration}
+            }
+
             $Stat = Switch ($Mode) {
                 "Miners" {
                     [PSCustomObject]@{
@@ -875,6 +879,7 @@ function Set-Stat {
                         Diff_Live          = [Double]$Stat.Diff_Live
                         Diff_Average       = [Double]$Stat.Diff_Average
                         Ratio_Live         = [Double]$Stat.Ratio_Live
+                        Benchmarked        = $Benchmarked
                         #Ratio_Average      = [Double]$Stat.Ratio_Average
                     }
                     Break
@@ -1005,6 +1010,7 @@ function Set-Stat {
                             Diff_Live          = $Difficulty
                             Diff_Average       = $Stat.Diff_Average + $Span_Day * ($Difficulty - $Stat.Diff_Average)
                             Ratio_Live         = $Ratio
+                            Benchmarked        = $Benchmarked
                             #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                         }
                         Break
@@ -1107,6 +1113,7 @@ function Set-Stat {
                     Diff_Live          = $Difficulty
                     Diff_Average       = $Difficulty
                     Ratio_Live         = $Ratio
+                    Benchmarked        = (Get-Date).ToUniversalTime()
                     #Ratio_Average      = $Ratio
                 }
                 Break
@@ -1210,6 +1217,7 @@ function Set-Stat {
                     Diff_Live          = [Double]$Stat.Diff_Live
                     Diff_Average       = [Double]$Stat.Diff_Average
                     Ratio_Live         = [Double]$Stat.Ratio_Live
+                    Benchmarked        = [DateTime]$Stat.Benchmarked
                     #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
                 Break

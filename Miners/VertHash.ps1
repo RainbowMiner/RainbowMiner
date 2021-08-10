@@ -124,6 +124,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         PowerDraw        = 0
                         BaseName         = $Name
                         BaseAlgorithm    = $Algorithm_Norm_0
+                        Benchmarked      = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         PrerequisitePath = $DatFile
                         PrerequisiteURI  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"
                         PrerequisiteMsg  = "Downloading verthash.dat (1.2GB) in the background, please wait!"

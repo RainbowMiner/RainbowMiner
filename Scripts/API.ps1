@@ -58,7 +58,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $IsAuth = $true
     
     if ($API.RemoteAPI -and $API.APIauth) {
-
+    
         $IsAuth = $Context.User.Identity.IsAuthenticated -and $Context.User.Identity.Name -eq $API.APIuser -and $Context.User.Identity.Password -eq $API.APIpassword
 
         $RemoteIP = "$($Request.RemoteEndPoint)" -replace ":\d+$"
@@ -888,7 +888,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             [hashtable]$Miners_List = @{}
             [System.Collections.ArrayList]$Out = @()
                     
-            $API.Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
+            $API.Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Foreach-Object {
                 if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                     $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                     $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -926,6 +926,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             Benchmarking = -not $Miner_Path
                             NeedsBenchmark = $Miner_NeedsBenchmark
                             BenchmarkFailed = $Miner_Failed
+                            Benchmarked = if ($_.Benchmarked) {$_.Benchmarked.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")} else {$null}
                         })>$null
                     }
                 }

@@ -69,6 +69,7 @@
                       <th data-field="tRatio" data-sortable="true">Rejected</th>
                       <th data-field="tPowerDraw" data-sortable="true">Power</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
+                      <th data-field="tBenchmarked" data-sortable="true">Date</th>
                       <th data-field="tButton" data-align="center">Bench</th>
                   </tr>
               </thead>
@@ -179,6 +180,8 @@
             if (item.Benchmarking) item.tStatus = 'Benchmarking';
             else if (item.NeedsBenchmark) item.tStatus = 'Needs Benchmark'
             else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'
+
+            item.tBenchmarked = (item.tStatus == 'Benchmarking' || !item.Benchmarked)? '-' : item.Benchmarked;
 
             // Format the Profile(s)
             var tOC = new Array();
