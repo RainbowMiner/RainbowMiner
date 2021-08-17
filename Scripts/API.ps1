@@ -883,6 +883,15 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = (Get-Culture).NumberFormat.NumberDecimalSeparator | ConvertTo-Json -Depth 10
             Break
         }
+        "/getminerlog" {
+            $Data = [PSCustomObject]@{Status=$false;Content=""}
+            if ($Parameters.logfile -and ($Parameters.logfile -match "\d+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.txt$") -and (Test-Path (Join-Path ".\Logs" $Parameters.logfile))) {
+                $Data.Status  = $true
+                $Data.Content = Get-ContentByStreamReader (Join-Path ".\Logs" $Parameters.logfile)
+            }
+            $Data = ConvertTo-Json $Data
+            Break
+        }
         "/minerstats" {
             [hashtable]$JsonUri_Dates = @{}
             [hashtable]$Miners_List = @{}
@@ -927,6 +936,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             NeedsBenchmark = $Miner_NeedsBenchmark
                             BenchmarkFailed = $Miner_Failed
                             Benchmarked = if ($_.Benchmarked) {$_.Benchmarked.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")} else {$null}
+                            LogFile     = "$(if ($_.LogFile -and (Test-Path (Join-Path ".\Logs" $_.LogFile))) {$_.LogFile})"
                         })>$null
                     }
                 }

@@ -806,7 +806,9 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$Ratio = 0.0,
         [Parameter(Mandatory = $false)]
-        [DateTime]$Updated = (Get-Date).ToUniversalTime(), 
+        [DateTime]$Updated = (Get-Date).ToUniversalTime(),
+        [Parameter(Mandatory = $false)]
+        [DateTime]$StartTime = (Get-Date).ToUniversalTime(),
         [Parameter(Mandatory = $true)]
         [TimeSpan]$Duration, 
         [Parameter(Mandatory = $false)]
@@ -825,6 +827,8 @@ function Set-Stat {
         [Double]$UplimProtection = 0,
         [Parameter(Mandatory = $false)]
         [String]$Sub = "",
+        [Parameter(Mandatory = $false)]
+        [String]$LogFile = "",
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
     )
@@ -880,6 +884,7 @@ function Set-Stat {
                         Diff_Average       = [Double]$Stat.Diff_Average
                         Ratio_Live         = [Double]$Stat.Ratio_Live
                         Benchmarked        = $Benchmarked
+                        LogFile            = $LogFile
                         #Ratio_Average      = [Double]$Stat.Ratio_Average
                     }
                     Break
@@ -1011,6 +1016,7 @@ function Set-Stat {
                             Diff_Average       = $Stat.Diff_Average + $Span_Day * ($Difficulty - $Stat.Diff_Average)
                             Ratio_Live         = $Ratio
                             Benchmarked        = $Benchmarked
+                            LogFile            = $LogFile
                             #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                         }
                         Break
@@ -1113,7 +1119,8 @@ function Set-Stat {
                     Diff_Live          = $Difficulty
                     Diff_Average       = $Difficulty
                     Ratio_Live         = $Ratio
-                    Benchmarked        = (Get-Date).ToUniversalTime()
+                    Benchmarked        = $StartTime
+                    LogFile            = $LogFile
                     #Ratio_Average      = $Ratio
                 }
                 Break
@@ -1218,6 +1225,7 @@ function Set-Stat {
                     Diff_Average       = [Double]$Stat.Diff_Average
                     Ratio_Live         = [Double]$Stat.Ratio_Live
                     Benchmarked        = [DateTime]$Stat.Benchmarked
+                    LogFile            = [String]$Stat.LogFile
                     #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
                 Break

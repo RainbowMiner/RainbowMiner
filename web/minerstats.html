@@ -70,6 +70,7 @@
                       <th data-field="tPowerDraw" data-sortable="true">Power</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
                       <th data-field="tBenchmarked" data-sortable="true">Date</th>
+                      <th data-field="tLogFile" data-align="center">Log</th>
                       <th data-field="tButton" data-align="center">Bench</th>
                   </tr>
               </thead>
@@ -78,16 +79,45 @@
   </div>
 </div>
 <style>
-    table#minerstats tbody .svg-inline--fa {margin-right:0}
+    table#minerstats tbody .svg-inline--fa {
+        margin-right: 0
+    }
+    #logModal .modal-dialog {
+        max-width:640px;
+    }
+    #logModal .modal-title {
+        font-size: 1rem;
+    }
+    #logModal .modal-body {
+        font-size:75%;
+    }
 </style>
+<!-- Modal -->
+<div class="modal fade" id="logModal" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <pre></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- End of page scripts -->
 <script>
     $(function () {
         $('#resetallbenchmarks').click(function () {
             if (confirm("Do you really want to rebench ALL miners?\n\nThis will delete all your benchmarks, so please think twice.\n\nAre you sure?")) {
-                $('.modal-body').load('scripts/resetallbenchmarks.ps1', function () {
-                    $('.modal-title').text('Reset All Benchmarks');
+                $('#myModal .modal-body').load('scripts/resetallbenchmarks.ps1', function () {
+                    $('#myModal .modal-title').text('Reset All Benchmarks');
                     $('#myModal').modal({ show: true });
                 });
             }
@@ -95,15 +125,15 @@
         });
 
         $('#resetneededbenchmarks').click(function () {
-            $('.modal-body').load('scripts/resetneededbenchmarks.ps1', function () {
-                $('.modal-title').text('Reset Needed Benchmarks');
+            $('#myModal .modal-body').load('scripts/resetneededbenchmarks.ps1', function () {
+                $('#myModal .modal-title').text('Reset Needed Benchmarks');
                 $('#myModal').modal({ show: true });
             });
         });
 
         $('#resetzerohashrateminers').click(function () {
-            $('.modal-body').load('scripts/resetzerohashrateminers.ps1', function () {
-                $('.modal-title').text('Reset 0H/s Miners');
+            $('#myModal .modal-body').load('scripts/resetzerohashrateminers.ps1', function () {
+                $('#myModal .modal-title').text('Reset 0H/s Miners');
                 $('#myModal').modal({ show: true });
             });
         });
@@ -124,8 +154,8 @@
                     params.devicemodel.push(btn.attr('data-devicemodel').toString());
                 })
                 $.post('scripts/resetselectedbenchmark.ps1',params,function(result) {
-                    $('.modal-body').html(result)
-                    $('.modal-title').text('Reset Selected Benchmarks');
+                    $('#myModal .modal-body').html(result)
+                    $('#myModal.modal-title').text('Reset Selected Benchmarks');
                     $('#myModal').modal({ show: true });
                 })
             }
@@ -139,9 +169,21 @@
                     algorithm: $(this).attr('data-algorithm'),
                     devicemodel: $(this).attr('data-devicemodel')
                 };
-                $('.modal-body').load('scripts/resetonebenchmark.ps1?' + jQuery.param(params), function () {
-                    $('.modal-title').text('Reset miner '+params.name.replace(/-GPU.+$/,'')+params.devicemodel+'-'+params.algorithm);
+                $('#myModal .modal-body').load('scripts/resetonebenchmark.ps1?' + jQuery.param(params), function () {
+                    $('#myModal .modal-title').text('Reset miner '+params.name.replace(/-GPU.+$/,'')+params.devicemodel+'-'+params.algorithm);
                     $('#myModal').modal({ show: true });
+                });
+            });
+            $('#minerstats button[name=logfile]').click(function () {
+                var params = {
+                    logfile: $(this).attr('data-logfile').toString()
+                };
+                $.get('/getminerlog?' + jQuery.param(params), function (result) {
+                    if (result.Status) {
+                        $('#logModal .modal-title').text(params.logfile);
+                        $('#logModal .modal-body pre').text(result.Content);
+                        $('#logModal').modal({ show: true });
+                    }
                 });
             });
         });
@@ -182,6 +224,7 @@
             else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'
 
             item.tBenchmarked = (item.tStatus == 'Benchmarking' || !item.Benchmarked)? '-' : item.Benchmarked;
+            item.tLogFile = (typeof item.LogFile !== "undefined" && item.LogFile != "")? '<button class="btn btn-default" type="button" name="logfile" title="Show logfile '+item.LogFile+'" data-logfile="' + item.LogFile + '"><i class="fa fa-search"></i></button>' : '&nbsp;';
 
             // Format the Profile(s)
             var tOC = new Array();

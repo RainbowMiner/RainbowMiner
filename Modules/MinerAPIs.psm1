@@ -191,8 +191,9 @@ class Miner {
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
-            $this.StartTime = (Get-Date).ToUniversalTime()
-            $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
+            $Now = Get-Date
+            $this.StartTime = $Now.ToUniversalTime()
+            $this.LogFile   = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$($Now.ToString("yyyy-MM-dd_HH-mm-ss")).txt")
             $this.Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -BashFileName "start_$($this.DeviceName -join '_')_$($this.Pool -join '_')_$($this.BaseAlgorithm -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH -WinTitle "$($this.Name -replace "-.+$") on $($this.DeviceModel) at $($this.Pool -join '+') with $($this.BaseAlgorithm -join '+')".Trim()
 
             if ($this.Job.XJob) {

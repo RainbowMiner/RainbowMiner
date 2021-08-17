@@ -126,6 +126,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             BaseName       = $Name
                             BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)"
                             Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
+                            LogFile        = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                             ExcludePoolName= $_.ExcludePoolName
 				        }
                     } else {
@@ -150,6 +151,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             BaseName       = $Name
                             BaseAlgorithm  = $MainAlgorithm_Norm_0
                             Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
+                            LogFile        = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                             ExcludePoolName= $_.ExcludePoolName
 				        }
                     }

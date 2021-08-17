@@ -148,6 +148,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         BaseName       = $Name
                         BaseAlgorithm  = $Algorithm_Norm_0
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
+                        LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
                         ListDevices    = "--list-devices"
 					}
 				}
