@@ -446,7 +446,7 @@ if ($AllRigs_Request) {
                     
                     $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
-                    $Rigs_UserSep   = if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
+                    $Rigs_UserSep   = if (@("ProgPowVeil","ProgPowZ","Ubqhash") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
 
                     [PSCustomObject]@{
                         Algorithm     = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
