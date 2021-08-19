@@ -5,7 +5,7 @@
 104	CcminerCool
 105	CcminerCryptonight
 106	CcminerLyra2v3
-107	CcminerRavencoin
+107	CcminerHeavyHash
 108	CcminerSib
 109	CcminerSkunk
 110	CcminerSpModBitcore
