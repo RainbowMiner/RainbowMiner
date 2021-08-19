@@ -30,7 +30,7 @@ catch {
 }
 
 #$Result = (Invoke-WebRequest "https://woolypooly.com/js/app.5956a294.js").Content
-#if ($Result -match "JSON.parse\('(\[{.+}\])'\)") {
+#if ($Result -match "coins:({.+?}}})") {
 #    $Tech = ConvertFrom-Json $Matches[1]
 #    $Tech | Sort-Object coin | Foreach-Object {
 #        $PoolHost = $_.servers[0].urls
@@ -54,6 +54,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "RVN";  port = 55555; host = "rvn"; rpc = "raven-1"}
     [PSCustomObject]@{symbol = "SERO"; port = 8008; host = "sero"; rpc = "sero-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
+    [PSCustomObject]@{symbol = "VTC"; port = 3102; host = "vtc"; rpc = "vtc-1"}
 )
 
 $Pool_PayoutScheme = "PPLNS"

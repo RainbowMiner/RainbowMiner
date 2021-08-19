@@ -26,6 +26,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "RVN"; port = 55555; host = "rvn"; rpc = "raven-1"}
     [PSCustomObject]@{symbol = "SERO"; port = 8008; host = "sero"; rpc = "sero-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
+    [PSCustomObject]@{symbol = "VTC"; port = 3102; host = "vtc"; rpc = "vtc-1"}
 )
 
 $Count = 0
