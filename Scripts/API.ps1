@@ -654,7 +654,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/getdeviceconfig" {
             $Data = if ($API.AllDevices) {
-                $GPUDevices = $API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","NVIDIA")}
+                $GPUDevices = $API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}
                 ConvertTo-Json @(@("CPU") + @($GPUDevices.Vendor | Select-Object -Unique | Sort-Object) + @($GPUDevices.Model | Select-Object -Unique | Sort-Object) + @($GPUDevices.Name | Select-Object -Unique | Sort-Object) | Foreach-Object {[PSCustomObject]@{Name=$_;Selected=$($_ -in $Session.Config.DeviceName);Excluded=$($_ -in $Session.Config.ExcludeDeviceName)}}) -Depth 10
                 if ($GPUDevices -ne $null) {Remove-Variable "GPUDevices"}
             } else {"[]"}
