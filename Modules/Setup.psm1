@@ -1210,7 +1210,9 @@ function Start-Setup {
                             }
                             if ($NewDeviceName["INTEL"]) {
                                 Write-Host " "
-                                Write-Host "Mining on INTEL GPUs is currently in beta mode. Please report any errors." -ForegroundColor Yellow
+                                Write-Host "Mining on INTEL GPUs is in beta mode." -ForegroundColor Yellow
+                                Write-Host "- Don't do it, unless you know exactly, what you are doing." -ForegroundColor Yellow
+                                Write-Host "- Don't mine Onboard-GPUs, they might overheat and your system can be destroyed." -ForegroundColor Yellow
                                 Write-Host " "
                             }
                         }
