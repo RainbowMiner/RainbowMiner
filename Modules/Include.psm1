@@ -1414,7 +1414,7 @@ function Get-Stat {
             $FullName = $p.FullName
             if (-not $All -and $BaseName -notmatch "_$MatchStr$") {continue}
 
-            $NewStatsKey = $BaseName -replace "^(AMD|CPU|NVIDIA)-"
+            $NewStatsKey = $BaseName -replace "^(AMD|CPU|INTEL|NVIDIA)-"
 
             if ($Stat = Get-StatFromFile -Path $FullName -Name $NewStatsKey -Cached:$Cached) {
                 $NewStats[$NewStatsKey] = $Stat
@@ -2106,6 +2106,17 @@ function Start-SubProcessInScreen {
 
     $StuffEnv = Switch ($Vendor) {
         "AMD" {
+            [ordered]@{
+                GPU_MAX_HEAP_SIZE=100
+                GPU_MAX_USE_SYNC_OBJECTS=1
+                GPU_SINGLE_ALLOC_PERCENT=100
+                GPU_MAX_ALLOC_PERCENT=100
+                GPU_MAX_SINGLE_ALLOC_PERCENT=100
+                GPU_ENABLE_LARGE_ALLOCATION=100
+                GPU_MAX_WORKGROUP_SIZE=256
+            }
+        }
+        "INTEL" {
             [ordered]@{
                 GPU_MAX_HEAP_SIZE=100
                 GPU_MAX_USE_SYNC_OBJECTS=1
@@ -2905,7 +2916,7 @@ function Get-Device {
         $GPUVendorLists = @{}
         $GPUDeviceNames = @{}
 
-        $KnownVendors = @("AMD","NVIDIA","INTEL")
+        $KnownVendors = @("AMD","INTEL","NVIDIA")
 
         foreach ($GPUVendor in $KnownVendors) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
         
@@ -4383,9 +4394,9 @@ function Get-GPUVendorList {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
-        [Array]$Type = @() #AMD/NVIDIA
+        [Array]$Type = @() #AMD/INTEL/NVIDIA
     )
-    if (-not $Type.Count) {$Type = "AMD","NVIDIA"}
+    if (-not $Type.Count) {$Type = "AMD","INTEL","NVIDIA"}
     $Type | Foreach-Object {if ($_ -like "*AMD*" -or $_ -like "*Advanced Micro*"){"AMD","Advanced Micro Devices","Advanced Micro Devices, Inc."}elseif($_ -like "*NVIDIA*" ){"NVIDIA","NVIDIA Corporation"}elseif($_ -like "*INTEL*"){"INTEL","Intel(R) Corporation","GenuineIntel"}else{$_}} | Select-Object -Unique
 }
 
@@ -4907,7 +4918,7 @@ function Set-GpuGroupsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $GpuNames = Get-Device "nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
+            $GpuNames = Get-Device "amd","intel","nvidia" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
             foreach ($GpuName in $GpuNames) {
                 if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
                 elseif ($Preset.$GpuName -ne "") {$Global:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
@@ -4945,7 +4956,7 @@ function Set-CombosConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
 
             $Sorted = [PSCustomObject]@{}
-            Foreach($SubsetType in @("AMD","NVIDIA")) {
+            Foreach($SubsetType in @("AMD","INTEL","NVIDIA")) {
                 if ($Preset.$SubsetType -eq $null) {$Preset | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
                 if ($Sorted.$SubsetType -eq $null) {$Sorted | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
 
@@ -4970,6 +4981,7 @@ function Set-CombosConfigDefault {
                             $Mem = $_.OpenCL.GlobalMemSizeGB
                             Switch ($SubsetType) {
                                 "AMD"    {"$($Model.SubString(0,2))$($Mem)GB";Break}
+                                "INTEL"  {"$($Model.SubString(0,2))$($Mem)GB";Break}
                                 "NVIDIA" {"$(
                                     Switch ($_.OpenCL.Architecture) {
                                         "Pascal" {Switch -Regex ($Model) {"105" {"GTX5";Break};"106" {"GTX6";Break};"(104|107|108)" {"GTX7";Break};default {$Model}};Break}
@@ -5039,7 +5051,7 @@ function Set-DevicesConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker=""}
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1"
-            $Devices = Get-Device "cpu","nvidia","amd" -IgnoreOpenCL
+            $Devices = Get-Device "amd","intel","nvidia","cpu" -IgnoreOpenCL
             $Devices | Select-Object -Unique Type,Model | Foreach-Object {
                 $DeviceModel = $_.Model
                 $DeviceType  = $_.Type
@@ -5123,7 +5135,7 @@ function Set-MinersConfigDefault {
                 $MiningMode = "combo"
             }
 
-            foreach ($a in @("CPU","NVIDIA","AMD")) {
+            foreach ($a in @("CPU","AMD","INTEL","NVIDIA")) {
                 if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
                 else {
                     $Devices = @($AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
@@ -5326,7 +5338,7 @@ function Set-OCProfilesConfigDefault {
             $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";PreCmd="";PreCmdArguments="";PostCmd="";PostCmdArguments=""}
             if ($true -or -not $Preset.PSObject.Properties.Name) {
                 $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1"
-                $Devices = Get-Device "amd","nvidia" -IgnoreOpenCL
+                $Devices = Get-Device "amd","intel","nvidia" -IgnoreOpenCL
                 $Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object | Foreach-Object {
                     $Model = $_
                     For($i=1;$i -le 7;$i++) {

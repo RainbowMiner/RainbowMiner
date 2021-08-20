@@ -2842,7 +2842,7 @@ class Xmrig6 : Miner {
 
         $Algo              = $Parameters.Algorithm
         $Algo0             = $Parameters.Algorithm -replace "/.+$"
-        $Device            = Switch($Parameters.Vendor) {"AMD" {"opencl"}; "NVIDIA" {"cuda"}; default {"cpu"}}
+        $Device            = Switch($Parameters.Vendor) {"AMD" {"opencl";break}; "INTEL" {"opencl";break}; "NVIDIA" {"cuda";break}; default {"cpu"}}
 
         try {
             if (Test-Path $ThreadsConfigFile) {

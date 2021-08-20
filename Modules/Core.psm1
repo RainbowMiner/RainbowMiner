@@ -317,7 +317,7 @@ function Start-Core {
         $Session.PauseMiners = $true
     }
 
-    if ($IsWindows -and ($GpuMemSizeMB = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100)) {
+    if ($IsWindows -and ($GpuMemSizeMB = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100)) {
         try {
             Write-Host "Checking Windows pagefile/virtual memory .. " -NoNewline
 
@@ -1443,8 +1443,9 @@ function Invoke-Core {
         $Global:DeviceCache.Devices = @()
         if (($Session.Config.DeviceName | Measure-Object).Count) {$Global:DeviceCache.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName).ForEach({$_})}
         $Global:DeviceCache.DevicesByTypes = [PSCustomObject]@{
-            NVIDIA = $Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"})
             AMD    = $Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "AMD"})
+            INTEL  = $Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "INTEL"})
+            NVIDIA = $Global:DeviceCache.Devices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"})
             CPU    = $Global:DeviceCache.Devices.Where({$_.Type -eq "Cpu"})
             Combos = [PSCustomObject]@{}
             FullComboModels = [PSCustomObject]@{}
@@ -1506,11 +1507,11 @@ function Invoke-Core {
             }
         } elseif ($Session.Config.MiningMode -eq "combo") {
             #add combos to DevicesbyTypes
-            @("NVIDIA","AMD","CPU") | Foreach-Object {$Global:DeviceCache.DevicesByTypes.$_ += $Global:DeviceCache.DevicesByTypes.Combos.$_}
+            @("AMD","INTEL","NVIDIA","CPU") | Foreach-Object {$Global:DeviceCache.DevicesByTypes.$_ += $Global:DeviceCache.DevicesByTypes.Combos.$_}
         }
 
         [hashtable]$Global:DeviceCache.DeviceNames = @{}
-        @("NVIDIA","AMD","CPU") | Foreach-Object {
+        @("AMD","INTEL","NVIDIA","CPU") | Foreach-Object {
             $Global:DeviceCache.DevicesByTypes.$_ | Group-Object Model | Foreach-Object {$Global:DeviceCache.DeviceNames[$_.Name] = @($_.Group | Select-Object -ExpandProperty Name | Sort-Object)}
         }
 

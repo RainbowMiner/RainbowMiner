@@ -86,7 +86,7 @@ function Start-Setup {
         $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
         $UserpoolsActual = Get-Content $ConfigFiles["Userpools"].Path | ConvertFrom-Json
 
-        $SetupDevices = Get-Device "nvidia","amd","cpu" -IgnoreOpenCL
+        $SetupDevices = Get-Device "amd","intel","nvidia","cpu" -IgnoreOpenCL
 
         $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
 
@@ -116,7 +116,7 @@ function Start-Setup {
         Write-Host " "
 
         try {
-            $TotalMem = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
+            $TotalMem = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","intel","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
             if ($IsWindows) {$TotalSwap = (Get-CimInstance Win32_PageFile | Select-Object -ExpandProperty FileSize | Measure-Object -Sum).Sum / 1GB}
             if ($TotalSwap -and $TotalMem -gt $TotalSwap) {
                 Write-Log -Level Warn "You should increase your windows pagefile to at least $TotalMem GB"
@@ -258,7 +258,7 @@ function Start-Setup {
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","fixedcostperday","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","preferminername","preferminermargin","disabledualmining","enablecheckminingconflict","enableethashzombiemode","algorithm","excludealgorithm","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enablefastlanebenchmark","fastlanebenchmarktypecpu","fastlanebenchmarktypegpu","enablefastlanebenchmarkmissing","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","preferminername","preferminermargin","algorithm","excludealgorithm","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","enableethashzombiemode","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","staticcpuminerport","staticgpuminerport","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","uistyle","uisorting","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","excludefromwatchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","fixedcostperday","usepowerprice","checkprofitability","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","enabledebugmode","ssl","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enablefastlanebenchmark","fastlanebenchmarktypecpu","fastlanebenchmarktypegpu","enablefastlanebenchmarkmissing","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","preferminername","preferminermargin","algorithm","excludealgorithm","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","enableethashzombiemode","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardintel1","devicenamewizardintel2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","staticcpuminerport","staticgpuminerport","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","uistyle","uisorting","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","excludefromwatchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","fixedcostperday","usepowerprice","checkprofitability","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","enabledebugmode","ssl","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null
 
@@ -1092,7 +1092,7 @@ function Start-Setup {
                             }
                         }
                         "devicename" {
-                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining " -Default $Config.DeviceName -Characters "A-Z0-9#\*" -Valid @($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining " -Default $Config.DeviceName -Characters "A-Z0-9#\*" -Valid @($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("amd","intel","nvidia") -icontains $_.Vendor -and $_.Type -eq "gpu") {$_.Vendor}} else {if (@("amd","intel","nvidia") -icontains $_.Vendor -and $_.Type -eq "gpu") {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "excludedevicename" {
                             $Config.ExcludeDeviceName = Read-HostArray -Prompt "Enter the devices to exclude from mining " -Default $Config.ExcludeDeviceName -Characters "A-Z0-9#\*" -Valid @($SetupDevices | Foreach-Object {$_.Type.ToUpper();$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1103,7 +1103,7 @@ function Start-Setup {
                             $Config.DeviceName = @("GPU")
                             [hashtable]$NewDeviceName = @{}
                             [hashtable]$AvailDeviceCounts = @{}
-                            $AvailDeviceGPUVendors = @($SetupDevices | Where-Object {$_.Type -eq "gpu" -and @("nvidia","amd") -icontains $_.Vendor} | Select-Object -ExpandProperty Vendor -Unique | Sort-Object)
+                            $AvailDeviceGPUVendors = @($SetupDevices | Where-Object {$_.Type -eq "gpu" -and @("amd","intel","nvidia") -icontains $_.Vendor} | Select-Object -ExpandProperty Vendor -Unique | Sort-Object)
                             $AvailDevicecounts["CPU"] = @($SetupDevices | Where-Object {$_.Type -eq "cpu"} | Select-Object -ExpandProperty Name -Unique | Sort-Object).Count
                             $AvailDeviceCounts["GPU"] = 0
 
@@ -1144,6 +1144,23 @@ function Start-Setup {
                         "devicenamewizardamd2" {
                             if ($AvailDeviceCounts["AMD"] -gt 1 -and $NewDeviceName["AMD"].Count -eq 0) {
                                 $NewDeviceName["AMD"] = Read-HostArray -Prompt "Enter the AMD devices you want to use for mining " -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "devicenamewizardintel1" {
+                            $NewDeviceName["INTEL"] = @()
+                            if ($AvailDeviceCounts["INTEL"] -gt 0) {
+                                if (Read-HostBool -Prompt "Do you want to mine on $(if ($AvailDeviceCounts["INTEL"] -gt 1) {"all INTEL GPUs"}else{"your INTEL GPU"})" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                    $NewDeviceName["INTEL"] = @("INTEL")
+                                }
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "devicenamewizardintel2" {
+                            if ($AvailDeviceCounts["INTEL"] -gt 1 -and $NewDeviceName["INTEL"].Count -eq 0) {
+                                $NewDeviceName["INTEL"] = Read-HostArray -Prompt "Enter the INTEL devices you want to use for mining " -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "INTEL" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1190,6 +1207,11 @@ function Start-Setup {
                                 Write-Host "Since you plan to mine on AMD, the minimum delay between miner change will be set to 2 seconds" -ForegroundColor Yellow
                                 Write-Host " "
                                 $Config.Delay = 2
+                            }
+                            if ($NewDeviceName["INTEL"]) {
+                                Write-Host " "
+                                Write-Host "Mining on INTEL GPUs is currently in beta mode. Please report any errors." -ForegroundColor Yellow
+                                Write-Host " "
                             }
                         }
                         "cpuminingthreads" {
@@ -2003,7 +2025,7 @@ function Start-Setup {
             Write-Host " "
 
             [System.Collections.ArrayList]$AvailDeviceName = @("*")
-            $AvailDeviceName.AddRange(@($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object))
+            $AvailDeviceName.AddRange(@($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("amd","intel","nvidia") -icontains $_.Vendor -and $_.Type -eq "gpu") {$_.Vendor}} else {if (@("amd","intel","nvidia") -icontains $_.Vendor -and $_.Type -eq "gpu") {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object))
                             
             $MinerSetupDone = $false
             do {             
@@ -2026,11 +2048,11 @@ function Start-Setup {
                             }
                             "devices" {
                                 if ($Config.MiningMode -eq "Legacy") {
-                                    $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/nvidia/cpu)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z\*" -Valid $AvailDeviceName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/intel/nvidia/cpu)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z\*" -Valid $AvailDeviceName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     if ($EditDeviceName -eq '') {throw "cancel"}
                                 } else {
                                     [String[]]$EditDeviceName_Array = Read-HostArray -Prompt ".. running on which device(s)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9#\*" -Valid $AvailDeviceName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    ForEach ($EditDevice0 in @("nvidia","amd","cpu")) {
+                                    ForEach ($EditDevice0 in @("amd","intel","nvidia","cpu")) {
                                         if ($EditDeviceName_Array -icontains $EditDevice0) {
                                             $EditDeviceName_Array = @($SetupDevices | Where-Object {$_.Vendor -eq $EditDevice0 -and $_.Type -eq "gpu" -or $_.Type -eq $EditDevice0} | Select-Object -ExpandProperty Model -Unique | Sort-Object)
                                             break
