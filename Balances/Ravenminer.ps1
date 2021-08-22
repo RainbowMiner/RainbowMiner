@@ -39,7 +39,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
 [PSCustomObject]@{
         Caption     = "$($Name) (RVN)"
 		BaseName    = $Name
-        Currency    = $Request.currency
+        Currency    = "RVN"
         Balance     = [Decimal]$Request.balance.cleared
         Pending     = [Decimal]$Request.balance.pending
         Total       = [Decimal]$Request.balance.cleared + [Decimal]$Request.balance.pending
