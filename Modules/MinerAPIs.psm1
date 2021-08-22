@@ -647,12 +647,15 @@ class Miner {
         [System.Collections.Generic.List[string]]$applied = @()
         [System.Collections.Generic.List[string]]$NvCmd = @()
         [System.Collections.Generic.List[string]]$AmdCmd = @()
+        [System.Collections.Generic.List[string]]$IntelCmd = @()
         [System.Collections.Generic.List[object]]$RunCmd = @()
+
+        $IsAfterburner = Test-Afterburner
 
         $DeviceVendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
         if ($Global:IsWindows) {
-            if ($DeviceVendor -ne "NVIDIA") {
+            if ($DeviceVendor -ne "NVIDIA" -and $IsAfterburner) {
                 try {
                     $Script:abMonitor.ReloadAll()
                     $Script:abControl.ReloadAll()
@@ -759,17 +762,19 @@ class Miner {
                 }
             
             } elseif ($Pattern.$DeviceVendor -ne $null) {
-                $DeviceId = 0
-                $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor | Select-Object -ExpandProperty Index | Foreach-Object {
-                    if ($DeviceId -in $this.Profiles.$DeviceModel.Index) {
-                        $GpuEntry = $Script:abControl.GpuEntries[$_]
-                        try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                        try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                        try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                        try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                        if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
+                if ($IsAfterburner) {
+                    $DeviceId = 0
+                    $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor | Select-Object -ExpandProperty Index | Foreach-Object {
+                        if ($DeviceId -in $this.Profiles.$DeviceModel.Index) {
+                            $GpuEntry = $Script:abControl.GpuEntries[$_]
+                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
+                        }
+                        $DeviceId++
                     }
-                    $DeviceId++
                 }
             }
             if ($applied_any) {$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})") > $null}
@@ -800,15 +805,17 @@ class Miner {
                     Invoke-NvidiaSettings $NvCmd
                 } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
                     #t.b.i
-                } else {
+                } elseif ($DeviceVendor -eq "INTEL" -and $IntelCmd.Count) {
+                    #t.b.i
+                } elseif ($IsAfterburner) {
                     $Script:abControl.CommitChanges()
                 }
-                $applied | Foreach-Object {Write-Log $_}
+                $applied | Foreach-Object {Write-Log -Level Info $_}
                 if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "Failed to apply OC for $($this.Name))!"
-                $applied | Foreach-Object {Write-Log "$($_ -replace "OC set","OC NOT set")"}
+                $applied | Foreach-Object {Write-Log -Level Info "$($_ -replace "OC set","OC NOT set")"}
             }
         }
     }
