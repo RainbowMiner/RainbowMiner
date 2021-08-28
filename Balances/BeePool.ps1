@@ -6,6 +6,16 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$Pools_Data = @(
+    [PSCustomObject]@{symbol = "ETH";  coin = "eth";  port = @(9530,9531); fee = 1.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "ETC";  coin = "etc";  port = @(9518,9519); fee = 1.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "RVN";  coin = "rvn";  port = @(9531,9532); fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "CFX";  coin = "cfx";  port = @(9555,9556); fee = 2.0; fee_pplns = $null}
+    [PSCustomObject]@{symbol = "SERO"; coin = "sero"; port = @(9515,9516); fee = 2.0; fee_pplns = $null}
+    [PSCustomObject]@{symbol = "AE";   coin = "ae";   port = @(9505,9506); fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "ERG";  coin = "ergo"; port = @(9545,9546); fee = 2.0; fee_pplns = 1.0}
+)
+
 $Pool_Request = [PSCustomObject]@{}
 $ok = $false
 try {
@@ -21,13 +31,18 @@ if (-not $ok) {
     return
 }
 
-$Pool_Request.data.data | Where-Object {$Config.Pools.$Name.Wallets."$($_.coin)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.coin)")} | Foreach-Object {
-    $Pool_Currency = "$($_.coin)".ToUpper()
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
+
+    $PoolData_Coin = $_.coin
+
+    if (-not ($Pool_Data = $Pool_Request.data.data | Where-Object {$_.coin -eq $PoolData_Coin})) {return}
+
+    $Pool_Currency = $_.symbol
 
     $Request = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-RestMethodAsync "https://www.beepool.org/get_miner" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15 -body @{coin=$_.coin;wallet=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^0x")}
+        $Request = Invoke-RestMethodAsync "https://www.beepool.org/get_miner" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15 -body @{coin=$Pool_Data.coin;wallet=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^0x")}
         if ("$($Request.code)" -ne "0" -or -not $Request.data.account) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {

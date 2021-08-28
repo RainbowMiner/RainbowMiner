@@ -21,12 +21,13 @@ $Pool_Region_Default = "asia"
 @("asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ETH";  port = @(9530,9531); fee = 1.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "ETC";  port = @(9518,9519); fee = 1.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "RVN";  port = @(9531,9532); fee = 2.0; fee_pplns = 1.0}
-    [PSCustomObject]@{symbol = "CFX";  port = @(9555,9556); fee = 2.0; fee_pplns = $null}
-    [PSCustomObject]@{symbol = "SERO"; port = @(9515,9516); fee = 2.0; fee_pplns = $null}
-    [PSCustomObject]@{symbol = "AE";   port = @(9505,9506); fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "ETH";  coin = "eth";  port = @(9530,9531); fee = 1.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "ETC";  coin = "etc";  port = @(9518,9519); fee = 1.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "RVN";  coin = "rvn";  port = @(9531,9532); fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "CFX";  coin = "cfx";  port = @(9555,9556); fee = 2.0; fee_pplns = $null}
+    [PSCustomObject]@{symbol = "SERO"; coin = "sero"; port = @(9515,9516); fee = 2.0; fee_pplns = $null}
+    [PSCustomObject]@{symbol = "AE";   coin = "ae";   port = @(9505,9506); fee = 2.0; fee_pplns = 1.0}
+    [PSCustomObject]@{symbol = "ERG";  coin = "ergo"; port = @(9545,9546); fee = 2.0; fee_pplns = 1.0}
 )
 
 $Pool_Request = [PSCustomObject]@{}
@@ -48,7 +49,9 @@ $TZ_China_Standard_Time = [System.TimeZoneInfo]::GetSystemTimeZones() | Where-Ob
 
 $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
 
-    if (-not ($Pool_Data = $Pool_Request.data.data | Where-Object {$_.coin -eq $Pool_Currency})) {return}
+    $PoolData_Coin = $_.coin
+
+    if (-not ($Pool_Data = $Pool_Request.data.data | Where-Object {$_.coin -eq $PoolData_Coin})) {return}
 
     $Pool_Coin      = Get-Coin $_.symbol
     $Pool_RpcPath   = $Pool_Data.coin
