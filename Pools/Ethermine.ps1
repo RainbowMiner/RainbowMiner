@@ -26,8 +26,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("asia","eu","useast");          host = "-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
-    [PSCustomObject]@{regions = @("asia","eu","uswest","useast"); host = ".ethermine.org";     rpc = "api.ethermine.org";     symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("asia","eu","useast");          host = "-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = @(4444,5555); fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("asia","eu","uswest","useast"); host = ".ethermine.org";     rpc = "api.ethermine.org";     symbol = "ETH"; port = @(4444,5555); fee = 1; divisor = 1000000}
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
