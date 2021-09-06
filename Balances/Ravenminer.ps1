@@ -15,11 +15,11 @@ if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalanc
 
 $Request = [PSCustomObject]@{}
 
-#https://new.ravenminer.com/api/v1/wallet/RFV5WxTdbQEQCdgESiMLRBj5rwXyFHokmC
+#https://www.ravenminer.com/api/v1/wallet/RFV5WxTdbQEQCdgESiMLRBj5rwXyFHokmC
 #old:https://www.ravenminer.com/api/wallet?address=RFV5WxTdbQEQCdgESiMLRBj5rwXyFHokmC
 $Success = $true
 try {
-    if (-not ($Request = Invoke-RestMethodAsync "https://new.ravenminer.com/api/v1/wallet/$($Config.Pools.$Name.Wallets.RVN)" -cycletime ($Config.BalanceUpdateMinutes*60))){$Success = $false}
+    if (-not ($Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/v1/wallet/$($Config.Pools.$Name.Wallets.RVN)" -cycletime ($Config.BalanceUpdateMinutes*60))){$Success = $false}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
