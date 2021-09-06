@@ -10,15 +10,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.8.4"
+$Version = "0.8.5"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.4-teamred/teamredminer-v0.8.4-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.5-teamred/teamredminer-v0.8.5-linux.tgz"
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.4-teamred/teamredminer-v0.8.4-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.5-teamred/teamredminer-v0.8.5-win.zip"
     $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
