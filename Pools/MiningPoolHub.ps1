@@ -101,7 +101,7 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol}
                 HasMinerExclusions = $false
                 Price_Bias    = 0.0
                 Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
+                Wallet        = $User
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
