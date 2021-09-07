@@ -2411,7 +2411,6 @@ class TeamblackWrapper : Miner {
                 if ($Line_Simple -notmatch "GPU\d" -and $Line_Simple -match "([\d\s\./hkMGTPs]+?)(\d+)/(\d+)\s*\([\d\.]+\)$") {
                     $Accepted_Shares = [Int64]$Matches[2]
                     $Rejected_Shares = [Int64]$Matches[3]
-                    $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
                     $Words = "$($Matches[1])".Trim() -split "\s+"
 
@@ -2429,6 +2428,7 @@ class TeamblackWrapper : Miner {
 
                     if ($HashRate_Value -gt 0) {
                         $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                        $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                     }
 
                     $this.AddMinerData($Line_Simple,$HashRate)
