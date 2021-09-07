@@ -65,7 +65,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb (new with v0.12.0)
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
     [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
-    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z, fails to validate on CPU
     [PSCustomObject]@{MainAlgorithm = "megabtx"; Params = ""; IsGtx = $true} #MegaBTX (Bitcore) (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "padihash"; Params = ""} #GLTPadiHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "pawelhash"; Params = ""} #GLTPawelHash  (new with v0.8.6)
