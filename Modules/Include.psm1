@@ -3385,6 +3385,7 @@ function Get-Device {
                     Type = "Cpu"
                     Type_Index = $CPUIndex
                     Type_Mineable_Index = $CPUIndex
+                    Type_Codec_Index = $CPUIndex
                     Model = "CPU"
                     Model_Base = "CPU"
                     Model_Name = $Global:GlobalCPUInfo.Name
