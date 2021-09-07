@@ -69,8 +69,6 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol}
 
     $Divisor = 1e9
 
-    if ($Pool_CoinSymbol -eq "ZCL") {$Divisor *= 12.5/0.78} #temp fix "tripple halving of ZCL"
-
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -Quiet
     }
