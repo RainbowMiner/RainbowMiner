@@ -2913,6 +2913,7 @@ function Get-Device {
         $Type_Vendor_Index = @{}
         $Type_Index = @{}
         $Type_Mineable_Index = @{}
+        $Type_Codec_Index = @{}
         $GPUVendorLists = @{}
         $GPUDeviceNames = @{}
 
@@ -3104,7 +3105,10 @@ function Get-Device {
                     }
 
                     if ($Vendor_Name -eq "NVIDIA") {
+                        $Codec = "CUDA"
                         $Device_OpenCL.Architecture = Get-NvidiaArchitecture $Model
+                    } else {
+                        $Codec = "OpenCL"
                     }
 
                     $Device = [PSCustomObject]@{
@@ -3115,12 +3119,13 @@ function Get-Device {
                         Type_PlatformId_Index = [Int]$Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"
                         Platform_Vendor = $PlatformVendor
                         Vendor = [String]$Vendor_Name
-                        Vendor_Name = [String]$Device_OpenCL.Vendor                    
+                        Vendor_Name = [String]$Device_OpenCL.Vendor
                         Vendor_Index = [Int]$Vendor_Index."$($Device_OpenCL.Vendor)"
-                        Type_Vendor_Index = [Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"
                         Type = [String]$Device_OpenCL.Type
                         Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
+                        Type_Codec_Index = [Int]$Type_Codec_Index."$($Device_OpenCL.Type)".$Codec
                         Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
+                        Type_Vendor_Index = [Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"
                         BusId_Index               = 0
                         BusId_Type_Index          = 0
                         BusId_Type_Vendor_Index   = 0
@@ -3128,6 +3133,7 @@ function Get-Device {
                         BusId_Vendor_Index        = 0
 
                         OpenCL = $Device_OpenCL
+                        Codec = $Codec
                         Model = $Model
                         Model_Base = $Model
                         Model_Name = [String]$Device_Name
@@ -3182,18 +3188,22 @@ function Get-Device {
                         }
                     }
 
+                    if (-not $Type_Codec_Index."$($Device_OpenCL.Type)") {
+                        $Type_Codec_Index."$($Device_OpenCL.Type)" = @{}
+                    }
                     if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
                         $Type_PlatformId_Index."$($Device_OpenCL.Type)" = @{}
                     }
                     if (-not $Type_Vendor_Index."$($Device_OpenCL.Type)") {
                         $Type_Vendor_Index."$($Device_OpenCL.Type)" = @{}
                     }
-                
+
                     $PlatformId_Index."$($PlatformId)"++
                     $Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"++
                     $Vendor_Index."$($Device_OpenCL.Vendor)"++
-                    $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                     $Type_Index."$($Device_OpenCL.Type)"++
+                    $Type_Codec_Index."$($Device_OpenCL.Type)".$Codec++
+                    $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                 }
             }
 
@@ -6997,7 +7007,7 @@ function Test-Internet {
             Foreach ($url in @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","www.rbminer.net")) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
             $Global:ProgressPreference = $oldProgressPreference
         } elseif (Get-Command "Get-NetConnectionProfile" -ErrorAction Ignore) {
-            (Get-NetConnectionProfile -IPv4Connectivity Internet | Measure-Object).Count -gt 0
+            (Get-NetConnectionProfile -IPv4Connectivity Internet -ErrorAction Ignore | Measure-Object).Count -gt 0 -or (Get-NetConnectionProfile -IPv6Connectivity Internet -ErrorAction Ignore | Measure-Object).Count -gt 0
         } else {
             $true
         }
