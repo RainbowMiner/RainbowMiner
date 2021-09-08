@@ -2239,16 +2239,14 @@ class SPMinerWrapper : Miner {
                         "P" {$HashRate_Value *= 1E+15}
                     }
 
+                    $HashRate = [PSCustomObject]@{}
+
                     if ($HashRate_Value -gt 0) {
                         $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
                         $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                     }
 
                     $this.AddMinerData($Line_Simple,$HashRate)
-                } elseif ($Line_Simple -match "Accepted\s+\((\d+)/(\d+)\)") {
-                    $Accepted_Shares = [Int64]$Matches[1]
-                    $Total_Shares    = [Int64]$Matches[1]
-                    $this.UpdateShares(0,$Accepted_Shares,$Total_Shares - $Accepted_Shares)
                 }
             }
         }
