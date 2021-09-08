@@ -1941,6 +1941,7 @@ function Start-SubProcessInBackground {
     if ($ArgumentList) {
         $ArgumentListToBlock = $ArgumentList
         ([regex]"\s-+[\w\-_]+[\s=]+([^'`"][^\s]*,[^\s]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value -replace "'","``'")'"}
+        ([regex]"\s-+[\w\-_]+[\s=]+([\[][^\s]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value -replace "'","``'")'"}
         if ($ArgumentList -ne $ArgumentListToBlock) {
             Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
             $ArgumentList = $ArgumentListToBlock
