@@ -2227,7 +2227,7 @@ class SPMinerWrapper : Miner {
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple -match "accepted:\s*(\d+)/(\d+).+\s+([\d\.]+)\s+([hkMGTP]+)/s") {
                     $Accepted_Shares = [Int64]$Matches[1]
-                    $Rejected_Shares = [Int64]$Matches[2]
+                    $Total_Shares    = [Int64]$Matches[2]
 
                     $HashRate_Value = [Double]"$($Matches[3] -replace "[^\d\.]+")"
 
@@ -2243,7 +2243,7 @@ class SPMinerWrapper : Miner {
 
                     if ($HashRate_Value -gt 0) {
                         $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-                        $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+                        $this.UpdateShares(0,$Accepted_Shares,$Total_Shares - $Accepted_Shares)
                     }
 
                     $this.AddMinerData($Line_Simple,$HashRate)
