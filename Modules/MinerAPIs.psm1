@@ -2215,6 +2215,48 @@ class SixMinerWrapper : Miner {
     }
 }
 
+class SPMinerWrapper : Miner {
+
+    [Void]UpdateMinerData () {
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
+        if ($MJob.HasMoreData) {
+            $HashRate_Name = $this.Algorithm[0]
+
+            $MJob | Receive-Job | ForEach-Object {
+                $Line = $_ -replace "`n|`r", ""
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
+                if ($Line_Simple -match "accepted:\s*(\d+)/(\d+).+\s+([\d\.]+)\s+([hkMGTP]+)/s") {
+                    $Accepted_Shares = [Int64]$Matches[1]
+                    $Rejected_Shares = [Int64]$Matches[2]
+
+                    $HashRate_Value = [Double]"$($Matches[3] -replace "[^\d\.]+")"
+
+                    switch -Regex ($Matches[4]) {
+                        "k" {$HashRate_Value *= 1E+3}
+                        "M" {$HashRate_Value *= 1E+6}
+                        "G" {$HashRate_Value *= 1E+9}
+                        "T" {$HashRate_Value *= 1E+12}
+                        "P" {$HashRate_Value *= 1E+15}
+                    }
+
+                    if ($HashRate_Value -gt 0) {
+                        $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                        $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+                    }
+
+                    $this.AddMinerData($Line_Simple,$HashRate)
+                } elseif ($Line_Simple -match "Accepted\s+\((\d+)/(\d+)\)") {
+                    $Accepted_Shares = [Int64]$Matches[1]
+                    $Total_Shares    = [Int64]$Matches[1]
+                    $this.UpdateShares(0,$Accepted_Shares,$Total_Shares - $Accepted_Shares)
+                }
+            }
+        }
+        $MJob = $null
+        $this.CleanupMinerData()
+    }
+}
+
 class SrbMiner : Miner {
 
     [String]GetArguments() {

@@ -140,7 +140,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					        Path           = $Path_VTC
                             Arguments      = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cu-devices"} else {"--cl-devices"}) $($DeviceIDsAll) --verthash-data $($DatFile) $($_.Params)"
 					        HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
-					        API            = "Wrapper"
+					        API            = "SPMinerWrapper"
 					        Port           = $Miner_Port
                             FaultTolerance = $_.FaultTolerance
 					        ExtendInterval = $_.ExtendInterval
