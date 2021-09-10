@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "1.0"
+$Version = "1.01"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -19,8 +19,13 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.01-teamblack/TeamBlackMiner_1_01_Ubuntu_18_04_Cuda_11_4_beta.zip"
+            Cuda = "11.4"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-teamblack/TeamBlackMiner_1_0_Cuda_11_2-Linux.zip"
             Cuda = "11.2"
+            Version = "1.0"
         }
     )
 } else {
@@ -31,12 +36,13 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-teamblack/TeamBlackMiner_1_0_Cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.01-teamblack/TeamBlackMiner_1_01_cuda_11_4.7z"
             Cuda = "11.4"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-teamblack/TeamBlackMiner_1_0_Cuda_11_2.7z"
             Cuda = "11.2"
+            Version = "1.0"
         }
     )
 }
@@ -74,12 +80,14 @@ if ($Session.Config.CUDAVersion) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if (($i -lt $UriCuda.Count-1) -or -not $Global:DeviceCache.DevicesByTypes.NVIDIA) {""}else{$Name})) {
             $Uri  = $UriCuda[$i].Uri
             $Cuda = $UriCuda[$i].Cuda
+            if ($UriCuda[$i].Version) {$Version = $UriCuda[$i].Version}
         }
     }
 }
 
 if (-not $Cuda) {
     $Uri = $UriCuda[0].Uri
+    if ($UriCuda[0].Version) {$Version = $UriCuda[0].Version}
 }
 
 if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
