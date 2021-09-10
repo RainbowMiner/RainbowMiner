@@ -11,8 +11,8 @@ $Request = [PSCustomObject]@{}
 $Pools_Data = @(
     [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-beam.flypool.org";      rpc = "api-beam.flypool.org";      symbol = "BEAM"; port = @(3333,3443); fee = 1; divisor = 1}
     [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-zcash.flypool.org";     rpc = "api-zcash.flypool.org";     symbol = "ZEC";  port = @(3333,3443); fee = 1; divisor = 1}
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-ycash.flypool.org";     rpc = "api-ycash.flypool.org";     symbol = "YEC";  port = @(3333,3443); fee = 1; divisor = 1}
     [PSCustomObject]@{regions = @("stratum");        host = "-ravencoin.flypool.org";  rpc = "api-ravencoin.flypool.org"; symbol = "RVN";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("stratum");        host = "-ergo.flypool.org";       rpc = "api-ergo.flypool.org";      symbol = "ERG";  port = @(3333,3443); fee = 0; divisor = 1} #fee = 0% until 22nd Sept. 2021
 )
 
 $Count = 0
