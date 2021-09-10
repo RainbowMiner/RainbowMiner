@@ -11,17 +11,17 @@ $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "10.0"
 $DevFee = 3.0
-$Version = "3.3.8"
+$Version = "3.3.9"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.8-nanominer/nanominer-linux-3.3.8-cuda11.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.9-nanominer/nanominer-linux-3.3.9-cuda11.tar.gz"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.8-nanominer/nanominer-linux-3.3.8.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.9-nanominer/nanominer-linux-3.3.9.tar.gz"
             Cuda = "10.0"
         }
     )
@@ -29,11 +29,11 @@ if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.8-nanominer/nanominer-windows-3.3.8-cuda11.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.9-nanominer/nanominer-windows-3.3.9-cuda11.zip"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.8-nanominer/nanominer-windows-3.3.8.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.9-nanominer/nanominer-windows-3.3.9.zip"
             Cuda = "10.0"
         }
     )
