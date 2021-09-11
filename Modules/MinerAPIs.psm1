@@ -597,7 +597,7 @@ class Miner {
             $HashRates_Count    = ($HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum).Minimum
             $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average).Average * $HashRates_Averages.Keys.Count
             $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_} | Measure-Object -Maximum).Maximum / $HashRates_Average} else {1}
-            Write-Log "GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
+            Write-Log -Level Info "$($this.Name): GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
         }
 
         $this.Variance[$this.Algorithm.IndexOf($Algorithm)] = $HashRates_Variance
@@ -846,7 +846,7 @@ class BMiner : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -905,7 +905,7 @@ class Cast : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -946,7 +946,7 @@ class Ccminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -990,7 +990,7 @@ class Claymore : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1054,7 +1054,7 @@ class CryptoDredge : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1094,7 +1094,7 @@ class Dstm : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1134,7 +1134,7 @@ class Eminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
         
@@ -1174,7 +1174,7 @@ class EnemyZ : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1226,7 +1226,7 @@ class Ethminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1409,7 +1409,7 @@ class Fireice : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1454,7 +1454,7 @@ class Gminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1555,7 +1555,7 @@ class GrinPro : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1624,7 +1624,7 @@ class Jceminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1669,7 +1669,7 @@ class Lol : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1711,7 +1711,7 @@ class Luk : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1752,7 +1752,7 @@ class MiniZ : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1842,7 +1842,7 @@ class Nanominer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1886,7 +1886,7 @@ class NBminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1950,7 +1950,7 @@ class Nheq : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -1988,7 +1988,7 @@ class NoncerPro : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2025,7 +2025,7 @@ class Nqminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2063,7 +2063,7 @@ class Prospector : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2103,7 +2103,7 @@ class RH : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2293,7 +2293,7 @@ class SrbMiner : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2335,7 +2335,7 @@ class SrbMinerMulti : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2476,6 +2476,10 @@ class TeamblackWrapper : Miner {
                     $Accepted_Shares = [Int64]$Matches[1]
                     $Total_Shares    = [Int64]$Matches[1]
                     $this.UpdateShares(0,$Accepted_Shares,$Total_Shares - $Accepted_Shares)
+                } elseif ($Line_Simple -match "GPU\s+(\d+):\s+has\s+timed\sout") {
+                    #GPU has crashed, restart miner
+                    Write-Log -Level Warn "$($this.Name): GPU $($Matches[1]) has timed out - restarting miner"
+                    $this.SetStatusRaw([MinerStatus]::RunningFailed)
                 }
             }
         }
@@ -2502,7 +2506,7 @@ class Trex : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2599,7 +2603,7 @@ class Xgminer : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -2736,7 +2740,7 @@ class Xmrig : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
         
@@ -2885,7 +2889,7 @@ class Xmrig3 : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
@@ -3050,7 +3054,7 @@ class Xmrig6 : Miner {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
 
