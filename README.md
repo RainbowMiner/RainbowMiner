@@ -52,16 +52,16 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ### Windows 7/8.1/10 pre-requisites
 
-1. Install PowerShell 7: [Download Installer for version 7.1.3](https://github.com/PowerShell/PowerShell/releases/download/v7.1.3/PowerShell-7.1.3-win-x64.msi)
+1. Install PowerShell 7: [Download Installer for version 7.1.4](https://github.com/PowerShell/PowerShell/releases/download/v7.1.4/PowerShell-7.1.4-win-x64.msi)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
     - **Nvidia official downloads**:
-      - [Nvidia Driver Version v461.92 - Windows 10](https://international.download.nvidia.com/Windows/461.92/461.92-desktop-win10-64bit-international-dch-whql.exe)
-      - [Nvidia Driver Version v461.92 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/461.92/461.92-desktop-win7-64bit-international-whql.exe)
-    - **AMD**: [AMD Adrenalin 2020 Edition 20.3.1](https://www.guru3d.com/files-get/amd-radeon-adrenalin-edition-20-2-3-driver-download,1.html) - if you run into trouble, try older versions.
+      - [Nvidia Driver Version v471.41 - Windows 10](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win10-64bit-international-dch-whql.exe)
+      - [Nvidia Driver Version v471.41 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win7-64bit-international-whql.exe)
+    - **AMD**: [AMD Adrenalin 2021 Edition 21.8.2](https://drivers.amd.com/drivers/non-whql-radeon-software-adrenalin-2020-21.8.2-win10-64bit-aug25.exe) - if you run into trouble, try older versions.
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
-Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
+Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\7" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
 
