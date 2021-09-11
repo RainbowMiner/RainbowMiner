@@ -12,7 +12,7 @@
 
 ## INTRODUCTION
 
-GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD and CPU), optionally including cost of electricity into profit calculations and  stop mining, if no longer profitable.
+GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD, INTEL and CPU), optionally including cost of electricity into profit calculations and  stop mining, if no longer profitable.
 Features: easy setup wizard with adhoc working default (no editing of files needed), GUI-webinterface, selection of devices to be used, very low CPU usage.
 
 
@@ -21,7 +21,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ## FEATURE SUMMARY
 
-- **Multi-Platform (AMD, NVIDIA, CPU) on Windows and Linux**
+- **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (2Miners, 666Pool, 6Block, Acepool, AHashPool, BaikalMiner, BeePool, Binance, BlockCruncher, BlockMasters, Bsod, BtcPrivate, Cortexmint, EthashPool, Ethermine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FairPool, FlexPool, FluxPools, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, MinerRocks, MiningDutch, MiningPoolHub, MiningPoolOvh, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, MoneroOcean, Nanopool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Poolin, Poolium, Ravenminer, SoloPool, SparkPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, Zergpool and Zpool)**
 - **Integrate own and custom pools**
@@ -807,7 +807,7 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 #### Select mining mode ####
 
 - **MiningMode** = possible values are "legacy", "device" and "combo", see explanation below
-  - "legacy": one miner will handle all devices of one vendor together. Only NVIDIA, AMD, CPU are possible to select.
+  - "legacy": one miner will handle all devices of one vendor together. Only NVIDIA, INTEL, AMD, CPU are possible to select.
   - "device" (default): each device group (e.g. GTX1070, RX570, CPU..) will get the most profitable miner to work on the different algorithm. If you have three different device groups, there will be three miners launched.
   - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperatly: if the combo is less efficient than single miners, it will be deactivated automatically.
 - **EnableResetVega** = set to 1 to always reset Vega Gpus before mining
