@@ -9,7 +9,6 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "1.01"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -21,6 +20,7 @@ if ($IsLinux) {
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.01-teamblack/TeamBlackMiner_1_01_Ubuntu_18_04_Cuda_11_4_beta.zip"
             Cuda = "11.4"
+            Version = "1.01"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-teamblack/TeamBlackMiner_1_0_Cuda_11_2-Linux.zip"
@@ -36,8 +36,9 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.01-teamblack/TeamBlackMiner_1_01_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.02-teamblack/TeamBlackMiner_1_02_cuda_11_4_beta.7z"
             Cuda = "11.4"
+            Version = "1.02"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-teamblack/TeamBlackMiner_1_0_Cuda_11_2.7z"
@@ -50,7 +51,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 
-$ExcludePools = "^666Pool|^BeePool|^Hellominer|^HeroMiners|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Poolin|^PoolSexy|^ProHashing|^ProHashingCoins|^SuprNova|^unMineable|^Zpool"
+$ExcludePools = "^666Pool|^BeePool|^Hellominer|^HeroMiners|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Poolin|^PoolSexy|^SuprNova|^unMineable|^Zpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
