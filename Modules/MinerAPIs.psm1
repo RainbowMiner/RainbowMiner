@@ -2479,7 +2479,7 @@ class TeamblackWrapper : Miner {
                 } elseif ($Line_Simple -match "GPU\s+(\d+):\s+has\s+timed\sout") {
                     #GPU has crashed, restart miner
                     Write-Log -Level Warn "$($this.Name): GPU $($Matches[1]) has timed out - restarting miner"
-                    $this.SetStatusRaw([MinerStatus]::RunningFailed)
+                    $this.Restart = $true
                 }
             }
         }
