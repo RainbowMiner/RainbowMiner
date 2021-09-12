@@ -76,7 +76,6 @@ if ($InfoOnly) {
 }
 
 $Cuda = $null
-$ExtraParams = $null
 if ($Session.Config.CUDAVersion) {
     for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
         if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if (($i -lt $UriCuda.Count-1) -or -not $Global:DeviceCache.DevicesByTypes.NVIDIA) {""}else{$Name})) {
@@ -114,8 +113,8 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = $Miner_Device.Type_Codec_Index -join ','
-                        $DeviceIDsAllByVendor = $Miner_Device.Type_Vendor_Index -join ','
+                        $DeviceIDsAllOpenCl = $Miner_Device.Type_Index -join ','
+                        $DeviceIDsAllCUDA   = $Miner_Device.Type_Vendor_Index -join ','
                         $First = $false
                     }
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
@@ -126,7 +125,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path
-					        Arguments      = "--algo $($_.MainAlgorithm) --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $($Pools.$Algorithm_Norm.Wallet) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllByVendor)]"} elseif ($Miner_Vendor -eq "AMD") {"--amd-only --cl-devices [$($DeviceIDsAllByVendor)]"} else {"--cl-devices [$($DeviceIDsAll)]"})$(if ($Version -notmatch "^1\.01" -and $Miner_Vendor -eq "NVIDIA") {" --xintensity -1"}) --no-ansi --no-cpu $($_.Params)"
+					        Arguments      = "--algo $($_.MainAlgorithm) --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $($Pools.$Algorithm_Norm.Wallet) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA" -and $Version -notmatch "^1\.01") {" --xintensity -1"}) --no-ansi --no-cpu $($_.Params)"
 					        HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					        API            = "TeamblackWrapper"
 					        Port           = $Miner_Port
@@ -149,7 +148,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path_VTC
-                            Arguments      = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cu-devices"} else {"--cl-devices"}) $($DeviceIDsAll) --verthash-data '$($DatFile)' $($_.Params)"
+                            Arguments      = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cu-devices $($DeviceIDsAllCUDA)"} else {"--cl-devices $($DeviceIDsAllOpenCl)"}) --verthash-data '$($DatFile)' $($_.Params)"
 					        HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					        API            = "SPMinerWrapper"
 					        Port           = $Miner_Port
