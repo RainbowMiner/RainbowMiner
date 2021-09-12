@@ -2448,7 +2448,7 @@ class TeamblackWrapper : Miner {
             $MJob | Receive-Job | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
-                if ($Line_Simple -notmatch "GPU\d" -and $Line_Simple -match "([\d\s\./hkMGTPs]+?)(\d+)/(\d+)\s*\([\d\.]+\)$") {
+                if ($Line_Simple -notmatch "GPU\d" -and $Line_Simple -match "([\d\s\./hkMGTPs]+?)(\d+)/(\d+)[/\s].*\([\d\.]+\)$") {
                     $Accepted_Shares = [Int64]$Matches[2]
                     $Rejected_Shares = [Int64]$Matches[3]
 
@@ -2472,9 +2472,9 @@ class TeamblackWrapper : Miner {
                     }
 
                     $this.AddMinerData($Line_Simple,$HashRate)
-                } elseif ($Line_Simple -match "Accepted\s+\((\d+)/(\d+)\)") {
+                } elseif ($Line_Simple -match "Accepted\s+\((\d+)/(\d+)[/)]") {
                     $Accepted_Shares = [Int64]$Matches[1]
-                    $Total_Shares    = [Int64]$Matches[1]
+                    $Total_Shares    = [Int64]$Matches[2]
                     $this.UpdateShares(0,$Accepted_Shares,$Total_Shares - $Accepted_Shares)
                 } elseif ($Line_Simple -match "GPU\s+(\d+):\s+has\s+timed\sout") {
                     #GPU has crashed, restart miner
