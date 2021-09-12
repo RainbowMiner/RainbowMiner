@@ -148,7 +148,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path_VTC
-                            Arguments      = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cu-devices $($DeviceIDsAllCUDA)"} else {"--cl-devices $($DeviceIDsAllOpenCl)"}) --verthash-data '$($DatFile)' $($_.Params)"
+                            Arguments      = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cu-devices $($DeviceIDsAllCUDA)"} else {"--cl-devices $($Miner_Device.Type_Codec_Index -join ',')"}) --verthash-data '$($DatFile)' $($_.Params)"
 					        HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					        API            = "SPMinerWrapper"
 					        Port           = $Miner_Port
