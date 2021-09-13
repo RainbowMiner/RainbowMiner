@@ -105,7 +105,7 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.symbol} | ForEach-Object {
                 HasMinerExclusions = $false
                 Price_Bias    = 0.0
                 Price_Unbias  = 0.0
-                Wallet        = "$User.{workername:$Worker}"
+                Wallet        = ""
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
