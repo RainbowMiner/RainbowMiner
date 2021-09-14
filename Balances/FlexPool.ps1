@@ -19,8 +19,8 @@ $Pool_TotalRequest    = [PSCustomObject]@{}
 $Pool_PaymentsRequest = [PSCustomObject]@{}
 
 try {
-    $Pool_BalanceRequest = Invoke-RestMethodAsync "https://flexpool.io/api/v1/miner/$($PoolConfig.$Pool_Currency)/balance" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
-    $Pool_TotalRequest   = Invoke-RestMethodAsync "https://flexpool.io/api/v1/miner/$($PoolConfig.$Pool_Currency)/totalPaid" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
+    $Pool_BalanceRequest = Invoke-RestMethodAsync "https://api.flexpool.io/v2/miner/balance?coin=ETH&address=$($PoolConfig.$Pool_Currency)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
+    $Pool_StatsRequest   = Invoke-RestMethodAsync "https://api.flexpool.io/v2/miner/paymentsStats?coin=ETH&address=$($PoolConfig.$Pool_Currency)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
     $ok = -not $Pool_BalanceRequest.error -and -not $Pool_TotalRequest.error
 }
 catch {
@@ -38,8 +38,8 @@ $page = 0
 do {
     $ok = $false
     try {
-        $Pool_PaymentsResult = Invoke-RestMethodAsync "https://flexpool.io/api/v1/miner/$($PoolConfig.$Pool_Currency)/payments?page=$($page)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
-        $ok = -not $Pool_PaymentsResult.error -and (++$page -lt $Pool_PaymentsResult.result.total_pages)
+        $Pool_PaymentsResult = Invoke-RestMethodAsync "https://api.flexpool.io/v2/miner/payments?coin=ETH&address=$($PoolConfig.$Pool_Currency)&page=$($page)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
+        $ok = -not $Pool_PaymentsResult.error -and (++$page -lt $Pool_PaymentsResult.result.totalPages)
         if (-not $Pool_PaymentsResult.error) {
             $Pool_PaymentsResult.result.data | Foreach-Object {$Pool_PaymentsData += $_}
         }
@@ -51,8 +51,8 @@ do {
 
 $Pool_Divisor = 1e18
 
-$Unpaid = [Decimal]$Pool_BalanceRequest.result / $Pool_Divisor
-$Paid   = [Decimal]$Pool_TotalRequest.result / $Pool_Divisor
+$Unpaid = [Decimal]$Pool_BalanceRequest.result.balance / $Pool_Divisor
+$Paid   = [Decimal]$Pool_StatsRequest.result.stats.totalPaid / $Pool_Divisor
 
 [PSCustomObject]@{
         Caption     = "$($Name) ($Pool_Currency)"

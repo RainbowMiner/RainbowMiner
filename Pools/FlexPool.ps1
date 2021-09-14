@@ -23,7 +23,7 @@ if (-not $Pool_User -and -not $InfoOnly) {return}
 [hashtable]$Pool_RegionsTable = @{}
 [hashtable]$Pool_FailoverRegionsTable = @{}
 
-$Pool_Regions = @("us-east","us-west","de","sg","au","br","kr")
+$Pool_Regions = @("us-east","us-west","de","se","sg","au","br","kr")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 foreach($Pool_Region in $Pool_Regions) {
     $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
@@ -45,8 +45,8 @@ if (-not $InfoOnly) {
 
     $ok = $false
     try {
-        $Pool_HashRate = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/hashrate" -tag $Name -cycletime 120
-        $Pool_Workers = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/workersOnline" -tag $Name -cycletime 120
+        $Pool_HashRate = Invoke-RestMethodAsync "https://api.flexpool.io/v2/pool/hashrate?coin=$($Pool_Currency)" -tag $Name -cycletime 120
+        $Pool_Workers = Invoke-RestMethodAsync "https://api.flexpool.io/v2/pool/workerCount?coin=$($Pool_Currency)" -tag $Name -cycletime 120
         $ok = -not $Pool_HashRate.error -and -not $Pool_Workers.error
     }
     catch {
@@ -67,12 +67,12 @@ if (-not $InfoOnly) {
         $ok = $false
         try {
             $Pool_BlocksResult  = [PSCustomObject]@{}
-            $Pool_BlocksResult = Invoke-RestMethodAsync "https://flexpool.io/api/v1/pool/blocks?page=$($page)" -retry 3 -retrywait 1000 -tag $Name -cycletime 180 -fixbigint
+            $Pool_BlocksResult = Invoke-RestMethodAsync "https://api.flexpool.io/v2/pool/blocks?coin=$($Pool_Currency)&page=$($page)" -retry 3 -retrywait 1000 -tag $Name -cycletime 180 -fixbigint
 
             $timestamp    = Get-UnixTimestamp
             $timestamp24h = $timestamp - 24*3600
 
-            $ok = -not $Pool_BlocksResult.error -and (++$page -lt $Pool_BlocksResult.result.total_pages)
+            $ok = -not $Pool_BlocksResult.error -and (++$page -lt $Pool_BlocksResult.result.totalPages)
             if (-not $Pool_BlocksResult.error) {
                 $Pool_BlocksResult.result.data | Where-Object {$_.number -lt $number -or -not $number} | Foreach-Object {
                     if ($_.timestamp -gt $timestamp24h) {$blocks += $_.timestamp} else {$ok = $false}
