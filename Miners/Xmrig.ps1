@@ -18,35 +18,39 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_3-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_4dev-x64.7z"
+            Cuda = "11.4"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_3dev-x64.7z"
             Cuda = "11.3"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_2-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_2dev-x64.7z"
             Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_1-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_1dev-x64.7z"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_0-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda11_0dev-x64.7z"
             Cuda = "11.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda10_2-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda10_2dev-x64.7z"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda10_1-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda10_1dev-x64.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda10_0-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda10_0dev-x64.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda9_2-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-bionic-cuda9_2dev-x64.7z"
             Cuda = "9.2"
         }
     )
@@ -56,27 +60,31 @@ if ($IsLinux) {
 } else {
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_3-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_4dev-win64.7z"
+            Cuda = "11.4"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_3dev-win64.7z"
             Cuda = "11.3"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_2dev-win64.7z"
             Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_1dev-win64.7z"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda11_0dev-win64.7z"
             Cuda = "11.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda10_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda10_2dev-win64.7z"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda10_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.0-xmrig/xmrig-6.15.0-msvc-cuda10_1dev-win64.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
@@ -135,7 +143,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/0";                       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/arq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "rx/grft";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU")} #CUDA Plugin v6.12.0 doesn't support GRFT, v6.15.0 has memory bug
+    [PSCustomObject]@{MainAlgorithm = "rx/grft";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")} #CUDA Plugin v6.12.0 doesn't support GRFT, v6.15.0 has memory bug
     [PSCustomObject]@{MainAlgorithm = "rx/keva";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     #[PSCustomObject]@{MainAlgorithm = "rx/loki";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/sfx";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","NVIDIA")}
@@ -177,7 +185,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
+        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev")}).ForEach({
             $First = $True
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
