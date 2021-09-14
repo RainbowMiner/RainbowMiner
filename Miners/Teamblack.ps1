@@ -31,20 +31,19 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.03-teamblack/TeamBlackMiner_1_03_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.04-teamblack/TeamBlackMiner_1_04_cuda_11_4.7z"
             Cuda = "11.4"
-            Version = "1.03"
+            Version = "1.04"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.03-teamblack/TeamBlackMiner_1_03_cuda_11_2.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.04-teamblack/TeamBlackMiner_1_04_cuda_11_2.7z"
             Cuda = "11.2"
-            Version = "1.03"
+            Version = "1.04"
         }
     )
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
-
 
 $ExcludePools = "^666Pool|^BeePool|^Hellominer|^HeroMiners|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Poolin|^PoolSexy|^SuprNova|^unMineable|^Zpool"
 
