@@ -110,7 +110,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Name -match $_.IncludePoolName)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                        $Miner_Name = (@($Name) + @($_.Xintensity | Select-Object) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $Miner_Name = (@($Name) + @($_.Xintensity) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAllOpenCl = $Miner_Device.Type_Index -join ','
                         $DeviceIDsAllCUDA   = $Miner_Device.Type_Vendor_Index -join ','
                         $Xintensity = if ($_.Xintensity) {$_.Xintensity} else {-1}
