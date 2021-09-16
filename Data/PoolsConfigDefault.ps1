@@ -95,8 +95,8 @@
             Currencies=@("ETH")
         }
         "Ezil" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{EnableNanominerDual="1"}
-            SetupFields=[PSCustomObject]@{EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms"}
+            Fields=[PSCustomObject]@{EnableLolminerDual="1";EnableNanominerDual="1"}
+            SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, Lolminer will dual mine ZIL on Ezil for various algorithms";EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms"}
             Currencies=@("ETH","ETC","ZIL")
         }
         "F2pool" = [PSCustomObject]@{
@@ -159,7 +159,7 @@
             Currencies=@("RVN","XWP")
         }
         "HeroMiners" = [PSCustomObject]@{
-            Currencies=@("XWP")
+            Currencies=@("ERG","XWP")
         }
         "Hiveon" = [PSCustomObject]@{
             Currencies=@("ETH","ETC")

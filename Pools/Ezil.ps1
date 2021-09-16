@@ -9,6 +9,7 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
+    [Bool]$EnableLolminerDual = $false,
     [Bool]$EnableNanominerDual = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week"
@@ -112,7 +113,7 @@ $Pools_Data | Where-Object {$EnableNanominerDual -or $Wallets."$($_.symbol)" -or
                     Email         = $Email
                 }
             }
-            if ($EnableNanominerDual) {
+            if ($EnableNanominerDual -or $EnableLolminerDual) {
                 [PSCustomObject]@{
                     Algorithm     = "Zilliqa$($Pool_Currency)"
                     Algorithm0    = "Zilliqa$($Pool_Currency)"
@@ -125,7 +126,7 @@ $Pools_Data | Where-Object {$EnableNanominerDual -or $Wallets."$($_.symbol)" -or
                     Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
                     Host          = "$($Pool_Region).ezil.me"
                     Port          = $Pool_Port
-                    User          = $Wallets.ZIL
+                    User          = "$($Wallets.ZIL).{workername:$Worker}"
                     Pass          = "x"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_Ssl
