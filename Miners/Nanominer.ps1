@@ -93,9 +93,12 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $First = $true
             $Algorithm_Norm_0 = if ($_.Algorithm) {Get-Algorithm $_.Algorithm} else {Get-Algorithm $_.MainAlgorithm}
 
-            if ($_.DualZIL -and $Pools.ZilliqaETH) {
+            if ($Session.Config.Pools.Ezil.EnableNanominerDual -and $_.DualZIL -and $Pools.ZilliqaETH ) {
                 $ZilWallet = $Pools.ZilliqaETH.Wallet
                 $ZilPool   = "$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
+            } else {
+                $ZilWallet = ""
+                $ZilPool   = ""
             }
 
             if ($Miner_Vendor -eq "CPU") {
