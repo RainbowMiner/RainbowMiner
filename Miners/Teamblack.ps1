@@ -12,28 +12,22 @@ $Port = "365{0:d2}"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
-    $Path_VTC = ".\Bin\GPU-Teamblack\SPMiner"
-
-    $DatFile = "$env:HOME/verthash.dat"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.03-teamblack/TeamBlackMiner_1_03_Ubuntu_18_04_Cuda_11_4.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.04-teamblack/TeamBlackMiner_1_04_Ubuntu_18_04_Cuda_11_4.7z"
             Cuda = "11.4"
-            Version = "1.03"
+            Version = "1.04"
         }
     )
 } else {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner.exe"
-    $Path_VTC = ".\Bin\GPU-Teamblack\SPMiner.exe"
-
-    $DatFile = "$env:APPDATA\verthash.dat"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.04-teamblack/TeamBlackMiner_1_04_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.05-teamblack/TeamBlackMiner_1_05_cuda_11_4_beta.7z"
             Cuda = "11.4"
-            Version = "1.04"
+            Version = "1.05"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.04-teamblack/TeamBlackMiner_1_04_cuda_11_2.7z"
@@ -54,7 +48,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; IncludePoolName = "Nicehash"; Xintensity = 32} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; IncludePoolName = "FlexPool"; Xintensity = 16} #Ethash
     [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; IncludePoolName = "FlexPool"; Xintensity = 16} #EtcHash
-    [PSCustomObject]@{MainAlgorithm = "verthash";                Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 1.0} #VertHash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -89,10 +82,6 @@ if (-not $Cuda) {
     if ($UriCuda[0].Version) {$Version = $UriCuda[0].Version}
 }
 
-if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
-    $DatFile = Join-Path $Session.MainPath "Bin\Common\verthash.dat"
-}
-
 foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
@@ -118,56 +107,28 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                     }
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
-                    if ($_.MainAlgorithm -ne "verthash") {
-				        [PSCustomObject]@{
-					        Name           = $Miner_Name
-					        DeviceName     = $Miner_Device.Name
-					        DeviceModel    = $Miner_Model
-					        Path           = $Path
-					        Arguments      = "--algo $($_.MainAlgorithm) --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"}) --no-ansi --no-cpu $($_.Params)"
-					        HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
-					        API            = "TeamblackWrapper"
-					        Port           = $Miner_Port
-                            FaultTolerance = $_.FaultTolerance
-					        ExtendInterval = $_.ExtendInterval
-                            Penalty        = 0
-					        DevFee         = $_.DevFee
-					        Uri            = $Uri
-					        ManualUri      = $ManualUri
-                            Version        = $Version
-                            PowerDraw      = 0
-                            BaseName       = $Name
-                            BaseAlgorithm  = $Algorithm_Norm_0
-                            Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
-                            LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-				        }
-                    } else {
-				        [PSCustomObject]@{
-					        Name           = $Miner_Name
-					        DeviceName     = $Miner_Device.Name
-					        DeviceModel    = $Miner_Model
-					        Path           = $Path_VTC
-                            Arguments      = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cu-devices $($DeviceIDsAllCUDA)"} else {"--cl-devices $($Miner_Device.Type_Codec_Index -join ',')"}) --verthash-data '$($DatFile)' $($_.Params)"
-					        HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
-					        API            = "SPMinerWrapper"
-					        Port           = $Miner_Port
-                            FaultTolerance = $_.FaultTolerance
-					        ExtendInterval = $_.ExtendInterval
-                            Penalty        = 0
-					        DevFee         = $_.DevFee
-					        Uri            = $Uri
-					        ManualUri      = $ManualUri
-                            Version        = $Version
-                            PowerDraw      = 0
-                            BaseName       = $Name
-                            BaseAlgorithm  = $Algorithm_Norm_0
-                            Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
-                            LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-                            PrerequisitePath = $DatFile
-                            PrerequisiteURI  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"
-                            PrerequisiteMsg  = "Downloading verthash.dat (1.2GB) in the background, please wait!"
-				        }
-                    }
+				    [PSCustomObject]@{
+					    Name           = $Miner_Name
+					    DeviceName     = $Miner_Device.Name
+					    DeviceModel    = $Miner_Model
+					    Path           = $Path
+					    Arguments      = "--algo $($_.MainAlgorithm) --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"}) --no-ansi --no-cpu $($_.Params)"
+					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
+					    API            = "TeamblackWrapper"
+					    Port           = $Miner_Port
+                        FaultTolerance = $_.FaultTolerance
+					    ExtendInterval = $_.ExtendInterval
+                        Penalty        = 0
+					    DevFee         = $_.DevFee
+					    Uri            = $Uri
+					    ManualUri      = $ManualUri
+                        Version        = $Version
+                        PowerDraw      = 0
+                        BaseName       = $Name
+                        BaseAlgorithm  = $Algorithm_Norm_0
+                        Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
+                        LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+				    }
 			    }
 		    }
         })

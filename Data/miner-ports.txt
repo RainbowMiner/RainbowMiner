@@ -114,6 +114,7 @@
 363	CryptoDredge25
 364	VertHash
 365	Teamblack
+366	VertHashSP
 
 400	Sgminer
 401	SgminerBitcore
