@@ -103,6 +103,8 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
 
     $Pool_Host = ".nicehash.com"
 
+    $Pool_IsEthash = $Pool_Algorithm_Norm -match "^Etc?hash"
+
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
     }
@@ -152,6 +154,48 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                     Wallet        = $Wallets.BTC
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
+                }
+                if ($Pool_IsEthash) {
+                    [PSCustomObject]@{
+                        Algorithm     = "$($Pool_Algorithm_Norm)NH"
+					    Algorithm0    = "$($Pool_Algorithm_Norm)NH"
+                        CoinName      = "$($Pool_Coin.Name)"
+                        CoinSymbol    = "$Pool_CoinSymbol"
+                        Currency      = "BTC"
+                        Price         = $Stat.$StatAverage
+                        StablePrice   = $Stat.$StatAverageStable
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = $Pool_Protocol
+                        Host          = $This_Host
+                        Port          = $Pool_Port
+                        User          = "$($Wallets.BTC).{workername:$Worker}"
+                        Pass          = "x"
+                        Region        = $Pool_RegionsTable.$Pool_Region
+                        SSL           = $Pool_Protocol -match "ssl"
+                        Updated       = $Stat.Updated
+                        PoolFee       = $Pool_PoolFee
+                        PaysLive      = $true
+                        Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
+                                            [PSCustomObject]@{
+                                                Protocol = $Pool_Protocol
+                                                Host     = $_
+                                                Port     = $Pool_Port
+                                                User     = "$($Wallets.BTC).{workername:$Worker}"
+                                                Pass     = "x"
+                                            }
+                                        })
+                        EthMode       = $Pool_EthProxy
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+					    Disabled      = $false
+					    HasMinerExclusions = $false
+					    Price_Bias    = 0.0
+					    Price_Unbias  = 0.0
+                        Wallet        = $Wallets.BTC
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
+                    }
                 }
             }
         }
