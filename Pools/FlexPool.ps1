@@ -146,6 +146,52 @@ foreach($Pool_Region in $Pool_Regions) {
             Worker        = "{workername:$Worker}"
             Email         = $Email
         }
+        [PSCustomObject]@{
+            Algorithm     = "$($Pool_Algorithm_Norm)FP"
+            Algorithm0    = "$($Pool_Algorithm_Norm)FP"
+            CoinName      = $Pool_Coin.Name
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
+            Protocol      = $Pool_Protocol
+            Host          = "eth-$($Pool_Region).flexpool.io"
+            Port          = $Pool_Port
+            User          = "$($Pool_User).{workername:$Worker}"
+            Pass          = "x"
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = $Pool_SSL
+            Updated       = $Stat.Updated
+            PoolFee       = $Pool_PoolFee
+            Failover      = @($Pool_FailoverRegionsTable.$Pool_Region | Foreach-Object {
+                                [PSCustomObject]@{
+                                    Protocol = $Pool_Protocol
+                                    Host     = "eth-$($_).flexpool.io"
+                                    Port     = $Pool_Port
+                                    User     = "$($Pool_User).{workername:$Worker}"
+                                    Pass     = "x"
+                                }
+                            })
+            DataWindow    = $DataWindow
+            Workers       = $Pool_Workers.result
+            Hashrate      = $Stat.HashRate_Live
+            BLK           = $Stat.BlockRate_Average
+            TSL           = $Pool_TSL
+            WTM           = $true
+            ErrorRatio    = $Stat.ErrorRatio
+            EthMode       = "ethproxy"
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Disabled      = $false
+            HasMinerExclusions = $false
+            Price_Bias    = 0.0
+            Price_Unbias  = 0.0
+            Wallet        = $Pool_User
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
+        }
         $Pool_SSL = $true
     }
 }
