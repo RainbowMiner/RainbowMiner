@@ -39,15 +39,13 @@ if ($IsLinux) {
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
-$ExcludePools = "^666Pool|^BeePool|^FlexPool|^Hellominer|^HeroMiners|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Nicehash|^Poolin|^PoolSexy|^SuprNova|^unMineable|^Zpool"
+$ExcludePools = "^666Pool|^BeePool|^FlexPool|^Hellominer|^HeroMiners|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Nicehash|^Poolin|^PoolSexy|^SuprNova|^Zpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
     [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #EtcHash
-    [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; IncludePoolName = "Nicehash"; Xintensity = 32} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; IncludePoolName = "Nicehash"; Xintensity = 32} #EtcHash
-    [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; IncludePoolName = "FlexPool"; Xintensity = 16} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; IncludePoolName = "FlexPool"; Xintensity = 16} #EtcHash
+    [PSCustomObject]@{MainAlgorithm = "ethashnh";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Xintensity = 32} #Ethash Nicehash type
+    [PSCustomObject]@{MainAlgorithm = "ethashfp";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; Xintensity = 16} #Ethash Flexpool type
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -112,7 +110,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--algo $($_.MainAlgorithm) --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"}) --no-ansi --no-cpu $($_.Params)"
+					    Arguments      = "--algo $($_.MainAlgorithm -replace "^(Etc*hash).+","`$1") --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"}) --no-ansi --no-cpu $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					    API            = "TeamblackWrapper"
 					    Port           = $Miner_Port
