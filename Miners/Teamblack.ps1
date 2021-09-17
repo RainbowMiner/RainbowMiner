@@ -97,7 +97,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Name -match $_.IncludePoolName)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                        $Miner_Name = (@($Name) + @($_.Xintensity) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAllOpenCl = $Miner_Device.Type_Index -join ','
                         $DeviceIDsAllCUDA   = $Miner_Device.Type_Vendor_Index -join ','
                         $Xintensity = if ($_.Xintensity) {$_.Xintensity} else {-1}
@@ -110,7 +110,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--algo $($_.MainAlgorithm -replace "^(Etc*hash).+","`$1") --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"}) --no-ansi --no-cpu $($_.Params)"
+					    Arguments      = "--algo $($_.MainAlgorithm -replace "^(Etc?hash).+","`$1") --hostname $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"}) --no-ansi --no-cpu $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					    API            = "TeamblackWrapper"
 					    Port           = $Miner_Port
