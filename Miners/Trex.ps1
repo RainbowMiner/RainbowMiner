@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.21.6"
+$Version = "0.22.0"
 $DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.6-trex/t-rex-0.21.6-linux.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.22.0-trex/t-rex-0.22.0-linux.tar.gz"
             Cuda   = "9.2"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.6-trex/t-rex-0.21.6-win.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.22.0-trex/t-rex-0.22.0-win.zip"
             Cuda   = "9.2"
         }
     )
@@ -38,6 +38,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Etchash (new with 0.18.8)
     [PSCustomObject]@{MainAlgorithm = "ethash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2; ExtendInterval = 3; Algorithm = "ethash"} #Ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 4; ExtendInterval = 3} #FiroPoW (new with 0.22.0)
     [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = ""; ExtendInterval = 3} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP-TCR (new with v0.15.2)
