@@ -11,14 +11,14 @@ $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
-$Version = "39.3"
+$Version = "39.4"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-NBMiner\nbminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.3-nbminer/NBMiner_39.3_Linux.tgz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.4-nbminer/NBMiner_39.4_Linux.tgz"
 } else {
     $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.3-nbminer/NBMiner_39.3_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.4-nbminer/NBMiner_39.4_Win.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
