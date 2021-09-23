@@ -17,21 +17,16 @@ $Request = [PSCustomObject]@{}
 
 #https://www.ravenminer.com/api/v1/wallet/RFV5WxTdbQEQCdgESiMLRBj5rwXyFHokmC
 #old:https://www.ravenminer.com/api/wallet?address=RFV5WxTdbQEQCdgESiMLRBj5rwXyFHokmC
-$Success = $true
 try {
-    if (-not ($Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/v1/wallet/$($Config.Pools.$Name.Wallets.RVN)" -cycletime ($Config.BalanceUpdateMinutes*60))){$Success = $false}
+    $Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/v1/wallet/$($Config.Pools.$Name.Wallets.RVN)" -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
-    $Success = $_.Exception.Message -match "404"
-}
-
-if (-not $Success) {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
     return
 }
 
-if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (-not $Request.balance) {
     Write-Log -Level Info "Pool Balance API ($Name) returned nothing. "
     return
 }
