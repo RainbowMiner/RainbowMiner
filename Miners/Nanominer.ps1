@@ -11,17 +11,17 @@ $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "10.0"
 $DevFee = 3.0
-$Version = "3.3.11"
+$Version = "3.3.12"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.11-nanominer/nanominer-linux-3.3.11-cuda11.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.12-nanominer/nanominer-linux-3.3.12-cuda11.tar.gz"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.11-nanominer/nanominer-linux-3.3.11.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.12-nanominer/nanominer-linux-3.3.12.tar.gz"
             Cuda = "10.0"
         }
     )
@@ -29,11 +29,11 @@ if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.11-nanominer/nanominer-windows-3.3.11-cuda11.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.12-nanominer/nanominer-windows-3.3.12-cuda11.zip"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.11-nanominer/nanominer-windows-3.3.11.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3.12-nanominer/nanominer-windows-3.3.12.zip"
             Cuda = "10.0"
         }
     )
@@ -52,6 +52,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0} #RandomX
     [PSCustomObject]@{MainAlgorithm = "Verushash";               Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes")} #Verushash
     [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "^F2Pool"} #UbqHash
+    [PSCustomObject]@{MainAlgorithm = "Verthash";                Params = ""; MinMemGb = 2;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0} #Verthash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
