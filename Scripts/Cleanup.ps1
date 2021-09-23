@@ -1282,7 +1282,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.7.4.6")) {
-        $AddAlgorithm += @("FiroPoW")
+        $AddAlgorithm += @("EtchashNH","EtchashFP","EthashNH","EthashFP","FiroPoW")
     }
 
     # remove mrrpools.json from cache
