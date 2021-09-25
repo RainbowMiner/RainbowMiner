@@ -181,6 +181,16 @@
             SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable automatic Catalyst mining"}
             Currencies=@("ARRR")
         }
+        "Minerpool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Password="xyz"}
+            SetupFields=[PSCustomObject]@{Password="Enter your Minerpool password (must NOT be x)"}
+            Currencies=@("FLUX","TENT","VDL")
+        }
+        "MinerpoolSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Password="xyz"}
+            SetupFields=[PSCustomObject]@{Password="Enter your Minerpool password (must NOT be x)"}
+            Currencies=@("FLUX","TENT","VDL")
+        }
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("XMR")
         }
