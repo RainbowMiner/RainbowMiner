@@ -10,7 +10,8 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
-    [String]$StatAverageStable = "Week"
+    [String]$StatAverageStable = "Week",
+    [String]$Password = "x"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -25,6 +26,8 @@ $Pools_Data = @(
 )
 
 $Pools_Requests = [hashtable]@{}
+
+if (-not $Password) {$Password = "x"}
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_Coin          = Get-Coin $_.symbol
@@ -96,7 +99,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
                     Host          = "$($Pool_Region)-$($_.stratum)"
                     Port          = $Pool_Port
                     User          = "$($Pool_Wallet).{workername:$Worker}"
-                    Pass          = "x"
+                    Pass          = $Password
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $SSL
                     Updated       = $Stat.Updated
