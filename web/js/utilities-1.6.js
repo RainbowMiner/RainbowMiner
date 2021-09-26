@@ -216,7 +216,7 @@ function setCookie(cname, cvalue, exdays) {
         d.setTime(d.getTime() + ((exdays==-1? 3650:exdays) * 24 * 60 * 60 * 1000));
         expires = "expires=" + d.toUTCString() + ";";
     }
-    document.cookie = cname + "=" + cvalue + ";" + expires + "path=/";
+    document.cookie = cname + "=" + cvalue + ";SameSite=Lax;" + expires + "path=/";
 }
 
 function getCookie(cname) {
