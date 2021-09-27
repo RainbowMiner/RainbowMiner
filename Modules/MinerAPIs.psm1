@@ -704,7 +704,7 @@ class Miner {
                     }
                 }
                 if ($DeviceIds.Count -gt 0) {
-                    $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"} else {[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*"}}
+                    $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"} else {[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*"}}
                     if ($Profile) {
                         $this.Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; CardId = $CardIds; Profile = $Profile; x = $x}) -Force
                     }
@@ -714,7 +714,7 @@ class Miner {
 
         foreach ($DeviceModel in @($this.Profiles.PSObject.Properties.Name | Select-Object)) {
             if (-not $Config) {
-                $Profile = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "0";CoreClockBoost = "0";LockVoltagePoint = "*"}
+                $Profile = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "0";CoreClockBoost = "0";LockVoltagePoint = "*"}
                 if ($this.Profiles.$DeviceModel.Profile.PostCmd) {
                     $RunCmd.Add([PSCustomObject]@{FilePath = $this.Profiles.$DeviceModel.Profile.PostCmd;ArgumentList=$this.Profiles.$DeviceModel.Profile.PostCmdArguments}) > $null
                 }
@@ -738,7 +738,7 @@ class Miner {
                 foreach($DeviceId in $this.Profiles.$DeviceModel.Index) {
                     if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
                     if (-not $Global:IsLinux) {
-                        if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),0,$($val)") >$null;$applied_any=$true}
+                        if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),$(if (Get-Yes $Profile.PriorizeThermalLimit) {"1"} else {"0"}),$($val)") >$null;$applied_any=$true}
                         if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true}
                     } else {
                         $NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'") >$null

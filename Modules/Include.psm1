@@ -5350,7 +5350,7 @@ function Set-OCProfilesConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";PreCmd="";PreCmdArguments="";PostCmd="";PostCmdArguments=""}
+            $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";PreCmd="";PreCmdArguments="";PostCmd="";PostCmdArguments=""}
             if ($true -or -not $Preset.PSObject.Properties.Name) {
                 $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1"
                 $Devices = Get-Device "amd","intel","nvidia" -IgnoreOpenCL

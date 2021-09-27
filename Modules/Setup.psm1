@@ -3111,6 +3111,7 @@ function Start-Setup {
                             @{Label="Device"; Expression={"$($_.Name -replace '^.+-')"}}
                             @{Label="Power Limit"; Expression={"$(if ($_.Value.PowerLimit -eq '0'){'*'}else{"$($_.Value.PowerLimit) %"})"}; Align="center"}
                             @{Label="Thermal Limit"; Expression={"$(if ($_.Value.ThermalLimit -eq '0'){'*'}else{"$($_.Value.ThermalLimit) °C"})"}; Align="center"}
+                            @{Label="Prio TL"; Expression={"$($_.Value.PriorizeThermalLimit)"}; Align="center"}
                             @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.CoreClockBoost) -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
                             @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.MemoryClockBoost) -gt 0){'+'})$($_.Value.MemoryClockBoost)"})"}; Align="center"}                                        
                         ) | Out-Host
@@ -3170,6 +3171,7 @@ function Start-Setup {
                         $OCProfileDefault = [PSCustomObject]@{
                             PowerLimit = 0
                             ThermalLimit = 0
+                            PriorizeThermalLimit = "0"
                             MemoryClockBoost = "*"
                             CoreClockBoost = "*"
                             LockVoltagePoint = "*"
@@ -3178,7 +3180,7 @@ function Start-Setup {
 
                         $OCProfileConfig = $OCProfilesActual.$OCProfile_Name.PSObject.Copy()
 
-                        $OCProfileSetupSteps.AddRange(@("powerlimit","thermallimit","coreclockboost","memoryclockboost")) > $null
+                        $OCProfileSetupSteps.AddRange(@("powerlimit","thermallimit","priorizethermallimit","coreclockboost","memoryclockboost")) > $null
                         if (Get-Yes $ConfigActual.EnableOCVoltage) {$OCProfileSetupSteps.Add("lockvoltagepoint") >$null}
                         $OCProfileSetupSteps.Add("save") > $null
                                         
@@ -3191,6 +3193,11 @@ function Start-Setup {
                                     }
                                     "thermallimit" {
                                         $OCProfileConfig.ThermalLimit = Read-HostInt -Prompt "Enter the thermal limit in °C (input 0 to never set)" -Default $OCProfileConfig.ThermalLimit -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "priorizethermallimit" {
+                                        $PriorizeThermalLimit = Get-Yes $OCProfileConfig.PriorizeThermalLimit
+                                        $PriorizeThermalLimit = Read-HostBool -Prompt "Priorize thermal limit over power limit?" -Default $PriorizeThermalLimit | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $OCProfileConfig.PriorizeThermalLimit = if ($PriorizeThermalLimit) {"1"} else {"0"}
                                     }
                                     "memoryclockboost" {
                                         $p = Read-HostString -Prompt "Enter a value for memory clock boost or `"*`" to never set" -Default $OCProfileConfig.MemoryClockBoost -Characters "0-9*+-" -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
