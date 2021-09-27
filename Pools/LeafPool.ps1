@@ -16,12 +16,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 [hashtable]$Pool_RegionsTable = @{}
-@("us","us-east","us-west","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("us","us-east","us-west","us-central","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "BEAM";  port = 3333; fee = 0.5; rpc = "beam"; region = @("us","eu","asia"); coinUnits = 100000000; ssl = $true}
-    #[PSCustomObject]@{symbol = "TTNZ";  port = 3333; fee = 0.1; rpc = "ttnz"; region = @("us","eu"); endpoint = "stats"}
-    #[PSCustomObject]@{symbol = "QRL";   port = 3333; fee = 0.8; rpc = "qrl";  region = @("us","eu"); endpoint = "stats"}
+    [PSCustomObject]@{symbol = "ERG";   port = @(1111,2288); fee = 0.0; rpc = "ergo";   region = @("us-central","us-west","eu","asia"); coinUnits = 1000000000}
     [PSCustomObject]@{symbol = "ZP";    port = 8811; fee = 2.0; rpc = "zp";   region = @("us-east","eu","asia")}
 )
 
