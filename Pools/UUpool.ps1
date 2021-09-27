@@ -19,7 +19,6 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 [hashtable]$Pool_RegionsTable = @{}
-
 @("CN","EU","US") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request = @()
