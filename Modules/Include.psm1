@@ -2008,8 +2008,9 @@ function Start-SubProcessInConsole {
 
     $Job = Start-Job -FilePath .\Scripts\StartInConsole.ps1 -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH
 
-    do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
-    while ($JobOutput -eq $null)
+    $cnt = 30
+    do {Start-Sleep 1; $JobOutput = Receive-Job $Job;$cnt--}
+    while ($JobOutput -eq $null -and $cnt -gt 0)
 
     [int[]]$ProcessIds = @()
     
@@ -2212,8 +2213,9 @@ function Start-SubProcessInScreen {
 
     $Job = Start-Job -FilePath .\Scripts\StartInScreen.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin
 
-    do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
-    while ($JobOutput -eq $null)
+    $cnt = 30;
+    do {Start-Sleep 1; $JobOutput = Receive-Job $Job;$cnt--}
+    while ($JobOutput -eq $null -and $cnt -gt 0)
 
     [int[]]$ProcessIds = @()
     
@@ -6174,83 +6176,46 @@ Param(
             if ($Error.Count){$Error.RemoveAt(0)}
         }
 
-        $oldProgressPreference = $null
-        if ($Global:ProgressPreference -ne "SilentlyContinue") {
-            $oldProgressPreference = $Global:ProgressPreference
-            $Global:ProgressPreference = "SilentlyContinue"
-        }
+        $StatusCode = $null
+        $Data       = $null
 
-        if (Test-IsCore) {
-            $StatusCode = $null
-            $Data       = $null
+        do {
+            $CallJobName = "WebRequest-$(Get-UnixTimestamp -Milliseconds)"
+        } While (Get-Job -Name $CallJobName -ErrorAction Ignore)
 
-            try {
-                if (Test-IsPS7) {
-                    if ($IsForm) {
-                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
-                    } else {
-                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-                    }
-                } else {
-                    if ($IsForm) {
-                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
-                    } else {
-                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-                    }
-                }
+        $CallJob = Start-Job .\Scripts\WebRequest.ps1 -Name $CallJobName -ArgumentList $RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers_local, $body, $IsForm, (Test-IsPS7), (Test-IsCore), $fixbigint
 
-                $StatusCode = $Response.StatusCode
+        if ($CallJob) {
+            if (Wait-Job -Job $CallJob -Timeout ([Math]::Min($timeout,30))) {
+                $Result = Receive-Job -Job $CallJob
+                if ($Result.Status -ne $null) {
+                    $StatusCode   = $Result.StatusCode
+                    $Data         = $Result.Data
+                    $ErrorMessage = $Result.ErrorMessage
 
-                if ($StatusCode -match "^2\d\d$") {
-                    $Data = if ($Response.Content -is [byte[]]) {[System.Text.Encoding]::UTF8.GetString($Response.Content)} else {$Response.Content}
-                    if ($method -eq "REST") {
-                        if ($fixbigint) {
-                            try {
-                                $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
-                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    if (Test-IsCore) {
+                        if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
+                            if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
+                                if ($StatusCodeObject.Type -ne "Success") {
+                                    $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                                }
+                            } else {
+                                $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                            }
                         }
-                        try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                    }
-                    if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-                }
-
-                if ($Response) {
-                    $Response = $null
-                }
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                $ErrorMessage = "$($_.Exception.Message)"
-            }
-
-            if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
-                if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
-                    if ($StatusCodeObject.Type -ne "Success") {
-                        $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
                     }
                 } else {
-                    $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                    $ErrorMessage = "Could not receive data from $($RequestUrl)"
                 }
+                $Result = $null
+            } else {
+                $ErrorMessage = "Call to $($RequestUrl) timed out"
             }
+            Remove-Job -Job $CallJob -Force
+            $CallJob = $null
         } else {
-            try {
-                $ServicePoint = $null
-                if ($method -eq "REST") {
-                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
-                    $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-                } else {
-                    $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-                }
-                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                $ErrorMessage = "$($_.Exception.Message)"
-            } finally {
-                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
-                $ServicePoint = $null
-            }
+            $ErrorMessage = "WebRequest failed for $($RequestUrl)"
         }
-
-        if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
     }
 
     if ($ErrorMessage -eq '') {$Data}

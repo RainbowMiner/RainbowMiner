@@ -3275,8 +3275,8 @@ function Invoke-Core {
         $Error.Clear()
     }
 
-    Get-Job -State Completed | Where-Object HasMoreData | Receive-Job | Out-Host
-    Get-Job -State Completed | Remove-Job -Force
+    Get-Job -State Completed | Where-Object {$_.Name -notmatch "^WebRequest-" -and $_.HasMoreData} | Receive-Job | Out-Host
+    Get-Job -State Completed | Where-Object {$_.Name -notmatch "^WebRequest-"} | Remove-Job -Force
 
     [System.GC]::Collect()
 
