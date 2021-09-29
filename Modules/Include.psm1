@@ -6183,7 +6183,7 @@ Param(
             $CallJobName = "WebRequest-$(Get-UnixTimestamp -Milliseconds)"
         } While (Get-Job -Name $CallJobName -ErrorAction Ignore)
 
-        $CallJob = Start-Job .\Scripts\WebRequest.ps1 -Name $CallJobName -ArgumentList $RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers_local, $body, $IsForm, (Test-IsPS7), (Test-IsCore), $fixbigint
+        $CallJob = Start-ThreadJob .\Scripts\WebRequest.ps1 -Name $CallJobName -ArgumentList $RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers_local, $body, $IsForm, (Test-IsPS7), (Test-IsCore), $fixbigint
 
         if ($CallJob) {
             if (Wait-Job -Job $CallJob -Timeout ([Math]::Min($timeout,30))) {
