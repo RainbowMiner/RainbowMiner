@@ -819,7 +819,11 @@ function Invoke-Core {
 
         $Session.LogLevel = $Session.Config.LogLevel
 
+        $EnableCurl = $Session.EnableCurl
         $Session.EnableCurl = $Session.Curl -and ($Session.Config.EnableCurl -or (Test-Path ".\curl.txt"))
+        if ($EnableCurl -ne $Session.EnableCurl) {
+            Write-Log -Level Info "cURL $(if ($Session.EnableCurl) {"enabled"} else {"disabled"})"
+        }
 
         #crosscheck for invalid cpu mining parameters to avoid system overload
         if ($Session.Config.DeviceName -match "^CPU") {
