@@ -6089,7 +6089,7 @@ Param(
 
     $ErrorMessage = ''
 
-    if ($Session.Curl) {
+    if ($Session.EnableCurl) {
 
         $TmpFile = $null
 

@@ -276,6 +276,10 @@ function Start-Core {
             else {
                 $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://httpbin.org/status/200`" -H `"accept: text/plain`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q -w `"%{response_code}`"" -WaitForExit 10
                 if ($CurlTest -eq "200") {$TestOk = $true}
+                else {
+                    $CurlTest = Invoke-Exe $CurlPath -ArgumentList "--version" -WaitForExit 10
+                    if ($CurlTest -match "curl\s+\d+") {$TestOk = $true}
+                }
             }
             if ($TestOk) {$Session.Curl = $CurlPath}
         }
@@ -284,12 +288,11 @@ function Start-Core {
     }
 
     if ($Session.Curl) {
-        $IsCurl = if (Test-Path ".\curl.txt") {"enabled"} else {"disabled"}
-        Write-Host "ok ($($IsCurl))" -ForegroundColor Green
+        Write-Host "ok$(if (Test-Path ".\curl.txt") {" (permanently enabled by curl.txt file)";$Session.EnableCurl = $true})" -ForegroundColor Green
         Write-Log -Level Info "Curl $($IsCurl): $($Session.Curl)"
-        if ($IsCurl -ne "enabled") {$Session.Curl = $false}
     } else {
         Write-Host "not found" -ForegroundColor Red
+        $Session.EnableCurl = $false
     }
 
     try {
@@ -709,11 +712,14 @@ function Invoke-Core {
 
     $Session.ConfigFiles["Config"].Healthy = $true
 
-    if (-not (Test-Internet)) {
-        $i = 0
-        $Internet_ok = $false
+    $Internet_ok = Test-Internet
 
-        if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = $false}
+    if (-not $Internet_ok) {
+        Write-Log -Level Info "Internet is down"
+
+        $i = 0
+
+        if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
 
         do {
             if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
@@ -722,8 +728,6 @@ function Invoke-Core {
             $i++
             if (-not ($i % 20)) {$Internet_ok = Test-Internet}
         } until ($Internet_ok -or $keyPressedValue -eq "X")
-
-        if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = -not $Internet_ok}
 
         if ($keyPressedValue -eq "X") {
             Write-Log "User requests to stop script. "
@@ -734,6 +738,11 @@ function Invoke-Core {
             Update-WatchdogLevels -Reset
             $Global:WatchdogTimers = @()
         }
+    }
+
+    if ($Internet_ok) {
+        Write-Log -Level Info "Internet is ok"
+        if ((Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Pause) {$AsyncLoader.Pause = $false}
     }
 
     if (-not $Session.Updatetracker.TimeDiff -or $Session.Updatetracker.TimeDiff -lt (Get-Date).AddMinutes(-60)) {
@@ -809,6 +818,8 @@ function Invoke-Core {
         if ($Session.CurrentPowerPrice -eq $null) {$Session.CurrentPowerPrice = $Session.Config.PowerPrice}
 
         $Session.LogLevel = $Session.Config.LogLevel
+
+        $Session.EnableCurl = $Session.Curl -and ($Session.Config.EnableCurl -or (Test-Path ".\curl.txt"))
 
         #crosscheck for invalid cpu mining parameters to avoid system overload
         if ($Session.Config.DeviceName -match "^CPU") {
@@ -3284,7 +3295,6 @@ function Invoke-Core {
 
     #Pause/Restart Asyncloader if internet status changes
     if (Test-Path Variable:Global:AsyncLoader) {
-        $AsyncLoader.Pause = -not (Test-Internet)
         if ($AsyncLoader.Timestamp -and ($AsyncLoader.Timestamp -lt $Session.Timer.AddHours(-1))) {
             Write-Log -Level Warn "Asyncloader seems to be crashed. Please press [Y] to restart it."
         }
@@ -4084,7 +4094,7 @@ function Invoke-ReportMinerStatus {
 
     # Create crash alerts
     $CrashData = $null
-    if ($Session.IsCore -or $Session.Curl) {
+    if ($Session.IsCore -or $Session.EnableCurl) {
         try {
             ConvertTo-Json @($Global:CrashCounter | Foreach-Object {[PSCustomObject]@{
                 Timestamp      = "{0:yyyy-MM-dd HH:mm:ss}" -f $_.TimeStamp
@@ -4111,7 +4121,7 @@ function Invoke-ReportMinerStatus {
 
     # Add current console.txt
     $Console = $null
-    if ($Session.IsCore -or $Session.Curl) {
+    if ($Session.IsCore -or $Session.EnableCurl) {
         try {
             if (Test-Path ".\Logs\console.txt") {
                 @(Get-ContentByStreamReader -FilePath ".\Logs\console.txt" -ExpandLines) | Foreach-Object {$_ -replace "$([char]27)\[\d+m"} | Set-Content -Path ".\Cache\console.txt" -Encoding Utf8
@@ -4133,7 +4143,7 @@ function Invoke-ReportMinerStatus {
         try {
             ConvertTo-Json $Global:GlobalCachedDevices -Depth 10 -Compress | Set-Content ".\Data\devicedata.json"
             if (Test-Path ".\Data\devicedata.json") {
-                if ($Session.IsCore -or $Session.Curl) {
+                if ($Session.IsCore -or $Session.EnableCurl) {
                     $DeviceData = Get-Item ".\Data\devicedata.json"
                 } else {
                     $DeviceData = Get-ContentByStreamReader ".\Data\devicedata.json"
@@ -4194,7 +4204,7 @@ function Invoke-ReportMinerStatus {
             $ReportDone = $true
             
             #Upload statistics as separate files
-            if ($Session.IsCore -or $Session.Curl) {
+            if ($Session.IsCore -or $Session.EnableCurl) {
                 if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {
                     $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; minerdata = Get-Item ".\Data\minerdata.json"}
                     $Session.ReportMinerData = $false
