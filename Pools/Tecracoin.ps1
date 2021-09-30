@@ -31,10 +31,11 @@ if ($Pool_Request.TCR_MTP -eq $null) {
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Coin           = "Tecracoin"
 $Pool_Currency       = "TCR"
 $Pool_Host           = "pool.tecracoin.io"
-$Pool_Algorithm_Norm = Get-Algorithm "MTPTcr"
+
+$Pool_Coin           = Get-Coin $Pool_Currency
+$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 $Pool_Port           = [int]$Pool_Request.TCR_MTP.port
 $Pool_PoolFee        = [Double]$Pool_Request.TCR_MTP.fees
 $Pool_Factor         = $Pool_Request.TCR_MTP.mbtc_mh_factor
@@ -60,7 +61,7 @@ if ($Pool_User -or $InfoOnly) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Coin
+            CoinName      = $Pool_Coin.Name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live
