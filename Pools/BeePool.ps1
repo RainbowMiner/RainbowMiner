@@ -45,7 +45,12 @@ if (-not $ok) {
     return
 }
 
-Write-Log -Level Warn "BeePool will stop all services at 23:59 on October 15, 2021, Beijing time"
+if ((Get-Date).ToUniversalTime() -lt [DateTime]::new(2021, 10, 15, 16, 0, 0, 0, 'Utc')) {
+    Write-Log -Level Warn "BeePool will stop all services at 23:59 on October 15, 2021, Beijing time"
+} else {
+    Write-Log -Level Warn "BeePool has stopped all services. Please remove it from your config.txt."
+    return
+}
 
 $TZ_China_Standard_Time = [System.TimeZoneInfo]::GetSystemTimeZones() | Where-Object {$_.Id -match "Shanghai" -or $_.Id -match "^China" -or $_.StandardName -match "^China"} | Select-Object -First 1
 

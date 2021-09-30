@@ -6,6 +6,10 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+if ((Get-Date).ToUniversalTime() -ge [DateTime]::new(2021, 10, 15, 16, 0, 0, 0, 'Utc')) {
+    return
+}
+
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETH";  coin = "eth";  port = @(9530,9531); fee = 1.0; fee_pplns = 1.0}
     [PSCustomObject]@{symbol = "ETC";  coin = "etc";  port = @(9518,9519); fee = 1.0; fee_pplns = 1.0}
