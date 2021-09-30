@@ -1707,7 +1707,8 @@ function Get-BalancesPayouts {
     )
 
     $Payouts | Foreach-Object {
-        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp} elseif ($_.createdAt) {$_.createdAt})"
+        $DateTime = if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp} elseif ($_.createdAt) {$_.createdAt}
+        if ($DateTime -isnot [DateTime]) {$DateTime = "$($DateTime)"}
         if ($DateTime) {
             $Amount = if ($_.amount -ne $null) {$_.amount} elseif ($_.value -ne $null) {$_.value} else {$null}
             if ($Amount -ne $null) {
