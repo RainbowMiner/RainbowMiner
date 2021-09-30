@@ -878,6 +878,7 @@ For Server (Runmode=server) setup:
 - **MinimumMiningIntervals** = minimum number of intervals a miner will run, before switching will be allowed [default=1]
 - **SSL** = set to 1, if only ssl connections wanted
 - **Proxy** = set your proxy address here, if you are using one
+- **EnableCurl** = set to 1 to use cURL instead of the build-in web requests (enable this, if you get frequent "Asyncloader is crashed" warnings) [default=0]
 - **Delay** = extra delay in secondes, between switching to avoid blue screen [default=0]
 - **Watchdog** = use (1) or do not use (0) watchdog [default=1]
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
