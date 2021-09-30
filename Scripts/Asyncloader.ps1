@@ -56,10 +56,14 @@ while (-not $AsyncLoader.Stop) {
             $Now = (Get-Date).ToUniversalTime()
 
             if (-not $Job.LastCacheWrite -or (($Job.LastCacheWrite -lt $Job.LastRequest) -and ($Job.LastCacheWrite -lt $Now.AddSeconds(-600-$Job.CycleTime)))) {
-                if (-not $Job.LastFailRetry -or ($Job.LastFailRetry -le $Now.AddSeconds(-600))) {
+                $RetryTime = if ($Job.LastFailCount -le 3) {600} elseif ($Job.LastFailCount -le 6) {1800} elseif ($Job.LastFailCount -le 10) {3600} else {10800}
+                if (-not $Job.LastFailRetry -or ($Job.LastFailRetry -le $Now.AddSeconds(-$RetryTime))) {
                     $Job.LastFailRetry = (Get-Date).ToUniversalTime()
+                    $Job.LastFailCount++
                     $JobFailRetry = $true
                 }
+            } else {
+                $Job.LastFailCount = 0
             }
 
             if (-not $AsyncLoader.Pause -and $Job -and -not $Job.Running -and -not $Job.Paused -and ($JobFailRetry -or ($Job.LastRequest -le $Now.AddSeconds(-$Job.CycleTime)))) {
