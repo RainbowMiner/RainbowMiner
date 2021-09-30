@@ -45,6 +45,8 @@ if (-not $ok) {
     return
 }
 
+Write-Log -Level Warn "BeePool will stop all services at 23:59 on October 15, 2021, Beijing time"
+
 $TZ_China_Standard_Time = [System.TimeZoneInfo]::GetSystemTimeZones() | Where-Object {$_.Id -match "Shanghai" -or $_.Id -match "^China" -or $_.StandardName -match "^China"} | Select-Object -First 1
 
 $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
