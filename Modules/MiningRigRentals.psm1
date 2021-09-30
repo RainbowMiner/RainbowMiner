@@ -218,7 +218,7 @@ param(
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($method)$($endpoint)$(Get-HashtableAsJson $params)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=$cache;forcelocal=$ForceLocal;raw=$Raw;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag="MiningRigRentals";Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=$cache;forcelocal=$ForceLocal;raw=$Raw;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag="MiningRigRentals";Timeout=$timeout;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
