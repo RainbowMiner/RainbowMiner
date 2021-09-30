@@ -2438,6 +2438,57 @@ class SwapminerWrapper : Miner {
     }
 }
 
+class TBMiner : Miner {
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "127.0.0.1"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = $null
+
+        try {
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/threads" -Timeout $Timeout
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
+            return
+        }
+
+        $HashRate_Name  = [String]$this.Algorithm[0]
+        $PowerDraw      = [Double]($Data.PSObject.Properties.Value.hashrate | Measure-Object -Sum).Sum
+        $HashRate_Value = [Double]($Data.PSObject.Properties.Value.watt | Measure-Object -Sum).Sum
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            try {
+                $DataPool = Invoke-GetUrl "http://$($Server):$($this.Port)/pool" -Timeout $Timeout
+                $Difficulty_Value = [Double]$DataPool.diff
+                if ($Difficulty_Value -gt 0) {
+                    $Difficulty = [PSCustomObject]@{$HashRate_Name = $Difficulty_Value}
+                }
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+
+            $Accepted_Shares  = [Int64]($Data.PSObject.Properties.Value.accepted | Measure-Object -Sum).Sum
+            $Rejected_Shares  = [Int64]($Data.PSObject.Properties.Value.rejected | Measure-Object -Sum).Sum
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
+
+        $this.CleanupMinerData()
+    }
+}
+
 class TeamblackWrapper : Miner {
 
     [Void]UpdateMinerData () {
