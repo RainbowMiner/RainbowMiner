@@ -8,7 +8,6 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
-$Miner_API = "TBMiner"
 $Port = "365{0:d2}"
 
 if ($IsLinux) {
@@ -19,7 +18,6 @@ if ($IsLinux) {
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-teamblack/TeamBlackMiner_1_11_Ubuntu_18_04_Cuda_11_4.zip"
             Cuda = "11.4"
             Version = "1.11"
-            API = "TBMiner"
         }
     )
 } else {
@@ -30,13 +28,11 @@ if ($IsLinux) {
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-teamblack/TeamBlackMiner_1_11_cuda_11_4.7z"
             Cuda = "11.4"
             Version = "1.11"
-            API = "TBMiner"
         },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-teamblack/TeamBlackMiner_1_11_cuda_11_2.7z"
             Cuda = "11.2"
             Version = "1.11"
-            API = "TBMiner"
         }
     )
 }
@@ -76,7 +72,6 @@ if ($Session.Config.CUDAVersion) {
             $Uri  = $UriCuda[$i].Uri
             $Cuda = $UriCuda[$i].Cuda
             if ($UriCuda[$i].Version) {$Version = $UriCuda[$i].Version}
-            if ($UriCuda[$i].API) {$Miner_API = $UriCuda[$i].API}
         }
     }
 }
@@ -84,7 +79,6 @@ if ($Session.Config.CUDAVersion) {
 if (-not $Cuda) {
     $Uri = $UriCuda[0].Uri
     if ($UriCuda[0].Version) {$Version = $UriCuda[0].Version}
-    if ($UriCuda[0].API) {$Miner_API = $UriCuda[0].API}
 }
 
 foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
@@ -117,9 +111,9 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--algo $($_.MainAlgorithm -replace "^(Etc?hash).+","`$1") --hostname $($Pools.$Algorithm_Norm.Host) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl-port"} else {"--port"}) $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"})$(if ($Miner_API -eq "TBMiner") {" --api --api-port $($Miner_Port)"}) --no-ansi --no-cpu $($_.Params)"
+					    Arguments      = "--algo $($_.MainAlgorithm -replace "^(Etc?hash).+","`$1") --hostname $($Pools.$Algorithm_Norm.Host) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl-port"} else {"--port"}) $($Pool_Port) --wallet $(if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}) --worker_name $($Pools.$Algorithm_Norm.Worker)$(if ($Pools.$Algorithm_Norm.Pass) {" --server_passwd $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) $(if ($Miner_Vendor -eq "NVIDIA") {"--cuda-devices [$($DeviceIDsAllCUDA)]"} else {"--cl-devices [$($DeviceIDsAllOpenCl)]"})$(if ($Miner_Vendor -eq "AMD") {" --amd-only"} elseif ($Miner_Vendor -eq "NVIDIA") {" --xintensity $($Xintensity)"}) --api --api-port $($Miner_Port) --no-ansi --no-cpu $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
-					    API            = $Miner_API
+					    API            = "TBMiner"
 					    Port           = $Miner_Port
                         FaultTolerance = $_.FaultTolerance
 					    ExtendInterval = $_.ExtendInterval
