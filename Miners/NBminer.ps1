@@ -32,7 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";                SecondaryAlgorithm = ""; Params = "-a cuckatoo32 --cuckoo-intensity $CuckooIntensity";    NH = $true;  MinMemGb = 6; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckatoo31
 
     #Others
-    [PSCustomObject]@{MainAlgorithm = "Autolykos2";                SecondaryAlgorithm = ""; Params = "-a ergo";          NH = $true; MinMemGb = 3;   DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Autolycos2/ERGO
+    [PSCustomObject]@{MainAlgorithm = "Autolykos2";                SecondaryAlgorithm = ""; Params = "-a ergo";          NH = $true; MinMemGb = 2;   DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Autolycos2/ERGO
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                 SecondaryAlgorithm = ""; Params = "-a beamv3";        NH = $true; MinMemGb = 3;   DevFee = 2.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #BEAM
     [PSCustomObject]@{MainAlgorithm = "Etchash";      DAG = $true; SecondaryAlgorithm = ""; Params = "-a etchash";       NH = $true; MinMemGb = 3;   DevFee = 1.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Etchash
     [PSCustomObject]@{MainAlgorithm = "Ethash";       DAG = $true; SecondaryAlgorithm = ""; Params = "-a ethash";        NH = $true; MinMemGb = 3;   DevFee = 1.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash

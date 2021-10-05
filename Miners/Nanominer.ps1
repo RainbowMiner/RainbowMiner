@@ -42,7 +42,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "autolykos";               Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
+    [PSCustomObject]@{MainAlgorithm = "autolykos";               Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
     [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "^F2Pool"} #Ethash
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD");     ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "^F2Pool"} #Ethash for low memory coins
