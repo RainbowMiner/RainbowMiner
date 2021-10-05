@@ -6425,9 +6425,9 @@ Param(
             if ($retry -gt 0) {
                 if (-not $RequestError) {$retry = 0}
                 else {
-                    $Passed = $StopWatch.ElapsedMilliseconds
-                    if (($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed) -gt 50) {
-                        Start-Sleep -Milliseconds ($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed)
+                    $RetryWait_Time = [Math]::Min($AsyncLoader.Jobs.$Jobkey.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
+                    if ($RetryWait_Time -gt 50) {
+                        Start-Sleep -Milliseconds $RetryWait_Time
                     }
                 }
             }
