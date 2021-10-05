@@ -13,37 +13,37 @@ $Port = "365{0:d2}"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
-    $ExcludePools = "^666Pool|^FlexPool|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Nicehash|^Poolin|^PoolSexy|^SuprNova|^Zpool"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.08-teamblack/TeamBlackMiner_1_08_Ubuntu_18_04_Cuda_11_4.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-teamblack/TeamBlackMiner_1_11_Ubuntu_18_04_Cuda_11_4.zip"
             Cuda = "11.4"
-            Version = "1.08"
-            API = "TeamblackWrapper"
+            Version = "1.11"
+            API = "TBMiner"
         }
     )
 } else {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner.exe"
-    $ExcludePools = "^666Pool|^MiningDutch|^MiningRigRentals|^MoneroOcean|^PoolSexy|^SuprNova|^Zpool"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.10-teamblack/TeamBlackMiner_1_10_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-teamblack/TeamBlackMiner_1_11_cuda_11_4.7z"
             Cuda = "11.4"
-            Version = "1.10"
-            API = "TeamblackWrapper"
+            Version = "1.11"
+            API = "TBMiner"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.10-teamblack/TeamBlackMiner_1_10_cuda_11_2.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.11-teamblack/TeamBlackMiner_1_11_cuda_11_2.7z"
             Cuda = "11.2"
-            Version = "1.10"
-            API = "TeamblackWrapper"
+            Version = "1.11"
+            API = "TBMiner"
         }
     )
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
+
+$ExcludePools = "^666Pool|^MiningDutch|^MiningRigRentals|^MoneroOcean|^PoolSexy|^SuprNova|^Zpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash

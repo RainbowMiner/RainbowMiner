@@ -2461,8 +2461,8 @@ class TBMiner : Miner {
         }
 
         $HashRate_Name  = [String]$this.Algorithm[0]
-        $PowerDraw      = [Double]($Data.PSObject.Properties.Value.hashrate | Measure-Object -Sum).Sum
-        $HashRate_Value = [Double]($Data.PSObject.Properties.Value.watt | Measure-Object -Sum).Sum
+        $HashRate_Value = [Double]($Data.PSObject.Properties.Value.hashrate | Measure-Object -Sum).Sum
+        $PowerDraw      = [Double]($Data.PSObject.Properties.Value.watt | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
