@@ -20,7 +20,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies" -tag $Name -cycletime 120 -delay 1000
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.zpool.ca/api/currencies" -tag $Name -cycletime 120 -delay 750 -timeout 30
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -34,7 +34,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/status" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://www.zpool.ca/api/status" -tag $Name -cycletime 120 -delay 750 -timeout 30
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
