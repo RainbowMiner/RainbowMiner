@@ -20,7 +20,6 @@ Param(
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = $Quickstart
-    $AsyncLoader.Verbose    = $false
     $AsyncLoader.Debug      = $Session.LogLevel -eq "Debug"
     $AsyncLoader.Timestamp  = $null
 

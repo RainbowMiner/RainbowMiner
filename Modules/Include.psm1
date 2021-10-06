@@ -6985,6 +6985,16 @@ function Test-Internet {
     } catch {if ($Error.Count){$Error.RemoveAt(0)};$true}
 }
 
+function Test-IsOnBattery {
+    [bool]$(if ($IsWindows) {
+        try {
+            -not (Get-CimInstance -classname BatteryStatus -namespace "root\wmi" -ErrorAction Stop).PowerOnline
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    })
+}
+
 function Wait-UntilTrue
 {
     [CmdletBinding()]

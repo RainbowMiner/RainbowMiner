@@ -21,20 +21,22 @@ $Hosts_LastCall = [hashtable]@{}
 
 while (-not $AsyncLoader.Stop) {
 
+    $IsVerbose = $Session.Config.EnableVerboseAsyncloader
+
     $StopWatch.Restart()
     $Cycle++
     $AsyncLoader.Timestamp = (Get-Date).ToUniversalTime()
 
-    if ($AsyncLoader.Verbose) {
+    if ($IsVerbose) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start cycle" -Append -Timestamp
     }
 
     if (-not ($Cycle % 3)) {
-        if ($AsyncLoader.Verbose) {
+        if ($IsVerbose) {
             Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start Get-SysInfo" -Append -Timestamp
         }
         $Session.SysInfo = Get-SysInfo
-        if ($AsyncLoader.Verbose) {
+        if ($IsVerbose) {
             Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End Get-SysInfo" -Append -Timestamp
         }
     }
@@ -73,7 +75,7 @@ while (-not $AsyncLoader.Stop) {
             }
 
             if (-not $AsyncLoader.Pause -and $Job -and -not $Job.Running -and -not $Job.Paused -and ($JobFailRetry -or ($Job.LastRequest -le $Now.AddSeconds(-$Job.CycleTime)))) {
-                if ($AsyncLoader.Verbose) {
+                if ($IsVerbose) {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                 }
                 try {
@@ -85,7 +87,7 @@ while (-not $AsyncLoader.Stop) {
                         if ($JobHost) {
                             if ($AsyncLoader.HostDelays.$JobHost -and $Hosts_LastCall.$JobHost) {
                                 $JobDelay = [Math]::Min([Math]::Max([Math]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0),0),5000)
-                                if ($JobDelay -and $AsyncLoader.Verbose) {
+                                if ($JobDelay -and $IsVerbose) {
                                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($JobDelay) milliseconds" -Append -Timestamp
                                 }
                             }
@@ -104,7 +106,7 @@ while (-not $AsyncLoader.Stop) {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Catch error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" -Append -Timestamp
                 }
                 finally {
-                    if ($AsyncLoader.Verbose) {
+                    if ($IsVerbose) {
                         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Done job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                     }
                 }
@@ -115,7 +117,7 @@ while (-not $AsyncLoader.Stop) {
 
     $Delta = [Math]::Min([Math]::Max($AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds,1),30)
 
-    if ($AsyncLoader.Verbose) {
+    if ($IsVerbose) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End cycle $(if ($Delta -gt 0) {"(wait $Delta s)"})" -Append -Timestamp
     }
 
