@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.22"
+$Version = "5.0.24"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.22-rplant/cpuminer-rplant-5.0.22-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.24-rplant/cpuminer-rplant-5.0.24-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.22-rplant/cpuminer-rplant-5.0.22-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.24-rplant/cpuminer-rplant-5.0.24-win.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
@@ -67,6 +67,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
+    [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""} #Minotaurx/RING
     [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #Myriad-groestl
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt(128,2,1)
     [PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #NIST5
