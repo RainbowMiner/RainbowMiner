@@ -30,7 +30,13 @@ while (-not $AsyncLoader.Stop) {
     }
 
     if (-not ($Cycle % 3)) {
+        if ($AsyncLoader.Verbose) {
+            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start Get-SysInfo" -Append -Timestamp
+        }
         $Session.SysInfo = Get-SysInfo
+        if ($AsyncLoader.Verbose) {
+            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End Get-SysInfo" -Append -Timestamp
+        }
     }
 
     if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
@@ -71,7 +77,7 @@ while (-not $AsyncLoader.Stop) {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                 }
                 try {
-                    if ($Job.Tag -eq "MiningRigRentals" -and $Job.endpoint) {
+                    if (($Job.Tag -eq "MiningRigRentals") -and $Job.endpoint) {
                         Invoke-MiningRigRentalRequestAsync -Jobkey $Jobkey -force -quiet > $null
                     } else {
                         $JobDelay = 0
