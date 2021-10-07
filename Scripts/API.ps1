@@ -1074,9 +1074,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/pause" {
             if ($Parameters.action -in @("set","reset","pause","unpause")) {
-                $API.Pause = $Parameters.action -in @("set","pause")
+                $API.Pause = ($Parameters.action -in @("set","pause")) -ne $Session.PauseMiners.TestIA()
             } else {
-                $API.Pause = -not $API.Pause
+                $API.Pause = $true
             }
             $Data = $API.Pause | ConvertTo-Json
             Break
@@ -1112,7 +1112,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/status" {
-            $Data = [PSCustomObject]@{Pause=$API.Pause;LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json -Depth 10
+            $Data = [PSCustomObject]@{Pause=$Session.PauseMiners.Test();PauseIAOnly=$Session.PauseMiners.TestIAOnly();LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json -Depth 10
             Break
         }
         "/clients" {
