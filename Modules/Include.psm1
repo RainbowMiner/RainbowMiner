@@ -2602,7 +2602,7 @@ function Expand-WebRequest {
     if (Test-Path $FileName) {Remove-Item $FileName}
     $oldProgressPreference = $Global:ProgressPreference
     $Global:ProgressPreference = "SilentlyContinue"
-    Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing
+    Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing -DisableKeepAlive
     $Global:ProgressPreference = $oldProgressPreference
 
     if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
