@@ -3389,8 +3389,6 @@ function Invoke-Core {
             }
 
             $SamplesPicked++
-
-            $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
         }
 
         if (-not $MinersNeedingBenchmarkCount -and ($Session.Timer - $MinerStart).TotalSeconds -ge $Session.Config.BenchmarkInterval) {
@@ -3422,6 +3420,10 @@ function Invoke-Core {
             }
         } else {
             $Session.PauseMiners.Reset([PauseStatus]::ByActivity)
+        }
+
+        if ($WaitRound % 3 -eq 0) {
+            $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
         }
 
         if ($CurrentPause -ne $Session.PauseMiners.Test()) {
