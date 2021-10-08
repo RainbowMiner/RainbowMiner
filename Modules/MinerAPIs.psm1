@@ -170,7 +170,7 @@ class Miner {
 
             $ArgumentList = $this.GetArguments()
             
-            $Prescription = if ($this.EthPillEnable    -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash","VertHash") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnable}
+            $Prescription = if ($this.EthPillEnable    -ne "disable" -and ($this.BaseAlgorithm -match "^Etc?hash|^UbqHash|^Verthash" | Measure-Object).Count) {$this.EthPillEnable}
                         elseif ($this.EthPillEnableMTP -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("MTP")               -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnableMTP}
 
             if ($Prescription -and -not ($this.Name -match "^ClaymoreDual" -and $ArgumentList -match "-strap")) {
