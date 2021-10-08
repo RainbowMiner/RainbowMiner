@@ -1268,6 +1268,9 @@ function Invoke-Core {
         }
     }
 
+    #Check for diverse per-mining events
+    $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
+
     #Get PowerPrice and Scheduler events
     $PauseByScheduler        = $false
     $PowerPrice              = [Double]$Session.Config.PowerPrice
@@ -3386,6 +3389,8 @@ function Invoke-Core {
             }
 
             $SamplesPicked++
+
+            $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
         }
 
         if (-not $MinersNeedingBenchmarkCount -and ($Session.Timer - $MinerStart).TotalSeconds -ge $Session.Config.BenchmarkInterval) {
@@ -3418,8 +3423,6 @@ function Invoke-Core {
         } else {
             $Session.PauseMiners.Reset([PauseStatus]::ByActivity)
         }
-
-        $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
 
         if ($CurrentPause -ne $Session.PauseMiners.Test()) {
             $keyPressed = $true
