@@ -27,13 +27,13 @@
                    "Type_Index":  "*"
                },
     "gpu":  {
-                "Index":  "*",
+                "Index":  "{1}",
                 "PlatformId":  "*",
                 "Type_PlatformId_Index":  "*",
                 "Vendor":  "*",
                 "Type_Vendor_Index":  "*",
                 "Type":  "GPU",
-                "Type_Index":  "{1}"
+                "Type_Index":  "*"
             },
     "intel":  {
                   "Index":  "*",
