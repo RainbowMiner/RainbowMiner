@@ -61,7 +61,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
     - **AMD**: [AMD Adrenalin 2021 Edition 21.8.2](https://drivers.amd.com/drivers/non-whql-radeon-software-adrenalin-2020-21.8.2-win10-64bit-aug25.exe) - if you run into trouble, try older versions.
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
-Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\7" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
+Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\7" has to be added manually to the PATH environment variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
 
@@ -71,10 +71,10 @@ A note on Windows Nvidia drivers. Recommended lite-packed versions are available
 
 Debian-based distros will be more-or-less the same as these instructions.
 
-Other distros will have settings in different places (hugepages) and the software install commands will be differen (dnf, yum, pacman, nix, pkg, etc.) It is assumed you are clever enough to sort out the differences on your own if you choose a different distribution. BUT! As noted above, feel free to edit this page and make a pull request.
+Other distros will have settings in different places (hugepages) and the software install commands will be different (dnf, yum, pacman, nix, pkg, etc.) It is assumed you are clever enough to sort out the differences on your own if you choose a different distribution. BUT! As noted above, feel free to edit this page and make a pull request.
 
 ###### Huge Pages
-By default, linux sets memory-chunk size fairly small. This is to save RAM useage for low-requirement sofware (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is call 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is a how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)
+By default, linux sets memory-chunk size fairly small. This is to save RAM usage for low-requirement software (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is call 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)
 
 On newer Ubuntu distros (Ubuntu 18.04 - Bionic Beaver and up), the value can be added to `/etc/sysctl.conf` and you need to be root do it (ie: `sudo emacs -wm /etc/sysctl.conf` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.) The system will need to be rebooted to load the new kernel parameters or you can run `sudo sysctl -p` to load any new or changed parameters at runtime. 
 
@@ -121,7 +121,7 @@ Download and extract the latest driver for your cards from the [AMD support site
 
 After the archive is downloaded, extract the contents to a temporary location from which you can install it. 
 
-Run the following to install it "headless" (this is nessecary for Ubuntu Desktop installations and possibly some other configurations. [Read more here](https://amdgpu-install.readthedocs.io/en/latest/install-installing.html#installing-the-pro-variant)) and with ROCm support.
+Run the following to install it "headless" (this is necessary for Ubuntu Desktop installations and possibly some other configurations. [Read more here](https://amdgpu-install.readthedocs.io/en/latest/install-installing.html#installing-the-pro-variant)) and with ROCm support.
 
 ```
 ./amdgpu-pro-install -y --opencl=pal,legacy,rocm --headless
@@ -135,7 +135,7 @@ Reboot and you should be good to go!
 
 #### 1. Download RainbowMiner and extract to a folder of you choice: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 
-**Important:** Add the RainbowMiner directory to the exceptions of your antivirus program. Otherwise, some miner will cause false virus alerts.
+**Important:** Add the RainbowMiner directory to the exceptions of your antivirus program. Otherwise, some miners will cause false virus alerts.
 
 On Linux, you may use git for a shortcut:
 ```
@@ -173,7 +173,7 @@ wget https://github.com/PowerShell/PowerShell/releases/download/v7.1.3/powershel
 # install powershell package
 dpkg -i powershell_7.1.3-1.ubuntu.18.04_amd64.deb
 
-# install powershell dependecies
+# install powershell dependencies
 apt install -f
 ```
 
@@ -208,7 +208,7 @@ Alternative: start as Linux `screen`:
    - choose your RunMode:
      - **standalone** = all config locally and direct connect to pool APIs
      - **server** = act as server for many Clients, may also run as mining rig
-     - **client** = opionally use server's config files, connect to server for pool API data
+     - **client** = optionally use server's config files, connect to server for pool API data
    - enter API port for webinterface at http://localhost:<APIport>
    - optionally protect access to the webinterface with username and password
    - for client-mode:
@@ -242,12 +242,12 @@ Alternative: start as Linux `screen`:
 
 ## HOTKEYS
 
-You can press the follwing keys, while RainbowMiner is waiting for the next run.
+You can press the following keys, while RainbowMiner is waiting for the next run.
 
 - E[**x**]it Miningscript = stop all running miner and exit RainbowMiner
 - [**S**]kip switching prevention = immediately start the most profitable miner, without waiting for the switching prevention
 - start [**D**]ownloader = start the downloader manually (only needed, if you manually updated a miner)
-- [**C**]onfiguration = goto the configuration setup (after setup all miner will be restarted)
+- [**C**]onfiguration = goto the configuration setup (after setup all miners will be restarted)
 - [**V**]erbose off/on = switch the user interface from lite(=off) to full(=on)
 - [**P**]ause = stop all running miner and wait until user presses P again
 - [**U**]pdate = if a new release of RainbowMiner is available, this option will show up. Pressing this key will start the automatic update.
@@ -483,7 +483,7 @@ The following miners can be fine tuned, using config files. Most of the config f
 
 ## ALGORITHMS
 
-RainbowMiner uses a built-in hash table to convert different algorithmnames to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the "Config\config.txt" or using command line parameters. E.g. cryptonight-v7, cryptonight/1, cryptonightv7 would all be converted to CryptonightV7.
+RainbowMiner uses a built-in hash table to convert different algorithm names to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the "Config\config.txt" or using command line parameters. E.g. cryptonight-v7, cryptonight/1, cryptonightv7 would all be converted to CryptonightV7.
 
 ## Special notes for Equihash
 
@@ -551,7 +551,7 @@ The differences:
 > I set the ocprofile to a clock and then set it different within AF under the same profile number
 
 - MSI Afterburner profiles are fixed to a maximum of five and is being selected by their number 1 to 5 in parameter "MSIprofile" in miners.config.txt"
-- ocprofiles are unlimited in ammount, you decide what their names are. RainbowMiner comes with an example ocprofiles.config.txt, where the profiles are named "Profile1", "Profile", .. "Profile9". The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
+- ocprofiles are unlimited in amount, you decide what their names are. RainbowMiner comes with an example ocprofiles.config.txt, where the profiles are named "Profile1", "Profile", .. "Profile9". The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
 
 > My overclocking settings do not work on Linux
 
@@ -678,7 +678,7 @@ Config files are found in directory "Config\"
 - autoexec.config.txt = add executables/commands to be executed when RainbowMiner starts
 
 **Note: if you have not started the Start.bat yet, there will be no config files! Start it first!**
-**Config files are in JSON format. Look here for to get an idea, how they work: https://www.tutorialspoint.com/json/index.htm**
+**Config files are in JSON format. Look here to get an idea, how they work: https://www.tutorialspoint.com/json/index.htm**
 **Be careful, when editing these files. Every comma counts!**
 
 
@@ -726,7 +726,7 @@ Notes for the automatic values for **APIThreads**:
 #### Select devices ####
 
 - **DeviceName** = list of device descriptors, with which you want to mine [default=gpu]
-  - click ListDevices.bat to find out which devices are availabe
+  - click ListDevices.bat to find out which devices are available
   - out of this table, models, vendors and names can be used to select
   - for mining on all GPUs, use "gpu"
   - for mining on all Nvidia GPUs use "nvidia"
@@ -808,7 +808,7 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 - **MiningMode** = possible values are "legacy", "device" and "combo", see explanation below
   - "legacy": one miner will handle all devices of one vendor together. Only NVIDIA, INTEL, AMD, CPU are possible to select.
   - "device" (default): each device group (e.g. GTX1070, RX570, CPU..) will get the most profitable miner to work on the different algorithm. If you have three different device groups, there will be three miners launched.
-  - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperatly: if the combo is less efficient than single miners, it will be deactivated automatically.
+  - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperately: if the combo is less efficient than single miners, it will be deactivated automatically.
 - **EnableResetVega** = set to 1 to always reset Vega Gpus before mining
 
 #### Setup network operations
@@ -825,7 +825,7 @@ For Client (Runmode=client) setup:
 - **ServerPassword** = enter the server's password
 - **EnableServerConfig** = set to "1" to use the server's config files on this rig
 - **EnableServerPools** = set to "1" to use the server's pool/coins/balance statistics and mine exactly to those pools (except for MiningRigRentals)
-  Note: With this setting, it is possible to let the server rig control pools/coins/balance data of the client. This reduces network traffic significantly, but overrides the local pool setup. MiningRigRentals is exluded - this pool always runs locally.
+  Note: With this setting, it is possible to let the server rig control pools/coins/balance data of the client. This reduces network traffic significantly, but overrides the local pool setup. MiningRigRentals is excluded - this pool always runs locally.
 - **ServerConfigName** = list of config files to be downloaded if "EnableServerConfig" is set to "1". Possible values are "algorithms","coins","config","miners","ocprofiles","pools"
 - **ExcludeServerConfigVars** = list of parameter names in config.txt or pools.config.txt, that should -not- be overwritten with server values (best is to leave it as is).
   For pools.config.txt:
