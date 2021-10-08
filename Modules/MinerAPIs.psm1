@@ -174,12 +174,13 @@ class Miner {
                         elseif ($this.EthPillEnableMTP -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("MTP")               -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnableMTP}
 
             if ($Prescription -and -not ($this.Name -match "^ClaymoreDual" -and $ArgumentList -match "-strap")) {
-                $Prescription_Device = @(Get-Device $this.DeviceName) | Where-Object Model -in @("GTX1080","GTX1080Ti","TITANXP")
+                $Prescription_Device = Get-Device -Name $this.DeviceName
+                $Prescription_Device = $Prescription_Device | Where-Object {$_.Model_Base -in @("GTX1080","GTX1080Ti","TITANXP")}
                 $Prescription = switch ($Prescription) {
-                    "RevA" {$Prescription = "revA";Break}
-                    "RevB" {$Prescription = "revB";Break}
+                    "RevA" {"revA";Break}
+                    "RevB" {"revB";Break}
                 }
-                if ($Prescription -ne "" -and $Prescription_Device) {
+                if ("$Prescription" -ne "" -and $Prescription_Device) {
                     Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"
                     if ($Global:IsLinux) {
                         $Command = ".\IncludesLinux\bin\OhGodAnETHlargementPill-r2"
