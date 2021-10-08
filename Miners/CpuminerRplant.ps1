@@ -47,7 +47,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "curvehash"; Params = ""} #CurveHash/Oblivion, still broken in v4.5.18
     [PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Deepcoin (DCN)
     [PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #Diamond
-    [PSCustomObject]@{MainAlgorithm = "gr"; Params = ""; FaultTolerance = 0.7; ExtendInterval = 3} #Ghostrider/Take5
+    [PSCustomObject]@{MainAlgorithm = "gr"; Params = ""; FaultTolerance = 0.9; ExtendInterval = 3} #Ghostrider/Take5
     [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
     [PSCustomObject]@{MainAlgorithm = "heavyhash"; Params = ""} #HeavyHash
     [PSCustomObject]@{MainAlgorithm = "hex"; Params = ""} #h16r-hex
