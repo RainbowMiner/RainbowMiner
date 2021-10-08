@@ -1811,6 +1811,10 @@ function Invoke-Core {
 
     $Global:AllPools = $null #will be set to NewPools later
 
+    if ($Session.Config.EnableDebugMode) {
+        $API.NewPools = $NewPools
+    }
+
     $NewPools = $NewPools.Where({
         $Pool_Name = $_.Name
         $Pool_Algo = $_.Algorithm0

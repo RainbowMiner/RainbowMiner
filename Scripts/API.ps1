@@ -212,6 +212,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = if ($API.AllPools) {ConvertTo-Json $API.AllPools -Depth 10} else {"[]"}
             Break
         }
+        "/newpools" {
+            $Data = if ($API.NewPools) {ConvertTo-Json $API.NewPools -Depth 10} else {"[]"}
+            Break
+        }
         "/algorithms" {
             $Data = if ($API.Algorithms) {ConvertTo-Json $API.Algorithms -Depth 10} else {"[]"}
             Break
