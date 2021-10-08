@@ -85,6 +85,9 @@
         "CpuPool" = [PSCustomObject]@{
             Currencies=@("CPU","MBC")
         }
+        "Crazypool" = [PSCustomObject]@{
+            Currencies=@("ETH","ETC","UBQ")
+        }
         "CryptoKnight" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
