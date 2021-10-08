@@ -3422,9 +3422,7 @@ function Invoke-Core {
             $Session.PauseMiners.Reset([PauseStatus]::ByActivity)
         }
 
-        if ($WaitRound % 3 -eq 0) {
-            $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
-        }
+        $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
 
         if ($CurrentPause -ne $Session.PauseMiners.Test()) {
             $keyPressed = $true
