@@ -47,13 +47,12 @@ while (-not $AsyncLoader.Stop) {
 
         foreach ($JobKey in $JobKeys) {
 
-            if ($AsyncLoader.Pause) {
-                break
-            }
-
             $Job = $AsyncLoader.Jobs.$JobKey
 
-            if (-not $Job) {
+            if ($AsyncLoader.Pause -or -not $Job -or $Job.Running -or $Job.Paused) {
+                if ($IsVerbose) {
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Skip job $JobKey with $($Job.Url) R=$($Job.Running) P=$($Job.Paused) AP=$($AsyncLoader.Pause)" -Append -Timestamp
+                }
                 continue
             }
 
@@ -66,8 +65,6 @@ while (-not $AsyncLoader.Stop) {
             if (-not $Job.LastCacheWrite -or (($Job.LastCacheWrite -lt $Job.LastRequest) -and ($Job.LastCacheWrite -lt $Now.AddSeconds(-600-$Job.CycleTime)))) {
                 $RetryTime = if ($Job.LastFailCount -le 3) {600} elseif ($Job.LastFailCount -le 6) {1800} elseif ($Job.LastFailCount -le 10) {3600} else {10800}
                 if (-not $Job.LastFailRetry -or ($Job.LastFailRetry -le $Now.AddSeconds(-$RetryTime))) {
-                    $Job.LastFailRetry = (Get-Date).ToUniversalTime()
-                    $Job.LastFailCount++
                     $JobFailRetry = $true
                 }
             } else {
@@ -75,6 +72,12 @@ while (-not $AsyncLoader.Stop) {
             }
 
             if (-not $AsyncLoader.Pause -and $Job -and -not $Job.Running -and -not $Job.Paused -and ($JobFailRetry -or ($Job.LastRequest -le $Now.AddSeconds(-$Job.CycleTime)))) {
+
+                if ($JobFailRetry) {
+                    $Job.LastFailRetry = (Get-Date).ToUniversalTime()
+                    $Job.LastFailCount++
+                }
+
                 if ($IsVerbose) {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                 }
