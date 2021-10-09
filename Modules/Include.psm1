@@ -5737,7 +5737,7 @@ function Get-ServerConfig {
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$($Session.Version)"
         try {
-            $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 20
+            $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -Timeout 30
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             $ErrorMessage = "$($_.Exception.Message)"
@@ -6107,7 +6107,7 @@ Param(
                     myip      = $Session.MyIP
                 }
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Config.ServerName):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
-                $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message ".. $(if ($Result.Status) {"ok!"} else {"failed"})" -Append -Timestamp
                 if ($Result.Status) {return $Result.Content}
             }
@@ -7517,7 +7517,7 @@ param(
                     myip      = $Session.MyIP
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
@@ -7606,7 +7606,7 @@ param(
                     myip      = $Session.MyIP
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal
+                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
