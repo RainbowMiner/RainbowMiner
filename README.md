@@ -920,9 +920,11 @@ For Server (Runmode=server) setup:
 - **DisableMSIAmonitor** = set to 1, to fully disable MSI Afterburner monitoring (if more than six AMD GPU are used for mining)
 - **Quickstart** = set to 1 to read all pool data from cache during startup (speeds up first start, but balance data may be out of date)
 - **StartPaused** = set to 1 to start RainbowMiner in pause mode (no mining, you will have to press "P" to enable mining)
-- **EnablePauseOnActivity** = set to 1 to automatically send RainbowMiner into pause mode, if user input is detected (also see **ResumeOnInactivitySeconds**)
-- **ResumeOnInactivitySeconds** = seconds of no user input, until RainbowMiner leaves pause-on-activity mode (0 = never, default = 300)
+- **EnablePauseOnActivity** = set to 1 to automatically send RainbowMiner into pause mode, if user input is detected (also see **ResumeOnInactivitySeconds**) [default=0]
+- **EnablePauseOnBattery** = set to 1 to automatically send RainbowMiner into pause mode, if notebook runs on battery (Windows only) [default=0]
+- **ResumeOnInactivitySeconds** = seconds of no user input, until RainbowMiner leaves pause-on-activity mode (0 = never) [default=300]
 - **EnableMinersAsRoot** = set to 0, if you do not want to run miners as root, using the OCDaemon (linux only) [default=1]
+- **OpenCLPlatformSorting** = define sort order of the OpenCL platforms, comma separated list. Valid values are AMD,INTEL,NVIDIA. Leave empty for automatic detection (recommended) [default=]
 
 #### Maintenance ####
 - **MaxLogfileDays** = max. days to keep logfiles in Logs folder [default=5]

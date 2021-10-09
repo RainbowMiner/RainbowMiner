@@ -49,6 +49,9 @@ param(
     [Parameter(Mandatory = $false)]
     [Array]$ExcludeCoinSymbol = @(),
     [Parameter(Mandatory = $false)]
+    [Alias("PlatformSorting")]
+    [Array]$OpenCLPlatformSorting = @(), 
+    [Parameter(Mandatory = $false)]
     [Array]$Currency = ("BTC", "USD"), #i.e. GBP,EUR,ZEC,ETH etc.
     [Parameter(Mandatory = $false)]
     [Int]$Donate = 24, #Minutes per Day
@@ -308,7 +311,7 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$GroupName = "", # client group name for shared server config
     [Parameter(Mandatory = $false)]
-    [Array]$ExcludeServerConfigVars = @("APIauth","APIpassword","APIport","APIuser","APIthreads","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName","StaticCPUMinerPort","StaticGPUMinerPort"), # do not copy these vars from the server's config.txt
+    [Array]$ExcludeServerConfigVars = @("APIauth","APIpassword","APIport","APIuser","APIthreads","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","LinuxDisplay","LinuxXAuthority","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName","StaticCPUMinerPort","StaticGPUMinerPort","OpenCLPlatformSorting"), # do not copy these vars from the server's config.txt
     [Parameter(Mandatory = $false)]
     [Switch]$EnableServerExcludeList = $false,
     [Parameter(Mandatory = $false)]
@@ -349,6 +352,8 @@ $Session.LogLevel        = $LogLevel
 
 $Session.SupportedPSVersion = "7.1.4"
 
+$Session.OpenCLPlatformSorting = @()
+
 Add-Type -Path .\DotNet\OpenCL\*.cs
 #Add-Type -Path .\DotNet\Tools\RBMTools.cs
 
@@ -379,8 +384,21 @@ if ($UseTimeSync) {Test-TimeSync}
 
 #Get loglevel
 if (Test-Path $ConfigFile) {
-    $Config_LogLevel = try {(Get-Content $ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop).LogLevel} catch {if ($Error.Count) {$Error.RemoveAt(0)};$LogLevel}
+    $Config_LogLevel = $null
+    $Config_OpenCLPlatformSorting = $null
+    try {
+        $Config_Content = Get-Content $ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $Config_LogLevel = $Config_Content.LogLevel
+        $Config_OpenCLPlatformSorting = $Config_Content.OpenCLPlatformSorting
+    } catch {if ($Error.Count) {$Error.RemoveAt(0)};$LogLevel}
     if ($Config_LogLevel -and $Config_LogLevel -ne "`$LogLevel") {$Session.LogLevel = $Config_LogLevel}
+    if ($Config_OpenCLPlatformSorting -and $Config_OpenCLPlatformSorting -ne "`$OpenCLPlatformSorting") {
+        if ($Config_OpenCLPlatformSorting -is [string]) {
+            $Config_OpenCLPlatformSorting = $Config_OpenCLPlatformSorting.Trim()
+            $Config_OpenCLPlatformSorting = @(if ($Config_OpenCLPlatformSorting -ne ''){@([regex]::split($Config_OpenCLPlatformSorting,"\s*[,;]+\s*") | Foreach-Object {$_.ToUpper()} | Where-Object {$_ -in @("AMD","INTEL","NVIDIA")})})
+            if ($Config_OpenCLPlatformSorting) {$Session.OpenCLPlatformSorting = $Config_OpenCLPlatformSorting}
+        }
+    }
 }
 
 #Start the log
@@ -396,7 +414,7 @@ if ($IsWindows -and (Get-Command "Unblock-File" -ErrorAction SilentlyContinue)) 
 [hashtable]$Session.DefaultValues = @{}
 
 if (-not $psISE) {$MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}}
-if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","WorkerName","Interval","Region","DefaultPoolRegion","SSL","DeviceName","ExcludeDeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PreferMinerName","PreferMinerMargin","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","ExcludeFromWatchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","MinerStatusMaxTemp","DiskMinGB","MinerStatusMaxCrashesPerHour","SwitchingPrevention","PoolSwitchingHysteresis","MinerSwitchingHysteresis","MaxRejectedShareRatio","MaxAllowedLuck","MaxTimeSinceLastBlock","MinComboOverSingleRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","DisableUnprofitableAlgolist","DisableUnprofitableCpuAlgolist","EnableCheckMiningConflict","EnableCurl","EnableEthashZombieMode","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","ExcludeCoinsymbolBalances","ShowWalletBalances","WalletBalances","DisableDualMining","APIport","APIuser","APIpassword","APIauth","APIthreads","APIlockConfig","APImaxLoginAttemps","APIblockLoginAttemptsTime","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UIsorting","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","PowerOffsetPercent","FixedCostPerDay","CheckProfitability","DisableExtendInterval","EthPillEnable","EthPillEnableMTP","EnableOCProfiles","EnableOCVoltage","EnableOCLinuxSetAllPStates","EnableOCLinuxForcePState","EnableLinuxHeadless","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","StaticCPUMinerPort","StaticGPUMinerPort","EnableAutoAdjustAffinity","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","ForceStablePrice","EnableMinersAsRoot","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","MinerFaultToleranceGPU","MinerFaultToleranceCPU","BalanceUpdateMinutes","ProfitSpikeProtection","Quickstart","PoolDataWindow","PoolStatAverage","PoolStatAverageStable","EnableErrorRatio","MaxErrorRatio","EnableAutoAlgorithmAdd","EnableAlgorithmMapping","EnableResetVega","EnableMiningHeatControl","MiningHeatControl","MaxActivityDays","MaxLogfileDays","MaxDownloadfileDays","MaxCachefileDays","StartPaused","EnableUpdateDuringPause","EnableUpdateWhenScheduled","EnablePauseOnActivity","EnablePauseOnBattery","ResumeOnInactivitySeconds","EnableFastlaneBenchmark","FastlaneBenchmarkTypeCPU","FastlaneBenchmarkTypeGPU","EnableFastlaneBenchmarkMissing","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","EnableServerPools","ServerConfigName","GroupName","ExcludeServerConfigVars","EnableServerExcludeList","EnableMinerBackups","EnableKeepDownloads","RunMode","SetupOnly","EnableDebugMode","EnableVerboseAsyncloader","EnableRestartComputer","RestartComputerHours","LinuxDisplay","LinuxXAuthority","LogLevel")}
+if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","WorkerName","Interval","Region","DefaultPoolRegion","SSL","DeviceName","ExcludeDeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PreferMinerName","PreferMinerMargin","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","OpenCLPlatformSorting","Currency","Donate","Proxy","Delay","Watchdog","ExcludeFromWatchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","MinerStatusMaxTemp","DiskMinGB","MinerStatusMaxCrashesPerHour","SwitchingPrevention","PoolSwitchingHysteresis","MinerSwitchingHysteresis","MaxRejectedShareRatio","MaxAllowedLuck","MaxTimeSinceLastBlock","MinComboOverSingleRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","DisableUnprofitableAlgolist","DisableUnprofitableCpuAlgolist","EnableCheckMiningConflict","EnableCurl","EnableEthashZombieMode","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","ExcludeCoinsymbolBalances","ShowWalletBalances","WalletBalances","DisableDualMining","APIport","APIuser","APIpassword","APIauth","APIthreads","APIlockConfig","APImaxLoginAttemps","APIblockLoginAttemptsTime","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UIsorting","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","PowerOffsetPercent","FixedCostPerDay","CheckProfitability","DisableExtendInterval","EthPillEnable","EthPillEnableMTP","EnableOCProfiles","EnableOCVoltage","EnableOCLinuxSetAllPStates","EnableOCLinuxForcePState","EnableLinuxHeadless","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","StaticCPUMinerPort","StaticGPUMinerPort","EnableAutoAdjustAffinity","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","ForceStablePrice","EnableMinersAsRoot","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","MinerFaultToleranceGPU","MinerFaultToleranceCPU","BalanceUpdateMinutes","ProfitSpikeProtection","Quickstart","PoolDataWindow","PoolStatAverage","PoolStatAverageStable","EnableErrorRatio","MaxErrorRatio","EnableAutoAlgorithmAdd","EnableAlgorithmMapping","EnableResetVega","EnableMiningHeatControl","MiningHeatControl","MaxActivityDays","MaxLogfileDays","MaxDownloadfileDays","MaxCachefileDays","StartPaused","EnableUpdateDuringPause","EnableUpdateWhenScheduled","EnablePauseOnActivity","EnablePauseOnBattery","ResumeOnInactivitySeconds","EnableFastlaneBenchmark","FastlaneBenchmarkTypeCPU","FastlaneBenchmarkTypeGPU","EnableFastlaneBenchmarkMissing","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","EnableServerPools","ServerConfigName","GroupName","ExcludeServerConfigVars","EnableServerExcludeList","EnableMinerBackups","EnableKeepDownloads","RunMode","SetupOnly","EnableDebugMode","EnableVerboseAsyncloader","EnableRestartComputer","RestartComputerHours","LinuxDisplay","LinuxXAuthority","LogLevel")}
 $MyCommandParameters | Where-Object {Get-Variable $_ -ErrorAction Ignore} | Foreach-Object {$Session.DefaultValues[$_] = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
 if ($IsWindows -and $Session.IsAdmin) {

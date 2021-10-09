@@ -3289,7 +3289,9 @@ function Get-Device {
         #re-index in case the OpenCL platforms have shifted positions
         if ($Platform_Devices) {
             try {
-                if (Test-Path ".\Data\openclplatforms.json") {
+                if ($Session.OpenCLPlatformSorting) {
+                    $OpenCL_Platforms = $Session.OpenCLPlatformSorting
+                } elseif (Test-Path ".\Data\openclplatforms.json") {
                     $OpenCL_Platforms = Get-ContentByStreamReader ".\Data\openclplatforms.json" | ConvertFrom-Json -ErrorAction Ignore
                 }
 
@@ -3299,9 +3301,11 @@ function Get-Device {
 
                 $OpenCL_Platforms_Current = @($Platform_Devices | Sort-Object {$_.Vendor -notin $KnownVendors},PlatformId | Foreach-Object {"$($_.Vendor)"})
 
-                if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current) {
-                    Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms_Current > $null
-                    $OpenCL_Platforms = $OpenCL_Platforms_Current
+                if (Compare-Object $OpenCL_Platforms $OpenCL_Platforms_Current | Where-Object SideIndicator -eq "=>") {
+                    $OpenCL_Platforms_Current | Where-Object {$_ -notin $OpenCL_Platforms} | Foreach-Object {$OpenCL_Platforms += $_}
+                    if (-not $Session.OpenCLPlatformSorting -or -not (Test-Path ".\Data\openclplatforms.json")) {
+                        Set-ContentJson -PathToFile ".\Data\openclplatforms.json" -Data $OpenCL_Platforms > $null
+                    }
                 }
 
                 $Index = 0
