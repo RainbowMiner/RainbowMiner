@@ -11,6 +11,7 @@ param(
     [Bool]$AllowZero = $false,
     [Bool]$EnableLolminerDual = $false,
     [Bool]$EnableNanominerDual = $false,
+    [Bool]$EnableTrexDual = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week"
 )
@@ -30,7 +31,7 @@ $Pools_Data = @(
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
-if (((-not $EnableNanominerDual -and -not $EnableLolminerDual -and -not $Pool_Currencies) -or -not $Wallets.ZIL) -and -not $InfoOnly) {return}
+if (((-not $EnableNanominerDual -and -not $EnableLolminerDual -and -not $EnableTrexDual -and -not $Pool_Currencies) -or -not $Wallets.ZIL) -and -not $InfoOnly) {return}
 
 if ($Pool_Currencies) {
     $Pool_RequestCalc = [PSCustomObject]@{}
@@ -46,7 +47,7 @@ if ($Pool_Currencies) {
     }
 }
 
-$Pools_Data | Where-Object {$EnableNanominerDual -or $EnableLolminerDual -or $Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$EnableNanominerDual -or $EnableLolminerDual -or $EnableTrexDual -or $Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Coin  = Get-Coin $_.symbol
     $Pool_Ports = $_.port
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
@@ -117,7 +118,7 @@ $Pools_Data | Where-Object {$EnableNanominerDual -or $EnableLolminerDual -or $Wa
                     Email         = $Email
                 }
             }
-            if ($EnableNanominerDual -or $EnableLolminerDual) {
+            if ($EnableNanominerDual -or $EnableLolminerDual -or $EnableTrexDual) {
                 [PSCustomObject]@{
                     Algorithm     = "Zilliqa$($Pool_Currency)"
                     Algorithm0    = "Zilliqa$($Pool_Currency)"
