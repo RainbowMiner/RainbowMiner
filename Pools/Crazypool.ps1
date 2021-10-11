@@ -26,9 +26,6 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "ubq.crazypool.org"; symbol = "UBQ"; port = @(3335); fee = 1}
 )
 
-$Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
-if (-not $Pool_Currencies -and -not $InfoOnly) {return}
-
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Coin  = Get-Coin $_.symbol
     $Pool_Ports = $_.port
@@ -44,9 +41,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         $ok = $false
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/stats" -tag $Name -cycletime 120
+            $Pool_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/stats" -tag $Name -cycletime 120 -fixbigint
             if ($Pool_Request.now) {
-                $PoolBlocks_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/blocks" -tag $Name -cycletime 120
+                $PoolBlocks_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/blocks" -tag $Name -cycletime 120 -fixbigint
                 $ok = $PoolBlocks_Request.luck -ne $null
             }
         }
