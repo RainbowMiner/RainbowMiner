@@ -90,11 +90,10 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-        if ($Session.Config.Pools.Ezil.EnableTrexDual -and $_.DualZIL -and $Pools.ZilliqaETH ) {
-            $ZilPool = "$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
+        if ($Session.Config.Pools.Ezil.EnableTrexDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.Host -and $Pools.ZilliqaETH.Wallet) {
+            $ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
             $ZilUser = $Pools.ZilliqaETH.User
             $ZilPass = $Pools.ZilliqaETH.Pass
-            if ($ZilPool) {$ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($ZilPool)"}
         } else {
             $ZilPool = ""
             $ZilUser = ""
