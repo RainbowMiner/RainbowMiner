@@ -360,7 +360,9 @@
             BalancesKeepAlive="30d"
         }
         "Poolin" = [PSCustomObject]@{
-            Currencies=@("ETH","RVN")
+            Fields=[PSCustomObject]@{API_ETH_PUID="";API_ETH_ReadToken=""}
+            SetupFields=[PSCustomObject]@{API_ETH_PUID="For ETH balance, enter your miner subaccount puid (https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)";API_ETH_ReadToken="For ETH balance, enter your miner subaccount read-token (starts with wow; https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"}
+            Currencies=@("ETH")
         }
         "Poolium" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{API_Key="";Password="x"}
