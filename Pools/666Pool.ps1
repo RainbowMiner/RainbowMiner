@@ -17,6 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $CoinXlat = [hashtable]@{
     ERGO = "ERG"
+    MEER = "PMEER"
     VDS = "VOLLAR"
 }
 
