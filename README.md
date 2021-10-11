@@ -1453,21 +1453,30 @@ Example:
           "MaxTimeToFind": "1.5h",
           "MSIAprofile": 4,
           "OCprofile": "Profile4",
-          "MRRPriceModifierPercent": "-10"
+          "MRRPriceModifierPercent": "-10",
+          "MRREnable": "1",
+          "MRRAllowExtensions": "1",
+          "MinerName": "Gminer,CcminerTpruvot",
+          "ExcludeMinerName": ""
         }
     }
 
 This configuration would:
-- reduce all X17 pool prices by a "Penalty" of 10%
-- set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
-- set the mimimum pool workers mining X17 to 300 for a pool to be selected
-- set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
-- set the MSI Afterburner overclocking profile to 4 (if MSIA is used)
-- set the overclocking profile to "Profile4" (if the RainbowMiner oc is used)
+- **Penalty**: reduce all X17 pool prices by a "Penalty" of 10%
+- **MinHashrate**: set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
+- **MinWorkers**: set the mimimum pool workers mining X17 to 300 for a pool to be selected
+- **MaxTimeToFind**: set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
+- **MSIAprofile**: set the MSI Afterburner overclocking profile to 4 (if MSIA is used)
+- **OCprofile**: set the overclocking profile to "Profile4" (if the RainbowMiner oc is used)
+- **MRRPriceModifierPercent**: if pool MiningRigRentals is in use, the X17 mining rig will use a price modifier of -10% (relative to suggested price)
+- **MRREnable**: if pool MiningRigRentals is in use, all X17 workers will be announced on MRR (set to "0" to disable a specific algorithm)
+- **MRRAllowExtensions**: if pool MiningRigRentals is in use, renters may extend their X17 rental (set to "0" to forbid extension)
+- **MinerName**: only Gminer and CcminerTpruvot are allowed to mine X17 (leave empty for all X17 miners)
+- **ExcludeMinerName**: no excluded miners for X17 (in case you want to disable a specific miner for that algorithm, add it to this list)
+
+Notes:
 - the overclocking profiles define the default for a specific algorithm
 - the OCprofile hierarchy: miners.config.txt over algorithms.config.txt over devices.config.txt
-- if pool MiningRigRentals is in use, the X17 mining rig will use a price modifier of -10% (relative to suggested price)
-
 
 ### Config\coins.config.txt
 
