@@ -2398,14 +2398,14 @@ function Stop-SubProcess {
                     try {
                         $Response = Invoke-GetUrl $ShutdownUrl -Timeout 20 -ErrorAction Stop
 
-                        $StopWatch.Reset()
+                        $StopWatch.Restart()
                         while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 20) {
                             Start-Sleep -Milliseconds 500
                         }
                         if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
                             Write-Log -Level Warn "$($Title) failed to close within 20 seconds via API $(if ($Name) {": $($Name)"})"
                         }
-                        $StopWatch.Reset()
+                        $StopWatch.Restart()
                     }
                     catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
