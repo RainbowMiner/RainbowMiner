@@ -94,7 +94,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
             $ZilPool = "$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
             $ZilUser = $Pools.ZilliqaETH.User
             $ZilPass = $Pools.ZilliqaETH.Pass
-            if ($ZilPool) {$ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($ZilPool)"
+            if ($ZilPool) {$ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($ZilPool)"}
         } else {
             $ZilPool = ""
             $ZilUser = ""
