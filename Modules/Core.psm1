@@ -973,6 +973,8 @@ function Invoke-Core {
                         MRREnable               = $(if ($Session.Config.Algorithms.$a.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRREnable} else {$true})
                         MRRAllowExtensions      = $(if ($Session.Config.Algorithms.$a.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRRAllowExtensions} else {$null})
                         MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
+                        MinerName               = @(if ($Session.Config.Algorithms.$a.MinerName){[regex]::split("$($Session.Config.Algorithms.$a.MinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
+                        ExcludeMinerName        = @(if ($Session.Config.Algorithms.$a.ExcludeMinerName){[regex]::split("$($Session.Config.Algorithms.$a.ExcludeMinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
                     }).GetEnumerator() | Foreach-Object {
                         if ([bool]$Session.Config.Algorithms.$a.PSObject.Properties["$($_.Name)"]) {
                             $Session.Config.Algorithms.$a."$($_.Name)" = $_.Value
@@ -2055,18 +2057,32 @@ function Invoke-Core {
             } |
             Where-Object {
                 $MinerOk = $true
-                foreach ($p in @($_.DeviceModel -split '-')) {
-                    $BaseAlgo = $_.BaseAlgorithm -split '-'
-                    if ($Session.Config.Miners."$($_.BaseName)-$($p)-$($_.BaseAlgorithm)".Disable -or 
-                        $Session.Config.Devices.$p -and
-                        (
-                            ($Session.Config.Devices.$p.DisableDualMining -and $_.HashRates.PSObject.Properties.Name.Count -gt 1) -or
-                            ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.Algorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
-                            ($Session.Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.ExcludeAlgorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -or
-                            ($Session.Config.Devices.$p.MinerName.Count -gt 0 -and ($Session.Config.Devices.$p.MinerName -inotcontains $_.Basename)) -or
-                            ($Session.Config.Devices.$p.ExcludeMinerName.Count -gt 0 -and ($Session.Config.Devices.$p.ExcludeMinerName -icontains $_.Basename))
-                        )
-                    ) {$MinerOk=$false;break}
+                $BaseAlgo = $_.BaseAlgorithm -split '-'
+                foreach ($p in @($BaseAlgo)) {
+                    if (
+                            ($Session.Config.Algorithms.$p.MinerName -and ($Session.Config.Algorithms.$p.MinerName -notcontains $_.BaseName)) -or
+                            ($Session.Config.Algorithms.$p.ExcludeMinerName -and ($Session.Config.Algorithms.$p.ExcludeMinerName -contains $_.BaseName))
+                    ) {
+                        $MinerOk = $false
+                        break
+                    }
+                }
+                if ($MinerOk) {
+                    foreach ($p in @($_.DeviceModel -split '-')) {
+                        if ($Session.Config.Miners."$($_.BaseName)-$($p)-$($_.BaseAlgorithm)".Disable -or 
+                            $Session.Config.Devices.$p -and
+                            (
+                                ($Session.Config.Devices.$p.DisableDualMining -and $_.HashRates.PSObject.Properties.Name.Count -gt 1) -or
+                                ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.Algorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
+                                ($Session.Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.ExcludeAlgorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -or
+                                ($Session.Config.Devices.$p.MinerName.Count -gt 0 -and ($Session.Config.Devices.$p.MinerName -inotcontains $_.Basename)) -or
+                                ($Session.Config.Devices.$p.ExcludeMinerName.Count -gt 0 -and ($Session.Config.Devices.$p.ExcludeMinerName -icontains $_.Basename))
+                            )
+                        ) {
+                            $MinerOk=$false
+                            break
+                        }
+                    }
                 }
                 $MinerOk
             }

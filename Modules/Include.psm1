@@ -1760,19 +1760,25 @@ function Get-BalancesPayouts {
         [Parameter(Mandatory = $false)]
         $Payouts,
         [Parameter(Mandatory = $false)]
-        [Decimal]$Divisor = 1
+        [Decimal]$Divisor = 1,
+        [Parameter(Mandatory = $false)]
+        [String]$DateTimeField,
+        [Parameter(Mandatory = $false)]
+        [String]$AmountField,
+        [Parameter(Mandatory = $false)]
+        [String]$TxField
     )
 
     $Payouts | Foreach-Object {
-        $DateTime = if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp} elseif ($_.createdAt) {$_.createdAt}
+        $DateTime = if ($DateTimeField) {$_.$DateTimeField} elseif ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp} elseif ($_.createdAt) {$_.createdAt} elseif ($_.pay_time) {$_.pay_time}
         if ($DateTime -isnot [DateTime]) {$DateTime = "$($DateTime)"}
         if ($DateTime) {
-            $Amount = if ($_.amount -ne $null) {$_.amount} elseif ($_.value -ne $null) {$_.value} else {$null}
+            $Amount = if ($AmountField) {$_.$AmountField} elseif ($_.amount -ne $null) {$_.amount} elseif ($_.value -ne $null) {$_.value} else {$null}
             if ($Amount -ne $null) {
                 [PSCustomObject]@{
                     Date     = $(if ($DateTime -is [DateTime]) {$DateTime.ToUniversalTime()} elseif ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
                     Amount   = [Double]$Amount / $Divisor
-                    Txid     = "$(if ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash} elseif ($_.transactionId) {$_.transactionId} elseif ($_.hash) {$_.hash})"
+                    Txid     = "$(if ($TxField) {$_.$TxField} elseif ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash} elseif ($_.transactionId) {$_.transactionId} elseif ($_.hash) {$_.hash})"
                 }
             }
         }
@@ -4919,7 +4925,7 @@ function Set-AlgorithmsConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions=""}
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions="";MinerName="";ExcludeMinerName=""}
             $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1"
             $AllAlgorithms = Get-Algorithms -Values
             foreach ($Algorithm in $AllAlgorithms) {
