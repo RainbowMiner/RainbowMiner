@@ -89,16 +89,6 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $First = $True
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-
-        if ($Session.Config.Pools.Ezil.EnableTrexDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.Host -and $Pools.ZilliqaETH.Wallet) {
-            $ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
-            $ZilUser = $Pools.ZilliqaETH.User
-            $ZilPass = $Pools.ZilliqaETH.Pass
-        } else {
-            $ZilPool = ""
-            $ZilUser = ""
-            $ZilPass = ""
-        }
         
         $MinMemGB = if ($_.DAG -and -not $_.NoMemCalcCheck) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
@@ -116,6 +106,15 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     $Miner_Name   = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
                     $First = $False
+                    if ($Session.Config.Pools.Ezil.EnableTrexDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.Host -and $Pools.ZilliqaETH.Wallet -and $Pools.ZilliqaETH.EthMode -eq $Pools.$Algorithm_Norm.EthMode) {
+                        $ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
+                        $ZilUser = $Pools.ZilliqaETH.User
+                        $ZilPass = $Pools.ZilliqaETH.Pass
+                    } else {
+                        $ZilPool = ""
+                        $ZilUser = ""
+                        $ZilPass = ""
+                    }
                 }
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
                 $Pool_Protocol = if ($Algorithm_Norm_0 -in @("Octopus")) {

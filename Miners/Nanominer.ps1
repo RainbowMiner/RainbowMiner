@@ -94,14 +94,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $First = $true
             $Algorithm_Norm_0 = if ($_.Algorithm) {Get-Algorithm $_.Algorithm} else {Get-Algorithm $_.MainAlgorithm}
 
-            if ($Session.Config.Pools.Ezil.EnableNanominerDual -and $_.DualZIL -and $Pools.ZilliqaETH ) {
-                $ZilWallet = $Pools.ZilliqaETH.Wallet
-                $ZilPool   = "$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
-            } else {
-                $ZilWallet = ""
-                $ZilPool   = ""
-            }
-
             if ($Miner_Vendor -eq "CPU") {
                 $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
                 $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
@@ -119,6 +111,13 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $First = $false
+                        if ($Session.Config.Pools.Ezil.EnableNanominerDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.EthMode -eq $Pools.$Algorithm_Norm.EthMode) {
+                            $ZilWallet = $Pools.ZilliqaETH.Wallet
+                            $ZilPool   = "$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
+                        } else {
+                            $ZilWallet = ""
+                            $ZilPool   = ""
+                        }
                     }
 					$Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
                     $Wallet    = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
