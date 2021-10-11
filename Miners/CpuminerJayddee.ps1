@@ -11,16 +11,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
-$Version = "3.18.0"
+$Version = "3.18.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $Path_AVX = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.18.0-jayddee/cpuminer-opt-3.18.0-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.18.1-jayddee/cpuminer-opt-3.18.1-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes) {'avx512-sha-vaes'}elseif($f.avx512 -and $f.sha) {'avx512-sha'}elseif($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'zen3'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Path_AVX = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.18.0-jayddee/cpuminer-opt-3.18.0-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.18.1-jayddee/cpuminer-opt-3.18.1-windows.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
@@ -54,11 +52,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""} #pluck
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = "--param-n 2048 --param-r 32 --param-key `"Now I am become Death, the destroyer of worlds`""; Algorithm = "yespower-b2b"} #power2b
-    [PSCustomObject]@{MainAlgorithm = "scryptn2"; Params = "--param-n 1048576"; Algorithm = "scrypt"; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #ScryptN2
-    #[PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #ScryptN11, CpuminerMulti faster
-    [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #Scrypt8k
-    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #ScryptJane16
-    [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""; Path = if ($Global:GlobalCPUInfo.IsRyzen) {$Path_AVX}} #scryptjane:nf
+    [PSCustomObject]@{MainAlgorithm = "scryptn2"; Params = "--param-n 1048576"; Algorithm = "scrypt"} #ScryptN2
+    [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""} #ScryptN11, CpuminerMulti faster
+    [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; Params = ""} #Scrypt8k
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""} #ScryptJane16
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #sha256q
     [PSCustomObject]@{MainAlgorithm = "sha3d"; Params = ""} #sha3d, BSHA3
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #shavite3
@@ -69,6 +67,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #x12
     [PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
     #[PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16r
     #[PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
     #[PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
     [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rv2
@@ -131,7 +130,6 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""} #x13
     #[PSCustomObject]@{MainAlgorithm = "x13sm3"; Params = ""} #x13sm3
     #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""} #x14
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""} #x16r
     #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""} #X16s
     #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
 )
