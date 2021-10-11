@@ -81,8 +81,9 @@ function Start-Core {
         [hashtable]$Global:MinerInfo    = @{}
 
         [System.Collections.ArrayList]$Global:ActiveMiners   = @()
-        $Global:WatchdogTimers = @()
-        $Global:CrashCounter = @()
+        $Global:WatchdogTimers  = @()
+        $Global:CrashCounter    = @()
+        $Global:AlgorithmMinerName = @()
 
         $Global:AllPools = $null
 
@@ -980,6 +981,9 @@ function Invoke-Core {
                             $Session.Config.Algorithms.$a."$($_.Name)" = $_.Value
                         } else {
                             $Session.Config.Algorithms.$a | Add-Member "$($_.Name)" $_.Value -Force
+                        }
+                        if ($Session.Config.Algorithms.$a.MinerName.Count -or $Session.Config.Algorithms.$a.ExcludeMinerName.Count) {
+                            $Global:AlgorithmMinerName += $a
                         }
                     }
                 }
@@ -2058,13 +2062,17 @@ function Invoke-Core {
             Where-Object {
                 $MinerOk = $true
                 $BaseAlgo = $_.BaseAlgorithm -split '-'
-                foreach ($p in @($BaseAlgo)) {
-                    if (
-                            ($Session.Config.Algorithms.$p.MinerName -and ($Session.Config.Algorithms.$p.MinerName -notcontains $_.BaseName)) -or
-                            ($Session.Config.Algorithms.$p.ExcludeMinerName -and ($Session.Config.Algorithms.$p.ExcludeMinerName -contains $_.BaseName))
-                    ) {
-                        $MinerOk = $false
-                        break
+                if ($Global:AlgorithmMinerName.Count) {
+                    foreach ($p in @($BaseAlgo)) {
+                        if (
+                                ($Global:AlgorithmMinerName -contains $p) -and (
+                                    ($Session.Config.Algorithms.$p.MinerName.Count -and ($Session.Config.Algorithms.$p.MinerName -notcontains $_.BaseName)) -or
+                                    ($Session.Config.Algorithms.$p.ExcludeMinerName.Count -and ($Session.Config.Algorithms.$p.ExcludeMinerName -contains $_.BaseName))
+                                )
+                        ) {
+                            $MinerOk = $false
+                            break
+                        }
                     }
                 }
                 if ($MinerOk) {
