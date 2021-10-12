@@ -6130,7 +6130,7 @@ Param(
                     }
                 } 
                 if ($body -isnot [hashtable]) {
-                    if ($body.Length -gt 30000) {
+                    if (($body.Length + ($body -replace '[^"]').Length) -gt 30000) {
                         $TmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "$([System.Guid]::NewGuid()).txt"
                         Set-Content -Value $body -Path $TmpFile
                         $body = "@$($TmpFile)"
