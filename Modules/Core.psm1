@@ -1732,7 +1732,7 @@ function Invoke-Core {
                 $SelectedPoolNames.Add($_) > $null
                 Remove-Variable "Pool_Parameters"
             }
-            $TimerPools[$_] = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
+            $TimerPools[$_] = [Math]::Round($StopWatch.Elapsed.TotalSeconds,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
         }

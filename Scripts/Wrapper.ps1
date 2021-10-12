@@ -12,7 +12,7 @@ $StopWatch = [System.Diagnostics.Stopwatch]::New()
 $StopWatch.Restart()
 do {
     Start-Sleep -Milliseconds 500
-} while (-not (Test-Path $LogPath) -and $StopWatch.ElapsedMilliseconds -lt 30000)
+} while (-not (Test-Path $LogPath) -and $StopWatch.Elapsed.TotalSeconds -lt 30)
 $StopWatch.Stop()
 
 if (Test-Path $LogPath) {
