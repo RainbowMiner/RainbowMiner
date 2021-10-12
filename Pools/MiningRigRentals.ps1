@@ -786,9 +786,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
 
                             $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
-                            $RigPower   = 0
-                            $RigSpeed   = 0
-                            $RigRevenue = 0
+                            $RigPower     = 0
+                            $RigSpeed     = 0
+                            $RigRevenue   = 0
+                            $RigMaxRevenueFactor = 10
 
                             $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
 
@@ -804,17 +805,22 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                     $RigPowerAdd   = 0
                                     $RigSpeedAdd   = 0
                                     $RigRevenueAdd = 0
+                                    $RigIsMRRPool  = $false
                                     $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and "$($_.Algorithm[0])" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)}).Foreach({
                                         $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
                                         if ($ThisSpeed -gt $RigSpeedAdd) {
+                                            $RigIsMRRPool  = $_.Pool -contains "MiningRigRentals"
+                                            $ThisProfit    = if ($RigIsMRRPool) {$SuggestedPrice * $ThisSpeed} else {$_.Profit}
                                             $RigPowerAdd   = $_.PowerDraw
                                             $RigSpeedAdd   = $ThisSpeed
-                                            $RigRevenueAdd = $(if ($_.Pool -contains "MiningRigRentals") {$SuggestedPrice * $ThisSpeed} else {$_.Profit}) + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                            $RigRevenueAdd = $ThisProfit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+
                                         }
                                     })
                                     $RigPower   += $RigPowerAdd
                                     $RigSpeed   += $RigSpeedAdd
                                     $RigRevenue += $RigRevenueAdd
+                                    if ($RigIsMRRPool) {$RigMaxRevenueFactor = 20}
                                 }
                                 $RigModelsKey = "$($RigModels -join "-")"
                                 if ($RigSpeed -gt 0) {
@@ -848,7 +854,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
                                 $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
        
-                                if ($IsHandleRig -or (($RigRevenue -lt 5*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
+                                if ($IsHandleRig -or (($RigRevenue -lt $RigMaxRevenueFactor*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
 
                                     #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
