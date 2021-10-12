@@ -4404,7 +4404,8 @@ function Invoke-NvidiaSettings {
             Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
         }
     } elseif ($IsWindows -and $NvCmd) {
-        & ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd
+        (Start-Process ".\Includes\NvidiaInspector\nvidiaInspector.exe" -ArgumentList "$($NvCmd -join " ")" -PassThru).WaitForExit(10) > $null
+        #& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd
     }
 }
 
