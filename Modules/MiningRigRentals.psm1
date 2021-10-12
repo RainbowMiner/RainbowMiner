@@ -168,10 +168,16 @@ param(
 
     try {
         if ($Session.MRRCacheLastCleanup -eq $null -or $Session.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            if ($RemoveKeys = $Session.MRRCache.Keys | Where-Object {$_ -ne $JobKey -and $Session.MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Session.MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
-                $RemoveKeys | Foreach-Object {$Session.MRRCache[$_] = $null; $Session.MRRCache.Remove($_)}
-            }
             $Session.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
+            $CacheKeys = $Session.MRRCache.Keys
+            if ($RemoveKeys = $CacheKeys | Where-Object {$_ -ne $JobKey -and $Session.MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Session.MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
+                $RemoveKeys | Foreach-Object {
+                    if ($Session.MRRCache.ContainsKey($_)) {
+                        $Session.MRRCache[$_] = $null
+                        $Session.MRRCache.Remove($_)
+                    }
+                }
+            }
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
