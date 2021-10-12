@@ -86,6 +86,8 @@ function Start-Core {
         $Global:CrashCounter    = @()
         $Global:AlgorithmMinerName = @()
 
+        $Global:PauseMiners = [PauseMiners]::new()
+
         $Global:AllPools = $null
 
         #Setup session variables
@@ -119,7 +121,6 @@ function Start-Core {
 
         $Session.SkipSwitchingPrevention = $false
         $Session.StartDownloader = $false
-        $Session.PauseMiners = [PauseMiners]::new()
         $Session.RestartMiners = $false
         $Session.Restart = $false
         $Session.LockMiners = [PSCustomObject]@{Locked=$false;Enabled=$false;Pools=@()}
@@ -539,7 +540,7 @@ function Start-Core {
         Write-Log -Level Error "Error writing version: $($_.Exception.Message)"
     }
 
-    $Session.PauseMiners.Set([PauseStatus]::ByError,$PauseByError)
+    $Global:PauseMiners.Set([PauseStatus]::ByError,$PauseByError)
 
     #Remove trigger files
     if (Test-Path ".\stopp.txt")  {Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore}
@@ -880,6 +881,10 @@ function Invoke-Core {
         $API.MachineName = $Session.MachineName
     }
 
+    $API.PauseMiners.Pause       = $Global:PauseMiners.Test()
+    $API.PauseMiners.PauseIA     = $Global:PauseMiners.TestIA()
+    $API.PauseMiners.PauseIAOnly = $Global:PauseMiners.TestIAOnly()
+
     $API.CmdKey = ''
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {$Session.SysInfo = Get-SysInfo}
@@ -927,7 +932,7 @@ function Invoke-Core {
                             }) -Depth 10
     }
 
-    if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Session.PauseMiners.Test())) {$Session.PauseMiners.SetIA()}
+    if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Global:PauseMiners.Test())) {$Global:PauseMiners.SetIA()}
 
     #Update defaults for all subfolders, if in Server-mode
     if (-not $Session.IsDonationRun -and $Session.Config.RunMode -eq "Server") {
@@ -1278,7 +1283,7 @@ function Invoke-Core {
     }
 
     #Check for diverse per-mining events
-    $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
+    $Global:PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
 
     #Get PowerPrice and Scheduler events
     $PauseByScheduler        = $false
@@ -1291,7 +1296,7 @@ function Invoke-Core {
     $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$PauseByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
     $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$PauseByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$Scheduler = $_})
 
-    $Session.PauseMiners.Set([PauseStatus]::ByScheduler,$PauseByScheduler)
+    $Global:PauseMiners.Set([PauseStatus]::ByScheduler,$PauseByScheduler)
 
     if ($Scheduler) {
         Write-Log -Level Info "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To)"
@@ -1307,7 +1312,7 @@ function Invoke-Core {
 
     #Versioncheck for automatic updates
     $Session.AutoUpdate = $false
-    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Session.PauseMiners.Test([PauseStatus]::ByActivity) -and (-not $Session.Config.EnableUpdateWhenScheduled -or $Scheduler.EnableUpdate) -and ($Session.Config.EnableUpdateDuringPause -or -not $Session.PauseMiners.Test())) {
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Global:PauseMiners.Test([PauseStatus]::ByActivity) -and (-not $Session.Config.EnableUpdateWhenScheduled -or $Scheduler.EnableUpdate) -and ($Session.Config.EnableUpdateDuringPause -or -not $Global:PauseMiners.Test())) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
         if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
             $Last_Autoupdate = [PSCustomObject]@{
@@ -1379,11 +1384,11 @@ function Invoke-Core {
         $DonateDelayHours /= 2
     }
 
-    if (-not $Session.LastDonated -or $Session.PauseMiners.Test()) {
+    if (-not $Session.LastDonated -or $Global:PauseMiners.Test()) {
         if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
         $ShiftDonationHours = if ($Session.RoundCounter -eq 0) {(Get-Random -Minimum 100 -Maximum 200)/100} else {1}
         $ShiftDonationRun = $Session.Timer.AddHours($ShiftDonationHours - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners.Test()) {
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Global:PauseMiners.Test()) {
             $Session.IsDonationRun = $false
             $Session.LastDonated   = Set-LastDrun $ShiftDonationRun
         }
@@ -1568,7 +1573,7 @@ function Invoke-Core {
     $Global:DeviceCache.ConfigFullComboModelNames = @($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name).Where({$_})
 
     if (-not $Global:DeviceCache.Devices) {
-        $Session.PauseMiners.Set([PauseStatus]::ByError)
+        $Global:PauseMiners.Set([PauseStatus]::ByError)
     }
 
     $API.AllDevices = $Global:DeviceCache.AllDevices
@@ -2864,9 +2869,9 @@ function Invoke-Core {
             }
         }
 
-        if ($Session.PauseMiners.Test([PauseStatus]::ByScheduler) -and (($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner} | Measure-Object).Count -or $Session.IsExclusiveRun)) {$Session.PauseMiner.Reset([PauseStatus]::ByScheduler)}
+        if ($Global:PauseMiners.Test([PauseStatus]::ByScheduler) -and (($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner} | Measure-Object).Count -or $Session.IsExclusiveRun)) {$Global:PauseMiners.Reset([PauseStatus]::ByScheduler)}
 
-        if (-not $Session.PauseMiners.Test() -and -not $Session.AutoUpdate -and $Session.Profitable) {
+        if (-not $Global:PauseMiners.Test() -and -not $Session.AutoUpdate -and $Session.Profitable) {
             $MinersRunning = $true
             $BestMiners_Combo | ForEach-Object {$_.Best = $true}
         }
@@ -3118,24 +3123,24 @@ function Invoke-Core {
         Write-Host " "
         $Session.RestartMiners = $false
     }
-    if ($Session.PauseMiners.Test([PauseStatus]::ByScheduler)) {
+    if ($Global:PauseMiners.Test([PauseStatus]::ByScheduler)) {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "PAUSED BY SCHEDULER" -ForegroundColor Red
         Write-Host " (edit scheduler.config.txt to change)"
         Write-Host " "
-    } elseif ($Session.PauseMiners.Test([PauseStatus]::ByActivity)) {
+    } elseif ($Global:PauseMiners.Test([PauseStatus]::ByActivity)) {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "PAUSED BY ACTIVITY" -ForegroundColor Red
         Write-Host " (edit config.txt to change)"
         Write-Host " "
-    } elseif ($Session.PauseMiners.Test([PauseStatus]::ByBattery)) {
+    } elseif ($Global:PauseMiners.Test([PauseStatus]::ByBattery)) {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "PAUSED BY BATTERY" -ForegroundColor Red
         Write-Host " (edit config.txt to change)"
         Write-Host " "
-    } elseif ($Session.PauseMiners.Test()) {
+    } elseif ($Global:PauseMiners.Test()) {
         Write-Host -NoNewline "Status: "
-        Write-Host -NoNewLine "PAUSED $($Session.PauseMiners.Status -join ",")" -ForegroundColor Red
+        Write-Host -NoNewLine "PAUSED $($Global:PauseMiners.Status -join ",")" -ForegroundColor Red
         Write-Host " (press P to resume)"
         Write-Host " "
     } elseif (-not $Session.Profitable) {
@@ -3316,7 +3321,7 @@ function Invoke-Core {
                 Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) starts as soon as exclusive mining ends" -ForegroundColor Yellow
             } elseif ($IsExclusiveRun) {
                 Write-Host "Exclusive run finished. Automatic update to v$($ConfirmedVersion.RemoteVersion) starts after the next round" -ForegroundColor Yellow
-            } elseif ($Session.PauseMiners.Test()) {
+            } elseif ($Global:PauseMiners.Test()) {
                 Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) starts as soon as mining op will be resumed" -ForegroundColor Yellow
             } else {
                 Write-Host "Automatic update failed! Please exit RainbowMiner and start Updater.bat manually to proceed" -ForegroundColor Yellow
@@ -3384,7 +3389,7 @@ function Invoke-Core {
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {$cmdMenu.Insert(0,"[U]pdate RainbowMiner") > $null}
     if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun){$cmdMenu.Add("[C]onfiguration") > $null}
     $cmdMenu.Add("[V]erbose$(if ($Session.Config.UIstyle -eq "full"){" off"})") > $null
-    if (-not $Session.PauseMiners.Test() -or $Session.PauseMiners.TestIA()) {$cmdMenu.Add("[P]ause$(if ($Session.PauseMiners.Test()){" off"})") > $null}
+    if (-not $Global:PauseMiners.Test() -or $Global:PauseMiners.TestIA()) {$cmdMenu.Add("[P]ause$(if ($Global:PauseMiners.Test()){" off"})") > $null}
     if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and -not $Session.IsServerDonationRun) {$cmdMenu.Add("$(if ($LockMiners){"Un[l]ock"} else {"[L]ock"})") > $null}
     Write-Host "Waiting $($WaitSeconds)s until next run: $($cmdMenu -join ", ")"
 
@@ -3435,29 +3440,32 @@ function Invoke-Core {
             }
         }
 
-        $CurrentPause = $Session.PauseMiners.Test()
+        $CurrentPause = $Global:PauseMiners.Test()
 
         if ($Session.Config.EnablePauseOnActivity -and $Session.RoundCounter -gt 0) {
             if ($ActivityTimer = Get-LastUserInput) {
-                if ($Session.PauseMiners.Test([PauseStatus]::ByActivity)) {
+                if ($Global:PauseMiners.Test([PauseStatus]::ByActivity)) {
                     if ($Session.Config.ResumeOnInactivitySeconds -and $ActivityTimer.IdleTime.TotalSeconds -ge $Session.Config.ResumeOnInactivitySeconds) {
-                        $Session.PauseMiners.Reset([PauseStatus]::ByActivity)
+                        $Global:PauseMiners.Reset([PauseStatus]::ByActivity)
                     }
                 } elseif ($ActivityTimer.IdleTime -lt ((Get-Date).ToUniversalTime() - $Session.RoundStart)) {
-                    $Session.PauseMiners.Set([PauseStatus]::ByActivity)
+                    $Global:PauseMiners.Set([PauseStatus]::ByActivity)
                 }
             } else {
-                $Session.PauseMiners.Reset([PauseStatus]::ByActivity)
+                $Global:PauseMiners.Reset([PauseStatus]::ByActivity)
             }
         } else {
-            $Session.PauseMiners.Reset([PauseStatus]::ByActivity)
+            $Global:PauseMiners.Reset([PauseStatus]::ByActivity)
         }
 
-        $Session.PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
+        $Global:PauseMiners.Set([PauseStatus]::ByBattery,$Session.Config.EnablePauseOnBattery -and (Test-IsOnBattery))
 
-        if ($CurrentPause -ne $Session.PauseMiners.Test()) {
+        if ($CurrentPause -ne $Global:PauseMiners.Test()) {
             $keyPressed = $true
-            Write-Log "Mining will be $(if ($Session.PauseMiners.Test()) {"PAUSED $($Session.PauseMiners.Status -join ",")"} else {"UNPAUSED"})"
+            Write-Log "Mining will be $(if ($Global:PauseMiners.Test()) {"PAUSED $($Global:PauseMiners.Status -join ",")"} else {"UNPAUSED"})"
+            $API.PauseMiners.Pause       = $Global:PauseMiners.Test()
+            $API.PauseMiners.PauseIA     = $Global:PauseMiners.TestIA()
+            $API.PauseMiners.PauseIAOnly = $Global:PauseMiners.TestIAOnly()
         }
  
         $keyPressedValue =  if ((Test-Path ".\stopp.txt") -or $API.Stop) {"X"}
@@ -3522,8 +3530,11 @@ function Invoke-Core {
                 }
                 "P" {
                     $API.Pause = $false
-                    if ($Session.PauseMiners.TestIA()) {$Session.PauseMiners.ResetIA()} else {$Session.PauseMiners.SetIA()}
-                    Write-Host -NoNewline "[P] pressed - mining will be $(if ($Session.PauseMiners.Test()) {"PAUSED $($Session.PauseMiners.Status -join ",")"} else {"UNPAUSED"})"
+                    if ($Global:PauseMiners.TestIA()) {$Global:PauseMiners.ResetIA()} else {$Global:PauseMiners.SetIA()}
+                    Write-Host -NoNewline "[P] pressed - mining will be $(if ($Global:PauseMiners.Test()) {"PAUSED $($Global:PauseMiners.Status -join ",")"} else {"UNPAUSED"})"
+                    $API.PauseMiners.Pause       = $Global:PauseMiners.Test()
+                    $API.PauseMiners.PauseIA     = $Global:PauseMiners.TestIA()
+                    $API.PauseMiners.PauseIAOnly = $Global:PauseMiners.TestIAOnly()
                     $keyPressed = $true
                     Break
                 }
@@ -4071,7 +4082,7 @@ function Invoke-ReportMinerStatus {
     }
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
-    $Status = if ($Session.PauseMiners.Test()) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
+    $Status = if ($Global:PauseMiners.Test()) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
     $ReportRates = [PSCustomObject]@{}
     $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 

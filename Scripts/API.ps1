@@ -10,7 +10,6 @@ Import-Module ".\Modules\Include.psm1"
 Import-Module ".\Modules\MiningRigRentals.psm1"
 Import-Module ".\Modules\APIhelper.psm1"
 Import-Module ".\Modules\MinerAPIs.psm1"
-Import-Module ".\Modules\PauseMiners.psm1"
 
 $BasePath = Join-Path $PWD "web"
 
@@ -1079,7 +1078,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/pause" {
             if ($Parameters.action -in @("set","reset","pause","unpause")) {
-                $API.Pause = ($Parameters.action -in @("set","pause")) -ne $Session.PauseMiners.TestIA()
+                $API.Pause = ($Parameters.action -in @("set","pause")) -ne $API.PauseMiners.PauseIA
             } else {
                 $API.Pause = $true
             }
@@ -1117,7 +1116,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/status" {
-            $Data = [PSCustomObject]@{Pause=$Session.PauseMiners.Test();PauseIAOnly=$Session.PauseMiners.TestIAOnly();LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json -Depth 10
+            $Data = [PSCustomObject]@{Pause=$API.PauseMiners.Pause;PauseIAOnly=$API.PauseMiners.PauseIAOnly;LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json -Depth 10
             Break
         }
         "/clients" {

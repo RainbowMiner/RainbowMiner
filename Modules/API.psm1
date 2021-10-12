@@ -28,6 +28,7 @@
     $API.LockConfig  = $Session.Config.APIlockConfig
     $API.MaxLoginAttempts = $Session.Config.APImaxLoginAttemps
     $API.BlockLoginAttemptsTime = ConvertFrom-Time $Session.Config.APIblockLoginAttemptsTime
+    $API.PauseMiners = [PSCustomObject]@{Pause = $false;PauseIA = $false;PauseIAOnly = $false}
 
     Set-APICredentials
 
