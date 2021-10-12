@@ -49,7 +49,7 @@ $Pool_Request.param | Where-Object {$Pool_Currency = if ($CoinXlat[$_.coin]) {$C
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_BlocksRequest  = [PSCustomObject]@{}
 

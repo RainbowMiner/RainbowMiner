@@ -38,7 +38,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symb
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets.$Pool_Currency
-    $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Stratum        = if ($_.info.links.stratums) {"randomx"} else {"stratum-%region%"}
 

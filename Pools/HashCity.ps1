@@ -81,7 +81,7 @@ $Pools_Data | Where-Object {[double]$Pools_Request.pools."$($_.symbol)".speed_po
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Hashrate = ConvertFrom-Hash "$($Pools_Request.pools."$($_.symbol)".speed_pool)$($Pools_Request.pools."$($_.symbol)".speed_pool_type)"
 

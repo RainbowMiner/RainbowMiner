@@ -26,7 +26,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
     $Pool_Coin = Get-Coin $_.coin
     $Pool_Rpc  = $_.coin.ToLower()
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $ok = $true
     if (-not $InfoOnly) {

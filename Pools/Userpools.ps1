@@ -26,7 +26,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
     $Pool_Coin     = Get-Coin $Pool_Params["CoinSymbol"]
     $Pool_User     = "$(if ($_.User) {$_.User} else {"`$Wallet.`$WorkerName"})"
     $Pool_Pass     = "$(if ($_.Pass) {$_.Pass} else {"x"})"
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Algorithm_Norm = Get-Algorithm "$(if ($_.Algorithm) {$_.Algorithm} else {$Pool_Coin.Algo})"
 

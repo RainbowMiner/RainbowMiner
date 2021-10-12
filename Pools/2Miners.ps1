@@ -74,7 +74,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
     $Pool_Fee = $_.fee
     $Pool_Divisor = $_.divisor
     $Pool_FixBigInt = $Pool_Divisor -ge 1e18
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -eq "KawPOW") {"stratum"} else {$null}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
     $Pool_SSL = $_.ssl
 
     if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
