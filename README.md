@@ -899,6 +899,7 @@ For Server (Runmode=server) setup:
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
 - **EnableOCLinuxForcePState** = set to 1, to force all GPU into their workload powerstate to avoid crashes due to P2-P0 switching [default=1]
 - **EnableOCLinuxSetAllPStates** = set to 1, to set mem/core clock offsets to all PStates, instead to the highest, only [default=0]
+- **OCResetInterval** = set the interval to reset the overclocking settings of running miners, in seconds (0 to disable) [default=0]
 - **MaxActivityDays** = set max. days for localhost's Activity history [default=2]
 - **MSIApath** = absolute windows path to MSI Afterburner executable [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
 - **MSIAprofile** = default MSI Afterburner profile (1-5), set to 0 to disable [default=2]
