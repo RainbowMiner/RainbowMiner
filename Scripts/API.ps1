@@ -10,6 +10,7 @@ Import-Module ".\Modules\Include.psm1"
 Import-Module ".\Modules\MiningRigRentals.psm1"
 Import-Module ".\Modules\APIhelper.psm1"
 Import-Module ".\Modules\MinerAPIs.psm1"
+Import-Module ".\Modules\PauseMiners.psm1"
 
 $BasePath = Join-Path $PWD "web"
 

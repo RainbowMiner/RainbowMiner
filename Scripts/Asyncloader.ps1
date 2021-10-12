@@ -8,6 +8,7 @@ $ProgressPreference = "SilentlyContinue"
 
 Import-Module ".\Modules\Include.psm1"
 Import-Module ".\Modules\MiningRigRentals.psm1"
+Import-Module ".\Modules\PauseMiners.psm1"
 
 Set-OsFlags
 

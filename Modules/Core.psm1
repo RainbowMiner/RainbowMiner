@@ -1,4 +1,5 @@
 ﻿using module .\MinerAPIs.psm1
+using module .\PauseMiners.psm1
 
 ##
 ## Core functions
