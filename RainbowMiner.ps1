@@ -352,7 +352,7 @@ $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
 
-$Session.SupportedPSVersion = "7.1.4"
+$Session.SupportedPSVersion = "7.1.5"
 
 $Session.OpenCLPlatformSorting = @()
 
