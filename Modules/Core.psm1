@@ -1259,6 +1259,8 @@ function Invoke-Core {
             $Pool_MaxAllowedLuck        = "$($Session.Config.Pools.$p.MaxAllowedLuck -replace "[^\d\.]+")"
             $Pool_MaxTimeSinceLastBlock = "$($Session.Config.Pools.$p.MaxTimeSinceLastBlock -replace "[^\d\.mhdw]+")"
             $Pool_BalancesKeepAlive     = "$($Session.Config.Pools.$p.BalancesKeepAlive -replace "[^\d]+")"
+            $Pool_MaxTimeToFind         = "$($Session.Config.Pools.$p.MaxTimeToFind -replace "[^\d\.mhdw]+")"            
+            $Pool_MaxTimeToFind         = if ($Pool_MaxTimeToFind -ne "") {ConvertFrom-Time $Pool_MaxTimeToFind} else {$null}
 
             ([ordered]@{
                 DataWindow            = (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)
@@ -1269,9 +1271,11 @@ function Invoke-Core {
                 StatAverageStable     = (Get-StatAverage $Session.Config.Pools.$p.StatAverageStable -Default $Session.Config.PoolStatAverageStable)
                 MaxAllowedLuck        = $(if ($Pool_MaxAllowedLuck) {[Math]::Max([double]$Pool_MaxAllowedLuck,0.0)} else {$null})
                 MaxTimeSinceLastBlock = $(if ($Pool_MaxTimeSinceLastBlock) {ConvertFrom-Time $Pool_MaxTimeSinceLastBlock} else {$null})
+                MaxTimeToFind         = $Pool_MaxTimeToFind
                 Region                = $(if ($Session.Config.Pools.$p.Region) {Get-Region $Session.Config.Pools.$p.Region} else {$null})
                 SSL                   = $(if ("$($Session.Config.Pools.$p.SSL)" -ne '') {Get-Yes $Session.Config.Pools.$p.SSL} else {$Session.Config.SSL})
                 BalancesKeepAlive     = $(if ($Pool_BalancesKeepAlive) {ConvertFrom-Time $Pool_BalancesKeepAlive} else {$null})
+                MinBLKRate            = $(if ($Pool_MaxTimeToFind) {86400/$Pool_MaxTimeToFind} else {0})
             }).GetEnumerator() | Foreach-Object {
                 if ([bool]$Session.Config.Pools.$p.PSObject.Properties["$($_.Name)"]) {
                     $Session.Config.Pools.$p."$($_.Name)" = $_.Value
@@ -1835,7 +1839,7 @@ function Invoke-Core {
         $Pool_CheckForUnprofitableAlgo = -not $Session.Config.DisableUnprofitableAlgolist -and -not ($_.Exclusive -and -not $_.Idle)
         if ($_.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($_.CoinSymbol)")}
         ($ServerPoolNames.Count -and $ServerPoolNames.Contains($Pool_Name)) -or (
-            -not (  (-not $Session.Config.Pools.$Pool_Name) -or
+            -not ( (-not $Session.Config.Pools.$Pool_Name) -or
                 ($Session.Config.PoolName.Count -and $Session.Config.PoolName -inotcontains $Pool_Name) -or
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
                 ($Test_Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
@@ -1859,6 +1863,7 @@ function Invoke-Core {
                     ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
                     ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
                     ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinBLKRate -and ($_.BLK -lt $Session.Config.Algorithms."$($_.Algorithm)".MinBLKRate)) -or
+                    ($_.BLK -ne $null -and $Session.Config.Pools.$Pool_Name.MinBLKRate -and ($_.BLK -lt $Session.Config.Pools.$Pool_Name.MinBLKRate)) -or
                     ($_.CoinSymbol -and $_.Hashrate -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate -and $_.Hashrate -lt $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate) -or
                     ($_.CoinSymbol -and $_.Workers -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers -and $_.Workers -lt $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers) -or
                     ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate -and ($_.BLK -lt $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate))
@@ -1980,15 +1985,6 @@ function Invoke-Core {
                         if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
                             $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm0)-$($_.CoinSymbol)"],$HashrateWeightStrength)) * $HashrateWeight
                         }
-                        #if ($_.TSL -ne $null -and $_.BLK -ne $null -and $Session.Config.MaxAllowedLuck -gt 0) {
-                        #    $Luck = $_.TSL / $(if ($_.BLK -gt 0) {86400/$_.BLK} else {86400})
-                        #    if ($Luck -gt $Session.Config.MaxAllowedLuck) {
-                        #        $Price_Cmp /= $Luck - $Session.Config.MaxAllowedLuck + 1
-                        #    }
-                        #}
-                        #if ($_.TSL -ne $null -and $Session.Config.MaxTimeSinceLastBlock -gt 0 -and $_.TSL -gt $Session.Config.MaxTimeSinceLastBlock) {
-                        #    $Price_Cmp /= ($_.TSL - $Session.Config.MaxTimeSinceLastBlock)/3600 + 1
-                        #}
                     }
                 }
                 $Pools_PriceCmp[$Pool_Ix] = $Price_Cmp

@@ -1608,7 +1608,7 @@ function Get-PoolsContent {
                         if ($c.BLK -ne $null -and $c.BLK -le 144) {
                             $Pool_MaxAllowedLuck = if ($Parameters.MaxAllowedLuck -ne $null) {$Parameters.MaxAllowedLuck} else {$Session.Config.MaxAllowedLuck}
                             if ($Pool_MaxAllowedLuck -gt 0) {
-                                $Luck = $c.TSL / $(if ($c.BLK -gt 0) {86400/$c.BLK} else {86400})
+                                $Luck = if ($c.BLK -gt 0) {$c.TSL * $c.BLK / 86400} else {1}
                                 if ($Luck -gt $Pool_MaxAllowedLuck) {
                                     $Penalty += [Math]::Exp([Math]::Min($Luck - $Pool_MaxAllowedLuck,0.385)*12)-1
                                 }
@@ -1619,6 +1619,10 @@ function Get-PoolsContent {
                         if ($Pool_MaxTimeSinceLastBlock -gt 0 -and $c.TSL -gt $Pool_MaxTimeSinceLastBlock) {
                             $Penalty += [Math]::Exp([Math]::Min($c.TSL - $Pool_MaxTimeSinceLastBlock,554)/120)-1
                         }
+                    }
+                    if (-not $c.SoloMining -and $c.BLK -ne $null -and $Parameters.MaxTimeToFind) {
+                        $TTF = 
+                        $Penalty += [Math]::Exp([Math]::
                     }
                 }
 
@@ -5286,7 +5290,7 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region="";SSL="";BalancesKeepAlive=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";MaxTimeToFind="";Region="";SSL="";BalancesKeepAlive=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools")})
             $Userpools = @()

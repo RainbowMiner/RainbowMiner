@@ -93,7 +93,7 @@ function Start-Setup {
         $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions=""}
         $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
         $MRRDefault        = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
-        $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";Region="";SSL="";BalancesKeepAlive=""}
+        $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";MaxTimeToFind="";Region="";SSL="";BalancesKeepAlive=""}
         $UserpoolsDefault  = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
 
         $Controls = @("cancel","exit","back","save","done","<")
@@ -2304,7 +2304,7 @@ function Start-Setup {
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
-                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage","stataveragestable","maxmarginoferror","switchinghysteresis","maxallowedluck","maxtimesincelastblock","region","ssl","balanceskeepalive")) > $null
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage","stataveragestable","maxmarginoferror","switchinghysteresis","maxallowedluck","maxtimesincelastblock","maxtimetofind","region","ssl","balanceskeepalive")) > $null
                         if ($IsYiimpPool) {$PoolSetupSteps.AddRange(@("datawindow")) > $null}
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0 -and $Pool_Name -notmatch "miningpoolhub") {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
@@ -2505,6 +2505,10 @@ function Start-Setup {
                                     "maxtimesincelastblock" {
                                         $PoolConfig.MaxTimeSinceLastBlock = Read-HostString -Prompt "Enter allowed maximum time since last found block (units allowed, e.h. 1h=one hour, default unit is s=seconds, $(if ($PoolConfig.MaxTimeSinceLastBlock) {"enter 'clear'"} else {"leave empty"}) to use value in config.txt)" -Default $PoolConfig.MaxTimeSinceLastBlock -Characters "0-9smhdw`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $PoolConfig.MaxTimeSinceLastBlock = "$($PoolConfig.MaxTimeSinceLastBlock -replace "([A-Z])[A-Z]+","`$1")"
+                                    }
+                                    "maxtimetofind" {
+                                        $PoolConfig.MaxTimeToFind = Read-HostString -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds, $(if ($PoolConfig.MaxTimeToFind) {"enter 'clear'"} else {"leave empty"})" -Default $PoolConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.MaxTimeToFind = "$($PoolConfig.MaxTimeToFind -replace "([A-Z])[A-Z]+","`$1")"
                                     }
                                     "maxmarginoferror" {
                                         $PoolConfig.MaxMarginOfError = Read-HostDouble -Prompt "Enter the maximum allowed fluctuation of pool prices in percent" -Default $PoolConfig.MaxMarginOfError -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
