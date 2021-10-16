@@ -2271,7 +2271,7 @@ function Get-SubProcessIds {
 
     $WaitCount = 0
     $ProcessFound = 0
-    $ArgumentList = "*$($ArgumentList.Replace("'","*").Replace('"',"*"))*" -replace "\*+","*"
+    $ArgumentList = ("*$($ArgumentList.Replace("*","#!star!#").Replace("'","*").Replace('"',"*") -replace '([\[\]\?\`])','`$1')*" -replace "\*+","*").Replace("#!star!#",'`*')
     do {
         Start-Sleep -Milliseconds 100
         Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $_.CommandLine -like $ArgumentList -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
