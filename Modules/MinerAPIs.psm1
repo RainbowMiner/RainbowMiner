@@ -245,11 +245,10 @@ class Miner {
 
     hidden StartMiningPostProcess() { }
 
-    hidden StopMiningPreProcess() {
-        $this.ResetOCprofile(500) #reset all overclocking
-    }
+    hidden StopMiningPreProcess() { }
 
     hidden StopMiningPostProcess() {
+        $this.ResetOCprofile(500) #reset all overclocking
         $this.New = $false
     }
 
