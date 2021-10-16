@@ -1620,10 +1620,6 @@ function Get-PoolsContent {
                             $Penalty += [Math]::Exp([Math]::Min($c.TSL - $Pool_MaxTimeSinceLastBlock,554)/120)-1
                         }
                     }
-                    if (-not $c.SoloMining -and $c.BLK -ne $null -and $Parameters.MaxTimeToFind) {
-                        $TTF = 
-                        $Penalty += [Math]::Exp([Math]::
-                    }
                 }
 
                 $Pool_Factor = [Math]::Max(1-$Penalty/100,0)
