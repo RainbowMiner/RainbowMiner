@@ -46,7 +46,7 @@ try {
         } elseif ($IsLinux) {
             $DownloadURI = $Request.assets | Where-Object Name -EQ "$($Name)V$($RemoteVersion)_linux.zip" | Select-Object -ExpandProperty browser_download_url
         }
-        if (-not $Uri) {
+        if (-not $DownloadURI) {
             $DownloadURI = $Request.assets | Where-Object Name -EQ "$($Name)V$($RemoteVersion).zip" | Select-Object -ExpandProperty browser_download_url
         }
     }
