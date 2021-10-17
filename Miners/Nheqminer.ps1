@@ -15,7 +15,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-nheqminer/nheqminer-0.8.2-win.7z"
 }
 $ManualUri = "https://github.com/VerusCoin/nheqminer/releases"
-$Port = "536{0:d2}"
+$Port = "236{0:d2}"
 $DevFee = 0.0
 $Version = "0.8.2"
 

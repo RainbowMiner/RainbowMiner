@@ -10,7 +10,7 @@ if (-not $IsWindows) {return}
 $Path = ".\Bin\CPU-ArcticHash\cpuminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.7.1-cpuminerarctichash/cpuminer-arctichash-v1.3.7.1.7z"
 $ManualUri = ""
-$Port = "545{0:d2}"
+$Port = "245{0:d2}"
 $DevFee = 0.0
 $Version = "1.3.7.1"
 

@@ -15,7 +15,7 @@ if ($IsLinux) {
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.7c-cpuminerrkz/cpuminer-RKZ-3.9.7c-win64.7z"
 }
 $ManualUri = "https://github.com/patrykwnosuch/cpuminer-RKZ/releases"
-$Port = "542{0:d2}"
+$Port = "242{0:d2}"
 $DevFee = 0.0
 $Version = "3.9.7c"
 

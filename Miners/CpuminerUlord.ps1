@@ -15,7 +15,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-ulordrig/ulordrig-win-v1.2.1.zip"
 }
 $ManualUri = "https://github.com/UlordChain/ulordrig/releases"
-$Port = "538{0:d2}"
+$Port = "238{0:d2}"
 $DevFee = 0.0
 $Version = "1.2.1"
 

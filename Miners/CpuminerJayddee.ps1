@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
-$Port = "500{0:d2}"
+$Port = "200{0:d2}"
 $DevFee = 0.0
 $Version = "3.18.1"
 

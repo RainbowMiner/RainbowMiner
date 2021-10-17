@@ -15,7 +15,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8-ccminerverus/ccminerverus22-3.7cpu-win.7z"
 }
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
-$Port = "535{0:d2}"
+$Port = "235{0:d2}"
 $DevFee = 0.0
 $Version = "3.7"
 

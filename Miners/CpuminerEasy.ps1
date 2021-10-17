@@ -10,7 +10,7 @@ if (-not $IsWindows) {return}
 $Path = ".\Bin\CPU-Easy\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'aes-avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.7.0-cpuminereasy/cpuminer-easy-binarium-win_x64.zip"
 $ManualUri = "https://github.com/bubasik/cpuminer-easy-binarium/releases"
-$Port = "531{0:d2}"
+$Port = "231{0:d2}"
 $DevFee = 0.0
 $Version = "3.7.0"
 

@@ -15,7 +15,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.12-cpumineropt/cpuminer-opt-v3.8.12-bf-win64.zip"
 }
 $ManualUri = "https://github.com/bellflower2015/cpuminer-opt/releases"
-$Port = "504{0:d2}"
+$Port = "204{0:d2}"
 $DevFee = 0.0
 $Version = "3.8.12"
 

@@ -10,7 +10,7 @@ if (-not $IsWindows) {return}
 $Path = ".\Bin\CPU-Multi\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'})).exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6.3-cpuminermulti/cpuminer-multi-1.3.6.3.7z"
 $ManualUri = "https://github.com/tpruvot/cpuminer-multi/releases"
-$Port = "513{0:d2}"
+$Port = "213{0:d2}"
 $DevFee = 0.0
 $Version = "1.3.6.3"
 

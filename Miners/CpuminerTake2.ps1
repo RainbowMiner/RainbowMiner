@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualUri = "https://github.com/Raptor3um/cpuminer-opt/releases"
-$Port = "532{0:d2}"
+$Port = "232{0:d2}"
 $DevFee = 0.0
 $Version = "5.0.11"
 

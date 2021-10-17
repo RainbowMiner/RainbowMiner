@@ -15,7 +15,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpuminerverium/cpuminer_1.4_windows_x64_O2_GCC7$(if($Global:GlobalCPUInfo.IsRyzen){'_RYZEN'}).zip"
 }
 $ManualUri = "https://github.com/fireworm71/veriumMiner/releases"
-$Port = "544{0:d2}"
+$Port = "244{0:d2}"
 $DevFee = 0.0
 $Version = "1.4"
 

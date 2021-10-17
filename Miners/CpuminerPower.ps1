@@ -15,7 +15,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-cpupool/Cpuminer-opt-cpu-pool-v1.4-win64.zip"
 }
 $ManualUri = "https://github.com/cpu-pool/cpuminer-opt-cpupower/releases"
-$Port = "539{0:d2}"
+$Port = "239{0:d2}"
 $DevFee = 0.0
 $Version = "1.4"
 

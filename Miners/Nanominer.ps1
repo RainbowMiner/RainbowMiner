@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
-$Port = "534{0:d2}"
+$Port = "234{0:d2}"
 $Cuda = "10.0"
 $DevFee = 3.0
 $Version = "3.3.13"
