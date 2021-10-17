@@ -6192,43 +6192,102 @@ Param(
         $StatusCode = $null
         $Data       = $null
 
-        do {
-            $CallJobName = "WebRequest-$(Get-UnixTimestamp -Milliseconds)"
-        } While (Get-Job -Name $CallJobName -ErrorAction Ignore)
+        $Result = [PSCustomObject]@{
+            Status       = $false
+            StatusCode   = $null
+            Data         = $null
+            ErrorMessage = ""
+        }
 
-        $CallJob = Start-ThreadJob .\Scripts\WebRequest.ps1 -Name $CallJobName -ArgumentList $RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers_local, $body, $IsForm, (Test-IsPS7), (Test-IsCore), $fixbigint
+        $oldProgressPreference = $null
+        if ($Global:ProgressPreference -ne "SilentlyContinue") {
+            $oldProgressPreference = $Global:ProgressPreference
+            $Global:ProgressPreference = "SilentlyContinue"
+        }
 
-        if ($CallJob) {
-            if (Wait-Job -Job $CallJob -Timeout ([Math]::Min($timeout,30))) {
-                $Result = Receive-Job -Job $CallJob
-                if ($Result.Status -ne $null) {
-                    $StatusCode   = $Result.StatusCode
-                    $Data         = $Result.Data
-                    $ErrorMessage = $Result.ErrorMessage
+        #$CallJob = Start-ThreadJob .\Scripts\WebRequest.ps1 -Name $CallJobName -ArgumentList $RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers_local, $body, $IsForm, (Test-IsPS7), (Test-IsCore), $fixbigint
 
-                    if (Test-IsCore) {
-                        if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
-                            if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
-                                if ($StatusCodeObject.Type -ne "Success") {
-                                    $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
-                                }
-                            } else {
-                                $ErrorMessage = "$StatusCode Very bad! Code not found :("
-                            }
-                        }
+        if (Test-IsCore) {
+            try {
+                $Response   = $null
+                if (Test-IsPS7) {
+                    if ($IsForm) {
+                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                    } else {
+                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
                     }
                 } else {
-                    $ErrorMessage = "Could not receive data from $($RequestUrl)"
+                    if ($IsForm) {
+                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                    } else {
+                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    }
                 }
-                $Result = $null
-            } else {
-                $ErrorMessage = "Call to $($RequestUrl) timed out"
+
+                $Result.Status     = $true
+                $Result.StatusCode = $Response.StatusCode
+
+                if ($Result.StatusCode -match "^2\d\d$") {
+                    $Result.Data = if ($Response.Content -is [byte[]]) {[System.Text.Encoding]::UTF8.GetString($Response.Content)} else {$Response.Content}
+                    if ($method -eq "REST") {
+                        if ($fixbigint) {
+                            try {
+                                $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        }
+                        try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    }
+                    if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                }
+
+                if ($Response) {
+                    $Response = $null
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $Result.ErrorMessage = "$($_.Exception.Message)"
             }
-            Remove-Job -Job $CallJob -Force
-            $CallJob = $null
         } else {
-            $ErrorMessage = "WebRequest failed for $($RequestUrl)"
+            try {
+                $ServicePoint = $null
+                if ($method -eq "REST") {
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
+                    $Result.Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $Result.Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                }
+                if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                $Result.Status = $true
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $Result.ErrorMessage = "$($_.Exception.Message)"
+            } finally {
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                $ServicePoint = $null
+            }
         }
+        if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
+
+        if ($Result.Status -ne $null) {
+            $StatusCode   = $Result.StatusCode
+            $Data         = $Result.Data
+            $ErrorMessage = $Result.ErrorMessage
+
+            if (Test-IsCore) {
+                if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
+                    if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
+                        if ($StatusCodeObject.Type -ne "Success") {
+                            $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                        }
+                    } else {
+                        $ErrorMessage = "$StatusCode Very bad! Code not found :("
+                    }
+                }
+            }
+        } else {
+            $ErrorMessage = "Could not receive data from $($RequestUrl)"
+        }
+        $Result = $null
     }
 
     if ($ErrorMessage -eq '') {$Data}
