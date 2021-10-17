@@ -1236,7 +1236,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                     }
                     if ($EnableFixBigInt) {
-                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey -fixbigint $Parameters.fixbigint
+                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey -fixbigint $(if ($Parameters.fixbigint -is [string]) {$Parameters.fixbigint -eq "True"} else {$Parameters.fixbigint})
                     } else {
                         $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                     }
@@ -1540,7 +1540,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
     if ($Error.Count) {
         if ($Session.Config.LogLevel -ne "Silent") {
-            $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}
+            $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$($_.Exception)" -Append -Timestamp}
         }
         $Error.Clear()
     }
