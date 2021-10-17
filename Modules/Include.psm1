@@ -6215,12 +6215,16 @@ Param(
             ErrorMessage = ""
         }
 
-        if (-not $forceIWR -and $Global:GlobalHttpClient) {
+        if ($forceHttpClient -and -not $forceIWR -and $Global:GlobalHttpClient) {
+
+            #Write-Log -Level Info "Using HttpClient to $($method)-$($requestmethod) $($requesturl)"
 
             try {
                 $Response = $null
 
-                [System.Collections.Generic.List[System.IO.FileStream]]$fs_array = @()
+                if ($IsForm) {
+                    [System.Collections.Generic.List[System.IO.FileStream]]$fs_array = @()
+                }
 
                 $content = [System.Net.Http.HttpRequestMessage]::new()
 
@@ -6231,6 +6235,7 @@ Param(
 
                 if ($body) {
                     if ($body -is [hashtable]) {
+                        $fx = @{}
                         if ($IsForm) {
                             $form = [System.Net.Http.MultipartFormDataContent]::New()
                             $body.GetEnumerator() | Foreach-Object {
@@ -6238,21 +6243,26 @@ Param(
                                     $fs = [System.IO.FileStream]::New($_.Value, [System.IO.FileMode]::Open)
                                     $fs_array.Add($fs)
                                     $form.Add([System.Net.Http.StreamContent]::New($fs),$_.Name,(Split-Path $_.Value -Leaf))
+                                    $fx[$_.Name] = "@$($_.Value.FullName)"
                                 } else {
                                     $form.Add([System.Net.Http.StringContent]::New($_.Value),$_.Name)
+                                    $fx[$_.Name] = $_.Value
                                 }
                             }
                         } else {
                             $body_local = [System.Collections.Generic.Dictionary[string,string]]::New()
                             $body.GetEnumerator() | Foreach-Object {
                                 $body_local.Add([string]$_.Name,[string]$_.Value)
+                                $fx[$_.Name] = $_.Value
                             }
                             $form = [System.Net.Http.FormUrlEncodedContent]::new($body_local)
                             $body_local = $null
                         }
 
+                        #Write-Log -Level Info "--> $(if ($IsForm) {"FORM"} else {"BODY"}): $(ConvertTo-Json $fx -Depth 10)"
                         $content.Content = $form
                     } else {
+                        #Write-Log -Level Info "--> PLAIN: $($body)"
                         $content.Content = [System.Net.Http.StringContent]::new($body,[System.Text.Encoding]::UTF8,'plain/text')
                     }
                 }
@@ -6260,6 +6270,8 @@ Param(
                 $task = $Global:GlobalHttpClient.SendAsync($content)
                 
                 if ($task.Wait($timeout*1000)) {
+
+                    #Write-Log -Level Info "--> Result: $($task.Result.StatusCode) IsFaulted=$($task.Result.isFaulted) Status=$($task.Status)"
 
                     $Result.Status = -not $task.Result.isFaulted -and $task.Status -eq "RanToCompletion"
 
@@ -6389,11 +6401,11 @@ Param(
             $Data         = $Result.Data
             $ErrorMessage = $Result.ErrorMessage
 
-            if (Test-IsCore) {
+            if ((Test-IsCore) -or $StatusCode -match "^\d\d\d$") {
                 if ($ErrorMessage -eq '' -and $StatusCode -ne 200) {
                     if ($StatusCodeObject = Get-HttpStatusCode $StatusCode) {
                         if ($StatusCodeObject.Type -ne "Success") {
-                            $ErrorMessage = "$StatusCode $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
+                            $ErrorMessage = "$($StatusCode) $($StatusCodeObject.Description) ($($StatusCodeObject.Type))"
                         }
                     } else {
                         $ErrorMessage = "$StatusCode Very bad! Code not found :("
