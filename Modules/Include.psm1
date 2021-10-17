@@ -2552,7 +2552,7 @@ function Expand-WebRequest {
     if (Test-Path $FileName) {Remove-Item $FileName}
     $oldProgressPreference = $Global:ProgressPreference
     $Global:ProgressPreference = "SilentlyContinue"
-    Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing -DisableKeepAlive
+    Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing
     $Global:ProgressPreference = $oldProgressPreference
 
     if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
@@ -6037,7 +6037,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$ForceLocal,
     [Parameter(Mandatory = $False)]
-        [switch]$NoExtraHeaderData
+        [switch]$NoExtraHeaderData,
+    [Parameter(Mandatory = $False)]
+        [switch]$ForceHttpClient,
+    [Parameter(Mandatory = $False)]
+        [switch]$ForceIWR
 )
     if ($JobKey -and $JobData) {
         if (-not $ForceLocal -and $JobData.url -notmatch "^server://") {
@@ -6102,7 +6106,7 @@ Param(
 
     $ErrorMessage = ''
 
-    if ($Session.EnableCurl) {
+    if (-not $ForceHttpClient -and -not $forceIWR -and $Session.EnableCurl) {
 
         $TmpFile = $null
 
@@ -6171,8 +6175,20 @@ Param(
                 Remove-Item $TmpFile -Force -ErrorAction Ignore
             }
         }
-
+    
     } else {
+
+        if ($Global:GlobalHttpClient -eq $null) {
+            try {
+                Add-Type -AssemblyName System.Net.Http -ErrorAction Stop
+                $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
+                #$Global:GlobalHttpClient.DefaultRequestHeaders.ConnectionClose = $true
+                $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
+            } catch {
+                Write-Log -Level Info "The installed .net version doesn't support HttpClient yet. Falling back to IWM/IRM"
+                $Global:GlobalHttpClient = $false
+            }
+        }
 
         $IsForm = $false
 
@@ -6199,74 +6215,174 @@ Param(
             ErrorMessage = ""
         }
 
-        $oldProgressPreference = $null
-        if ($Global:ProgressPreference -ne "SilentlyContinue") {
-            $oldProgressPreference = $Global:ProgressPreference
-            $Global:ProgressPreference = "SilentlyContinue"
-        }
+        if (-not $forceIWR -and $Global:GlobalHttpClient) {
 
-        #$CallJob = Start-ThreadJob .\Scripts\WebRequest.ps1 -Name $CallJobName -ArgumentList $RequestUrl, $useragent, $timeout, $requestmethod, $method, $headers_local, $body, $IsForm, (Test-IsPS7), (Test-IsCore), $fixbigint
-
-        if (Test-IsCore) {
             try {
-                $Response   = $null
-                if (Test-IsPS7) {
-                    if ($IsForm) {
-                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
-                    } else {
-                        $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-                    }
-                } else {
-                    if ($IsForm) {
-                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
-                    } else {
-                        $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
-                    }
-                }
+                $Response = $null
 
-                $Result.Status     = $true
-                $Result.StatusCode = $Response.StatusCode
+                [System.Collections.Generic.List[System.IO.FileStream]]$fs_array = @()
 
-                if ($Result.StatusCode -match "^2\d\d$") {
-                    $Result.Data = if ($Response.Content -is [byte[]]) {[System.Text.Encoding]::UTF8.GetString($Response.Content)} else {$Response.Content}
-                    if ($method -eq "REST") {
-                        if ($fixbigint) {
-                            try {
-                                $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
-                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                $content = [System.Net.Http.HttpRequestMessage]::new()
+
+                $content.Method = $requestmethod
+                $content.RequestUri = $requesturl
+                $headers_local.GetEnumerator() | Foreach-Object {$content.Headers.Add($_.Key,$_.Value)}
+                $content.Headers.Add('User-Agent', $userAgent)
+
+                if ($body) {
+                    if ($body -is [hashtable]) {
+                        if ($IsForm) {
+                            $form = [System.Net.Http.MultipartFormDataContent]::New()
+                            $body.GetEnumerator() | Foreach-Object {
+                                if ($_.Value -is [object] -and $_.Value.FullName) {
+                                    $fs = [System.IO.FileStream]::New($_.Value, [System.IO.FileMode]::Open)
+                                    $fs_array.Add($fs)
+                                    $form.Add([System.Net.Http.StreamContent]::New($fs),$_.Name,(Split-Path $_.Value -Leaf))
+                                } else {
+                                    $form.Add([System.Net.Http.StringContent]::New($_.Value),$_.Name)
+                                }
+                            }
+                        } else {
+                            $body_local = [System.Collections.Generic.Dictionary[string,string]]::New()
+                            $body.GetEnumerator() | Foreach-Object {
+                                $body_local.Add([string]$_.Name,[string]$_.Value)
+                            }
+                            $form = [System.Net.Http.FormUrlEncodedContent]::new($body_local)
+                            $body_local = $null
                         }
-                        try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+
+                        $content.Content = $form
+                    } else {
+                        $content.Content = [System.Net.Http.StringContent]::new($body,[System.Text.Encoding]::UTF8,'plain/text')
                     }
-                    if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
                 }
 
-                if ($Response) {
-                    $Response = $null
-                }
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                $Result.ErrorMessage = "$($_.Exception.Message)"
-            }
-        } else {
-            try {
-                $ServicePoint = $null
-                if ($method -eq "REST") {
-                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
-                    $Result.Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                $task = $Global:GlobalHttpClient.SendAsync($content)
+                
+                if ($task.Wait($timeout*1000)) {
+
+                    $Result.Status = -not $task.Result.isFaulted -and $task.Status -eq "RanToCompletion"
+
+                    if ($task.Result) {
+                        $Result.StatusCode = [int]$task.Result.StatusCode
+
+                        if (-not $Result.Status) {
+                            $Result.ErrorMessage = $task.Result.Exception.Message
+                        }
+
+                        $Response = $task.Result.Content.ReadAsStringAsync().Result
+                    }
+
+                    if ($Result.StatusCode -match "^2\d\d$") {
+                        $Result.Data = if ($Response -is [byte[]]) {[System.Text.Encoding]::UTF8.GetString($Response)} else {$Response}
+                        if ($method -eq "REST") {
+                            if ($fixbigint) {
+                                try {
+                                    $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            }
+                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        }
+                        if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                    }
+
                 } else {
-                    $Result.Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                    $Result.ErrorMessage = "Call to $($RequestUrl) timed out after $($timeout) secs"
                 }
-                if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
-                $Result.Status = $true
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $Result.ErrorMessage = "$($_.Exception.Message)"
             } finally {
-                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
-                $ServicePoint = $null
+                if($task -ne $null) {
+                    if ($task.Result -ne $null) {$task.Result.Dispose()}
+                    $task.Dispose()
+                    $task = $null
+                }
+                if ($fs_array.Count) {
+                    foreach($fs in $fs_array) {
+                        $fs.Close()
+                        $fs.Dispose()
+                    }
+                    $fs_array = $null
+                }
+                if ($content -ne $null) {
+                    $content.Dispose()
+                    $content = $null
+                }
+                if ($Response -ne $null) {
+                    $Response = $null
+                }
             }
+            
+        } else {
+
+            $oldProgressPreference = $null
+            if ($Global:ProgressPreference -ne "SilentlyContinue") {
+                $oldProgressPreference = $Global:ProgressPreference
+                $Global:ProgressPreference = "SilentlyContinue"
+            }
+            
+            if (Test-IsCore) {
+                try {
+                    $Response   = $null
+                    if (Test-IsPS7) {
+                        if ($IsForm) {
+                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                        } else {
+                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                        }
+                    } else {
+                        if ($IsForm) {
+                            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                        } else {
+                            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                        }
+                    }
+
+                    $Result.Status     = $true
+                    $Result.StatusCode = $Response.StatusCode
+
+                    if ($Result.StatusCode -match "^2\d\d$") {
+                        $Result.Data = if ($Response.Content -is [byte[]]) {[System.Text.Encoding]::UTF8.GetString($Response.Content)} else {$Response.Content}
+                        if ($method -eq "REST") {
+                            if ($fixbigint) {
+                                try {
+                                    $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
+                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            }
+                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        }
+                        if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                    }
+
+                    if ($Response) {
+                        $Response = $null
+                    }
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $Result.ErrorMessage = "$($_.Exception.Message)"
+                }
+            } else {
+                try {
+                    $ServicePoint = $null
+                    if ($method -eq "REST") {
+                        $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
+                        $Result.Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                    } else {
+                        $Result.Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                    }
+                    if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                    $Result.Status = $true
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $Result.ErrorMessage = "$($_.Exception.Message)"
+                } finally {
+                    if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
+                    $ServicePoint = $null
+                }
+            }
+            if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
         }
-        if ($oldProgressPreference) {$Global:ProgressPreference = $oldProgressPreference}
 
         if ($Result.Status -ne $null) {
             $StatusCode   = $Result.StatusCode

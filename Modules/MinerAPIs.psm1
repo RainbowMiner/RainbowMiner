@@ -842,7 +842,7 @@ class BMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status/solver" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status/solver" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -901,7 +901,7 @@ class Cast : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1130,7 +1130,7 @@ class Eminer : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/stats" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/stats" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1170,7 +1170,7 @@ class EnemyZ : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary?gpuinfo=1" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary?gpuinfo=1" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1405,7 +1405,7 @@ class Fireice : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1450,7 +1450,7 @@ class Gminer : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stat" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1551,7 +1551,7 @@ class GrinPro : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/status" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/status" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1620,7 +1620,7 @@ class Jceminer : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1665,7 +1665,7 @@ class Lol : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1882,7 +1882,7 @@ class NBminer : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -1984,7 +1984,7 @@ class NoncerPro : Miner {
         $HashRate   = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2021,7 +2021,7 @@ class Nqminer : Miner {
         $HashRate   = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2059,7 +2059,7 @@ class Prospector : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v0/hashrates" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v0/hashrates" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2289,7 +2289,7 @@ class SrbMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2330,7 +2330,7 @@ class SrbMinerMulti : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
             $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
         }
         catch {
@@ -2452,7 +2452,7 @@ class TBMiner : Miner {
         $Difficulty = $null
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/threads" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/threads" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2468,7 +2468,7 @@ class TBMiner : Miner {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
 
             try {
-                $DataPool = Invoke-GetUrl "http://$($Server):$($this.Port)/pool" -Timeout $Timeout
+                $DataPool = Invoke-GetUrl "http://$($Server):$($this.Port)/pool" -Timeout $Timeout -ForceHttpClient
                 $Difficulty_Value = [Double]$DataPool.diff
                 if ($Difficulty_Value -gt 0) {
                     $Difficulty = [PSCustomObject]@{$HashRate_Name = $Difficulty_Value}
@@ -2553,7 +2553,7 @@ class Trex : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2787,7 +2787,7 @@ class Xmrig : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2936,7 +2936,7 @@ class Xmrig3 : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -3101,7 +3101,7 @@ class Xmrig6 : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
