@@ -6562,7 +6562,7 @@ Param(
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Start-Sleep -Milliseconds $delay}
-        Invoke-GetUrl -JobData $JobData -JobKey $JobKey
+        Invoke-GetUrl -JobData $JobData -JobKey $JobKey -ForceLocal:$($JobHost -in @("localhost","127.0.0.1"))
         $JobData.LastCacheWrite = (Get-Date).ToUniversalTime()
         return
     }
