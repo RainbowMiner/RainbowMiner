@@ -45,7 +45,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $Path = $Request.Url.LocalPath
 
     if ($API.Debug) {
-        Write-ToFile -FilePath "Logs\requests_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] $Path $($Parameters | ConvertTo-Json -Depth 10 -Compress)" -Append -Timestamp
+        Write-ToFile -FilePath "Logs\requests$($ThreadID)_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$Path $($Parameters | ConvertTo-Json -Depth 10 -Compress)" -Append -Timestamp
     }
 
     # Create the defaults for associated settings
