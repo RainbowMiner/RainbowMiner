@@ -4565,7 +4565,7 @@ function Get-Yes {
         $Argument = $false
     )
     if ($Argument -eq $null) {$false}
-    elseif ($Argument -is [bool]) {$Argument} else {[Bool](0,$false,"no","n","not","niet","non","nein","never","0" -inotcontains $Argument)}
+    elseif ($Argument -is [bool]) {$Argument} else {[Bool](0,$false,"no","n","not","niet","non","nein","never","0","false" -inotcontains $Argument)}
 }
 
 function Read-HostString {
@@ -6215,9 +6215,11 @@ Param(
             ErrorMessage = ""
         }
 
-        if ($forceHttpClient -and -not $forceIWR -and $Global:GlobalHttpClient) {
+        if (-not $forceIWR -and $Global:GlobalHttpClient) {
 
-            #Write-Log -Level Info "Using HttpClient to $($method)-$($requestmethod) $($requesturl)"
+            if ($Session.LogLevel -eq "Debug") {
+                Write-Log -Level Info "Using HttpClient to $($method)-$($requestmethod) $($requesturl)"
+            }
 
             try {
                 $Response = $null
@@ -6235,7 +6237,7 @@ Param(
 
                 if ($body) {
                     if ($body -is [hashtable]) {
-                        $fx = @{}
+                        if ($Session.LogLevel -eq "Debug") {$fx = @{}}
                         if ($IsForm) {
                             $form = [System.Net.Http.MultipartFormDataContent]::New()
                             $body.GetEnumerator() | Foreach-Object {
@@ -6243,26 +6245,30 @@ Param(
                                     $fs = [System.IO.FileStream]::New($_.Value, [System.IO.FileMode]::Open)
                                     $fs_array.Add($fs)
                                     $form.Add([System.Net.Http.StreamContent]::New($fs),$_.Name,(Split-Path $_.Value -Leaf))
-                                    $fx[$_.Name] = "@$($_.Value.FullName)"
+                                    if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = "@$($_.Value.FullName)"}
                                 } else {
                                     $form.Add([System.Net.Http.StringContent]::New($_.Value),$_.Name)
-                                    $fx[$_.Name] = $_.Value
+                                    if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = $_.Value}
                                 }
                             }
                         } else {
                             $body_local = [System.Collections.Generic.Dictionary[string,string]]::New()
                             $body.GetEnumerator() | Foreach-Object {
                                 $body_local.Add([string]$_.Name,[string]$_.Value)
-                                $fx[$_.Name] = $_.Value
+                                if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = $_.Value}
                             }
                             $form = [System.Net.Http.FormUrlEncodedContent]::new($body_local)
                             $body_local = $null
                         }
 
-                        #Write-Log -Level Info "--> $(if ($IsForm) {"FORM"} else {"BODY"}): $(ConvertTo-Json $fx -Depth 10)"
+                        if ($Session.LogLevel -eq "Debug") {
+                            Write-Log -Level Info "--> $(if ($IsForm) {"FORM"} else {"BODY"}): $(ConvertTo-Json $fx -Depth 10)"
+                        }
                         $content.Content = $form
                     } else {
-                        #Write-Log -Level Info "--> PLAIN: $($body)"
+                        if ($Session.LogLevel -eq "Debug") {
+                            Write-Log -Level Info "--> PLAIN: $($body)"
+                        }
                         $content.Content = [System.Net.Http.StringContent]::new($body,[System.Text.Encoding]::UTF8,'plain/text')
                     }
                 }
@@ -6271,7 +6277,9 @@ Param(
                 
                 if ($task.Wait($timeout*1000)) {
 
-                    #Write-Log -Level Info "--> Result: $($task.Result.StatusCode) IsFaulted=$($task.Result.isFaulted) Status=$($task.Status)"
+                    if ($Session.LogLevel -eq "Debug") {
+                        Write-Log -Level Info "--> Result: $($task.Result.StatusCode) IsFaulted=$($task.Result.isFaulted) Status=$($task.Status)"
+                    }
 
                     $Result.Status = -not $task.Result.isFaulted -and $task.Status -eq "RanToCompletion"
 
@@ -6332,6 +6340,10 @@ Param(
             if ($Global:ProgressPreference -ne "SilentlyContinue") {
                 $oldProgressPreference = $Global:ProgressPreference
                 $Global:ProgressPreference = "SilentlyContinue"
+            }
+
+            if ($Session.LogLevel -eq "Debug") {
+                Write-Log -Level Info "Using IWR to $($method)-$($requestmethod) $($requesturl)"
             }
             
             if (Test-IsCore) {
