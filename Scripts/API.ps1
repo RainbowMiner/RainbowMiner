@@ -757,8 +757,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Data = if ($API.Balances) {$API.Balances} else {"[]"}
                 Break
             }
-            if ($API.Balances) {$Balances = ConvertFrom-Json $API.Balances}
-            if ($API.Rates)    {$LocalRates = ConvertFrom-Json $API.Rates}
+            if ($API.Balances) {$Balances = ConvertFrom-Json "$($API.Balances)"}
+            if ($API.Rates)    {$LocalRates = ConvertFrom-Json "$($API.Rates)"}
             $Balances = $Balances | Where-Object {($Parameters.add_total -or $_.Name -notmatch "^\*") -and ($Parameters.add_wallets -or $_.BaseName -ne "Wallet")}
 
             if ($Session.Config.ShowWalletBalances -and $Parameters.add_total -and -not $Parameters.add_wallets) {
@@ -816,7 +816,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
                 if ($Parameters.add_btc) {
                     $Balances | Foreach-Object {
-                        $Rate = $LocalRates."$($_.Currency)"
+                        $Rate = if ($_.Currency) {$LocalRates."$($_.Currency)"} else {0}
                         $_ | Add-Member -NotePropertyMembers @{
                             Total_BTC = [Decimal]$(if ($Rate) {$_.Total / $Rate} else {0})
                             Paid_BTC = [Decimal]$(if ($Rate) {$_.Paid / $Rate} else {0})
