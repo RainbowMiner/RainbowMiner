@@ -104,7 +104,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     $ZilParams = ""
 
-                    if ($Session.Config.Pools.Ezil.EnableLolminerDual -and $_.DualZIL -and $Pools."Zilliqa$($_.DualZIL)") {
+                    if ($Session.Config.Pools.Ezil.EnableLolminerDual -and $_.DualZIL -and $Pools."Zilliqa$($_.DualZIL)" -and $Pools."Zilliqa$($_.DualZIL)".EthMode -eq $Pools.$Algorithm_Norm.EthMode) {
                         $ZilWallet = $Pools."Zilliqa$($_.DualZIL)".Wallet
                         $ZilPool   = "$($Pools."Zilliqa$($_.DualZIL)".Host):$($Pools."Zilliqa$($_.DualZIL)".Port)"
                         if ($ZilWallet -and $ZilWallet) {
@@ -114,13 +114,31 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
 
                     if (-not $_.Pers -or $PersCoin -or $_.ParamsAutoPers) {
+
                         $Pool_Port  = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+
+                        $Pool_Arguments = if ($Session.Config.Pools.Ezil.EnableLolminerDual -and $_.DualZIL -and $Pools."Zilliqa$($_.DualZIL)" -and $Pools."Zilliqa$($_.DualZIL)".EthMode -eq $Pools.$Algorithm_Norm.EthMode) {
+                            $ZilWallet = $Pools."Zilliqa$($_.DualZIL)".Wallet
+                            $ZilPool   = "$($Pools."Zilliqa$($_.DualZIL)".Host):$($Pools."Zilliqa$($_.DualZIL)".Port)"
+                            if ($ZilPool -and $ZilWallet) {
+                                $EthStratum = Switch ($Pools."Zilliqa$($_.DualZIL)".EthMode) {
+                                        "ethproxy" {"ETHPROXY"}
+                                        default {"ETHV1"}
+                                    }
+                                $EthWallet = if ($Pools.$Algorithm_Norm.Wallet -match "^0x") {$Pools.$Algorithm_Norm.Wallet} elseif ($_.DualZIL -eq "ETH") {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"} else {"0x7f3E62e5bb0601bA52f0813Cb818279f40aB14BC"}
+                                "--pool $($ZilPool) --user $($EthWallet).$($ZilWallet) --tls $(if ($Pools."Zilliqa$($_.DualZIL)".SSL) {"on"} else {"off"}) $(if (($Miner_Device.OpenCL.GlobalMemSizeGB | Measure-Object -Minimum).Minimum -ge 6) {"--enablezilcache"}) --dualmode zil --dualpool $(if ($Pools.$Algorithm_Norm.SSL) {"tls://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --dualuser $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --dualpass $($Pools.$Algorithm_Norm.Pass)"})"
+                            }
+                        }
+                        if (-not $Pool_Arguments) {
+                            $Pool_Arguments = "--pool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"})"
+                        }
+
 					    [PSCustomObject]@{
 						    Name           = $Miner_Name
 						    DeviceName     = $Miner_Device.Name
 						    DeviceModel    = $Miner_Model
 						    Path           = $Path
-						    Arguments      = "--pool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Worker) {" --worker $($Pools.$Algorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogAction)$($ZilParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
+						    Arguments      = "$($Pool_Arguments)$(if ($Pools.$Algorithm_Norm.Worker) {" --worker $($Pools.$Algorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogAction) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
 						    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 						    API            = "Lol"
 						    Port           = $Miner_Port
