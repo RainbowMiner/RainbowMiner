@@ -2,7 +2,7 @@
 
 Set-Location $CurrentPwd
 
-if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
+if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API$($ThreadID)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
 $ProgressPreference = "SilentlyContinue"
 
@@ -45,7 +45,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     $Path = $Request.Url.LocalPath
 
     if ($API.Debug) {
-        Write-ToFile -FilePath "Logs\requests_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$Path $($Parameters | ConvertTo-Json -Depth 10 -Compress)" -Append -Timestamp
+        Write-ToFile -FilePath "Logs\requests_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] $Path $($Parameters | ConvertTo-Json -Depth 10 -Compress)" -Append -Timestamp
     }
 
     # Create the defaults for associated settings
@@ -1524,7 +1524,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         if ($Session.Config.LogLevel -ne "Silent") {
-            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Response not sent: $($_.Exception.Message)" -Append -Timestamp
+            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Response to $($Path) not sent: $($_.Exception.Message)" -Append -Timestamp
         }
     }
 
@@ -1534,13 +1534,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         if ($Session.Config.LogLevel -ne "Silent") {
-            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close response failed: $($_.Exception.Message)" -Append -Timestamp
+            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Close response to $($Path) failed: $($_.Exception.Message)" -Append -Timestamp
         }
     }
 
     if ($Error.Count) {
         if ($Session.Config.LogLevel -ne "Silent") {
-            $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$($_.Exception)" -Append -Timestamp}
+            $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error during $($Path): $($_.Exception)" -Append -Timestamp}
         }
         $Error.Clear()
     }
