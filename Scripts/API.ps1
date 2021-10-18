@@ -1540,7 +1540,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
     if ($Error.Count) {
         if ($Session.Config.LogLevel -ne "Silent") {
-            $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error during $($Path): $($_.Exception)" -Append -Timestamp}
+            $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error during $($Path): $($_.Exception.Message)" -Append -Timestamp}
         }
         $Error.Clear()
     }
