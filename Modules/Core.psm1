@@ -3275,7 +3275,7 @@ function Invoke-Core {
 
     if ($Session.Config.UsePowerPrice) {$StatusLine.Add("E-Price = $($Session.Config.PowerPriceCurrency) $([Math]::Round($Session.CurrentPowerPrice,3))") > $null}
 
-    Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
+    Write-Host " [$(Get-Date)] Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
     if ($StatusLine -ne $null) {Remove-Variable "StatusLine"}
 

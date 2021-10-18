@@ -6184,6 +6184,7 @@ Param(
                 $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
                 #$Global:GlobalHttpClient.DefaultRequestHeaders.ConnectionClose = $true
                 $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
+                if ($Session.LogLevel -eq "Debug") {Write-Log -Level Info "New HttpClient created"}
             } catch {
                 Write-Log -Level Info "The installed .net version doesn't support HttpClient yet. Falling back to IWM/IRM"
                 $Global:GlobalHttpClient = $false
