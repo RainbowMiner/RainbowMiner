@@ -1400,29 +1400,30 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     }
                     $AllRigs_Request | Foreach-Object {
                         $Rig = $_
-                        $Pool_Data = $Pool_Request | Where-Object {$_.name -eq $Rig.type}
-                        $Algo  = Get-MiningRigRentalAlgorithm $_.type
-                        $Speed = [Double]$StatsCPU[$Algo] + [Double]$StatsGPU[$Algo]
-                        $Mrr_Data.Add([PSCustomObject]@{
-                            Algorithm = $Algo
-                            Title     = $Pool_Data.display
-                            SuggPrice = $Pool_Data.suggested_price.amount
-                            LastPrice = $Pool_Data.stats.prices.last.amount
-                            RigsPrice = [double]$Rig.hashrate.advertised.hash*[double]$Rig.price.BTC.price
-                            Unit      = $Pool_Data.hashtype.ToUpper()
-                            Hot       = $Pool_Data.hot
-                            RigsAvail = $Pool_Data.stats.available.rigs
-                            RigsRented= $Pool_Data.stats.rented.rigs
-                            Price     = $Rig.price.BTC.price
-                            MinPrice  = $Rig.price.BTC.minimum
-                            Modifier  = $Rig.price.BTC.modifier
-                            Multiplier= Get-MiningRigRentalsDivisor $Rig.price.type
-                            PriceData = $Rig.price
-                            MinHours  = $Rig.minhours
-                            MaxHours  = $Rig.maxhours
-                            HashRate  = $Speed
-                            HashRateAdv = $Rig.hashrate.advertised.hash * (Get-MiningRigRentalsDivisor $Rig.hashrate.advertised.type)
-                        }) > $null
+                        if ($Pool_Data = $Pool_Request | Where-Object {$_.name -eq $Rig.type}) {
+                            $Algo  = Get-MiningRigRentalAlgorithm $_.type
+                            $Speed = [Double]$StatsCPU[$Algo] + [Double]$StatsGPU[$Algo]
+                            $Mrr_Data.Add([PSCustomObject]@{
+                                Algorithm = $Algo
+                                Title     = $Pool_Data.display
+                                SuggPrice = $Pool_Data.suggested_price.amount
+                                LastPrice = $Pool_Data.stats.prices.last.amount
+                                RigsPrice = [double]$Rig.hashrate.advertised.hash*[double]$Rig.price.BTC.price
+                                Unit      = "$($Pool_Data.hashtype)".ToUpper()
+                                Hot       = $Pool_Data.hot
+                                RigsAvail = $Pool_Data.stats.available.rigs
+                                RigsRented= $Pool_Data.stats.rented.rigs
+                                Price     = $Rig.price.BTC.price
+                                MinPrice  = $Rig.price.BTC.minimum
+                                Modifier  = $Rig.price.BTC.modifier
+                                Multiplier= Get-MiningRigRentalsDivisor $Rig.price.type
+                                PriceData = $Rig.price
+                                MinHours  = $Rig.minhours
+                                MaxHours  = $Rig.maxhours
+                                HashRate  = $Speed
+                                HashRateAdv = $Rig.hashrate.advertised.hash * (Get-MiningRigRentalsDivisor $Rig.hashrate.advertised.type)
+                            }) > $null
+                        }
                     }
                     Remove-Variable "StatsCPU"
                     Remove-Variable "StatsGPU"
