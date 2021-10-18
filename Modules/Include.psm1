@@ -6007,6 +6007,22 @@ Param(
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
 }
 
+function Initialize-HttpClient {
+    if ($Global:GlobalHttpClient -eq $null) {
+        try {
+            Add-Type -AssemblyName System.Net.Http -ErrorAction Stop
+            $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
+            #$Global:GlobalHttpClient.DefaultRequestHeaders.ConnectionClose = $true
+            $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
+            if ($Session.LogLevel -eq "Debug") {Write-Log -Level Info "New HttpClient created"}
+        } catch {
+            Write-Log -Level Info "The installed .net version doesn't support HttpClient yet. Falling back to IWM/IRM"
+            $Global:GlobalHttpClient = $false
+        }
+    }
+    $Global:GlobalHttpClient -ne $false
+}
+
 function Invoke-GetUrl {
 [cmdletbinding()]
 Param(   
@@ -6178,19 +6194,6 @@ Param(
     
     } else {
 
-        if ($Global:GlobalHttpClient -eq $null) {
-            try {
-                Add-Type -AssemblyName System.Net.Http -ErrorAction Stop
-                $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
-                #$Global:GlobalHttpClient.DefaultRequestHeaders.ConnectionClose = $true
-                $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
-                if ($Session.LogLevel -eq "Debug") {Write-Log -Level Info "New HttpClient created"}
-            } catch {
-                Write-Log -Level Info "The installed .net version doesn't support HttpClient yet. Falling back to IWM/IRM"
-                $Global:GlobalHttpClient = $false
-            }
-        }
-
         $IsForm = $false
 
         try {
@@ -6216,7 +6219,7 @@ Param(
             ErrorMessage = ""
         }
 
-        if (-not $forceIWR -and $Global:GlobalHttpClient) {
+        if (-not $forceIWR -and (Initialize-HttpClient)) {
 
             if ($Session.LogLevel -eq "Debug") {
                 Write-Log -Level Info "Using HttpClient to $($method)-$($requestmethod) $($requesturl)"
