@@ -25,14 +25,14 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.16-teamblack/TeamBlackMiner_1_16_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.17-teamblack/TeamBlackMiner_1_17_cuda_11_4.7z"
             Cuda = "11.4"
-            Version = "1.15"
+            Version = "1.17"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.16-teamblack/TeamBlackMiner_1_16_cuda_11_2.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.17-teamblack/TeamBlackMiner_1_17_cuda_11_2.7z"
             Cuda = "11.2"
-            Version = "1.15"
+            Version = "1.17"
         }
     )
 }
