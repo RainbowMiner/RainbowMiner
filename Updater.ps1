@@ -27,11 +27,11 @@ if (Test-Path "Start.bat.saved") {
 
 Set-OsFlags
 
-$RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" | ConvertFrom-Json).Version -Force -Silent
+$RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version -Force -Silent
 
 if (Test-Path ".\Downloads\config.json") {
     try {
-        $DownloaderConfig = Get-ContentByStreamReader ".\Downloads\config.json" | ConvertFrom-Json -ErrorAction Ignore
+        $DownloaderConfig = Get-Content ".\Downloads\config.json" -Raw | ConvertFrom-Json -ErrorAction Ignore
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
     }
@@ -42,6 +42,8 @@ if (-not $DownloaderConfig) {
             EnableKeepDownloads = $true
         }
 }
+
+$Proxy = Get-Proxy
 
 $Name = "RainbowMiner"
 try {
@@ -55,7 +57,7 @@ try {
 
         if ($RBMVersion.DownloadURI -eq "") {throw}
 
-        Invoke-WebRequest $RBMVersion.DownloadURI -OutFile $FileName -UseBasicParsing
+        Invoke-WebRequest $RBMVersion.DownloadURI -OutFile $FileName -UseBasicParsing -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
 
         if (-not (Test-Path $FileName) -or (Get-Item $FileName).Length -lt 2MB) {throw}
 

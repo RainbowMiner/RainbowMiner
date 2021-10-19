@@ -14,7 +14,7 @@ $Sha256 = if (Test-Path (".\Data\minersha256.json")) {Get-Content ".\Data\miners
 
 [System.Collections.ArrayList]$RunningMiners_Paths = @()
 try {
-    $RunningMiners_Request = Invoke-GetUrl "http://localhost:$($LocalAPIport)/runningminers"
+    $RunningMiners_Request = Invoke-RestMethod "http://localhost:$($LocalAPIport)/runningminers" -UseBasicParsing -ErrorAction Stop
     if ($RunningMiners_Request -isnot [array]) {
         if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
             $RunningMiners_Paths.Add($RunningMiners_Request.Path) > $null
@@ -46,6 +46,8 @@ if (-not $DownloaderConfig) {
         }
 }
 
+$Proxy = Get-Proxy
+
 $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | ForEach-Object {
     $URI = $_.URI
     $Path = $_.Path
@@ -73,7 +75,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
 
                 if (Test-Path $FileName) {Remove-Item $FileName}
 
-                Invoke-WebRequest $URI -OutFile $FileName -UseBasicParsing -ErrorAction Stop
+                Invoke-WebRequest $URI -OutFile $FileName -UseBasicParsing -ErrorAction Stop -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
 
                 if ((Test-Path $FileName) -and (Get-Item $FileName).Length) {
                     Move-Item -Path $FileName -Destination $PathFolder

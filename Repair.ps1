@@ -35,9 +35,11 @@ if (-not $DownloaderConfig) {
 
 $Name = "RainbowMiner"
 
+$Proxy = Get-Proxy
+
 try {
     $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
-    $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 30
+    $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 30 -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
 
     $RemoteVersion = ($Request.tag_name -replace '^v')
     if ($RemoteVersion) {
@@ -60,7 +62,7 @@ try {
 
     if ($DownloadURI -eq "") {throw}
 
-    Invoke-WebRequest $DownloadURI -OutFile $FileName -UseBasicParsing
+    Invoke-WebRequest $DownloadURI -OutFile $FileName -UseBasicParsing -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
 
     if (-not (Test-Path $FileName) -or (Get-Item $FileName).Length -lt 2MB) {throw}
 

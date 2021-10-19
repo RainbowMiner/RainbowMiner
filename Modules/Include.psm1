@@ -2549,10 +2549,12 @@ function Expand-WebRequest {
     if (-not (Test-Path ".\Bin\Common")) {New-Item "Bin\Common" -ItemType "directory" > $null}
     $FileName = Join-Path ".\Downloads" (Split-Path $Uri -Leaf)
 
+    $Proxy = Get-Proxy
+
     if (Test-Path $FileName) {Remove-Item $FileName}
     $oldProgressPreference = $Global:ProgressPreference
     $Global:ProgressPreference = "SilentlyContinue"
-    Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing
+    Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
     $Global:ProgressPreference = $oldProgressPreference
 
     if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
@@ -6007,16 +6009,118 @@ Param(
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
 }
 
+function Get-Proxy {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Force = $false
+    )
+
+    if ($Force -or -not (Test-Path Variable:Global:GlobalProxy)) {
+
+        $Proxy = [PSCustomObject]@{
+            Proxy       = $null
+            Username    = $null
+            Password    = $null
+            Uri         = $null
+            Credentials = $null
+        }
+
+        if (Test-Path ".\Data\proxy.json") {
+            try {
+                $CurrentProxy = Get-ContentByStreamReader ".\Data\proxy.json" | ConvertFrom-Json -ErrorAction Stop
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+
+            if ($CurrentProxy.Proxy) {
+                $Proxy.Proxy = $CurrentProxy.Proxy
+                $Proxy.Uri   = [Uri]$Proxy.Proxy
+            
+                if ($Proxy.Uri.UserInfo) {
+                    $Proxy.Username = $Proxy.Uri.UserInfo -replace ":.+$"
+                    $Proxy.Password = $Proxy.Uri.UserInfo -replace "^.+:"
+                } else {
+                    $Proxy.Username = $CurrentProxy.Username
+                    $Proxy.Password = $CurrentProxy.Password
+                }
+                if ($Proxy.Username -and $Proxy.Password) {
+                    $pass = ConvertTo-SecureString "$($Proxy.Password)" -AsPlainText -Force
+                    $Proxy.Credentials = [System.Management.Automation.PSCredential]::new($Proxy.Username, $pass)
+                }
+            }
+        }
+
+        $Global:GlobalProxy = $Proxy
+    }
+    if (-not $silent) {$Global:GlobalProxy}
+}
+
+function Set-Proxy {
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [String]$Proxy = "",
+    [Parameter(Mandatory = $false)]
+    [String]$Username = "",
+    [Parameter(Mandatory = $false)]
+    [String]$Password = ""
+)
+
+    $ProxyRecord = [PSCustomObject]@{
+        Proxy    = $Proxy
+        Username = $Username
+        Password = $Password
+    }
+
+    try {
+        $CurrentProxy = Get-ContentByStreamReader ".\Data\proxy.json" | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+    if (-not $CurrentProxy -or $CurrentProxy.Proxy -ne $ProxyRecord.Proxy -or $CurrentProxy.ProxyUsername -ne $ProxyRecord.ProxyUsername -or $CurrentProxy.Password -ne $ProxyRecord.Password) {
+        Set-ContentJson -PathToFile ".\Data\proxy.json" -Data $ProxyRecord > $null
+        $true
+    } else {
+        $false
+    }
+    Get-Proxy -Force -Silent
+}
+
 function Initialize-HttpClient {
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [Switch]$Restart
+)
+    if ($Restart) {
+        if ($Global:GlobalHttpClient) {
+            $Global:GlobalHttpClient.Dispose()
+        }
+        $Global:GlobalHttpClient = $null
+    }
+
     if ($Global:GlobalHttpClient -eq $null) {
         try {
             Add-Type -AssemblyName System.Net.Http -ErrorAction Stop
-            $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
-            #$Global:GlobalHttpClient.DefaultRequestHeaders.ConnectionClose = $true
+            if ($Proxy = Get-Proxy) {
+                $httpHandler = [System.Net.Http.HttpClientHandler]::New()
+                $WebProxy    = [System.Net.WebProxy]::New($Proxy.Proxy)
+                $WebProxy.BypassProxyOnLocal = $true
+                if ($Proxy.Credentials) {
+                    $WebProxy.Credentials = $Proxy.Credentials
+                }
+                $httpHandler.Proxy = $WebProxy
+                $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new($httpHandler)
+            } else {
+                $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
+            }
             $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
             if ($Session.LogLevel -eq "Debug") {Write-Log -Level Info "New HttpClient created"}
         } catch {
-            Write-Log -Level Info "The installed .net version doesn't support HttpClient yet. Falling back to IWM/IRM"
+            Write-Log -Level Info "The installed .net version doesn't support HttpClient yet: $($_.Exception.Message)"
             $Global:GlobalHttpClient = $false
         }
     }
@@ -6126,6 +6230,8 @@ Param(
 
         $TmpFile = $null
 
+        $Proxy = Get-Proxy
+
         try {
             $CurlHeaders = [String]::Join(" ",@($headers_local.GetEnumerator() | Sort-Object Name | Foreach-Object {"-H `"$($_.Name): $($_.Value)`""}))
             $CurlBody    = ""
@@ -6161,7 +6267,9 @@ Param(
 
             if ($useragent -ne "") {$useragent = "-A `"$($useragent)`" "}
 
-            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)-m $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+            $curlproxy = "$(if ($Proxy.Proxy) {"-x $($Proxy.Proxy)$(if ($Proxy.Username -and $Proxy.Password) {" -U $($Proxy.Username):$($Proxy.Password)"}) "})"
+
+            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)$($curlproxy)-m $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
 
             $Data = (Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit $Timeout) -split "#~#"
 
@@ -6350,20 +6458,22 @@ Param(
                 Write-Log -Level Info "Using IWR to $($method)-$($requestmethod) $($requesturl)"
             }
             
+            $Proxy = Get-Proxy
+
             if (Test-IsCore) {
                 try {
                     $Response   = $null
                     if (Test-IsPS7) {
                         if ($IsForm) {
-                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
                         } else {
-                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                            $Response = Invoke-WebRequest $RequestUrl -SkipHttpErrorCheck -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
                         }
                     } else {
                         if ($IsForm) {
-                            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body
+                            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Form $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
                         } else {
-                            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                            $Response = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
                         }
                     }
 
@@ -6395,9 +6505,9 @@ Param(
                     $ServicePoint = $null
                     if ($method -eq "REST") {
                         $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
-                        $Result.Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                        $Result.Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
                     } else {
-                        $Result.Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                        $Result.Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials).Content
                     }
                     if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
                     $Result.Status = $true
@@ -7187,7 +7297,10 @@ param(
 
 function Test-Internet {
     try {
-        if (Get-Command "Test-Connection" -ErrorAction Ignore) {
+        $Proxy = Get-Proxy
+        if ($Proxy.Proxy) {
+            $true
+        } elseif (Get-Command "Test-Connection" -ErrorAction Ignore) {
             $oldProgressPreference = $Global:ProgressPreference
             $Global:ProgressPreference = "SilentlyContinue"
             Foreach ($url in @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","www.rbminer.net")) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}

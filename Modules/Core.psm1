@@ -577,6 +577,8 @@ function Invoke-Core {
     $CheckPools = $false
     $CheckGpuGroups = $false
     $CheckCombos = $false
+
+    $RestartRunspaces = $false
     
     [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools","WhatToMine")} | Sort-Object)
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
@@ -685,6 +687,15 @@ function Invoke-Core {
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
                     $Session.RunSetup = $true
+                } else {
+                    if (Set-Proxy -Proxy "$($Session.Config.Proxy -replace "^`$Proxy$")" -Username "$($Session.Config.ProxyUsername -replace "^`$ProxyUsername$")" -Password "$($Session.Config.ProxyPassword -replace "^`$ProxyPassword$")") {
+                        if ($Session.RoundCounter -gt 0 -and (Test-Path Variable:Global:AsyncLoader)) {
+                            if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
+                            $RestartRunspaces = $true
+                        }
+                        Write-Log -Level Info "Proxy settings have changed: Restarting HttpClient$(if ($RestartRunspaces) {" and Runspaces"})"
+                        Initialize-HttpClient -Restart > $null
+                    }
                 }
 
                 $ReReadConfig = $false
@@ -720,35 +731,37 @@ function Invoke-Core {
 
     $Internet_ok = Test-Internet
 
-    if (-not $Internet_ok) {
-        Write-Log -Level Info "Internet is down"
+    if (-not $RestartRunspaces) {
+        if (-not $Internet_ok) {
+            Write-Log -Level Info "Internet is down"
 
-        $i = 0
+            $i = 0
 
-        if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
+            if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
 
-        do {
-            if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
-            Start-Sleep -Milliseconds 500
-            if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
-            $i++
-            if (-not ($i % 20)) {$Internet_ok = Test-Internet}
-        } until ($Internet_ok -or $keyPressedValue -eq "X")
+            do {
+                if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
+                Start-Sleep -Milliseconds 500
+                if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
+                $i++
+                if (-not ($i % 20)) {$Internet_ok = Test-Internet}
+            } until ($Internet_ok -or $keyPressedValue -eq "X")
 
-        if ($keyPressedValue -eq "X") {
-            Write-Log "User requests to stop script. "
-            Write-Host "[X] pressed - stopping script."
-            break
+            if ($keyPressedValue -eq "X") {
+                Write-Log "User requests to stop script. "
+                Write-Host "[X] pressed - stopping script."
+                break
+            }
+            if ($i -gt $Session.Config.BenchmarkInterval*2) {
+                Update-WatchdogLevels -Reset
+                $Global:WatchdogTimers = @()
+            }
         }
-        if ($i -gt $Session.Config.BenchmarkInterval*2) {
-            Update-WatchdogLevels -Reset
-            $Global:WatchdogTimers = @()
-        }
-    }
 
-    if ($Internet_ok) {
-        Write-Log -Level Info "Internet is ok"
-        if ((Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Pause) {$AsyncLoader.Pause = $false}
+        if ($Internet_ok) {
+            Write-Log -Level Info "Internet is ok"
+            if ((Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Pause) {$AsyncLoader.Pause = $false}
+        }
     }
 
     if (-not $Session.Updatetracker.TimeDiff -or $Session.Updatetracker.TimeDiff -lt (Get-Date).AddMinutes(-60)) {
@@ -854,10 +867,10 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0) {
         Start-Autoexec -Priority $Session.Config.AutoexecPriority
     }
-    if (($Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
+    if (($RestartRunspaces -or $Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
     if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart}
     if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor)) {Start-Afterburner}
-    if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.APIport -ne $ConfigBackup.APIport -or $Session.Config.APIauth -ne $ConfigBackup.APIauth -or $Session.Config.APIuser -ne $ConfigBackup.APIuser -or $Session.Config.APIpassword -ne $ConfigBackup.APIpassword -or $Session.Config.APIthreads -ne $ConfigBackup.APIthreads) -and (Test-Path Variable:Global:API) -and -not $API.IsVirtual) {Stop-APIServer}
+    if (-not $psISE -and ($RestartRunspaces -or $Session.Config.DisableAPI -or $Session.Config.APIport -ne $ConfigBackup.APIport -or $Session.Config.APIauth -ne $ConfigBackup.APIauth -or $Session.Config.APIuser -ne $ConfigBackup.APIuser -or $Session.Config.APIpassword -ne $ConfigBackup.APIpassword -or $Session.Config.APIthreads -ne $ConfigBackup.APIthreads) -and (Test-Path Variable:Global:API) -and -not $API.IsVirtual) {Stop-APIServer}
     if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {Start-APIServer}
     if($psISE -or -not (Test-Path Variable:Global:API)) {
         $Global:API = [hashtable]@{}
@@ -1661,10 +1674,6 @@ function Invoke-Core {
         Write-Log "Testing for GPU failure. "
         Test-GPU
     }
-
-    #init round variables and set Proxy
-    if ($Session.Config.Proxy) {$PSDefaultParameterValues["*:Proxy"] = $Session.Config.Proxy}
-    else {$PSDefaultParameterValues.Remove("*:Proxy")}
 
     if ($UseTimeSync) {Test-TimeSync}
     $Session.Timer = (Get-Date).ToUniversalTime()
