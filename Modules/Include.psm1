@@ -4819,18 +4819,18 @@ function Set-ContentJson {
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
                 if ($Session.IsCore -or ($PSVersionTable.PSVersion -ge (Get-Version "6.1"))) {
                     if ($Data -is [array]) {
-                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 -ErrorAction Stop | Set-Content $PathToFile -Encoding utf8 -Force -ErrorAction Stop
                     } else {
-                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 -ErrorAction Stop | Set-Content $PathToFile -Encoding utf8 -Force -ErrorAction Stop
                     }
                 } else {
                     $JsonOut = if ($Data -is [array]) {
-                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10
+                        ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 -ErrorAction Stop
                     } else {
-                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10
+                        ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 -ErrorAction Stop
                     }
                     $utf8 = New-Object System.Text.UTF8Encoding $false
-                    Set-Content -Value $utf8.GetBytes($JsonOut) -Encoding Byte -Path $PathToFile
+                    Set-Content -Value $utf8.GetBytes($JsonOut) -Encoding Byte -Path $PathToFile -ErrorAction Stop
                 }
             } elseif ($Exists) {
                 (Get-ChildItem $PathToFile -File).LastWriteTime = Get-Date
@@ -6443,6 +6443,10 @@ Param(
                     $fs_array = $null
                 }
                 if ($content -ne $null) {
+                    if ($content.Content -ne $null) {
+                        $content.Content.Dispose()
+                        $content.Content = $null
+                    }
                     $content.Dispose()
                     $content = $null
                 }
@@ -7621,12 +7625,18 @@ function Get-Uptime {
 }
 
 function Get-SysInfo {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $False)]
+        [int]$PhysicalCPUs = 1
+    )
+
     if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
     if ($IsWindows) {
 
         $CIM_CPU = $null
 
-        $CPUs = @(1..$Session.PhysicalCPUs | Foreach-Object {
+        $CPUs = @(1..$PhysicalCPUs | Foreach-Object {
             [PSCustomObject]@{
                     Clock       = 0
                     Utilization = 0

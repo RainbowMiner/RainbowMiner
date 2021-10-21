@@ -187,72 +187,6 @@ function Start-Core {
         Write-Host "ok (not in a VM)" -ForegroundColor Green
     }
 
-    if ($IsWindows -and $false) {
-        Write-Host "Checking for TcpTimeWaitDelay .. " -NoNewline
-        $Tcpip_Warn = ""
-        $Tcpip_Done = ""
-        try {
-            $Tcpip_Parameters = Get-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -ErrorAction Ignore
-            if (-not $Tcpip_Parameters) {
-                $Tcpip_Warn = "No Tcpip Parameters found!"
-            } else {
-                $Tcpip_WhatToDo = ""
-                if ($Tcpip_Parameters.GetValue("TcpTimedWaitDelay") -eq $null) {
-                    $Tcpip_Warn = "TcpTimedWaitDelay not set!"
-                    $Tcpip_WhatToDo = "insert"
-                } elseif ($Tcpip_Parameters.GetValue("TcpTimedWaitDelay") -gt 30) {
-                    $Tcpip_Warn = "TcpTimedWaitDelay is greater than 30!"
-                    $Tcpip_WhatToDo = "update"
-                }
-                if ($Tcpip_WhatToDo -and (Test-IsElevated)) {
-                    try {
-                        Switch ($Tcpip_WhatToDo) {
-                            "insert" {New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name TcpTimedWaitDelay -PropertyType DWord -Value 30 -ErrorAction Stop}
-                            "update" {New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name TcpTimedWaitDelay -Value 30 -ErrorAction Stop}
-                        }
-                        $Tcpip_Done = $Tcpip_WhatToDo
-                    }
-                    catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                        $Tcpip_Done = "manual"
-                    }
-                }
-            }
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Error "TIME_WAIT detection failed: $($_.Exception.Message)"
-        }
-        if ($Tcpip_Warn) {
-            Write-Host "problem!" -ForegroundColor Red
-            Write-Log -Level Warn "$($Tcpip_Warn)$(if ($Tcpip_Done) {": $($Tcpip_Done)"})"
-            if ($Tcpip_Done) {
-                Switch($Tcpip_Done) {
-                    "insert" {
-                        Write-Host "Solved - new registry entry TcpTimedWaitDelay has been created. Please restart your system!" -ForegroundColor Green
-                        break
-                    }
-                    "update" {
-                        Write-Host "Solved - registry entry TcpTimedWaitDelay has been updated. Please restart your system!" -ForegroundColor Green
-                        break
-                    }
-                    default {
-                        Write-Host " "
-                        Write-Host "To set TcpTimedWaitDelay (TIME_WAIT):" -BackgroundColor Yellow -ForegroundColor Black
-                        Write-Host "1. start the regedit command" -ForegroundColor Yellow
-                        Write-Host "2. goto the `"HKEY_LOCAL_MACHINE`\SYSTEM`\CurrentControlSet`\Services`\TCPIP`\Parameters`" subkey" -ForegroundColor Yellow
-                        Write-Host "3. create a new REG_DWORD value named TcpTimedWaitDelay (or edit it, if it already exists)." -ForegroundColor Yellow
-                        Write-Host "4. set the value to 30" -ForegroundColor Yellow
-                        Write-Host "5. stop and restart your system" -ForegroundColor Yellow
-                    }
-                }
-                Write-Host " "
-            }
-        } else {
-            Write-Host "ok" -ForegroundColor Green
-        }
-    }
-
     try {
         $Session.Curl = $null
         Write-Host "Checking for cURL .. " -NoNewline
@@ -321,6 +255,15 @@ function Start-Core {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Error "Device detection failed: $($_.Exception.Message)"
         $PauseByError = $true
+    }
+
+    Write-Host "Starting sysinfo .. " -NoNewline
+    try {
+        $Global:GlobalSysInfoJob = Start-ThreadJob ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs -ErrorAction Stop
+        Write-Host "ok" -ForegroundColor Green
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Host "error" -ForegroundColor Red
     }
 
     if ($IsWindows -and ($GpuMemSizeMB = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100)) {
@@ -901,7 +844,9 @@ function Invoke-Core {
 
     $API.CmdKey = ''
 
-    if (-not (Test-Path Variable:Global:Asyncloader)) {$Session.SysInfo = Get-SysInfo}
+    if (Test-Path ".\Data\sysinfo.json") {
+        $Session.SysInfo = Get-ContentByStreamReader ".\Data\sysinfo.json" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+    }
 
     if ($CheckConfig) {Update-WatchdogLevels -Reset}
 
@@ -3355,6 +3300,7 @@ function Invoke-Core {
 
     Get-Job -State Completed | Where-Object {$_.Name -notmatch "^WebRequest-" -and $_.HasMoreData} | Receive-Job | Out-Host
     Get-Job -State Completed | Where-Object {$_.Name -notmatch "^WebRequest-"} | Remove-Job -Force
+    if ($Global:GlobalSysInfoJob -and $Global:GlobalSysInfoJob.State -eq "Running") {$Global:GlobalSysInfoJob | Receive-Job > $null}
 
     [System.GC]::Collect()
 

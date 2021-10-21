@@ -32,16 +32,6 @@ while (-not $AsyncLoader.Stop) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start cycle" -Append -Timestamp
     }
 
-    if (-not ($Cycle % 3)) {
-        if ($IsVerbose) {
-            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start Get-SysInfo" -Append -Timestamp
-        }
-        $Session.SysInfo = Get-SysInfo
-        if ($IsVerbose) {
-            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End Get-SysInfo" -Append -Timestamp
-        }
-    }
-
     if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
 
         $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
