@@ -88,6 +88,8 @@ param(
         $JobKey = Get-MD5Hash "$($method)$($endpoint)$(Get-HashtableAsJson $params)"
     }
 
+    $Result = $null
+
     if ($Session.MRRCache -eq $null) {[hashtable]$Session.MRRCache = @{}}
     if (-not $Cache -or -not $Session.MRRCache[$JobKey] -or -not $Session.MRRCache[$JobKey].request -or -not $Session.MRRCache[$JobKey].request.success -or $Session.MRRCache[$JobKey].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
@@ -116,8 +118,9 @@ param(
                     myip      = $Session.MyIP
                 }
                 try {
-                    $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getmrr" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
-                    if ($Result.Status) {$Data = $Result.Content;$Remote = $true}
+                    $GetMrr_Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getmrr" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
+                    if ($GetMrr_Result.Status) {$Data = $GetMrr_Result.Content;$Remote = $true}
+                    if ($GetMrr_Result -ne $null) {$GetMrr_Result = $null}
                     #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
@@ -157,13 +160,28 @@ param(
             Write-Log -Level Warn "MiningRigRental error: $(if ($Data.data.message) {$Data.data.message} else {"unknown"})"
         }
 
-        if (-not $Session.MRRCache[$JobKey] -or ($Data -and $Data.success)) {
-            $Session.MRRCache[$JobKey] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Data; cachetime = $Cache}
+        if (($Data -and $Data.success) -or -not $Cache -or -not $Session.MRRCache[$JobKey]) {
+            $Result = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Data; cachetime = $Cache}
+        }
+        if ($Data -ne $null) {$Data = $null}
+    }
+
+    if ($Cache) {
+        if ($Result -eq $null) {
+            if ($Session.MRRCache[$JobKey]) {
+                $Result = $Session.MRRCache[$JobKey]
+            }
+        } else {
+            $Session.MRRCache[$JobKey] = $Result
         }
     }
-    if ($Raw) {$Session.MRRCache[$JobKey].request}
-    else {
-        if ($Session.MRRCache[$JobKey].request -and $Session.MRRCache[$JobKey].request.success) {$Session.MRRCache[$JobKey].request.data}
+
+    if ($Result -ne $null) {
+        if ($Raw) {$Result.request}
+        else {
+            if ($Result.request -and $Result.request.success) {$Result.request.data}
+        }
+        $Result = $null
     }
 
     try {
@@ -203,7 +221,7 @@ param(
     [Parameter(Mandatory = $False)]
     [int]$Timeout = 15,
     [Parameter(Mandatory = $False)]
-    [int]$Cache = 0,
+    [int]$Cache = 10,
     [Parameter(Mandatory = $False)]
     [int64]$nonce = 0,
     [Parameter(Mandatory = $False)]
@@ -224,7 +242,7 @@ param(
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($method)$($endpoint)$(Get-HashtableAsJson $params)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=$cache;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag="MiningRigRentals";Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=[Math]::Max($cache,10);forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag="MiningRigRentals";Timeout=$timeout;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
