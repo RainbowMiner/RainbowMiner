@@ -6351,15 +6351,15 @@ Param(
                     if ($body -is [hashtable]) {
                         if ($Session.LogLevel -eq "Debug") {$fx = @{}}
                         if ($IsForm) {
-                            $form = [System.Net.Http.MultipartFormDataContent]::New()
+                            $content.Content = [System.Net.Http.MultipartFormDataContent]::New()
                             $body.GetEnumerator() | Foreach-Object {
                                 if ($_.Value -is [object] -and $_.Value.FullName) {
                                     $fs = [System.IO.FileStream]::New($_.Value, [System.IO.FileMode]::Open)
                                     $fs_array.Add($fs)
-                                    $form.Add([System.Net.Http.StreamContent]::New($fs),$_.Name,(Split-Path $_.Value -Leaf))
+                                    $content.Content.Add([System.Net.Http.StreamContent]::New($fs),$_.Name,(Split-Path $_.Value -Leaf))
                                     if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = "@$($_.Value.FullName)"}
                                 } else {
-                                    $form.Add([System.Net.Http.StringContent]::New($_.Value),$_.Name)
+                                    $content.Content.Add([System.Net.Http.StringContent]::New($_.Value),$_.Name)
                                     if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = $_.Value}
                                 }
                             }
@@ -6369,14 +6369,13 @@ Param(
                                 $body_local.Add([string]$_.Name,[string]$_.Value)
                                 if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = $_.Value}
                             }
-                            $form = [System.Net.Http.FormUrlEncodedContent]::new($body_local)
+                            $content.Content = [System.Net.Http.FormUrlEncodedContent]::new($body_local)
                             $body_local = $null
                         }
 
                         if ($Session.LogLevel -eq "Debug") {
                             Write-Log -Level Info "--> $(if ($IsForm) {"FORM"} else {"BODY"}): $(ConvertTo-Json $fx -Depth 10)"
                         }
-                        $content.Content = $form
                     } else {
                         if ($Session.LogLevel -eq "Debug") {
                             Write-Log -Level Info "--> PLAIN: $($body)"
@@ -6386,8 +6385,12 @@ Param(
                 }
 
                 $task = $Global:GlobalHttpClient.SendAsync($content)
-                
-                if ($task.Wait($timeout*1000)) {
+
+                if ($task.IsFaulted) {
+
+                    $Result.ErrorMessage = "Call to $($RequestUrl) failed: $($task.Exception.Message)$(if ($task.Exception.InnerException) {" --> $($task.Exception.InnerException)"})"
+
+                } elseif ($task.Wait($timeout*1000)) {
 
                     if ($Session.LogLevel -eq "Debug") {
                         Write-Log -Level Info "--> Result: $($task.Result.StatusCode) IsFaulted=$($task.Result.isFaulted) Status=$($task.Status)"
@@ -6399,7 +6402,7 @@ Param(
                         $Result.StatusCode = [int]$task.Result.StatusCode
 
                         if (-not $Result.Status) {
-                            $Result.ErrorMessage = $task.Result.Exception.Message
+                            $Result.ErrorMessage =  "$($task.Result.Exception.Message)$(if ($task.Result.Exception.InnerException) {" --> $($task.Result.Exception.InnerException)"})"
                         }
 
                         $Response = $task.Result.Content.ReadAsStringAsync().Result
@@ -6419,11 +6422,13 @@ Param(
                     }
 
                 } else {
+
                     $Result.ErrorMessage = "Call to $($RequestUrl) timed out after $($timeout) secs"
+
                 }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                $Result.ErrorMessage = "$($_.Exception.Message)"
+                $Result.ErrorMessage = "$($_.Exception.Message)$(if ($_.Exception.InnerException) {" --> $($_.Exception.InnerException)"})"
             } finally {
                 if($task -ne $null) {
                     if ($task.Result -ne $null) {$task.Result.Dispose()}
@@ -7651,7 +7656,7 @@ function Get-SysInfo {
                     $CPU.Temperature = $GetCPU_Data[$Index].Temperature
                 } else {
                     if (-not $CIM_CPU) {
-                        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
+                        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor -Property "Name","MaxClockSpeed","LoadPercentage" -ErrorAction Ignore
                     }
                     $CPU.Method = "cim"
                     $CIM_CPU | Select-Object -Index $Index | Foreach-Object {
@@ -7671,11 +7676,13 @@ function Get-SysInfo {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
+        } finally {
+            if ($CIM_CPU -ne $null) {$CIM_CPU.Dispose();$CIM_CPU = $null}
         }
 
         try {
             $CPULoad = ($CPUs | Measure-Object -Property Utilization -Average).Average
-            $OSData  = Get-CimInstance -Class Win32_OperatingSystem -ErrorAction Ignore
+            $OSData  = Get-CimInstance -Class Win32_OperatingSystem -Property "TotalVisibleMemorySize","FreePhysicalMemory" -ErrorAction Ignore
             $HDData  = Get-CimInstance -class Win32_LogicalDisk -namespace "root\CIMV2" -ErrorAction Ignore
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -7701,6 +7708,10 @@ function Get-SysInfo {
                 } | Select-Object
             )
         }
+
+        if ($OSData -ne $null) {$OSData.Dispose();$OSData = $null}
+        if ($HDData -ne $null) {$HDData.Dispose();$HDData = $null}
+
     } elseif ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
         Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo.sh" -File | Foreach-Object {
             try {
