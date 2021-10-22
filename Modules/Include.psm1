@@ -1556,7 +1556,7 @@ function Get-PoolsData {
         [String]$PoolName
     )
     if (Test-Path ".\Data\Pools\$($PoolName).json") {
-        if (Test-IsCore) {
+        if (Test-IsPS7) {
             Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
         } else {
             $Data = Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
