@@ -904,7 +904,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $API.Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Foreach-Object {
                 if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                     $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
-                    $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
+                    $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTimeUtc} else {$null}
                 }
                 [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
                 [String]$SecondAlgo = ''
@@ -921,7 +921,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Miners_List[$Miners_Key] = $true
                     $Miner_Path = Get-ChildItem "Stats\Miners\*-$($Miners_Key)_HashRate.txt" -ErrorAction Ignore
                     $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
-                    $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
+                    $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTimeUtc -lt $JsonUri_Dates[$_.BaseName]
                     $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -and $_.DeviceModel -match "-") {$API.DevicesToVendors."$($_.DeviceModel)"} else {$_.DeviceModel}
                     if ($Miner_DeviceModel -notmatch "-" -or $Miner_Path) {
                         $Out.Add([PSCustomObject]@{
@@ -1178,7 +1178,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                     $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
                     if ($PathToFile = Get-ConfigPath -ConfigName $GetConfigA[0] -WorkerName $Parameters.workername -GroupName $Parameters.groupname) {
-                        $ConfigLwt = Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
+                        $ConfigLwt = Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTimeUtc
                         $GetConfigNew = ($GetConfigA.Count -lt 2) -or ([int]$GetConfigA[1] -lt $ConfigLwt)
                         $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
                                                     isnew = $GetConfigNew

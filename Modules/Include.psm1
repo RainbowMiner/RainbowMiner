@@ -230,7 +230,7 @@ function Get-WhatToMineData {
     [CmdletBinding()]
     param([Switch]$Silent)
     
-    if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
+    if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTimeUtc -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
         try {
             $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10 -method "WEB"
             [System.Collections.Generic.List[PSCustomObject]]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
@@ -1431,7 +1431,7 @@ function Get-Stat {
 
 function Confirm-ConfigHealth {
     $Ok = $true
-    $Session.ConfigFiles.Keys | Where-Object {$Session.ConfigFiles.$_.Path -and (Test-Path $Session.ConfigFiles.$_.Path)} | Where-Object {(Get-ChildItem $Session.ConfigFiles.$_.Path).LastWriteTime.ToUniversalTime() -gt $_.Value.LastWriteTime} | Foreach-Object {
+    $Session.ConfigFiles.Keys | Where-Object {$Session.ConfigFiles.$_.Path -and (Test-Path $Session.ConfigFiles.$_.Path)} | Where-Object {(Get-ChildItem $Session.ConfigFiles.$_.Path).LastWriteTimeUtc -gt $_.Value.LastWriteTime} | Foreach-Object {
         $Name = $_
         $File = $Session.ConfigFiles.$_
         try {
@@ -4077,10 +4077,10 @@ function Get-AlgorithmMap {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc -gt $Global:GlobalAlgorithmMapTimeStamp) {
         [hashtable]$Global:GlobalAlgorithmMap = @{}
         (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
-        $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
+        $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
         $Global:GlobalAlgorithmMap
@@ -4158,10 +4158,10 @@ function Get-Algorithms {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if ($Force -or -not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
+    if ($Force -or -not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc -gt $Global:GlobalAlgorithmsTimeStamp) {
         [hashtable]$Global:GlobalAlgorithms = @{}
         (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
-        $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
+        $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
         if ($Values) {$Global:GlobalAlgorithms.Values | Sort-Object -Unique}
@@ -4179,10 +4179,10 @@ function Get-CoinsDB {
         [Parameter(Mandatory = $false)]
         [Switch]$Force = $false
     )
-    if ($Force -or -not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
+    if ($Force -or -not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc -gt $Global:GlobalCoinsDBTimeStamp) {
         [hashtable]$Global:GlobalCoinsDB = @{}
         (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
-        $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
+        $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
         if ($Values) {$Global:GlobalCoinsDB.Values | Sort-Object -Unique}
@@ -4196,10 +4196,10 @@ function Get-EquihashCoins {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalEquihashCoins) -or (Get-ChildItem "Data\equihashcoins.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalEquihashCoinsTimeStamp) {
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins) -or (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc -gt $Global:GlobalEquihashCoinsTimeStamp) {
         [hashtable]$Global:GlobalEquihashCoins = @{}
         (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
-        $Global:GlobalEquihashCoinsTimeStamp = (Get-ChildItem "Data\equihashcoins.json").LastWriteTime.ToUniversalTime()
+        $Global:GlobalEquihashCoinsTimeStamp = (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc
     }
     if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
 }
@@ -4266,10 +4266,10 @@ function Get-NimqHashrates {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalNimqHashrates) -or (Get-ChildItem "Data\nimqhashrates.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalNimqHashratesTimeStamp) {
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates) -or (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc -gt $Global:GlobalNimqHashratesTimeStamp) {
         [hashtable]$Global:GlobalNimqHashrates = @{}
         (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
-        $Global:GlobalNimqHashratesTimeStamp = (Get-ChildItem "Data\nimqhashrates.json").LastWriteTime.ToUniversalTime()
+        $Global:GlobalNimqHashratesTimeStamp = (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc
 
     }
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
@@ -4332,10 +4332,10 @@ function Get-Regions {
         [Switch]$Silent = $false,
         [Switch]$AsHash = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions) -or (Get-ChildItem "Data\regions.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalRegionsTimeStamp) {
+    if (-not (Test-Path Variable:Global:GlobalRegions) -or (Get-ChildItem "Data\regions.json").LastWriteTimeUtc -gt $Global:GlobalRegionsTimeStamp) {
         [hashtable]$Global:GlobalRegions = @{}
         (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
-        $Global:GlobalRegionsTimeStamp = (Get-ChildItem "Data\regions.json").LastWriteTime.ToUniversalTime()
+        $Global:GlobalRegionsTimeStamp = (Get-ChildItem "Data\regions.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
         if ($AsHash) {$Global:GlobalRegions}
@@ -4349,10 +4349,10 @@ function Get-Regions2 {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions2) -or (Get-ChildItem "Data\regions2.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalRegions2TimeStamp) {
+    if (-not (Test-Path Variable:Global:GlobalRegions2) -or (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc -gt $Global:GlobalRegions2TimeStamp) {
         [hashtable]$Global:GlobalRegions2 = @{}
         (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
-        $Global:GlobalRegions2TimeStamp = (Get-ChildItem "Data\regions2.json").LastWriteTime.ToUniversalTime()
+        $Global:GlobalRegions2TimeStamp = (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc
     }
     if (-not $Silent) {$Global:GlobalRegions2.Keys}
 }
@@ -4864,7 +4864,7 @@ function Set-AlgorithmsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Algorithms"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTimeUtc) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -4902,7 +4902,7 @@ function Set-CoinsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Coins"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTimeUtc) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -5073,7 +5073,7 @@ function Set-DevicesConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Devices"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTimeUtc) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -5115,7 +5115,7 @@ function Set-MinersConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Miners"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTimeUtc) {
         $Algo = [hashtable]@{}
         $Done = [PSCustomObject]@{}
         $ChangeTag = $null
@@ -5273,13 +5273,13 @@ function Set-PoolsConfigDefault {
     if ($UserpoolsConfigName -and $Session.ConfigFiles.ContainsKey($UserpoolsConfigName)) {
         $UserpoolsPathToFile = $Session.ConfigFiles[$UserpoolsConfigName].Path
         if (Test-Path $UserpoolsPathToFile) {
-            $UserpoolsUpdated = ((Test-Path $PathToFile) -and (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem $UserpoolsPathToFile).LastWriteTime.ToUniversalTime())
+            $UserpoolsUpdated = ((Test-Path $PathToFile) -and (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem $UserpoolsPathToFile).LastWriteTimeUtc)
         } else {
             $UserpoolsPathToFile = ""
         }
     }
 
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime() -or $UserpoolsUpdated) {
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTimeUtc -or $UserpoolsUpdated) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -5359,7 +5359,7 @@ function Set-OCProfilesConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})OCProfiles"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTimeUtc) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -5504,7 +5504,7 @@ function Test-Config {
         [Switch]$LastWriteTime
     )
     if (-not $Exists -and ($Health -or $LastWriteTime)) {$Exists = $true}
-    $Session.ConfigFiles.ContainsKey($ConfigName) -and $Session.ConfigFiles[$ConfigName].Path -and (-not $Exists -or (Test-Path $Session.ConfigFiles[$ConfigName].Path)) -and (-not $Health -or $Session.ConfigFiles[$ConfigName].Healthy) -and (-not $LastWriteTime -or (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles[$ConfigName].LastWriteTime)
+    $Session.ConfigFiles.ContainsKey($ConfigName) -and $Session.ConfigFiles[$ConfigName].Path -and (-not $Exists -or (Test-Path $Session.ConfigFiles[$ConfigName].Path)) -and (-not $Health -or $Session.ConfigFiles[$ConfigName].Healthy) -and (-not $LastWriteTime -or (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTimeUtc -gt $Session.ConfigFiles[$ConfigName].LastWriteTime)
 }
 
 function Set-ConfigLastWriteTime {
@@ -5514,7 +5514,7 @@ function Set-ConfigLastWriteTime {
         [string]$ConfigName
     )
     if (Test-Config $ConfigName -Exists) {
-        $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime()        
+        $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTimeUtc        
     }
 }
 
@@ -5608,7 +5608,7 @@ function Get-ConfigContent {
     if ($PathToFile = Get-ConfigPath -ConfigName $ConfigName -WorkerName $WorkerName -GroupName $GroupName) {
         try {
             if ($UpdateLastWriteTime) {
-                $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
+                $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTimeUtc
             }
             $Result = Get-ContentByStreamReader $PathToFile
             if ($Parameters.Count) {
@@ -6818,6 +6818,7 @@ Param(
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
             try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
+
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
     }

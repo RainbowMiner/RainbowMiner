@@ -7,7 +7,7 @@
     $ConfigName = "MRR"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if (-not (Test-Path $PathToFile) -or (Test-Config $ConfigName -LastWriteTime) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MRRConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+    if (-not (Test-Path $PathToFile) -or (Test-Config $ConfigName -LastWriteTime) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MRRConfigDefault.ps1").LastWriteTimeUtc) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -221,7 +221,7 @@ param(
     [Parameter(Mandatory = $False)]
     [int]$Timeout = 15,
     [Parameter(Mandatory = $False)]
-    [int]$Cache = 10,
+    [int]$Cache = 0,
     [Parameter(Mandatory = $False)]
     [int64]$nonce = 0,
     [Parameter(Mandatory = $False)]
@@ -242,7 +242,7 @@ param(
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($method)$($endpoint)$(Get-HashtableAsJson $params)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=[Math]::Max($cache,10);forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag="MiningRigRentals";Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=$cache;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag="MiningRigRentals";Timeout=$timeout;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
@@ -253,7 +253,9 @@ param(
     
     if ($StaticJobKey -and $endpoint -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.endpoint -ne $endpoint -or $AsyncLoader.Jobs.$Jobkey.key -ne $key -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.params) -ne (Get-HashtableAsJson $params))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.endpoint = $endpoint;$AsyncLoader.Jobs.$Jobkey.key = $key;$AsyncLoader.Jobs.$Jobkey.secret = $secret;$AsyncLoader.Jobs.$Jobkey.params = $params}
 
-    if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not $Session.MRRCache -or -not $Session.MRRCache[$JobKey]) {
+    if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
+
+    if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy") -or (Get-ChildItem ".\Cache\$($Jobkey).asy").LastWriteTimeUtc -lt (Get-Date).ToUniversalTime().AddSeconds(-$AsyncLoader.Jobs.$Jobkey.CycleTime*10)) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $AsyncLoader.Jobs.$Jobkey = $JobData
             $AsyncLoader.Jobs.$Jobkey.Index = $AsyncLoader.Jobs.Count
@@ -291,9 +293,9 @@ param(
             if ($retry -gt 0) {
                 if (-not $RequestError) {$retry = 0}
                 else {
-                    $Passed = $StopWatch.ElapsedMilliseconds
-                    if ($AsyncLoader.Jobs.$Jobkey.RetryWait -gt $Passed) {
-                        Start-Sleep -Milliseconds ($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed)
+                     $RetryWait_Time = [Math]::Min($AsyncLoader.Jobs.$Jobkey.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
+                    if ($RetryWait_Time -gt 50) {
+                        Start-Sleep -Milliseconds $RetryWait_Time
                     }
                 }
             }
@@ -302,23 +304,66 @@ param(
         $StopWatch.Stop()
         $StopWatch = $null
 
+        if (-not $RequestError -and $Request) {
+            try {
+                $Request = $Request | ConvertTo-Json -Compress -Depth 10 -ErrorAction Stop
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $RequestError = "$($_.Exception.Message)"
+            } finally {
+                if ($RequestError) {$RequestError = "JSON problem: $($RequestError)"}
+            }
+        }
+
+        $CacheWriteOk = $false
+
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
-        } elseif ($Session.MRRCache[$JobKey]) {
-            $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=$Session.MRRCache[$JobKey].last
+        } else {
+            $retry = 3
+            do {
+                $RequestError = $null
+                try {
+                    Write-ToFile -FilePath ".\Cache\$($Jobkey).asy" -Message $Request -NoCR -ThrowError
+                    $CacheWriteOk = $true
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $RequestError = "$($_.Exception.Message)"                
+                }
+                $retry--
+                if ($retry -gt 0) {
+                    if (-not $RequestError) {$retry = 0}
+                    else {
+                        Start-Sleep -Milliseconds 500
+                    }
+                }
+            } until ($retry -le 0)
+        }
+
+        if ($CacheWriteOk) {
+            $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()
+        }
+
+        if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
+            try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
 
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
     }
     if (-not $quiet) {
-        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0 -and -not $Session.MRRCache[$JobKey]) {throw $AsyncLoader.Jobs.$Jobkey.Error}
-        if ($Session.MRRCache -and $Session.MRRCache[$JobKey]) {
-            if ($Raw) {$Session.MRRCache[$JobKey].request}
-            else {
-                if ($Session.MRRCache[$JobKey].request -and $Session.MRRCache[$JobKey].request.success) {$Session.MRRCache[$JobKey].request.data}
+        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0 -and -not (Test-Path ".\Cache\$($Jobkey).asy")) {throw $AsyncLoader.Jobs.$Jobkey.Error}
+        if (Test-Path ".\Cache\$($Jobkey).asy") {
+            try {
+                if (Test-IsCore) {
+                    Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                } else {
+                    $Data = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
+                    $Data
+                }
             }
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
         }
     }
 }
