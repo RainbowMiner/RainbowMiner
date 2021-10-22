@@ -30,6 +30,11 @@ if ($IsLinux) {
             Version = "1.18"
         },
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.17-teamblack/TeamBlackMiner_1_17_cuda_11_4.7z"
+            Cuda = "11.4"
+            Version = "1.17"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.18-teamblack/TeamBlackMiner_1_18_cuda_11_2.7z"
             Cuda = "11.2"
             Version = "1.18"
