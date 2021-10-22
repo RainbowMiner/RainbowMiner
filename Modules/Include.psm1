@@ -6827,7 +6827,7 @@ Param(
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
                 if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
-                    if (Test-IsCore) {
+                    if (Test-IsPS7) {
                         Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
                     } else {
                         $Data = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop

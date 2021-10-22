@@ -367,7 +367,7 @@ param(
         if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0 -and -not (Test-Path ".\Cache\$($Jobkey).asy")) {throw $AsyncLoader.Jobs.$Jobkey.Error}
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
-                if (Test-IsCore) {
+                if (Test-IsPS7) {
                     Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
                 } else {
                     $Data = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
@@ -694,7 +694,7 @@ param(
     [Parameter(Mandatory = $False)]
     [Int]$Cache = 0
 )
-    (Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -Cache $Cache -cycletime $Session.Config.Interval) | Where-Object description -match "\[($($workers -join '|'))\]"
+    Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -Cache $Cache -cycletime $Session.Config.Interval | Where-Object description -match "\[($($workers -join '|'))\]"
 }
 
 function Get-MiningRigRentalsRigID {
