@@ -259,7 +259,7 @@ function Start-Core {
 
     Write-Host "Starting sysinfo .. " -NoNewline
     try {
-        $Global:GlobalSysInfoJob = Start-ThreadJob ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs -ErrorAction Stop
+        $Global:GlobalSysInfoJob = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -FilePath ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs -ErrorAction Stop
         Write-Host "ok" -ForegroundColor Green
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
