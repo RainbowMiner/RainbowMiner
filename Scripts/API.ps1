@@ -1272,7 +1272,21 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     if ($Parameters.key -and $Parameters.secret) {
                         $Params = [hashtable]@{}
                         ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
-                        $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -regexfld "$($Parameters.regexfld)"  -regex "$($Parameters.regex)" -regexmatch ([bool]$Parameters.regexmatch) -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
+
+                        if (-not $Parameters.nonce -and $Parameters.cycletime) {
+                            $Result = Invoke-MiningRigRentalRequestAsync $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -Raw
+                        } else {
+                            $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -nonce $Parameters.nonce -Raw
+                        }
+
+                        if ($Parameters.regexfld -and $Parameters.regex -and $Result.data) {
+                            if (Get-Yes $Parameters.regexmatch) {
+                                $Result.data = $Result.data | Where-Object {$_."$($Parameters.regexfld)" -match $Parameters.regex}
+                            } else {
+                                $Result.data = $Result.data | Where-Object {$_."$($Parameters.regexfld)" -notmatch $Parameters.regex}
+                            }
+                        }
+
                         $Status = $true
                     }
                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}

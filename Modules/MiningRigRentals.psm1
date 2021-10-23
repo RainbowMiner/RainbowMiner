@@ -90,11 +90,14 @@ param(
         $regexfld  = $JobData.regexfld
         $regexmatch= $JobData.regexmatch
         $Timeout   = $JobData.timeout
-        $Cache     = $JobData.cache
         $ForceLocal= $JobData.forcelocal
         $Raw       = $JobData.raw
+        $cycletime = $JobData.cycletime
+        $retry     = $JobData.retry
+        $retrywait = $JobData.retrywait
     } else {
         $JobKey = Get-MD5Hash "$($base)$($method)$($endpoint)$($regexfld)$($regex)$($regexmatch)$(Get-HashtableAsJson $params)"
+        $cycletime = $retry = $retrywait = 0
     }
 
     $Result = $null
@@ -125,6 +128,9 @@ param(
                     regexmatch= $regexmatch
                     timeout   = $timeout
                     nonce     = $nonce
+                    cycletime = $cycletime
+                    retry     = $retry
+                    retrywait = $retrywait
                     machinename = $Session.MachineName
                     workername  = $Config.Workername
                     myip      = $Session.MyIP
@@ -173,7 +179,7 @@ param(
         }
 
         if (($Data -and $Data.success) -or -not $Cache -or -not $Global:MRRCache[$JobKey]) {
-            if (-not $Raw -and $regex -and $regexfld -and $Data.data) {
+            if ($regex -and $regexfld -and $Data.data) {
                 if ($regexmatch) {
                     $Data.data = $Data.data | Where-Object {$_.$regexfld -match $regex}
                 } else {
@@ -246,10 +252,6 @@ param(
     [Parameter(Mandatory = $False)]
     [int]$Timeout = 15,
     [Parameter(Mandatory = $False)]
-    [int]$Cache = 0,
-    [Parameter(Mandatory = $False)]
-    [int64]$nonce = 0,
-    [Parameter(Mandatory = $False)]
     [string]$JobKey = "",
     [Parameter(Mandatory = $False)]
     [switch]$ForceLocal,
@@ -257,6 +259,10 @@ param(
     [switch]$Raw,
     [Parameter(Mandatory = $False)]   
     [int]$cycletime = 0,
+    [Parameter(Mandatory = $False)]   
+    [int]$retry = 0,
+    [Parameter(Mandatory = $False)]   
+    [int]$retrywait = 250,
     [Parameter(Mandatory = $False)]   
     [switch]$force = $false,
     [Parameter(Mandatory = $False)]   
@@ -270,7 +276,7 @@ param(
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
         $JobHost = try{([System.Uri]$base).Host}catch{if($Error.Count){$Error.RemoveAt(0)};"www.miningrigrentals.com"}
-        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;regex=$regex;regexfld=$regexfld;regexmatch=$regexmatch;cache=$cache;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag=$tag;Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;regex=$regex;regexfld=$regexfld;regexmatch=$regexmatch;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
@@ -715,11 +721,14 @@ param(
     [Parameter(Mandatory = $True)]
     [String]$secret,
     [Parameter(Mandatory = $True)]
-    [String[]]$workers,
-    [Parameter(Mandatory = $False)]
-    [Int]$Cache = 0
+    [String[]]$workers
 )
-    Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -Cache $Cache -cycletime $Session.Config.Interval -regexfld "description" -regex "\[($($workers -join '|'))\]" -regexmatch $true
+    $regex = "\[($($workers -join '|'))\]"
+    if ($Session.Config.RunMode -eq "Server") {
+        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime $Session.Config.Interval | Where-Object {$_.description -match $regex}
+    } else {
+        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime $Session.Config.Interval -regexfld "description" -regex $regex -regexmatch $true
+    }
 }
 
 function Get-MiningRigRentalsRigID {
