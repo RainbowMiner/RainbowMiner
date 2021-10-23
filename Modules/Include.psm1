@@ -7402,7 +7402,7 @@ function Set-OsFlags {
         [CultureInfo]::CurrentCulture = 'en-US'
     }
 
-    if (-not (Get-Command "Start-ThreadJob" -ErrorAction SilentlyContinue)) {Set-Alias -Scope Global Start-ThreadJob Start-Job}
+    if (-not (Get-Command "Start-ThreadJob" -ErrorAction Ignore)) {Set-Alias -Scope Global Start-ThreadJob Start-Job}
 
     if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
        [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
