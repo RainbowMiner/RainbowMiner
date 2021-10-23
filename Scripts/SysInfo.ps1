@@ -17,7 +17,7 @@ do {
     if (-not $end -and $count -le 0) {
         try {
             if ($SysInfo = Get-SysInfo -PhysicalCPUs $PhysicalCPUs) {
-                Set-ContentJson ".\Data\sysinfo.json" $SysInfo > $null
+                Set-ContentJson -PathToFile ".\Data\sysinfo.json" -Data $SysInfo -Quiet > $null
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}

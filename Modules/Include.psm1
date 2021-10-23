@@ -1528,11 +1528,8 @@ function Get-ContentByStreamReader {
     try {
         if (-not (Test-Path $FilePath)) {return}
         $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-        $FileMode = [System.IO.FileMode]::Open
-        $FileAccess = [System.IO.FileAccess]::Read
-        $FileShare = [System.IO.FileShare]::ReadWrite
-        $FileStream = New-Object System.IO.FileStream $FilePath, $FileMode, $FileAccess, $FileShare
-        $reader = New-Object System.IO.StreamReader($FileStream)
+        $stream = [System.IO.FileStream]::new($FilePath,[System.IO.FileMode]::Open,[System.IO.FileAccess]::Read,[System.IO.FileShare]::ReadWrite)
+        $reader = [System.IO.StreamReader]::new($stream)
         if ($ExpandLines) {
             while (-not $reader.EndOfStream) {$reader.ReadLine()}
         } else {
@@ -1545,6 +1542,7 @@ function Get-ContentByStreamReader {
     }
     finally {
         if ($reader) {$reader.Close();$reader.Dispose()}
+        if ($stream) {$stream.Close();$stream.Dispose()}
     }
     if ($ThrowError -and $ErrorString) {throw $ErrorString}
 }
@@ -4800,7 +4798,9 @@ function Set-ContentJson {
         [Parameter(Mandatory = $False)]
         $MD5hash = '',
         [Parameter(Mandatory = $False)]
-        [Switch]$Compress
+        [Switch]$Compress,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Quiet
     )
     $retry = 3
     do {
@@ -4808,12 +4808,12 @@ function Set-ContentJson {
             $Exists = $false
             if ([System.IO.File]::Exists($PathToFile)) {
                     if ((Get-ChildItem $PathToFile -File).IsReadOnly) {
-                        Write-Log -Level Warn "Unable to write to read-only file $PathToFile"
+                        if (-not $Quiet) {Write-Log -Level Warn "Unable to write to read-only file $PathToFile"}
                         return $false
                     }
-                    $FileStream = [System.IO.File]::Open($PathToFile,'Open','Write')
-                    $FileStream.Close()
-                    $FileStream.Dispose()
+                    $stream = [System.IO.File]::Open($PathToFile,'Open','Write')
+                    $stream.Close()
+                    $stream.Dispose()
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
@@ -4829,7 +4829,7 @@ function Set-ContentJson {
                     } else {
                         ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 -ErrorAction Stop
                     }
-                    $utf8 = New-Object System.Text.UTF8Encoding $false
+                    $utf8 = [System.Text.UTF8Encoding]::new($false)
                     Set-Content -Value $utf8.GetBytes($JsonOut) -Encoding Byte -Path $PathToFile -ErrorAction Stop
                 }
             } elseif ($Exists) {
@@ -4840,7 +4840,7 @@ function Set-ContentJson {
         $retry--
         Start-Sleep -Seconds 1
     } until ($retry -le 0)
-    Write-Log -Level Warn "Unable to write to file $PathToFile"
+    if (-not $Quiet) {Write-Log -Level Warn "Unable to write to file $PathToFile"}
     return $false
 }
 
