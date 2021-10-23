@@ -11,7 +11,8 @@ $Request = [PSCustomObject]@{}
 
 if (-not $Config.Pools.$Name.API_Key -or -not $Config.Pools.$Name.API_Secret) {return}
 
-$Request = Invoke-MiningRigRentalRequest "/account/balance" $Config.Pools.$Name.API_Key $Config.Pools.$Name.API_Secret
+$Request = Invoke-MiningRigRentalRequestAsync "/account/balance" $Config.Pools.$Name.API_Key $Config.Pools.$Name.API_Secret -cycletime ($Config.BalanceUpdateMinutes*60)
+
 if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
 }
