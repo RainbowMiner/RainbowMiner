@@ -1272,7 +1272,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     if ($Parameters.key -and $Parameters.secret) {
                         $Params = [hashtable]@{}
                         ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
-                        $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
+                        $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -regexfld "$($Parameters.regexfld)"  -regex "$($Parameters.regex)" -regexmatch ([bool]$Parameters.regexmatch) -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
                         $Status = $true
                     }
                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}

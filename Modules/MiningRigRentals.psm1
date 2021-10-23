@@ -56,6 +56,12 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$base = "https://www.miningrigrentals.com/api/v2",
     [Parameter(Mandatory = $False)]
+    [String]$regex = "",
+    [Parameter(Mandatory = $False)]
+    [String]$regexfld = "",
+    [Parameter(Mandatory = $False)]
+    [Bool]$regexmatch = $true,
+    [Parameter(Mandatory = $False)]
     [int]$Timeout = 15,
     [Parameter(Mandatory = $False)]
     [int]$Cache = 0,
@@ -80,12 +86,15 @@ param(
         $params    = $JobData.params
         $method    = $JobData.method
         $base      = $JobData.base
+        $regex     = $JobData.regex
+        $regexfld  = $JobData.regexfld
+        $regexmatch= $JobData.regexmatch
         $Timeout   = $JobData.timeout
         $Cache     = $JobData.cache
         $ForceLocal= $JobData.forcelocal
         $Raw       = $JobData.raw
     } else {
-        $JobKey = Get-MD5Hash "$($method)$($endpoint)$(Get-HashtableAsJson $params)"
+        $JobKey = Get-MD5Hash "$($base)$($method)$($endpoint)$($regexfld)$($regex)$($regexmatch)$(Get-HashtableAsJson $params)"
     }
 
     $Result = $null
@@ -111,6 +120,9 @@ param(
                     params    = $params_local | ConvertTo-Json -Depth 10 -Compress
                     method    = $method
                     base      = $base
+                    regex     = $regex
+                    regexfld  = $regexfld
+                    regexmatch= $regexmatch
                     timeout   = $timeout
                     nonce     = $nonce
                     machinename = $Session.MachineName
@@ -161,6 +173,13 @@ param(
         }
 
         if (($Data -and $Data.success) -or -not $Cache -or -not $Global:MRRCache[$JobKey]) {
+            if (-not $Raw -and $regex -and $regexfld -and $Data.data) {
+                if ($regexmatch) {
+                    $Data.data = $Data.data | Where-Object {$_.$regexfld -match $regex}
+                } else {
+                    $Data.data = $Data.data | Where-Object {$_.$regexfld -notmatch $regex}
+                }
+            }
             $Result = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Data; cachetime = $Cache}
         }
         if ($Data -ne $null) {$Data = $null}
@@ -219,6 +238,12 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$base = "https://www.miningrigrentals.com/api/v2",
     [Parameter(Mandatory = $False)]
+    [String]$regex = "",
+    [Parameter(Mandatory = $False)]
+    [String]$regexfld = "",
+    [Parameter(Mandatory = $False)]
+    [Bool]$regexmatch = $true,
+    [Parameter(Mandatory = $False)]
     [int]$Timeout = 15,
     [Parameter(Mandatory = $False)]
     [int]$Cache = 0,
@@ -239,13 +264,13 @@ param(
 )
     if (-not $endpoint -and -not $Jobkey) {return}
 
-    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($base)$($method)$($endpoint)$(Get-HashtableAsJson $params)";$StaticJobKey = $false} else {$StaticJobKey = $true}
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($base)$($method)$($endpoint)$($regex)$($regexfld)$($regexmatch)$(Get-HashtableAsJson $params)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     $tag = "MiningRigRentals"
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
         $JobHost = try{([System.Uri]$base).Host}catch{if($Error.Count){$Error.RemoveAt(0)};"www.miningrigrentals.com"}
-        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;cache=$cache;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag=$tag;Timeout=$timeout;Index=0}
+        $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;regex=$regex;regexfld=$regexfld;regexmatch=$regexmatch;cache=$cache;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=0;RetryWait=0;Tag=$tag;Timeout=$timeout;Index=0}
     }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
@@ -254,7 +279,7 @@ param(
         return
     }
     
-    if ($StaticJobKey -and $endpoint -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.endpoint -ne $endpoint -or $AsyncLoader.Jobs.$Jobkey.key -ne $key -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.params) -ne (Get-HashtableAsJson $params))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.endpoint = $endpoint;$AsyncLoader.Jobs.$Jobkey.key = $key;$AsyncLoader.Jobs.$Jobkey.secret = $secret;$AsyncLoader.Jobs.$Jobkey.params = $params}
+    if ($StaticJobKey -and $endpoint -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.endpoint -ne $endpoint -or $AsyncLoader.Jobs.$Jobkey.key -ne $key -or $AsyncLoader.Jobs.$Jobkey.regex -ne $regex -or $AsyncLoader.Jobs.$Jobkey.regexfld -ne $regexfld -or $AsyncLoader.Jobs.$Jobkey.regexmatch -ne $regexmatch -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.params) -ne (Get-HashtableAsJson $params))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.endpoint = $endpoint;$AsyncLoader.Jobs.$Jobkey.key = $key;$AsyncLoader.Jobs.$Jobkey.secret = $secret;$AsyncLoader.Jobs.$Jobkey.params = $params}
 
     if ($JobHost) {
         if ($AsyncLoader.HostTags.$JobHost -eq $null) {
@@ -694,7 +719,7 @@ param(
     [Parameter(Mandatory = $False)]
     [Int]$Cache = 0
 )
-    Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -Cache $Cache -cycletime $Session.Config.Interval | Where-Object description -match "\[($($workers -join '|'))\]"
+    Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -Cache $Cache -cycletime $Session.Config.Interval -regexfld "description" -regex "\[($($workers -join '|'))\]" -regexmatch $true
 }
 
 function Get-MiningRigRentalsRigID {
