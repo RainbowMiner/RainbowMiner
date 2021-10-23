@@ -725,9 +725,9 @@ param(
 )
     $regex = "\[($($workers -join '|'))\]"
     if ($Session.Config.RunMode -eq "Server") {
-        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime $Session.Config.Interval | Where-Object {$_.description -match $regex}
+        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime 60 | Where-Object {$_.description -match $regex}
     } else {
-        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime $Session.Config.Interval -regexfld "description" -regex $regex -regexmatch $true
+        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime 60 -regexfld "description" -regex $regex -regexmatch $true
     }
 }
 

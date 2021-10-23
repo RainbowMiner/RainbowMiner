@@ -1276,7 +1276,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         if (-not $Parameters.nonce -and $Parameters.cycletime) {
                             $Result = Invoke-MiningRigRentalRequestAsync $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -Raw
                         } else {
-                            $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -nonce $Parameters.nonce -Raw
+                            $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -nonce $Parameters.nonce -Raw -Cache $(if ($Parameters.cycletime) {30} else {0})
                         }
 
                         if ($Parameters.regexfld -and $Parameters.regex -and $Result.data) {
