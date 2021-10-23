@@ -4,6 +4,8 @@ Import-Module .\Modules\Include.psm1
 
 Set-OsFlags
 
+if ($IsLinux) {Import-Module .\Modules\OCDaemon.psm1}
+
 $ControllerProcess = Get-Process -Id $ControllerProcessID -ErrorAction Ignore
 if ($ControllerProcess -eq $null) {return}
 
