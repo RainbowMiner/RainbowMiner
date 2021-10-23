@@ -1276,9 +1276,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $regex = "$($Parameters.regex)"
                         $regexfld = "$($Parameters.regexfld)"
                         $regexmatch = Get-Yes $Parameters.regexmatch
+                        $cycletime = [int]$Parameters.cycletime
+                        $nonce     = [int]$Parameters.nonce
 
-                        if (-not $Parameters.nonce -and $Parameters.cycletime) {
-                            $Result = Invoke-MiningRigRentalRequestAsync $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -Raw
+                        if (-not $nonce -and $cycletime) {
+                            $Result = Invoke-MiningRigRentalRequestAsync $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -cycletime $cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -Raw
                             if ($regexfld -and $regex -and $Result.data) {
                                 if ($regexmatch) {
                                     $Result.data = $Result.data | Where-Object {$_.$regexfld -match $regex}
@@ -1287,7 +1289,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                 }
                             }
                         } else {
-                            $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -nonce $Parameters.nonce -regexfld $regexfld -regex $regex -regexmatch $regexmatch -Raw -Cache $(if ($Parameters.cycletime) {30} else {0})
+                            $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -nonce $nonce -regexfld $regexfld -regex $regex -regexmatch $regexmatch -Raw -Cache $(if ($cycletime) {30} else {0})
                         }
 
                         $Status = $true
