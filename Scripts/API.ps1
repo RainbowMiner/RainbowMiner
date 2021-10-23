@@ -1273,18 +1273,21 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Params = [hashtable]@{}
                         ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
 
+                        $regex = "$($Parameters.regex)"
+                        $regexfld = "$($Parameters.regexfld)"
+                        $regexmatch = Get-Yes $Parameters.regexmatch
+
                         if (-not $Parameters.nonce -and $Parameters.cycletime) {
                             $Result = Invoke-MiningRigRentalRequestAsync $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -Raw
-                        } else {
-                            $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -nonce $Parameters.nonce -Raw -Cache $(if ($Parameters.cycletime) {30} else {0})
-                        }
-
-                        if ($Parameters.regexfld -and $Parameters.regex -and $Result.data) {
-                            if (Get-Yes $Parameters.regexmatch) {
-                                $Result.data = $Result.data | Where-Object {$_."$($Parameters.regexfld)" -match $Parameters.regex}
-                            } else {
-                                $Result.data = $Result.data | Where-Object {$_."$($Parameters.regexfld)" -notmatch $Parameters.regex}
+                            if ($regexfld -and $regex -and $Result.data) {
+                                if ($regexmatch) {
+                                    $Result.data = $Result.data | Where-Object {$_.$regexfld -match $regex}
+                                } else {
+                                    $Result.data = $Result.data | Where-Object {$_.$regexfld -notmatch $regex}
+                                }
                             }
+                        } else {
+                            $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -nonce $Parameters.nonce -regexfld $regexfld -regex $regex -regexmatch $regexmatch -Raw -Cache $(if ($Parameters.cycletime) {30} else {0})
                         }
 
                         $Status = $true
