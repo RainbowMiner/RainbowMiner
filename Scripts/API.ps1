@@ -1279,7 +1279,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $cycletime = [int]$Parameters.cycletime
                         $nonce     = [int]$Parameters.nonce
 
-                        if (-not $nonce -and $cycletime) {
+                        if (-not $nonce -and $cycletime -and (Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Timestamp -and ($AsyncLoader.Timestamp -gt (Get-Date).ToUniversalTime().AddMinutes(-10))) {
                             $Result = Invoke-MiningRigRentalRequestAsync $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -cycletime $cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -Raw
                             if ($regexfld -and $regex -and $Result.data) {
                                 if ($regexmatch) {
