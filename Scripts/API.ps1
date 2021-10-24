@@ -603,7 +603,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             }
 
-            @(".\Data\lscpu.txt", ".\Data\gpu-count.txt", ".\Data\gpu-minerlist.txt", ".\Data\gpu-test.txt", ".\Data\alldevices.json") | Where-Object {Test-Path $_} | Foreach-Object {
+            @(".\Data\lscpu.txt", ".\Data\gpu-count.txt", ".\Data\gpu-minerlist.txt", ".\Data\gpu-test.txt", ".\Data\alldevices.json", ".\Data\sysinfo.json") | Where-Object {Test-Path $_} | Foreach-Object {
                 Copy-Item $_ $DebugPath -ErrorAction Ignore
             }
 
