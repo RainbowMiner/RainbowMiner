@@ -124,7 +124,7 @@ function Start-Setup {
             }
         } catch {}
 
-        $IsInitialSetup = -not $Config.Wallet -or -not $Config.WorkerName
+        $IsInitialSetup = -not $Config.WorkerName
 
         $DefaultWorkerName = $Session.MachineName -replace "[^A-Z0-9]+"
 
@@ -188,7 +188,7 @@ function Start-Setup {
                             if ($WorkerName -ne "exit") {
                                 $ConfigActual | Add-Member WorkerName $WorkerName -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["Config"].Path -Data $ConfigActual > $null
-                                if ($ConfigActual.Wallet -and $ConfigActual.WorkerName -and $ConfigActual.Wallet -ne "`$Wallet" -and $ConfigActual.WorkerName -ne "`$WorkerName") {
+                                if ($ConfigActual.WorkerName -and $ConfigActual.WorkerName -ne "`$WorkerName") {
                                     $SetupType = "X"
                                 }
                             }
@@ -229,9 +229,8 @@ function Start-Setup {
             Write-Host "- Network: API and client/server setup for multiple rigs within one network" -ForegroundColor Yellow
             Write-Host "- Scheduler: different power prices and selective pause for timespans" -ForegroundColor Yellow
             Write-Host " "
-            if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName) {
+            if (-not $Config.WorkerName -or -not $Config.PoolName) {
                 Write-Host " WARNING: without the following data, RainbowMiner is not able to start mining. " -BackgroundColor Yellow -ForegroundColor Black
-                if (-not $Config.Wallet)     {Write-Host "- No BTC-wallet defined! Please go to [W]allets and input your wallet! " -ForegroundColor Yellow}
                 if (-not $Config.WorkerName) {Write-Host "- No workername defined! Please go to [W]allets and input a workername! " -ForegroundColor Yellow}
                 if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
                 Write-Host " "
@@ -327,16 +326,18 @@ function Start-Setup {
                         "wallet" {                                                                             
                             if ($IsInitialSetup) {
                                 Write-Host " "
-                                Write-Host "Please lookup your BTC wallet address. It is easy: copy it to your clipboard and then press the right mouse key in this window to paste" -ForegroundColor Cyan
+                                Write-Host "Do you want to mine to autoexchange pools and earn BTC?" -ForegroundColor Cyan
+                                Write-Host "It is easy: Lookup your BTC wallet address and copy it to your clipboard, then press the right mouse key in this window to paste" -ForegroundColor Cyan
+                                Write-Host "If you do not want to use autoexchange pools, leave this empty (or enter `"clear`" to make it empty) and press return " -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -MinLength 34 -MaxLength 64 -Mandatory -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address ($(if ($Config.Wallet) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $Config.Wallet -MinLength 34 -MaxLength 64 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
 
                         "addcoins1" {
                             if ($IsInitialSetup) {
                                 Write-Host " "
-                                Write-Host "Now is your chance to add other currency wallets (e.g. enter XWP for Swap)" -ForegroundColor Cyan
+                                Write-Host "Now is your chance to add other currency wallets (e.g. enter XMR for Monero, ETH for Ethash ...)" -ForegroundColor Cyan
                                 Write-Host " "
                             }
                             $addcoins = Read-HostBool -Prompt "Do you want to add/edit $(if ($CoinsAdded.Count) {"another "})wallet addresses of non-BTC currencies?" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -379,10 +380,10 @@ function Start-Setup {
                             }
 
                             if ($NicehashWallet -eq "`$Wallet"){$NicehashWallet=$Config.Wallet}
-                            $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash BTC mining wallet address" -Default $NicehashWallet -MinLength 34 -MaxLength 64 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash BTC mining wallet address ($(if ($NicehashWallet) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $NicehashWallet -MinLength 34 -MaxLength 64 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "nicehash2" {
-                            if ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet) {
+                            if ($NiceHashWallet -and ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet)) {
                                 if (Read-HostBool "You have entered your default wallet as Nicehash wallet. Do you want to disable NiceHash mining for now? (Or enter `"<`" to return to the wallet query)" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                     $NiceHashWallet = ''
                                 }
