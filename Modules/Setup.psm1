@@ -3385,6 +3385,8 @@ function Start-Setup {
                         ExcludeAlgorithm = ""
                         CoinSymbol = ""
                         ExcludeCoinSymbol = ""
+                        PoolName = ""
+                        ExcludePoolName = ""
                     }
 
                     if ($Scheduler_Action -eq "a") {
@@ -3401,7 +3403,7 @@ function Start-Setup {
                     $SchedulerSetupStep = 0
 
                     if ($Scheduler_Action -ne "d") {
-                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableupdate","enableminingheatcontrol","miningheatcontrol","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol")) > $null
+                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableupdate","enableminingheatcontrol","miningheatcontrol","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","poolname","excludepoolname")) > $null
                     }
                     $SchedulerSetupSteps.Add("save") > $null
 
@@ -3460,13 +3462,19 @@ function Start-Setup {
                                     $Schedule.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine during this schedule ($(if ($Schedule.Algorithm) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Schedule.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "excludealgorithm" {
-                                    $Schedule.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude from this schedule" -Default $Schedule.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude from this schedule ($(if ($Schedule.ExcludeAlgorithm) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $Schedule.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "coinsymbol" {
                                     $Schedule.CoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to mine during this schedule ($(if ($Schedule.CoinSymbol) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Schedule.CoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "excludecoinsymbol" {
-                                    $Schedule.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to exclude from this schedule" -Default $Schedule.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the coin symbol you want to exclude from this schedule ($(if ($Schedule.ExcludeCoinSymbol) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $Schedule.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "poolname" {
+                                    $Schedule.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine during this schedule ($(if ($Schedule.PoolName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Schedule.PoolName -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "excludepoolname" {
+                                    $Schedule.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from this schedule ($(if ($Schedule.ExcludePoolName) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $Schedule.ExcludePoolName -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "save" {
                                     Write-Host " "
@@ -3494,7 +3502,9 @@ function Start-Setup {
                                             Algorithm  = "$($_.Algorithm -join ",")"
                                             ExcludeAlgorithm  = "$($_.ExcludeAlgorithm -join ",")"
                                             CoinSymbol  = "$($_.CoinSymbol -join ",")"
-                                            ExcludeCoinSymbol  = "$($_.ExcludeCoinSymbol -join ",")"
+                                            ExcludeCoinSymbol = "$($_.ExcludeCoinSymbol -join ",")"
+                                            PoolName    = "$($_.PoolName -join ",")"
+                                            ExcludePoolName   = "$($_.ExcludePoolName -join ",")"
                                         }
                                     }
                                     Set-ContentJson -PathToFile $ConfigFiles["Scheduler"].Path -Data $SchedulerSave > $null

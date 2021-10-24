@@ -1615,6 +1615,8 @@ Define different power prices and/or pause miners for different timespans.
 - ExcludeAlgorithm: disallow mining to specific algorithms, during that timespan
 - CoinSymbol: restrict mining to specific coin symbols, during that timespan
 - ExcludeCoinSymbol: disallow mining to specific coin symbols, during that timespan
+- PoolName: restrict mining to specific pools, during that timespan
+- ExcludePoolName: disallow mining to specific pools, during that timespan
 
 Example
 

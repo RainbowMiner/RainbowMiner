@@ -13,4 +13,6 @@
     ExcludeAlgorithm = ""
     CoinSymbol = ""
     ExcludeCoinSymbol = ""
+    PoolName = ""
+    ExcludePoolName = ""
 }

@@ -1026,7 +1026,7 @@ function Invoke-Core {
                     $_ | Add-Member EnableMiningHeatControl $(if ($_.EnableMiningHeatControl -eq "") {$Session.Config.EnableMiningHeatControl} else {Get-Yes $_.EnableMiningHeatControl}) -Force
                     $_ | Add-Member MiningHeatControl "$($_.MiningHeatControl -replace ",","." -replace "[^0-9\.]+")" -Force
 
-                    foreach($q in @("Algorithm","ExcludeAlgorithm","CoinSymbol","ExcludeCoinSymbol")) {
+                    foreach($q in @("Algorithm","ExcludeAlgorithm","CoinSymbol","ExcludeCoinSymbol","PoolName","ExcludePoolName")) {
                         if ($_.$q -is [string]) {$_.$q = @($_.$q -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
                         $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                     }
@@ -1767,14 +1767,18 @@ function Invoke-Core {
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     $Test_Algorithm = @($Session.Config.Algorithm | Select-Object)
     $Test_ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | Select-Object)
-    $Test_CoinSymbol = @()
+    $Test_CoinSymbol = @($Session.Config.CoinSymbol | Select-Object)
     $Test_ExcludeCoinSymbol = @($Session.Config.ExcludeCoinSymbol | Select-Object)
+    $Test_PoolName = @($Session.Config.PoolName | Select-Object)
+    $Test_ExcludePoolName = @($Session.Config.ExcludePoolName | Select-Object)
 
     if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun -and $Scheduler) {
         if ($Scheduler.Algorithm.Count) {$Test_Algorithm = @($Test_Algorithm + $Scheduler.Algorithm | Select-Object -Unique)}
         if ($Scheduler.ExcludeAlgorithm.Count) {$Test_ExcludeAlgorithm = @($Test_ExcludeAlgorithm + $Scheduler.ExcludeAlgorithm | Select-Object -Unique)}
         if ($Scheduler.CoinSymbol.Count) {$Test_CoinSymbol = @($Test_CoinSymbol + $Scheduler.CoinSymbol | Select-Object -Unique)}
         if ($Scheduler.ExcludeCoinSymbol.Count) {$Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + $Scheduler.ExcludeCoinSymbol | Select-Object -Unique)}
+        if ($Scheduler.PoolName.Count) {$Test_PoolName = @($Test_PoolName + $Scheduler.PoolName | Select-Object -Unique)}
+        if ($Scheduler.ExcludePoolName.Count) {$Test_ExcludePoolName = @($Test_ExcludePoolName + $Scheduler.ExcludePoolName | Select-Object -Unique)}
     }
 
     if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object {$_.SideIndicator -EQ "=>" -and $_.InputObject -ne "MiningRigRentals"} | Select-Object -ExpandProperty InputObject) {
@@ -1795,8 +1799,8 @@ function Invoke-Core {
         if ($_.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($_.CoinSymbol)")}
         ($ServerPoolNames.Count -and $ServerPoolNames.Contains($Pool_Name)) -or (
             -not ( (-not $Session.Config.Pools.$Pool_Name) -or
-                ($Session.Config.PoolName.Count -and $Session.Config.PoolName -inotcontains $Pool_Name) -or
-                ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
+                ($Test_PoolName.Count -and $Test_PoolName -inotcontains $Pool_Name) -or
+                ($Test_ExcludePoolName.Count -and $Test_ExcludePoolName -icontains $Pool_Name) -or
                 ($Test_Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Test_ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
