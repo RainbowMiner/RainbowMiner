@@ -9,16 +9,16 @@ $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
 $Cuda = "8.0"
-$Version = "5.7b"
+$Version = "5.8c"
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Phoenix\PhoenixMiner"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.7b-phoenix/PhoenixMiner_5.7b_Linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.8c-phoenix/PhoenixMiner_5.8c_Linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.7b-phoenix/PhoenixMiner_5.7b_Windows.7z"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.8c-phoenix/PhoenixMiner_5.8c_Windows.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
@@ -33,9 +33,7 @@ $Commands = [PSCustomObject[]]@(
 $CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1 -gbase 0"
 
 $CoinXlat = [PSCustomObject]@{
-    "AKA" = "akroma"
     "ATH" = "ath"
-    "AURA" = "aura"
     "B2G" = "b2g"
     "BCI" = "bci"
     "CLO" = "clo"
@@ -44,14 +42,10 @@ $CoinXlat = [PSCustomObject]@{
     "ELLA" = "ella"
     "ESN" = "esn"
     "ETC" = "etc"
-    "ETCC" = "etcc"
     "ETH" = "eth"
     "ETHO" = "etho"
     "ETP" = "etp"
-    "ETZ" = "etz"
     "EXP" = "exp"
-    "GEN" = "gen"
-    "HBC" = "hbc"
     "MIX" = "mix"
     "MOAC" = "moac"
     "MUSIC" = "music"
@@ -119,7 +113,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         "qtminer"          {"-proto 3"}
                         "ethstratum"       {"-proto 4"}
                         "ethstratum1"      {"-proto 4"}
-						"ethstratumnh"     {"-proto 4 -stales 0"}
+						"ethstratumnh"     {"-proto 4"}
                         "ethstratum2"      {"-proto 5"}
 						default            {"-proto 1"}
 					}
@@ -138,7 +132,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						DeviceName     = $Miner_Device.Name
 						DeviceModel    = $Miner_Model
 						Path           = $Path
-						Arguments      = "-cdmport `$mport -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {"-wal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
+						Arguments      = "-cdmport `$mport -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {"-wal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) -stales $(if ($Pools.$Algorithm_Norm.Name -in @("FlexPool","Nicehash")) {0} else {1}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
 						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 						API            = "Claymore"
 						Port           = $Miner_Port
