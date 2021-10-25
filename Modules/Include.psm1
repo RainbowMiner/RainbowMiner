@@ -6105,8 +6105,15 @@ param(
     if ($Global:GlobalHttpClient -eq $null) {
         try {
             Add-Type -AssemblyName System.Net.Http -ErrorAction Stop
+
             if ($Proxy = Get-Proxy) {
-                $httpHandler = [System.Net.Http.HttpClientHandler]::New()
+                try {
+                    $httpHandler = [System.Net.Http.SocketsHttpHandler]::New()
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    $httpHandler = [System.Net.Http.HttpClientHandler]::New()
+                }
+
                 $WebProxy    = [System.Net.WebProxy]::New($Proxy.Proxy)
                 $WebProxy.BypassProxyOnLocal = $true
                 if ($Proxy.Credentials) {
@@ -6384,11 +6391,14 @@ Param(
                     }
                 }
 
-                $task = $Global:GlobalHttpClient.SendAsync($content)
+                $cts = [System.Threading.CancellationTokenSource]::new()
 
-                if ($task.IsFaulted) {
+                $task = $Global:GlobalHttpClient.SendAsync($content,$cts.Token)
 
-                    $Result.ErrorMessage = "Call to $($RequestUrl) failed: $($task.Exception.Message)$(if ($task.Exception.InnerException) {" --> $($task.Exception.InnerException)"})"
+                if ($task.IsFaulted -or $task.IsCanceled) {
+
+                    $Result.StatusCode = 504
+                    $Result.ErrorMessage = "Call to $($RequestUrl) failed: $(if ($task.IsCanceled -and -not $task.Exception.Message) {"canceled"} else {$task.Exception.Message})$(if ($task.Exception.InnerException) {" --> $($task.Exception.InnerException.Message)"})"
 
                 } elseif ($task.Wait($timeout*1000)) {
 
@@ -6396,16 +6406,20 @@ Param(
                         Write-Log -Level Info "--> Result: $($task.Result.StatusCode) IsFaulted=$($task.Result.isFaulted) Status=$($task.Status)"
                     }
 
-                    $Result.Status = -not $task.Result.isFaulted -and $task.Status -eq "RanToCompletion"
+                    $Result.Status = -not $task.Result.isFaulted -and $task.Status -eq [System.Threading.Tasks.TaskStatus]::RanToCompletion
 
                     if ($task.Result) {
+
                         $Result.StatusCode = [int]$task.Result.StatusCode
 
                         if (-not $Result.Status) {
-                            $Result.ErrorMessage =  "$($task.Result.Exception.Message)$(if ($task.Result.Exception.InnerException) {" --> $($task.Result.Exception.InnerException)"})"
+                            $Result.ErrorMessage =  "$($task.Result.Exception.Message)$(if ($task.Result.Exception.InnerException) {" --> $($task.Result.Exception.InnerException.Message)"})"
                         }
 
                         $Response = $task.Result.Content.ReadAsStringAsync().Result
+
+                    } elseif ($task.IsCanceled) {
+                        $Result.StatusCode = 504
                     }
 
                     if ($Result.StatusCode -match "^2\d\d$") {
@@ -6422,18 +6436,32 @@ Param(
                     }
 
                 } else {
-
+                    $cts.Cancel()
+                    $Result.StatusCode = 444
                     $Result.ErrorMessage = "Call to $($RequestUrl) timed out after $($timeout) secs"
-
                 }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                $Result.ErrorMessage = "$($_.Exception.Message)$(if ($_.Exception.InnerException) {" --> $($_.Exception.InnerException)"})"
+                $Result.ErrorMessage = "$($_.Exception.Message)$(if ($_.Exception.InnerException) {" --> $($_.Exception.InnerException.Message)"})"
             } finally {
                 if($task -ne $null) {
-                    if ($task.Result -ne $null) {$task.Result.Dispose()}
-                    $task.Dispose()
+                    if (-not $task.IsCompleted -and $cts) {
+                        $cts.Cancel()
+                        $retry = 10
+                        while (-not $task.IsCompleted -and $retry -gt 0) {
+                            Start-Sleep -Milliseconds 100
+                            $retry--
+                        }
+                    }
+                    if ($task.Status -in @([System.Threading.Tasks.TaskStatus]::RanToCompletion,[System.Threading.Tasks.TaskStatus]::Canceled,[System.Threading.Tasks.TaskStatus]::Faulted)) {
+                        if ($task.Result -ne $null) {$task.Result.Dispose()}
+                        $task.Dispose()
+                    }
                     $task = $null
+                }
+                if ($cts -ne $null) {
+                    $cts.Dispose()
+                    $cts = $null
                 }
                 if ($fs_array.Count) {
                     foreach($fs in $fs_array) {
@@ -7306,15 +7334,24 @@ param(
 }
 
 function Test-Internet {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $False)]
+        [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","rbminer.net")
+    )
     try {
         $Proxy = Get-Proxy
         if ($Proxy.Proxy) {
             $true
         } elseif (Get-Command "Test-Connection" -ErrorAction Ignore) {
-            $oldProgressPreference = $Global:ProgressPreference
-            $Global:ProgressPreference = "SilentlyContinue"
-            Foreach ($url in @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","www.rbminer.net")) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
-            $Global:ProgressPreference = $oldProgressPreference
+            if ($CheckDomains -and $CheckDomains.Count) {
+                $oldProgressPreference = $Global:ProgressPreference
+                $Global:ProgressPreference = "SilentlyContinue"
+                Foreach ($url in $CheckDomains) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
+                $Global:ProgressPreference = $oldProgressPreference
+            } else {
+                $true
+            }
         } elseif (Get-Command "Get-NetConnectionProfile" -ErrorAction Ignore) {
             (Get-NetConnectionProfile -IPv4Connectivity Internet -ErrorAction Ignore | Measure-Object).Count -gt 0 -or (Get-NetConnectionProfile -IPv6Connectivity Internet -ErrorAction Ignore | Measure-Object).Count -gt 0
         } else {

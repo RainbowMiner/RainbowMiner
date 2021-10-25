@@ -881,6 +881,7 @@ For Server (Runmode=server) setup:
 - **Delay** = extra delay in secondes, between switching to avoid blue screen [default=0]
 - **Watchdog** = use (1) or do not use (0) watchdog [default=1]
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
+- **WebsitesForOnlineCheck** = list of websites, that RainbowMiner pings for testing the internet connection [default=www.google.com,www.amazon.com,www.baidu.com,www.coinbase.com,rbminer.net]
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
 - **PoolSwitchingHysteresis** = prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, can be overwritten per pool) [default=3]
 - **MinerSwitchingHysteresis** = prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable) [default=3]

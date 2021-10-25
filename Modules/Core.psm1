@@ -672,47 +672,6 @@ function Invoke-Core {
 
     $Session.ConfigFiles["Config"].Healthy = $true
 
-    $Internet_ok = Test-Internet
-
-    if (-not $RestartRunspaces) {
-        if (-not $Internet_ok) {
-            Write-Log -Level Info "Internet is down"
-
-            $i = 0
-
-            if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
-
-            do {
-                if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
-                Start-Sleep -Milliseconds 500
-                if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
-                $i++
-                if (-not ($i % 20)) {$Internet_ok = Test-Internet}
-            } until ($Internet_ok -or $keyPressedValue -eq "X")
-
-            if ($keyPressedValue -eq "X") {
-                Write-Log "User requests to stop script. "
-                Write-Host "[X] pressed - stopping script."
-                break
-            }
-            if ($i -gt $Session.Config.BenchmarkInterval*2) {
-                Update-WatchdogLevels -Reset
-                $Global:WatchdogTimers = @()
-            }
-        }
-
-        if ($Internet_ok) {
-            Write-Log -Level Info "Internet is ok"
-            if ((Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Pause) {$AsyncLoader.Pause = $false}
-        }
-    }
-
-    if (-not $Session.Updatetracker.TimeDiff -or $Session.Updatetracker.TimeDiff -lt (Get-Date).AddMinutes(-60)) {
-        $Session.Updatetracker.TimeDiff = Get-Date
-        $TimeDiff = ((Get-Date)-(Get-NtpTime)).TotalSeconds
-        $Session.TimeDiff = [Math]::Sign($TimeDiff)*[Math]::Floor([Math]::Abs($TimeDiff))
-    }
-
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
     if ($CheckConfig) {
         if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating config data"}
@@ -804,6 +763,50 @@ function Invoke-Core {
             $Session.Config.CPUMiningAffinity = "0x$(([bigint]$CPUAffinityInt).ToString("x") -replace "^0")"
             $Session.Config.CPUMiningThreads  = [Math]::Max(@(ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity).Count,1)
         }
+    }
+
+
+    #Check if internet is online
+    $Internet_ok = Test-Internet -CheckDomains $Session.Config.WebsitesForOnlineCheck
+
+    if (-not $RestartRunspaces) {
+        if (-not $Internet_ok) {
+            Write-Log -Level Info "Internet is down"
+
+            $i = 0
+
+            if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
+
+            do {
+                if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
+                Start-Sleep -Milliseconds 500
+                if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
+                $i++
+                if (-not ($i % 20)) {$Internet_ok = Test-Internet -CheckDomains $Session.Config.WebsitesForOnlineCheck}
+            } until ($Internet_ok -or $keyPressedValue -eq "X")
+
+            if ($keyPressedValue -eq "X") {
+                Write-Log "User requests to stop script. "
+                Write-Host "[X] pressed - stopping script."
+                break
+            }
+            if ($i -gt $Session.Config.BenchmarkInterval*2) {
+                Update-WatchdogLevels -Reset
+                $Global:WatchdogTimers = @()
+            }
+        }
+
+        if ($Internet_ok) {
+            Write-Log -Level Info "Internet is ok"
+            if ((Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Pause) {$AsyncLoader.Pause = $false}
+        }
+    }
+
+    #Check for system time vs. NTP services
+    if (-not $Session.Updatetracker.TimeDiff -or $Session.Updatetracker.TimeDiff -lt (Get-Date).AddMinutes(-60)) {
+        $Session.Updatetracker.TimeDiff = Get-Date
+        $TimeDiff = ((Get-Date)-(Get-NtpTime)).TotalSeconds
+        $Session.TimeDiff = [Math]::Sign($TimeDiff)*[Math]::Floor([Math]::Abs($TimeDiff))
     }
 
     #Start/stop services
