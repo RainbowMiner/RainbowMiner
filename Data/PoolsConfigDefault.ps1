@@ -2,6 +2,12 @@
         "2Miners" = [PSCustomObject]@{
             Currencies=@("FIRO")
         }
+        "2MinersAE" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AECurrency=""}
+            SetupFields=[PSCustomObject]@{AECurrency = "Enter your 2MinersAE autoexchange currency"}
+            Autoexchange=$true
+            Currencies=@("BTC","ETH","NANO")
+        }
         "2MinersSolo" = [PSCustomObject]@{
             Currencies=@("FIRO")
         }
@@ -171,6 +177,9 @@
         }
         "Icemining" = [PSCustomObject]@{
             Currencies=@("SIN","MWC")
+        }
+        "KuCoin" = [PSCustomObject]@{
+            Currencies=@("ETH")
         }
         "LeafPool" = [PSCustomObject]@{
             Currencies=@("BEAM")

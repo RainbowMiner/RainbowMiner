@@ -7,6 +7,7 @@ param(
 #https://xzc.2miners.com/api/accounts/aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)AE".Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
 
 $Pools_Data = @(
     [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
@@ -28,20 +29,21 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zel";   symbol = "FLUX";   port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
     [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
+
+    #AutoExchange currencies
+    [PSCustomObject]@{rpc = "eth";   symbol = "BTC";   port = 2020; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "eth";   symbol = "NANO";   port = 2020; fee = 1.0; divisor = 1e18}
 )
 
-$Pools_Data | Where-Object {($Config.Pools.$Name.Wallets."$($_.symbol)" -or ($_.altsymbol -and $Config.Pools.$Name.Wallets."$($_.altsymbol)")) -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
-    $Pool_Currency = $_.symbol
+$Payout_Currencies | Where-Object {$Pool_Currency = $_.Name;$Pool_Data = $Pools_Data | Where-Object {$_.symbol -eq $Pool_Currency -or $_.altsymbol -eq $Pool_Currency};$Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
 
     $Request = [PSCustomObject]@{}
-    $Divisor = if ($_.divisor) {$_.divisor} else {[Decimal]1e8}
+    $Divisor = if ($Pool_Data.divisor) {$Pool_Data.divisor} else {[Decimal]1e8}
 
-    if (-not ($Pool_Wallet = $Config.Pools.$Name.Wallets."$($_.symbol)")) {
-        $Pool_Wallet = $Config.Pools.$Name.Wallets."$($_.altsymbol)"
-    }
+    $Pool_Wallet = $_.Value
 
     try {
-        $Request = Invoke-RestMethodAsync "https://$($_.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Pool_Wallet -pidchar '.')" -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://$($Pool_Data.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Pool_Wallet -pidchar '.')" -cycletime ($Config.BalanceUpdateMinutes*60)
 
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
