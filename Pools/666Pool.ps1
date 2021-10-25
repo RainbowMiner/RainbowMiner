@@ -25,8 +25,8 @@ $Pool_Request = [PSCustomObject]@{}
 
 $ok = $false
 try {
-    $Request = Invoke-RestMethodAsync "https://server.666pool.cn/server/v1/getCoinList" -tag $Name -cycletime 120 -headers $headers
-    if ("$Request".Trim() -match "(?smi)^[^{]*({.+})[^}]*$") {
+    $Pool_Request = Invoke-RestMethodAsync "https://server.666pool.cn/server/v1/getCoinList" -tag $Name -cycletime 120 -headers $headers
+    if ($Pool_Request -is [string] -and $Pool_Request.Trim() -match "(?smi)^[^{]*({.+})[^}]*$") {
         $Pool_Request = ConvertFrom-Json $Matches[1] -ErrorAction Stop
     }
     $ok = $Pool_Request.retCode -eq 200
@@ -61,8 +61,8 @@ $Pool_Request.param | Where-Object {$Pool_Currency = if ($CoinXlat[$_.coin]) {$C
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Request = Invoke-RestMethodAsync "https://server.666pool.cn/server/v1/getCoinDetail/?coin=$($_.coin)" -tag $Name -timeout 15 -cycletime 120
-            if ("$Request".Trim() -match "(?smi)^[^{]*({.+})[^}]*$") {
+            $Pool_BlocksRequest = Invoke-RestMethodAsync "https://server.666pool.cn/server/v1/getCoinDetail/?coin=$($_.coin)" -tag $Name -timeout 15 -cycletime 120
+            if ($Pool_BlocksRequest -is [string] -and $Pool_BlocksRequest.Trim() -match "(?smi)^[^{]*({.+})[^}]*$") {
                 $Pool_BlocksRequest = ConvertFrom-Json $Matches[1] -ErrorAction Stop
             }
             if ($Pool_BlocksRequest.retCode -eq 200) {
