@@ -127,6 +127,16 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     if ($Pools.$Algorithm_Norm.Name -eq "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
 
+                    $EnvVars = @()
+                    if ($Pools.$Algorithm_Norm.SSL) {
+                        $EnvVars += "SSL_NOVERIFY=1"
+                    }
+
+                    if ($Miner_Vendor -eq "AMD") {
+                        $EnvVars += "GPU_FORCE_64BIT_PTR=0"
+                    }
+
+
 					[PSCustomObject]@{
 						Name           = $Miner_Name
 						DeviceName     = $Miner_Device.Name
@@ -142,7 +152,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    ExtendInterval = $_.ExtendInterval
                         Penalty        = 0
                         DevFee         = 0
-                        EnvVars        = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")} else {$null}
+                        EnvVars        = if ($EnvVars.Count) {$EnvVars} else {$null}
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
