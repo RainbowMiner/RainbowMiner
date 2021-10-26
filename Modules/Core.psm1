@@ -534,7 +534,7 @@ function Invoke-Core {
                 #DateTime target
 
                 #$Fork_Meets_Target = (Get-Date) -ge [datetime]"October 31, 2020 5:00 PM GMT"
-                $Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse("October 26, 2021 06:00:00 AM GMT")
+                #$Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse("October 26, 2021 06:00:00 AM GMT")
             } else {
                 #Blockchain target
 
