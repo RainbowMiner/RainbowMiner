@@ -28,7 +28,7 @@
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
             <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
-            <th data-field="tPrimaryShares" data-align="right">Acc/Rej</th>
+            <th data-field="tPrimaryShares" data-align="right">A/R/S</th>
             <th data-field="tActive" data-align="right" data-sortable="true" data-sorter="sortRunningMinersByActive">Active</th>
             <th data-field="tDonator" data-sortable="true">Mines</th>
         </tr>
@@ -411,11 +411,11 @@ function formatRunningMiners(data) {
         item.tPrimaryShares = "- / -";
         item.tSecondaryShares = "- / -";
         if (Array.isArray(item.Stratum) && item.Stratum.length) {
-            item.tPrimaryShares = (typeof item.Stratum[0].Accepted !== "undefined"? item.Stratum[0].Accepted : '-') + ' / ' + (typeof item.Stratum[0].Rejected !== "undefined"? item.Stratum[0].Rejected : '-')
+            item.tPrimaryShares = (typeof item.Stratum[0].Accepted !== "undefined"? item.Stratum[0].Accepted : '-') + '/' + (typeof item.Stratum[0].Rejected !== "undefined"? item.Stratum[0].Rejected : '-')+ '/' + (typeof item.Stratum[0].Stale !== "undefined"? item.Stratum[0].Stale : '-')
             if (item.Stratum.length > 1)
-                item.tSecondaryShares = (typeof item.Stratum[1].Accepted !== "undefined"? item.Stratum[1].Accepted : '-') + ' / ' + (typeof item.Stratum[1].Rejected !== "undefined"? item.Stratum[1].Rejected : '-')
+                item.tSecondaryShares = (typeof item.Stratum[1].Accepted !== "undefined"? item.Stratum[1].Accepted : '-') + '/' + (typeof item.Stratum[1].Rejected !== "undefined"? item.Stratum[1].Rejected : '-') + '/' + (typeof item.Stratum[1].Stale !== "undefined"? item.Stratum[1].Stale : '-')
         } else if (typeof item.Stratum !== "undefined") {
-            item.tPrimaryShares = (typeof item.Stratum.Accepted !== "undefined"? item.Stratum.Accepted : '-') + ' / ' + (typeof item.Stratum.Rejected !== "undefined"? item.Stratum.Rejected : '-')
+            item.tPrimaryShares = (typeof item.Stratum.Accepted !== "undefined"? item.Stratum.Accepted : '-') + '/' + (typeof item.Stratum.Rejected !== "undefined"? item.Stratum.Rejected : '-') + '/' + (typeof item.Stratum.Stale !== "undefined"? item.Stratum.Stale : '-')
         }
 
         if (Array.isArray(item.Speed_Live)) {

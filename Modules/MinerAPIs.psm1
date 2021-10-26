@@ -238,7 +238,7 @@ class Miner {
 
     hidden StartMiningPreProcess() {
         $this.Stratum = @()
-        while ($this.Stratum.Count -lt $this.Algorithm.Count) {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0;LastAcceptedTime=$null;LastRejectedTime=$null}}
+        while ($this.Stratum.Count -lt $this.Algorithm.Count) {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0;Stale=0;LastAcceptedTime=$null;LastRejectedTime=$null;LastStaleTime=$null}}
         $this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count
         $this.ActiveLast = Get-Date
     }
@@ -403,10 +403,16 @@ class Miner {
     }
 
     UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected) {
+        $this.UpdateShares($Index,$Accepted,$Rejected,0)
+    }
+
+    UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected,[Double]$Stale) {
         if ($this.Stratum[$Index].Accepted -ne $Accepted) {$this.Stratum[$Index].LastAcceptedTime = Get-Date}
         if ($this.Stratum[$Index].Rejected -ne $Rejected) {$this.Stratum[$Index].LastRejectedTime = Get-Date}
+        if ($this.Stratum[$Index].Stale -ne $Stale) {$this.Stratum[$Index].LastStaleTime = Get-Date}
         $this.Stratum[$Index].Accepted = $Accepted
         $this.Stratum[$Index].Rejected = $Rejected
+        $this.Stratum[$Index].Stale = $Stale
         if ($Accepted + $Rejected) {
             $this.RejectedShareRatio[$Index] = [Math]::Round($Rejected / ($Accepted + $Rejected),4)
         }
@@ -1471,7 +1477,8 @@ class Gminer : Miner {
 
             $Accepted_Shares = [Int64]($Data.devices.accepted_shares | Measure-Object -Sum).Sum
             $Rejected_Shares = [Int64]($Data.devices.rejected_shares | Measure-Object -Sum).Sum
-            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+            $Stale_Shares    = [Int64]($Data.devices.stale_shares | Measure-Object -Sum).Sum
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
 
             if ($this.Algorithm[1]) {
                 $HashRate_Name = [String]$this.Algorithm[1]
@@ -1482,7 +1489,8 @@ class Gminer : Miner {
 
                     $Accepted_Shares = [Int64]($Data.devices.accepted_shares2 | Measure-Object -Sum).Sum
                     $Rejected_Shares = [Int64]($Data.devices.rejected_shares2 | Measure-Object -Sum).Sum
-                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
+                    $Stale_Shares    = [Int64]($Data.devices.stale_shares2 | Measure-Object -Sum).Sum
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
                 }
             }
         }
@@ -1682,8 +1690,9 @@ class Lol : Miner {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
 
             $Accepted_Shares = [Int64]$Data.Session.Accepted
-            $Rejected_Shares = [Int64]($Data.Session.Submitted - $Data.Session.Accepted)
-            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+            $Stale_Shares    = [Int64]$Data.Session.Stale
+            $Rejected_Shares = [Int64]$Data.Session.Submitted - $Accepted_Shares - $Stale_Shares
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
         }
 
         $this.AddMinerData($Data,$HashRate,$null,$PowerDraw)
@@ -2480,7 +2489,8 @@ class TBMiner : Miner {
 
             $Accepted_Shares  = [Int64]($Data.PSObject.Properties.Value.accepted | Measure-Object -Sum).Sum
             $Rejected_Shares  = [Int64]($Data.PSObject.Properties.Value.rejected | Measure-Object -Sum).Sum
-            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+            $Stale_Shares     = [Int64]($Data.PSObject.Properties.Value.stale | Measure-Object -Sum).Sum
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
         }
 
         $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
