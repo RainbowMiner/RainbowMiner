@@ -6106,24 +6106,31 @@ param(
         try {
             Add-Type -AssemblyName System.Net.Http -ErrorAction Stop
 
-            if ($Proxy = Get-Proxy) {
+            $WebProxy = $null
+
+            if (($Proxy = Get-Proxy).Proxy) {
+                $WebProxy    = [System.Net.WebProxy]::New($Proxy.Proxy)
+                $WebProxy.BypassProxyOnLocal = $true
+                if ($Proxy.Credentials) {
+                    $WebProxy.Credentials = $Proxy.Credentials
+                }
+            } elseif ($IsWindows) {
+                $WebProxy = [System.Net.WebRequest]::GetSystemWebproxy()
+            }
+
+            if ($WebProxy) {
                 try {
                     $httpHandler = [System.Net.Http.SocketsHttpHandler]::New()
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
                     $httpHandler = [System.Net.Http.HttpClientHandler]::New()
                 }
-
-                $WebProxy    = [System.Net.WebProxy]::New($Proxy.Proxy)
-                $WebProxy.BypassProxyOnLocal = $true
-                if ($Proxy.Credentials) {
-                    $WebProxy.Credentials = $Proxy.Credentials
-                }
-                $httpHandler.Proxy = $WebProxy
+                $httpHandler.Proxy = $WebProxy                
                 $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new($httpHandler)
             } else {
                 $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
             }
+
             $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
             if ($Session.LogLevel -eq "Debug") {Write-Log -Level Info "New HttpClient created"}
         } catch {
