@@ -6125,7 +6125,7 @@ param(
                     if ($Error.Count){$Error.RemoveAt(0)}
                     $httpHandler = [System.Net.Http.HttpClientHandler]::New()
                 }
-                $httpHandler.Proxy = $WebProxy                
+                $httpHandler.Proxy = $WebProxy
                 $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new($httpHandler)
             } else {
                 $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
