@@ -11,14 +11,14 @@ $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
-$Version = "39.5"
+$Version = "39.6"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-NBMiner\nbminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.5-nbminer/NBMiner_39.5_Linux.tgz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.6-nbminer/NBMiner_39.6_Linux.tgz"
 } else {
     $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.5-nbminer/NBMiner_39.5_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.6-nbminer/NBMiner_39.6_Win.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -28,8 +28,6 @@ $CuckooIntensity = if ($Global:GlobalCPUInfo.Cores -eq 1 -or $Global:GlobalCPUIn
 $Commands = [PSCustomObject[]]@(
     #Cuckoo
     [PSCustomObject]@{MainAlgorithm = "Aeternity";                 SecondaryAlgorithm = ""; Params = "-a cuckoo_ae --cuckoo-intensity $CuckooIntensity";     NH = $true;  MinMemGb = 5; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckoo29/Aeternity
-    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";                SecondaryAlgorithm = ""; Params = "-a cuckatoo --cuckoo-intensity $CuckooIntensity";      NH = $true;  MinMemGb = 8; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckatoo31
-    [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";                SecondaryAlgorithm = ""; Params = "-a cuckatoo32 --cuckoo-intensity $CuckooIntensity";    NH = $true;  MinMemGb = 6; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckatoo31
 
     #Others
     [PSCustomObject]@{MainAlgorithm = "Autolykos2";                SecondaryAlgorithm = ""; Params = "-a ergo";          NH = $true; MinMemGb = 2;   DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Autolycos2/ERGO
