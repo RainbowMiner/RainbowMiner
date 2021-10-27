@@ -6114,8 +6114,6 @@ param(
                 if ($Proxy.Credentials) {
                     $WebProxy.Credentials = $Proxy.Credentials
                 }
-            } elseif ($IsWindows) {
-                $WebProxy = [System.Net.WebRequest]::GetSystemWebproxy()
             }
 
             if ($WebProxy) {
