@@ -31,8 +31,8 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
 
     #AutoExchange currencies
-    [PSCustomObject]@{rpc = "eth";   symbol = "BTC";   port = 2020; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "eth";   symbol = "NANO";   port = 2020; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "eth";   symbol = "BTC";   port = 2020; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "eth";   symbol = "NANO";   port = 2020; fee = 1.0; divisor = 1e8}
 )
 
 $Payout_Currencies | Where-Object {$Pool_Currency = $_.Name;$Pool_Data = $Pools_Data | Where-Object {$_.symbol -eq $Pool_Currency -or $_.altsymbol -eq $Pool_Currency};$Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
