@@ -3027,6 +3027,7 @@ function Get-Device {
         try {
             $AmdModels   = @{}
             [System.Collections.Generic.List[string]]$AmdModelsEx = @()
+            [System.Collections.Generic.List[string]]$PCIBusIds = @()
             $Platform_Devices | Foreach-Object {
                 $PlatformId = $_.PlatformId
                 $PlatformVendor = $_.Vendor
@@ -3183,41 +3184,48 @@ function Get-Device {
 
                     if ($Device.Type -ne "Cpu") {
                         $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
-                        $Global:GlobalCachedDevices += $Device
                         if ($AmdModelsEx -notcontains $Device.Model) {
                             $AmdGb = $Device.OpenCL.GlobalMemSizeGB
                             if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx.Add($Device.Model) > $null}
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
-                        $Index++
                         if ($Vendor_Name -in @("NVIDIA","AMD")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                         if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
                             $Device.BusId = $Matches[1]
+                            if ($PCIBusIds.Contains($Device.BusId)) {$Device = $null} else {$PCIBusIds.Add($Device.BusId)>$null}
                         }
-                        if ($IsWindows) {
-                            $Global:WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
-                                if ($_.BusId -ne $null -and $Device.BusId -eq $null) {$Device.BusId = $_.BusId}
-                                if ($_.InstanceId -and $Device.InstanceId -eq "")    {$Device.InstanceId = $_.InstanceId}
+
+                        if ($Device) {
+                            if ($IsWindows) {
+                                $Global:WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
+                                    if ($_.BusId -ne $null -and $Device.BusId -eq $null) {$Device.BusId = $_.BusId}
+                                    if ($_.InstanceId -and $Device.InstanceId -eq "")    {$Device.InstanceId = $_.InstanceId}
+                                }
                             }
+
+                            $Global:GlobalCachedDevices += $Device
+                            $Index++
                         }
                     }
 
-                    if (-not $Type_Codec_Index."$($Device_OpenCL.Type)") {
-                        $Type_Codec_Index."$($Device_OpenCL.Type)" = @{}
-                    }
-                    if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
-                        $Type_PlatformId_Index."$($Device_OpenCL.Type)" = @{}
-                    }
-                    if (-not $Type_Vendor_Index."$($Device_OpenCL.Type)") {
-                        $Type_Vendor_Index."$($Device_OpenCL.Type)" = @{}
-                    }
+                    if ($Device) {
+                        if (-not $Type_Codec_Index."$($Device_OpenCL.Type)") {
+                            $Type_Codec_Index."$($Device_OpenCL.Type)" = @{}
+                        }
+                        if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
+                            $Type_PlatformId_Index."$($Device_OpenCL.Type)" = @{}
+                        }
+                        if (-not $Type_Vendor_Index."$($Device_OpenCL.Type)") {
+                            $Type_Vendor_Index."$($Device_OpenCL.Type)" = @{}
+                        }
 
-                    $PlatformId_Index."$($PlatformId)"++
-                    $Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"++
-                    $Vendor_Index."$($Device_OpenCL.Vendor)"++
-                    $Type_Index."$($Device_OpenCL.Type)"++
-                    $Type_Codec_Index."$($Device_OpenCL.Type)".$Codec++
-                    $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
+                        $PlatformId_Index."$($PlatformId)"++
+                        $Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"++
+                        $Vendor_Index."$($Device_OpenCL.Vendor)"++
+                        $Type_Index."$($Device_OpenCL.Type)"++
+                        $Type_Codec_Index."$($Device_OpenCL.Type)".$Codec++
+                        $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
+                    }
                 }
             }
 
