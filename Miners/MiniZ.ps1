@@ -10,13 +10,13 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "1.8y4rc2"
+$Version = "1.8y4rc1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8y4rc2-miniz/miniZ_v1.8y4rc2_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8y4rc1-miniz/miniZ_v1.8y4rc1_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -24,7 +24,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8y4rc2-miniz/miniZ_v1.8y4rc2_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8y4rc1-miniz/miniZ_v1.8y4rc1_win-x64.7z"
             Cuda = "8.0"
         }
     )
