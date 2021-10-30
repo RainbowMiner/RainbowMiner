@@ -113,7 +113,11 @@ if (-not ($Pool_Request = Get-MiningRigRentalAlgos)) {return}
 
 Set-MiningRigRentalConfigDefault -Workers $Workers > $null
 
-$Devices_Benchmarking = @($API.MinersNeedingBenchmark | Select-Object -ExpandProperty DeviceName | Select-Object -Unique)
+if ($API.MinersNeedingBenchmark) {
+    $Devices_Benchmarking = @($API.MinersNeedingBenchmark.ForEach("DeviceName") | Select-Object -Unique)
+} else {
+    $Devices_Benchmarking = @()
+}
 if ($Session.MRRBenchmarkStatus -eq $null) {$Session.MRRBenchmarkStatus = @{}}
 if ($Session.MRRRentalTimestamp -eq $null) {$Session.MRRRentalTimestamp = @{}}
 if ($Session.MRRRigGroups       -eq $null) {
@@ -156,8 +160,8 @@ if ($AllRigs_Request) {
         }
 
         $Rigs_Devices = $Rigs_Devices.Where({($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)})
-        $Workers_Devices[$Worker1] = @($Rigs_Devices | Select-Object -ExpandProperty Name -Unique)
-        $Workers_Models[$Worker1]  = @($Rigs_Devices | Select-Object -ExpandProperty Model -Unique)
+        $Workers_Devices[$Worker1] = @($Rigs_Devices.Foreach("Name") | Select-Object -Unique)
+        $Workers_Models[$Worker1]  = @($Rigs_Devices.Foreach("Model") | Select-Object -Unique)
 
         if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
             $Devices_Rented = @($Devices_Rented + $Workers_Devices[$Worker1] | Select-Object -Unique | Sort-Object)
@@ -444,7 +448,7 @@ if ($AllRigs_Request) {
 
                     #END temporary fixes
                     
-                    $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
+                    $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
                     $Rigs_UserSep   = if (@("ProgPowVeil","ProgPowZ","Ubqhash") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
 
@@ -734,11 +738,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 try {
                     $RigModels           = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
                     $RigDevice           = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
-                    $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice | Select-Object -ExpandProperty Name -Unique | Sort-Object) -join "-")"
+                    $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice.Foreach("Name") | Sort-Object -Unique) -join "-")"
                     $RigDeviceRevenue24h = $RigDeviceStat."$($MRRConfig.$RigName.ProfitAverageTime)"
                     $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
 
-                    $RigType ="$($RigDevice | Select-Object -ExpandProperty Type -Unique)".ToUpper()
+                    $RigType ="$($RigDevice.Foreach("Type") | Select-Object -Unique)".ToUpper()
 
                     if ($RigType -eq "GPU") {
                         $RigDeviceRam = ($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsize} | Measure-Object -Minimum).Minimum / 1GB
@@ -765,7 +769,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                     
                     if ($RigDeviceRevenue24h -and $RigDeviceStat.Duration) {
                         if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
-                        $RigModels         = @($RigDevice | Select-Object -ExpandProperty Model -Unique | Sort-Object)
+                        $RigModels         = @($RigDevice.Foreach("Model") | Sort-Object -Unique)
                         $RigAlreadyCreated = @($UniqueRigs_Request.Where({$_.description -match "\[$RigName\]"}))
                         $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
                         $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
@@ -1198,7 +1202,7 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
 
         $InactiveNicehashAlgorithms = @($Pool_Request_Nicehash.miningAlgorithms | Where-Object {[double]$_.paying -le 0 -or [double]$_.speed -le 0} | ForEach-Object {Get-Algorithm $_.algorithm} | Select-Object)
        
-        $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals"}) | Select-Object -ExpandProperty Algorithm0 -Unique)
+        $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals"}).Foreach("Algorithm0") | Select-Object -Unique)
 
         $PoolsData.Where({$_.Algorithm -notin $ActiveAlgorithms -and ($_.Pool -ne "Nicehash" -or $_.Algorithm -notin $InactiveNicehashAlgorithms)}).Foreach({
             [PSCustomObject]@{
