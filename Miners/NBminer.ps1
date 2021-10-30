@@ -11,14 +11,14 @@ $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
-$Version = "39.6"
+$Version = "39.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-NBMiner\nbminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.6-nbminer/NBMiner_39.6_Linux.tgz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.7-nbminer/NBMiner_39.7_Linux.tgz"
 } else {
     $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.6-nbminer/NBMiner_39.6_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v39.7-nbminer/NBMiner_39.7_Win.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -37,7 +37,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; SecondaryAlgorithm = ""; Params = "-a ethash";     NH = $true; MinMemGb = 2;   DevFee = 1.0; Vendor = @("NVIDIA");       ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "KawPOW";       DAG = $true; SecondaryAlgorithm = ""; Params = "-a kawpow";        NH = $true; MinMemGb = 2.4; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #KAWPoW
     [PSCustomObject]@{MainAlgorithm = "Octopus";      DAG = $true; SecondaryAlgorithm = ""; Params = "-a octopus";       NH = $true; MinMemGb = 5;   DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Octopus/Conflux
-    [PSCustomObject]@{MainAlgorithm = "ProgPowSero";  DAG = $true; SecondaryAlgorithm = ""; Params = "-a progpow_sero";  NH = $true; MinMemGb = 3;   DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #ProgPowSero
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
