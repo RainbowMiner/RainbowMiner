@@ -1649,9 +1649,10 @@ function Get-PoolsContent {
             if (-not $InfoOnly -and $c.SoloMining -and $c.Difficulty) {
                 $BLKFactor = $DiffFactor / $c.Difficulty
                 foreach ($Model in $Global:DeviceCache.DeviceCombos) {
-                    $c.Algorithm = "$($c.Algorithm0)-$($Model)"
-                    $c.BLK       = $Speeds[$c.Algorithm] * $BLKFactor
-                    $c
+                    $d = $c | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+                    $d.Algorithm = "$($d.Algorithm0)-$($Model)"
+                    $d.BLK       = $Speeds[$d.Algorithm] * $BLKFactor
+                    $d
                 }
             } else {
                 $c
