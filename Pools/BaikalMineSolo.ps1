@@ -32,35 +32,19 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_Request = [PSCustomObject]@{}
 
-    $Pool_Hashrate = $null
-    $Pool_Workers  = $null
-    $Pool_TSL      = $null
-
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/stats" -tag $Name -cycletime 120
-            if (-not $Pool_Request -or ($Pool_Request.mainStats -eq $null -and $Pool_Request.hashrate -eq $null)) {throw}
-            $PoolBlocks_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/blocks" -tag $Name -cycletime 120 -delay 250
+            if (-not $Pool_Request -or $Pool_Request.nodes -eq $null) {throw}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) has failed. "
         }
 
-        if ($Pool_Request.mainStats) {
-            $Pool_Hashrate = $Pool_Request.mainStats.hashrate
-            $Pool_Workers  = [int]($Pool_Request.charts.workers | Select-Object -Last 1)
-            $Pool_TSL      = (Get-UnixTimestamp) - $Pool_Request.mainStats.lastBlockFound
-        } else {
-            $Pool_Hashrate = $Pool_Request.hashrate
-            $Pool_Workers  = $Pool_Request.minersTotal
-            $Pool_TSL      = (Get-UnixTimestamp) - $Pool_Request.stats.lastBlockFound
-        }
-        $Timestamp_24h = (Get-UnixTimestamp) - 24*3600
-        $Pool_BLK = ($PoolBlocks_Request.candidates | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.immature | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.matured | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count
+        $difficulty = ($Pool_Request.nodes | Where-Object name -eq "main").difficulty
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -Quiet
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty $difficulty -Quiet
     }
     
     foreach($Pool_Region in $_.regions) {
@@ -85,10 +69,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Updated       = $Stat.Updated
                 PoolFee       = $_.fee
                 DataWindow    = $DataWindow
-                Workers       = $Pool_Workers
-                Hashrate      = (Get-Date).ToUniversalTime()
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
+                Workers       = $null
+                Hashrate      = $null
+                TSL           = $null
+                BLK           = $null
+                Difficulty    = $Stat.Diff_Average
                 SoloMining    = $true
                 WTM           = $true
                 EthMode       = $Pool_EthProxy

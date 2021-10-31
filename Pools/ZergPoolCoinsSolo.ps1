@@ -83,7 +83,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             $Pool_Actual24h   = $PoolCoins_Request.$Pool_CoinSymbol.actual_last24h/1000
             $Pool_Estimate24h = $PoolCoins_Request.$Pool_CoinSymbol.estimate_last24
         }
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -HashRate $PoolCoins_Request.$Pool_CoinSymbol.difficulty -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -Difficulty $PoolCoins_Request.$Pool_CoinSymbol.difficulty -Quiet
     }
 
     $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} elseif ($PoolCoins_Request.$Pool_CoinSymbol.noautotrade -eq 0) {$AECurrency}
@@ -114,7 +114,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $null
                 BLK           = $null
                 TSL           = $null
-                Difficulty    = $Stat.HashRate_Live
+                Difficulty    = $Stat.Diff_Average
                 SoloMining    = $true
                 EthMode       = $Pool_EthProxy
                 ErrorRatio    = $Stat.ErrorRatio

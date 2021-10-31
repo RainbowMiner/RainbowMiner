@@ -84,7 +84,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
         $Pool_Blocks = [PSCustomObject]@{}
 
         try {
-            $Pool_Blocks = Invoke-RestMethodAsync "https://$($Pool_Host)/api/blocks" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250 -fixbigint:$Pool_FixBigInt
+            $Pool_Blocks = Invoke-RestMethodAsync "https://$($_.rpc).2miners.com/api/blocks" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250 -fixbigint:$Pool_FixBigInt
             if ($Pool_Blocks.code -ne $null) {$ok=$false}
         }
         catch {
@@ -119,24 +119,22 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
 
         $blocks_measure = $blocks | Measure-Object timestamp -Minimum -Maximum
         $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
-        $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
-        $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
         $reward         = $(if ($blocks) {($blocks | Where-Object reward | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
         $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
+        $difficulty     = [double]($Pool_Request.nodes | Select-Object -First 1).difficulty
+
         if ($_.cycles) {
             $addName         = $Pool_Algorithm_Norm -replace "[^\d]"
-            $PBR  = (86400 / $_.cycles) * ($(if ($_.symbol -match "-PRI$") {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
+            $PBR  = (86400 / $_.cycles) * ($(if ($_.symbol -match "-PRI$") {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$difficulty)
             $btcRewardLive   = $PBR * $reward * $btcPrice
             $Divisor         = 1
-            $Hashrate        = $Pool_Request.hashrates.$addName
         } else {
             $btcRewardLive   = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
             $addName         = ""
             $Divisor         = 1
-            $Hashrate        = $Pool_Request.hashrate
         }
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Hashrate -BlockRate $Pool_BLK -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -Difficulty $difficulty -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -166,10 +164,11 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     DataWindow    = $DataWindow
-                    Workers       = $Pool_Request.workersTotal
-                    Hashrate      = $Stat.HashRate_Live
-                    TSL           = $Pool_TSL
-                    BLK           = $Stat.BlockRate_Average
+                    Workers       = $null
+                    Hashrate      = $null
+                    TSL           = $null
+                    BLK           = $null
+                    Difficulty    = $Stat.Diff_Average
                     SoloMining    = $true
                     EthMode       = $Pool_EthProxy
                     Name          = $Name

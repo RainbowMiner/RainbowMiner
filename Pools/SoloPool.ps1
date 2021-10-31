@@ -47,7 +47,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
 
     $ok = $false
     try {
-        $Pool_HelpPage = Invoke-WebRequestAsync "https://$_.solopool.org/help" -tag $Name -cycletime 86400
+        $Pool_HelpPage = Invoke-WebRequestAsync "https://$($_).solopool.org/help" -tag $Name -cycletime 86400
         if ($Pool_HelpPage -match 'meta\s+name="arts-pool/config/environment"\s+content="(.+?)"') {
             $Pool_MetaVars = [System.Web.HttpUtility]::UrlDecode($Matches[1]) | ConvertFrom-Json -ErrorAction Stop
             $ok = $true
@@ -73,7 +73,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
         $Pool_Pass = "x"
     }
 
-    $Pool_PoolFee   = $_.fee
+    $Pool_PoolFee   = $Pool_Request.$_.fee
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
@@ -84,7 +84,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
         $Pool_Port      = if ($Pool_MetaVars.APP.StratumPortVar) {$Pool_MetaVars.APP.StratumPortVar} else {$Pool_MetaVars.APP.StratumPortLow}
 
         if (-not $InfoOnly) {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate (ConvertFrom-Hash $_.hashrate) -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty $Pool_Request.$_.difficulty -Quiet
         }
     }
 
@@ -107,10 +107,11 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
             SSL           = $_ -eq "beam"
             Updated       = (Get-Date).ToUniversalTime()
             PoolFee       = $Pool_PoolFee
-            Workers       = $PoolCoins_Request.$Pool_Currency.workers
-            Hashrate      = $Stat.HashRate_Live
+            Workers       = $null
+            Hashrate      = $null
             BLK           = $null
             TSL           = $null
+            Difficulty    = $Stat.Diff_Average
             SoloMining    = $true
             WTM           = $true
             EthMode       = $Pool_EthProxy

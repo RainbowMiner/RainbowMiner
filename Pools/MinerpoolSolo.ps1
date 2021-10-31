@@ -38,7 +38,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
     $Pool_RpcPath   = $_.rpc
 
     $Pool_Divisor   = 1
-    $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
@@ -65,15 +64,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
 
     if ($ok -and -not $InfoOnly) {
         $Pool_Fee = [double]"$($Pool_Request.poolFee -replace "[^\d]+")"
-
-        $Pool_Workers  = [int]$Pool_Request.workerCount
-        $Pool_Hashrate = [decimal]$Pool_Request.hashrate
-        $Pool_TSL      = [int]$Pool_Request.lbfSeconds
-        $Pool_BLK      = [int]$Pool_Request.poolStats.last24hBlocks
-
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
-
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -Difficulty $Pool_Request.poolStats.networkDiff -ChangeDetection $false -Quiet
     }
     
     if ($ok -or $InfoOnly) {
@@ -96,10 +87,12 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
                 SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
-                Workers       = $Pool_Workers
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
+                Workers       = $null
+                Hashrate      = $null
+                TSL           = $null
+                BLK           = $null
+                Difficulty    = $Stat.Diff_Average
+                SoloMining    = $true
                 WTM           = $true
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
