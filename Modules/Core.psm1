@@ -2730,7 +2730,7 @@ function Invoke-Core {
         
         #Get most profitable miner combination
 
-        $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$(if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval})})
+        $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$(if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval})}, {$_.Algorithm[0] -eq $_.BaseAlgorithm[0]})
 
         $BestMiners = @()
 
