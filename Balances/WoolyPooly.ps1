@@ -11,19 +11,19 @@ $Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-
 #https://api.woolypooly.com/api/veil-1/accounts/bv1q46w7plr5lzjrn643m30g09vve8r3g4cheksr4p
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "AE"; port = 20000; host = "ae"; rpc = "aeternity-1"}
+    [PSCustomObject]@{symbol = "AE";   port = 20000; host = "ae"; rpc = "aeternity-1"}
     [PSCustomObject]@{symbol = "AION"; port = 33333; host = "aion"; rpc = "aion-1"}
-    [PSCustomObject]@{symbol = "BTG"; port = 3090; host = "btg"; rpc = "btg-1"}
-    [PSCustomObject]@{symbol = "CFX"; port = 3094; host = "cfx"; rpc = "cfx-1"}
+    [PSCustomObject]@{symbol = "BTG";  port = 3090; host = "btg"; rpc = "btg-1"}
+    [PSCustomObject]@{symbol = "CFX";  port = 3094; host = "cfx"; rpc = "cfx-1"}
     [PSCustomObject]@{symbol = "CTXC"; port = 40000; host = "cortex"; rpc = "cortex-1"}
-    [PSCustomObject]@{symbol = "ERG"; port = 3100; host = "erg"; rpc = "ergo-1"}
-    [PSCustomObject]@{symbol = "ETC"; port = 35000; host = "etc"; rpc = "etc-1"}
-    [PSCustomObject]@{symbol = "ETH"; port = 3096; host = "eth"; rpc = "eth-1"}
-    [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "zcoin"; rpc = "zcoin-1"}
+    [PSCustomObject]@{symbol = "ERG";  port = 3100; host = "erg"; rpc = "ergo-1"}
+    [PSCustomObject]@{symbol = "ETC";  port = 35000; host = "etc"; rpc = "etc-1"}
+    [PSCustomObject]@{symbol = "ETH";  port = 3096; host = "eth"; rpc = "eth-1"}
+    [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "firo"; rpc = "firo-1"}
     [PSCustomObject]@{symbol = "FLUX"; port = 3092; host = "zel"; rpc = "zel-1"}
-    [PSCustomObject]@{symbol = "GRIN"; port = 12000; host = "grin"; rpc = "grin-1"}
-    [PSCustomObject]@{symbol = "MWC"; port = 11000; host = "mwc"; rpc = "mwc-1"}
-    [PSCustomObject]@{symbol = "RVN"; port = 55555; host = "rvn"; rpc = "raven-1"}
+    [PSCustomObject]@{symbol = "GRIN-PRI";  port = 12000; host = "grin"; rpc = "grin-1"}
+    [PSCustomObject]@{symbol = "MWC-PRI"; port = 11000; host = "mwc"; rpc = "mwc-1"}
+    [PSCustomObject]@{symbol = "RVN";  port = 55555; host = "rvn"; rpc = "raven-1"}
     [PSCustomObject]@{symbol = "SERO"; port = 8008; host = "sero"; rpc = "sero-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
     [PSCustomObject]@{symbol = "VTC"; port = 3102; host = "vtc"; rpc = "vtc-1"}

@@ -47,7 +47,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ERG";  port = 3100; host = "erg"; rpc = "ergo-1"}
     [PSCustomObject]@{symbol = "ETC";  port = 35000; host = "etc"; rpc = "etc-1"}
     [PSCustomObject]@{symbol = "ETH";  port = 3096; host = "eth"; rpc = "eth-1"}
-    [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "zcoin"; rpc = "zcoin-1"}
+    [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "firo"; rpc = "firo-1"}
     [PSCustomObject]@{symbol = "FLUX"; port = 3092; host = "zel"; rpc = "zel-1"}
     [PSCustomObject]@{symbol = "GRIN-PRI";  port = 12000; host = "grin"; rpc = "grin-1"}
     [PSCustomObject]@{symbol = "MWC-PRI"; port = 11000; host = "mwc"; rpc = "mwc-1"}
@@ -64,7 +64,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
     $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Port      = $_.port
     $Pool_RpcPath   = $_.rpc
-    $Pool_HostPath  = $_.host
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
