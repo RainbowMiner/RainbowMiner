@@ -56,20 +56,6 @@
                     ]
     },
     {
-        "symbol":  "ETP",
-        "coin":  "Metaverse",
-        "algo":  "Ethash",
-        "rpc":  "etp.baikalmine.com",
-        "host":  "etp.baikalmine.com",
-        "port":  [
-                     5150
-                 ],
-        "fee":  0.5,
-        "regions":  [
-                        "eu"
-                    ]
-    },
-    {
         "symbol":  "EXP",
         "coin":  "Expanse",
         "algo":  "Ethash",
@@ -77,20 +63,6 @@
         "host":  "exp.baikalmine.com",
         "port":  [
                      7171
-                 ],
-        "fee":  0.5,
-        "regions":  [
-                        "eu"
-                    ]
-    },
-    {
-        "symbol":  "JOYS",
-        "coin":  "Joys Digital",
-        "algo":  "Ethash",
-        "rpc":  "joys.baikalmine.com",
-        "host":  "joys.baikalmine.com",
-        "port":  [
-                     9191
                  ],
         "fee":  0.5,
         "regions":  [
@@ -107,20 +79,6 @@
                      4444
                  ],
         "fee":  0.5,
-        "regions":  [
-                        "eu"
-                    ]
-    },
-    {
-        "symbol":  "WLI",
-        "coin":  "Wanliuno",
-        "algo":  "Ethash",
-        "rpc":  "wanli-solo.baikalmine.com",
-        "host":  "wanli-solo.baikalmine.com",
-        "port":  [
-                     4345
-                 ],
-        "fee":  1.0,
         "regions":  [
                         "eu"
                     ]
