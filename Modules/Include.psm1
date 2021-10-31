@@ -916,6 +916,8 @@ function Set-Stat {
                         HashRate_Average   = [Double]$Stat.HashRate_Average
                         BlockRate_Live     = [Double]$Stat.BlockRate_Live
                         BlockRate_Average  = [Double]$Stat.BlockRate_Average
+                        Diff_Live          = [Double]$Stat.Diff_Live
+                        Diff_Average       = [Double]$Stat.Diff_Average
                         Actual24h_Week     = [Double]$Stat.Actual24h_Week
                         Estimate24h_Week   = [Double]$Stat.Estimate24h_Week
                         ErrorRatio         = [Double]$Stat.ErrorRatio
@@ -1014,7 +1016,7 @@ function Set-Stat {
                             PowerDraw_Live     = $PowerDraw
                             PowerDraw_Average  = if ($Stat.PowerDraw_Average -gt 0) {$Stat.PowerDraw_Average + $Span_Week * ($PowerDraw - $Stat.PowerDraw_Average)} else {$PowerDraw}
                             Diff_Live          = $Difficulty
-                            Diff_Average       = $Stat.Diff_Average + $Span_Day * ($Difficulty - $Stat.Diff_Average)
+                            Diff_Average       = $Stat.Diff_Average + $Span_Hour * ($Difficulty - $Stat.Diff_Average)
                             Ratio_Live         = $Ratio
                             Benchmarked        = $Benchmarked
                             LogFile            = $LogFile
@@ -1048,6 +1050,8 @@ function Set-Stat {
                             HashRate_Average   = if ($Stat.HashRate_Average -gt 0) {$Stat.HashRate_Average + $Span_Hour * ($HashRate - $Stat.HashRate_Average)} else {$HashRate}
                             BlockRate_Live     = $BlockRate
                             BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {$Stat.BlockRate_Average + $Span_Hour * ($BlockRate - $Stat.BlockRate_Average)} else {$BlockRate}
+                            Diff_Live          = $Difficulty
+                            Diff_Average       = $Stat.Diff_Average + $Span_Hour * ($Difficulty - $Stat.Diff_Average)
                             Actual24h_Week     = $Stat.Actual24h_Week + $Span_Day * ($Actual24h - $Stat.Actual24h_Week)
                             Estimate24h_Week   = $Stat.Estimate24h_Week + $Span_Day * ($Estimate24h - $Stat.Estimate24h_Week)
                             ErrorRatio         = $Stat.ErrorRatio
@@ -1152,6 +1156,8 @@ function Set-Stat {
                     HashRate_Average   = $HashRate
                     BlockRate_Live     = $BlockRate
                     BlockRate_Average  = $BlockRate
+                    Diff_Live          = $Difficulty
+                    Diff_Average       = $Difficulty
                     Actual24h_Week     = 0
                     Estimate24h_Week   = 0
                     ErrorRatio         = 0
@@ -1257,6 +1263,8 @@ function Set-Stat {
                     HashRate_Average   = [Double]$Stat.HashRate_Average
                     BlockRate_Live     = [Decimal]$Stat.BlockRate_Live
                     BlockRate_Average  = [Double]$Stat.BlockRate_Average
+                    Diff_Live          = [Double]$Stat.Diff_Live
+                    Diff_Average       = [Double]$Stat.Diff_Average
                     Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
                     Estimate24h_Week   = [Decimal]$Stat.Estimate24h_Week
                     ErrorRatio         = [Decimal]$Stat.ErrorRatio
