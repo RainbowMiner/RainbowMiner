@@ -1580,7 +1580,18 @@ function Get-PoolsContent {
 
     $UsePoolName = if ($Parameters.Name) {$Parameters.Name} else {$PoolName}
 
+    $DiffFactor = 3600 / [Math]::Pow(2,32)
+
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
+
+        $Speeds = $null
+
+        if ($PoolName -match "(Solo|Party)$") {
+            $Speeds = [hashtable]@{}
+            $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $PoolName)}).Foreach({
+                $Speeds["$($_.Algorithm[0])-$($_.DeviceModel)"] = $_.Speed[0]
+            })
+        }
 
         $Content = & {
                 $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
@@ -1635,7 +1646,16 @@ function Get-PoolsContent {
                     $c.Disabled = $true
                 }
             }
-            $c
+            if (-not $InfoOnly -and $c.SoloMining -and $c.Difficulty) {
+                $BLKFactor = $DiffFactor / $c.Difficulty
+                foreach ($Model in $Global:DeviceCache.DeviceCombo) {
+                    $c.Algorithm = "$($c.Algorithm0)-$($Model)"
+                    $c.BLK       = $Speeds[$c.Algorithm] * $BLKFactor
+                    $c
+                }
+            } else {
+                $c
+            }
         }
     }
 }
