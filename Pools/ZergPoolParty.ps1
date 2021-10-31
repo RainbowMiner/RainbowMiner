@@ -85,14 +85,12 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         return
     }
 
-    $Pool_TSL = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast_solo -Minimum).Minimum
-    $Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks_solo" -Maximum).Maximum
+    $Pool_Diff = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object -Average difficulty).Average
 
     if (-not $InfoOnly) {
         $NewStat = $false; if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$NewStat = $true; $DataWindow = "actual_last24h_solo"}
         $Pool_Price = Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factor
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -Actual24h $($Pool_Request.$_.actual_last24h/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -HashRate $Pool_Request.$_.hashrate_solo -BlockRate $Pool_BLK -Quiet
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -Actual24h $($Pool_Request.$_.actual_last24h/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -HashRate $Pool_Diff -Quiet
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -117,10 +115,11 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee
                 DataWindow    = $DataWindow
-                Workers       = $Pool_Request.$_.workers_solo
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
+                Workers       = $null
+                Hashrate      = $null
+                BLK           = $null
+                TSL           = $null
+                Difficulty    = $Stat.HashRate_Live
                 SoloMining    = $true
                 EthMode       = $Pool_EthProxy
 				ErrorRatio    = $Stat.ErrorRatio
