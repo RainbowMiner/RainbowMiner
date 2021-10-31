@@ -37,6 +37,9 @@
         "BaikalMine" = [PSCustomObject]@{
             Currencies=@("REOSC")
         }
+        "BaikalMinePPS" = [PSCustomObject]@{
+            Currencies=@("ETH","ETC")
+        }
         "BaikalMineSolo" = [PSCustomObject]@{
             Currencies=@("REOSC")
         }

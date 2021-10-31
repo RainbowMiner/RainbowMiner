@@ -1,0 +1,30 @@
+[
+    {
+        "symbol":  "ETC",
+        "coin":  "Ethereum Classic",
+        "algo":  "Ethash",
+        "rpc":  "etc-pps.baikalmine.com",
+        "host":  "etc-pps.baikalmine.com",
+        "port":  [
+                     3030
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ETH",
+        "coin":  "Ethereum",
+        "algo":  "Ethash",
+        "rpc":  "eth-pps.baikalmine.com",
+        "host":  "eth-pps.baikalmine.com",
+        "port":  [
+                     4040
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    }
+]
