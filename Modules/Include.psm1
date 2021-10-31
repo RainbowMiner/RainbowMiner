@@ -1589,7 +1589,7 @@ function Get-PoolsContent {
         if ($PoolName -match "(Solo|Party)$") {
             $Speeds = [hashtable]@{}
             $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $PoolName)}).Foreach({
-                $Speeds["$($_.Algorithm[0])-$($_.DeviceModel)"] = $_.Speed[0]
+                $Speeds["$($_.BaseAlgorithm[0])-$($_.DeviceModel)"] = $_.Speed[0]
             })
         }
 
