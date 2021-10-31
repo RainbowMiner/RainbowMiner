@@ -5025,7 +5025,8 @@ function Set-CombosConfigDefault {
                                 "NVIDIA" {"$(
                                     Switch ($_.OpenCL.Architecture) {
                                         "Pascal" {Switch -Regex ($Model) {"105" {"GTX5";Break};"106" {"GTX6";Break};"(104|107|108)" {"GTX7";Break};default {$Model}};Break}
-                                        "Turing" {"RTX";Break}
+                                        "Turing" {"RTX2";Break}
+                                        "Ampere" {"RTX3";Break}
                                         default  {$Model}
                                     })$(if ($Mem -lt 6) {"$($Mem)GB"})"}
                             }
