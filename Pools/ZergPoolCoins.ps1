@@ -85,7 +85,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             $Pool_Actual24h   = $PoolCoins_Request.$Pool_CoinSymbol.actual_last24h/1000
             $Pool_Estimate24h = $PoolCoins_Request.$Pool_CoinSymbol.estimate_last24
         }
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_shared -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_shared" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_shared -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_shared" -Difficulty $PoolCoins_Request.$Pool_CoinSymbol.difficulty -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
