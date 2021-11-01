@@ -204,6 +204,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = if ($API.MinerInfo) {ConvertTo-Json $API.MinerInfo -Depth 10} else {"{}"}
             Break
         }
+        "/minerspeeds" {
+            $Data = if ($API.MinerSpeeds) {ConvertTo-Json $API.MinerSpeeds -Depth 10} else {"{}"}
+            Break
+        }
         "/pools" {
             $Data = if ($API.Pools) {ConvertTo-Json $API.Pools -Depth 10} else {"[]"}
             Break
@@ -1050,6 +1054,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                         AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                         Seconds  = [int64]$Timer.TotalSeconds
                                     }
+
             $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Power=$API.CurrentPower;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json -Depth 10
             Remove-Variable "Timer" -ErrorAction Ignore
             Remove-Variable "Uptime" -ErrorAction Ignore

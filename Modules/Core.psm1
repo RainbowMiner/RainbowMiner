@@ -1688,6 +1688,8 @@ function Invoke-Core {
         if ($Miner_Remove) {$Global:MinerSpeeds.Remove($Miner_Key)}
     }
 
+    $API.MinerSpeeds = $Global:MinerSpeeds
+
     #Load information about the pools
     Write-Log "Loading pool information. "
 
@@ -2496,7 +2498,6 @@ function Invoke-Core {
             $Session.ReportMinerData = $true
         }
 
-        $Global:MinerSPeeds = [hashtable]@{}
         $Miners | Group-Object -Property BaseAlgorithm,DeviceModel | Foreach-Object {
             $Miner_Algo  = $_.Values[0] -replace "-.+$"
             $Miner_Key   = "$($Miner_Algo)-$($_.Values[1])"
