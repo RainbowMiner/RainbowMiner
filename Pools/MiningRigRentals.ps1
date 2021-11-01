@@ -143,6 +143,11 @@ if ($AllRigs_Request) {
     $Devices_Rented  = @()
     $MRR_Pings       = $null
 
+    if ($Remove_Rigs = $AllRigs_Request | Where-Object {$_.type -eq "sha256" -and $_.status.status -ne "rented" -and -not $_.status.rented} | Select-Object -ExpandProperty id | Sort-Object) {
+        Invoke-MiningRigRentalRequest "/rig/$($Remove_Rigs -join ';')" $API_Key $API_Secret -method "DELETE" > $null
+        $AllRigs_Request = $AllRigs_Request | Where-Object {$_.id -notin @($Remove_Rigs)}
+    }
+
     foreach ($Worker1 in $Workers) {
 
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
