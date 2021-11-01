@@ -2509,8 +2509,11 @@ function Invoke-Core {
                     if ($Global:MinerSpeeds.ContainsKey($Miner_Key)) {
                         $Global:MinerSpeeds.Remove($Miner_Key)
                     }
-                } elseif (-not $Global:MinerSpeeds.ContainsKey($Miner_Key) -or $Global:MinerSpeeds[$Miner_Key].Hashrate -ne $Miner_Hashrate -or (Compare-Object $Global:MinerSpeeds[$Miner_Key].Names $Miner_Names)) {
-                    $Global:MinerSpeeds[$Miner_Key] = [PSCustomObject]@{Hashrate=$Miner_Hashrate;Names=$Miner_Names;Miner=$Miner_Miner}
+                } else {
+                    $Miner_Hashrate = [Math]::Round($Miner_Hashrate,2)
+                    if (-not $Global:MinerSpeeds.ContainsKey($Miner_Key) -or $Global:MinerSpeeds[$Miner_Key].Hashrate -ne $Miner_Hashrate -or (Compare-Object $Global:MinerSpeeds[$Miner_Key].Names $Miner_Names)) {
+                        $Global:MinerSpeeds[$Miner_Key] = [PSCustomObject]@{Hashrate=$Miner_Hashrate;Names=$Miner_Names;Miner=$Miner_Miner}
+                    }
                 }
             }
         }
