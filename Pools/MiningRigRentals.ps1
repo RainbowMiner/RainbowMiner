@@ -107,10 +107,6 @@ if (-not $Workers.Count) {return}
 
 $AllRigs_Request   = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
 
-$Pool_Request = [PSCustomObject]@{}
-
-if (-not ($Pool_Request = Get-MiningRigRentalAlgos)) {return}
-
 Set-MiningRigRentalConfigDefault -Workers $Workers > $null
 
 if ($API.MinersNeedingBenchmark) {
@@ -241,14 +237,8 @@ if ($AllRigs_Request) {
             $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
             $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
 
-            if ($false) {
-                $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
-                $Divisor = Get-MiningRigRentalsDivisor $Pool_Price_Data.unit
-                $Pool_Price = $Pool_Price_Data.amount
-            } else {
-                $Divisor = Get-MiningRigRentalsDivisor $_.price.type
-                $Pool_Price = $_.price.BTC.price
-            }
+            $Divisor = Get-MiningRigRentalsDivisor $_.price.type
+            $Pool_Price = $_.price.BTC.price
 
             if (-not $InfoOnly) {
                 $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
@@ -705,469 +695,474 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 4. Auto create/update rigs
     #
 
-    $MaxAPICalls = 40
+    $Pool_Request = [PSCustomObject]@{}
 
-    $RigGPUModels = $Session.Config.DeviceModel.Where({$_ -ne "CPU"})
+    if ($Pool_Request = (Get-MiningRigRentalAlgos).Where({$_.name -ne "sha256"})) {
 
-    $RigPools = [hashtable]@{}
-    if ($AllRigs_Request) {
-        try {
-            (Invoke-MiningRigRentalRequest "/rig/$(@($AllRigs_Request | Select-Object -ExpandProperty id) -join ";")/pool" $API_Key $API_Secret -Timeout 60) | Foreach-Object {$RigPools[[int]$_.rigid] = $_.pools}
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "$($Name): Unable to get pools: $($_.Exception.Message)"
-        }
-    }
+        $MaxAPICalls = 40
 
-    $PoolsData = Get-MiningRigRentalsPoolsData -UpdateLocalCopy
+        $RigGPUModels = $Session.Config.DeviceModel.Where({$_ -ne "CPU"})
 
-    foreach($RigRunMode in @("create","update")) {
-
-        foreach ($RigName in $Workers) {
-
-            $RigNameStat = Get-MiningRigStat $RigName
-            if (-not $RigNameStat) {
-                $RigNameStat = [PSCustomObject]@{}
+        $RigPools = [hashtable]@{}
+        if ($AllRigs_Request) {
+            try {
+                (Invoke-MiningRigRentalRequest "/rig/$(@($AllRigs_Request | Select-Object -ExpandProperty id) -join ";")/pool" $API_Key $API_Secret -Timeout 60) | Foreach-Object {$RigPools[[int]$_.rigid] = $_.pools}
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "$($Name): Unable to get pools: $($_.Exception.Message)"
             }
+        }
 
-            Write-Log -Level Info "$($Name): Start $($RigRunMode) rigs on $($RigName)"
+        $PoolsData = Get-MiningRigRentalsPoolsData -UpdateLocalCopy
 
-            if ($RigRunMode -eq "create" -and $RigCreated -ge $MaxAPICalls) {break}
+        foreach($RigRunMode in @("create","update")) {
 
-            if (($RigRunMode -eq "create" -and $MRRConfig.$RigName.EnableAutoCreate) -or ($RigRunMode -eq "update" -and $MRRConfig.$RigName.EnableAutoUpdate)) {
-                try {
-                    $RigModels           = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
-                    $RigDevice           = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
-                    $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice.Foreach("Name") | Sort-Object -Unique) -join "-")"
-                    $RigDeviceRevenue24h = $RigDeviceStat."$($MRRConfig.$RigName.ProfitAverageTime)"
-                    $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
+            foreach ($RigName in $Workers) {
 
-                    $RigType ="$($RigDevice.Foreach("Type") | Select-Object -Unique)".ToUpper()
+                $RigNameStat = Get-MiningRigStat $RigName
+                if (-not $RigNameStat) {
+                    $RigNameStat = [PSCustomObject]@{}
+                }
 
-                    if ($RigType -eq "GPU") {
-                        $RigDeviceRam = ($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsize} | Measure-Object -Minimum).Minimum / 1GB
-                        if ($IsWindows -and $Session.IsWin10 -and -not $Session.Config.EnableEthashZombieMode) {
-                            $RigDeviceRam *= 0.8652
+                Write-Log -Level Info "$($Name): Start $($RigRunMode) rigs on $($RigName)"
+
+                if ($RigRunMode -eq "create" -and $RigCreated -ge $MaxAPICalls) {break}
+
+                if (($RigRunMode -eq "create" -and $MRRConfig.$RigName.EnableAutoCreate) -or ($RigRunMode -eq "update" -and $MRRConfig.$RigName.EnableAutoUpdate)) {
+                    try {
+                        $RigModels           = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
+                        $RigDevice           = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
+                        $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice.Foreach("Name") | Sort-Object -Unique) -join "-")"
+                        $RigDeviceRevenue24h = $RigDeviceStat."$($MRRConfig.$RigName.ProfitAverageTime)"
+                        $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
+
+                        $RigType ="$($RigDevice.Foreach("Type") | Select-Object -Unique)".ToUpper()
+
+                        if ($RigType -eq "GPU") {
+                            $RigDeviceRam = ($RigDevice | Foreach-Object {$_.OpenCL.GlobalMemsize} | Measure-Object -Minimum).Minimum / 1GB
+                            if ($IsWindows -and $Session.IsWin10 -and -not $Session.Config.EnableEthashZombieMode) {
+                                $RigDeviceRam *= 0.8652
+                            }
+                            $RigDeviceRam = [Math]::Round($RigDeviceRam,3)
                         }
-                        $RigDeviceRam = [Math]::Round($RigDeviceRam,3)
-                    }
 
-                    if (-not $API.MinersNeedingBenchmark) {$CurrentlyBenchmarking = @()}
-                    else {$CurrentlyBenchmarking = @($API.MinersNeedingBenchmark | Foreach-Object {[PSCustomObject]@{Algorithm="$($_.HashRates.PSObject.Properties.Name | Select-Object -First 1)";DeviceModel=$_.DeviceModel}} | Where-Object {$_.Algorithm -notmatch "-"} | Select-Object)}
+                        if (-not $API.MinersNeedingBenchmark) {$CurrentlyBenchmarking = @()}
+                        else {$CurrentlyBenchmarking = @($API.MinersNeedingBenchmark | Foreach-Object {[PSCustomObject]@{Algorithm="$($_.HashRates.PSObject.Properties.Name | Select-Object -First 1)";DeviceModel=$_.DeviceModel}} | Where-Object {$_.Algorithm -notmatch "-"} | Select-Object)}
 
-                    if ($MRRConfig.$RigName.AutoCreateMinProfitBTC -lt 0) {
-                        $MRRConfig.$RigName.AutoCreateMinProfitBTC = if ($RigType -eq "CPU") {$MRRConfig.$RigName.AutoCreateMinCPUProfitBTC} else {0}
-                    }
+                        if ($MRRConfig.$RigName.AutoCreateMinProfitBTC -lt 0) {
+                            $MRRConfig.$RigName.AutoCreateMinProfitBTC = if ($RigType -eq "CPU") {$MRRConfig.$RigName.AutoCreateMinCPUProfitBTC} else {0}
+                        }
 
-                    $RigSubst = @{
-                        "RigID"      = "$(Get-MiningRigRentalsRigID $RigName)"
-                        "Type"       = $RigType
-                        "TypeCPU"    = "$(if ($RigType -eq "CPU") {"CPU"})"
-                        "TypeGPU"    = "$(if ($RigType -eq "GPU") {"GPU"})"
-                        "Workername" = $RigName
-                    }
+                        $RigSubst = @{
+                            "RigID"      = "$(Get-MiningRigRentalsRigID $RigName)"
+                            "Type"       = $RigType
+                            "TypeCPU"    = "$(if ($RigType -eq "CPU") {"CPU"})"
+                            "TypeGPU"    = "$(if ($RigType -eq "GPU") {"GPU"})"
+                            "Workername" = $RigName
+                        }
                     
-                    if ($RigDeviceRevenue24h -and $RigDeviceStat.Duration) {
-                        if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
-                        $RigModels         = @($RigDevice.Foreach("Model") | Sort-Object -Unique)
-                        $RigAlreadyCreated = @($UniqueRigs_Request.Where({$_.description -match "\[$RigName\]"}))
-                        $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
-                        $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
+                        if ($RigDeviceRevenue24h -and $RigDeviceStat.Duration) {
+                            if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
+                            $RigModels         = @($RigDevice.Foreach("Model") | Sort-Object -Unique)
+                            $RigAlreadyCreated = @($UniqueRigs_Request.Where({$_.description -match "\[$RigName\]"}))
+                            $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
+                            $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
 
-                        $RigPriceFactor    = $MRRConfig.$RigName.PriceFactor
+                            $RigPriceFactor    = $MRRConfig.$RigName.PriceFactor
 
-                        $RigControl_Data   = $null
+                            $RigControl_Data   = $null
 
-                        if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
-                            if ($RigControl_Data = $MRRRigControl | Where-Object {$_.Name -eq $RigName}) {
-                                $RigPriceFactor = $RigControl_Data.PriceFactor
-                            }
-                        }
-
-                        $DeviceAlgorithm        = @($RigModels | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
-                        $DeviceExcludeAlgorithm = @($RigModels | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
-
-                        $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
-
-                            $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
-                            $RigPower     = 0
-                            $RigSpeed     = 0
-                            $RigRevenue   = 0
-                            $RigMaxRevenueFactor = 10
-
-                            $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
-
-                            if ((Get-Yes $Session.Config.Algorithms.$Algorithm_Norm.MRREnable) -and -not (
-                                    ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Algorithm_Norm) -or
-                                    ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Algorithm_Norm) -or
-                                    ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Algorithm_Norm) -or
-                                    ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Algorithm_Norm) -or
-                                    ($DeviceAlgorithm.Count -and $DeviceAlgorithm -inotcontains $Algorithm_Norm) -or
-                                    ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $Algorithm_Norm)
-                                ) -and (-not $CurrentlyBenchmarking.Count -or -not $CurrentlyBenchmarking.Where({$_.Algorithm -eq $Algorithm_Norm -and $RigModels -contains $_.DeviceModel}).Count)) {
-                                foreach ($Model in $RigModels) {
-                                    $RigPowerAdd   = 0
-                                    $RigSpeedAdd   = 0
-                                    $RigRevenueAdd = 0
-                                    $RigIsMRRPool  = $false
-                                    $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and "$($_.Algorithm[0])" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)}).Foreach({
-                                        $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
-                                        if ($ThisSpeed -gt $RigSpeedAdd) {
-                                            $RigIsMRRPool  = $_.Pool -contains "MiningRigRentals"
-                                            $ThisProfit    = if ($RigIsMRRPool) {$SuggestedPrice * $ThisSpeed} else {$_.Profit}
-                                            $RigPowerAdd   = $_.PowerDraw
-                                            $RigSpeedAdd   = $ThisSpeed
-                                            $RigRevenueAdd = $ThisProfit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
-
-                                        }
-                                    })
-                                    $RigPower   += $RigPowerAdd
-                                    $RigSpeed   += $RigSpeedAdd
-                                    $RigRevenue += $RigRevenueAdd
-                                    if ($RigIsMRRPool) {$RigMaxRevenueFactor = 20}
+                            if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
+                                if ($RigControl_Data = $MRRRigControl | Where-Object {$_.Name -eq $RigName}) {
+                                    $RigPriceFactor = $RigControl_Data.PriceFactor
                                 }
-                                $RigModelsKey = "$($RigModels -join "-")"
-                                if ($RigSpeed -gt 0) {
-                                    if (-not $RigNameStat.$RigModelsKey) {$RigNameStat | Add-Member $RigModelsKey ([PSCustomObject]@{}) -Force}
-                                    $RigNameStat.$RigModelsKey | Add-Member $Algorithm_Norm ([PSCustomObject]@{Power=$RigPower;Speed=$RigSpeed;Revenue=$RigRevenue}) -Force
-                                } elseif ($RigRunMode -eq "update") {
-                                    if ($RigNameStat.$RigModelsKey.$Algorithm_Norm) {
-                                        $RigPower   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Power
-                                        $RigSpeed   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Speed
-                                        $RigRevenue = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Revenue
-                                    } else {
-                                        $RigPower   = $RigDevicePowerDraw
-                                        $RigRevenue = 0
-                                        $RigMRRid   = $_.name
-                                        $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
-                                            $RigSpeed = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
+                            }
+
+                            $DeviceAlgorithm        = @($RigModels | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
+                            $DeviceExcludeAlgorithm = @($RigModels | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
+
+                            $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
+
+                                $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
+                                $RigPower     = 0
+                                $RigSpeed     = 0
+                                $RigRevenue   = 0
+                                $RigMaxRevenueFactor = 10
+
+                                $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
+
+                                if ((Get-Yes $Session.Config.Algorithms.$Algorithm_Norm.MRREnable) -and -not (
+                                        ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Algorithm_Norm) -or
+                                        ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Algorithm_Norm) -or
+                                        ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Algorithm_Norm) -or
+                                        ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Algorithm_Norm) -or
+                                        ($DeviceAlgorithm.Count -and $DeviceAlgorithm -inotcontains $Algorithm_Norm) -or
+                                        ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $Algorithm_Norm)
+                                    ) -and (-not $CurrentlyBenchmarking.Count -or -not $CurrentlyBenchmarking.Where({$_.Algorithm -eq $Algorithm_Norm -and $RigModels -contains $_.DeviceModel}).Count)) {
+                                    foreach ($Model in $RigModels) {
+                                        $RigPowerAdd   = 0
+                                        $RigSpeedAdd   = 0
+                                        $RigRevenueAdd = 0
+                                        $RigIsMRRPool  = $false
+                                        $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and "$($_.Algorithm[0])" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)}).Foreach({
+                                            $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
+                                            if ($ThisSpeed -gt $RigSpeedAdd) {
+                                                $RigIsMRRPool  = $_.Pool -contains "MiningRigRentals"
+                                                $ThisProfit    = if ($RigIsMRRPool) {$SuggestedPrice * $ThisSpeed} else {$_.Profit}
+                                                $RigPowerAdd   = $_.PowerDraw
+                                                $RigSpeedAdd   = $ThisSpeed
+                                                $RigRevenueAdd = $ThisProfit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+
+                                            }
                                         })
+                                        $RigPower   += $RigPowerAdd
+                                        $RigSpeed   += $RigSpeedAdd
+                                        $RigRevenue += $RigRevenueAdd
+                                        if ($RigIsMRRPool) {$RigMaxRevenueFactor = 20}
                                     }
-                                }
-                            }
-
-                            $IsHandleRig    = ($RigRunMode -eq "update") -or ($MRRConfig.$RigName.AutoCreateAlgorithm -contains $Algorithm_Norm)
-
-                            $RigPowerDiff   = 0
-                            $RigMinPrice    = 0
-                            $RigPrice       = 0
-
-                            if ($RigSpeed -gt 0) {
-                                $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
-                                if ($RigPowerDiff -lt 0 -and $MRRConfig.$RigName.EnablePowerDrawAddOnly) {$RigPowerDiff = 0}
-                                $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
-                                $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
-       
-                                if ($IsHandleRig -or (($RigRevenue -lt $RigMaxRevenueFactor*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
-
-                                    #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
-
-                                    $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
-
-                                    $PriceDivisor = 0
-                                    while($PriceDivisor -lt $RigDivisors.Count -and $RigMinPrice -lt 1e-3) {
-                                        $RigMinPrice *= 1000
-                                        $RigPrice    *= 1000
-                                        $PriceDivisor++
-                                    }
-                                    $RigMinPrice = [Decimal][Math]::Round($RigMinPrice,12)
-                                    $RigPrice    = [Decimal][Math]::Round($RigPrice,12)
-
-                                    $HashDivisor = 0
-                                    while ($HashDivisor -lt $RigDivisors.Count -and $RigSpeed -gt 1000) {
-                                        $RigSpeed /= 1000
-                                        $HashDivisor++
-                                    }
-
-                                    if ($RigSpeed -lt 1) {$RigSpeed = [Math]::Floor($RigSpeed*100)/100}
-                                    elseif ($RigSpeed -lt 100) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
-                                    else {$RigSpeed = [Math]::Floor($RigSpeed)}
-
-                                    $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
-
-                                    $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply))}
-
-                                    #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
-
-                                    if ($IsHandleRig -or $RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) {
-
-                                        $RigMaxHours             = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
-                                        $Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Algorithm_Norm
-                                        $RigSubst["Algorithm"]   = $Algorithm_Norm_Mapped
-                                        $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)$(if (Get-Coin $Matches[1]) {"/$($Matches[1].ToUpper())"} elseif ($Matches[1] -ne $Algorithm_Norm_Mapped) {"/$($Matches[1])"})"} else {$Algorithm_Norm_Mapped}
-                                        $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
-                                        $RigSubst["Display"]     = $_.display
-
-                                        $RigGroupName = "RBM-$($RigName)"
-
-                                        if (-not $Session.MRRRigGroups.$RigGroupName) {
-                                            try {
-                                                $Result = Invoke-MiningRigRentalRequest "/riggroup" $API_Key $API_Secret -params @{name = $RigGroupName;enabled = 1;rental_limit = 1} -method "PUT" -Timeout 60
-                                                if ($Result.id) {
-                                                    $RigCreated++
-                                                    $Session.MRRRigGroups[$RigGroupName] = [int]$Result.id
-                                                }
-                                                Write-Log -Level Info "$($Name): $(if ($Result.id) {"Successfully created"} else {"Failed to create"}) rig group $($RigGroupName)"
-                                            } catch {
-                                                if ($Error.Count){$Error.RemoveAt(0)}
-                                                Write-Log -Level Warn "$($Name): Unable to create rig group $($RigGroupName): $($_.Exception.Message)"
-                                            }
-                                        }
-
-                                        $RigGroupId = if ($Session.MRRRigGroups.$RigGroupName) {[int]$Session.MRRRigGroups.$RigGroupName} else {0}
-                                    
-                                        if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + $Session.Config.DefaultPoolRegion.Where({$_ -ne $Session.Config.Region}) | Select-Object)}
-                                        $CreateRig = if ($RigRunMode -eq "create") {
-                                            @{
-                                                type          = $_.name
-                                                status	      = "disabled"
-                                                server	      = $RigServer.name
-                                                ndevices      = 1
-                                            }
+                                    $RigModelsKey = "$($RigModels -join "-")"
+                                    if ($RigSpeed -gt 0) {
+                                        if (-not $RigNameStat.$RigModelsKey) {$RigNameStat | Add-Member $RigModelsKey ([PSCustomObject]@{}) -Force}
+                                        $RigNameStat.$RigModelsKey | Add-Member $Algorithm_Norm ([PSCustomObject]@{Power=$RigPower;Speed=$RigSpeed;Revenue=$RigRevenue}) -Force
+                                    } elseif ($RigRunMode -eq "update") {
+                                        if ($RigNameStat.$RigModelsKey.$Algorithm_Norm) {
+                                            $RigPower   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Power
+                                            $RigSpeed   = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Speed
+                                            $RigRevenue = $RigNameStat.$RigModelsKey.$Algorithm_Norm.Revenue
                                         } else {
-                                            @{
-                                                ndevices    = 1
-                                            }
-                                        }
-
-                                        #$CreateRig["riggroup"] = $RigGroupId
-
-                                        if ($RigType -eq "GPU") {
-                                            $CreateRig["device_ram"] = $RigDeviceRam
-                                        }
-
-                                        if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
-                                            $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithmex% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%(algorithm|algorithmex|display)%") {"%algorithmex% $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
-                                        }
-
-                                        if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateDescription) {
-                                            $CreateRig["description"] = Get-MiningRigRentalsSubst "$(if ($MRRConfig.$RigName.Description -notmatch "%workername%") {"$($MRRConfig.$RigName.Description)[$RigName]"} elseif ($MRRConfig.$RigName.Description -notmatch "\[%workername%\]") {$MRRConfig.$RigName.Description -replace "%workername%","[$RigName]"} else {$MRRConfig.$RigName.Description})" -Subst $RigSubst
-                                        }
-
-                                        $CreateRig["price"] = @{
-                                            btc = @{
-                                                price       = $RigPrice
-                                                autoprice   = $MRRConfig.$RigName.EnableAutoPrice
-                                                minimum	    = if ($MRRConfig.$RigName.EnableMinimumPrice) {$RigMinPrice} else {0}
-                                            }
-                                            ltc = @{
-                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "LTC"
-                                                autoprice   = $true
-                                            }
-                                            eth = @{
-                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "ETH"
-                                                autoprice   = $true
-                                            }
-                                            dash = @{
-                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "DASH"
-                                                autoprice   = $true
-                                            }
-                                            bch = @{
-                                                enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "BCH"
-                                                autoprice   = $true
-                                            }
-                                            type = $RigDivisors[$PriceDivisor].type
-                                        }
-
-                                        $CreateRig["hash"] = @{
-                                            hash = $RigSpeed
-                                            type = $RigDivisors[$HashDivisor].type
-                                        }
-
-                                        $CreateRig["minhours"] = $RigMinHours
-                                        $CreateRig["maxhours"] = $RigMaxHours
-
-                                        $CreateRig["extensions"] = ($MRRConfig.$RigName.AllowExtensions -and $Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions -eq $null) -or ($Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions)
-
-                                        if ($RigRunMode -eq "create" -or $EnableUpdatePriceModifier) {
-                                            $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent -ne $null) {$Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent} else {$RigModifier}
-                                            $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
-                                        }
-
-                                        $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
-                                        if ($RigRunMode -eq "create") {
-                                            try {
-                                                $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
-                                                if ($Result.id) {
-                                                    if ($RigGroupId) {
-                                                        $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $Result.id}
-                                                    }
-                                                    Write-Log -Level Info "$($Name): Created rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
-                                                    if ($RigPool) {
-                                                        try {
-                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($Result.id)/pool" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
-                                                            if ($Result.success) {
-                                                                $RigCreated++
-                                                            }
-                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to add"}) pools of rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
-                                                        } catch {
-                                                            if ($Error.Count){$Error.RemoveAt(0)}
-                                                            Write-Log -Level Warn "$($Name): Unable to add pools to $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
-                                                        }
-                                                    }
-                                                } else {
-                                                    Write-Log -Level Warn "$($Name): Unable to create $($Algorithm_Norm) rig for $($RigName)"
-                                                }
-                                            } catch {
-                                                if ($Error.Count){$Error.RemoveAt(0)}
-                                                Write-Log -Level Warn "$($Name): Unable to create $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
-                                            }
-                                            $RigCreated++
-                                            if ($RigCreated -ge $MaxAPICalls) {return}
-
-                                        } elseif ($RigRunMode -eq "update") {
-
-                                            $RigMRRid = $_.name
+                                            $RigPower   = $RigDevicePowerDraw
+                                            $RigRevenue = 0
+                                            $RigMRRid   = $_.name
                                             $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
-
-                                                $RigPools_Id = [int]$_.id
-
-                                                if ($RigGroupId -and ([int]$_.riggroup -ne $RigGroupId)) {
-                                                    $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $RigPools_Id}
-                                                    if ([int]$_.riggroup) {
-                                                        $RigGroupsRemove += [PSCustomObject]@{groupid = [int]$_.riggroup;rigid = $RigPools_Id}
-                                                    }
-                                                }
-
-                                                if ($RigControl_Data -and ($_.status.status -eq "rented" -or $_.status.rented)) {
-                                                    $RigControl_Data.LastReset = (Get-Date).ToUniversalTime()
-                                                }
-                                                $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
-                                                $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
-
-                                                if ( (-not $RigMinPriceCurrent) -or
-                                                     ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
-                                                     ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
-                                                     ($_.ndevices -ne $CreateRig.ndevices) -or 
-                                                     ($CreateRig.device_ram -and ($_.device_ram -ne $CreateRig.device_ram)) -or
-                                                     ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
-                                                     ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
-                                                     ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
-                                                     ($RigServer -and ($_.region -ne $RigServer.region)) -or
-                                                     ($_.extensions -ne $CreateRig.extensions)
-                                                ) {
-                                                    $CreateRig["id"] = $RigPools_Id
-                                                    if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
-                                                    $RigUpdated = $false
-                                                    if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
-                                                        if ($RigCreated -lt $MaxAPICalls) {
-                                                            $RigUpdated = $true
-                                                            try {
-                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
-                                                            } catch {
-                                                                if ($Error.Count){$Error.RemoveAt(0)}
-                                                                Write-Log -Level Warn "$($Name): Unable to update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
-                                                            }
-                                                            $RigCreated++
-                                                        }
-                                                    } else {
-                                                        $RigUpdated = $true
-                                                        $RigsToUpdate += $CreateRig
-                                                    }
-                                                    if ($RigUpdated) {
-                                                        Write-Log -Level Info "$($Name): Update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
-                                                    }
-                                                }
-
-                                                if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
-                                                    $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"  -or $_.pass -match "=mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
-                                                    if ((-not $RigPoolCurrent -and ($RigPools[$RigPools_Id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
-                                                        try {
-                                                            $RigPriority = [int]$(if ($RigPoolCurrent) {
-                                                                $RigPoolCurrent.priority
-                                                            } else {
-                                                                foreach($i in 0..4) {
-                                                                    if (-not ($RigPools[$RigPools_Id] | Where-Object {$_.priority -eq $i})) {
-                                                                        $i
-                                                                        break
-                                                                    }
-                                                                }
-                                                            })
-                                                            $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($RigPriority)" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
-                                                            if ($Result.success) {
-                                                                $RigCreated++
-                                                            }
-                                                            Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
-                                                        } catch {
-                                                            if ($Error.Count){$Error.RemoveAt(0)}
-                                                            Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
-                                                        }                                                        
-                                                    }
-
-                                                    #temporary fix
-                                                    @($RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Select-Object) + @($RigPools[$RigPools_Id] | Where-Object {$_.pass -match "ID=mrx"} | Select-Object -Skip 1) | Foreach-Object {
-                                                        if ($RigCreated -lt $MaxAPICalls) {
-                                                            try {
-                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
-                                                                if ($Result.success) {
-                                                                    $RigCreated++
-                                                                }
-                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
-                                                            } catch {
-                                                                if ($Error.Count){$Error.RemoveAt(0)}
-                                                                Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                                                $RigSpeed = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
                                             })
                                         }
                                     }
                                 }
-                            }
-                        })
+
+                                $IsHandleRig    = ($RigRunMode -eq "update") -or ($MRRConfig.$RigName.AutoCreateAlgorithm -contains $Algorithm_Norm)
+
+                                $RigPowerDiff   = 0
+                                $RigMinPrice    = 0
+                                $RigPrice       = 0
+
+                                if ($RigSpeed -gt 0) {
+                                    $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
+                                    if ($RigPowerDiff -lt 0 -and $MRRConfig.$RigName.EnablePowerDrawAddOnly) {$RigPowerDiff = 0}
+                                    $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
+                                    $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
+       
+                                    if ($IsHandleRig -or (($RigRevenue -lt $RigMaxRevenueFactor*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
+
+                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+
+                                        $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
+
+                                        $PriceDivisor = 0
+                                        while($PriceDivisor -lt $RigDivisors.Count -and $RigMinPrice -lt 1e-3) {
+                                            $RigMinPrice *= 1000
+                                            $RigPrice    *= 1000
+                                            $PriceDivisor++
+                                        }
+                                        $RigMinPrice = [Decimal][Math]::Round($RigMinPrice,12)
+                                        $RigPrice    = [Decimal][Math]::Round($RigPrice,12)
+
+                                        $HashDivisor = 0
+                                        while ($HashDivisor -lt $RigDivisors.Count -and $RigSpeed -gt 1000) {
+                                            $RigSpeed /= 1000
+                                            $HashDivisor++
+                                        }
+
+                                        if ($RigSpeed -lt 1) {$RigSpeed = [Math]::Floor($RigSpeed*100)/100}
+                                        elseif ($RigSpeed -lt 100) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
+                                        else {$RigSpeed = [Math]::Floor($RigSpeed)}
+
+                                        $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
+
+                                        $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply))}
+
+                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+
+                                        if ($IsHandleRig -or $RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) {
+
+                                            $RigMaxHours             = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
+                                            $Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Algorithm_Norm
+                                            $RigSubst["Algorithm"]   = $Algorithm_Norm_Mapped
+                                            $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)$(if (Get-Coin $Matches[1]) {"/$($Matches[1].ToUpper())"} elseif ($Matches[1] -ne $Algorithm_Norm_Mapped) {"/$($Matches[1])"})"} else {$Algorithm_Norm_Mapped}
+                                            $RigSubst["CoinInfo"]    = if ($_.display -match "\(([^\)]+)\)$") {"$(if (Get-Coin $Matches[1]) {$Matches[1].ToUpper()} else {$Matches[1]})"} else {""}
+                                            $RigSubst["Display"]     = $_.display
+
+                                            $RigGroupName = "RBM-$($RigName)"
+
+                                            if (-not $Session.MRRRigGroups.$RigGroupName) {
+                                                try {
+                                                    $Result = Invoke-MiningRigRentalRequest "/riggroup" $API_Key $API_Secret -params @{name = $RigGroupName;enabled = 1;rental_limit = 1} -method "PUT" -Timeout 60
+                                                    if ($Result.id) {
+                                                        $RigCreated++
+                                                        $Session.MRRRigGroups[$RigGroupName] = [int]$Result.id
+                                                    }
+                                                    Write-Log -Level Info "$($Name): $(if ($Result.id) {"Successfully created"} else {"Failed to create"}) rig group $($RigGroupName)"
+                                                } catch {
+                                                    if ($Error.Count){$Error.RemoveAt(0)}
+                                                    Write-Log -Level Warn "$($Name): Unable to create rig group $($RigGroupName): $($_.Exception.Message)"
+                                                }
+                                            }
+
+                                            $RigGroupId = if ($Session.MRRRigGroups.$RigGroupName) {[int]$Session.MRRRigGroups.$RigGroupName} else {0}
+                                    
+                                            if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + $Session.Config.DefaultPoolRegion.Where({$_ -ne $Session.Config.Region}) | Select-Object)}
+                                            $CreateRig = if ($RigRunMode -eq "create") {
+                                                @{
+                                                    type          = $_.name
+                                                    status	      = "disabled"
+                                                    server	      = $RigServer.name
+                                                    ndevices      = 1
+                                                }
+                                            } else {
+                                                @{
+                                                    ndevices    = 1
+                                                }
+                                            }
+
+                                            #$CreateRig["riggroup"] = $RigGroupId
+
+                                            if ($RigType -eq "GPU") {
+                                                $CreateRig["device_ram"] = $RigDeviceRam
+                                            }
+
+                                            if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
+                                                $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithmex% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%(algorithm|algorithmex|display)%") {"%algorithmex% $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
+                                            }
+
+                                            if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateDescription) {
+                                                $CreateRig["description"] = Get-MiningRigRentalsSubst "$(if ($MRRConfig.$RigName.Description -notmatch "%workername%") {"$($MRRConfig.$RigName.Description)[$RigName]"} elseif ($MRRConfig.$RigName.Description -notmatch "\[%workername%\]") {$MRRConfig.$RigName.Description -replace "%workername%","[$RigName]"} else {$MRRConfig.$RigName.Description})" -Subst $RigSubst
+                                            }
+
+                                            $CreateRig["price"] = @{
+                                                btc = @{
+                                                    price       = $RigPrice
+                                                    autoprice   = $MRRConfig.$RigName.EnableAutoPrice
+                                                    minimum	    = if ($MRRConfig.$RigName.EnableMinimumPrice) {$RigMinPrice} else {0}
+                                                }
+                                                ltc = @{
+                                                    enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "LTC"
+                                                    autoprice   = $true
+                                                }
+                                                eth = @{
+                                                    enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "ETH"
+                                                    autoprice   = $true
+                                                }
+                                                dash = @{
+                                                    enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "DASH"
+                                                    autoprice   = $true
+                                                }
+                                                bch = @{
+                                                    enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "BCH"
+                                                    autoprice   = $true
+                                                }
+                                                type = $RigDivisors[$PriceDivisor].type
+                                            }
+
+                                            $CreateRig["hash"] = @{
+                                                hash = $RigSpeed
+                                                type = $RigDivisors[$HashDivisor].type
+                                            }
+
+                                            $CreateRig["minhours"] = $RigMinHours
+                                            $CreateRig["maxhours"] = $RigMaxHours
+
+                                            $CreateRig["extensions"] = ($MRRConfig.$RigName.AllowExtensions -and $Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions -eq $null) -or ($Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions)
+
+                                            if ($RigRunMode -eq "create" -or $EnableUpdatePriceModifier) {
+                                                $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent -ne $null) {$Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent} else {$RigModifier}
+                                                $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
+                                            }
+
+                                            $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
+                                            if ($RigRunMode -eq "create") {
+                                                try {
+                                                    $Result = Invoke-MiningRigRentalRequest "/rig" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                                    if ($Result.id) {
+                                                        if ($RigGroupId) {
+                                                            $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $Result.id}
+                                                        }
+                                                        Write-Log -Level Info "$($Name): Created rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours)"
+                                                        if ($RigPool) {
+                                                            try {
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($Result.id)/pool" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
+                                                                if ($Result.success) {
+                                                                    $RigCreated++
+                                                                }
+                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to add"}) pools of rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            } catch {
+                                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                                Write-Log -Level Warn "$($Name): Unable to add pools to $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
+                                                            }
+                                                        }
+                                                    } else {
+                                                        Write-Log -Level Warn "$($Name): Unable to create $($Algorithm_Norm) rig for $($RigName)"
+                                                    }
+                                                } catch {
+                                                    if ($Error.Count){$Error.RemoveAt(0)}
+                                                    Write-Log -Level Warn "$($Name): Unable to create $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
+                                                }
+                                                $RigCreated++
+                                                if ($RigCreated -ge $MaxAPICalls) {return}
+
+                                            } elseif ($RigRunMode -eq "update") {
+
+                                                $RigMRRid = $_.name
+                                                $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
+
+                                                    $RigPools_Id = [int]$_.id
+
+                                                    if ($RigGroupId -and ([int]$_.riggroup -ne $RigGroupId)) {
+                                                        $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $RigPools_Id}
+                                                        if ([int]$_.riggroup) {
+                                                            $RigGroupsRemove += [PSCustomObject]@{groupid = [int]$_.riggroup;rigid = $RigPools_Id}
+                                                        }
+                                                    }
+
+                                                    if ($RigControl_Data -and ($_.status.status -eq "rented" -or $_.status.rented)) {
+                                                        $RigControl_Data.LastReset = (Get-Date).ToUniversalTime()
+                                                    }
+                                                    $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
+                                                    $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
+
+                                                    if ( (-not $RigMinPriceCurrent) -or
+                                                         ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
+                                                         ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
+                                                         ($_.ndevices -ne $CreateRig.ndevices) -or 
+                                                         ($CreateRig.device_ram -and ($_.device_ram -ne $CreateRig.device_ram)) -or
+                                                         ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
+                                                         ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
+                                                         ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
+                                                         ($RigServer -and ($_.region -ne $RigServer.region)) -or
+                                                         ($_.extensions -ne $CreateRig.extensions)
+                                                    ) {
+                                                        $CreateRig["id"] = $RigPools_Id
+                                                        if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
+                                                        $RigUpdated = $false
+                                                        if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
+                                                            if ($RigCreated -lt $MaxAPICalls) {
+                                                                $RigUpdated = $true
+                                                                try {
+                                                                    $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                                                } catch {
+                                                                    if ($Error.Count){$Error.RemoveAt(0)}
+                                                                    Write-Log -Level Warn "$($Name): Unable to update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                                }
+                                                                $RigCreated++
+                                                            }
+                                                        } else {
+                                                            $RigUpdated = $true
+                                                            $RigsToUpdate += $CreateRig
+                                                        }
+                                                        if ($RigUpdated) {
+                                                            Write-Log -Level Info "$($Name): Update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
+                                                        }
+                                                    }
+
+                                                    if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
+                                                        $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"  -or $_.pass -match "=mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
+                                                        if ((-not $RigPoolCurrent -and ($RigPools[$RigPools_Id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
+                                                            try {
+                                                                $RigPriority = [int]$(if ($RigPoolCurrent) {
+                                                                    $RigPoolCurrent.priority
+                                                                } else {
+                                                                    foreach($i in 0..4) {
+                                                                        if (-not ($RigPools[$RigPools_Id] | Where-Object {$_.priority -eq $i})) {
+                                                                            $i
+                                                                            break
+                                                                        }
+                                                                    }
+                                                                })
+                                                                $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($RigPriority)" $API_Key $API_Secret -params @{host=$RigPool.Host;port=$RigPool.Port;user=$RigPool.User;pass=$RigPool.pass} -method "PUT" -Timeout 60
+                                                                if ($Result.success) {
+                                                                    $RigCreated++
+                                                                }
+                                                                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                            } catch {
+                                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                                Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                            }                                                        
+                                                        }
+
+                                                        #temporary fix
+                                                        @($RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Select-Object) + @($RigPools[$RigPools_Id] | Where-Object {$_.pass -match "ID=mrx"} | Select-Object -Skip 1) | Foreach-Object {
+                                                            if ($RigCreated -lt $MaxAPICalls) {
+                                                                try {
+                                                                    $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
+                                                                    if ($Result.success) {
+                                                                        $RigCreated++
+                                                                    }
+                                                                    Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
+                                                                } catch {
+                                                                    if ($Error.Count){$Error.RemoveAt(0)}
+                                                                    Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                })
+                                            }
+                                        }
+                                    }
+                                }
+                            })
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "$($Name): Unable to $($RigRunMode) rigs for $($RigName): $($_.Exception.Message)"
+                    }
+                }
+
+                Set-MiningRigStat -Name $RigName -Data $RigNameStat > $null
+            }
+        }
+
+        if ($RigsToUpdate.Count) {
+            try {
+                $Result = Invoke-MiningRigRentalRequest "/rig/batch" $API_Key $API_Secret -params @{"rigs"=$RigsToUpdate} -method "PUT" -Timeout 60
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "$($Name): Unable to update: $($_.Exception.Message)"
+            }
+        }
+
+
+        if ($RigGroupsRemove.Count) {
+            #POST /riggroup/[ID]/remove/[rigid1];[rigid2];[rigid3]...
+            $RigGroupsRemove | Group-Object groupid | Foreach-Object {
+                $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.name).Name
+                try {
+                    $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/remove/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
+                    Write-Log -Level Info "$($Name): $(if ($Result.success) {"Successfully removed"} else {"Failed to remove"}) rigs $($_.Group.rigid -join ',') from group $($RigGroupName): $($_.Exception.Message)"
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "$($Name): Unable to remove rigs from group $($RigGroupName): $($_.Exception.Message)"
+                }
+            }
+        }
+
+        if ($RigGroupsAdd.Count) {
+            #POST /riggroup/[ID]/add/[rigid1];[rigid2];[rigid3]...
+            $RigGroupsAdd | Group-Object groupid | Foreach-Object {
+                $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.Name).Name
+                try {
+                    $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/add/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
+                    $FailedToAdd = @(Compare-Object @($Result.rigs.id | Select-Object) @($_.Group.rigid | Select-Object) | Where-Object SideIndicator -eq "=>" | Foreach-Object {$_.InputObject} | Select-Object)
+                    $SuccessToAdd = @($_.Group.rigid | Where-Object {$_ -notin $FailedToAdd} | Select-Object)
+                    if ($SuccessToAdd.Count) {
+                        Write-Log -Level Info "$($Name): Successfully added rig$(if ($SuccessToAdd.Count -gt 1) {"s"}) $($SuccessToAdd -join ',') to group $($RigGroupName)"
+                    }
+                    if ($FailedToAdd.Count) {
+                        Write-Log -Level Info "$($Name): Failed to add rig$(if ($FailedToAdd.Count -gt 1) {"s"}) $($FailedToAdd -join ',') to group $($RigGroupName)"
                     }
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Warn "$($Name): Unable to $($RigRunMode) rigs for $($RigName): $($_.Exception.Message)"
+                    Write-Log -Level Warn "$($Name): Unable to add rigs to group $($RigGroupName): $($_.Exception.Message)"
                 }
-            }
-
-            Set-MiningRigStat -Name $RigName -Data $RigNameStat > $null
-        }
-    }
-
-    if ($RigsToUpdate.Count) {
-        try {
-            $Result = Invoke-MiningRigRentalRequest "/rig/batch" $API_Key $API_Secret -params @{"rigs"=$RigsToUpdate} -method "PUT" -Timeout 60
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "$($Name): Unable to update: $($_.Exception.Message)"
-        }
-    }
-
-
-    if ($RigGroupsRemove.Count) {
-        #POST /riggroup/[ID]/remove/[rigid1];[rigid2];[rigid3]...
-        $RigGroupsRemove | Group-Object groupid | Foreach-Object {
-            $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.name).Name
-            try {
-                $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/remove/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
-                Write-Log -Level Info "$($Name): $(if ($Result.success) {"Successfully removed"} else {"Failed to remove"}) rigs $($_.Group.rigid -join ',') from group $($RigGroupName): $($_.Exception.Message)"
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Warn "$($Name): Unable to remove rigs from group $($RigGroupName): $($_.Exception.Message)"
-            }
-        }
-    }
-
-    if ($RigGroupsAdd.Count) {
-        #POST /riggroup/[ID]/add/[rigid1];[rigid2];[rigid3]...
-        $RigGroupsAdd | Group-Object groupid | Foreach-Object {
-            $RigGroupName = ($Session.MRRRigGroups.GetEnumerator() | Where-Object Value -eq $_.Name).Name
-            try {
-                $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/add/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
-                $FailedToAdd = @(Compare-Object @($Result.rigs.id | Select-Object) @($_.Group.rigid | Select-Object) | Where-Object SideIndicator -eq "=>" | Foreach-Object {$_.InputObject} | Select-Object)
-                $SuccessToAdd = @($_.Group.rigid | Where-Object {$_ -notin $FailedToAdd} | Select-Object)
-                if ($SuccessToAdd.Count) {
-                    Write-Log -Level Info "$($Name): Successfully added rig$(if ($SuccessToAdd.Count -gt 1) {"s"}) $($SuccessToAdd -join ',') to group $($RigGroupName)"
-                }
-                if ($FailedToAdd.Count) {
-                    Write-Log -Level Info "$($Name): Failed to add rig$(if ($FailedToAdd.Count -gt 1) {"s"}) $($FailedToAdd -join ',') to group $($RigGroupName)"
-                }
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Warn "$($Name): Unable to add rigs to group $($RigGroupName): $($_.Exception.Message)"
             }
         }
     }
