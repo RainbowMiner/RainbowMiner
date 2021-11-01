@@ -2501,8 +2501,8 @@ function Invoke-Core {
         $Miners | Group-Object -Property BaseAlgorithm,DeviceModel | Foreach-Object {
             $Miner_Algo  = $_.Values[0] -replace "-.+$"
             $Miner_Key   = "$($Miner_Algo)-$($_.Values[1])"
-            $Miner_Names = @($_.Group | Foreach-Object {"$($_.Name)_$($Miner_Algo)_Hashrate"})
-            $Miner_Miner = @($_.Group | Foreach-Object {$_.BaseName})
+            $Miner_Names = @($_.Group.Foreach({"$($_.Name)_$($Miner_Algo)_Hashrate"}) | Select-Object -Unique)
+            $Miner_Miner = @($_.Group.Foreach("BaseName") | Select-Object -Unique)
             $_.Group | Sort-Object -Descending {$_.Profit -eq $null}, Profit_Bias | Select-Object -First 1 | Foreach-Object {
                 $Miner_Hashrate = $_.Hashrates.PSObject.Properties.Value | Select-Object -First 1
                 if ($Miner_Hashrate -eq $null) {
