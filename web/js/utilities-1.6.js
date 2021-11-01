@@ -163,7 +163,7 @@ function formatUptime(uptime) {
 
 function formatBLK(data) {
     if (typeof data == "undefined") return data;
-    if (!data) return "Infinity"
+    if (!data) return "&infin;"
     data = 24 / data * 60
     return data.toFixed(1)
 }
