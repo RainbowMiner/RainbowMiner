@@ -27,7 +27,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
     [PSCustomObject]@{rpc = "firo";  symbol = "FIRO";   port = 8080; fee = 1.0; divisor = 1e8; altsymbol = "XZC"}
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zel";   symbol = "FLUX";   port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
+    [PSCustomObject]@{rpc = "flux";  symbol = "FLUX";   port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
     [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
 
     #AutoExchange currencies
