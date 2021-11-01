@@ -3180,10 +3180,11 @@ function Invoke-Core {
                 Write-Host "If you do not want that accuracy, set DisableExtendInterval to 0 in your config.txt." -ForegroundColor Yellow
                 $OldForegroundColor = [console]::ForegroundColor
                 [console]::ForegroundColor = "Yellow"
-                $MinersNeedingBenchmark | Select-Object BaseName,BaseAlgorithm,ExtendInterval | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Sort-Object -Property @{Expression = {$_.ExtendInterval}; Descending = $True},@{Expression = {"$($_.BaseName)-$($_.BaseAlgorithm)"}; Descending = $False} | Format-Table (
-                    @{Label = "Miner"; Expression = {$_.BaseName}},
-                    @{Label = "Algorithms"; Expression = {$_.BaseAlgorithm}},
-                    @{Label = "Aprox. Time"; Expression = {"$($BenchmarkMinutes*$_.ExtendInterval)-$($BenchmarkMinutes*$_.ExtendInterval*2) minutes"}}
+                $MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Group-Object BaseName, BaseAlgorithm, DeviceModel, ExtendInterval | Sort-Object -Property @{Expression = {$_.Values[3]}; Descending = $True},@{Expression = {$_.Name}; Descending = $False} | Format-Table (
+                    @{Label = "Miner"; Expression = {$_.Values[0]}},
+                    @{Label = "Algorithms"; Expression = {$_.Values[1]}},
+                    @{Label = "Device"; Expression = {$_.Values[2]}},
+                    @{Label = "Aprox. Time"; Expression = {"$($BenchmarkMinutes*$_.Values[3])-$($BenchmarkMinutes*$_.Values[3]*2) minutes"}}
                 ) | Out-Host
 
                 if ($MinersNeedingBenchmark -ne $null) {Remove-Variable "MinersNeedingBenchmark"}

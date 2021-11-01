@@ -72,7 +72,7 @@
     "binariumv1": "Binarium",
     "binariumhashv1": "Binarium",
     "bitcash": "X16r",
-    "bitcoin": "Bitcoin",
+    "bitcoin": "SHA256",
     "bitcore": "Bitcore",
     "bl2bsha3": "Blake2bSHA3",
     "blake": "Blakecoin",
