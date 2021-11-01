@@ -80,6 +80,7 @@ function Start-Core {
         [hashtable]$Global:DeviceCache  = @{}
         [hashtable]$Global:Rates        = @{BTC = [Double]1}
         [hashtable]$Global:MinerInfo    = @{}
+        [hashtable]$Global:MinerSpeeds  = @{}
 
         [System.Collections.ArrayList]$Global:ActiveMiners   = @()
         $Global:WatchdogTimers  = @()
@@ -474,6 +475,7 @@ function Start-Core {
     try {
         #Read miner info
         if (Test-Path ".\Data\minerinfo.json") {try {(Get-ContentByStreamReader ".\Data\minerinfo.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        if (Test-Path ".\Data\minerspeeds.json") {try {(Get-ContentByStreamReader ".\Data\minerspeeds.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerSpeeds[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 
         #write version to data
         Set-ContentJson -PathToFile ".\Data\version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
@@ -494,10 +496,11 @@ function Start-Core {
     $Session.NextReport = (Get-Date).ToUniversalTime()
     $Session.DecayStart = (Get-Date).ToUniversalTime()
     [hashtable]$Session.Updatetracker = @{
-        Balances = 0
-        TimeDiff = 0
-        MinerSave = if (Test-Path ".\Data\minerdata.json") {Get-ChildItem ".\Data\minerdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
-        PoolsSave = if (Test-Path ".\Data\poolsdata.json") {Get-ChildItem ".\Data\poolsdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
+        Balances   = 0
+        TimeDiff   = 0
+        MinerSave  = if (Test-Path ".\Data\minerdata.json") {Get-ChildItem ".\Data\minerdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
+        PoolsSave  = if (Test-Path ".\Data\poolsdata.json") {Get-ChildItem ".\Data\poolsdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
+        SpeedsSave = if (Test-Path ".\Data\minerspeeds.json") {Get-ChildItem ".\Data\minerspeeds.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
         ReportDeviceData = 0
     }
 
@@ -1669,6 +1672,22 @@ function Invoke-Core {
 
     $API.Stats = $Global:StatsCache
 
+    #Validate Minerspeeds
+    foreach($Miner_Key in @($Global:MinerSpeeds.Keys)) {
+        $Miner_Remove = $false
+        if (Compare-Object $Global:MinerSpeeds[$Miner_Key].Miner $Session.AvailMiners | Where-Object SideIndicator -eq "<=") {
+            $Miner_Remove = $true
+        } else {
+            foreach($Miner_Name in $Global:MinerSpeeds[$Miner_Key].Names) {
+                if (-not $Global:StatsCache.ContainsKey($Miner_Name)) {
+                    $Miner_Remove = $true
+                    Break
+                }
+            }
+        }
+        if ($Miner_Remove) {$Global:MinerSpeeds.Remove($Miner_Key)}
+    }
+
     #Load information about the pools
     Write-Log "Loading pool information. "
 
@@ -2469,11 +2488,37 @@ function Invoke-Core {
 
     $Miners_BeforeWD_Count = ($Miners | Measure-Object).Count
 
-    #Store miners to file
-    if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\minerdata.json"))) {
-        $Session.Updatetracker.MinerSave = Get-Date
-        Set-ContentJson ".\Data\minerdata.json" ([PSCustomObject]@{Miners = @($Miners.Where({$_.BaseAlgorithm -notmatch "\-"}) | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm -replace '-.*$'}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.Values | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
-        $Session.ReportMinerData = $true
+    #Store miners to file and speeds to variable, if not DonationRUn
+    if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun) {
+        if (-not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\minerdata.json"))) {
+            $Session.Updatetracker.MinerSave = Get-Date
+            Set-ContentJson ".\Data\minerdata.json" ([PSCustomObject]@{Miners = @($Miners.Where({$_.BaseAlgorithm -notmatch "\-"}) | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm -replace '-.*$'}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.Values | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
+            $Session.ReportMinerData = $true
+        }
+
+        $Global:MinerSPeeds = [hashtable]@{}
+        $Miners | Group-Object -Property BaseAlgorithm,DeviceModel | Foreach-Object {
+            $Miner_Algo  = $_.Values[0] -replace "-.+$"
+            $Miner_Key   = "$($Miner_Algo)-$($_.Values[1])"
+            $Miner_Names = @($_.Group | Foreach-Object {"$($_.Name)_$($Miner_Algo)_Hashrate"})
+            $Miner_Miner = @($_.Group | Foreach-Object {$_.BaseName})
+            $_.Group | Sort-Object -Descending {$_.Profit -eq $null}, Profit_Bias | Select-Object -First 1 | Foreach-Object {
+                $Miner_Hashrate = $_.Hashrates.PSObject.Properties.Value | Select-Object -First 1
+                if ($Miner_Hashrate -eq $null) {
+                    if ($Global:MinerSpeeds.ContainsKey($Miner_Key)) {
+                        $Global:MinerSpeeds.Remove($Miner_Key)
+                    }
+                } elseif (-not $Global:MinerSpeeds.ContainsKey($Miner_Key) -or $Global:MinerSpeeds[$Miner_Key].Hashrate -ne $Miner_Hashrate -or (Compare-Object $Global:MinerSpeeds[$Miner_Key].Names $Miner_Names)) {
+                    $Global:MinerSpeeds[$Miner_Key] = [PSCustomObject]@{Hashrate=$Miner_Hashrate;Names=$Miner_Names;Miner=$Miner_Miner}
+                }
+            }
+        }
+        $Miner_Miner = $Miner_Names = $Miner_Algo = $Miner_Key = $Miner_Hashrate = $null
+
+        if (-not $Session.Updatetracker.SpeedsSave -or $Session.Updatetracker.SpeedsSave -lt (Get-Date).AddMinutes(-10) -or -not (Test-Path ".\Data\minerspeeds.json")) {
+            $Session.Updatetracker.SpeedsSave = Get-Date
+            Set-ContentJson ".\Data\minerspeeds.json" $Global:MinerSpeeds -Compress > $null
+        }
     }
 
     #Apply watchdog to miners

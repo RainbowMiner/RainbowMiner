@@ -1592,15 +1592,6 @@ function Get-PoolsContent {
 
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
 
-        $Speeds = $null
-
-        #if ($PoolName -match "(Solo|Party)$") {
-        #    $Speeds = [hashtable]@{}
-        #    $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $PoolName)}).Foreach({
-        #        $Speeds["$($_.BaseAlgorithm[0])-$($_.DeviceModel)"] = $_.Speed[0]
-        #    })
-        #}
-
         $Content = & {
                 $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
                 & $_.FullName @Parameters
@@ -1654,17 +1645,17 @@ function Get-PoolsContent {
                     $c.Disabled = $true
                 }
             }
-            #if (-not $InfoOnly -and $c.SoloMining -and $c.Difficulty) {
-            #    $BLKFactor = $DiffFactor / $c.Difficulty
-            #    foreach ($Model in $Global:DeviceCache.DeviceCombos) {
-            #        $d = $c | ConvertTo-Json -Depth 10 | ConvertFrom-Json
-            #        $d.Algorithm = "$($d.Algorithm0)-$($Model)"
-            #        $d.BLK       = $Speeds[$d.Algorithm] * $BLKFactor
-            #        $d
-            #    }
-            #} else {
+            if (-not $InfoOnly -and $c.SoloMining -and $c.Difficulty) {
+                $BLKFactor = $DiffFactor / $c.Difficulty
+                foreach ($Model in $Global:DeviceCache.DeviceCombos) {
+                    $d = $c | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+                    $d.Algorithm = "$($d.Algorithm0)-$($Model)"
+                    $d.BLK       = $Global:MinerSpeeds[$d.Algorithm].Hashrate * $BLKFactor
+                    $d
+                }
+            } else {
                 $c
-            #}
+            }
         }
     }
 }
