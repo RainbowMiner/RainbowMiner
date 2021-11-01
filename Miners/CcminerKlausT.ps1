@@ -12,20 +12,20 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.25-klaust/ccminer-825-yescrypt-cuda101-linux.7z"
-            Cuda = "10.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826-cuda114-linux.7z"
+            Cuda = "11.4"
         }
     )
-    $Version = "8.25-yescrypt"
+    $Version = "8.26"
 } else {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.25-klaust/ccminer-825-cuda101-x64.7z"
-            Cuda = "10.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826-cuda114-x64.7z"
+            Cuda = "11.4"
         }
     )
-    $Version = "8.25"
+    $Version = "8.26"
 }
 $ManualUri = "https://github.com/KlausT/ccminer/releases"
 $Port = "140{0:d2}"
@@ -34,7 +34,9 @@ $DevFee = 0.0
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; ExtendInterval = 3} #Neoscrypt, CryptoDredge faster
+    [PSCustomObject]@{MainAlgorithm = "bitcoin"; Params = ""; ExtendInterval = 2} #SHA256
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; ExtendInterval = 3} #Neoscrypt
+    [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""; ExtendInterval = 2} #Qubit
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
