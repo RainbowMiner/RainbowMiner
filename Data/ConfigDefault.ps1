@@ -14,6 +14,7 @@
     DisableMSIAmonitor = $false
     EnableOCProfiles = $false
     EnableOCVoltage = $false
+    EnableOCFullReset = $true
     EnableOCLinuxForcePState = $true
     EnableAutoUpdate = $true
     EnableUpdateDuringPause = $true

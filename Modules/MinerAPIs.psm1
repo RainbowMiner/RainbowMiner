@@ -42,6 +42,7 @@ class Miner {
     [Bool]$ShowMinerWindow = $false
     [int]$MSIAprofile
     $OCprofile
+    $OCprofileSet
     [Bool]$EnableOCprofile
     $DevFee
     [string]$BaseName
@@ -642,6 +643,12 @@ class Miner {
         return $this.LastSetOCTime
     }
 
+    SetOCprofileValue([string]$DeviceModel,[string]$Feature,$value) {
+        if ($this.OCprofileSet -eq $null) {$this.OCprofileSet = [PSCustomObject]@{}}
+        if ($this.OCprofileSet.$DeviceModel -eq $null) {$this.OCprofileSet | Add-Member $DeviceModel ([PSCustomObject]@{}) -Force}
+        if ($this.OCprofileSet.$DeviceModel.$Feature -eq $null) {$this.OCprofileSet.$DeviceModel | Add-Member $Feature $value -Force}
+    }
+
     SetOCprofile($Config,[int]$Sleep=500) {
 
         $ApplyToAllPerformanceLevels = $Global:Session.Config.EnableOCLinuxSetAllPStates
@@ -652,6 +659,7 @@ class Miner {
 
         [System.Collections.Generic.List[string]]$applied = @()
         [System.Collections.Generic.List[string]]$NvCmd = @()
+        [System.Collections.Generic.List[string]]$NvSmiCmd = @()
         [System.Collections.Generic.List[string]]$AmdCmd = @()
         [System.Collections.Generic.List[string]]$IntelCmd = @()
         [System.Collections.Generic.List[object]]$RunCmd = @()
@@ -710,7 +718,7 @@ class Miner {
                     }
                 }
                 if ($DeviceIds.Count -gt 0) {
-                    $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"} else {[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*"}}
+                    $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"} else {[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";LockMemoryClock = "*";LockCoreClock = "*"}}
                     if ($Profile) {
                         $this.Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; CardId = $CardIds; Profile = $Profile; x = $x}) -Force
                     }
@@ -720,32 +728,41 @@ class Miner {
 
         foreach ($DeviceModel in @($this.Profiles.PSObject.Properties.Name | Select-Object)) {
             if (-not $Config) {
-                $Profile = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "0";CoreClockBoost = "0";LockVoltagePoint = "*"}
+                $Profile = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = "0";MemoryClockBoost = "";CoreClockBoost = "";LockVoltagePoint = "";LockMemoryClock = "";LockCoreClock = ""}
+                if ($Global:Session.Config.EnableOCFullReset) {
+                    $Profile.MemoryClockBoost = $Profile.CoreClockBoost = $Profile.LockVoltagePoint = $Profile.LockMemoryClock = $Profile.LockCoreClock = "0"
+                } elseif ($this.OCprofileSet.$DeviceModel) {
+                    $this.OCprofileSet.$DeviceModel.PSObject.Properties.Name | Where-Object {$Profile.$_ -ne $null -and $Profile.$_ -eq ""} | Foreach-Object {$Profile.$_ = "0"}
+                }
                 if ($this.Profiles.$DeviceModel.Profile.PostCmd) {
                     $RunCmd.Add([PSCustomObject]@{FilePath = $this.Profiles.$DeviceModel.Profile.PostCmd;ArgumentList=$this.Profiles.$DeviceModel.Profile.PostCmdArguments}) > $null
                 }
+                $this.OCprofileSet = $null
             } else {
                 $Profile = $this.Profiles.$DeviceModel.Profile
 
                 $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
                 $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
                 $Profile.LockVoltagePoint = $Profile.LockVoltagePoint -replace '[^0-9]+'
-                if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = ''}
+                $Profile.LockMemoryClock  = $Profile.LockMemoryClock -replace '[^0-9]+'
+                $Profile.LockCoreClock    = $Profile.LockCoreClock -replace '[^0-9]+'
 
                 if ($Profile.PreCmd) {
                     $RunCmd.Add([PSCustomObject]@{FilePath = $Profile.PreCmd;ArgumentList=$Profile.PreCmdArguments}) > $null
                 }
             }
 
+            if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = ''}
+
             $applied_any = $false
 
             if ($DeviceVendor -eq "NVIDIA") {
 
                 foreach($DeviceId in $this.Profiles.$DeviceModel.Index) {
-                    if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
+                    if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$val)}}
                     if (-not $Global:IsLinux) {
-                        if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),$(if (Get-Yes $Profile.PriorizeThermalLimit) {"1"} else {"0"}),$($val)") >$null;$applied_any=$true}
-                        if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true}
+                        if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),$(if (Get-Yes $Profile.PriorizeThermalLimit) {"1"} else {"0"}),$($val)") >$null;$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$val);$this.SetOCprofileValue($DeviceModel,"PriorizeThermalLimit",(Get-Yes $Profile.PriorizeThermalLimit))}}
+                        if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockVoltagePoint",$val)}}
                     } else {
                         $NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'") >$null
                     }
@@ -753,12 +770,16 @@ class Miner {
                         if ($ApplyToAllPerformanceLevels) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffsetAllPerformanceLevels=$($val)'"}
                         else {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[$($this.Profiles.$DeviceModel.x)]=$($val)'"}} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null
                         $applied_any=$true
+                        if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$val)}
                     }
                     if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {
                         if ($ApplyToAllPerformanceLevels) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffsetAllPerformanceLevels=$($val)'"}
                         else{"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[$($this.Profiles.$DeviceModel.x)]=$($val)'"}} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null
                         $applied_any=$true
+                        if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$val)}
                     }
+                    if ($Profile.LockCoreClock -match '^[0-9]+$') {$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rgc"} else {"-lgc $($Profile.LockCoreClock)"})") > $null;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockCoreClock",$Profile.LockCoreClock)}}
+                    if ($Profile.LockMemoryClock -match '^[0-9]+$') {$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rmc"} else {"-lmc $($Profile.LockMemoryClock)"})") > $null;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$Profile.LockMemoryClock)}}
                 }
 
             } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux) {
@@ -773,17 +794,17 @@ class Miner {
                     $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor | Select-Object -ExpandProperty Index | Foreach-Object {
                         if ($DeviceId -in $this.Profiles.$DeviceModel.Index) {
                             $GpuEntry = $Script:abControl.GpuEntries[$_]
-                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$Script:abControl.GpuEntries[$_].PowerLimitCur)}}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$Script:abControl.GpuEntries[$_].ThermalLimitCur)}}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$Script:abControl.GpuEntries[$_].CoreClockBoostCur)}}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$Script:abControl.GpuEntries[$_].MemoryClockBoostCur)}}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                             if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
                         }
                         $DeviceId++
                     }
                 }
             }
-            if ($applied_any) {$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), PRIO=$(if (Get-Yes $Profile.PriorizeThermalLimit) {"TL"} else {"PL"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})") > $null}
+            if ($applied_any) {$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), PRIO=$(if (Get-Yes $Profile.PriorizeThermalLimit) {"TL"} else {"PL"}), MEMboost=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), COREboost=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), MEMlock=$(if ($Profile.LockMemoryClock -ne '') {"$($Profile.LockMemoryClock)"} else {"-"}), CORElock=$(if ($Profile.LockCoreClock -ne '') {"$($Profile.LockCoreClock)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})") > $null}
         }
 
         if ($RunCmd.Count) {
@@ -809,6 +830,9 @@ class Miner {
                 if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
                 if ($DeviceVendor -eq "NVIDIA") {
                     Invoke-NvidiaSettings $NvCmd
+                    if ($Global:IsLinux -or (Test-IsElevated)) {
+                        $NvSmiCmd | Foreach-Object {Invoke-NvidiaSmi -Arguments $_ -Runas > $null}
+                    }
                 } elseif ($DeviceVendor -eq "AMD" -and $AmdCmd.Count) {
                     #t.b.i
                 } elseif ($DeviceVendor -eq "INTEL" -and $IntelCmd.Count) {
@@ -827,9 +851,11 @@ class Miner {
     }
 
     ResetOCprofile([int]$Sleep=500) {
-        if (-not $this.HasOCprofile()) {return}
-        $this.SetOCprofile($null,$Sleep)
-        Write-Log "OC reset for $($this.BaseName)"
+        if ($this.HasOCprofile()) {
+            $this.SetOCprofile($null,$Sleep)
+            Write-Log "OC reset for $($this.BaseName)"
+        }
+        $this.OCprofileSet = $null
     }
 }
 

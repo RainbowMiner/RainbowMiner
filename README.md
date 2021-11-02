@@ -617,7 +617,7 @@ Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### 1. setup overclocking profiles
 
-Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (ï¿½C), MemoryClockBoost (MHz), CoreClockBoost (MHz) and LockVoltagePoint (ï¿½V) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
@@ -899,6 +899,7 @@ For Server (Runmode=server) setup:
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
+- **EnableOCFullReset** = set to 1, to reset all possible overclocking settings (instead of the prior set values, only), when a miner is closed. [default=1]
 - **EnableOCLinuxForcePState** = set to 1, to force all GPU into their workload powerstate to avoid crashes due to P2-P0 switching [default=1]
 - **EnableOCLinuxSetAllPStates** = set to 1, to set mem/core clock offsets to all PStates, instead to the highest, only [default=0]
 - **OCResetInterval** = set the interval to reset the overclocking settings of running miners, in seconds (0 to disable) [default=0]
@@ -1526,6 +1527,8 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
         "MemoryClockBoost": "0",
         "CoreClockBoost": "0",
         "LockVoltagePoint": "*",
+        "LockMemoryClock": "*",
+        "LockCoreClock": "*",
         "PreCmd": "",
         "PreCmdArguments": "",
         "PostCmd": "",
@@ -1537,6 +1540,8 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
         "MemoryClockBoost": "400",
         "CoreClockBoost": "100",
         "LockVoltagePoint": "*",
+        "LockMemoryClock": "*",
+        "LockCoreClock": "*",
         "PreCmd": "",
         "PreCmdArguments": "",
         "PostCmd": "",
@@ -1547,6 +1552,8 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
         "ThermalLimit": 0,
         "MemoryClockBoost": "200",
         "CoreClockBoost": "100",
+        "LockMemoryClock": "*",
+        "LockCoreClock": "*",
         "LockVoltagePoint": "*",
         "PreCmd": "",
         "PreCmdArguments": "",
@@ -1558,6 +1565,8 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
         "ThermalLimit": 0,
         "MemoryClockBoost": "-500",
         "CoreClockBoost": "100",
+        "LockMemoryClock": "*",
+        "LockCoreClock": "*",
         "LockVoltagePoint": "*",
         "PreCmd": "",
         "PreCmdArguments": "",
@@ -1569,6 +1578,8 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
         "ThermalLimit": 0,
         "MemoryClockBoost": "350",
         "CoreClockBoost": "100",
+        "LockMemoryClock": "*",
+        "LockCoreClock": "*",
         "LockVoltagePoint": "*",
         "PreCmd": "",
         "PreCmdArguments": "",
@@ -1580,19 +1591,23 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
         "ThermalLimit": 0,
         "MemoryClockBoost": "500",
         "CoreClockBoost": "150",
+        "LockMemoryClock": "*",
+        "LockCoreClock": "*",
         "LockVoltagePoint": "*",
         "PreCmd": "",
         "PreCmdArguments": "",
         "PostCmd": "",
         "PostCmdArguments": ""
-      }      
+      }
     }
 
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
-- ThermalLimit: in ï¿½C, set to 0, if you do not want this to be changed
+- ThermalLimit: in °C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
-- LockVoltagePoint: in ï¿½V set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- LockVoltagePoint: in µV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- LockMemoryClock: in MHz, set to "*", if you do not want this to be changed or "0", if MemoryClock should be unlocked
+- LockCoreClock: in MHz, set to "*", if you do not want this to be changed or "0", if CoreClock should be unlocked
 - PreCmd/PreCmdArguments: define a command to be executed before the miner starts. PreCmd is the path to the binary, PreCmdArguments are optional arguments for that command.
 - PostCmd/PostCmdArguments: define a command to be executed after the miner has finished. PostCmd is the path to the binary, PostCmdArguments are optional arguments for that command.
 

@@ -436,6 +436,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             MemoryClockBoost = $_.Value.MemoryClockBoost
                             CoreClockBoost   = $_.Value.CoreClockBoost
                             LockVoltagePoint = $_.Value.LockVoltagePoint
+                            LockMemoryClock  = $_.Value.LockMemoryClock
+                            LockCoreClock    = $_.Value.LockCoreClock
                         }
                     }) -Depth 10
             Break
