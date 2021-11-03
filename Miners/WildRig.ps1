@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.29.0"
+$Version = "0.30.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.29.0-wildrigmulti/wildrig-multi-linux-0.29.0.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.1-wildrigmulti/wildrig-multi-linux-0.30.1.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.29.0-wildrigmulti/wildrig-multi-windows-0.29.0.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.1-wildrigmulti/wildrig-multi-windows-0.30.1.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -35,6 +35,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dedal";                     Vendor = @("AMD");          Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";                    Vendor = @("AMD");          Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";                      Vendor = @("AMD");          Params = ""} #Geek
+    [PSCustomObject]@{MainAlgorithm = "ghostrider";                Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "glt-astralhash";            Vendor = @("AMD");        Params = ""} #GLT-AstralHash
     [PSCustomObject]@{MainAlgorithm = "glt-globalhash";            Vendor = @("AMD");        Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";             Vendor = @("AMD");        Params = ""} #GLT-JeongHash
