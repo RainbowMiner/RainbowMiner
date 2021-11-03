@@ -3399,6 +3399,8 @@ function Get-Device {
                 }
 
                 if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
+                if ($Global:GlobalCPUInfo.Features.aesni) {$Global:GlobalCPUInfo.Features.aes = $true}
+                if ($Global:GlobalCPUInfo.Features.shani) {$Global:GlobalCPUInfo.Features.sha = $true}
 
                 $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
                             "(AMD|Advanced Micro Devices)" {"AMD"}
