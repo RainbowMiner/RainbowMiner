@@ -87,16 +87,17 @@ class Miner {
     [DateTime]$ActiveLast = [DateTime]::MinValue
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
     [MinerStatus]$Status = [MinerStatus]::Idle
+    $Profiles
+    [TimeSpan]$Active = [TimeSpan]::Zero
+    [Int]$Activated = 0
+    [DateTime]$IntervalBegin = 0
+    [DateTime]$LastSetOCTime = 0
+    [Int]$StartPort = 0
     $Job
     $EthPillJob
     $WrapperJob
-    hidden $Profiles
-    hidden [TimeSpan]$Active = [TimeSpan]::Zero
-    hidden [Int]$Activated = 0
+
     hidden [Array]$Data = @()
-    hidden [DateTime]$IntervalBegin = 0
-    hidden [DateTime]$LastSetOCTime = 0
-    hidden [Int]$StartPort = 0
 
     [String]GetArguments() {
         return $this.Arguments -replace "\`$mport",$this.Port
