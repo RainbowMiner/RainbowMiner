@@ -1029,7 +1029,7 @@ class Claymore : Miner {
         $HashRate_Name    = [String]$this.Algorithm[0]
         $HashRate_Value   = [Double]($Data.result[2] -split ";")[0]
 
-        if ($this.Algorithm -match "^ethash|^etchash|^kawpow|^neoscrypt|^ubqhash|progpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
+        if ($this.Algorithm -match "^ethash|^etchash|^firopow|^kawpow|^neoscrypt|^ubqhash|progpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
 
         $HashRate_Value = [Int64]$HashRate_Value
 
