@@ -86,13 +86,13 @@ class Miner {
     [DateTime]$StartTime = [DateTime]::MinValue
     [DateTime]$ActiveLast = [DateTime]::MinValue
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
+    [MinerStatus]$Status = [MinerStatus]::Idle
     $Job
     $EthPillJob
     $WrapperJob
     hidden $Profiles
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
-    hidden [MinerStatus]$Status = [MinerStatus]::Idle
     hidden [Array]$Data = @()
     hidden [DateTime]$IntervalBegin = 0
     hidden [DateTime]$LastSetOCTime = 0
