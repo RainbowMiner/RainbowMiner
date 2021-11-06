@@ -7386,7 +7386,7 @@ function Test-Internet {
             } elseif ($Session.Curl) {
                 $curlproxy = "$(if ($Proxy.Proxy) {"-x $($Proxy.Proxy)$(if ($Proxy.Username -and $Proxy.Password) {" -U $($Proxy.Username):$($Proxy.Password)"}) "})"
                 Foreach ($url in $CheckDomains) {
-                    $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head http://$($url) $($curlproxy)-m 5 --connect-timeout 3 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
+                    $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head `"http://$($url)`" $($curlproxy)-m 5 --connect-timeout 3 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
                     if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$true;break}
                 }
             } else {
