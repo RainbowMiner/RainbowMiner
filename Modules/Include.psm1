@@ -1588,7 +1588,7 @@ function Get-PoolsContent {
 
     $UsePoolName = if ($Parameters.Name) {$Parameters.Name} else {$PoolName}
 
-    $DiffFactor = 3600 / [Math]::Pow(2,32)
+    $DiffFactor = 86400 / [Math]::Pow(2,32)
 
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
 
