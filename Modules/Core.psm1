@@ -207,14 +207,14 @@ function Start-Core {
 
         if ($CurlPath -and (Test-Path $CurlPath)) {
             $TestOk = $false
-            $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://rbminer.net/api/data/hello.txt`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q" -WaitForExit 10
-            if ("$($CurlTest)".Trim() -eq "world") {$TestOk = $true}
+            $CurlTest = Invoke-Exe $CurlPath -ArgumentList "--version" -WaitForExit 10
+            if ($CurlTest -match "curl\s+\d+") {$TestOk = $true}
             else {
                 $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://httpbin.org/status/200`" -H `"accept: text/plain`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q -w `"%{response_code}`"" -WaitForExit 10
                 if ($CurlTest -eq "200") {$TestOk = $true}
                 else {
-                    $CurlTest = Invoke-Exe $CurlPath -ArgumentList "--version" -WaitForExit 10
-                    if ($CurlTest -match "curl\s+\d+") {$TestOk = $true}
+                    $CurlTest = Invoke-Exe $CurlPath -ArgumentList "-G `"https://rbminer.net/api/data/hello.txt`" --max-time 5 --connect-timeout 3 --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -s -L -q" -WaitForExit 10
+                    if ("$($CurlTest)".Trim() -eq "world") {$TestOk = $true}
                 }
             }
             if ($TestOk) {$Session.Curl = $CurlPath}
