@@ -7377,7 +7377,7 @@ function Test-Internet {
     )
     try {
         $Proxy = Get-Proxy
-        if ($Proxy.Proxy) {
+        if ($Proxy.Proxy -or ($IsLinux -and -not (Test-IsElevated))) {
             $true
         } elseif (Get-Command "Test-Connection" -ErrorAction Ignore) {
             if ($CheckDomains -and $CheckDomains.Count) {
