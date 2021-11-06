@@ -7376,27 +7376,21 @@ function Test-Internet {
         [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","rbminer.net")
     )
     try {
-        $Proxy = Get-Proxy
-        if ($IsWindows -and -not $Proxy.Proxy) {
-            if (Get-Command "Test-Connection" -ErrorAction Ignore) {
-                if ($CheckDomains -and $CheckDomains.Count) {
-                    $oldProgressPreference = $Global:ProgressPreference
-                    $Global:ProgressPreference = "SilentlyContinue"
-                    Foreach ($url in $CheckDomains) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
-                    $Global:ProgressPreference = $oldProgressPreference
-                } else {
-                    $true
+        if ($CheckDomains -and $CheckDomains.Count) {
+            $Proxy = Get-Proxy
+            if ($IsWindows -and -not $Proxy.Proxy -and (Get-Command "Test-Connection" -ErrorAction Ignore)) {
+                $oldProgressPreference = $Global:ProgressPreference
+                $Global:ProgressPreference = "SilentlyContinue"
+                Foreach ($url in $CheckDomains) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
+                $Global:ProgressPreference = $oldProgressPreference
+            } elseif ($Session.Curl) {
+                $curlproxy = "$(if ($Proxy.Proxy) {"-x $($Proxy.Proxy)$(if ($Proxy.Username -and $Proxy.Password) {" -U $($Proxy.Username):$($Proxy.Password)"}) "})"
+                Foreach ($url in $CheckDomains) {
+                    $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head http://$($url) $($curlproxy)-m 5 --connect-timeout 3 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
+                    if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$true;break}
                 }
-            } elseif (Get-Command "Get-NetConnectionProfile" -ErrorAction Ignore) {
-                (Get-NetConnectionProfile -IPv4Connectivity Internet -ErrorAction Ignore | Measure-Object).Count -gt 0 -or (Get-NetConnectionProfile -IPv6Connectivity Internet -ErrorAction Ignore | Measure-Object).Count -gt 0
             } else {
                 $true
-            }
-        } elseif ($Session.Curl -and $CheckDomains -and $CheckDomains.Count) {
-            $curlproxy = "$(if ($Proxy.Proxy) {"-x $($Proxy.Proxy)$(if ($Proxy.Username -and $Proxy.Password) {" -U $($Proxy.Username):$($Proxy.Password)"}) "})"
-            Foreach ($url in $CheckDomains) {
-                $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head http://$($url) $($curlproxy)-m 5 --connect-timeout 3 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
-                if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$true;break}
             }
         } else {
             $true
