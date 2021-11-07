@@ -935,10 +935,11 @@ function Invoke-Core {
                     $a = $_
                     $Session.Config.Algorithms | Add-Member $a $AllAlgorithms.$a -Force
                     $Algo_MRRPriceModifierPercent = "$($Session.Config.Algorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
-                    $Algo_MaxTimeToFInd           = (ConvertFrom-Time $Session.Config.Algorithms.$a.MaxTimeToFind)
+                    $Algo_MaxTimeToFind           = (ConvertFrom-Time $Session.Config.Algorithms.$a.MaxTimeToFind)
                     ([ordered]@{
                         Penalty                 = ([Math]::Round([double]($Session.Config.Algorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
                         MinHashrate             = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrate)
+                        MinHashrateSolo         = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrateSolo)
                         MinWorkers              = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinWorkers)
                         MaxTimeToFind           = $Algo_MaxTimeToFind
                         MSIAprofile             = ([int]$Session.Config.Algorithms.$a.MSIAprofile)
@@ -979,6 +980,7 @@ function Invoke-Core {
                     ([ordered]@{
                         Penalty          = ([Math]::Round([double]($Session.Config.Coins.$c.Penalty -replace "[^\d\.\-]+"),2))
                         MinHashrate      = (ConvertFrom-Hash $Session.Config.Coins.$c.MinHashrate)
+                        MinHashrateSolo  = (ConvertFrom-Hash $Session.Config.Coins.$c.MinHashrateSolo)
                         MinWorkers       = (ConvertFrom-Hash $Session.Config.Coins.$c.MinWorkers)
                         MaxTimeToFind    = $Coin_MaxTimeToFind
                         Wallet           = ($Session.Config.Coins.$c.Wallet -replace "\s+")
@@ -1843,11 +1845,13 @@ function Invoke-Core {
             ) -and (
                 ($_.Exclusive -and -not $_.Idle) -or -not (
                     ($_.Idle) -or
-                    ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
+                    (-not $_.SoloMining -and $_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
+                    ($_.SoloMining -and $_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrateSolo -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrateSolo) -or
                     ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
                     ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinBLKRate -and ($_.BLK -lt $Session.Config.Algorithms."$($_.Algorithm)".MinBLKRate)) -or
                     ($_.BLK -ne $null -and $Session.Config.Pools.$Pool_Name.MinBLKRate -and ($_.BLK -lt $Session.Config.Pools.$Pool_Name.MinBLKRate)) -or
-                    ($_.CoinSymbol -and $_.Hashrate -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate -and $_.Hashrate -lt $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate) -or
+                    (-not $_.SoloMining -and $_.CoinSymbol -and $_.Hashrate -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate -and $_.Hashrate -lt $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate) -or
+                    ($_.SoloMining -and $_.CoinSymbol -and $_.Hashrate -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinHashrateSolo -and $_.Hashrate -lt $Session.Config.Coins."$($_.CoinSymbol)".MinHashrateSolo) -or
                     ($_.CoinSymbol -and $_.Workers -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers -and $_.Workers -lt $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers) -or
                     ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate -and ($_.BLK -lt $Session.Config.Coins."$($_.CoinSymbol)".MinBLKRate))
                 )
@@ -1927,7 +1931,7 @@ function Invoke-Core {
         $Pools_Benchmarking= @{}
         $Pools_PriceCmp    = @{}
 
-        $NewPools | Select-Object Algorithm0,CoinSymbol,Hashrate,StablePrice | Group-Object -Property {"$($_.Algorithm0)-$($_.CoinSymbol)"} | Foreach-Object {$Pools_Hashrates[$_.Name] = ($_.Group | Where-Object StablePrice | Select-Object -ExpandProperty Hashrate | Measure-Object -Maximum).Maximum;if (-not $Pools_Hashrates[$_.Name]) {$Pools_Hashrates[$_.Name]=1}}
+        $NewPools | Where-Object {-not $_.SoloMining} | Select-Object Algorithm0,CoinSymbol,Hashrate,StablePrice | Group-Object -Property {"$($_.Algorithm0)-$($_.CoinSymbol)"} | Foreach-Object {$Pools_Hashrates[$_.Name] = ($_.Group | Where-Object StablePrice | Select-Object -ExpandProperty Hashrate | Measure-Object -Maximum).Maximum;if (-not $Pools_Hashrates[$_.Name]) {$Pools_Hashrates[$_.Name]=1}}
         $NewPools | Where-Object {-not $_.SoloMining -and $_.TSL -ne $null -and $Session.Config.Pools."$($_.Name)".EnablePostBlockMining -and $_.CoinSymbol -and ($_.TSL -lt $Session.Config.Coins."$($_.CoinSymbol)".PostBlockMining)} | Foreach-Object {$_ | Add-Member PostBlockMining $true -Force}
 
         $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({
@@ -1965,7 +1969,7 @@ function Invoke-Core {
                                 $Price_Cmp *= $PoolSwitchingHysteresis
                             }
                         }
-                        if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
+                        if (-not $_.SoloMining -and $_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
                             $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm0)-$($_.CoinSymbol)"],$HashrateWeightStrength)) * $HashrateWeight
                         }
                     }

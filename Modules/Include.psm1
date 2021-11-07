@@ -1650,7 +1650,8 @@ function Get-PoolsContent {
                 foreach ($Model in $Global:DeviceCache.DeviceCombos) {
                     $d = $c | ConvertTo-Json -Depth 10 | ConvertFrom-Json
                     $d.Algorithm = "$($d.Algorithm0)-$($Model)"
-                    $d.BLK       = $Global:MinerSpeeds[$d.Algorithm].Hashrate * $BLKFactor
+                    $d.Hashrate  = $Global:MinerSpeeds[$d.Algorithm].Hashrate
+                    $d.BLK       = $d.Hashrate * $BLKFactor
                     $d
                 }
             } else {
@@ -4902,7 +4903,7 @@ function Set-AlgorithmsConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions="";MinerName="";ExcludeMinerName=""}
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions="";MinerName="";ExcludeMinerName=""}
             $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1"
             $AllAlgorithms = Get-Algorithms -Values
             foreach ($Algorithm in $AllAlgorithms) {
@@ -4940,7 +4941,7 @@ function Set-CoinsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0"; MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
             $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1"
             
             foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
