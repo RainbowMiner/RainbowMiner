@@ -400,6 +400,9 @@
         "RPlant" = [PSCustomObject]@{
             Currencies=@("BIN","CPU","MBC")
         }
+        "SeroPool" = [PSCustomObject]@{
+            Currencies=@("SERO")
+        }
         "SoloPool" = [PSCustomObject]@{
             Currencies=@("ETC","ETH","SAFE","SEL","XMR","XWP","ZERO")
         }
