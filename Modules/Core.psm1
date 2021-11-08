@@ -4007,7 +4007,10 @@ function Set-MinerStats {
 
         if ($Miner.New) {$Miner.New = [Boolean]($Miner.BaseAlgorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])})}
 
-        if ($Miner.New) {$Miner.Benchmarked++}
+        if ($Miner.New) {
+            if (-not $Miner.Benchmarked) {$Miner.CrashCount = 0}
+            $Miner.Benchmarked++
+        }
 
         if (($Miner.Status -eq [Minerstatus]::Running) -or $Miner.New) { #GetStatus() check?
             $Miner_PowerDraw = $Miner.GetPowerDraw()
@@ -4018,13 +4021,14 @@ function Set-MinerStats {
             foreach ($Miner_Algorithm in $Miner.Algorithm) {
                 $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)
                 $Miner_Diff  = $Miner.GetDifficulty($Miner_Algorithm)
+                $Miner_Benchmarking = $Miner.IsBenchmarking()
 
                 $Miner.Speed_Live[$Miner_Index] = [Double]$Miner_Speed
 
-                Write-Log -Level Info "$($Miner.BaseName) $(if ($Miner.IsBenchmarking()) {"benchmarking"} else {"mining"}) $($Miner_Algorithm) on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner.IsBenchmarking()) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance[$Miner.Algorithm.IndexOf($Miner_Algorithm)]*100))%"} else {$Miner.Rounds})"
+                Write-Log -Level Info "$($Miner.BaseName) $(if ($Miner_Benchmarking) {"benchmarking"} else {"mining"}) $($Miner_Algorithm) on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner_Benchmarking) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance[$Miner.Algorithm.IndexOf($Miner_Algorithm)]*100))%"} else {$Miner.Rounds})"
 
                 $Stat = $null
-                if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
+                if ($Miner_Speed -or -not $Miner_Benchmarking -or $Miner.CrashCount -ge $Session.Config.MaxCrashesDuringBenchmark) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Ratio $Miner.RejectedShareRatio[$Miner_Index] -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] -StartTime $Miner.StartTime -LogFile "$(Split-Path -Leaf $Miner.LogFile)" -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
                     $Statset++
                 }
@@ -4033,10 +4037,8 @@ function Set-MinerStats {
                 if ($WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) {
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
-                        $Miner.CrashCount = 0
-                    } elseif ($Miner.IsBenchmarking() -or ($Miner_Speed -and $Miner.Rounds -lt [Math]::Max($Miner.ExtendedInterval,1)-1)) {
+                    } elseif ($Miner_Benchmarking -or ($Miner_Speed -and $Miner.Rounds -lt [Math]::Max($Miner.ExtendedInterval,1)-1)) {
                         $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
-                        $Miner.CrashCount = 0
                     } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) {
                         $Miner_Failed = $true
                     }

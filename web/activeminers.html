@@ -68,7 +68,7 @@
             item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
             item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]);
             item.tDevFee = (parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-');
-            item.tPrimarySpeed = item.Speed[0];
+            item.tPrimarySpeed = (item.Speed !== null && item.Speed.length)? item.Speed[0] : "-.--";
 
             // Format the speed(s)
             if (item.Speed.length > 1) {

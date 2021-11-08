@@ -875,6 +875,7 @@ For Server (Runmode=server) setup:
 - **FastlaneBenchmarkTypeCPU** = if EnableFastlaneBenchmark="1": choose the value-set for CPU miners (avg, min or max) [default=avg]
 - **FastlaneBenchmarkTypeGPU** = if EnableFastlaneBenchmark="1": choose the value-set for GPU miners (avg, min or max) [default=avg]
 - **EnableFastlaneBenchmarkMissing** = if EnableFastlaneBenchmark="1": set to 1 if you want to benchmark all device/miners/algos not found on rbminer.net [default=1]
+- **MaxCrashesDuringBenchmark** = maximum number of crashes allowed, until a benchmark fails [default=2]
 - **MinimumMiningIntervals** = minimum number of intervals a miner will run, before switching will be allowed [default=1]
 - **SSL** = set to 1, if only ssl connections wanted
 - **Proxy** = set your proxy address here, if you are using one
