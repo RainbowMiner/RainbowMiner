@@ -32,7 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "MTP"           ;              MinMemGB = 5;   Params = "-A MTP%CUDA%";                      ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "MTPTcr"        ;              MinMemGB = 5;   Params = "-A MTP%CUDA% -coin TCR";            ExtendInterval = 2} #MTP-TCR
     [PSCustomObject]@{MainAlgorithm = "ProgPoW"       ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin EPIC";       ExtendInterval = 2; Coins = @("EPIC"); ExcludePoolName = "^Nicehash"; DevFee = 2.0} #ProgPoW (only EPIC left)
-    [PSCustomObject]@{MainAlgorithm = "ProgPoWSERO"   ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (SERO)
+    #[PSCustomObject]@{MainAlgorithm = "ProgPoWSERO"   ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (SERO)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWVEIL"   ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin VEIL";       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (VEIL)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWZ"      ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOWZ%CUDA%";                 ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWZ (ZANO)
     [PSCustomObject]@{MainAlgorithm = "UbqHash"       ;              MinMemGB = 2.4; Params = "-A UBQHASH%CUDA%";                  ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #Ubqhash
@@ -101,7 +101,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Miner_Path
-					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll) -P $($Miner_Protocol)$($Pools.$Algorithm_Norm.User)$(if ($Pass) {":$($Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -PRHRI 1 -nui $($_.Params -replace '%CUDA%',$Cuda)$(if ($_.Params -notmatch "-coin" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -coin $($Pools.$Algorithm_Norm.CoinSymbol)"}) -work-timeout 500000"
+					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll) -P $($Miner_Protocol)$($Pools.$Algorithm_Norm.User)$(if ($Pass) {":$($Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -PRHRI 1 -nui $($_.Params -replace '%CUDA%',$Cuda)$(if ($_.Params -notmatch "-coin" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -coin $($Pools.$Algorithm_Norm.CoinSymbol)"}) -work-timeout 500000 -w $($Pools.$Algorithm_Norm.Worker)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					API            = "Claymore"
 					Port           = $Miner_Port                
