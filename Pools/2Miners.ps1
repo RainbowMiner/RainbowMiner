@@ -121,7 +121,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
         $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
         $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
         $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
-        $reward         = $(if ($blocks) {($blocks | Where-Object reward | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
+        $reward         = $(if ($blocks) {($blocks | Where-Object {$_.reward -gt 0} | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
         $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
         if ($_.cycles) {
