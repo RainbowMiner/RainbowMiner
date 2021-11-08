@@ -62,6 +62,7 @@ if (-not $InfoOnly) {
         
     $blocks         = $blocks | Where-Object {$_.reward -gt 0 -and -not $_.orphan}
     $blocks_measure = $blocks.timestamp | Measure-Object -Minimum -Maximum
+    $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
     $reward         = $(if ($blocks) {($blocks | Measure-Object reward -Average).Average} else {0})/$Pool_Factor
     $btcPrice       = if ($Global:Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:Rates."$($Pool_Coin.Symbol)"} elseif ($Global:Rates.USD) {[double]$Pool_Request.qprice/[double]$Global:Rates.USD} else {0}
     $btcRewardLive  = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
