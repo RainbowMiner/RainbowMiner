@@ -32,7 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "MTP"           ;              MinMemGB = 5;   Params = "-A MTP%CUDA%";                      ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "MTPTcr"        ;              MinMemGB = 5;   Params = "-A MTP%CUDA% -coin TCR";            ExtendInterval = 2} #MTP-TCR
     [PSCustomObject]@{MainAlgorithm = "ProgPoW"       ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin EPIC";       ExtendInterval = 2; Coins = @("EPIC"); ExcludePoolName = "^Nicehash"; DevFee = 2.0} #ProgPoW (only EPIC left)
-    #[PSCustomObject]@{MainAlgorithm = "ProgPoWSERO"   ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (SERO)
+    [PSCustomObject]@{MainAlgorithm = "ProgPoWSERO"   ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin SERO";       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (SERO)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWVEIL"   ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin VEIL";       ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWSero (VEIL)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWZ"      ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOWZ%CUDA%";                 ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #ProgPoWZ (ZANO)
     [PSCustomObject]@{MainAlgorithm = "UbqHash"       ;              MinMemGB = 2.4; Params = "-A UBQHASH%CUDA%";                  ExtendInterval = 2; ExcludePoolName = "^Nicehash"} #Ubqhash
