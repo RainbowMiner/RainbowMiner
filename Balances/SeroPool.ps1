@@ -15,25 +15,22 @@ if (-not $PoolConfig.Wallets.$Pool_Currency -or ($Config.ExcludeCoinsymbolBalanc
 $Request = [PSCustomObject]@{}
 
 try {
-    if ($Request = Invoke-RestMethodAsync "https://pool.sero.cash/api/accounts/$($PoolConfig.$Pool_Currency)" -cycletime ($Config.BalanceUpdateMinutes*60)) {
-        if ($Request.status) {
-            $Divisor  = [Decimal]1e9
-            $Balance  = [Decimal]$Request.stats.balance / $Divisor
-            $Pending  = [Decimal]$Request.stats.immature / $Divisor
-            $Unpaid   = $Unpaid + $Immature
-            $Paid     = [Decimal]$Request.paymentsTotal / $Divisor
-            [PSCustomObject]@{
-                    Caption     = "$($Name) ($($Pool_Currency))"
-                    BaseName    = $Name
-                    Currency    = $Pool_Currency
-                    Balance     = $Balance
-                    Pending     = $Pending
-                    Total       = $Unpaid
-                    Paid        = $Paid
-                    Earned      = $Paid + $Unpaid
-                    Payouts     = @()
-                    LastUpdated = (Get-Date).ToUniversalTime()
-            }
+    $Request = Invoke-RestMethodAsync "https://pool.sero.cash/api/accounts/$($PoolConfig.$Pool_Currency)" -tag $Name -cycletime ($Config.BalanceUpdateMinutes*60)
+    if ($Request.stats) {
+        $Divisor  = [Decimal]1e9
+        $Balance  = [Decimal]$Request.stats.balance / $Divisor
+        $Pending  = [Decimal]$Request.stats.immature / $Divisor
+        $Paid     = [Decimal]$Request.paymentsTotal / $Divisor
+        [PSCustomObject]@{
+            Caption     = "$($Name) ($($Pool_Currency))"
+            BaseName    = $Name
+            Currency    = $Pool_Currency
+            Balance     = $Balance
+            Pending     = $Pending
+            Total       = $Balance + $Pending
+            Paid        = $Paid
+            Payouts     = @(Get-BalancesPayouts $Request.payments | Select-Object)
+            LastUpdated = (Get-Date).ToUniversalTime()
         }
     }
 }

@@ -56,12 +56,12 @@ if (-not $InfoOnly) {
     $timestamp24h = $timestamp - 86400
 
     $blocks         =  @($PoolBlocks_Request.candidates | Select-Object timestamp,reward,orphan) + @($PoolBlocks_Request.immature | Select-Object timestamp,reward,orphan) + @($PoolBlocks_Request.matured | Select-Object timestamp,reward,orphan) | Where-Object {$_.timestamp -gt $timestamp24h}
-    $blocks_measure = $blocks.timestamp | Measure-Object -Minimum -Maximum
+    $blocks_measure = $blocks | Measure-Object timestamp -Minimum -Maximum
     $Pool_BLK       = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
-    $Pool_TSL       = $timestamp - ($blocks.timestamp | Measure-Object -Maximum).Maximum
+    $Pool_TSL       = $timestamp - $blocks_measure.Maximum
         
     $blocks         = $blocks | Where-Object {$_.reward -gt 0 -and -not $_.orphan}
-    $blocks_measure = $blocks.timestamp | Measure-Object -Minimum -Maximum
+    $blocks_measure = $blocks | Measure-Object timestamp -Minimum -Maximum
     $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
     $reward         = $(if ($blocks) {($blocks | Measure-Object reward -Average).Average} else {0})/$Pool_Factor
     $btcPrice       = if ($Global:Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:Rates."$($Pool_Coin.Symbol)"} elseif ($Global:Rates.USD) {[double]$Pool_Request.qprice/[double]$Global:Rates.USD} else {0}
