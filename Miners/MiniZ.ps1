@@ -43,11 +43,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";              MinMemGB = 2; Params = "--par=125,4";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 125,4,0 (ZelCash)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";              MinMemGB = 3; Params = "--par=150,5";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 150,5,0 (GRIMM)
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";               MinMemGB = 2; Params = "--par=210,9";    ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee} #Equihash 210,9 (AION)
-    [PSCustomObject]@{MainAlgorithm = "KawPoW";        DAG = $true; MinMemGB = 2; Params = "--par=kawpow";   ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #KawPow (RVN)
-    [PSCustomObject]@{MainAlgorithm = "ProgPowSero";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowSero (SERO)
-    [PSCustomObject]@{MainAlgorithm = "ProgPowVeil";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowVeil (VEIL)
-    [PSCustomObject]@{MainAlgorithm = "ProgPowZ";      DAG = $true; MinMemGB = 2; Params = "--par=ProgPowZ"; ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowZano (ZANO)
-    [PSCustomObject]@{MainAlgorithm = "vProgPow";      DAG = $true; MinMemGB = 2; Params = "--par=vProgPow"; ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #vProgPow (VBK)
+    [PSCustomObject]@{MainAlgorithm = "KawPoW";        DAG = $true; MinMemGB = 2; Params = "--par=kawpow --pers=rAVENCOINKAWPOW";   ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #KawPow (RVN)
+    [PSCustomObject]@{MainAlgorithm = "ProgPowSero";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=sero";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowSero (SERO)
+    [PSCustomObject]@{MainAlgorithm = "ProgPowVeil";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=veil";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowVeil (VEIL)
+    [PSCustomObject]@{MainAlgorithm = "ProgPowZ";      DAG = $true; MinMemGB = 2; Params = "--par=ProgPowZ --pers=zano"; ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #ProgPowZano (ZANO)
+    [PSCustomObject]@{MainAlgorithm = "vProgPow";      DAG = $true; MinMemGB = 2; Params = "--par=vProgPow --pers=VeriBlock"; ExtendInterval = 3; AutoPers = $false; Fee = 1.00; ExcludePoolName = "^MiningRigRentals"} #vProgPow (VBK)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
