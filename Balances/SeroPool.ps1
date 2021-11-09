@@ -20,16 +20,15 @@ try {
         $Divisor  = [Decimal]1e9
         $Balance  = [Decimal]$Request.stats.balance / $Divisor
         $Pending  = [Decimal]$Request.stats.immature / $Divisor
-        $Paid     = [Decimal]$Request.paymentsTotal / $Divisor
         [PSCustomObject]@{
             Caption     = "$($Name) ($($Pool_Currency))"
             BaseName    = $Name
             Currency    = $Pool_Currency
-            Balance     = $Balance
+            Balance     = $Balance - $Pending
             Pending     = $Pending
-            Total       = $Balance + $Pending
-            Paid        = $Paid
-            Payouts     = @(Get-BalancesPayouts $Request.payments | Select-Object)
+            Total       = $Balance
+            Paid        = [Decimal]($Request.payments | Foreach-Object {$_.amount/$Divisor} | Measure-Object -Sum).Sum
+            Payouts     = @(Get-BalancesPayouts $Request.payments -Divisor $Divisor | Select-Object)
             LastUpdated = (Get-Date).ToUniversalTime()
         }
     }
