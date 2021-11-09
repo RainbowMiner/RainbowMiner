@@ -48,6 +48,7 @@ $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 $Pool_Port           = 8808
 $Pool_PoolFee        = 0
 $Pool_Factor         = 1e18
+$Pool_EthProxy       = "ethproxy"
 
 $Pool_User           = $Wallets.$Pool_Currency
 
@@ -94,8 +95,9 @@ if ($Pool_User -or $InfoOnly) {
             DataWindow    = $DataWindow
             Workers       = $Pool_Request.minersTotal
             Hashrate      = $Stat.Hashrate_Live
-            BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
+            BLK           = $Stat.BlockRate_Average
+            EthMode       = $Pool_EthProxy
             ErrorRatio    = $Stat.ErrorRatio
             Name          = $Name
             Penalty       = 0
