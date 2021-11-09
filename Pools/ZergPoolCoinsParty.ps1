@@ -78,6 +78,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         return
     }
 
+    $Pool_Diff = [double]$PoolCoins_Request.$Pool_CoinSymbol.network_hashrate * $PoolCoins_Request.$Pool_CoinSymbol.blocktime / [Math]::Pow(2,32)
+
     if (-not $InfoOnly) {
         if ($Pool_Request.$Pool_Algorithm.coins -eq 1) {
             $Pool_Actual24h   = $Pool_Request.$Pool_Algorithm.actual_last24h/1000
@@ -86,7 +88,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             $Pool_Actual24h   = $PoolCoins_Request.$Pool_CoinSymbol.actual_last24h/1000
             $Pool_Estimate24h = $PoolCoins_Request.$Pool_CoinSymbol.estimate_last24
         }
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -Difficulty $PoolCoins_Request.$Pool_CoinSymbol.difficulty -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -Difficulty $Pool_Diff -Quiet
     }
 
     $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} elseif ($PoolCoins_Request.$Pool_CoinSymbol.noautotrade -eq 0) {$AECurrency}

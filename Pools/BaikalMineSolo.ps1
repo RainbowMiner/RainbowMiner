@@ -42,7 +42,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Write-Log -Level Warn "Pool API ($Name) has failed. "
         }
 
-        $difficulty = ($Pool_Request.nodes | Where-Object name -eq "main").difficulty
+        $difficulty = ($Pool_Request.nodes | Where-Object name -eq "main").difficulty / [Math]::Pow(2,32)
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty $difficulty -Quiet
     }

@@ -122,11 +122,12 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
         $reward         = $(if ($blocks) {($blocks | Where-Object {$_.reward -gt 0} | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
         $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
-        $difficulty     = [double]($Pool_Request.nodes | Select-Object -First 1).difficulty
+        $node           = $Pool_Request.nodes | Select-Object -First 1
+        $difficulty     = [double]$node.networkhashps * $node.avgBlockTime / [Math]::Pow(2,32)
 
         if ($_.cycles) {
             $addName         = $Pool_Algorithm_Norm -replace "[^\d]"
-            $PBR  = (86400 / $_.cycles) * ($(if ($_.symbol -match "-PRI$") {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$difficulty)
+            $PBR  = (86400 / $_.cycles) * ($(if ($_.symbol -match "-PRI$") {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/[double]$node.difficulty)
             $btcRewardLive   = $PBR * $reward * $btcPrice
             $Divisor         = 1
         } else {
