@@ -1320,6 +1320,13 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.7.7.2")) {
+        $RemovePoolStats += @("2MinersSolo_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolParty_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolSolo_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolCoinsParty_*_Profit.txt")
+        $RemovePoolStats += @("ZergPoolCoinsSolo_*_Profit.txt")
+    }
 
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
