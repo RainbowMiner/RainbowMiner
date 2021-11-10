@@ -2021,7 +2021,7 @@ function Invoke-Core {
     }
 
     #Give API access to the pools information
-    $API.Pools = @($Pools.PSObject.Properties | Select-Object -ExpandProperty Value)
+    $API.Pools = @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK})
  
     #Load information about the miners
     Write-Log "Getting miner information. "
