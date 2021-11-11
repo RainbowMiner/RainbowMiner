@@ -2619,6 +2619,29 @@ class Trex : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
+        if ($this.Algorithm.Count -eq 2) {
+
+            $HashRate_Name = [String]$this.Algorithm[1]
+
+            $HashRate_Value   = [Double]$Data.dual_stat.hashrate
+            $HashRateGPUs_Value = [Double]($Data.dual_stat.gpus.hashrate | Measure-Object -Sum).Sum
+            if ($HashRate_Value -le $HashRateGPUs_Value*0.6) {
+                $HashRate_Value = $HashRateGPUs_Value
+            }
+
+            if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                $Difficulty_Value = ConvertFrom-Hash "$($Data.dual_stat.active_pool.difficulty)"
+                $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+                $Accepted_Shares  = [Int64]$Data.dual_stat.accepted_count
+                $Rejected_Shares  = [Int64]$Data.dual_stat.rejected_count
+                $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
+            }
+
+        }
+
         $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
 
         $this.CleanupMinerData()
