@@ -15,9 +15,9 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-teamblack/TeamBlackMiner_1_23_Ubuntu_18_04_Cuda_11_5.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_Ubuntu_18_04_Cuda_11_4.tar.gz"
             Cuda = "11.5"
-            Version = "1.22"
+            Version = "1.24"
         }
     )
 } else {
@@ -25,19 +25,19 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-teamblack/TeamBlackMiner_1_23_cuda_11_5.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_cuda_11_5.7z"
             Cuda = "11.5"
-            Version = "1.23"
+            Version = "1.24"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-teamblack/TeamBlackMiner_1_23_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_cuda_11_4.7z"
             Cuda = "11.4"
-            Version = "1.23"
+            Version = "1.24"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-teamblack/TeamBlackMiner_1_23_cuda_11_2.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_cuda_11_2.7z"
             Cuda = "11.2"
-            Version = "1.23"
+            Version = "1.24"
         }
     )
 }
