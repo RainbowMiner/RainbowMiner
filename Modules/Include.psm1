@@ -7352,7 +7352,7 @@ param(
     [String[]]$DeviceName
 )
     if (-not $IsWindows) {return}
-    $Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
+    $Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega|RX\d{4}"}
     if ($Device) {
         $DeviceId   = $Device.Type_Vendor_Index -join ','
         $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
