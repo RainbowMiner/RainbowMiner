@@ -137,7 +137,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                     }
                     
 				    $Arguments = [PSCustomObject]@{
-                        Algo      = $_.MainAlgorithm
+                        Algo      = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                         Coin      = $Pools.$Algorithm_Norm.CoinSymbol
 					    Host      = $Pools.$Algorithm_Norm.Host
 					    Port      = $Pools.$Algorithm_Norm.Port
