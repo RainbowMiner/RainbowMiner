@@ -931,6 +931,7 @@ For Server (Runmode=server) setup:
 - **ResumeOnInactivitySeconds** = seconds of no user input, until RainbowMiner leaves pause-on-activity mode (0 = never) [default=300]
 - **EnableMinersAsRoot** = set to 0, if you do not want to run miners as root, using the OCDaemon (linux only) [default=1]
 - **OpenCLPlatformSorting** = define sort order of the OpenCL platforms, comma separated list. Valid values are AMD,INTEL,NVIDIA. Leave empty for automatic detection (recommended) [default=]
+- **CovalentAPIKey** = enter your covalenthq.com API key [default=]
 
 #### Maintenance ####
 - **MaxLogfileDays** = max. days to keep logfiles in Logs folder [default=5]

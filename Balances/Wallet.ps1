@@ -223,3 +223,55 @@ if ($Config.Pools.Nicehash.EnableShowWallets -and $Config.Pools.Nicehash.API_Key
         }
     }
 }
+
+#
+# Covalent
+#
+
+if ($Config.CovalentAPIKey) {
+
+    # Polygon chain
+
+    $Polygon_Base_Wallet_Symbol  = "WETH"
+
+    @($Config.Coins.PSObject.Properties | Where-Object {"$($_.Name -replace "_\d+$")" -eq $Polygon_Base_Wallet_Symbol -and $_.Value.Wallet -match "^0x"} | Foreach-Object {$_.Value.Wallet}) + @($Config.Pools.PSObject.Properties.Value | Where-Object {$_.Wallets.$Polygon_Base_Wallet_Symbol -match "^0x"} | Foreach-Object {$_.Wallets.$Polygon_Base_Wallet_Symbol}) | Select-Object -Unique | Sort-Object | Foreach-Object {
+
+        $Wallet_Address = $_
+        $Wallet_Info = $Wallet_Address -replace "^0x"
+
+        $Request = @()
+        try {
+            $Request = Invoke-RestMethodAsync "https://api.covalenthq.com/v1/137/address/$($Wallet_Address)/balances_v2/?key=$($Config.CovalentAPIKey)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Verbose "Covalent API has failed ($Name)"
+        }
+
+        if ($Request.error) {
+            Write-Log -Level Verbose "Covalent API returned error ($Name): $($error_code) $($error_message)"
+            return
+        }
+
+        $Request.data.items | Foreach-Object {
+
+            $Wallet_Symbol = $_.contract_ticker_symbol
+            if (($Session.Config.Coins."$($Wallet_Symbol)") -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Wallet_Symbol)) {
+
+                $Wallet_Balance = $_.balance / [Math]::Pow(10,$_.contract_decimals)
+
+                [PSCustomObject]@{
+                        Caption     = "$Name $($Wallet_Symbol) $($Wallet_Address)"
+                        BaseName    = $Name
+                        Info        = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3)) Polygon"
+                        Currency    = $_.contract_ticker_symbol
+                        Balance     = $Wallet_Balance
+                        Pending     = 0
+                        Total       = $Wallet_Balance
+                        Payouts     = @()
+                        LastUpdated = (Get-Date).ToUniversalTime()
+                }
+            }
+        }
+    }
+}
