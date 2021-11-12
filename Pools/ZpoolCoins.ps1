@@ -72,7 +72,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         return
     }
 
-    $Divisor = 1e9 * $Pool_Factor
+    $Divisor = 1e6 * $Pool_Factor
 
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
     
