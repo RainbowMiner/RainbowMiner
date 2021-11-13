@@ -4169,6 +4169,7 @@ function Invoke-ReportMinerStatus {
                 Type           = @($Miner.DeviceModel)
                 Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $Miner.GetActiveTime()
                 Algorithm      = @($Miner.BaseAlgorithm)
+                BLK            = @($Miner.BLK)
                 Currency       = $Miner.Currency
                 CoinName       = @($Miner.CoinName | Where-Object {$_} | Select-Object)
                 CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$_} | Select-Object)
