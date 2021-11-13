@@ -2636,7 +2636,8 @@ function Invoke-Core {
         $Miner_IsLocked           = ($LockMiners -and $Session.LockMiners.Pools -and -not (Compare-Object $Session.LockMiners.Pools @($Miner.Pools.PSObject.Properties.Name | Foreach-Object {"$($Miner.Pools.$_.Name)-$($Miner.Pools.$_.Algorithm0)-$($Miner.Pools.$_.CoinSymbol)"} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>"))
         $Miner_IsFocusWalletMiner = $false
         $Miner_IsExclusiveMiner   = $false
-        $Miner.Pools.PSObject.Properties.Value | Foreach-Object {
+        $Miner_Pools = $Miner.Pools.PSObject.Properties.Value
+        $Miner_Pools | Foreach-Object {
             $Miner_IsFocusWalletMiner = $Miner_IsFocusWalletMiner -or ($Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Name)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent))
             $Miner_IsExclusiveMiner   = $Miner_IsExclusiveMiner -or $_.Exclusive
         }
@@ -2680,9 +2681,10 @@ function Invoke-Core {
             $ActiveMiner.IsLocked           = $Miner_IsLocked
             $ActiveMiner.PostBlockMining    = $Miner_PostBlockMining
             $ActiveMiner.MinSamples         = $Miner_MinSamples
-            $ActiveMiner.CoinName           = $Miner.Pools.PSObject.Properties.Value.CoinName
-            $ActiveMiner.CoinSymbol         = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-            $ActiveMiner.PoolPenalty        = $Miner.Pools.PSObject.Properties.Value.Penalty
+            $ActiveMiner.CoinName           = $Miner_Pools.CoinName
+            $ActiveMiner.CoinSymbol         = $Miner_Pools.CoinSymbol
+            $ActiveMiner.PoolPenalty        = $Miner_Pools.Penalty
+            $ActiveMiner.BLK                = $Miner_Pools.BLK
             $ActiveMiner.NoCPUMining        = [bool]$Miner.NoCPUMining
             $ActiveMiner.NeedsBenchmark     = $Miner.HashRates.PSObject.Properties.Value -contains $null
             $ActiveMiner.MaxRejectedShareRatio = $Miner_MaxRejectedShareRatio
@@ -2710,10 +2712,13 @@ function Invoke-Core {
                     Port                 = $Miner.Port
                     Algorithm            = $Miner.HashRates.PSObject.Properties.Name
                     BaseAlgorithm        = $Miner.BaseAlgorithm -split '-'
-                    Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
-                    CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
-                    CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-                    Wallet               = $Miner.Pools.PSObject.Properties.Value.Wallet
+                    Currency             = $Miner_Pools.Currency
+                    CoinName             = $Miner_Pools.CoinName
+                    CoinSymbol           = $Miner_Pools.CoinSymbol
+                    Wallet               = $Miner_Pools.Wallet
+                    PoolPenalty          = $Miner_Pools.Penalty
+                    BLK                  = $Miner_Pools.BLK
+                    Pool                 = $Miner_Pools.Name
                     DeviceName           = $Miner.DeviceName
                     DeviceModel          = $Miner.DeviceModel
                     Profit               = $Miner.Profit
@@ -2730,7 +2735,6 @@ function Invoke-Core {
                     Best                 = $false
                     New                  = $false
                     Benchmarked          = 0
-                    Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
                     MSIAprofile          = $Miner.MSIAprofile
                     DevFee               = $Miner.DevFee
                     OCprofile            = $Miner.OCprofile
@@ -2739,7 +2743,6 @@ function Invoke-Core {
                     ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
                     FaultTolerance       = $Miner.FaultTolerance
                     Penalty              = $Miner.Penalty
-                    PoolPenalty          = $Miner.Pools.PSObject.Properties.Value.Penalty
                     ManualUri            = $Miner_ManualUri
                     EthPillEnable        = $Session.Config.EthPillEnable
                     EthPillEnableMTP     = $Session.Config.EthPillEnableMTP
@@ -2778,6 +2781,7 @@ function Invoke-Core {
     if ($Miner -ne $null)        {Remove-Variable "Miner"}
     if ($ActiveMiner -ne $null)  {Remove-Variable "ActiveMiner"}
     if ($Miner_DevFee -ne $null) {Remove-Variable "Miner_DevFee"}
+    if ($Miner_Pools -ne $null)  {Remove-Variable "Miner_Pools"}
 
     $ActiveMiners_DeviceNames = @(($Global:ActiveMiners | Where-Object {$_.Enabled}).DeviceName | Select-Object -Unique | Sort-Object)
 
@@ -3131,6 +3135,7 @@ function Invoke-Core {
             $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
         }
         $Miner_Table.AddRange([System.Collections.Generic.List[hashtable]]@(
+            @{Label = "TTF"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.BLK) {86400/$_.BLK | ConvertTo-TTF} else {"-"}}}; Align = 'right'},
             @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
             @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}}
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
@@ -3232,6 +3237,7 @@ function Invoke-Core {
         @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.BaseAlgorithm}},
         @{Label = "Coin"; Expression = {$_.CoinName | Foreach-Object {if ($_) {$_} else {"-"}}}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Global:DeviceCache.Devices -Name @($_.DeviceName) -Short) -join ','}},
+        @{Label = "Pool"; Expression = {$_.Pool}},
         @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.GetArguments())"}}
     ) | Out-Host

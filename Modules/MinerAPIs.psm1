@@ -32,6 +32,7 @@ class Miner {
     $Stratum
     [double[]]$Speed
     [double[]]$Speed_Live
+    [double[]]$BLK
     [double[]]$Variance
     [string]$StartCommand
     [string]$StopCommand

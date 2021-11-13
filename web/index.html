@@ -29,6 +29,7 @@
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
             <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
             <th data-field="tPrimaryShares" data-align="right">A/R/S</th>
+            <th data-field="tPrimaryBLK" data-sortable="true" data-formatter="formatBLK" data-align="right">TTF</th>
             <th data-field="tActive" data-align="right" data-sortable="true" data-sorter="sortRunningMinersByActive">Active</th>
             <th data-field="tDonator" data-sortable="true">Mines</th>
         </tr>
@@ -91,6 +92,7 @@
                 <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
                 <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
                 <th data-field="tPrimaryShares" data-align="right">Acc/Rej</th>
+                <th data-field="tPrimaryBLK" data-sortable="true" data-formatter="formatBLK" data-align="right">TTF</th>
                 <th data-field="tActive" data-align="right" data-sortable="true" data-sorter="sortRemoteMinersByActive">Active</th>
                 <th data-field="tDonator" data-sortable="true">Mines</th>
             </tr>
@@ -425,6 +427,13 @@ function formatRunningMiners(data) {
             item.tPrimaryHashRateLive = item.Speed_Live;
         }
 
+        if (Array.isArray(item.BLK)) {
+            item.tPrimaryBLK = item.BLK[0];
+            item.tSecondaryBLK = item.BLK[1];
+        } else {
+            item.tPrimaryBLK = item.BLK;
+        }
+
         item.tProfit = typeof item.Profit == "undefined"? 0 : Number(item.Profit);
         item.tPowerDraw = Math.round(Number(item.PowerDraw));
         item.tDonator = item.Donator ? "for dev" : "for you";
@@ -580,6 +589,13 @@ function formatRemoteMiners(data) {
                 item.tSecondaryShares = (typeof item.Accepted[1] !== "undefined"? item.Accepted[1] : '-') + ' / ' + (typeof item.Rejected[1] !== "undefined"? item.Rejected[1] : '-')
         } else if (typeof item.Accepted !== "undefined") {
             item.tPrimaryShares = (typeof item.Accepted !== "undefined"? item.Accepted : '-') + ' / ' + (typeof item.Rejected !== "undefined"? item.Rejected : '-')
+        }
+
+        if (Array.isArray(item.BLK)) {
+            item.tPrimaryBLK = item.BLK[0];
+            item.tSecondaryBLK = item.BLK[1];
+        } else {
+            item.tPrimaryBLK = item.BLK;
         }
 
         item.tProfit = item.Profit == "undefined"? 0 : Number(item.Profit);

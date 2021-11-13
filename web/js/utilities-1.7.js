@@ -163,9 +163,32 @@ function formatUptime(uptime) {
 
 function formatBLK(data) {
     if (typeof data == "undefined") return data;
+    if (data == null) return "-";
     if (!data) return "&infin;"
-    data = 24 / data * 60
-    return data.toFixed(1)
+    data = 86400 / data
+    if (data >= 86400) {
+        if (data >= 31536000) {data = "&gt;1 year"}
+        else if (data >= 15768000) {data = "&gt;6 mon"}
+        else if (data >= 2628000) {data = "&gt;1 mon"}
+        else if (data >= 604800) {data = "&gt;1 week"}
+        else {
+            data /= 86400
+            data = data.toFixed(1) + " day"
+        }
+    }
+    else if (data >= 3600) {
+        data /= 3600
+        data = data.toFixed(1) + " hour"
+    }
+    else if (data >= 60) {
+        data /= 60
+        data = data.toFixed(1) + " min"
+    }
+    else {
+        data = data.toFixed(1) + " sec"
+    }
+
+    return data.replace(" ","&nbsp;")
 }
 
 function formatTSL(data) {
