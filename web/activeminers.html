@@ -71,7 +71,7 @@
             item.tPrimarySpeed = (item.Speed !== null && item.Speed.length)? item.Speed[0] : "-.--";
 
             // Format the speed(s)
-            if (item.Speed.length > 1) {
+            if (item.Speed !== null && item.Speed.length > 1) {
                 item.tSecondarySpeed = item.Speed[1];
                 item.tPrimaryAlgorithm += ' + ' + item.tSecondaryAlgorithm;
                 if (parseFloat(item.DevFee[item.Algorithm[1]])) {
