@@ -3554,17 +3554,24 @@ function Get-Device {
                 if ($Global:GlobalCPUInfo.Features.shani) {$Global:GlobalCPUInfo.Features.sha = $true}
 
                 if ($Global:GlobalCPUInfo.Vendor -eq "AMD" -or $Global:GlobalCPUInfo.Vendor -eq "HYGON") {
-                    Switch ($Global:GlobalCPUInfo.Family) {
+                    $zen = Switch ($Global:GlobalCPUInfo.Family) {
                         0x17 {
                             Switch ($Global:GlobalCPUInfo.Model) {
-                                {$_ -in @(0x01,0x11,0x18,0x20)} {$Global:GlobalCPUInfo.Features.iszen = $true;break}
-                                {$_ -eq 0x08} {$Global:GlobalCPUInfo.Features.iszenplus = $true;break}
-                                {$_ -in @(0x31,0x47,0x60,0x68,0x71,0x90,0x98)} {$Global:GlobalCPUInfo.Features.iszen2 = $true;break}
+                                {$_ -in @(0x01,0x11,0x18,0x20)} {"zen";break}
+                                {$_ -eq 0x08} {"zenplus";break}
+                                {$_ -in @(0x31,0x47,0x60,0x68,0x71,0x90,0x98)} {"zen2";break}
                             }
                             break
                         }
-                        0x18 {$Global:GlobalCPUInfo.Features.iszen = $true;break}
-                        0x19 {$Global:GlobalCPUInfo.Features.iszen3 = $true;break}
+                        0x18 {"zen";break}
+                        0x19 {"zen3";break}
+                    }
+                    $f = $Global:GlobalCPUInfo.Features
+                    if (-not $zen) {
+                        $zen = if ($f.avx2 -and $f.sha -and $f.vaes) {"zen3"} elseif ($f.avx2 -and $f.sha -and $f.aes) {"zen"}
+                    }
+                    if ($zen) {
+                        if ($f.avx2 -and $f.sha -and (($zen -eq "zen3" -and $f.vaes) -or ($zen -ne "zen3" -and $f.aes))) {$Global:GlobalCPUInfo.Features."is$($zen)" = $true}
                     }
                 }
 
