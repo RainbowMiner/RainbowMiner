@@ -68,9 +68,11 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                         $Pattern = if ($Global:GlobalCPUInfo.Vendor -eq "INTEL") {
                             if ($Global:GlobalCPUInfo.Name -match "Core.+?(i\d-\d{4}\w*)") {
                                 "$($Matches[1])"
-                            } elseif ($Global:GlobalCPUInfo.Name -match "(E\d-\d{4}\w*)[\sv]*(\d)") {
+                            } elseif ($Global:GlobalCPUInfo.Name -match "(E\d*-\d{4}\w*)[\sv]*(\d)") {
                                 "$($Matches[1])v$($Matches[2])"
-                            } elseif ($Global:GlobalCPUInfo.Name -match "(E\d-\d{4}\w*)") {
+                            } elseif ($Global:GlobalCPUInfo.Name -match "(E\d*-\d{4}\w*)") {
+                                "$($Matches[1])"
+                            } elseif ($Global:GlobalCPUInfo.Name -match "([A-Z]\d{4}\w*)") {
                                 "$($Matches[1])"
                             }
                         } else {
@@ -105,7 +107,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 					ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
                     Penalty        = 0
                     MaxRejectedShareRatio = $_.MaxRejectedShareRatio
-					DevFee         = $DevFee
+					DevFee         = if ($Pools.$Algorithm_Norm.Name -eq "FlockPool") {1.50} else {$DevFee}
 					ManualUri      = $ManualUri
                     Version        = $Version
                     PowerDraw      = 0
