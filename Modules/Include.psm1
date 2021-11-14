@@ -2913,6 +2913,104 @@ function Get-MyIP {
     }
 }
 
+function Get-CpuInfo {
+
+    Add-Type -Path .\DotNet\Tools\CPUID.cs
+
+    $family = 0
+    $model  = 0
+    $stepping = 0
+
+    $features = @{}
+
+    $info   = [CpuID]::Invoke(0)
+    $vendor = [System.Text.Encoding]::ASCII.GetString($info[4..7]) + [System.Text.Encoding]::ASCII.GetString($info[12..15]) + [System.Text.Encoding]::ASCII.GetString($info[8..11])
+    $nIds   = [BitConverter]::ToUInt32($info, 0)
+    $nExIds = [BitConverter]::ToUInt32([CpuID]::Invoke(0x80000000), 0)
+
+    $b1 = [Uint32]1
+    $mask4bit = (($b1 -shl 4) -1)
+    $mask8bit = (($b1 -shl 8) -1)
+
+    If ($nIds -ge 0x00000001) { 
+
+        $info = [CpuID]::Invoke(0x00000001)
+        $info = [UInt32[]]@(
+            [BitConverter]::ToUInt32($info, 0)
+            [BitConverter]::ToUInt32($info, 4)
+            [BitConverter]::ToUInt32($info, 8)
+            [BitConverter]::ToUInt32($info, 12)
+        )
+
+        $features.mmx    = ($info[3] -band ($b1 -shl 23)) -ne 0
+        $features.sse    = ($info[3] -band ($b1 -shl 25)) -ne 0
+        $features.sse2   = ($info[3] -band ($b1 -shl 26)) -ne 0
+        $features.sse3   = ($info[2] -band ($b1 -shl 00)) -ne 0
+        $features.ssse3  = ($info[2] -band ($b1 -shl 09)) -ne 0
+        $features.sse41  = ($info[2] -band ($b1 -shl 19)) -ne 0
+        $features.sse42  = ($info[2] -band ($b1 -shl 20)) -ne 0
+        $features.aes    = ($info[2] -band ($b1 -shl 25)) -ne 0
+        $features.avx    = ($info[2] -band ($b1 -shl 28)) -ne 0
+        $features.fma3   = ($info[2] -band ($b1 -shl 12)) -ne 0
+        $features.rdrand = ($info[2] -band ($b1 -shl 30)) -ne 0
+
+        $family = (($info[0] -shr 8) -band $mask4bit) + ($info[0] -shr 20) -band $mask8bit
+        $model = (($info[0] -shr 4) -band $mask4bit) + ((($info[0] -shr 16) -band $mask4bit) -shl 4)
+        $stepping = $info[0] -band $mask4bit
+    }
+
+    If ($nIds -ge 0x00000007) {
+        $info = [CpuID]::Invoke(0x00000007)
+        $info = [UInt32[]]@(
+            [BitConverter]::ToUInt32($info, 0)
+            [BitConverter]::ToUInt32($info, 4)
+            [BitConverter]::ToUInt32($info, 8)
+            [BitConverter]::ToUInt32($info, 12)
+        )
+
+        $features.avx2       = ($info[1] -band ($b1 -shl 05)) -ne 0
+        $features.bmi1       = ($info[1] -band ($b1 -shl 03)) -ne 0
+        $features.bmi2       = ($info[1] -band ($b1 -shl 08)) -ne 0
+        $features.adx        = ($info[1] -band ($b1 -shl 19)) -ne 0
+        $features.mpx        = ($info[1] -band ($b1 -shl 14)) -ne 0
+        $features.sha        = ($info[1] -band ($b1 -shl 29)) -ne 0
+        $features.avx512f    = ($info[1] -band ($b1 -shl 16)) -ne 0
+        $features.avx512cd   = ($info[1] -band ($b1 -shl 28)) -ne 0
+        $features.avx512pf   = ($info[1] -band ($b1 -shl 26)) -ne 0
+        $features.avx512er   = ($info[1] -band ($b1 -shl 27)) -ne 0
+        $features.avx512vl   = ($info[1] -band ($b1 -shl 31)) -ne 0
+        $features.avx512bw   = ($info[1] -band ($b1 -shl 30)) -ne 0
+        $features.avx512dq   = ($info[1] -band ($b1 -shl 17)) -ne 0
+        $features.avx512ifma = ($info[1] -band ($b1 -shl 21)) -ne 0
+        $features.avx512vbmi = ($info[2] -band ($b1 -shl 01)) -ne 0
+        $features.vaes       = ($info[2] -band ($b1 -shl 09)) -ne 0
+    }
+
+    If ($nExIds -ge 0x80000001) { 
+        $info = [CpuID]::Invoke(0x80000001)
+        $info = [UInt32[]]@(
+            [BitConverter]::ToUInt32($info, 0)
+            [BitConverter]::ToUInt32($info, 4)
+            [BitConverter]::ToUInt32($info, 8)
+            [BitConverter]::ToUInt32($info, 12)
+        )
+
+        $features.x64   = ($info[3] -band ($b1 -shl 29)) -ne 0
+        $features.abm   = ($info[2] -band ($b1 -shl 05)) -ne 0
+        $features.sse4a = ($info[2] -band ($b1 -shl 06)) -ne 0
+        $features.fma4  = ($info[2] -band ($b1 -shl 16)) -ne 0
+        $features.xop   = ($info[2] -band ($b1 -shl 11)) -ne 0
+    }
+
+    [PSCustomObject]@{
+        vendor   = $vendor
+        family   = $family
+        model    = $model
+        stepping = $stepping
+        features = $features.Keys.Where({$features.$_})
+    }
+}
+
 function Get-Device {
     [CmdletBinding()]
     param(
@@ -3363,19 +3461,43 @@ function Get-Device {
                     $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
                     $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
                     $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
+                    $Global:GlobalCPUInfo | Add-Member Family        0
+                    $Global:GlobalCPUInfo | Add-Member Model         0
+                    $Global:GlobalCPUInfo | Add-Member Stepping      0
                     $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                     try {
-                        (Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop).flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                        $lscpu = Get-CpuInfo
+                        $Global:GlobalCPUInfo.Family   = $lscpu.family
+                        $Global:GlobalCPUInfo.Model    = $lscpu.model
+                        $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
+                        $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                     } catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
                     }
 
+
                     if (-not $Global:GlobalCPUInfo.Features.Count) {
-                        $chkcpu = @{}
-                        try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                        try {
+                            $lscpu = Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop
+                            $Global:GlobalCPUInfo.Family   = $lscpu.family
+                            $Global:GlobalCPUInfo.Model    = $lscpu.model
+                            $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
+                            $lscpu.flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+
+                        if (-not $Global:GlobalCPUInfo.Features.Count) {
+                            $chkcpu = @{}
+                            try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                        }
                     }
+
+                    if (-not $Global:GlobalCPUInfo.Family   -and $CIM_CPU[0].Caption -match "Family\s*(\d+)")   {$Global:GlobalCPUInfo.Family   = $Matches[1]}
+                    if (-not $Global:GlobalCPUInfo.Model    -and $CIM_CPU[0].Caption -match "Model\s*(\d+)")    {$Global:GlobalCPUInfo.Model    = $Matches[1]}
+                    if (-not $Global:GlobalCPUInfo.Stepping -and $CIM_CPU[0].Caption -match "Stepping\s*(\d+)") {$Global:GlobalCPUInfo.Stepping = $Matches[1]}
 
                     $Global:GlobalCPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
 
@@ -3385,6 +3507,7 @@ function Get-Device {
                     } catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
                     }
+
                     $Data = Get-Content "/proc/cpuinfo"
                     if ($Data) {
                         $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
@@ -3394,6 +3517,9 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
                         $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
                         $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member Family        ([int]"$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member Model         ([int]"$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member Stepping      ([int]"$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim())
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
@@ -3414,22 +3540,38 @@ function Get-Device {
                     }
                 }
 
-                if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
-                if ($Global:GlobalCPUInfo.Features.aesni) {$Global:GlobalCPUInfo.Features.aes = $true}
-                if ($Global:GlobalCPUInfo.Features.shani) {$Global:GlobalCPUInfo.Features.sha = $true}
-
                 $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
                             "(AMD|Advanced Micro Devices)" {"AMD"}
+                            "Hygon" {"HYGON"}
                             "Intel" {"INTEL"}
                             default {"$($Global:GlobalCPUInfo.Manufacturer)".ToUpper() -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
                         })
 
                 if (-not $Global:GlobalCPUInfo.Vendor) {$Global:GlobalCPUInfo.Vendor = "OTHER"}
 
+                if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
+                if ($Global:GlobalCPUInfo.Features.aesni) {$Global:GlobalCPUInfo.Features.aes = $true}
+                if ($Global:GlobalCPUInfo.Features.shani) {$Global:GlobalCPUInfo.Features.sha = $true}
+
+                if ($Global:GlobalCPUInfo.Vendor -eq "AMD" -or $Global:GlobalCPUInfo.Vendor -eq "HYGON") {
+                    Switch ($Global:GlobalCPUInfo.Family) {
+                        0x17 {
+                            Switch ($Global:GlobalCPUInfo.Model) {
+                                {$_ -in @(0x01,0x11,0x18,0x20)} {$Global:GlobalCPUInfo.Features.iszen = $true;break}
+                                {$_ -eq 0x08} {$Global:GlobalCPUInfo.Features.iszenplus = $true;break}
+                                {$_ -in @(0x31,0x47,0x60,0x68,0x71,0x90,0x98)} {$Global:GlobalCPUInfo.Features.iszen2 = $true;break}
+                            }
+                            break
+                        }
+                        0x18 {$Global:GlobalCPUInfo.Features.iszen = $true;break}
+                        0x19 {$Global:GlobalCPUInfo.Features.iszen3 = $true;break}
+                    }
+                }
+
                 $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
                 if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
             }
-            $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Vendor -eq "AMD" -and $Global:GlobalCPUInfo.Name -match "Ryzen")
+            $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Features.iszen -or $Global:GlobalCPUInfo.Features.iszenplus -or $Global:GlobalCPUInfo.Features.iszen2 -or $Global:GlobalCPUInfo.Features.iszen3)
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
