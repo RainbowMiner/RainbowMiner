@@ -9,15 +9,19 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
+$Version = "1.25"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_Ubuntu_18_04_Cuda_11_4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25-teamblack/TeamBlackMiner_1_25_Ubuntu_18_04_Cuda_11_5.tar.gz"
             Cuda = "11.5"
-            Version = "1.24"
+        }
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25-teamblack/TeamBlackMiner_1_25_Ubuntu_18_04_Cuda_11_4.tar.gz"
+            Cuda = "11.4"
         }
     )
 } else {
@@ -25,19 +29,16 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_cuda_11_5.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25-teamblack/TeamBlackMiner_1_25_cuda_11_5.7z"
             Cuda = "11.5"
-            Version = "1.24"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25-teamblack/TeamBlackMiner_1_25_cuda_11_4.7z"
             Cuda = "11.4"
-            Version = "1.24"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-teamblack/TeamBlackMiner_1_24_cuda_11_2.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25-teamblack/TeamBlackMiner_1_25_cuda_11_2.7z"
             Cuda = "11.2"
-            Version = "1.24"
         }
     )
 }
