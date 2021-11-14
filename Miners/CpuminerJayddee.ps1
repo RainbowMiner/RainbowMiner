@@ -17,7 +17,7 @@ if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.19.0-jayddee/cpuminer-opt-3.19.0-linux.7z"
 } else {
-    $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes) {'avx512-sha-vaes'}elseif($f.avx512 -and $f.sha) {'avx512-sha'}elseif($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'zen3'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
+    $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512 -and $f.sha){'avx512-sha'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'zen3'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.19.0-jayddee/cpuminer-opt-3.19.0-windows.zip"
 }
 

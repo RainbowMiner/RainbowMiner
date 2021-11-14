@@ -8,9 +8,9 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualUri = "https://github.com/Raptor3um/cpuminer-opt/releases"
-$Port = "232{0:d2}"
+$Port = "212{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.11"
+$Version = "2.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Take2\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'aes-avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
@@ -23,7 +23,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "take2"; Params = ""; FaultTolerance = 0.9; ExtendInterval = 3} #RTM/Take2
+    [PSCustomObject]@{MainAlgorithm = "take2"; Params = ""; FaultTolerance = 0.99; ExtendInterval = 3} #RTM/Take2
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
