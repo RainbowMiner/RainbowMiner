@@ -178,7 +178,7 @@ function formatBLK(data) {
     }
     else if (data >= 3600) {
         data /= 3600
-        data = data.toFixed(1) + " hour"
+        data = data.toFixed(1) + " hr"
     }
     else if (data >= 60) {
         data /= 60
@@ -188,7 +188,7 @@ function formatBLK(data) {
         data = data.toFixed(1) + " sec"
     }
 
-    return data.replace(" ","&nbsp;")
+    return data.replace(".0 ","&nbsp;").replace(" ","&nbsp;")
 }
 
 function formatTSL(data) {

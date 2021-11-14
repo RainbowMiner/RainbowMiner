@@ -1782,7 +1782,7 @@ filter ConvertTo-TTF {
         elseif ($Secs.Days -gt 7) {">1 week"}
         else {"$([Math]::Round($Secs.TotalDays,1)) day"}
     }
-    elseif ($Secs.Hours -gt 0) {"$([Math]::Round($Secs.TotalHours,1)) hour"}
+    elseif ($Secs.Hours -gt 0) {"$([Math]::Round($Secs.TotalHours,1)) hr"}
     elseif ($Secs.Minutes -gt 0) {"$([Math]::Round($Secs.TotalMinutes,1)) min"}
     else {"$([Math]::Round($Secs.TotalSeconds,1)) sec"}
 }
