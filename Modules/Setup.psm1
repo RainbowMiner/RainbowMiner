@@ -2099,7 +2099,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","intensity","affinity","threads","sharecheck")) > $null
+                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","tuning","intensity","affinity","threads","sharecheck")) > $null
                 $MinerSetupSteps.Add("save") > $null                         
 
                 do { 
@@ -2152,6 +2152,7 @@ function Start-Setup {
                                     Penalty = ""
                                     Difficulty = ""
                                     Disable = "0"
+                                    Tuning = "0"
                                     ShareCheck = ""
                                 }
                                 if ($EditSecondaryAlgorithm) {
@@ -2204,6 +2205,14 @@ function Start-Setup {
                                     $MinerSetupStepStore = $true
                                 }
                                 $EditMinerConfig.Disable = if (Get-Yes $EditMinerConfig.Disable) {"1"} else {"0"}
+                            }
+                            "tuning" {
+                                $MinerSetupStepStore = $false
+                                if ($EditAlgorithm -ne '*') {
+                                    $EditMinerConfig.Tuning = Read-HostBool -Prompt "Enable tuning for $EditAlgorithm$(if ($EditSecondaryAlgorithm) {"-$EditSecondaryAlgorithm"}) on $EditMinerName (if applicable)" -Default $EditMinerConfig.Tuning | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $MinerSetupStepStore = $true
+                                }
+                                $EditMinerConfig.Tuning = if (Get-Yes $EditMinerConfig.Tuning) {"1"} else {"0"}
                             }
                             "intensity" {
                                 $MinerSetupStepStore = $false

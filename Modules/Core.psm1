@@ -1566,15 +1566,17 @@ function Invoke-Core {
                     for($i=1;($i -lt $CcMinerName_Array.Count) -and $CcMinerOk;$i++) {if ($Session.Config.DeviceModel -inotcontains $CcMinerName_Array[$i]) {$CcMinerOk=$false}}
                     if ($CcMinerOk) {
                         foreach($p in @($CcMiner.Value)) {
-                            $p | Add-Member Disable $(Get-Yes $p.Disable) -Force
-                            if ($p.SecondaryAlgorithm) {
-                                $p | Add-Member Intensity @($p.Intensity -replace "[^0-9,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique) -Force
-                            }
-                            if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $q -ne "Disable" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($q -eq "Disable" -and $p.Disable)) {$true;break}})) {
+                            $Disable = Get-Yes $p.Disable
+                            $Tuning  = Get-Yes $p.Tuning
+                            if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -notin @("MainAlgorithm","SecondaryAlgorithm","Disable","Tuning") -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($Disable -and $q -eq "Disable") -or ($Tuning -and $q -eq "Tuning")) {$true;break}})) {
                                 $CcMinerNameToAdd = $CcMinerName
                                 if ($p.MainAlgorithm -ne '*') {
                                     $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.MainAlgorithm)"
-                                    if ($p.SecondaryAlgorithm) {$CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+                                    if ($p.SecondaryAlgorithm) {
+                                        $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.SecondaryAlgorithm)"
+                                        $Intensity = @($p.Intensity -replace "[^0-9,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique)
+                                        if ($p.Intensity -ne $null) {$p.Intensity = $Intensity} else {$p | Add-Member Intensity $Intensity -Force}
+                                    }
                                 }
                                 if ($p.MSIAprofile -ne $null -and $p.MSIAprofile -and $p.MSIAprofile -notmatch "^[1-5]$") {
                                     Write-Log -Level Warn "Invalid MSIAprofile for $($CcMinerNameToAdd) in miners.config.txt: `"$($p.MSIAprofile)`" (empty or 1-5 allowed, only)"
@@ -1595,8 +1597,9 @@ function Invoke-Core {
                                 }
                                 if ($p.Threads -ne $null) {$p.Threads = [int]($p.Threads -replace "[^\d]")}
                                 if ($p.ShareCheck -ne $null -and $p.ShareCheck -ne "") {$p.ShareCheck = ConvertFrom-Time $p.ShareCheck}
+                                if ($p.Disable -ne $null) {$p.Disable = $Disable} else {$p | Add-Member Disable $Disable -Force}
+                                if ($p.Tuning -ne $null) {$p.Tuning = $Tuning} else {$p | Add-Member Tuning $Tuning -Force}
                                 $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $p -MemberType NoteProperty -Force
-                                $Session.Config.Miners.$CcMinerNameToAdd.Disable = Get-Yes $Session.Config.Miners.$CcMinerNameToAdd.Disable
                             }
                         }
                     }

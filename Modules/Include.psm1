@@ -5385,9 +5385,9 @@ function Set-MinersConfigDefault {
                                 $k = "$m-$s"                                
                                 if (-not $MinerCheck.Contains($k)) {
                                     if ($SetupDevice -eq "CPU") {
-                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";ShareCheck = "";Affinity = "";Threads = ""}
+                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";Tuning = "0";ShareCheck = "";Affinity = "";Threads = ""}
                                     } else {
-                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";ShareCheck = ""}
+                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty = "";Penalty = "";Disable = "0";Tuning = "0";ShareCheck = ""}
                                     }
                                     $MinerCheck.Add($k)>$null
                                 }
@@ -5425,9 +5425,9 @@ function Set-MinersConfigDefault {
                 }
             }
 
-            $Default     = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";ShareCheck=""}
-            $DefaultCPU  = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";ShareCheck="";Affinity="";Threads=""}
-            $DefaultDual = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";ShareCheck="";Intensity=""}
+            $Default     = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";Tuning="0";ShareCheck=""}
+            $DefaultCPU  = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";Tuning="0";ShareCheck="";Affinity="";Threads=""}
+            $DefaultDual = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0";Tuning="0";ShareCheck="";Intensity=""}
             $DoneSave = [PSCustomObject]@{}
             $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {
                 $Name = $_
