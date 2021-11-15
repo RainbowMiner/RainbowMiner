@@ -53,6 +53,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 
         $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
         $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+        $Run_Tuning = $Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Tuning
 
         $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})"
 
@@ -63,6 +64,10 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $TuneConfig_File = "tune_config"
                     $Preset_Found = Test-Path "$(Join-Path (Split-path $Path) $TuneConfig_File)"
+                    $HashRate   = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week
+                    if ($HashRate -and $Run_Tuning -and -not $Preset_Found) {
+                        $HashRate = $null
+                    }
                     $First = $false
                 }
 				[PSCustomObject]@{
@@ -70,8 +75,8 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-b `$mport -a gr -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParams) $(if ($Preset_Found) {"--tune-config=$($TuneConfig_File)"} else {"--no-tune"}) $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
+					Arguments      = "-b `$mport -a gr -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParams) $(if ($Preset_Found -or $Run_Tuning) {"--tune-config=$($TuneConfig_File)"} else {"--no-tune"}) $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $HashRate}
 					API            = "Ccminer"
 					Port           = $Miner_Port
 					Uri            = $Uri
