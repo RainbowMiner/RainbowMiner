@@ -1776,15 +1776,15 @@ filter ConvertTo-TTF {
     [CmdletBinding()]
     $Secs = [timespan]::FromSeconds($_)
     if ($Secs.Days -gt 0) {
-        if ($Secs.Days -gt 365) {">1 year"}
-        elseif ($Secs.Days -gt 182) {">6 mon"}
-        elseif ($Secs.Days -gt 30) {">1 mon"}
-        elseif ($Secs.Days -gt 7) {">1 week"}
-        else {"$([Math]::Round($Secs.TotalDays,1)) day"}
+        if ($Secs.Days -gt 365) {">1 y"}
+        elseif ($Secs.Days -gt 182) {">6 mo"}
+        elseif ($Secs.Days -gt 30) {">1 mo"}
+        elseif ($Secs.Days -gt 7) {">1 w"}
+        else {"$([Math]::Round($Secs.TotalDays,1)) d"}
     }
-    elseif ($Secs.Hours -gt 0) {"$([Math]::Round($Secs.TotalHours,1)) hr"}
-    elseif ($Secs.Minutes -gt 0) {"$([Math]::Round($Secs.TotalMinutes,1)) min"}
-    else {"$([Math]::Round($Secs.TotalSeconds,1)) sec"}
+    elseif ($Secs.Hours -gt 0) {"$([Math]::Round($Secs.TotalHours,1)) h"}
+    elseif ($Secs.Minutes -gt 0) {"$([Math]::Round($Secs.TotalMinutes,1)) m"}
+    else {"$([Math]::Round($Secs.TotalSeconds,1)) s"}
 }
 
 function ConvertFrom-Hash {
