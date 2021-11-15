@@ -1773,18 +1773,24 @@ filter ConvertTo-Hash {
 }
 
 filter ConvertTo-TTF {
-    [CmdletBinding()]
-    $Secs = [timespan]::FromSeconds($_)
-    if ($Secs.Days -gt 0) {
-        if ($Secs.Days -gt 365) {">1 y"}
-        elseif ($Secs.Days -gt 182) {">6 mo"}
-        elseif ($Secs.Days -gt 30) {">1 mo"}
-        elseif ($Secs.Days -gt 7) {">1 w"}
-        else {"$([Math]::Round($Secs.TotalDays,1)) d"}
+    try {
+        if ($_ -lt [timespan]::MaxValue.TotalSeconds) {
+            $Secs = [timespan]::FromSeconds($_)
+            if ($Secs.Days -gt 0) {
+                if ($Secs.Days -gt 365) {">1 y"}
+                elseif ($Secs.Days -gt 182) {">6 mo"}
+                elseif ($Secs.Days -gt 30) {">1 mo"}
+                elseif ($Secs.Days -gt 7) {">1 w"}
+                else {"$([Math]::Round($Secs.TotalDays,1)) d"}
+            }
+            elseif ($Secs.Hours -gt 0) {"$([Math]::Round($Secs.TotalHours,1)) h"}
+            elseif ($Secs.Minutes -gt 0) {"$([Math]::Round($Secs.TotalMinutes,1)) m"}
+            else {"$([Math]::Round($Secs.TotalSeconds,1)) s"}
+        } else {">10 y"}
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        ">10 y"
     }
-    elseif ($Secs.Hours -gt 0) {"$([Math]::Round($Secs.TotalHours,1)) h"}
-    elseif ($Secs.Minutes -gt 0) {"$([Math]::Round($Secs.TotalMinutes,1)) m"}
-    else {"$([Math]::Round($Secs.TotalSeconds,1)) s"}
 }
 
 function ConvertFrom-Hash {
