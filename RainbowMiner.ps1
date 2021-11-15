@@ -7,7 +7,7 @@ param(
     [String]$Wallet,
     [Parameter(Mandatory = $false)]
     [Alias("Worker")]
-    [String]$WorkerName = "$([System.Environment]::MachineName)",
+    [String]$WorkerName = "",
     [Parameter(Mandatory = $false)]
     [Int]$Interval = 60, #seconds before reading hash rate from miners
     [Parameter(Mandatory = $false)]

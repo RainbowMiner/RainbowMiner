@@ -439,7 +439,7 @@ function Start-Setup {
                                 Write-Host "Every pool (except the MiningPoolHub) wants the miner to send a worker's name. You can change the name later. Please enter only letters and numbers. " -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $Config.WorkerName = Read-HostString -Prompt "Enter your worker's name" -Default $Config.WorkerName -Mandatory -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.WorkerName = Read-HostString -Prompt "Enter your worker's name" -Default "$(if ($Config.WorkerName) {$Config.WorkerName} else {$DefaultWorkerName})" -Mandatory -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
 
                         "mph" {
