@@ -31,16 +31,16 @@ Param(
     Write-Host "- estimate_current: the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)" -ForegroundColor $Color
     Write-Host "- estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)" -ForegroundColor $Color
     Write-Host "- actual_last24h: the actual profitability over the past 24 hours (less switching)" -ForegroundColor $Color
-    Write-Host "- mininum (or minimum-2): the minimum value of estimate_current and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- minimum (or minimum-2): the minimum value of estimate_current and actual_last24h will be used" -ForegroundColor $Color
     Write-Host "- maximum (or maximum-2): the maximum value of estimate_current and actual_last24h will be used" -ForegroundColor $Color
     Write-Host "- average (or average-2): the calculated average of estimate_current and actual_last24h will be used" -ForegroundColor $Color
-    Write-Host "- mininume (or minimum-2e): the minimum value of estimate_current and estimate_last24h will be used" -ForegroundColor $Color
+    Write-Host "- minimume (or minimum-2e): the minimum value of estimate_current and estimate_last24h will be used" -ForegroundColor $Color
     Write-Host "- maximume (or maximum-2e): the maximum value of estimate_current and estimate_last24h will be used" -ForegroundColor $Color
     Write-Host "- averagee (or average-2e): the calculated average of estimate_current and estimate_last24h will be used" -ForegroundColor $Color
-    Write-Host "- mininumh (or minimum-2h): the minimum value of estimate_last24h and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- minimumh (or minimum-2h): the minimum value of estimate_last24h and actual_last24h will be used" -ForegroundColor $Color
     Write-Host "- maximumh (or maximum-2h): the maximum value of estimate_last24h and actual_last24h will be used" -ForegroundColor $Color
     Write-Host "- averageh (or average-2h): the calculated average of estimate_last24h and actual_last24h will be used" -ForegroundColor $Color
-    Write-Host "- mininumall (or minimum-3): the minimum value of the above three values will be used" -ForegroundColor $Color
+    Write-Host "- minimumall (or minimum-3): the minimum value of the above three values will be used" -ForegroundColor $Color
     Write-Host "- maximumall (or maximum-3): the maximum value of the above three values will be used" -ForegroundColor $Color
     Write-Host "- averageall (or average-3): the calculated average of the above three values will be used" -ForegroundColor $Color
     Write-Host " "
@@ -212,7 +212,7 @@ function Start-Setup {
         } else {
             Write-Host "Please choose, what to configure:" -ForegroundColor Yellow
             Write-Host " "
-            Write-Host "- Wallet: setup wallet addresses, worker- and username, API-keys" -ForegroundColor Yellow
+            Write-Host "- Wallet: setup wallet addresses, worker and username, API-keys" -ForegroundColor Yellow
             Write-Host "- Common: setup the most common RainbowMiner settings and flags" -ForegroundColor Yellow
             Write-Host "- Energycosts: setup energy consumption values" -ForegroundColor Yellow
             Write-Host "- Selection: select which pools, miners, algorithms to use" -ForegroundColor Yellow
@@ -585,21 +585,21 @@ function Start-Setup {
                         }
                         "minerstatusmaxtemp" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.MinerStatusMaxTemp = Read-HostDouble -Prompt "Enter max. GPU temperature. If temp. rises above that value, a notification is being triggered" -Default $Config.MinerStatusMaxTemp -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusMaxTemp = Read-HostDouble -Prompt "Enter max. GPU temperature. If temp. rises above that value, a notification will be triggered" -Default $Config.MinerStatusMaxTemp -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "minerstatusmaxcrashesperhour" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.MinerStatusMaxCrashesPerHour = Read-HostInt -Prompt "Enter max. crashes per hour allowed before a notification is being triggered (enter -1 to turn off)" -Default $Config.MinerStatusMaxCrashesPerHour -Min -1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusMaxCrashesPerHour = Read-HostInt -Prompt "Enter max. crashes per hour allowed before a notification will be triggered (enter -1 to turn off)" -Default $Config.MinerStatusMaxCrashesPerHour -Min -1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "diskmingb" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.DiskMinGB = Read-HostDouble -Prompt "Enter min. disk space in GB. If the disk space drops below that value, a notification is being triggered" -Default $Config.DiskMinGB -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.DiskMinGB = Read-HostDouble -Prompt "Enter min. disk space in GB. If the disk space drops below that value, a notification will be triggered" -Default $Config.DiskMinGB -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1022,7 +1022,7 @@ function Start-Setup {
                                 $Skip = Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 if ($Skip) {throw "Goto devicenamebegin"}
                             }
-                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($Config.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners you want to use ($(if ($Config.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "excludeminername" {
                             $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1040,10 +1040,10 @@ function Start-Setup {
                             $Config.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude " -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "disableunprofitablealgolist" {
-                            $Config.DisableUnprofitableAlgolist = Read-HostBool -Prompt "Disable the build-in list of unprofitable algorithms " -Default $Config.DisableUnprofitableAlgolist | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.DisableUnprofitableAlgolist = Read-HostBool -Prompt "Disable the built-in list of unprofitable algorithms " -Default $Config.DisableUnprofitableAlgolist | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "disableunprofitablecpualgolist" {
-                            $Config.DisableUnprofitableCpuAlgolist = Read-HostBool -Prompt "Disable the build-in list of unprofitable algorithms on CPU " -Default $Config.DisableUnprofitableCpuAlgolist | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.DisableUnprofitableCpuAlgolist = Read-HostBool -Prompt "Disable the built-in list of unprofitable algorithms on CPU " -Default $Config.DisableUnprofitableCpuAlgolist | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "excludecoinsymbol" {
                             $Config.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the name of coins by currency symbol, you want to globaly exclude " -Default $Config.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1212,7 +1212,7 @@ function Start-Setup {
                             if ($NewDeviceName["INTEL"]) {
                                 Write-Host " "
                                 Write-Host "Mining on INTEL GPUs is in beta mode." -ForegroundColor Yellow
-                                Write-Host "- Don't do it, unless you know exactly, what you are doing." -ForegroundColor Yellow
+                                Write-Host "- Don't do it unless you know exactly what you are doing." -ForegroundColor Yellow
                                 Write-Host "- Don't mine Onboard-GPUs, they might overheat and your system can be destroyed." -ForegroundColor Yellow
                                 Write-Host " "
                             }
@@ -1308,7 +1308,7 @@ function Start-Setup {
                         }
                         "maxerrorratio" {
                             if ($Config.EnableErrorRatio) {
-                                $Config.MaxErrorRatio = Read-HostDouble -Prompt "Maxium error ratio for yiimp pool price auto-correction" -Default $Config.MaxErrorRatio -Min 1 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.MaxErrorRatio = Read-HostDouble -Prompt "Maximum error ratio for yiimp pool price auto-correction" -Default $Config.MaxErrorRatio -Min 1 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1373,7 +1373,7 @@ function Start-Setup {
                             $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enableheatmyflat" {
-                            $Config.EnableHeatMyFlat = Read-HostDouble -Prompt "Priorize heat over profit to heat my flat. Set intensity from 0 to 10, (0 to disable, 5 is a good point to start)" -Default $Config.EnableHeatMyFlat -Min 0 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.EnableHeatMyFlat = Read-HostDouble -Prompt "Prioritize heat over profit to heat my flat. Set intensity from 0 to 10, (0 to disable, 5 is a good point to start)" -Default $Config.EnableHeatMyFlat -Min 0 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             $Config.EnableHeatMyFlat = [Math]::Round($Config.EnableHeatMyFlat,1)
                         }
                         "enableminingheatcontrol" {
@@ -1593,7 +1593,7 @@ function Start-Setup {
                         }
                         "enablecurl" {
                             if ($Session.Curl) {
-                                $Config.EnableCurl = Read-HostBool -Prompt "Use cURL instead of the build in web requests (enable this, if you get Asyncloader has crashed warnings)" -Default $Config.EnableCurl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.EnableCurl = Read-HostBool -Prompt "Use cURL instead of the built-in web requests (enable this, if you get Asyncloader has crashed warnings)" -Default $Config.EnableCurl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -2035,7 +2035,7 @@ function Start-Setup {
                             if ($IsInitialSetup) {
                                 $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") > $null
                                 if (-not $SetupOnly) {
-                                    $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null
+                                    $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next few minutes, RainbowMiner will download all miner programs. Please be patient and let it run. There will be some popup windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null
                                 }
                             } else {
                                 $SetupMessage.Add("Changes written to configuration. ") > $null
@@ -2511,7 +2511,7 @@ function Start-Setup {
                                         $PoolConfig.EnableMining = if ($PoolConfig.EnableMining) {"1"} else {"0"}
                                     }
                                     "enablepostblockmining" {
-                                        $PoolConfig.EnablePostBlockMining = Read-HostBool -Prompt "Enable forced mining a currency for a timespan after a block has been found (activate in coins.config.txt with PostBlockMining > 0)" -Default $PoolConfig.EnablePostBlockMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnablePostBlockMining = Read-HostBool -Prompt "Enable forced mining of a currency for a timespan after a block has been found (activate in coins.config.txt with PostBlockMining > 0)" -Default $PoolConfig.EnablePostBlockMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $PoolConfig.EnablePostBlockMining = if ($PoolConfig.EnablePostBlockMining) {"1"} else {"0"}
                                     }
                                     "enablepriceupdates" {
@@ -2560,7 +2560,7 @@ function Start-Setup {
                                         $PoolConfig.MaxMarginOfError = "$($PoolConfig.MaxMarginOfError)"
                                     }
                                     "minername" {
-                                        $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners you want to use ($(if ($PoolConfig.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "organizationid" {
                                         $PoolConfig.OrganizationID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.OrganizationID -Default ($PoolConfig.OrganizationID -replace "^\`$.+") -Characters "A-Z0-9-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
@@ -2749,7 +2749,7 @@ function Start-Setup {
                                         $DeviceConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude " -Default $DeviceConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "minername" {
-                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($DeviceConfig.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners you want to use ($(if ($DeviceConfig.MinerName) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "excludeminername" {
                                         $DeviceConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $DeviceConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -3278,7 +3278,7 @@ function Start-Setup {
                                     }
                                     "priorizethermallimit" {
                                         $PriorizeThermalLimit = Get-Yes $OCProfileConfig.PriorizeThermalLimit
-                                        $PriorizeThermalLimit = Read-HostBool -Prompt "Priorize thermal limit over power limit?" -Default $PriorizeThermalLimit | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PriorizeThermalLimit = Read-HostBool -Prompt "Prioritize thermal limit over power limit?" -Default $PriorizeThermalLimit | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $OCProfileConfig.PriorizeThermalLimit = if ($PriorizeThermalLimit) {"1"} else {"0"}
                                     }
                                     "memoryclockboost" {
@@ -3622,7 +3622,7 @@ function Start-Setup {
                 if (-not $Pool_Config -or -not $Pool_Config.API_Key -or -not $Pool_Config.API_Secret) {
                     Write-Host "MiningRigRental pool is not configured yet." -ForegroundColor Red
                     Write-Host " "
-                    Write-Host "Please go to pool configuration and make sure, that you enter your API-Key and API-Secret." -ForegroundColor Yellow
+                    Write-Host "Please go to pool configuration and make sure that you enter your API-Key and API-Secret." -ForegroundColor Yellow
                     $Run_MRRConfig = $false
                 }
 
