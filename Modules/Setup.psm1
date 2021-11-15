@@ -2208,7 +2208,10 @@ function Start-Setup {
                             }
                             "tuning" {
                                 $MinerSetupStepStore = $false
-                                if ($EditAlgorithm -ne '*') {
+                                if ($EditAlgorithm -ne '*' -and $Miner_Name -in @("CpuminerWyvern")) {
+                                    Write-Host " "
+                                    Write-Host "*** Attention: enabling this feature will cause $EditMinerName to run a tuning operation for 1-4 hours, depending on your CPU ***" -ForegroundColor Yellow
+                                    Write-Host " "
                                     $EditMinerConfig.Tuning = Read-HostBool -Prompt "Enable tuning for $EditAlgorithm$(if ($EditSecondaryAlgorithm) {"-$EditSecondaryAlgorithm"}) on $EditMinerName (if applicable)" -Default $EditMinerConfig.Tuning | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     $MinerSetupStepStore = $true
                                 }
