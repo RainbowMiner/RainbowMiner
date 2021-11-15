@@ -287,6 +287,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                     Difficulty         = $_.Difficulty
                                     Penalty            = $_.Penalty
                                     Disable            = $_.Disable
+                                    Tuning             = $_.Tuning
                                 }
                             }
                         }) -Depth 10 -Compress
