@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualUri = "https://github.com/WyvernTKC/cpuminer-gr-avx2/releases"
 $Port = "211{0:d2}"
-$DevFee = 1.75
+$DevFee = 0.0
 $Version = "1.2.4.1"
 
 if ($IsLinux) {
