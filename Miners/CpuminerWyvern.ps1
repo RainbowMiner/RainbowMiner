@@ -62,35 +62,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $TuneConfig_File = "tune_config"
-                    $Preset_Found = Test-Path "$(Join-Path (Split-path $Path) $($TuneConfig_File))"
-                    if (-not $Preset_Found) {
-                        $Preset_Found = $false
-                        $Pattern = if ($Global:GlobalCPUInfo.Vendor -eq "INTEL") {
-                            if ($Global:GlobalCPUInfo.Name -match "Core.+?(i\d-\d{4}\w*)") {
-                                "$($Matches[1])"
-                            } elseif ($Global:GlobalCPUInfo.Name -match "(E\d*-\d{4}\w*)[\sv]*(\d)") {
-                                "$($Matches[1])v$($Matches[2])"
-                            } elseif ($Global:GlobalCPUInfo.Name -match "(E\d*-\d{4}\w*)") {
-                                "$($Matches[1])"
-                            } elseif ($Global:GlobalCPUInfo.Name -match "([A-Z]\d{4}\w*)") {
-                                "$($Matches[1])"
-                            }
-                        } else {
-                            if ($Global:GlobalCPUInfo.Name -match "EPYC") {
-                                if ($GlobalCPUInfo.Name -match "(\d{4}\w+)") {
-                                    "EPYC-$($Matches[1])"
-                                }
-                            } elseif ($Global:GlobalCPUInfo.Name -match "Ryzen\s*(\d).+?(\d{4}\w*)") {
-                                "R$($Matches[1])-$($Matches[2])"
-                            }
-                        }
-                        if ($Pattern) {
-                            Get-ChildItem "$(Join-Path (Join-Path (Split-path $Path) "tune_presets") "$($Global:GlobalCPUInfo.Vendor)_$($Pattern)_$(if($IsWindows) {"Windows"} else {"Linux"})")" -ErrorAction Ignore | Select-Object -First 1 | Foreach-Object {
-                                Copy-Item $_.FullName "$(Join-Path (Split-path $Path) $($TuneConfig_File))" -ErrorAction Ignore
-                                $Preset_Found = $true
-                            }
-                        }
-                    }
+                    $Preset_Found = Test-Path "$(Join-Path (Split-path $Path) $TuneConfig_File)"
                     $First = $false
                 }
 				[PSCustomObject]@{
