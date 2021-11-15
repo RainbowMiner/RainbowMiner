@@ -24,9 +24,9 @@ try {
             Caption     = "$($Name) ($($Pool_Currency))"
             BaseName    = $Name
             Currency    = $Pool_Currency
-            Balance     = $Balance - $Pending
+            Balance     = $Balance
             Pending     = $Pending
-            Total       = $Balance
+            Total       = $Balance + $Pending
             Paid        = [Decimal]($Request.payments | Foreach-Object {$_.amount/$Divisor} | Measure-Object -Sum).Sum
             Payouts     = @(Get-BalancesPayouts $Request.payments -Divisor $Divisor | Select-Object)
             LastUpdated = (Get-Date).ToUniversalTime()
