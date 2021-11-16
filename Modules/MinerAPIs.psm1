@@ -781,7 +781,7 @@ class Miner {
                         if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$val)}
                     }
                     if ($Profile.LockCoreClock -match '^[0-9]+$') {$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rgc"} else {"-lgc $($Profile.LockCoreClock)"})") > $null;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockCoreClock",$Profile.LockCoreClock)}}
-                    if ($Profile.LockMemoryClock -match '^[0-9]+$') {$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockCoreClock -eq 0) {"-rmc"} else {"-lmc $($Profile.LockMemoryClock)"})") > $null;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$Profile.LockMemoryClock)}}
+                    if ($Profile.LockMemoryClock -match '^[0-9]+$') {$NvSmiCmd.Add("-i $($DeviceId) $(if ($Profile.LockMemoryClock -eq 0) {"-rmc"} else {"-lmc $($Profile.LockMemoryClock)"})") > $null;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockMemoryClock",$Profile.LockMemoryClock)}}
                 }
 
             } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux) {
