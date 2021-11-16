@@ -93,9 +93,9 @@ if ($Pool_User -or $InfoOnly) {
                 CoinName      = $Pool_Coin.Name
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.$StatAverageStable
-                MarginOfError = $Stat.Week_Fluctuation
+                Price         = 0
+                StablePrice   = 0
+                MarginOfError = 0
                 Protocol      = if ($Pool_SSL) {"stratum+ssl"} else {"stratum+tcp"}
                 Host          = "$($Pool_Region).$($Pool_Host)"
                 Port          = $Pool_Port
