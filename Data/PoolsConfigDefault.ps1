@@ -122,6 +122,9 @@
         "FlexPool" = [PSCustomObject]@{
             Currencies=@("ETH")
         }
+        "FlockPool" = [PSCustomObject]@{
+            Currencies=@("RTM")
+        }
         "FluxPools" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your Fluxpools password"}
