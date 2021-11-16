@@ -68,7 +68,7 @@ if (-not $InfoOnly) {
     $btcPrice       = if ($Global:Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:Rates."$($Pool_Coin.Symbol)"} elseif ($Global:Rates.USD) {[double]$Pool_Request.qprice/[double]$Global:Rates.USD} else {0}
     $btcRewardLive  = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
 
-    $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
+    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 }
 
@@ -88,7 +88,7 @@ if ($Pool_User -or $InfoOnly) {
             Port          = $Pool_Port
             User          = "$($Wallets.$Pool_Currency)"
             Pass          = "x"
-            Region        = $Pool_Regions.$Pool_Region
+            Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated
             PoolFee       = $Pool_PoolFee
