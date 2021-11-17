@@ -55,7 +55,7 @@ try {
                     DeviceIndex      = $Device_Index
                     Name             = $_.Name
                     Architecture     = $_.Architecture
-                    Type             = $_.Type
+                    Type             = "$($_.Type)"
                     Vendor           = $_.Vendor
                     GlobalMemSize    = $_.GlobalMemSize
                     GlobalMemSizeGB  = [int]($_.GlobalMemSize/1GB)
