@@ -3148,7 +3148,7 @@ function Get-Device {
                 }
                 if ($OpenCL_Devices) {
                     Write-Log -Level Info "CUDA found: successfully configured devices via nvidia-smi"
-                    $Platform_Devices = [PSCustomObject]@{PlatformId=0;Vendor="NVIDIA";Devices=$OpenCL_Devices}}
+                    $Platform_Devices = [PSCustomObject]@{PlatformId=0;Vendor="NVIDIA";Devices=$OpenCL_Devices}
                 } else {
                     Write-Log -Level Info "CUDA found: failed to configure devices via nvidia-smi"
                 }
