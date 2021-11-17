@@ -43,7 +43,7 @@ $Pool_Request | Where-Object {($_.profit -gt 0.00 -and ($AllowZero -or $_.hashra
 
     if (-not $InfoOnly) {
         $Pool_TSL = if ($_.tsl -ge 0) {$_.tsl} else {$null}
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $_.profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.diff -HashRate $_.hashrate -BlockRate $_.blk24h -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $_.profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.diff -HashRate $_.hashrate -BlockRate $(if ($_.ttf -gt 0) {86400/$_.ttf} else {0}) -Quiet
     }
 
     $CPUPort_Base = if ($Pool_Algorithm_Norm -match "^Cucka") {1} else {$Pool_CPUPort_Base}
