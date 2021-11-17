@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+
 namespace OpenCl
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Runtime.InteropServices;
-    using System.Linq;
-    using System.Linq.Expressions;
-    using System.Text;
-
     public delegate void ProgramNotify(Program program, object userData);
 
     internal delegate void ProgramNotifyInternal(IntPtr program, IntPtr userData);
@@ -147,6 +147,19 @@ namespace OpenCl
             get { throw new NotImplementedException(); }
         }
 
+        public int NumKernels
+        {
+            get { return (int)Cl.GetInfo<IntPtr>(NativeMethods.clGetProgramInfo, this.handle, CL_PROGRAM_NUM_KERNELS); }
+        }
+
+        public String[] KernelNames
+        {
+            get {
+                var names = Cl.GetInfoString(NativeMethods.clGetProgramInfo, this.handle, CL_PROGRAM_KERNEL_NAMES);
+                return names.Split(new char[] { ';' });
+            }
+        }
+
         // Program build attributes
 
         private BuildInfo bi;
@@ -252,6 +265,25 @@ namespace OpenCl
             return new Program(handle);
         }
 
+        public static Program CreateProgramWithSource(Context context, string source)
+        {
+            return CreateProgramWithSource(context, new string[] { source });
+        }
+
+        public static Program CreateProgramWithSource(Context context, Device device, string[] sources)
+        {
+            var result = CreateProgramWithSource(context, sources);
+            result.BuildProgram(device);
+            return result;
+        }
+
+        public static Program CreateProgramWithSource(Context context, Device device, string source)
+        {
+            var result = CreateProgramWithSource(context, device, new string[] { source });
+            result.BuildProgram(device);
+            return result;
+        }
+
         public static Program CreateProgramWithBinary(Context context, Device device, byte[] binary)
         {
             ErrorCode error;
@@ -293,6 +325,35 @@ namespace OpenCl
             return new Program(handle);
         }
 
+#if CL_KHR_IL_PROGRAM
+        delegate IntPtr ClCreateProgramWithILKHR(IntPtr handle, byte[] buf, IntPtr len, out ErrorCode error);
+
+        public static Program CreateProgramWithILKHR(Context context, byte[] binary)
+        {
+            Device[] devs = context.Devices;
+            Platform pfrm = devs[0].Platform;
+            var func = context.Devices[0].Platform.GetExtensionFunction<ClCreateProgramWithILKHR>("clCreateProgramWithILKHR");
+            if (func == null) {
+                Console.WriteLine("Function 'clCreateProgramWithILKHR' not found.");
+                return null;
+            }
+            ErrorCode error;
+            IntPtr length = (IntPtr)binary.Length;
+            var handle = func.Invoke(context.handle, binary, length, out error);
+            if (error != ErrorCode.Success) {
+                throw new OpenClException(error);
+            }
+            return new Program(handle);
+        }
+
+        public static Program CreateProgramWithILKHR(Context context, Device device, byte[] binary)
+        {
+            var result = CreateProgramWithILKHR(context, binary);
+            result.BuildProgram(device);
+            return result;
+        }
+
+#endif
         public static Program CreateProgramWithIL(Context context, byte[] binary)
         {
             ErrorCode error;
@@ -302,6 +363,13 @@ namespace OpenCl
                 throw new OpenClException(error);
             }
             return new Program(handle);
+        }
+
+        public static Program CreateProgramWithIL(Context context, Device device, byte[] binary)
+        {
+            var result = CreateProgramWithIL(context, binary);
+            result.BuildProgram(device);
+            return result;
         }
 
         public static Program CreateProgramWithExpression(Context context, Expression[] expressions)

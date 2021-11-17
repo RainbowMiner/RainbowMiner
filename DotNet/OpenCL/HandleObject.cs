@@ -1,7 +1,7 @@
+using System;
+
 namespace OpenCl
 {
-    using System;
-
     public abstract class HandleObject
     {
         internal readonly IntPtr handle;

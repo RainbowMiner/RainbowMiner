@@ -1,9 +1,9 @@
-﻿namespace OpenCl
-{
-    using System;
-    using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
+namespace OpenCl
+{
     [Flags]
     public enum FpConfig : ulong
     {
@@ -179,57 +179,57 @@
         Global = 0x2,
     }
 
-	public enum ErrorCode : int
-	{
-		Success = 0,
+    public enum ErrorCode : int
+    {
+        Success = 0,
 
-		DeviceNotFound = -1,
-		DeviceNotAvailable = -2,
-		CompilerNotAvailable = -3,
-		MemObjectAllocationFailure = -4,
-		OutOfResources = -5,
-		OutOfHostMemory = -6,
-		ProfilingInfoNotAvailable = -7,
-		MemCopyOverlap = -8,
-		ImageFormatMismatch = -9,
-		ImageFormatNotSupported = -10,
-		BuildProgramFailure = -11,
-		MapFailure = -12,
+        DeviceNotFound = -1,
+        DeviceNotAvailable = -2,
+        CompilerNotAvailable = -3,
+        MemObjectAllocationFailure = -4,
+        OutOfResources = -5,
+        OutOfHostMemory = -6,
+        ProfilingInfoNotAvailable = -7,
+        MemCopyOverlap = -8,
+        ImageFormatMismatch = -9,
+        ImageFormatNotSupported = -10,
+        BuildProgramFailure = -11,
+        MapFailure = -12,
 
-		InvalidValue = -30,
-		InvalidDeviceType = -31,
-		InvalidPlatform = -32,
-		InvalidDevice = -33,
-		InvalidContext = -34,
-		InvalidQueueProperties = -35,
-		InvalidCommandQueue = -36,
-		InvalidHostPtr = -37,
-		InvalidMemObject = -38,
-		InvalidImageFormatDescriptor = -39,
-		InvalidImageSize = -40,
-		InvalidSampler = -41,
-		InvalidBinary = -42,
-		InvalidBuildOptions = -43,
-		InvalidProgram = -44,
-		InvalidProgramExecutable = -45,
-		InvalidKernelName = -46,
-		InvalidKernelDefinition = -47,
-		InvalidKernel = -48,
-		InvalidArgIndex = -49,
-		InvalidArgValue = -50,
-		InvalidArgSize = -51,
-		InvalidKernelArgs = -52,
-		InvalidWorkDimension = -53,
-		InvalidWorkGroupSize = -54,
-		InvalidWorkItemSize = -55,
-		InvalidGlobalOffset = -56,
-		InvalidEventWaitList = -57,
-		InvalidEvent = -58,
-		InvalidOperation = -59,
-		InvalidGlObject = -60,
-		InvalidBufferSize = -61,
-		InvalidMipLevel = -62,
-	}
+        InvalidValue = -30,
+        InvalidDeviceType = -31,
+        InvalidPlatform = -32,
+        InvalidDevice = -33,
+        InvalidContext = -34,
+        InvalidQueueProperties = -35,
+        InvalidCommandQueue = -36,
+        InvalidHostPtr = -37,
+        InvalidMemObject = -38,
+        InvalidImageFormatDescriptor = -39,
+        InvalidImageSize = -40,
+        InvalidSampler = -41,
+        InvalidBinary = -42,
+        InvalidBuildOptions = -43,
+        InvalidProgram = -44,
+        InvalidProgramExecutable = -45,
+        InvalidKernelName = -46,
+        InvalidKernelDefinition = -47,
+        InvalidKernel = -48,
+        InvalidArgIndex = -49,
+        InvalidArgValue = -50,
+        InvalidArgSize = -51,
+        InvalidKernelArgs = -52,
+        InvalidWorkDimension = -53,
+        InvalidWorkGroupSize = -54,
+        InvalidWorkItemSize = -55,
+        InvalidGlobalOffset = -56,
+        InvalidEventWaitList = -57,
+        InvalidEvent = -58,
+        InvalidOperation = -59,
+        InvalidGlObject = -60,
+        InvalidBufferSize = -61,
+        InvalidMipLevel = -62,
+    }
 
     internal delegate ErrorCode GetInfoDelegate(IntPtr handle, uint paramName, IntPtr paramValueSize, IntPtr paramValue, out IntPtr paramValueSizeRet);
 
@@ -304,7 +304,7 @@
             }
             int count = (int)arraySize/elemSize;
             if (count*elemSize < (int)arraySize) {
-                throw new InvalidOperationException(String.Format("Array size is incompatible with managed element size: array size = {0}, sizeof({1}) = {2})", arraySize, typeof(T), elemSize));
+                throw new InvalidOperationException($"Array size is incompatible with managed element size: array size = {arraySize}, sizeof({typeof(T)}) = {elemSize})");
             }
             T[] result = new T[count];
             GCHandle gch = GCHandle.Alloc(result, GCHandleType.Pinned);

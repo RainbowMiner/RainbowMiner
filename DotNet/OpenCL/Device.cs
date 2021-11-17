@@ -1,8 +1,8 @@
+using System;
+using System.Runtime.InteropServices;
+
 namespace OpenCl
 {
-    using System;
-    using System.Runtime.InteropServices;
-
     public class Device : HandleObject
     {
         private const uint CL_DEVICE_TYPE =                                   0x1000;
@@ -466,13 +466,13 @@ namespace OpenCl
             ErrorCode error;
             uint count;
 
-            error = NativeMethods.clGetDeviceIDs(platform.handle, type, 0, null, out count);
+            error = NativeMethods.clGetDeviceIDs((platform?.handle).GetValueOrDefault(), type, 0, null, out count);
             if (error != ErrorCode.Success) {
                 throw new OpenClException(error);
             }
 
-            var ids = new IntPtr[count];
-            error = NativeMethods.clGetDeviceIDs(platform.handle, type, count, ids, out count);
+            var ids = new IntPtr[count] ;
+            error = NativeMethods.clGetDeviceIDs((platform?.handle).GetValueOrDefault(), type, count, ids, out count);
             if (error != ErrorCode.Success) {
                 throw new OpenClException(error);
             }

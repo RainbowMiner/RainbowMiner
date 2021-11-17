@@ -1,7 +1,7 @@
-﻿namespace OpenCl
-{
-    using System;
+﻿using System;
 
+namespace OpenCl
+{
     public class OpenClException : System.Exception
     {
         private ErrorCode code;
