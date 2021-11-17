@@ -6481,7 +6481,13 @@ Param(
 
             if ($useragent -ne "") {$useragent = "-A `"$($useragent)`" "}
 
-            $curlproxy = "$(if ($Proxy.Proxy) {"-x $($Proxy.Proxy)$(if ($Proxy.Username -and $Proxy.Password) {" -U $($Proxy.Username):$($Proxy.Password)"}) "})"
+            $curlproxy = ""
+            if ($Proxy.Proxy) {
+                $curlproxy = "-x `"$($Proxy.Proxy)`" "
+                if ($Proxy.Username -and $Proxy.Password) {
+                    $curlproxy = "$($curlproxy)-U `"$($Proxy.Username):$($Proxy.Password)`" "
+                }
+            }
 
             $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)$($curlproxy)-m $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
 
@@ -7555,7 +7561,13 @@ function Test-Internet {
                 Foreach ($url in $CheckDomains) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
                 $Global:ProgressPreference = $oldProgressPreference
             } elseif ($Session.Curl) {
-                $curlproxy = "$(if ($Proxy.Proxy) {"-x $($Proxy.Proxy)$(if ($Proxy.Username -and $Proxy.Password) {" -U $($Proxy.Username):$($Proxy.Password)"}) "})"
+                $curlproxy = ""
+                if ($Proxy.Proxy) {
+                    $curlproxy = "-x `"$($Proxy.Proxy)`" "
+                    if ($Proxy.Username -and $Proxy.Password) {
+                        $curlproxy = "$($curlproxy)-U `"$($Proxy.Username):$($Proxy.Password)`" "
+                    }
+                }
                 Foreach ($url in $CheckDomains) {
                     $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head `"http://$($url)`" $($curlproxy)-m 5 --connect-timeout 3 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
                     if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$true;break}
