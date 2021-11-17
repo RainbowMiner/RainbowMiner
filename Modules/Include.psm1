@@ -3104,28 +3104,32 @@ function Get-Device {
             $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"})
         }
 
-        [System.Collections.Generic.List[string]]$AllPlatforms = @()
-        $Platform_Devices = try {
+        $Platform_Devices = $null
+        $ErrorMessage     = $null
+
+        try {
             $GetOpenCL_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\GetOpenCL.ps1
             if ($GetOpenCL_Job) {
                 $GetOpenCL_Job | Wait-Job -Timeout 60 > $null
                 if ($GetOpenCL_Job.State -eq 'Running') {
-                    $ErrorMessage = "Time-out while loading .\Scripts\GetOpenCL.ps1"
                     try {$GetOpenCL_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    $ErrorMessage = "Timeout"
                 } else {
                     try {
                         $GetOpenCL_Result = Receive-Job -Job $GetOpenCL_Job
-                        if ($GetOpenCL_Result) {
-                            if ($GetOpenCL_Result.ErrorMessage) {throw $GetOpenCL_Result.ErrorMessage}
-                            $AllPlatforms = $GetOpenCL_Result.AllPlatforms
-                            $GetOpenCL_Result.Platform_Devices
-                        }
+                        $Platform_Devices = $GetOpenCL_Result.Platform_Devices
+                        $ErrorMessage     = $GetOpenCL_Result.ErrorMessage
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                 }
                 try {Remove-Job $GetOpenCL_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
+            $ErrorMessage = "$($_.Exception.Message)"
+        }
+
+        if ($ErrorMessage) {
+            Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL detection failed: $($ErrorMessage)"
             $Cuda = Get-NvidiaSmi | Where-Object {$_} | Foreach-Object {Invoke-Exe $_ -ExcludeEmptyLines -ExpandLines | Where-Object {$_ -match "CUDA.+?:\s*(\d+\.\d+)"} | Foreach-Object {$Matches[1]} | Select-Object -First 1 | Foreach-Object {"$_.0"}}
             if ($Cuda) {
                 $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total","pci.bus_id" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
@@ -3142,9 +3146,12 @@ function Get-Device {
                         CardId          = -1
                     }
                 }
-                if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Vendor="NVIDIA";Devices=$OpenCL_Devices}}
-            } else {
-                Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
+                if ($OpenCL_Devices) {
+                    Write-Log -Level Info "CUDA found: successfully configured devices via nvidia-smi"
+                    $Platform_Devices = [PSCustomObject]@{PlatformId=0;Vendor="NVIDIA";Devices=$OpenCL_Devices}}
+                } else {
+                    Write-Log -Level Info "CUDA found: failed to configure devices via nvidia-smi"
+                }
             }
         }
 

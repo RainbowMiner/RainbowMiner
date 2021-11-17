@@ -23,24 +23,22 @@ if ($IsLinux) {
         }
     }
     if ($exitcode -eq 0 -and $out -notmatch "libOpenCL.so[\s\t]") {
-        $env:LD_LIBRARY_PATH = "$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
+        $env:LD_LIBRARY_PATH = "$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
     }
 }
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
 $Result = [PSCustomObject]@{
-    AllPlatforms = [System.Collections.Generic.List[string]]@()
     Platform_Devices = $null
-    ErrorMessage = $null
-    Status = $false
+    ErrorMessage     = $null
 }
 
-$PlatformId = 0
-
-$Result.Platform_Devices = try {
-    [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
-        $Result.AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
+[System.Collections.Generic.List[string]]$AllPlatforms = @()
+try {
+    $PlatformId = 0
+    $Result.Platform_Devices = [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
+        $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
         $Device_Index = 0
         $PlatformVendor = switch -Regex ([String]$_.Vendor) { 
                                 "Advanced Micro Devices" {"AMD"}
@@ -73,7 +71,6 @@ $Result.Platform_Devices = try {
         }
         $PlatformId++
     }
-    $Result.Status = $true
 } catch {
     if ($Error.Count){$Error.RemoveAt(0)}
     $Result.ErrorMessage = $_.Exception.Message
