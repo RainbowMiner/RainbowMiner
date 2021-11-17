@@ -770,7 +770,11 @@ function Invoke-Core {
 
 
     #Check if internet is online
-    $Internet_ok = Test-Internet -CheckDomains $Session.Config.WebsitesForOnlineCheck
+    if ($Session.Config.DisableInternetCheck) {
+        $Internet_ok = $true
+    } else {
+        $Internet_ok = Test-Internet -CheckDomains $Session.Config.WebsitesForOnlineCheck
+    }
 
     if (-not $RestartRunspaces) {
         if (-not $Internet_ok) {
@@ -800,7 +804,11 @@ function Invoke-Core {
         }
 
         if ($Internet_ok) {
-            Write-Log -Level Info "Internet is ok"
+            if ($Session.Config.DisableInternetCheck) {
+                Write-Log -Level Info "Internet check is disabled"
+            } else {
+                Write-Log -Level Info "Internet is ok"
+            }
             if ((Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Pause) {$AsyncLoader.Pause = $false}
         }
     }

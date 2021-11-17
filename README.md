@@ -924,6 +924,7 @@ For Server (Runmode=server) setup:
 - **StaticGPUMinerPort** = enter a static API port number for all GPU miners (0=use default ports) [default=0]
 - **DisableAPI** = set to 1, if no localhost API is needed
 - **DisableAsyncLoader** = set to 1, if all net access should happen synchronous (used for debugging)
+- **DisableInternetCheck** = set to 1, in case you get "Internet is down" messages, even if the internet is available [default=0]
 - **DisableMSIAmonitor** = set to 1, to fully disable MSI Afterburner monitoring (if more than six AMD GPU are used for mining)
 - **Quickstart** = set to 1 to read all pool data from cache during startup (speeds up first start, but balance data may be out of date)
 - **StartPaused** = set to 1 to start RainbowMiner in pause mode (no mining, you will have to press "P" to enable mining)
