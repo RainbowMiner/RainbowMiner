@@ -3106,40 +3106,24 @@ function Get-Device {
 
         [System.Collections.Generic.List[string]]$AllPlatforms = @()
         $Platform_Devices = try {
-            [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
-                $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
-                $Device_Index = 0
-                $PlatformVendor = switch -Regex ([String]$_.Vendor) { 
-                                        "Advanced Micro Devices" {"AMD"}
-                                        "Intel"  {"INTEL"}
-                                        "NVIDIA" {"NVIDIA"}
-                                        "AMD"    {"AMD"}
-                                        default {$_.Vendor -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
-                            }
-                [PSCustomObject]@{
-                    PlatformId=$PlatformId
-                    Vendor=$PlatformVendor
-                    Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
-                        [PSCustomObject]@{
-                            DeviceIndex      = $Device_Index
-                            Name             = $_.Name
-                            Architecture     = $_.Architecture
-                            Type             = $_.Type
-                            Vendor           = $_.Vendor
-                            GlobalMemSize    = $_.GlobalMemSize
-                            GlobalMemSizeGB  = [int]($_.GlobalMemSize/1GB)
-                            MaxComputeUnits  = $_.MaxComputeUnits
-                            PlatformVersion  = $_.Platform.Version
-                            DriverVersion    = $_.DriverVersion
-                            PCIBusId         = $_.PCIBusId
-                            DeviceCapability = $_.DeviceCapability
-                            CardId           = -1
+            $GetOpenCL_Job = Start-Job -InitializationScript ([ScriptBlock]::Create("Set-Location `"$($PWD.Path -replace '"','``"')`"")) -FilePath .\Scripts\GetOpenCL.ps1
+            if ($GetOpenCL_Job) {
+                $GetOpenCL_Job | Wait-Job -Timeout 60 > $null
+                if ($GetOpenCL_Job.State -eq 'Running') {
+                    $ErrorMessage = "Time-out while loading .\Scripts\GetOpenCL.ps1"
+                    try {$GetOpenCL_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                } else {
+                    try {
+                        $GetOpenCL_Result = Receive-Job -Job $GetOpenCL_Job
+                        if ($GetOpenCL_Result) {
+                            if ($GetOpenCL_Result.ErrorMessage) {throw $GetOpenCL_Result.ErrorMessage}
+                            $AllPlatforms = $GetOpenCL_Result.AllPlatforms
+                            $GetOpenCL_Result.Platform_Devices
                         }
-                        $Device_Index++
-                    }
+                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                 }
-                $PlatformId++
-             }
+                try {Remove-Job $GetOpenCL_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             $Cuda = Get-NvidiaSmi | Where-Object {$_} | Foreach-Object {Invoke-Exe $_ -ExcludeEmptyLines -ExpandLines | Where-Object {$_ -match "CUDA.+?:\s*(\d+\.\d+)"} | Foreach-Object {$Matches[1]} | Select-Object -First 1 | Foreach-Object {"$_.0"}}
