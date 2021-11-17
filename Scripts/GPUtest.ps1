@@ -1,5 +1,7 @@
 ﻿using module ..\Modules\Include.psm1
 
+Add-Type -Path .\DotNet\OpenCL\*.cs
+
 $TestFileName = "gputestresult.txt"
 
 if ($IsWindows -eq $null) {
