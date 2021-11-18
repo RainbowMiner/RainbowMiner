@@ -7543,15 +7543,24 @@ function Test-Internet {
         [Parameter(Mandatory = $False)]
         [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","rbminer.net")
     )
+
+    $tested = $false
+    $ok     = $false
+
     try {
         if ($CheckDomains -and $CheckDomains.Count) {
             $Proxy = Get-Proxy
+
             if ($IsWindows -and -not $Proxy.Proxy -and (Get-Command "Test-Connection" -ErrorAction Ignore)) {
+                $tested = $true
                 $oldProgressPreference = $Global:ProgressPreference
                 $Global:ProgressPreference = "SilentlyContinue"
-                Foreach ($url in $CheckDomains) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
+                Foreach ($url in $CheckDomains) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$ok = $true;break}}
                 $Global:ProgressPreference = $oldProgressPreference
-            } elseif ($Session.Curl) {
+            }
+
+            if (-not $ok -and $Session.Curl) {
+                $tested = $true
                 $curlproxy = ""
                 if ($Proxy.Proxy) {
                     $curlproxy = "-x `"$($Proxy.Proxy)`" "
@@ -7561,15 +7570,13 @@ function Test-Internet {
                 }
                 Foreach ($url in $CheckDomains) {
                     $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head `"http://$($url)`" $($curlproxy)-m 5 --connect-timeout 3 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
-                    if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$true;break}
+                    if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$ok = $true;break}
                 }
-            } else {
-                $true
             }
-        } else {
-            $true
         }
-    } catch {if ($Error.Count){$Error.RemoveAt(0)};$true}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+
+    $ok -or -not $tested
 }
 
 function Test-IsOnBattery {
