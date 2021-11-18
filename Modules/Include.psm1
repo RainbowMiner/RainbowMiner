@@ -7541,7 +7541,7 @@ function Test-Internet {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $False)]
-        [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","rbminer.net")
+        [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.coinbase.com","www.baidu.com")
     )
 
     $tested = $false

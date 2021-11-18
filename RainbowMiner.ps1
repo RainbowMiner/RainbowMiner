@@ -62,7 +62,7 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$ProxyPassword = "", # Proxy Password
     [Parameter(Mandatory = $false)]
-    [Array]$WebsitesForOnlineCheck = @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","rbminer.net"), #list of websites for the build-in Internet-online check
+    [Array]$WebsitesForOnlineCheck = @("www.google.com","www.amazon.com","www.coinbase.com","www.baidu.com"), #list of websites for the build-in Internet-online check
     [Parameter(Mandatory = $false)]
     [Int]$Delay = 1, #seconds before opening each miner
     [Parameter(Mandatory = $false)]
