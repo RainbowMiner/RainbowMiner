@@ -370,7 +370,7 @@ $Session.SupportedPSVersion = "7.2.0"
 
 $Session.OpenCLPlatformSorting = @()
 
-Add-Type -Path .\DotNet\OpenCL\*.cs
+#Add-Type -Path .\DotNet\OpenCL\*.cs
 #Add-Type -Path .\DotNet\Tools\RBMTools.cs
 
 if ($IsWindows) {
