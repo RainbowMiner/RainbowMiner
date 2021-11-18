@@ -4264,7 +4264,7 @@ function Invoke-ReportMinerStatus {
     if ($Session.IsCore -or $Session.EnableCurl) {
         try {
             if (Test-Path ".\Logs\console.txt") {
-                @(Get-ContentByStreamReader -FilePath ".\Logs\console.txt" -ExpandLines) | Foreach-Object {$_ -replace "$([char]27)\[\d+m"} | Set-Content -Path ".\Cache\console.txt" -Encoding Utf8
+                @(Get-ContentByStreamReader -FilePath ".\Logs\console.txt" -ExpandLines) | Foreach-Object {$_ -replace "\x1B\[[;\d]+m"} | Set-Content -Path ".\Cache\console.txt" -Encoding Utf8
                 $Console = Get-Item ".\Cache\console.txt"
                 if ($Console.Length -le 100) {$Console = $null}
             }

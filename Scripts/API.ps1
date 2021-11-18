@@ -122,7 +122,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $CountLines -eq 2 -and $_ -notmatch "console.txt"
                 }
             } | Foreach-Object {
-                $_ -replace "$([char]27)\[\d+m"
+                $_ -replace "\x1B\[[;\d]+m"
             }))} else {'*'}
 
             $CurrentMiners = @()
@@ -130,7 +130,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $CurrentMiners = @($API.RunningMiners | Where-Object {$_.LogFile -and (Test-Path $_.LogFile)} | Sort-Object -Property Name | Foreach-Object {
                     [PSCustomObject]@{
                         Name = "$($_.DeviceModel) $($_.BaseName)"
-                        Content = [String]::Join("`n",@(Get-Content $_.LogFile -Tail 20 -ErrorAction Ignore | Foreach-Object {$_ -replace "$([char]27)\[\d+m"}))
+                        Content = [String]::Join("`n",@(Get-Content $_.LogFile -Tail 20 -ErrorAction Ignore | Foreach-Object {$_ -replace "\x1B\[[;\d]+m"}))
                     }
                 })
             }
