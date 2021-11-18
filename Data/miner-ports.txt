@@ -11,7 +11,7 @@
 110	CcminerSpModBitcore
 111	CcminerSpModPhi
 112	CcminerSpModSkunk
-113	CcminerDelos
+113	CcminerObtc
 114	CcminerTpruvot
 115	CcminerTpruvotx64
 116	CcminerX16r
@@ -51,8 +51,8 @@
 203	CpuminerWyfernTKC
 204	CpuminerOptBF
 205
-211	
-212	
+211	CpuminerWyvern
+212	CpuminerTake2
 213	CpuminerMulti
 220	ClaymoreCpu
 221	XmrigCpu
