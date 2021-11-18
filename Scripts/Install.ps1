@@ -23,6 +23,8 @@ if ($IsLinux) {
     Start-Process ".\IncludesLinux\bash\libuv.sh" -Wait
     Write-Host "Install libcurl4 .."
     Start-Process ".\IncludesLinux\bash\libcurl4.sh" -Wait
+    Write-Host "Install libaprutil1 .."
+    Start-Process ".\IncludesLinux\bash\libaprutil1.sh" -Wait
     Write-Host "Install libopencl .."
     Start-Process ".\IncludesLinux\bash\libocl.sh" -Wait
     Write-Host "Install libjansson-dev .."
