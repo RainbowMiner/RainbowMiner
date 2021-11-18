@@ -23,11 +23,9 @@ if ($IsLinux) {
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
-$CuckooIntensity = if ($Global:GlobalCPUInfo.Cores -eq 1 -or $Global:GlobalCPUInfo.Threads -lt 4 -or $Global:GlobalCPUInfo.Name -match "Celeron") {4} else {2}
-
 $Commands = [PSCustomObject[]]@(
     #Cuckoo
-    [PSCustomObject]@{MainAlgorithm = "Aeternity";                 SecondaryAlgorithm = ""; Params = "-a cuckoo_ae --cuckoo-intensity $CuckooIntensity";     NH = $true;  MinMemGb = 5; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckoo29/Aeternity
+    [PSCustomObject]@{MainAlgorithm = "Aeternity";                 SecondaryAlgorithm = ""; Params = "-a cuckoo_ae";     NH = $true;  MinMemGb = 5; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckoo29/Aeternity
 
     #Others
     [PSCustomObject]@{MainAlgorithm = "Autolykos2";                SecondaryAlgorithm = ""; Params = "-a ergo";          NH = $true; MinMemGb = 2;   DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Autolycos2/ERGO
