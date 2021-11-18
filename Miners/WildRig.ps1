@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.30.2"
+$Version = "0.30.3b"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.2-wildrigmulti/wildrig-multi-linux-0.30.2.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.3b-wildrigmulti/wildrig-multi-linux-0.30.3.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.2-wildrigmulti/wildrig-multi-windows-0.30.2.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.3b-wildrigmulti/wildrig-multi-windows-0.30.3.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -41,6 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";             Vendor = @("AMD");        Params = ""} #GLT-JeongHash
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";              Vendor = @("AMD");        Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";             Vendor = @("AMD");        Params = ""} #GLT-PawelHash
+    [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2} #Heavyhash/OBTC
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD");          Params = ""} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "honeycomb";                 Vendor = @("AMD");          Params = ""} #Honeycomb broken since v0.17.6
