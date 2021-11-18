@@ -780,16 +780,26 @@ function Invoke-Core {
         if (-not $Internet_ok) {
             Write-Log -Level Info "Internet is down"
 
-            $i = 0
-
             if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
 
-            do {
-                if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
-                Start-Sleep -Milliseconds 500
-                if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
-                $i++
-                if (-not ($i % 20)) {$Internet_ok = Test-Internet -CheckDomains $Session.Config.WebsitesForOnlineCheck}
+            $StopWatch_Outer = [System.Diagnostics.StopWatch]::New()
+            $StopWatch_Inner = [System.Diagnostics.StopWatch]::New()
+
+            do {                
+                Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"
+
+                $StopWatch_Outer.Restart()
+                $StopWatch_Inner.Restart()
+
+                do {
+                    $keyPressedValue = try {if ([console]::KeyAvailable) {$([System.Console]::ReadKey($true)).key}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    if ($StopWatch_Inner.Elapsed.TotalSeconds -ge 10) {
+                        $Internet_ok = Test-Internet -CheckDomains $Session.Config.WebsitesForOnlineCheck
+                        $StopWatch_Inner.Restart()
+                    }
+                    Start-Sleep -Milliseconds 250
+                } until ($Internet_ok -or $keyPressedValue -eq "X" -or $StopWatch_Outer.Elapsed.Seconds -ge 30)
+
             } until ($Internet_ok -or $keyPressedValue -eq "X")
 
             if ($keyPressedValue -eq "X") {
@@ -801,6 +811,12 @@ function Invoke-Core {
                 Update-WatchdogLevels -Reset
                 $Global:WatchdogTimers = @()
             }
+
+            $StopWatch_Inner.Stop()
+            $StopWatch_Outer.Stop()
+
+            $StopWatch_Inner = $null
+            $StopWatch_Outer = $null
         }
 
         if ($Internet_ok) {
