@@ -1,32 +1,4 @@
 ﻿
-if ($IsLinux) {
-    $exitcode = -1
-    try {
-        $psi = [System.Diagnostics.ProcessStartInfo]::New()
-        $psi.FileName               = "ldconfig"
-        $psi.CreateNoWindow         = $true
-        $psi.UseShellExecute        = $false
-        $psi.RedirectStandardOutput = $true
-        $psi.RedirectStandardError  = $true
-        $psi.Arguments              = "-p"
-        $process = [System.Diagnostics.Process]::New()
-        $process.StartInfo = $psi
-        [void]$process.Start()
-        $out = $process.StandardOutput.ReadToEnd()
-        $process.WaitForExit(5000)>$null
-        $exitcode = $process.ExitCode
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-    } finally {
-        if ($psi) {
-            $process.Dispose()
-        }
-    }
-    if ($exitcode -eq 0 -and $out -notmatch "libOpenCL.so[\s\t]") {
-        $env:LD_LIBRARY_PATH = "$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
-    }
-}
-
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
 $Result = [PSCustomObject]@{

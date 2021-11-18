@@ -3074,6 +3074,8 @@ function Get-Device {
         $KnownVendors = @("AMD","INTEL","NVIDIA")
 
         foreach ($GPUVendor in $KnownVendors) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
+
+        $OldLD = $null
         
         if ($IsWindows) {
             #Get WDDM data               
@@ -3102,6 +3104,14 @@ function Get-Device {
                 Write-Log -Level Warn "WDDM device detection has failed. "
             }
             $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"})
+        } else {
+
+            $ldconfig = Invoke-Exe "ldconfig" -ArgumentList "-p"
+
+            if ($Global:LASTEXEEXITCODE -eq 0 -and $ldconfig -notmatch "libOpenCL.so[\s\t]") {
+                $oldLD = "$($env:LD_LIBRARY_PATH)"
+                $env:LD_LIBRARY_PATH = "$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
+            }
         }
 
         $Platform_Devices = $null
@@ -3126,6 +3136,8 @@ function Get-Device {
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             $ErrorMessage = "$($_.Exception.Message)"
+        } finally {
+            if ($oldLD -ne $null) {$env:LD_LIBRARY_PATH = $oldLD}
         }
 
         if ($ErrorMessage) {
