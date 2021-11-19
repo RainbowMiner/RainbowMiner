@@ -106,15 +106,15 @@ if ($GAMD) {
     else {Write-Host " $($GAMD) AMD GPUs found."}
 
     if ($IsLinux) {
-        if (Test-Path "/opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so.1.2") {
-            if (-not (Test-Path "/opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so")) {
-                Invoke-Exe -FilePath "ln" -ArgumentList "-nfs /opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so.1.2 /opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so" > $null
-                Invoke-Exe -FilePath "ldconfig" > $null
-                Write-Host " libOpenCL.so.1.2 found, but symbolic link needed to be created and ldconfig cache updated."
-            } else {
-                Write-Host " libOpenCL.so found."
-            }
-        }
+        #if (Test-Path "/opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so.1.2") {
+        #    if (-not (Test-Path "/opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so")) {
+        #        Invoke-Exe -FilePath "ln" -ArgumentList "-nfs /opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so.1.2 /opt/amdgpu-pro/lib/x86_64-linux-gnu/libOpenCL.so" > $null
+        #        Invoke-Exe -FilePath "ldconfig" > $null
+        #        Write-Host " libOpenCL.so.1.2 found, but symbolic link needed to be created and ldconfig cache updated."
+        #    } else {
+        #        Write-Host " libOpenCL.so found."
+        #    }
+        #}
     }
 }
 if (-not $GNVIDIA -and -not $GAMD) {
