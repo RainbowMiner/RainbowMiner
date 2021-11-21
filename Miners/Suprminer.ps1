@@ -29,7 +29,7 @@ if ($IsLinux) {
         }
     )
 } else {
-    $Path = ".\Bin\NVIDIA-Suprminer\suprminer-winx86_64_cuda11_1.exe"
+    $Path = ".\Bin\NVIDIA-Suprminer\suprminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.1-suprminer/suprminer-winx86_64_cuda11_1_v2.7z"
