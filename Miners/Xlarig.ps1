@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualUri = "https://github.com/scala-network/XLArig/releases"
 $Port = "241{0:d2}"
-$Version = "5.2.2"
+$Version = "5.2.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Xlarig\xlarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.2-xlarig/XLArig-v5.2.2-linux-x86_64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.3-xlarig/XLArig-v5.2.3-linux-x86_64.zip"
     $DevFee = 0.0
 } else {
     $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.2-xlarig/XLArig-v5.2.2-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.3-xlarig/XLArig-v5.2.3-win64.zip"
     $DevFee = 0.0
 }
 
