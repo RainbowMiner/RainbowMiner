@@ -2377,7 +2377,7 @@ class SrbMinerMulti : Miner {
 
         $Type = if ($Data.total_cpu_workers -gt 0) {"cpu"} else {"gpu"}
 
-        $Data = $Data.algorithms | Select-Object -First 1
+        $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [double]$Data.hashrate."1min"
