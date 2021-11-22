@@ -53,7 +53,7 @@ if ($PoolCoins_Request) {
     if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
 }
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | Where-Object {$_ -ne "x25x"} | ForEach-Object {
     $Pool_Host = "blockmasters.co"
     $Pool_Port = $Pool_Request.$_.port
     $Pool_Algorithm = $Pool_Request.$_.name
