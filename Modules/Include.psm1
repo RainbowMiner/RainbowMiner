@@ -233,9 +233,9 @@ function Get-WhatToMineData {
     if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTimeUtc -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
         try {
             $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10 -method "WEB"
-            [System.Collections.Generic.List[PSCustomObject]]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
+            [System.Collections.Generic.List[PSCustomObject]]$WtmKeys = ([regex]'(?smi)data-bs-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
                     [PSCustomObject]@{
-                        algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
+                        algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29" -replace "Ethash4g","EthashLowMemory"
                         id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
                         factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9;Break};"Mh" {1e6;Break};"kh" {1e3;Break};default {1}}}
                     }
