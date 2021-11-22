@@ -2376,9 +2376,14 @@ class SrbMinerMulti : Miner {
             return
         }
 
+        $Type = if ($Data.total_cpu_workers -gt 0) {"cpu"} else {"gpu"}
+
+        $Data = $Data.algorithms | Select-Object -First 1
+
         $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = [double]$Data.hashrate."5min"
-        if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.hashrate.now}
+        $HashRate_Value = [double]$Data.hashrate."1min"
+
+        if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.hashrate.$Type.total}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
