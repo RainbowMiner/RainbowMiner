@@ -2368,7 +2368,6 @@ class SrbMinerMulti : Miner {
 
         try {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
-            $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
