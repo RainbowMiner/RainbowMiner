@@ -395,7 +395,7 @@ if ($AllRigs_Request) {
                     }
 
                     try {
-                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-15) -gt [DateTime]::Parse("$($Rental_Result.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
+                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-15) -gt [DateTime]::Parse("$($Rental_Result.end -replace "\s+UTC$")"))) {
 
                             #Manual override to end rentals in case of server failure
 
@@ -403,7 +403,7 @@ if ($AllRigs_Request) {
                             if ($_.status.status -eq "rented") {$_.status.status = "available"}
                             $Pool_RigEnable = $false
 
-                            Write-Log -Level Warn "MiningRigRentals: cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1)"
+                            Write-Log -Level Warn "MiningRigRentals: cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1) that ended $($Rental_Result.end)."
                         }
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
