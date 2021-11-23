@@ -24,8 +24,8 @@
     "info": "Port information here is depreciated, please see /rig/port"
   },
   {
-    "id": "9",
-    "name": "eu-ru01.miningrigrentals.com",
+    "id": "11",
+    "name": "eu-ru02.miningrigrentals.com",
     "region": "eu-ru",
     "port": "3333",
     "ethereum_port": "3344",
@@ -99,6 +99,14 @@
     "id": "15",
     "name": "ca-tor01.miningrigrentals.com",
     "region": "ca",
+    "port": "3333",
+    "ethereum_port": "3344",
+    "info": "Port information here is depreciated, please see /rig/port"
+  },
+  {
+    "id": "21",
+    "name": "in-01.miningrigrentals.com",
+    "region": "in",
     "port": "3333",
     "ethereum_port": "3344",
     "info": "Port information here is depreciated, please see /rig/port"
