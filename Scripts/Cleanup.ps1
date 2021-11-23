@@ -1414,7 +1414,7 @@ try {
 
     if ($MinersConfigCleanup) {
         $MinersContentBaseNames = @($MinersContent | Where-Object {$_.BaseName} | Select-Object -ExpandProperty BaseName)
-        $AllDevicesModels = @(Get-DeviceSubsets $AllDevices | Select-Object -ExpandProperty Model -Unique)
+        $AllDevicesModels = @($AllDevices | Select-Object -ExpandProperty Model -Unique)
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $MinersActual.PSObject.Properties | Where-Object {$_.MemberType -eq "NoteProperty"} | Foreach-Object {
@@ -1432,10 +1432,14 @@ try {
                 }
             }
         }
-        $MinersActualSave = [PSCustomObject]@{}
-        $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
-        Set-ContentJson -PathToFile $MinersConfigFile -Data $MinersActualSave > $null
-        $ChangesTotal++
+        $MinersActual_Count = ($MinersActual.PSObject.Properties.Value | Measure-Object).Count
+        $MinersSave_Count   = ($MinersSave.PSObject.Properties.Value | Measure-Object).Count
+        if ($MinersSave_Count) {
+            $MinersActualSave = [PSCustomObject]@{}
+            $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+            Set-ContentJson -PathToFile $MinersConfigFile -Data $MinersActualSave > $null
+            $ChangesTotal += $MinersActual_Count - $MinersSave_Count
+        }
     }
 
     if ($CacheCleanup) {if (Test-Path "Cache") {Get-ChildItem "Cache" -Filter "*.asy" | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}}}
