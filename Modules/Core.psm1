@@ -3217,27 +3217,30 @@ function Invoke-Core {
         if ($Session.Benchmarking) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmarkCount) miner$(if ($MinersNeedingBenchmarkCount -gt 1){'s'}) left, interval is set to $($Session.Config.BenchmarkInterval) seconds."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
-            if (-not $Session.Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0) {
+            if ($Session.Config.UIFullBenchmarkList -or (-not $Session.Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0)) {
                 $BenchmarkMinutes = [Math]::Ceiling($Session.Config.BenchmarkInterval/60)
                 Write-Host " "
                 Write-Host "Please be patient!" -BackgroundColor Yellow -ForegroundColor Black
-                Write-Host "RainbowMiner will benchmark the following $($MinersNeedingBenchmarkWithEI) miner$(if ($MinersNeedingBenchmarkWithEI -gt 1){'s'}) with extended intervals!" -ForegroundColor Yellow
-                Write-Host "These algorithms need a longer time to reach an accurate average hashrate." -ForegroundColor Yellow
-                Write-Host "After that, benchmarking will be much faster ($($BenchmarkMinutes)-$($BenchmarkMinutes*2) minutes per miner)." -ForegroundColor Yellow
-                Write-Host "If you do not want that accuracy, set DisableExtendInterval to 0 in your config.txt." -ForegroundColor Yellow
+                if ($MinersNeedingBenchmarkWithEI -gt 0) {
+                    Write-Host "RainbowMiner will benchmark $($MinersNeedingBenchmarkWithEI) out of $($MinersNeedingBenchmarkCount) miner$(if ($MinersNeedingBenchmarkCount -gt 1){'s'}) with extended intervals!" -ForegroundColor Yellow
+                    Write-Host "These algorithms need a longer time to reach an accurate average hashrate." -ForegroundColor Yellow
+                    Write-Host "After that, benchmarking will be much faster ($($BenchmarkMinutes)-$($BenchmarkMinutes*2) minutes per miner)." -ForegroundColor Yellow
+                    Write-Host "If you do not want that accuracy, set DisableExtendInterval to 0 in your config.txt." -ForegroundColor Yellow
+                }
                 $OldForegroundColor = [console]::ForegroundColor
                 [console]::ForegroundColor = "Yellow"
-                $MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Group-Object BaseName, BaseAlgorithm, DeviceModel, ExtendInterval | Sort-Object -Property @{Expression = {$_.Values[3]}; Descending = $True},@{Expression = {$_.Name}; Descending = $False} | Format-Table (
+                $MinersNeedingBenchmark | Where-Object {$Session.Config.UIFullBenchmarkList -or ($_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null)} | Group-Object BaseName, BaseAlgorithm, DeviceModel, ExtendInterval | Sort-Object -Property @{Expression = {if ($_.Values[3]) {$_.Values[3]} else {1}}; Descending = $True},@{Expression = {$_.Name}; Descending = $False} | Format-Table (
                     @{Label = "Miner"; Expression = {$_.Values[0]}},
+                    @{Label = "Version"; Expression = {$_.Group[0].Version}},
                     @{Label = "Algorithms"; Expression = {$_.Values[1]}},
                     @{Label = "Device"; Expression = {$_.Values[2]}},
-                    @{Label = "Aprox. Time"; Expression = {"$($BenchmarkMinutes*$_.Values[3])-$($BenchmarkMinutes*$_.Values[3]*2) minutes"}}
+                    @{Label = "OC-Profile"; Expression = {if ($_.Group[0].OCProfile.PSObject.Properties.Value) {$_.Group[0].OCProfile.PSObject.Properties.Value -join "/"} else {"-"}}},
+                    @{Label = "Aprox. Time"; Expression = {if ($_.Values[3]) {"$($BenchmarkMinutes*$_.Values[3])-$($BenchmarkMinutes*$_.Values[3]*2) minutes"} else {"$($BenchmarkMinutes)-$($BenchmarkMinutes*2) minutes"}}}
                 ) | Out-Host
-
-                if ($MinersNeedingBenchmark -ne $null) {Remove-Variable "MinersNeedingBenchmark"}
 
                 [console]::ForegroundColor = $OldForegroundColor
             }
+            if ($MinersNeedingBenchmark -ne $null) {Remove-Variable "MinersNeedingBenchmark"}
         }
         if ($Miners_Downloading -gt 0) {
             Write-Log -Level Warn "Download in progress: $($Miners_Downloading) miner$(if($Miners_Downloading -gt 1){"s"}) left. Command windows might popup during extraction."

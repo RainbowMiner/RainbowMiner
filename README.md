@@ -708,6 +708,7 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **Region** = your region, [default=US]
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
 - **UIsorting** = set to "profit" in order to force UI sorting by profit, set to "biased" for internal biased profits [default=biased]
+- **UIFullBenchmarkList** = Show non-extended benchmarks in minerlist [default=0]
 - **APIPort** = enter a free web-interface port localhost:<port> [default=4000]
 - **APIThreads** = Enter number of possible, parallel API threads (0=automatic, see notes) [default=0]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically [default=1]
