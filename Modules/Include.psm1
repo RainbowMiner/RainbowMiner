@@ -4477,6 +4477,23 @@ function Get-NimqHashrates {
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
 
+function Get-WalletsData {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Force = $false
+    )
+    if ($Force -or -not (Test-Path Variable:Global:GlobalWalletsData) -or (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc -gt $Global:GlobalWalletsDataTimeStamp) {
+        [PSCustomObject[]]$Global:GlobalWalletsData = Get-ContentByStreamReader "Data\walletsdata.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalWalletsDataTimeStamp = (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc
+    }
+    if (-not $Silent) {
+        $Global:GlobalWalletsData
+    }
+}
+
 function Test-VRAM {
     [CmdletBinding()]
     param(
