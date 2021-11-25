@@ -15,8 +15,6 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Fee = 0.5
-
 $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
@@ -45,6 +43,9 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
+$Pool_Fee = if ($Session.Config.ReduceZergPoolFee) {0.3} else {0.5}
+$Pool_AddRefcode = "$(if ($Session.Config.ReduceZergPoolFee) {",refcode=78f6ec9427d56069f93709d7805a6a56"})"
+
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
@@ -64,7 +65,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
-    $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {[Math]::Min($Pool_Fee,$Pool_Request.$Pool_Algorithm.fees)} else {$Pool_Fee}
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
 
     if ($Pool_CoinSymbol -eq "CURVE") {$Pool_Port = 3343}
@@ -107,7 +108,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = $Wallets.$Pool_ExCurrency
-                Pass          = "ID={workername:$Worker},c=$Pool_ExCurrency,mc=$Pool_Currency,m=solo{diff:,sd=`$difficulty}$Pool_Params"
+                Pass          = "ID={workername:$Worker},c=$Pool_ExCurrency,mc=$Pool_Currency,m=solo{diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated

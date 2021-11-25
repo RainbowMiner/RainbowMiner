@@ -3,6 +3,7 @@
   <h1 id="title" data-navbaractive="navbestpools" class="h2">Best Pools</h1>
 </div>
 <p>Shows the pool for each algorithm that was selected as the most profitable</p>
+<p id="ZergHint"><strong>Hint: ZergPool mining fee can be reduced from 0.5% to 0.3% by setting "ReduceZergPoolFee" to "1" in config.txt (can be changed on Setup page at "Pools, Miners and Algorithms")</strong></p>
 <table id="pools" class="table"
   data-toggle="table"
   data-url="/pools"
@@ -50,13 +51,16 @@
     function formatPools(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
+        var showZergHint = false
         $.each(data, function (index, item) {
             item.tAlgorithm = formatAlgorithm(item.Algorithm);
             item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
             item.tErrorRatio = typeof item.ErrorRatio != "undefined" ? parseFloat(item.ErrorRatio).toFixed(3) : "-";
             item.tWTM = typeof item.WTM != "undefined" && item.WTM? "<span class='text-success font-weight-bold'>&check;</span>":"";
             if (typeof item.tCoin == "undefined" || item.tCoin == null) {item.tCoin = ""}
+            if (item.Name.match(/^ZergPool/i) && item.PoolFee == 0.5) {showZergHint = true}
         });
+        if (showZergHint) {$("#ZergHint").show()} else {$("#ZergHint").hide()}
         return data;
     }
 

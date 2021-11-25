@@ -457,6 +457,10 @@ This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very l
   
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Bsod, CryptoKnight, GosCx, Icemining, Minerpool, MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
+<details><summary>Notes for [ZergPool](https://zergpool.com/?address=&refcode=78f6ec9427d56069f93709d7805a6a56)</summary>
+
+The mining fee of all ZergPools can be reduced from 0.5% to 0.3% by setting "ReduceZergPoolFee" to "1" in config.txt
+</details>
 <details><summary>Notes for Solo- and Party-mining</summary>
   
 Bsod.pw, Gos.cx and ZergPool allow solo mining and party mining. This is achieved by adding parameters "m=solo" or "m=party.yourpassword" to the password of the pool. There are two ways to achieve this with RainbowMiner:
@@ -796,6 +800,7 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 
 - **PoolName** = list of pool names, you want to use for mining [default=nicehash,miningpoolhub]
 - **ExcludePoolName** = list of pool names, you want to exclude from mining
+- **ReduceZergPoolFee** = set to 1 to reduce the mining fee of all ZergPools from 0.5% to 0.3% (my refcode will be added to the miner's parameters automatically) [default=0]
 - **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
 - **ShowPoolBalancesDetails** = set to 0 if coin balances at a pool should be added up to BTC [default=1]
 - **ShowPoolBalancesExcludedPools** = set to 1 to let RainbowMiner try to fetch balances from not used pools in addition to the currently activated pools [default=0]

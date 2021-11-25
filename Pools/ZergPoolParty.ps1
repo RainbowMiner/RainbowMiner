@@ -48,6 +48,9 @@ catch {
 [hashtable]$Pool_Coins = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
+$Pool_Fee = if ($Session.Config.ReduceZergPoolFee) {0.3} else {0.5}
+$Pool_AddRefcode = "$(if ($Session.Config.ReduceZergPoolFee) {",refcode=78f6ec9427d56069f93709d7805a6a56"})"
+
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
@@ -71,7 +74,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     $Pool_Coin = $Pool_Coins.$Pool_Algorithm.Name
     $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
-    $Pool_PoolFee = [Double]$Pool_Request.$_.fees
+    $Pool_PoolFee = [Math]::Min($Pool_Fee,[Double]$Pool_Request.$_.fees)
     if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
     $Pool_EthProxy = $null
 
@@ -109,7 +112,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = $Wallets.$Pool_Currency
-                Pass          = "ID={workername:$Worker},c=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params"
+                Pass          = "ID={workername:$Worker},c=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated

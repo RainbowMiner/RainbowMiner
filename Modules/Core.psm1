@@ -1753,6 +1753,11 @@ function Invoke-Core {
             $TimerPools[$_] = [Math]::Round($StopWatch.Elapsed.TotalSeconds,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
+            if (-not $Session.Config.ReduceZergPoolFee -and $_ -match "ZergPool") {
+                $ZergHint = "Hint: ZergPool mining fee can be reduced from 0.5% to 0.3% by setting `"ReduceZergPoolFee`" to `"1`" in config.txt"
+                if ($Session.RoundCounter -eq 0) {Write-Host " $($ZergHint)! " -BackgroundColor Yellow -ForegroundColor Black}
+                Write-Log $ZergHint
+            }
         }
     }
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
