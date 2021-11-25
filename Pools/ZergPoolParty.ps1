@@ -49,7 +49,7 @@ catch {
 [hashtable]$Pool_RegionsTable = @{}
 
 $Pool_Fee = if ($Session.Config.ReduceZergPoolFee) {0.3} else {0.5}
-$Pool_AddRefcode = "$(if ($Session.Config.ReduceZergPoolFee) {",refcode=78f6ec9427d56069f93709d7805a6a56"})"
+$Pool_AddRefcode = "$(if ($Session.Config.ReduceZergPoolFee -and -not $Session.IsDonationRun) {",refcode=78f6ec9427d56069f93709d7805a6a56"})"
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
