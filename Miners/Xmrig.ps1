@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
-$Version = "6.15.3"
+$Version = "6.16.0"
 $DevFee = 0.0
 
 if ($IsLinux) {
@@ -18,43 +18,43 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda11_5-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda11_5-x64.7z"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda11_4-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda11_4-x64.7z"
             Cuda = "11.4"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda11_3-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda11_3-x64.7z"
             Cuda = "11.3"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda11_2-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda11_2-x64.7z"
             Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda11_1-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda11_1-x64.7z"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda11_0-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda11_0-x64.7z"
             Cuda = "11.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda10_2-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda10_2-x64.7z"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda10_1-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda10_1-x64.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda10_0-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda10_0-x64.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-bionic-cuda9_2-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-bionic-cuda9_2-x64.7z"
             Cuda = "9.2"
         }
     )
@@ -64,55 +64,55 @@ if ($IsLinux) {
 } else {
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda11_5-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda11_5-win64.7z"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda11_4-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda11_4-win64.7z"
             Cuda = "11.4"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda11_3-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda11_3-win64.7z"
             Cuda = "11.3"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda11_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda11_2-win64.7z"
             Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda11_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda11_1-win64.7z"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda11_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda11_0-win64.7z"
             Cuda = "11.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda10_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda10_2-win64.7z"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda10_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda10_1-win64.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda10_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda10_0-win64.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda9_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda9_2-win64.7z"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda9_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda9_1-win64.7z"
             Cuda = "9.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda9_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda9_0-win64.7z"
             Cuda = "9.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.15.3-xmrig/xmrig-6.15.3-msvc-cuda8_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.16.0-xmrig/xmrig-6.16.0-msvc-cuda8_0-win64.7z"
             Cuda = "8.0"
         }
     )
@@ -148,6 +148,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-lite/1";                  MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico";                    MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "gr";                         MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8; ByParameters = $true}
     [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/0";                       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/arq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
@@ -203,61 +204,75 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
+            $ByParameters = $_.ByParameters
+
 		    foreach($Algorithm_Norm in $All_Algorithms) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $First = $false
+                        $CPUThreads = $null
+                        $CPUAffinity = $null
                         $DeviceParams = Switch ($Miner_Vendor) {
                             "AMD" {"--opencl --opencl-devices=$($Miner_Device.Type_Vendor_Index -join ',') --opencl-platform=$($Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId) --no-cpu";break}
-                            "CPU" {"";break} #{"$(if ($Session.Config.CPUMiningThreads -and $Global:GlobalCPUInfo.Threads){"--cpu-max-threads-hint=$([Math]::Ceiling($Session.Config.CPUMiningThreads/$Global:GlobalCPUInfo.Threads*100))"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"}
+                            "CPU" {
+                                $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+                                $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+                                "$(if ($ByParameters -and $CPUThreads){" -t $CPUThreads"})$(if ($ByParameters -and $CPUAffinity){" --cpu-affinity=$CPUAffinity"})"
+                                break
+                            } #{"$(if ($Session.Config.CPUMiningThreads -and $Global:GlobalCPUInfo.Threads){"--cpu-max-threads-hint=$([Math]::Ceiling($Session.Config.CPUMiningThreads/$Global:GlobalCPUInfo.Threads*100))"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"}
                             "INTEL" {"--opencl --opencl-devices=$($Miner_Device.Type_Vendor_Index -join ',') --opencl-platform=$($Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId) --no-cpu";break}
                             "NVIDIA" {"--cuda --cuda-loader=$CudaLib --cuda-devices=$($Miner_Device.Type_Vendor_Index -join ',') --no-nvml --no-cpu";break}
                         }
                     }
 
                     $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
-                    $Arguments = [PSCustomObject]@{
-                        Algorithm    = $Algorithm
-                        APIParams    = "--http-enabled --http-host=127.0.0.1 --http-port=`$mport"
-                        DeviceParams = $DeviceParams
-                        Config = [PSCustomObject]@{
-                            "api" = [PSCustomObject]@{
-                                "id"           = $null
-                                "worker-id"    = $null
+
+                    if ($ByParameters) {
+                        $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Name -match "Nicehash") {" --nicehash"}) --donate-level=0 --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
+                    } else {
+                        $Arguments = [PSCustomObject]@{
+                            Algorithm    = $Algorithm
+                            APIParams    = "--http-enabled --http-host=127.0.0.1 --http-port=`$mport"
+                            DeviceParams = $DeviceParams
+                            Config = [PSCustomObject]@{
+                                "api" = [PSCustomObject]@{
+                                    "id"           = $null
+                                    "worker-id"    = $null
+                                }
+                                "background" = $false
+                                "colors"     = $true
+                                "randomx" = [PSCustomObject]@{
+                                    "init" = -1
+                                    "numa" = $true
+                                }
+                                "donate-level" = 0
+                                "log-file"     = $null
+                                "print-time"   = 5
+                                "retries"      = 5
+                                "retry-pause"  = 1
                             }
-                            "background" = $false
-                            "colors"     = $true
-                            "randomx" = [PSCustomObject]@{
-                                "init" = -1
-                                "numa" = $true
-                            }
-                            "donate-level" = 0
-                            "log-file"     = $null
-                            "print-time"   = 5
-                            "retries"      = 5
-                            "retry-pause"  = 1
+                            Pools = @(
+                                [PSCustomObject]@{
+                                    "algo"      = $Algorithm
+                                    "coin"      = $null
+                                    "url"       = "$($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)"
+                                    "user"      = $Pools.$Algorithm_Norm.User
+                                    "pass"      = if ($Pools.$Algorithm_Norm.Pass) {$Pools.$Algorithm_Norm.Pass} else {"x"}
+                                    "nicehash"  = $Pools.$Algorithm_Norm.Name -match "NiceHash"
+                                    "keepalive" = $true
+                                    "enabled"   = $true
+                                    "tls"       = $Pools.$Algorithm_Norm.SSL
+                                }
+                            )
+                            Vendor  = $Miner_Vendor
+                            Params  = $Params
+                            HwSig   = if ($Miner_Vendor -eq "CPU") {"$(($Global:DeviceCache.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"} else {"$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"}
+                            Threads = if ($Miner_Vendor -eq "CPU") {if ($CPUThreads) {$CPUThreads} else {$Global:GlobalCPUInfo.Threads}} else {1}
+                            Devices = $Miner_Device.Type_Vendor_Index
+                            Affinity= if ($Miner_Vendor -eq "CPU") {$CPUAffinity} else {$null}
                         }
-                        Pools = @(
-                            [PSCustomObject]@{
-                                "algo"      = $Algorithm
-                                "coin"      = $null
-                                "url"       = "$($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)"
-                                "user"      = $Pools.$Algorithm_Norm.User
-                                "pass"      = if ($Pools.$Algorithm_Norm.Pass) {$Pools.$Algorithm_Norm.Pass} else {"x"}
-                                "nicehash"  = $Pools.$Algorithm_Norm.Name -match "NiceHash"
-                                "keepalive" = $true
-                                "enabled"   = $true
-                                "tls"       = $Pools.$Algorithm_Norm.SSL
-                            }
-                        )
-                        Vendor  = $Miner_Vendor
-                        Params  = $Params
-                        HwSig   = if ($Miner_Vendor -eq "CPU") {"$(($Global:DeviceCache.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"} else {"$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"}
-                        Threads = if ($Miner_Vendor -eq "CPU") {if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.Threads}} else {1}
-                        Devices = $Miner_Device.Type_Vendor_Index
-                        Affinity= if ($Miner_Vendor -eq "CPU") {if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity} else {$null}} else {$null}
                     }
 
 				    [PSCustomObject]@{
