@@ -3239,7 +3239,7 @@ function Invoke-Core {
                     @{Label = "Version"; Expression = {$_.Group[0].Version}},
                     @{Label = "Algorithms"; Expression = {$_.Values[1]}},
                     @{Label = "Device"; Expression = {$_.Values[2]}},
-                    @{Label = "OC-Profile"; Expression = {if ($_.Group[0].DeviceModel -ne "CPU" -and $_.Group[0].OCProfile.PSObject.Properties.Value) {$_.Group[0].OCProfile.PSObject.Properties.Value -join "/"} else {"-"}}},
+                    @{Label = "OC-Profile"; Expression = {if ($_.Group[0].DeviceModel -ne "CPU") {@(foreach($p in @($_.Group[0].DeviceModel -split '-')) {if ($_.Group[0].OCProfile[$p] -ne '') {$_.Group[0].OCProfile[$p]} else {"-"}}) -join "/"} else {"-"}}},
                     @{Label = "Aprox. Time"; Expression = {if ($_.Values[3]) {"$($BenchmarkMinutes*$_.Values[3])-$($BenchmarkMinutes*$_.Values[3]*2) minutes"} else {"$($BenchmarkMinutes)-$($BenchmarkMinutes*2) minutes"}}}
                 ) | Out-Host
 
