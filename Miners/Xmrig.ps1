@@ -202,6 +202,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
 
+            if ($Algorithm_Norm_0 -eq "Take2" -and $Global:GlobalCPUInfo.Cores -lt 4 -and ($Global:DeviceCache.Devices | Where-Object Type -eq "Gpu" | Measure-Object).Count) {$Miner_Device = $null}
+
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
             $ByParameters = $_.ByParameters
@@ -269,7 +271,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                             Vendor  = $Miner_Vendor
                             Params  = $Params
                             HwSig   = if ($Miner_Vendor -eq "CPU") {"$(($Global:DeviceCache.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"} else {"$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"}
-                            Threads = if ($Miner_Vendor -eq "CPU") {if ($CPUThreads) {$CPUThreads} else {$Global:GlobalCPUInfo.Threads}} else {1}
+                            Threads = if ($Miner_Vendor -eq "CPU") {if ($CPUThreads) {$CPUThreads} else {$Global:GlobalCPUInfo.Cores}} else {1}
                             Devices = $Miner_Device.Type_Vendor_Index
                             Affinity= $CPUAffinity
                         }
