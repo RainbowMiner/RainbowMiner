@@ -3101,32 +3101,26 @@ class Xmrig6 : Miner {
 
                     if ($Device -eq "cpu") {
                         if ($Algo -eq "ghostrider") {
-                            #$All_Algos = @("cn","cn-heavy","cn-lite","cn-pico","ghostrider") | Where-Object {$ThreadsConfig.$_}
-                            $All_Algos = @($Algo)
                             $Parameters.Config.$Device | Add-Member "max-threads-hint" ([int](100 * $Parameters.Threads / $Global:GlobalCPUInfo.Threads)) -Force
-                        } else {
-                            $All_Algos = @($Algo)
                         }
-                        foreach($Algo in $All_Algos) {
-                            $cix = @{}
-                            $ThreadsAffinity = $ThreadsConfig.$Algo | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
+                        $cix = @{}
+                        $ThreadsAffinity = $ThreadsConfig.$Algo | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}
 
-                            $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
 
-                            $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
-                            if ($AffCount = ($Aff | Measure-Object).Count) {
-                                $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
-                                $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
-                                if ($AffThreads.Count -lt $ThreadsCount) {
-                                    $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
-                                }
-                                $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
+                        $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
+                        if ($AffCount = ($Aff | Measure-Object).Count) {
+                            $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
+                            $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
+                            if ($AffThreads.Count -lt $ThreadsCount) {
+                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
                             }
-                            if ($cix.Count) {
-                                for ($i=0; $i -lt $Parameters.Config.$Device.$Algo.Count; $i++) {
-                                    $thr = $Parameters.Config.$Device.$Algo[$i]
-                                    $Parameters.Config.$Device.$Algo[$i] = @($(if ($cix["k$thr"]) {$cix["k$thr"]} else {1}),$thr)
-                                }
+                            $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
+                        }
+                        if ($cix.Count) {
+                            for ($i=0; $i -lt $Parameters.Config.$Device.$Algo.Count; $i++) {
+                                $thr = $Parameters.Config.$Device.$Algo[$i]
+                                $Parameters.Config.$Device.$Algo[$i] = @($(if ($cix["k$thr"]) {$cix["k$thr"]} else {1}),$thr)
                             }
                         }
                         $Parameters.Config | Add-Member cuda   ([PSCustomObject]@{enabled=$false}) -Force
