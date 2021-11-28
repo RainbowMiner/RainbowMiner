@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.30.9"
+$Version = "0.31.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.9-wildrigmulti/wildrig-multi-linux-0.30.9.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.31.0-wildrigmulti/wildrig-multi-linux-0.31.0.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.30.9-wildrigmulti/wildrig-multi-windows-0.30.9.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.31.0-wildrigmulti/wildrig-multi-windows-0.31.0.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -41,7 +41,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";             Vendor = @("AMD");        Params = ""} #GLT-JeongHash
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";              Vendor = @("AMD");        Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";             Vendor = @("AMD");        Params = ""} #GLT-PawelHash
-    [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2} #Heavyhash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("AMD");        Params = ""; ExtendInterval = 2} #Heavyhash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("NVIDIA");     Params = ""; ExtendInterval = 2; DevFee = 2.0} #Heavyhash/OBTC
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD");          Params = ""} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "honeycomb";                 Vendor = @("AMD");          Params = ""} #Honeycomb broken since v0.17.6
