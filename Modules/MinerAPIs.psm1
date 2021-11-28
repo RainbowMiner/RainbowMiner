@@ -3101,7 +3101,9 @@ class Xmrig6 : Miner {
 
                     if ($Device -eq "cpu") {
                         if ($Algo -eq "ghostrider") {
-                            $All_Algos = @("cn","cn-heavy","cn-lite","cn-pico","ghostrider") | Where-Object {$ThreadsConfig.$_}
+                            #$All_Algos = @("cn","cn-heavy","cn-lite","cn-pico","ghostrider") | Where-Object {$ThreadsConfig.$_}
+                            $All_Algos = @($Algo)
+                            $Parameters.Config.$Device | Add-Member "max-threads-hint" ([int](100 * $Parameters.Threads / $Global:GlobalCPUInfo.Threads)) -Force
                         } else {
                             $All_Algos = @($Algo)
                         }
