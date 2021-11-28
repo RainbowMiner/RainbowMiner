@@ -202,7 +202,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
 
-            if ($Algorithm_Norm_0 -eq "Take2" -and $Global:GlobalCPUInfo.Cores -lt 4 -and ($Global:DeviceCache.Devices | Where-Object Type -eq "Gpu" | Measure-Object).Count) {$Miner_Device = $null}
+            #if ($Algorithm_Norm_0 -eq "Take2" -and $Global:GlobalCPUInfo.Cores -lt 4 -and ($Global:DeviceCache.Devices | Where-Object Type -eq "Gpu" | Measure-Object).Count) {$Miner_Device = $null}
 
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
