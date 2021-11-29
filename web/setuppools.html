@@ -1,0 +1,391 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navsetuppools" class="h2">Setup Pools</h1>
+</div>
+
+<form id="formConfig">
+    <input type="hidden" name="ConfigName" value="Pools" />
+    <div class="card mb-3">
+        <select id="select--PoolName" name="PoolName" class="form-control"><option value="">-- please select --</option></select>
+    </div>
+    <div id="accordion"></div>
+    <div class="card mb-3">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
+
+<script id="poolsetup_template" type="text/x-handlebars-template">
+    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" id="config--Coins">
+        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseCoins" aria-expanded="true" aria-controls="collapseCoins"><div class="card-header" id="headingCoins"><h5>Coins</h5></div></button>
+        <div id="collapseCoins" class="collapse" aria-labelledby="headingCoins" data-parent="#accordion">
+            <div class="card-body">
+                {{#each coins}}
+                <div class="form-group row">
+                    {{#if isNew}}
+                    <label for="inputAddNewCoin" class="col-sm-2 col-form-label">Add New Coin</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="inputAddNewCoin" name="AddNewCoin" placeholder="Symbol of new coin" value="">
+                    </div>
+                    <label for="inputAddNewCoinWallet" class="col-sm-2 col-form-label">Add Wallet for New Coin</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="inputAddNewCoinWallet" name="AddNewCoinWallet" placeholder="Wallet address of new coin, use $ for coins in coins.config.txt" value="">
+                    </div>
+                    <label for="inputAddNewCoinParams" class="col-sm-2 col-form-label">Add Params for New Coin</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="inputAddNewCoinParams" name="AddNewCoinParams" placeholder="Additional password parameters of new coin" value="">
+                    </div>
+                    {{else}}
+                    <label for="input{{this.coin}}" class="col-sm-2 col-form-label">{{this.coin}}</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="input{{this.coin}}" name="{{this.coin}}" placeholder="{{this.coin}} Wallet address" value="{{this.wallet}}">
+                    </div>
+                    <label for="input{{this.coin}}-Params" class="col-sm-2 col-form-label">{{this.coin}}-Params</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="input{{this.coin}}-Params" name="{{this.coin}}-Params" placeholder="Additional password field parameters for {{this.coin}}" value="{{this.params}}">
+                    </div>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" id="config--Common">
+        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseCommon" aria-expanded="true" aria-controls="collapseCommon"><div class="card-header" id="headingCommon"><h5>Common</h5></div></button>
+        <div id="collapseCommon" class="collapse" aria-labelledby="headingCommon" data-parent="#accordion">
+            <div class="card-body">
+                {{#each common}}
+                {{#if (eq this.type "text")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}"{{#if (noteq this.append null)}} aria-describedby="addto-input{{this.key}}"{{/if}}>
+                            {{#if (noteq this.append null)}}<div class="input-group-append">
+                                <span class="input-group-text" id="addto-input{{this.key}}">{{this.append}}</span>
+                            </div>{{/if}}
+                        </div>
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "password")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "number")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}" {{#if (noteq this.min null)}} min="{{this.min}}" {{/if}} {{#if (noteq this.max null)}} max="{{this.max}}" {{/if}} {{#if (noteq this.step null)}} step="{{this.step}}" {{/if}}{{#if (noteq this.append null)}} aria-describedby="addto-input{{this.key}}" {{/if}} inputmode="decimal">
+                            {{#if (noteq this.append null)}}<div class="input-group-append">
+                                <span class="input-group-text" id="addto-input{{this.key}}">{{this.append}}</span>
+                            </div>{{/if}}
+                        </div>
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "bool")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <select class="form-control mr-sm-2" id="input{{this.key}}" name="{{this.key}}">
+                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
+                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
+                        </select>
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "boolplus")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <select class="form-control mr-sm-2" id="input{{this.key}}" name="{{this.key}}">
+                            <option value="" {{#if (eq this.value "")}} selected{{/if}}>default</option>
+                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
+                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
+                        </select>
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "checkbox")}}
+                <div class="form-group row">
+                    <div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}"><label class="custom-control-label" for="input{{this.key}}">{{this.text}}</label></div>
+                </div>
+                {{/if}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" id="config--Specific">
+        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseSpecific" aria-expanded="true" aria-controls="collapseSpecific"><div class="card-header" id="headingSpecific"><h5>Specific</h5></div></button>
+        <div id="collapseSpecific" class="collapse" aria-labelledby="headingSpecific" data-parent="#accordion">
+            <div class="card-body">
+                {{#each specific}}
+                {{#if (eq this.type "text")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}"{{#if (noteq this.append null)}} aria-describedby="addto-input{{this.key}}" {{/if}}>
+                            {{#if (noteq this.append null)}}<div class="input-group-append">
+                                <span class="input-group-text" id="addto-input{{this.key}}">{{this.append}}</span>
+                            </div>{{/if}}
+                        </div>
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "password")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "number")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}" {{#if (noteq this.min null)}} min="{{this.min}}" {{/if}} {{#if (noteq this.max null)}} max="{{this.max}}" {{/if}} {{#if (noteq this.step null)}} step="{{this.step}}" {{/if}}{{#if (noteq this.append null)}} aria-describedby="addto-input{{this.key}}" {{/if}}>
+                            {{#if (noteq this.append null)}}<div class="input-group-append">
+                                <span class="input-group-text" id="addto-input{{this.key}}">{{this.append}}</span>
+                            </div>{{/if}}
+                        </div>
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "bool")}}
+                <div class="form-group row">
+                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
+                    <div class="col-sm-10">
+                        <select class="form-control mr-sm-2" id="input{{this.key}}" name="{{this.key}}">
+                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
+                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
+                        </select>
+                        <div class="form-text text-muted">{{this.text}}</div>
+                    </div>
+                </div>
+                {{else if (eq this.type "checkbox")}}
+                <div class="form-group row">
+                    <div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}"><label class="custom-control-label" for="input{{this.key}}">{{this.text}}</label></div>
+                </div>
+                {{/if}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</script>
+
+<style>
+    .custom-control-input {
+        position: static;
+    }
+</style>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+
+$(function() {
+
+    Handlebars.registerHelper('eq', function (a, b) {
+        if (a == b) { return true; }
+        return false;
+    });
+
+    Handlebars.registerHelper('noteq', function (a, b) {
+        if (a != b) { return true; }
+        return false;
+    });
+
+    var template = Handlebars.compile($("#poolsetup_template").html());
+
+    $.ajax({
+        url: '/loadconfig',
+        data: {ConfigName: "Pools", PoolName: "list"},
+        success: function (result) {
+            result.sort();
+            var add = '';
+            $.each(result, function( ix, name ) {
+                add += '<option value="'+name+'">'+name+'</option>';
+            })
+            $("#select--PoolName").append(add);
+        }
+    });
+
+    $("#select--PoolName").change(function (event) {
+        var name = $("#select--PoolName").val()
+        if (name == "") {$("#accordion").empty()}
+        else {
+            $.ajax({
+                url: '/loadconfig',
+                data: {ConfigName: "Pools", PoolName: name},
+                success: function (result) {
+                    var limits = {
+                        AutoBonusExtendByHours: {min:0, max:null, step:0.001, append:"hours"},
+                        AutoBonusExtendForHours: {min:0, max:null, step:0.001, append:"hours"},
+                        AutoCreateMaxMinHours: {min:0, max:null, step:1, append:"hours"},
+                        AutoCreateMinCPUProfitBTC: {min:null, max:null, step:null, append:"BTC"},
+                        AutoCreateMinProfitPercent: {min:0, max:100, step:0.001, append:"%"},
+                        AutoExtendMaximumPercent: {min:0, max:100, step:0.001, append:"%"},
+                        AutoExtendTargetPercent: {min:0, max:100, step:0.001, append:"%"},
+                        AutoPriceModifierPercent: {min:-30, max:30, step:0.001, append:"%"},
+                        AutoUpdateMinPriceChangePercent: {min:0, max:100, step:0.001, append:"%"},
+                        MaxAllowedLuck: {min:0, max:null, step:0.001, append:null},
+                        MaxHours: {min:3, max:null, step:1, append:"hours"},
+                        MaxMarginOfError: {min:0, max:100, step:0.001, append:"%"},
+                        MinHours: {min:3, max:null, step:1, append:"hours"},
+                        Penalty: {min:0, max:100, step:0.001, append:"%"},
+                        PowerDrawFactor: {min:0, max:null, step:0.001, append:null},
+                        PriceBTC: {min:null, max:null, step:null, append:"BTC"},
+                        PriceFactorDecayPercent: {min:0, max:100, step:0.001, append:"%"},
+                        PriceFactor: {min:0, max:null, step:0.001, append:null},
+                        PriceFactorMin: {min:0, max:null, step:0.001, append:null},
+                        SwitchingHysteresis: {min:0, max:100, step:0.001, append:"%"}
+                    }
+                    var common = {
+                        Worker: "Enter the worker name (enter $WorkerName to use config.txt default)",
+                        Penalty: "Enter penalty in percent. This value will decrease all reported values.",
+                        FocusWallet: "Force mining for one or more of this pool's wallets (comma separated)",
+                        SSL: "Enable use SSL stratum connection, if available",
+                        AllowZero: "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)",
+                        EnableAutoCoin: "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=\"1\"",
+                        EnablePostBlockMining: "Enable to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.",
+                        Algorithm: "Enter algorithms you want to mine (leave empty for all)",
+                        ExcludeAlgorithm: "Enter algorithms you do want to exclude",
+                        CoinSymbol: "Enter coins by currency-symbol, you want to mine (leave empty for all). Better alternative to \"CoinName\"",
+                        ExcludeCoinSymbol: "Enter coins by currency-symbol, you do want to exclude. Better alternative to \"ExcludeCoin\"",
+                        CoinSymbolPBM: "If EnablePostBlockMining is enabled, specify which currency is taken into account for post block mining (leave empty for all)",
+                        CoinName: "Enter coins by name, you want to mine (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
+                        ExcludeCoin: "Enter coins by name, you do want to exclude. The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
+                        MinerName: "Enter the miners you want to use (leave empty for all)",
+                        ExcludeMinerName: "Enter the miners you do want to exclude",
+                        MaxAllowedLuck: "Maximum pool luck in % (0=allow any luck, leave empty to use value in config.txt)",
+                        MaxMarginOfError: "Enter the maximum allowed fluctuation of pool prices in percent",
+                        MaxTimeSinceLastBlock: "Enter allowed maximum time since last found block (units allowed, e.h. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
+                        MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
+                        Region: "Enter the stratum server's home region (leave empty to use value in config.txt)",
+                        StatAverage: "Enter which moving average is to be used for the live trendline",
+                        StatAverageStable: "Enter which moving average is to be used for the stable trendline",
+                        SwitchingHysteresis: "Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, leave empty to use global PoolSwitchingHysteresis)",
+                        DataWindow: "Enter which datawindow is to be used for this pool (leave empty for default)",
+                        BalancesKeepAlive: ""
+                    }
+                    if (result.PoolName == name) {
+                        var coins = []
+                        var item = {
+                            poolname: result.PoolName,
+                            dark: theme=="dark",
+                            coins: [],
+                            common: [],
+                            specific: []
+                        }
+    
+                        $.each(common,function(key,val) {
+                            if (typeof result.Config[key] === "undefined" || (key == "DataWindow" && result.Setup.Yiimp) || key == "BalancesKeepAlive") return
+
+                            var rec = {
+                                key:key,
+                                text:val,
+                                value:result.Config[key],
+                                type:"text",
+                                min:null,
+                                max:null,
+                                step:null,
+                                append:null
+                            }
+
+                            if (key.match(/^Allow|Enable|Disable/)) rec.type="bool"
+                            else if (key == "SSL") rec.type="boolplus"
+                            else if (key.match(/Secret|Password/i)) rec.type="password"
+                            else if (typeof limits[key] !== "undefined") {
+                                rec.min = limits[key].min;
+                                rec.max = limits[key].max;
+                                rec.step= limits[key].step;
+                                rec.append = limits[key].append;
+                                if (rec.min !== null || rec.max !== null || rec.step !== null) rec.type = "number"
+                            }
+
+                            item.common.push(rec)
+                        })
+    
+                        $.each(result.Config,function(key,val) {
+                            if (typeof common[key] !== "undefined") return
+ 
+                            var hasSetupField = typeof result.Setup !== "undefined" && typeof result.Setup.SetupFields !== "undefined" && typeof result.Setup.Fields[key] !== "undefined"
+
+                            if (!hasSetupField && (key.length <= 5 || key.match(/-Params$/))) {
+                                if (key.match(/-Params$/)) {
+                                    key = key.replace(/-Params$/,"")
+                                }
+                                if (-1 == coins.indexOf(key)) {
+                                    item.coins.push({coin:key, wallet:val, params:result.Config[key+'-Params']})
+                                    coins.push(key)
+                                }
+                            } else if (hasSetupField) {
+                                var rec = {
+                                    key:key,
+                                    text:result.Setup.SetupFields[key],
+                                    value:result.Config[key],
+                                    type:"text",
+                                    min:null,
+                                    max:null,
+                                    step:null,
+                                    append:null
+                                }
+
+                                if (key.match(/^Allow|Enable|Disable/)) rec.type="bool"
+                                else if (key == "SSL") rec.type="boolplus"
+                                else if (key.match(/Secret|Password/i)) rec.type="password"
+                                else if (typeof limits[key] !== "undefined") {
+                                    rec.min = limits[key].min;
+                                    rec.max = limits[key].max;
+                                    rec.step= limits[key].step;
+                                    rec.append = limits[key].append;
+                                    if (rec.min !== null || rec.max !== null || rec.step !== null) rec.type = "number"
+                                }
+
+                                item.specific.push(rec)
+                            } else {
+                                console.log("Unrelated config field found in "+result.PoolName+": "+key)
+                            }
+                        })
+                        if (item.coins.length) {
+                            item.coins.push({coin:"", wallet:"", isNew:true})
+                        }
+
+                        $("#accordion").html(template(item))
+
+                        var frst = "collapseCoins"
+                        if (item.coins.length) $("#config--Coins").show()
+                        else {
+                            $("#config--Coins").hide()
+                            frst = "collapseCommon"
+                        }
+                        if (item.specific.length) $("#config--Specific").show()
+                        else {
+                            $("#config--Specific").hide()
+                        }
+                        $("#"+frst).addClass("show")
+                    }
+                }
+            })
+        }
+    });
+
+    $("#formConfig").submit(function (event) {
+        // Stop form from submitting normally
+        event.preventDefault();
+        $.post("/saveconfig", $(this).serialize()).done(function (data) {
+            $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
+            $('.modal-title').text('Configuration saved!');
+            $('#myModal').modal({ show: true });
+        });
+    })
+});
+</script>
+<!--#include file="/parts/foot.html" -->

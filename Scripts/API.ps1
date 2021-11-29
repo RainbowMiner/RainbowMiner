@@ -294,20 +294,22 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     } elseif ($ConfigName -eq "Pools") {
                         $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
                         if ($Parameters.PoolName) {
-                            $Data = ConvertTo-Json ([PSCustomObject]@{
-                                PoolName = $Parameters.PoolName
-                                Config = $ConfigActual."$($Parameters.PoolName)"
-                                Setup  = $PoolSetup."$($Parameters.PoolName)"
-                            }) -Depth 10 -Compress
+                            if ($Parameters.PoolName -in @("ls","list")) {
+                                $RealConfig = if ($Session.UserConfig) {ConvertFrom-Json $Session.UserConfig} else {$Session.Config}
+                                $Data = ConvertTo-Json @($ConfigActual.PSObject.Properties.Name | Sort-Object -Descending {$_ -in $RealConfig.PoolName})
+                            } else {
+                                $Data = ConvertTo-Json ([PSCustomObject]@{
+                                    PoolName = $Parameters.PoolName
+                                    Config = $ConfigActual."$($Parameters.PoolName)"
+                                    Setup  = $PoolSetup."$($Parameters.PoolName)"
+                                }) -Depth 10 -Compress
+                            }
                         } else {
                             $Data = ConvertTo-Json ([PSCustomObject]@{
                                 Pools = $ConfigActual
                                 Setup = $PoolSetup
                             }) -Depth 10 -Compress
                         }
-                    } elseif ($ConfigName -eq "PoolNames") {
-                        $RealConfig = if ($Session.UserConfig) {ConvertFrom-Json $Session.UserConfig} else {$Session.Config}
-                        $Data = ConvertTo-Json @($ConfigActual.PSObject.Properties.Name | Sort-Object -Descending {$_ -in $RealConfig.PoolName})
                     } else {
                         $Data = ConvertTo-Json $ConfigActual -Depth 10 -Compress
                     }
@@ -355,6 +357,82 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     }
                 }
             } elseif ($ConfigName -eq "Pools") {
+
+                $PoolName = $Parameters.PoolName
+
+                if ($PoolName -and $ConfigActual.$PoolName) {
+                    $DataSaved = [PSCustomObject]@{}
+
+                    $NewCoin = "$($Parameters.AddNewCoin)".Trim().ToUpper()
+
+                    if ($NewCoin -ne "" -and $ConfigActual.$NewCoin -eq $null) {
+                        $DataSaved | Add-Member $NewCoin "$($Parameters.AddNewCoinWallet.Trim())"
+                        $DataSaved | Add-Member "$($NewCoin)-Params" "$($Parameters.AddNewCoinParams.Trim())"
+
+                        $ConfigActual.$PoolName | Add-Member $NewCoin "$($Parameters.AddNewCoinWallet.Trim())" -Force
+                        $ConfigActual.$PoolName | Add-Member "$($NewCoin)-Params" "$($Parameters.AddNewCoinParams.Trim())" -Force
+                        $ConfigChanged++
+                    }
+
+                    $Parameters.PSObject.Properties.Name | Where-Object {$_ -notmatch "^AddNewCoin" -and ($ConfigActual.$PoolName.$_ -ne $null -or $_ -match "-Params$")} | Foreach-Object {
+                        $Value = $Parameters.$_.Trim()
+
+                        $Type = Switch($_) {
+                            #Common
+                            "Penalty" {"float"}
+                            "MaxAllowedLuck" {"float"}
+                            "MaxMarginOfError" {"float"}
+                            "MaxTimeSinceLastBlock" {"timespan"}
+                            "MaxTimeToFind" {"timespan"}
+                            "SwitchingHysteresis" {"float"}
+
+                            #MiningRigRentals
+                            "PriceBTC" {"float"}
+                            "PriceFactor" {"float"}
+                            "AutoCreateMinProfitPercent" {"float"}
+                            "AutoCreateMinCPUProfitBTC" {"float"}
+                            "MinHours" {"int"}
+                            "MaxHours" {"int"}
+                            "AutoCreateMaxMinHours" {"int"}
+                            "AutoPriceModifierPercent" {"float"}
+                            "AutoUpdateMinPriceChangePercent" {"float"}
+                            "PowerDrawFactor" {"float"}
+                            "AutoExtendTargetPercent" {"float"}
+                            "AutoExtendMaximumPercent" {"float"}
+                            "AutoBonusExtendForHours" {"float"}
+                            "AutoBonusExtendByHours" {"float"}
+                            "PauseBetweenRentals" {"timespan"}
+                            "ExtensionMessageTime" {"timespan"}
+                            "PriceFactorMin" {"float"}
+                            "PriceFactorDecayPercent" {"float"}
+                            "PriceFactorDecayTime" {"timespan"}
+                            "UpdateInterval" {"timespan"}
+
+                            default {
+                                if ($_ -match "^Allow|Enable|Disable") {"bool"}
+                            }
+                        }
+
+                        Switch($Type) {
+                            "bool" {"$([int](Get-Yes $Value))"}
+                            "float" {"$([double]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
+                            "int" {"$([int]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
+                            "timespan" {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
+                            default {$Value}
+                        }
+
+                        if ($ConfigActual.$PoolName.$_ -ne $null) {
+                            if ("$($Value)" -ne "$($ConfigActual.$PoolName.$_)") {
+                                $ConfigActual.$PoolName.$_ = $Value
+                                $DataSaved | Add-Member $_ $Value
+                                $ConfigChanged++
+                            }
+                        } else {
+                            $ConfigActual.$PoolName | Add-Member $_ "$($Value)" -Force
+                            $DataSaved | Add-Member $_ $Value
+                        }
+                    }
+                }
 
             } elseif ($ConfigName -eq "Coins") {
                 $Parameters.Coins | Foreach-Object {
