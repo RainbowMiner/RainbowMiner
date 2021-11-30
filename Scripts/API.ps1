@@ -346,7 +346,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         }) -Depth 10 -Compress
                     } elseif ($ConfigName -eq "Pools") {
                         $ConfigActual.PSObject.Properties.Value | Foreach-Object {
-                            if ($_.PSObject.Properties.Match("MaxAllowedLuck")) {
+                            if ($_.PSObject.Properties.Match("MaxAllowedLuck").Count) {
                                 if ($_.MaxAllowedLuck) {
                                     $_.MaxAllowedLuck = "$($_.MaxAllowedLuck * 100)"
                                 }
