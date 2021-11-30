@@ -509,7 +509,7 @@ RainbowMiner uses the following nameing convention:
 - EquihashR25x5 = Equihash (150,5), e.g. GRIMM
 - EquihashR25x5x3 = Equihash (150,5,3), e.g. BEAM
 
-The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the “hardness” of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
+The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the âhardnessâ of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
 For EquihashR the parameter (r) will be added to the algorithm name. For r=0, nothing will be added. 
 
 RainbowMiner's built-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5. BeamHash will be represented by EquihashR25x5x3
@@ -623,7 +623,7 @@ Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### 1. setup overclocking profiles
 
-Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (�C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (�V) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
@@ -1613,10 +1613,10 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
     }
 
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
-- ThermalLimit: in �C, set to 0, if you do not want this to be changed
+- ThermalLimit: in °C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
-- LockVoltagePoint: in �V, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- LockVoltagePoint: in µV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 - LockMemoryClock: in MHz, set to "*", if you do not want this to be changed or "0", if MemoryClock should be unlocked
 - LockCoreClock: in MHz, set to "*", if you do not want this to be changed or "0", if CoreClock should be unlocked
 - PreCmd/PreCmdArguments: define a command to be executed before the miner starts. PreCmd is the path to the binary, PreCmdArguments are optional arguments for that command.
