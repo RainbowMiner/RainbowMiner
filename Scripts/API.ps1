@@ -252,6 +252,59 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($LocalRates -ne $null) {Remove-Variable "LocalRates"}
             Break
         }
+        "/loadconfigjson" {
+            $ConfigName = if ($Parameters.ConfigName) {$Parameters.ConfigName} else {"Config"}
+
+            $ConfigActual = Get-ConfigContent $ConfigName
+
+            $Success = $false
+            $Data = $null
+            if ($Session.ConfigFiles[$ConfigName].Healthy -and (Test-Path $Session.ConfigFiles[$ConfigName].Path)) {
+                try {
+                    $Data = Get-ContentByStreamReader $Session.ConfigFiles[$ConfigName].Path -ThrowError
+                    $Success = $true
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error reading config file $($Session.ConfigFiles[$ConfigName].Path): $($_.Exception.Message)" -Append -Timestamp
+                }
+            }
+
+            if ($Success -and $Data) {
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$true;Data=$Data}) -Depth 10
+            } else {
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
+            }
+
+            if ($ConfigActual -ne $null) {Remove-Variable "ConfigActual"}
+            Break
+        }
+        "/saveconfigjson" {
+            if ($API.LockConfig) {
+                $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
+                Break;
+            }
+
+            $ConfigName = if ($Parameters.ConfigName) {$Parameters.ConfigName} else {"Config"}
+
+            $Success = $false
+            if ("$($Parameters.Data)" -ne "") {
+                try {
+                    $Data = $Parameters.Data | ConvertFrom-Json -ErrorAction Stop
+                    $ConfigActual = Get-ConfigContent $ConfigName
+                    $ChangeTag = Get-ContentDataMD5hash($ConfigActual)
+                    $Success = Set-ContentJson -PathToFile $Session.ConfigFiles[$ConfigName].Path -Data $Data -MD5hash $ChangeTag
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error writing config file $($Session.ConfigFiles[$ConfigName].Path): $($_.Exception.Message)" -Append -Timestamp
+                }
+                if ($ConfigActual -ne $null) {Remove-Variable "ConfigActual"}
+                if ($ChangeTag -ne $null) {Remove-Variable "ChangeTag"}
+            }
+
+            $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success}) -Depth 10
+
+            Break
+        }
         "/loadconfig" {
             $ConfigName = if ($Parameters.ConfigName) {$Parameters.ConfigName} else {"Config"}
             if ($ConfigName -eq "Config") {
