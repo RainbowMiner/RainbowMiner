@@ -209,11 +209,14 @@ $(function() {
         data: {ConfigName: "Pools", PoolName: "list"},
         success: function (result) {
             result.sort();
-            var add = '';
+            var add1 = '', add2 = '';
             $.each(result, function( ix, name ) {
-                add += '<option value="'+name+'">'+name+'</option>';
+                var sel = (name.slice(-1)=='*')? true:false;
+                if (sel) name = name.slice(0,-1);
+                var opt = '<option value="'+name+'">'+name+'</option>';
+                if (sel) add1 += opt; else add2 += opt;
             })
-            $("#select--PoolName").append(add);
+            $("#select--PoolName").append(add1 + '<option>--------</option>' + add2);
         }
     });
 

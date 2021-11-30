@@ -296,7 +296,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         if ($Parameters.PoolName) {
                             if ($Parameters.PoolName -in @("ls","list")) {
                                 $RealConfig = if ($Session.UserConfig) {ConvertFrom-Json $Session.UserConfig} else {$Session.Config}
-                                $Data = ConvertTo-Json @($ConfigActual.PSObject.Properties.Name | Sort-Object -Descending {$_ -in $RealConfig.PoolName})
+                                $Data = ConvertTo-Json @($ConfigActual.PSObject.Properties.Name | Foreach-Object {"$($_)$(if ($_ -in $RealConfig.PoolName) {"*"})"} | Sort-Object -Unique)
                             } else {
                                 $Data = ConvertTo-Json ([PSCustomObject]@{
                                     PoolName = $Parameters.PoolName
@@ -314,9 +314,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Data = ConvertTo-Json $ConfigActual -Depth 10 -Compress
                     }
                 }
-                if ($ConfigActual -ne $null) {
-                    Remove-Variable "ConfigActual"
-                }
+                if ($ConfigActual -ne $null) {Remove-Variable "ConfigActual"}
+                if ($PoolSetup -ne $null) {Remove-Variable "PoolSetup"}
             }
             Break
         }
