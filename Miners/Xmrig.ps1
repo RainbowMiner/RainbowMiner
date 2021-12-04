@@ -262,6 +262,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     "url"       = "$($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)"
                                     "user"      = $Pools.$Algorithm_Norm.User
                                     "pass"      = if ($Pools.$Algorithm_Norm.Pass) {$Pools.$Algorithm_Norm.Pass} else {"x"}
+                                    "rig-id"    = $Pools.$Algorithm_Norm.Worker
                                     "nicehash"  = $Pools.$Algorithm_Norm.Name -match "NiceHash"
                                     "keepalive" = $true
                                     "enabled"   = $true
