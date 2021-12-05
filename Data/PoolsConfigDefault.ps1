@@ -201,6 +201,12 @@
             SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable automatic Catalyst mining"}
             Currencies=@("ARRR")
         }
+        "Minafacil" = [PSCustomObject]@{
+            Currencies=@("RTM")
+        }
+        "MinafacilSolo" = [PSCustomObject]@{
+            Currencies=@("RTM")
+        }
         "Minerpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="xyz"}
             SetupFields=[PSCustomObject]@{Password="Enter your Minerpool password (must NOT be x)"}
