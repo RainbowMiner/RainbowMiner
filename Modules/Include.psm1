@@ -3298,6 +3298,7 @@ function Get-Device {
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
                         BusId = $null
+                        IsLHR = $Vendor -eq "NVIDIA" -and $Model -in @("RTX3060","RTX3060TI","RTX3070","RTX3070TI","RTX3080","RTX3080TI")
                         GpuGroup = ""
 
                         Data = [PSCustomObject]@{
