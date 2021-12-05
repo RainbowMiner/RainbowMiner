@@ -3089,6 +3089,7 @@ function Get-Device {
                         Name        = $_.Name
                         InstanceId  = $_.PNPDeviceId
                         BusId       = $(if ($BusId -ne $null -and $BusId.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusId,([int]$DeviceAddress -shr 16)})
+                        SubId       = if ($_.PNPDeviceId -match "DEV_([0-9A-F]{4})") {$Matches[1]} else {$null}
                         Vendor      = switch -Regex ([String]$_.AdapterCompatibility) { 
                                         "Advanced Micro Devices" {"AMD"}
                                         "Intel"  {"INTEL"}
@@ -3144,7 +3145,7 @@ function Get-Device {
             Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL detection failed: $($ErrorMessage)"
             $Cuda = Get-NvidiaSmi | Where-Object {$_} | Foreach-Object {Invoke-Exe $_ -ExcludeEmptyLines -ExpandLines | Where-Object {$_ -match "CUDA.+?:\s*(\d+\.\d+)"} | Foreach-Object {$Matches[1]} | Select-Object -First 1 | Foreach-Object {"$_.0"}}
             if ($Cuda) {
-                $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total","pci.bus_id" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
+                $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total","pci.bus_id","pci.device_id" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
                     [PSCustomObject]@{
                         DeviceIndex     = $_.index
                         Name            = $_.gpu_name
@@ -3155,6 +3156,7 @@ function Get-Device {
                         GlobalMemSizeGB = [int]($_.memory_total/1kB)
                         PlatformVersion = "CUDA $Cuda"
                         PCIBusId        = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
+                        SubId           = if ($_.pci_device_id -match "^0x([0-9A-F]{4})") {$Matches[1]} else {$null}
                         CardId          = -1
                     }
                 }
@@ -3189,12 +3191,12 @@ function Get-Device {
 
                     $Device_Name = Get-NormalizedDeviceName $Device_OpenCL.Name -Vendor $Vendor_Name
                     $InstanceId  = ''
-                    $SubId = ''
+                    $SubId = "$($Device_OpenCL.SubId)"
                     $PCIBusId = $null
                     $CardId = -1
 
-                    if ($Vendor_Name -eq "AMD") {
-                        if (-not $GPUDeviceNames[$Vendor_Name]) {
+                    if (-not $GPUDeviceNames[$Vendor_Name]) {
+                        if ($Vendor_Name -eq "AMD") {
                             $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
                                 if ((Test-OCDaemon) -or (Test-IsElevated)) {
                                     try {
@@ -3207,16 +3209,22 @@ function Get-Device {
                             if (-not $GPUDeviceNames[$Vendor_Name]) {
                                 $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
                             }
+                        } elseif ($Vendor_Name -eq "NVIDIA") {
+                            if (-not $GPUDeviceNames[$Vendor_Name]) {
+                                $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner $false
+                            }
                         }
+                    }
 
-                        $GPUDeviceNameFound = $null
-                        if ($Device_OpenCL.PCIBusId -match "[A-F0-9]+:[A-F0-9]+$") {
-                            $GPUDeviceNameFound = $GPUDeviceNames[$Vendor_Name] | Where-Object PCIBusId -eq $Device_OpenCL.PCIBusId | Select-Object -First 1
-                        }
-                        if (-not $GPUDeviceNameFound) {
-                            $GPUDeviceNameFound = $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Select-Object -First 1
-                        }
-                        
+                    $GPUDeviceNameFound = $null
+                    if ($Device_OpenCL.PCIBusId -match "[A-F0-9]+:[A-F0-9]+$") {
+                        $GPUDeviceNameFound = $GPUDeviceNames[$Vendor_Name] | Where-Object PCIBusId -eq $Device_OpenCL.PCIBusId | Select-Object -First 1
+                    }
+                    if (-not $GPUDeviceNameFound) {
+                        $GPUDeviceNameFound = $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Select-Object -First 1
+                    }
+
+                    if ($Vendor_Name -eq "AMD") {
                         if ($GPUDeviceNameFound) {
                             $Device_Name = $GPUDeviceNameFound.DeviceName
                             $InstanceId  = $GPUDeviceNameFound.InstanceId
@@ -3237,6 +3245,10 @@ function Get-Device {
 
                         # fix PCIBusId
                         if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
+                    } elseif ($Vendor_Name -eq "NVIDIA") {
+                        if ($GPUDeviceNameFound) {
+                            $SubId       = $GPUDeviceNameFound.SubId
+                        }
                     }
 
                     $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
@@ -3298,7 +3310,8 @@ function Get-Device {
                         InstanceId = [String]$InstanceId
                         CardId = $CardId
                         BusId = $null
-                        IsLHR = $Vendor_Name -eq "NVIDIA" -and $Model -in @("RTX3060","RTX3060TI","RTX3070","RTX3070TI","RTX3080","RTX3080TI")
+                        SubId = $SubId
+                        IsLHR = $Vendor_Name -eq "NVIDIA" -and $Model -in @("RTX3060","RTX3060TI","RTX3070","RTX3070TI","RTX3080","RTX3080TI") -and $SubId -notin @("2204","2206","2484","2486")
                         GpuGroup = ""
 
                         Data = [PSCustomObject]@{
@@ -3344,6 +3357,7 @@ function Get-Device {
                                 $Global:WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
                                     if ($_.BusId -ne $null -and $Device.BusId -eq $null) {$Device.BusId = $_.BusId}
                                     if ($_.InstanceId -and $Device.InstanceId -eq "")    {$Device.InstanceId = $_.InstanceId}
+                                    if ($_.SubId -and $Device.SubId -eq "")              {$Device.SubId = $_.SubId}
                                 }
                             }
 
