@@ -79,7 +79,11 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         return
     }
 
-    $Pool_Diff = [double]$PoolCoins_Request.$Pool_CoinSymbol.network_hashrate * $PoolCoins_Request.$Pool_CoinSymbol.blocktime / [Math]::Pow(2,32)
+    $Pool_Diff = if ([double]$PoolCoins_Request.$Pool_CoinSymbol.network_hashrate -gt [double]$PoolCoins_Request.$Pool_CoinSymbol.hashrate -or [int]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -eq 0) {
+        [double]$PoolCoins_Request.$Pool_CoinSymbol.network_hashrate * $PoolCoins_Request.$Pool_CoinSymbol.blocktime / [Math]::Pow(2,32)
+    } else {
+        [double]$PoolCoins_Request.$Pool_CoinSymbol.hashrate * 86400 / $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" / [Math]::Pow(2,32)
+    }
 
     if (-not $InfoOnly) {
         if ($Pool_Request.$Pool_Algorithm.coins -eq 1) {

@@ -88,7 +88,13 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         return
     }
 
-    $Pool_Diff = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Foreach-Object {[double]$_.network_hashrate * $_.blocktime / [Math]::Pow(2,32)} | Measure-Object -Average).Average
+    $Pool_Diff = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Foreach-Object {
+        if ([double]$_.network_hashrate -gt [double]$_.hashrate -or [int]$_."24h_blocks" -eq 0) {
+            [double]$_.network_hashrate * $_.blocktime / [Math]::Pow(2,32)
+        } else {
+            [double]$_.hashrate * 86400 / $_."24h_blocks" / [Math]::Pow(2,32)
+        }
+    } | Measure-Object -Average).Average
 
     if (-not $InfoOnly) {
         $NewStat = $false; if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$NewStat = $true; $DataWindow = "actual_last24h_solo"}
