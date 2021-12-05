@@ -108,9 +108,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
         $IsLHR = $true
-        foreach($d in $Miner_Device) {
-            if ($d.Model_Base -notin @("RTX3060","RTX3060TI","RTX3070","RTX3070TI","RTX3080","RTX3080TI")) {$IsLHR = $false;break}
-        }
+        foreach($d in $Miner_Device) {if (-not $d.IsLHR) {$IsLHR = $false;break}}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
