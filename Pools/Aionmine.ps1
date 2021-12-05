@@ -28,7 +28,7 @@ $Pool_Request = [PSCustomObject]@{}
 
 $ok = $false
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://aionmine.org/api/pools" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
     if ($Pool_Request.pools) {$ok = $true}
 }
 catch {
@@ -46,7 +46,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
         $Pool_Id = $_.id
         $Pool_BlocksRequest = @()
         try {
-            $Pool_BlocksRequest = Invoke-RestMethodAsync "http://88.99.47.205:26022/api/pools/$($Pool_Id)/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
+            $Pool_BlocksRequest = Invoke-RestMethodAsync "https://aionmine.org/api/pools/$($Pool_Id)/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
             $Pool_BlocksRequest = @($Pool_BlocksRequest | Where-Object {$_.status -ne "orphaned"} | Foreach-Object {Get-Date $_.created})
         }
         catch {
