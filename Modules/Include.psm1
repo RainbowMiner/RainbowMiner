@@ -3196,6 +3196,7 @@ function Get-Device {
                     $CardId = -1
 
                     if (-not $GPUDeviceNames[$Vendor_Name]) {
+                        $UseAB = $false
                         if ($Vendor_Name -eq "AMD") {
                             $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
                                 if ((Test-OCDaemon) -or (Test-IsElevated)) {
@@ -3206,13 +3207,10 @@ function Get-Device {
                                 }
                                 if (Test-Path ".\Data\amd-names.json") {Get-ContentByStreamReader ".\Data\amd-names.json" | ConvertFrom-Json -ErrorAction Ignore}
                             }
-                            if (-not $GPUDeviceNames[$Vendor_Name]) {
-                                $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
-                            }
-                        } elseif ($Vendor_Name -eq "NVIDIA") {
-                            if (-not $GPUDeviceNames[$Vendor_Name]) {
-                                $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner $false
-                            }
+                            $UseAB = $OpenCL_DeviceIDs.Count -lt 7
+                        }
+                        if (-not $GPUDeviceNames[$Vendor_Name]) {
+                            $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner $UseAB
                         }
                     }
 
@@ -3311,7 +3309,7 @@ function Get-Device {
                         CardId = $CardId
                         BusId = $null
                         SubId = $SubId
-                        IsLHR = $Vendor_Name -eq "NVIDIA" -and $Model -in @("RTX3060","RTX3060TI","RTX3070","RTX3070TI","RTX3080","RTX3080TI") -and $SubId -notin @("2204","2206","2484","2486")
+                        IsLHR = $false
                         GpuGroup = ""
 
                         Data = [PSCustomObject]@{
@@ -3359,6 +3357,10 @@ function Get-Device {
                                     if ($_.InstanceId -and $Device.InstanceId -eq "")    {$Device.InstanceId = $_.InstanceId}
                                     if ($_.SubId -and $Device.SubId -eq "")              {$Device.SubId = $_.SubId}
                                 }
+                            }
+
+                            if ($Vendor_Name -eq "NVIDIA") {
+                                $Device.IsLHR = $Model -in @("RTX3060","RTX3060TI","RTX3070","RTX3070TI","RTX3080","RTX3080TI") -and $Device.SubId -notin @("2204","2206","2484","2486")
                             }
 
                             $Global:GlobalCachedDevices += $Device
