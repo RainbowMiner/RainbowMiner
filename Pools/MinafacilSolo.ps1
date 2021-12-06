@@ -96,7 +96,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Wallets.$_ -or $Inf
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$(if ($Pool_Region -ne "us") {$Pool_Region})$Pool_Host"
                 Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                User          = "$($Wallets.$Pool_CoinSymbol).{workername:$Worker}"
                 Pass          = "c=$($Pool_CoinSymbol),m=solo"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
