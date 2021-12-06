@@ -116,7 +116,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Wallets.$_ -or $Inf
                 HasMinerExclusions = $false
                 Price_Bias    = 0.0
                 Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
+                Wallet        = $Wallets.$Pool_CoinSymbol
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
