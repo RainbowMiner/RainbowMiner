@@ -17,6 +17,7 @@ param(
     [String]$API_Secret = "",
     [String]$UseWorkerName = "",
     [String]$ExcludeWorkerName = "",
+    [String]$ExcludeRentalId = "",
     [Bool]$EnableMining = $false,
     [Bool]$EnableAutoCreate = $false,
     [Bool]$EnableAutoUpdate = $false,
@@ -95,6 +96,7 @@ $Workers     = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Dev
 
 $UseWorkerName_Array     = @($UseWorkerName   -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
+$ExcludeRentalId_Array = @($ExcludeRentalId -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 
 $StartMessage = "$StartMessage".Trim()
 $ExtensionMessage = "$ExtensionMessage".Trim()
@@ -256,6 +258,10 @@ if ($AllRigs_Request) {
                 $Pool_Currency = "BTC"
 
                 $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
+
+                if ($Pool_RigEnable -and $_.rental_id -in $ExcludeRentalId_Array) {
+                    $Pool_RigEnable = $false
+                }
 
                 if ($_.status.status -eq "rented" -or $_.status.rented) {
 
