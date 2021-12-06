@@ -83,6 +83,13 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Wallets.$_ -or $Inf
 
     foreach($Pool_Region in $Pool_Regions) {
         $Pool_SSL = $false
+        $Pool_FailOver = @([PSCustomObject]@{
+                                Protocol = "stratum+tcp"
+                                Host     = "$(if ($Pool_Region -ne "us") {$Pool_Region})$Pool_Host"
+                                Port     = 4001
+                                User     = "$($Wallets.$Pool_CoinSymbol).{workername:$Worker}"
+                                Pass     = "c=$($Pool_CoinSymbol)"
+                            })
         foreach($Pool_Port in $Pool_Ports) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Coin.Algo
@@ -102,6 +109,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Wallets.$_ -or $Inf
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee
+                Failover      = $Pool_FailOver
                 DataWindow    = $DataWindow
                 Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_shared
                 Hashrate      = $Stat.HashRate_Live
@@ -121,6 +129,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Wallets.$_ -or $Inf
                 Email         = $Email
             }
             $Pool_SSL = $true
+            $Pool_FailOver = $null
         }
     }
 }
