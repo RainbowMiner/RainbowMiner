@@ -9,18 +9,18 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "1.30"
+$Version = "1.31"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.30-teamblack/TeamBlackMiner_1_30_Ubuntu_18_04_Cuda_11_5_cpufix.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.31-teamblack/TeamBlackMiner_1_31_Ubuntu_18_04_Cuda_11_5.tar.gz"
             Cuda = "11.5"
         }
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.30-teamblack/TeamBlackMiner_1_30_Ubuntu_18_04_Cuda_11_4_cpufix.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.31-teamblack/TeamBlackMiner_1_31_Ubuntu_18_04_Cuda_11_4.tar.gz"
             Cuda = "11.4"
         }
     )
@@ -29,15 +29,15 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.30-teamblack/TeamBlackMiner_1_30_cuda_11_5_cpufix.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.31-teamblack/TeamBlackMiner_1_31_cuda_11_5.7z"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.30-teamblack/TeamBlackMiner_1_30_cuda_11_4_cpufix.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.31-teamblack/TeamBlackMiner_1_31_cuda_11_4.7z"
             Cuda = "11.4"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.30-teamblack/TeamBlackMiner_1_30_cuda_11_2_cpufix.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.31-teamblack/TeamBlackMiner_1_31_cuda_11_2.7z"
             Cuda = "11.2"
         }
     )
