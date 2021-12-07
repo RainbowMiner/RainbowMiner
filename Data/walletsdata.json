@@ -114,6 +114,28 @@
         "divisor":  100000000
     },
     {
+        "symbol":  "LCC",
+        "match":  "^C",
+        "rpc":  "https://chainz.cryptoid.info/lcc/api.dws?q=addressinfo&a={w}",
+        "address":  "address",
+        "balance":  "balance",
+        "received":  "",
+        "divisor":  1,
+        "verify":  "status",
+        "verify_value":  "success"
+    },
+    {
+        "symbol":  "LCC",
+        "match":  "^MATH",
+        "rpc":  "https://chainz.cryptoid.info/lcc/api.dws?q=addressinfo&a={w}",
+        "address":  "address",
+        "balance":  "balance",
+        "received":  "",
+        "divisor":  1,
+        "verify":  "status",
+        "verify_value":  "success"
+    },
+    {
         "symbol":  "LTC",
         "match":  "^[LM3]",
         "rpc":  "https://sochain.com/api/v2/get_address_balance/ltc/{w}",
