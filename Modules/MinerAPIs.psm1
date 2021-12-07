@@ -155,15 +155,38 @@ class Miner {
             $this.Port = $Miner_Port
 
             if ($this.EnableAutoPort) {
-                try {
-                    $PortsInUse = @((([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners()).Port | Where-Object {$_} | Select-Object -Unique)
+
+                [int[]]$PortsInUse = try {
+                    $ipProperties = [Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()
+                    @($ipProperties.GetActiveTcpListeners().Port) + @($ipProperties.GetActiveTcpConnections().LocalEndPoint.Port) | Where-Object {$_} | Sort-Object -Unique
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+
+                    try {
+                        if ($Global:IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
+                            Get-ChildItem ".\IncludesLinux\bash" -Filter "getports.sh" -File | Foreach-Object {
+                                try {
+                                    & chmod +x "$($_.FullName)" > $null
+                                    Invoke-exe $_.FullName -ExpandLines
+                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            }
+                        } elseif ($Global:IsWindows) {
+                            if (Get-Command "Get-NetTCPConnection" -ErrorAction Ignore) {
+                                (Get-NetTCPConnection -ErrorAction Stop).LocalPort | Sort-Object -Unique
+                            } else {
+                                netstat -anp TCP | Foreach-Object {"$($_)".Trim() -split "\s+" | Select-Object -Index 1} | Where-Object {$_ -match ":(\d+)$"} | Foreach-Object {[int]$Matches[1]} | Sort-Object -Unique
+                            }
+                        }
+                    } catch {
+                        Write-Log -Level Warn "Auto-Port failed for $($this.Name): $($_.Exception.Message)"
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+                }
+
+                if ($PortsInUse) {
                     $portmax = [math]::min($this.Port+9999,65535)
                     while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
                     if ($this.Port -gt $portmax) {$this.Port=$Miner_Port}
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Warn "Auto-Port failed for $($this.Name): $($_.Exception.Message)"
-                    $this.Port=$Miner_Port
                 }
             }
 
