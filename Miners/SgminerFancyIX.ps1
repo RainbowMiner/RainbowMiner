@@ -10,7 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0
-$Version = "v0.8.0"
+$Version = "0.8.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-FancyIX\sgminer"
