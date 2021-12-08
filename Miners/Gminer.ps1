@@ -11,15 +11,15 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "2.73"
+$Version = "2.74"
 $DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.73-gminer/gminer_2_73_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.74-gminer/gminer_2_74_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.73-gminer/gminer_2_73_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.74-gminer/gminer_2_74_windows64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
@@ -63,7 +63,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         if (-not $Device) {return}
 
-        #$ContestWallet = if ($Session.Config.Coins.ETH.Wallet -match "^0x[0-9a-f]{40}$") {$Session.Config.Coins.ETH.Wallet} else {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"}
+        $ContestWallet = if ($Session.Config.Coins.ETH.Wallet -match "^0x[0-9a-f]{40}$") {$Session.Config.Coins.ETH.Wallet} else {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"}
 
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or [version]$_.Version -le [version]$Version)}).ForEach({
             $First = $true
