@@ -1758,12 +1758,13 @@ Where `PATH_TO_RAINBOWMINER` is the RainbowMiner installation directory.
 - add "MiningRigRentals" to the PoolName list and make sure it is not in the ExcludePoolName list (config.txt or [C]onfiguration->[S]elections)
 - edit "Config\pools.config.txt", find the MiningRigRentals section and add (API_Secret, User) or edit the following data:
 
-    
+```
     "API_Key": "<put your MiningRigRentals API-key here>",
     "API_Secret": "<put your MiningRigRentals API-secret key here>",
     "User": "<put your MiningRigRentals username here>",
     "Worker": "<put your RainbowMiner workername here or leave $WorkerName>",
     "EnableMining": "0",
+```
 
 All rigs will be automatically set to status "online", at [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) and rest idle within RainbowMiner. If someone starts a rental, RainbowMiner will detect this and run the respective miner exclusively, until the rental ends. All other rigs on [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) will be deactivated, for that time.
 
