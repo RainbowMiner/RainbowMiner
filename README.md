@@ -1758,7 +1758,7 @@ Where `PATH_TO_RAINBOWMINER` is the RainbowMiner installation directory.
 - add "MiningRigRentals" to the PoolName list and make sure it is not in the ExcludePoolName list (config.txt or [C]onfiguration->[S]elections)
 - edit "Config\pools.config.txt", find the MiningRigRentals section and add (API_Secret, User) or edit the following data:
 
-
+    
     "API_Key": "<put your MiningRigRentals API-key here>",
     "API_Secret": "<put your MiningRigRentals API-secret key here>",
     "User": "<put your MiningRigRentals username here>",
