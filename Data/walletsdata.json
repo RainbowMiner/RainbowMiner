@@ -10,20 +10,9 @@
     },
     {
         "symbol":  "BCH",
-        "match":  "^1",
+        "match":  "^[1q]",
         "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
         "address":  "data.{w}.address.legacy",
-        "balance":  "data.{w}.address.balance",
-        "received":  "data.{w}.address.received",
-        "divisor":  100000000,
-        "verify":  "context.code",
-        "verify_value":  "200"
-    },
-    {
-        "symbol":  "BCH",
-        "match":  "^q",
-        "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
-        "address":  "data.{w}.address.cashaddr",
         "balance":  "data.{w}.address.balance",
         "received":  "data.{w}.address.received",
         "divisor":  100000000,
@@ -112,6 +101,17 @@
         "balance":  "balance",
         "received":  "totalReceived",
         "divisor":  100000000
+    },
+    {
+        "symbol":  "LCC",
+        "match":  "^C|^MATH",
+        "rpc":  "https://chainz.cryptoid.info/lcc/api.dws?q=addressinfo&a={w}",
+        "address":  "address",
+        "balance":  "balance",
+        "received":  "",
+        "divisor":  1,
+        "verify":  "status",
+        "verify_value":  "success"
     },
     {
         "symbol":  "LTC",
