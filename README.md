@@ -89,24 +89,24 @@ On my system (@ParalegicRacehorse), xmr-stak will not run with hugepages<1024. S
 Nvidia has kindly supplied a ppa for their official drivers.
 
 1. install some needed packages and add the drivers repository:
-
-
-    sudo apt update
-    sudo add-apt-repository ppa:graphics-drivers/ppa
-    sudo apt -y install dkms build-essential
-    sudo apt update
+```
+sudo apt update
+sudo add-apt-repository ppa:graphics-drivers/ppa
+sudo apt -y install dkms build-essential
+sudo apt update
+```
 
 2. optionally, uninstall any existing Nvidia driver:
-
-
-    sudo apt-get -y purge nvidia-*
-    sudo apt-get -y autoremove --purge
+```
+sudo apt-get -y purge nvidia-*
+sudo apt-get -y autoremove --purge
+```
 
 3. now install the new Nvidia driver and reboot
-
-
-    sudo apt -y install nvidia-headless-450 nvidia-driver-450 nvidia-compute-utils-450 nvidia-cuda-toolkit
-    sudo reboot
+```
+sudo apt -y install nvidia-headless-450 nvidia-driver-450 nvidia-compute-utils-450 nvidia-cuda-toolkit
+sudo reboot
+```
 
 **Important: check which version of the Nvidia driver you need (i.e. which is compatible with your graphics card)** You can check on the Nvidia website which products are supported by each driver (the latest one is usually the best if you have a recent graphics card). Not doing so can cause black screen on reboot. Only the main version is needed (don't bother about the number after the point, so if latest driver is 430.24, just write 430).
 
