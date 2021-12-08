@@ -1906,13 +1906,14 @@ The profit switcher can be controlled like follows. To be able to compare the po
 
 ### How can I make sure, my hand tuned config files in the Bin folders, will not be deleted during miner updates?
 
-- RainbowMiner has a built-in list of protected files, that will be kept during updates: 
-```
-    config.txt
-    nvidia.txt
-    amd.txt
-    config_*.txt
-```
+- RainbowMiner has a built-in list of protected files, that will be kept during updates:
+
+
+      config.txt
+      nvidia.txt
+      amd.txt
+      config_*.txt
+
 
 - If you want to add your own userdefined files, that should be kept from update to update, edit the file `Config\minerconfigfiles.txt` and add your files (wildcards are allowed), one at each row.
 
