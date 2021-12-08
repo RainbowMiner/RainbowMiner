@@ -90,6 +90,7 @@ Nvidia has kindly supplied a ppa for their official drivers.
 
 1. install some needed packages and add the drivers repository:
 
+
     sudo apt update
     sudo add-apt-repository ppa:graphics-drivers/ppa
     sudo apt -y install dkms build-essential
@@ -97,10 +98,12 @@ Nvidia has kindly supplied a ppa for their official drivers.
 
 2. optionally, uninstall any existing Nvidia driver:
 
+
     sudo apt-get -y purge nvidia-*
     sudo apt-get -y autoremove --purge
 
 3. now install the new Nvidia driver and reboot
+
 
     sudo apt -y install nvidia-headless-450 nvidia-driver-450 nvidia-compute-utils-450 nvidia-cuda-toolkit
     sudo reboot
@@ -342,8 +345,7 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
     "EnableServerPools": "1",
     "ServerConfigName": "config,coins,pools",
     "EnableServerExcludeList": "0",
-    "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,Serve
-rPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
+    "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,ServerPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
 
 If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the individual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectoy `<workername>`.
 Setting the field "EnableServerExcludeList" to "1" lets your client use the servers "ExcludeServerConfigVars" field, instead of the local one in config.txt.
