@@ -10,15 +10,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.8.6.3"
+$Version = "0.8.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.6.3-teamred/teamredminer-v0.8.6.3-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.7-teamred/teamredminer-v0.8.7-linux.tgz"
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.6.3-teamred/teamredminer-v0.8.6.3-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.7-teamred/teamredminer-v0.8.7-win.zip"
     $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
@@ -116,22 +116,22 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
                     $IsVerthash = $Algorithm_Norm_0 -eq "Verthash"
 
-                    $AdditionalParams = @("--watchdog_disabled")
+                    [System.Collections.Generic.List[string]]$AdditionalParams = @("--watchdog_disabled")
                     if ($Pools.$Algorithm_Norm_0.Name -match "^bsod" -and $Algorithm_Norm_0 -eq "x16rt") {
-                        $AdditionalParams += "--no_ntime_roll"
+                        $AdditionalParams.Add("--no_ntime_roll")
                     }
                     if ($IsLinux -and $Algorithm_Norm_0 -match "^cn") {
-                        $AdditionalParams += "--allow_large_alloc"
+                        $AdditionalParams.Add("--allow_large_alloc")
                     }
                     if ($_.MainAlgorithm -eq "nimiq") {
                         $Pool_User = $Pools.$Algorithm_Norm_0.Wallet
                         $Pool_Protocol = "stratum+tcp"
-                        $AdditionalParams += "--nimiq_worker=$($Pools.$Algorithm_Norm_0.Worker)"
+                        $AdditionalParams.Add("--nimiq_worker=$($Pools.$Algorithm_Norm_0.Worker)")
                         #if ($Pools.$Algorithm_Norm_0.Name -match "Icemining") {
                         #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
                         #}
                     } elseif ($IsVerthash) {
-                        $AdditionalParams += "--verthash_file='$($DatFile)'"
+                        $AdditionalParams.Add("--verthash_file='$($DatFile)'")
                     }
                     $First = $False
                 }
