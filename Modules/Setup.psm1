@@ -3442,7 +3442,7 @@ function Start-Setup {
                         PowerPrice = ""
                         Enable = "0"
                         Pause = "0"
-                        Update = "0"
+                        EnableUpdate = "0"
                         EnableMiningHeatControl = ""
                         MiningHeatControl = ""
                         Algorithm = ""
