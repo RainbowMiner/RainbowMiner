@@ -2634,7 +2634,7 @@ function Expand-WebRequest {
             }
         } else {
             $Params = @{
-                FilePath     = "7z"
+                FilePath     = "7z.exe"
                 ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
                 WindowStyle  = "Hidden"
             }
