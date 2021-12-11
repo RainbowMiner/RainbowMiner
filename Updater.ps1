@@ -73,17 +73,17 @@ try {
         $FromFullPath = [IO.Path]::GetFullPath($FileName)
         $ToFullPath   = [IO.Path]::GetFullPath(".")
 
-        if ($IsLinux) {
+        if ($IsWindows) {
+            $Params = @{
+                FilePath     = "7z.exe"
+                ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
+            }
+        } else {
             $Params = @{
                 FilePath     = "7z"
                 ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y"
                 RedirectStandardOutput = Join-Path ".\Logs" "7z-console.log"
                 RedirectStandardError  = Join-Path ".\Logs" "7z-error.log"
-            }
-        } else {
-            $Params = @{
-                FilePath     = "7z.exe"
-                ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
             }
         }
 
@@ -92,11 +92,7 @@ try {
 
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
-        if ($IsLinux) {
-            Get-ChildItem ".\*.sh" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
-            Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
-            Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
-        } elseif ($IsWindows) {
+        if ($IsWindows) {
             #Handle write locks
             try {
                 if (-not (Test-Path "_update")) {New-Item "_update" -ItemType "directory" > $null}
@@ -137,6 +133,10 @@ try {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Host "Failed to update exe files. Please download manually from Github." -ForegroundColor Yellow
             }
+        } else {
+            Get-ChildItem ".\*.sh" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
+            Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
+            Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
         }
 
         if (-not $DownloaderConfig.EnableKeepDownloads -and (Test-Path $FileName)) {

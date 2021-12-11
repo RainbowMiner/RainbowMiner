@@ -757,19 +757,18 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 Copy-Item $_ $DebugPath -ErrorAction Ignore
             }
 
-            if ($IsLinux) {
+            if ($IsWindows) {
                 $Params = @{
-                    FilePath     = "7z"
+                    FilePath     = "7z.exe"
                     ArgumentList = "a `"$($DebugPath).zip`" `"$(Join-Path $DebugPath "*")`" -y -sdel -tzip"
+                    WindowStyle  = "Hidden"
                 }
             } else {
                 $Params = @{
                     FilePath     = "7z"
                     ArgumentList = "a `"$($DebugPath).zip`" `"$(Join-Path $DebugPath "*")`" -y -sdel -tzip"
-                    WindowStyle  = "Hidden"
                 }
             }
-
 
             $Params.PassThru = $true
             (Start-Process @Params).WaitForExit()>$null
