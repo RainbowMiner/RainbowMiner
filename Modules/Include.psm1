@@ -3081,14 +3081,27 @@ function Get-Device {
             #Get WDDM data               
             $Global:WDDM_Devices = try {
                 Get-CimInstance CIM_VideoController | ForEach-Object {
-                    $PnpDevice = Get-PnpDevice $_.PNPDeviceId
-                    $BusId         = ($PnpDevice | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber" -ErrorAction Ignore).Data
-                    $DeviceAddress = ($PnpDevice | Get-PnpDeviceProperty "DEVPKEY_Device_Address" -ErrorAction Ignore).Data
+                    $BusId = $null
+                    try {
+                        if ((Get-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.PNPDeviceID)" -name locationInformation).locationInformation -match "\d+,\d+,\d+") {
+                            $BusId = "$("{0:x2}:{1:x2}" -f ($Matches[0] -split "," | Foreach-Object {[int]$_}))"
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        $BusId = $null
+                    }
+                    if ($BusId -notmatch "[0-9A-F]+:[0-9A-F]+") {
+                        $PnpInfo = Get-PnpDevice $_.PNPDeviceId | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber","DEVPKEY_Device_Address" -ErrorAction Ignore
+                        $BusNumber     = ($PnpInfo | Where-Object KeyName -eq "DEVPKEY_Device_BusNumber").Data #($PnpDevice | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber" -ErrorAction Ignore).Data
+                        $DeviceAddress = ($PnpInfo | Where-Object KeyName -eq "DEVPKEY_Device_Address").Data #($PnpDevice | Get-PnpDeviceProperty "DEVPKEY_Device_Address" -ErrorAction Ignore).Data
+                        $BusId = if ($BusNumber -ne $null -and $BusNumber.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusNumber,([int]$DeviceAddress -shr 16)} else {$null}
+                    }
+                    
                     if ($DeviceAddress -eq $null) {$DeviceAddress = 0}
                     [PSCustomObject]@{
                         Name        = $_.Name
                         InstanceId  = $_.PNPDeviceId
-                        BusId       = $(if ($BusId -ne $null -and $BusId.GetType() -match "int") {"{0:x2}:{1:x2}" -f $BusId,([int]$DeviceAddress -shr 16)})
+                        BusId       = $BusId
                         SubId       = if ($_.PNPDeviceId -match "DEV_([0-9A-F]{4})") {$Matches[1]} else {$null}
                         Vendor      = switch -Regex ([String]$_.AdapterCompatibility) { 
                                         "Advanced Micro Devices" {"AMD"}
