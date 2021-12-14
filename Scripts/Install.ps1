@@ -86,6 +86,7 @@ if ($IsWindows) {
 
 Write-Host "Detecting GPUs .."
 $GNVIDIA = ($lspci | Where-Object {$_ -match "NVIDIA" -and $_ -notmatch "nForce"} | Measure-Object).Count
+$GINTEL  = ($lspci | Where-Object {$_ -match "INTEL"} | Measure-Object).Count
 $GAMD    = ($lspci | Where-Object {$_ -match "Advanced Micro Devices" -and $_ -notmatch "RS880" -and $_ -notmatch "Stoney"} | Measure-Object).Count
 
 if ($GNVIDIA) {
