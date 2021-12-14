@@ -74,7 +74,14 @@ if ($IsWindows) {
         }
     }
 
-    Invoke-Expression ".\Includes\pci\lspci.exe" | Select-String "VGA compatible controller" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-Null
+    @(try {
+        Get-CimInstance CIM_VideoController | Where-Object {
+            (Get-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.PNPDeviceID)" -name locationinformation).locationInformation -match "\d+,\d+,\d+"
+        } | Foreach-Object {"$("{0:X2}:{1:X2}.{2:d}" -f ($Matches[0] -split "," | Foreach-Object {[int]$_})) $(if ($_.AdapterCompatibility -match "Advanced Micro Devices") {"$($Matches[0]) "})$($_.Name)"} | Sort-Object
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }) | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-Null
 }
 
 Write-Host "Detecting GPUs .."
