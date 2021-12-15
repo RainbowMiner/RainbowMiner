@@ -12,9 +12,9 @@ $Port = "366{0:d2}"
 $Version = "4"
 
 if ($IsLinux) {
-    $Path = ".\Bin\GPU-VerthashSP\SPMiner"
+    $Path = ".\Bin\GPU-VerthashSP\spminer"
 
-    $DatFile = "$env:HOME/verthash.dat"
+    $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 
     $UriCuda = @(
         [PSCustomObject]@{
@@ -25,7 +25,7 @@ if ($IsLinux) {
 } else {
     $Path = ".\Bin\GPU-VerthashSP\SPMiner.exe"
 
-    $DatFile = "$env:APPDATA\verthash.dat"
+    $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 
     $UriCuda = @(
         [PSCustomObject]@{
