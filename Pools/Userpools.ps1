@@ -11,7 +11,8 @@ param(
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
-    [String]$Name = ""
+    [String]$Name = "",
+    [String]$Password = ""
 )
 
 $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and ($Wallets."$($_.Currency)" -or $InfoOnly)} | ForEach-Object {
@@ -21,6 +22,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         WorkerName = "{workername:$Worker}"
         Currency   = "$($_.Currency)".ToUpper()
         CoinSymbol = "$($_.CoinSymbol)".ToUpper()
+        Password   = "$($Password)"
     }
 
     $Pool_Coin     = Get-Coin $Pool_Params["CoinSymbol"]
