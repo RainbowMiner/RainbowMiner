@@ -54,6 +54,17 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Currencies = @("BTC", "DASH", "LTC","TRX","USDT") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
+if (-not $InfoOnly) {
+    $USDT_Token = if ($Pool_Currencies -contains "USDT") {
+        if ($Wallets.USDT -match "^0x") {"USDT"}
+        elseif ($Wallets.USDT -clike "T*") {"USDT-TRC20"}
+        else {
+            Write-Log -Level Warn "Pool $($Name): wrong wallet address format for USDT. Please use either ERC20 0x... or TRC20 T... format"
+            $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -ne "USDT"}
+        }
+    }
+}
+
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
@@ -115,7 +126,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = $Wallets.$Pool_ExCurrency
-                Pass          = "ID={workername:$Worker},c=$Pool_ExCurrency,mc=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
+                Pass          = "ID={workername:$Worker},c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated

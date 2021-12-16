@@ -60,9 +60,19 @@ if ($PoolCoins_Request) {
     if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
 }
 
-if (-not $InfoOnly -and $Pool_Currencies.Count -gt 1) {
-    if ($AECurrency -eq "" -or $AECurrency -notin $Pool_Currencies) {$AECurrency = $Pool_Currencies | Select-Object -First 1}
-    $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
+if (-not $InfoOnly) {
+    $USDT_Token = if ($Pool_Currencies -contains "USDT") {
+        if ($Wallets.USDT -match "^0x") {"USDT"}
+        elseif ($Wallets.USDT -clike "T*") {"USDT-TRC20"}
+        else {
+            Write-Log -Level Warn "Pool $($Name): wrong wallet address format for USDT. Please use either ERC20 0x... or TRC20 T... format"
+            $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -ne "USDT"}
+        }
+    }
+    if ($Pool_Currencies.Count -gt 1) {
+        if ($AECurrency -eq "" -or $AECurrency -notin $Pool_Currencies) {$AECurrency = $Pool_Currencies | Select-Object -First 1}
+        $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
+    }
 }
 
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
@@ -118,7 +128,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = $Wallets.$Pool_Currency
-                Pass          = "ID={workername:$Worker},c=$Pool_Currency,m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
+                Pass          = "ID={workername:$Worker},c=$(if ($Pool_Currency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_Currency}),m=party.$($PartyPassword){diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
