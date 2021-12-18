@@ -49,11 +49,11 @@ $Pool_Fee = 0.45
 $Pool_Regions = @("na","eu","sea","jp")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Currencies = @("BTC","DASH","XVG","DGB","KMD","DOGE") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
+$Pool_Currencies = @("BTC","LTC","DASH","DGB","KMD","RVN","DOGE") + @($PoolCoins_Request.PSObject.Properties | Where-Object {$_.Value.conversion_disabled -ne "1"} | Foreach-Object {if ($_.Value.symbol -eq $null){$_.Name} else {$_.Value.symbol}} | Select-Object -Unique) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+$PoolCoins_Request.PSObject.Properties.Name | ForEach-Object {
 
     $Pool_CoinSymbol = $_
     $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
