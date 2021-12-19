@@ -3412,8 +3412,11 @@ function Invoke-Core {
         $Error.Clear()
     }
 
-    Get-Job -State Completed | Where-Object {$_.Name -notmatch "^WebRequest-" -and $_.HasMoreData} | Receive-Job | Out-Host
-    Get-Job -State Completed | Where-Object {$_.Name -notmatch "^WebRequest-"} | Remove-Job -Force
+    Get-Job | Where-Object {$_.State -in @("Completed","Stopped","Failed") -and $_.Name -notmatch "^WebRequest-"} | Foreach-Object {
+        if ($_.HasMoreData) {Receive-Job $_ | Out-Host}
+        Remove-Job -Force
+    }
+
     if ($Global:GlobalSysInfoJob -and $Global:GlobalSysInfoJob.State -eq "Running") {$Global:GlobalSysInfoJob | Receive-Job > $null}
 
     [System.GC]::Collect()
