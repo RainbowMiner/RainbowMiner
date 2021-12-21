@@ -64,7 +64,7 @@ if (-not $InfoOnly) {
 
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$_.algo -ne "token"} | ForEach-Object {
 
     $Pool_CoinSymbol = $_
     $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}    

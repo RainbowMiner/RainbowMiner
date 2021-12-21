@@ -72,7 +72,7 @@ if (-not $InfoOnly) {
     }
 }
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | ForEach-Object {
     $Pool_Host = "$($Pool_Request.$_.name).mine.zergpool.com"
     $Pool_Port = $Pool_Request.$_.port
     $Pool_Algorithm = $Pool_Request.$_.name
