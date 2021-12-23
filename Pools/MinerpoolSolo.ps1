@@ -25,7 +25,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "FLUX";  port = 2058;  fee = 1.0; rpc = "solo-flux"}
     [PSCustomObject]@{symbol = "RVN";   port = 16069; fee = 1.0; rpc = "solo-rvn"}
     [PSCustomObject]@{symbol = "TENT";  port = 3059;  fee = 4.0; rpc = "solo-tent"}
-    [PSCustomObject]@{symbol = "VDL";   port = 7058;  fee = 2.0; rpc = "solo-vdl"}
     [PSCustomObject]@{symbol = "ZER";   port = 15068; fee = 1.0; rpc = "solo-zer"}
 )
 
