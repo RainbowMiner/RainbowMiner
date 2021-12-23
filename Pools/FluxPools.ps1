@@ -77,7 +77,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
     }
 
     if ($ok -and -not $InfoOnly) {
-        $Pool_Hashrate = if ($Pool_Request.pools.$Pool_Name.hashrate -ne $null) {$Pool_Request.pools.$Pool_Name.hashrate} else {ConvertFrom-Hash "$($Pool_Request.pools.$Pool_Name.hashrateString)"}
+        $Pool_Hashrate = ConvertFrom-Hash "$($Pool_Request.pools.$Pool_Name.hashrateString)"
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate ([double]$Pool_Hashrate) -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
@@ -109,6 +109,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
                     TSL           = $Pool_TSL
                     BLK           = $Stat.BlockRate_Average
                     WTM           = $true
+                    WTMMode       = if ($Pool_Currency -eq "FLUX") {"WTM"} else {$null}
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
