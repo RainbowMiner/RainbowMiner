@@ -1934,7 +1934,7 @@ function Invoke-Core {
             $start = Get-UnixTimestamp -Milliseconds
             Get-PoolsContent "WhatToMine" -Parameters @{Pools = $Pools_WTM; StatSpan = $RoundSpan; InfoOnly = $false; StatAverage = $UserConfig.Pools.WhatToMine.StatAverage; StatAverageStable = $UserConfig.Pools.WhatToMine.StatAverageStable} | Foreach-Object {
                 $Pool_WTM = $_
-                $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
+                $Pools_WTM | Where-Object {$_.Price -eq 0 -and $_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol -and (-not $_.WTMMode -or $_.WTMMode -eq $Pool_WTM.Mode)} | Foreach-Object {
                    $_.Price         = $Pool_WTM.Price * $_.PenaltyFactor
                    $_.StablePrice   = $Pool_WTM.StablePrice * $_.PenaltyFactor
                    $_.MarginOfError = $Pool_WTM.MarginOfError

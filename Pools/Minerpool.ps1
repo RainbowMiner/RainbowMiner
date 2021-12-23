@@ -102,6 +102,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
                 WTM           = $Pool_Price -eq 0
+                WTMMode       = "WTM"
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
