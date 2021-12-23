@@ -16,7 +16,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Regions = @("eu","na","asia")
+$Pool_Regions = @("eu","us","asia")
 
 [hashtable]$Pool_RegionsTable = @{}
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
@@ -24,7 +24,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "FLUX";  port = 2033;  fee = 1.0; rpc = "flux"; rewards = "hourlyRewardsPerSol"}
     [PSCustomObject]@{symbol = "RVN";   port = 16059; fee = 1.0; rpc = "rvn";  rewards = "hourlyRewardsPerHash"}
-    [PSCustomObject]@{symbol = "TENT";  port = 3034;  fee = 4.0; rpc = "tent"; rewards = "hourlyRewardsPerSol"}
+    [PSCustomObject]@{symbol = "TENT";  port = 3034;  fee = 4.0; rpc = "tent"; host = "xsg"; rewards = "hourlyRewardsPerSol"}
     [PSCustomObject]@{symbol = "ZER";   port = 15058; fee = 1.0; rpc = "zer";  rewards = "hourlyRewardsPerSol"}
 )
 
@@ -89,7 +89,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
                 StablePrice   = if ($Pool_Price -gt 0) {$Stat.$StatAverageStable} else {0}
                 MarginOfError = if ($Pool_Price -gt 0) {$Stat.Week_Fluctuation} else {0}
                 Protocol      = "stratum+tcp"
-                Host          = "$($Pool_Region).minerpool.org"
+                Host          = "$($Pool_HostPath)-$($Pool_Region).minerpool.org"
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = $Password

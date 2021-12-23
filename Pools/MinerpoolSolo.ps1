@@ -16,16 +16,16 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Regions = @("eu","na","asia")
+$Pool_Regions = @("eu","us","asia")
 
 [hashtable]$Pool_RegionsTable = @{}
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "FLUX";  port = 2058;  fee = 1.0; rpc = "solo-flux"}
-    [PSCustomObject]@{symbol = "RVN";   port = 16069; fee = 1.0; rpc = "solo-rvn"}
-    [PSCustomObject]@{symbol = "TENT";  port = 3059;  fee = 4.0; rpc = "solo-tent"}
-    [PSCustomObject]@{symbol = "ZER";   port = 15068; fee = 1.0; rpc = "solo-zer"}
+    [PSCustomObject]@{symbol = "FLUX";  port = 2058;  fee = 1.0; rpc = "solo-flux"; host = "flux"}
+    [PSCustomObject]@{symbol = "RVN";   port = 16069; fee = 1.0; rpc = "solo-rvn";  host = "rvn"}
+    [PSCustomObject]@{symbol = "TENT";  port = 3059;  fee = 4.0; rpc = "solo-tent"; host = "xsg"}
+    [PSCustomObject]@{symbol = "ZER";   port = 15068; fee = 1.0; rpc = "solo-zer";  host = "zer"}
 )
 
 if (-not $Password) {$Password = "xyz"}
@@ -37,6 +37,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
     $Pool_RpcPath   = $_.rpc
 
     $Pool_Divisor   = 1
+    $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
@@ -78,7 +79,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+tcp"
-                Host          = "$($Pool_Region).minerpool.org"
+                Host          = "$($Pool_HostPath)-$($Pool_Region).minerpool.org"
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = $Password
