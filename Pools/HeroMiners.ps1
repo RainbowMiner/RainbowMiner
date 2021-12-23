@@ -145,6 +145,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                         Difficulty    = if ($Pool_SoloMining) {$Stat.Diff_Average} else {$null}
                         SoloMining    = $Pool_SoloMining
                         WTM           = $true
+                        WTMMode       = if ($Pool_Currency -eq "FLUX") {"WTM"} else {$null}
                         EthMode       = $Pool_EthProxy
                         Name          = $Name
                         Penalty       = 0
