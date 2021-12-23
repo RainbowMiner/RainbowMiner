@@ -22,11 +22,10 @@ $Pool_Regions = @("eu","na","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "FLUX";  port = 2033;  fee = 1.0; rpc = "flux"}
-    [PSCustomObject]@{symbol = "RVN";   port = 16059; fee = 1.0; rpc = "rvn"}
-    [PSCustomObject]@{symbol = "TENT";  port = 3034;  fee = 4.0; rpc = "tent"}
-    [PSCustomObject]@{symbol = "VDL";   port = 7033;  fee = 2.0; rpc = "vdl"}
-    [PSCustomObject]@{symbol = "ZER";   port = 15058; fee = 1.0; rpc = "zer"}
+    [PSCustomObject]@{symbol = "FLUX";  port = 2033;  fee = 1.0; rpc = "flux"; rewards = "hourlyRewardsPerSol"}
+    [PSCustomObject]@{symbol = "RVN";   port = 16059; fee = 1.0; rpc = "rvn";  rewards = "hourlyRewardsPerHash"}
+    [PSCustomObject]@{symbol = "TENT";  port = 3034;  fee = 4.0; rpc = "tent"; rewards = "hourlyRewardsPerSol"}
+    [PSCustomObject]@{symbol = "ZER";   port = 15058; fee = 1.0; rpc = "zer";  rewards = "hourlyRewardsPerSol"}
 )
 
 if (-not $Password) {$Password = "xyz"}
@@ -70,8 +69,11 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
         $Pool_Hashrate = [decimal]$Pool_Request.hashrate
         $Pool_TSL      = [int]$Pool_Request.lbfSeconds
         $Pool_BLK      = [int]$Pool_Request.poolStats.last24hBlocks
+        $Pool_Fee      = [double]"$($Pool_Request.poolFee -replace "%")"
 
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Pool_Price    = if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.poolStats."$($_.rewards)" / $Global:Rates.$Pool_Currency * 24} else {0}
+
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value $Pool_Price -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
 
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
@@ -100,7 +102,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
-                WTM           = $true
+                WTM           = $Pool_Price -eq 0
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
