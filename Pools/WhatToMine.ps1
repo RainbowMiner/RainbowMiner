@@ -36,7 +36,7 @@ if ($ok) {
 
     $Pool_Coins = @($WTMWallets.CoinSymbol | Select-Object)
 
-    $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin} | Foreach-Object {
+    $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin -and $_.coin -ne "FLUX"} | Foreach-Object {
         $Pool_Currency   = $_.coin
         $Pool_Algorithm  = $_.algo
         if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
