@@ -21,8 +21,6 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "FLUX"; port = @(7011); fee = 1.0; rpc = "flux";  stratum = "flux.fluxpools.net"; regions = @("eu","us"); altsymbol = "ZEL"}
-    #[PSCustomObject]@{symbol = "TCR";  port = @(2200); fee = 0.5; rpc = "tcr";   stratum = "tcr.zellabs.net";    regions = @("eu","us")}
-    [PSCustomObject]@{symbol = "FIRO"; port = @(7017); fee = 1.0; rpc = "firo";  stratum = "zcoin.zellabs.net";  regions = @("eu","us"); altsymbol = "XZC"}
 )
 
 $Pools_Requests = [hashtable]@{}
