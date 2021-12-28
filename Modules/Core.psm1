@@ -267,7 +267,9 @@ function Start-Core {
         Write-Host "error" -ForegroundColor Red
     }
 
-    if ($IsWindows -and ($GpuMemSizeMB = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100)) {
+    if ($IsWindows -and ($Session.MineOnCPU -ne $false -or $Session.MineOnGPU -ne $false)) {
+        $GpuMemSizeMB = if ($Session.MineOnGPU -eq $false) {0} else {(($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100}
+        $CpuMemSizeMB = if ($Session.MineOnCPU -eq $false) {0} else {[Math]::Max(0,32-(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum/1GB)*1100}
         try {
             Write-Host "Checking Windows pagefile/virtual memory .. " -NoNewline
 
@@ -288,21 +290,29 @@ function Start-Core {
                     Write-Log -Level Info "$($_.Name) is set to initial size $($_.InitialSize) MB and maximum size $($_.MaximumSize) MB"
                 }
                 $PageFileMaxSize = ($PageFileInfo | Measure-Object -Property MaximumSize -Sum).Sum
-                if ($PageFileMaxSize -lt $GpuMemSizeMB) {
-                    $PageFile_Warn += "Pagefiles are too small ($($PageFileMaxSize) MB). Set them to a total minimum of $($GpuMemSizeMB) MB"
+
+                if ($PageFileMaxSize -lt ($GpuMemSizeMB + $CpuMemSizeMB)) {
+                    if ($Session.MineOnCPU -eq $null -and $CpuMemSizeMB -gt 0 -and $GpuMemSizeMB -gt 0) {
+                        $PageFile_Warn += "Pagefiles may be too small ($($PageFileMaxSize) MB). Set them to a total minimum:"
+                        $PageFile_Warn += "- if mining on CPU, only: $($CpuMemSizeMB) MB$(if ($PageFileMaxSize -ge $CpuMemSizeMB) {" (current pagefile is large enough)"})"
+                        $PageFile_Warn += "- if mining on GPU, only: $($GpuMemSizeMB) MB$(if ($PageFileMaxSize -ge $GpuMemSizeMB) {" (current pagefile is large enough)"})"
+                        $PageFile_Warn += "- if mining on CPU + GPU: $($GpuMemSizeMB + $CpuMemSizeMB) MB"
+                    } else {
+                        $PageFile_Warn += "Pagefiles are too small ($($PageFileMaxSize) MB). Set them to a total minimum of $($CpuMemSizeMB + $GpuMemSizeMB) MB"
+                    }
                 }
             } else {
                 $PageFile_Warn += "No pagefile found"
             }
             if ($PageFile_Warn) {
-                Write-Host "problem!" -ForegroundColor Red
+                Write-Host "Problem!" -ForegroundColor Red
                 $PageFile_Warn | Where-Object {$_} | Foreach-Object {Write-Log -Level Warn "$_"}
                 Write-Host " "
                 Write-Host "To adjust your pagefile settings:" -BackgroundColor Yellow -ForegroundColor Black
                 Write-Host "1. goto Computer Properties -> Advanced System Settings -> Performance -> Advanced -> Virtual Memory" -ForegroundColor Yellow
                 Write-Host "2. uncheck `"Automatically manage paging file size for all drives`"" -ForegroundColor Yellow
                 Write-Host "3. select `"Custom size`"" -ForegroundColor Yellow
-                Write-Host "4. enter $($GpuMemSizeMB) into the fields `"Initial Size (MB)`" and `"Maximum Size (MB)`"" -ForegroundColor Yellow
+                Write-Host "4. enter $($CpuMemSizeMB + $GpuMemSizeMB) into the fields `"Initial Size (MB)`" and `"Maximum Size (MB)`"" -ForegroundColor Yellow
                 Write-Host "5. click onto `"Set`" and then `"OK`"" -ForegroundColor Yellow
                 Write-Host " "
             } else {

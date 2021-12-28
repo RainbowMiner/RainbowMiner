@@ -406,10 +406,14 @@ if ($UseTimeSync) {Test-TimeSync}
 if (Test-Path $ConfigFile) {
     $Config_LogLevel = $null
     $Config_OpenCLPlatformSorting = $null
+    $Config_DeviceName = $null
+    $Config_ExcludeDeviceName = $null
     try {
         $Config_Content = Get-Content $ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $Config_LogLevel = $Config_Content.LogLevel
         $Config_OpenCLPlatformSorting = $Config_Content.OpenCLPlatformSorting
+        $Config_DeviceName = $Config_Content.DeviceName
+        $Config_ExcludeDeviceName = $Config_Content.ExcludeDeviceName
     } catch {if ($Error.Count) {$Error.RemoveAt(0)};$LogLevel}
     if ($Config_LogLevel -and $Config_LogLevel -ne "`$LogLevel") {$Session.LogLevel = $Config_LogLevel}
     if ($Config_OpenCLPlatformSorting -and $Config_OpenCLPlatformSorting -ne "`$OpenCLPlatformSorting") {
@@ -417,6 +421,18 @@ if (Test-Path $ConfigFile) {
             $Config_OpenCLPlatformSorting = $Config_OpenCLPlatformSorting.Trim()
             $Config_OpenCLPlatformSorting = @(if ($Config_OpenCLPlatformSorting -ne ''){@([regex]::split($Config_OpenCLPlatformSorting,"\s*[,;]+\s*") | Foreach-Object {$_.ToUpper()} | Where-Object {$_ -in @("AMD","INTEL","NVIDIA")})})
             if ($Config_OpenCLPlatformSorting) {$Session.OpenCLPlatformSorting = $Config_OpenCLPlatformSorting}
+        }
+    }
+    if ($Config_DeviceName -ne "`$DeviceName") {
+        $Session.MineOnCPU = $Session.MineOnGPU = $false
+        $Test_ExludeDeviceName = [regex]::split("$(if ($Config_ExcludeDeviceName -ne "`$ExcludeDeviceName") {$Config_ExcludeDeviceName})","\s*[,;]+\s*")
+        $Test_DeviceName = [regex]::split($Config_DeviceName,"\s*[,;]+\s*") | Where-Object {$_ -notin $Test_ExludeDeviceName}
+        if ($Test_DeviceName -contains "CPU") {
+            $Test_DeviceName = $Test_DeviceName | Where-Object {$_ -ne "CPU"}
+            $Session.MineOnCPU = $true
+        }
+        if ($Test_DeviceName) {
+            $Session.MineOnGPU = $true
         }
     }
 }
