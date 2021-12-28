@@ -67,7 +67,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
-    [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""} #Minotaurx/RING
+    [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""; ExcludePoolName = "^MiningRigRentals"} #Minotaurx
     [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #Myriad-groestl
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt(128,2,1)
     [PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #NIST5
