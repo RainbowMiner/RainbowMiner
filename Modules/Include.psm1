@@ -379,12 +379,10 @@ Function Write-Log {
             }
             'Verbose' {
                 $LevelText = 'VERBOSE:'
-                $Color = "White"
                 Break
             }
             'Debug' {
                 $LevelText = 'DEBUG:'
-                $Color = "Blue"
                 Break
             }
         }
