@@ -15,6 +15,7 @@
     "argon2coin":  "Argon2",
     "argon2crds":  "Argon2d250",
     "argon2d":  "Argon2d500",
+    "argon2d16000":  "Argon2d16000",
     "argon2d250":  "Argon2d250",
     "argon2d4096":  "Argon2d4096",
     "argon2d500":  "Argon2dDyn",
