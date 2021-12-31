@@ -3,6 +3,7 @@
     "Blake2b",
     "BlakeCoin",
     "BlakeVanilla",
+    "Cuckatoo31",
     "Cryptolight",
     "Cryptonight",
     "CryptonightV7",
@@ -19,6 +20,7 @@
     "Quark",
     "Qubit",
     "Scrypt",
+    "SHA256",
     "SHA256d",
     "SHA256t",
     "Sib",
@@ -50,10 +52,24 @@
       "Algorithms": [],
       "Coins": [
         "BTG",
+        "CURVE",
         "ESP",
         "ETH",
         "XMR",
-        "XGCS"
+        "XGCS",
+        "XHV"
+      ]
+    },
+    "ZergPoolCoinsSolo": {
+      "Algorithms": [],
+      "Coins": [
+        "BTG",
+        "CURVE",
+        "ESP",
+        "ETH",
+        "XMR",
+        "XGCS",
+        "XHV"
       ]
     }
   }
