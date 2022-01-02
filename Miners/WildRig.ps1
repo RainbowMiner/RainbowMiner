@@ -35,7 +35,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dedal";                     Vendor = @("AMD");          Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";                    Vendor = @("AMD");          Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";                      Vendor = @("AMD");          Params = ""} #Geek
-    [PSCustomObject]@{MainAlgorithm = "ghostrider";                Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; FaultTolerance = 8} #Ghostrider
+    [PSCustomObject]@{MainAlgorithm = "ghostrider";                Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; FaultTolerance = 8; ExcludePoolName = "^MoneroOcean"} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "glt-astralhash";            Vendor = @("AMD");        Params = ""} #GLT-AstralHash
     [PSCustomObject]@{MainAlgorithm = "glt-globalhash";            Vendor = @("AMD");        Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";             Vendor = @("AMD");        Params = ""} #GLT-JeongHash
