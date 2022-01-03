@@ -76,8 +76,8 @@
 300	Nsfminer
 301	Ethminer
 302	EnemyZealot
-303	XmrigNvidia
-304	XmrigAmd
+303	Xmrig
+304	
 305	Dstm
 306	Cast
 307	Bminer
