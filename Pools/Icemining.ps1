@@ -40,14 +40,12 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 @("us","eu","asia","uswest") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol="ARW";             region=@("us","eu","asia");          host=@("stratum.icemining.ca","eu.icemining.ca","asia.icemining.ca"); fee = 1}
     [PSCustomObject]@{symbol="EPIC-Cuckatoo31"; region=@("us");                      host=@("epic.hashrate.to"); fee = 2}
     [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region=@("us");                      host=@("epic.hashrate.to"); fee = 2}
     [PSCustomObject]@{symbol="EPIC-ProgPoW";    region=@("us");                      host=@("epic.hashrate.to"); fee = 2}
-    [PSCustomObject]@{symbol="KDA";             region=@("us","eu");                 host=@("kda-us.icemining.ca","kda-eu.icemining.ca"); fee = 1}
     [PSCustomObject]@{symbol="MWC-SEC";         region=@("us");                      host=@("mwc.hashrate.to"); fee = 1; hashrate = "C29d"}
     [PSCustomObject]@{symbol="MWC-PRI";         region=@("us");                      host=@("mwc.hashrate.to"); fee = 1; hashrate = "C31"}
-    [PSCustomObject]@{symbol="NIM";             region=@("us","eu","asia","uswest"); host=@("nimiq.icemining.ca","nimiq.icemining.ca","nimiq.hashrate.to","nimiq.hashrate.to"); fee = 1.25; ssl = $true}
+    [PSCustomObject]@{symbol="NIM";             region=@("us");                      host=@("nimiq.icemining.ca"); fee = 1.25; ssl = $true}
     [PSCustomObject]@{symbol="SIN";             region=@("us","eu","asia");          host=@("stratum.icemining.ca","eu.icemining.ca","asia.icemining.ca"); fee = 1}
 )
 
