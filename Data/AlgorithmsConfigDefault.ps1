@@ -3,7 +3,7 @@
     "Balloon" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Bitcore" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "BMW512" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
-    "CryptonightHeavyXhv" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="1";OCprofile="Profile1"}
+    "CryptonightHeavyXhv" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Cuckatoo32" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Dedal" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Equihash24x7" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="5";OCprofile="Profile5"}
