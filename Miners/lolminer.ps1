@@ -132,7 +132,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             }
                         }
                         if (-not $Pool_Arguments) {
-                            $Pool_Arguments = "--pool $(if ($Algorithm_Norm -eq "TONPoW") {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"})"
+                            $Pool_Arguments = "--pool $(if ($Algorithm_Norm -eq "TONPoW") {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Algorithm_Norm -ne "TONPoW") {" --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"})"})"
                         }
 
 					    [PSCustomObject]@{
