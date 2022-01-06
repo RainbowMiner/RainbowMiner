@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.39"
+$Version = "1.40"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.39-lolminer/lolMiner_v1.39_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.40-lolminer/lolMiner_v1.40_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.39-lolminer/lolMiner_v1.39_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.40-lolminer/lolMiner_v1.40_Win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETC"} #Etchash
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "TONPoW";                       MinMemGb = 2;   Params = "--algo TON";        Pers=$false; Fee=1.5;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #TONPoW/TON
+    [PSCustomObject]@{MainAlgorithm = "TONPoW";                       MinMemGb = 2;   Params = "--algo TON";        Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #TONPoW/TON
     [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash for low memory coins
 )
 
@@ -132,7 +132,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             }
                         }
                         if (-not $Pool_Arguments) {
-                            $Pool_Arguments = "--pool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"})"
+                            $Pool_Arguments = "--pool $(if ($Algorithm_Norm -eq "TONPoW") {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --tls $(if ($Pools.$Algorithm_Norm.SSL) {"on"} else {"off"})"
                         }
 
 					    [PSCustomObject]@{
