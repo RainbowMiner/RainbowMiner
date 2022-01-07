@@ -13,6 +13,7 @@ $DevFee = 2.0
 $Cuda = "9.0"
 $Version = "2.74"
 $DeviceCapability = "5.0"
+$EnableContest = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
@@ -63,7 +64,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         if (-not $Device) {return}
 
-        $ContestWallet = if ($Session.Config.Coins.ETH.Wallet -match "^0x[0-9a-f]{40}$") {$Session.Config.Coins.ETH.Wallet} else {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"}
+        $ContestWallet = if ($EnableContest) {if ($Session.Config.Coins.ETH.Wallet -match "^0x[0-9a-f]{40}$") {$Session.Config.Coins.ETH.Wallet} else {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"}}
 
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or [version]$_.Version -le [version]$Version)}).ForEach({
             $First = $true
