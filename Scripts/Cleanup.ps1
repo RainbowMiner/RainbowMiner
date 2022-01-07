@@ -25,6 +25,11 @@ $AddAlgorithm = @()
 $RemoveMinerStats = @()
 $RemovePoolStats = @()
 try {
+
+    ### 
+    ### BEGIN OF VERSION CHECKS
+    ###
+
     if ($Version -le (Get-Version "3.8.3.7")) {
         $Changes = 0
         $PoolsActual = Get-Content "$PoolsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -1289,7 +1294,6 @@ try {
         $AddAlgorithm += @("MinotaurX")
     }
 
-
     if ($Version -le (Get-Version "4.7.5.3")) {
         $Changes = 0
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -1338,6 +1342,14 @@ try {
             Remove-Item $_.FullName -Force -ErrorAction Ignore
         }
     }
+
+    if ($Version -le (Get-Version "4.7.9.8")) {
+        $AddAlgorithm += @("TONPoW")
+    }
+
+    ###
+    ### END OF VERSION CHECKS
+    ###
 
     # remove mrrpools.json from cache
     Get-ChildItem "Cache\9FB0DC7AA798CEB4B4B7CB39F6E0CD9C.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
