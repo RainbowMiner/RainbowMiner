@@ -1344,7 +1344,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.7.9.8")) {
-        $AddAlgorithm += @("TONPoW")
+        $AddAlgorithm += @("SHA256ton")
     }
 
     ###
