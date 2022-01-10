@@ -18,7 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = Get-Region "ca"
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin="ETH";host="ryj-va.s.eksy.org";fee=1.0;divisor=1}
+    [PSCustomObject]@{coin="ETH";host="eth.ss.poolin.me";fee=1.0;divisor=1}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {
@@ -39,7 +39,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
             $Pool_RequestBase = Invoke-RestMethodAsync "https://api-prod.poolin.me/api/public/v2/basedata/coin/$Pool_Rpc" -tag $Name -cycletime 120
             if ("$($Pool_RequestBase.err_no)" -ne "0" -or -not $Pool_RequestBase.data) {$ok=$false;if ($Pool_RequestBase.err_no) {$errno = $Pool_RequestBase.err_no}}
             else {
-                $Pool_RequestCoin = Invoke-RestMethodAsync "https://api-prod.poolin.me/api/public/v1/pool/stats/merge?coin_type=$Pool_Rpc" -tag $Name -cycletime 120
+                $Pool_RequestCoin = Invoke-RestMethodAsync "https://api-prod.poolin.me/api/public/v1/pool/stats/merge?coin_type=$Pool_Rpc&show_pool_power=1" -tag $Name -cycletime 120
+                https://api-prod.poolin.me/api/public/v1/pool/stats/batchmerge?coin_type=btc,eth
                 if ("$($Pool_RequestCoin.err_no)" -ne "0" -or -not $Pool_RequestCoin.data) {$ok=$false;if ($Pool_RequestCoin.err_no) {$errno = $Pool_RequestCoin.err_no}}
             }
         }
