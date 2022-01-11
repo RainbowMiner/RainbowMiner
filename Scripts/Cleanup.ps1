@@ -1345,6 +1345,12 @@ try {
 
     if ($Version -le (Get-Version "4.7.9.8")) {
         $AddAlgorithm += @("SHA256ton")
+        if ($existingFiles = (Get-ChildItem "Bin\ANY-Xmrig" -Filter "config_Take2_*.json" -File -ErrorAction Ignore)) {
+            $now = Get-Date
+            $ChangesTotal++
+            $existingFiles.ForEach('LastWriteTime', $now)
+            $existingFiles.ForEach('LastAccessTime', $now)
+        }
     }
 
     ###
