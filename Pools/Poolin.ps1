@@ -40,7 +40,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Objec
             if ("$($Pool_RequestBase.err_no)" -ne "0" -or -not $Pool_RequestBase.data) {$ok=$false;if ($Pool_RequestBase.err_no) {$errno = $Pool_RequestBase.err_no}}
             else {
                 $Pool_RequestCoin = Invoke-RestMethodAsync "https://api-prod.poolin.me/api/public/v1/pool/stats/merge?coin_type=$Pool_Rpc&show_pool_power=1" -tag $Name -cycletime 120
-                https://api-prod.poolin.me/api/public/v1/pool/stats/batchmerge?coin_type=btc,eth
                 if ("$($Pool_RequestCoin.err_no)" -ne "0" -or -not $Pool_RequestCoin.data) {$ok=$false;if ($Pool_RequestCoin.err_no) {$errno = $Pool_RequestCoin.err_no}}
             }
         }
