@@ -3166,7 +3166,9 @@ class Xmrig6 : Miner {
             if (-not (Test-Path $RunConfigFile) -or (Test-Path $RunConfigFile -OlderThan $LastModified)) {
                 $RunConfig = Get-Content $ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
                 $RunConfig | Add-Member pools $Parameters.Pools -Force
-
+                foreach ($par in @("algo-perf","rebench-algo","bench-algo-time","algo-min-time")) {
+                    if ($par -in $Parameters.Config.PSObject.Properties.Name) {$RunConfig | Add-Member $par $Parameters.Config.$par -Force}
+                }
                 Set-ContentJson -PathToFile $RunConfigFile -Data $RunConfig > $null
             }
         }
