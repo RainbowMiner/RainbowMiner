@@ -286,18 +286,33 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                                     "bench-algo-time" = 0
                                                     "algo-min-time" = 86400
                                                     "algo-perf"    = [PSCustomObject]@{
+                                                        "cn/0"= 0
+                                                        "cn/1"= 0
+                                                        "cn/2"= 0
+                                                        "cn/r"= 0
+                                                        "cn/fast"= 0
+                                                        "cn/half"= 0
+                                                        "cn/xao"= 0
+                                                        "cn/rto"= 0
+                                                        "cn/rwz"= 0
+                                                        "cn/zls"= 0
+                                                        "cn/double"= 0
+                                                        "cn/ccx"= 0
+                                                        "cn-lite/0"= 0
+                                                        "cn-lite/1"= 0
+                                                        "cn-heavy/xhv"= 0
+                                                        "cn-pico"= 0
+                                                        "cn-pico/tlo"= 0
+                                                        "cn/gpu"= 0
+                                                        "rx/0"= 0
+                                                        "rx/arq"= 0
+                                                        "rx/graft"= 0
+                                                        "rx/sfx"= 0
+                                                        "panthera"= 0
+                                                        "argon2/chukwav2"= 0
+                                                        "astrobwt"= 0
+                                                        "kawpow"= 0
                                                         "ghostrider" = 0
-                                                        "cn-lite/1" = 0
-                                                        "cn-heavy/xhv" = 0
-                                                        "cn-pico" = 0
-                                                        "cn/ccx" = 0
-                                                        "cn/gpu" = 0
-                                                        "argon2/chukwav2" = 0
-                                                        "astrobwt" = 0
-                                                        "rx/0" = 0
-                                                        "rx/graft" = 0
-                                                        "rx/arq" = 0
-                                                        "panthera" = 0
                                                     }
                                                 } -Force
                         }
