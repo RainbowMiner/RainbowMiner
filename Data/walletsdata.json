@@ -125,6 +125,15 @@
         "verify_value":  "success"
     },
     {
+        "symbol":  "OBTC",
+        "match":  "^bc1",
+        "rpc":  "https://txrat.com/ext/getaddress/{w}",
+        "address":  "address",
+        "balance":  "balance",
+        "received":  "",
+        "divisor":  1
+    },
+    {
         "symbol":  "QTUM",
         "match":  "^Q",
         "rpc":  "https://qtumblockexplorer.com/api/v2/address/{w}?details=basic",
