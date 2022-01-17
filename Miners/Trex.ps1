@@ -119,7 +119,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
                     if ($Session.Config.Pools.Ezil.EnableTrexDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.Host -and $Pools.ZilliqaETH.Wallet -and $Pools.ZilliqaETH.EthMode -eq $Pools.$Algorithm_Norm.EthMode) {
                         $ZilPool = "$($Pools.ZilliqaETH.Protocol)://$($Pools.ZilliqaETH.Host):$($Pools.ZilliqaETH.Port)"
-                        $ZilUser = $Pools.ZilliqaETH.User
+                        $ZilUser = "$(if ($Pools.$Algorithm_Norm.Wallet -match "^0x") {$Pools.$Algorithm_Norm.Wallet} elseif ($_.DualZIL -eq "ETH") {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"}).$($Pools.ZilliqaETH.User)"
                         $ZilPass = $Pools.ZilliqaETH.Pass
                     } else {
                         $ZilPool = ""
