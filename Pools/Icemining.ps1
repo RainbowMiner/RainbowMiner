@@ -37,16 +37,15 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 
 [hashtable]$Pool_RegionsTable = @{}
 
-@("us","eu","asia","uswest") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Regions = @("us","eu","asia")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol="EPIC-Cuckatoo31"; region=@("us");                      host=@("epic.hashrate.to"); fee = 2}
-    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region=@("us");                      host=@("epic.hashrate.to"); fee = 2}
-    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region=@("us");                      host=@("epic.hashrate.to"); fee = 2}
-    [PSCustomObject]@{symbol="MWC-SEC";         region=@("us");                      host=@("mwc.hashrate.to"); fee = 1; hashrate = "C29d"}
-    [PSCustomObject]@{symbol="MWC-PRI";         region=@("us");                      host=@("mwc.hashrate.to"); fee = 1; hashrate = "C31"}
-    [PSCustomObject]@{symbol="NIM";             region=@("us");                      host=@("nimiq.icemining.ca"); fee = 1.25; ssl = $true}
-    [PSCustomObject]@{symbol="SIN";             region=@("us","eu","asia");          host=@("stratum.icemining.ca","eu.icemining.ca","asia.icemining.ca"); fee = 1}
+    [PSCustomObject]@{symbol="EPIC-Cuckatoo31"; region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2}
+    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2; hashrate = "randomx"}
+    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2; hashrate = "progpow"}
+    [PSCustomObject]@{symbol="NIM";             region = @("us"); host=@("nimiq.icemining.ca"); port=2053; fee = 1.25; ssl = $true}
+    [PSCustomObject]@{symbol="SIN";             region = @("us","eu","asia"); host=@("stratum.icemining.ca","eu.icemining.ca","asia.icemining.ca"); port=4205; fee = 1}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
@@ -63,15 +62,11 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_Currency -eq "EPIC") {10} elseif ($_.hashrate) {$PoolCoins_Request.$Pool_Currency.hashrate."$($_.hashrate)"} else {$PoolCoins_Request.$Pool_Currency.hashrate}) -BlockRate $PoolCoins_Request.$Pool_Currency."24h_blocks" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($_.hashrate) {$PoolCoins_Request.$Pool_Currency.hashrate."$($_.hashrate)"} elseif ($Pool_Currency -eq "EPIC") {10} else {$PoolCoins_Request.$Pool_Currency.hashrate}) -BlockRate $PoolCoins_Request.$Pool_Currency."24h_blocks" -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_User = if ($Pool_Currency -eq "MWC") {
-        $Wallets.$Pool_Currency
-    } else {
-        "$($Wallets.$Pool_Currency).{workername:$Worker}"
-    }
+    $Pool_User = "$($Wallets.$Pool_Currency).{workername:$Worker}"
 
     $Pool_Pass = if ($Pool_Currency -eq "SIN") {
         "c=$Pool_Currency{diff:,d=`$difficulty}$(if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"})"
@@ -92,7 +87,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
             MarginOfError = 0
             Protocol      = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
             Host          = "$($_.host[$i])"
-            Port          = $PoolCoins_Request.$Pool_Currency.port
+            Port          = $_.port
             User          = $Pool_User
             Pass          = $Pool_Pass
             Region        = $Pool_RegionsTable.$Pool_Region
