@@ -170,6 +170,17 @@
         "divisor":  100000000
     },
     {
+        "symbol":  "TON",
+        "match":  "^EQ",
+        "rpc":  "https://api.ton.sh/getAddressInformation?address={w}",
+        "address":  "",
+        "balance":  "result.balance",
+        "received":  "",
+        "divisor":  1000000000,
+        "verify":  "ok",
+        "verify_value":  "true"
+    },
+    {
         "symbol":  "VRSC",
         "match":  "^R",
         "rpc":  "https://explorer.verus.io/ext/getaddress/{w}",
