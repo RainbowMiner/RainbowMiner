@@ -171,7 +171,7 @@
     },
     {
         "symbol":  "TON",
-        "match":  "^EQ",
+        "match":  "^E[Qf]",
         "rpc":  "https://api.ton.sh/getAddressInformation?address={w}",
         "address":  "",
         "balance":  "result.balance",
