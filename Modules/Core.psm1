@@ -1686,22 +1686,22 @@ function Invoke-Core {
     $API.ActualRates = $ActualRates
 
     #PowerPrice check
-    $Session.PowerPriceBTC = 0
-    if ($Session.Config.PowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
-        if ($Global:Rates."$($Session.Config.PowerPriceCurrency)") {
-            $Session.PowerPriceBTC = [Double]$Session.Config.PowerPrice/[Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)"
-        }
-    }
-    $API.PowerPriceBTC = $Session.PowerPriceBTC
-
+    $Session.PowerPriceBTC        = 0
+    $Session.FixedCostPerDayBTC   = 0
     $Session.CurrentPowerPriceBTC = 0
-    if ($Session.CurrentPowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
-        if ($Global:Rates."$($Session.Config.PowerPriceCurrency)") {
-            $Session.CurrentPowerPriceBTC = [Double]$Session.CurrentPowerPrice/[Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)"
-        } else {
+
+    if ($Session.Config.PowerPriceCurrency) {
+        if ($PowerPrice_Rate = [Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)") {
+            $Session.PowerPriceBTC        = [Double]$Session.Config.PowerPrice/$PowerPrice_Rate
+            $Session.FixedCostPerDayBTC   = [Double]$Session.Config.FixedCostPerDay/$PowerPrice_Rate
+            $Session.CurrentPowerPriceBTC = [Double]$Session.CurrentPowerPrice/$PowerPrice_Rate
+        } elseif ($Session.CurrentPowerPrice) {
             Write-Log -Level Warn "Powerprice currency $($Session.Config.PowerPriceCurreny) not found. Cost of electricity will be ignored."
         }
     }
+
+    $API.PowerPriceBTC = $Session.PowerPriceBTC
+    $API.FixedCostPerDayBTC = $Session.FixedCostPerDayBTC
     $API.CurrentPowerPriceBTC = $Session.CurrentPowerPriceBTC
 
     #Load the stats
@@ -2929,7 +2929,7 @@ function Invoke-Core {
 
         if (($NewPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
             $PowerOffset_Watt = $Session.Config.PowerOffset
-            $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $Session.CurrentPowerPriceBTC) + $Session.Config.FixedCostPerDay
+            $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $Session.CurrentPowerPriceBTC) + $Session.FixedCostPerDayBTC
             if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
                 if ($Session.Config.CheckProfitability -and ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner -or $_.IsLocked} | Measure-Object).Count -eq 0) {$Session.Profitable = $false}
                 if (-not $Session.Profitable -or -not $Session.Config.CheckProfitability) {
@@ -3323,7 +3323,7 @@ function Invoke-Core {
     #Get worker specific profits without cost
 
     $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit | Measure-Object -Sum).Sum
-    if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost + $Session.Config.FixedCostPerDay;$CurrentProfitWithoutCostTotal += ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit_Cost | Measure-Object -Sum).Sum}
+    if ($Session.Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost;$CurrentProfitWithoutCostTotal += ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).Profit_Cost | Measure-Object -Sum).Sum}
 
     #Display exchange rates
     [System.Collections.Generic.List[string]]$StatusLine = @()
