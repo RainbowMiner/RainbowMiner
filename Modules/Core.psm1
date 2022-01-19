@@ -886,7 +886,12 @@ function Invoke-Core {
     $API.CmdKey = ''
 
     if (Test-Path ".\Data\sysinfo.json") {
-        $Session.SysInfo = Get-ContentByStreamReader ".\Data\sysinfo.json" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        try {
+            $Session.SysInfo = Get-ContentByStreamReader ".\Data\sysinfo.json" | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "SysInfo.json contains syntax error: $($_.Exception.Message)"
+        }
     }
 
     if ($CheckConfig) {Update-WatchdogLevels -Reset}
