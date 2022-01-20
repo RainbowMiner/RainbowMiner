@@ -24,13 +24,6 @@
         "Acepool" = [PSCustomObject]@{
             Currencies=@("BEAM","XGM")
         }
-        "AHashPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=22}
-            Currencies=@("BTC")
-            Autoexchange=$true
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
         "Aionmine" = [PSCustomObject]@{
             Currencies=@("AION")
         }
