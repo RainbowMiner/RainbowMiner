@@ -233,7 +233,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
                     $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
-                    $UseMO = $_.UseMO -and $Pools.$Algorithm_Norm.Name -match "^MoneroOcean"
+                    $UseMO = $_.UseMO -and $Pools.$Algorithm_Norm.Name -match "^C3pool|^MoneroOcean"
 
                     if ($ByParameters) {
                         $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Name -match "Nicehash") {" --nicehash"}) --donate-level=0 --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
