@@ -81,6 +81,11 @@
         "BtcPrivate" = [PSCustomObject]@{
             Currencies=@("BTCP")
         }
+        "C3pool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Password="x"}
+            SetupFields=[PSCustomObject]@{Password="Enter your C3pool password (eMail or Password)"}
+            Currencies=@("XMR")
+        }
         "Cortexmint" = [PSCustomObject]@{
             Currencies=@("CTXC")
         }
