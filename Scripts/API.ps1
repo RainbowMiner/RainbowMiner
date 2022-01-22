@@ -56,12 +56,13 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     if ($Path -match $API.RandTag) {$Path = "/stop";$API.APIauth = $false}
 
     $IsAuth = $true
-    
-    if ($API.RemoteAPI -and $API.APIauth) {
-    
-        $IsAuth = $Context.User.Identity.IsAuthenticated -and $Context.User.Identity.Name -eq $API.APIuser -and $Context.User.Identity.Password -eq $API.APIpassword
 
-        $RemoteIP = "$($Request.RemoteEndPoint)" -replace ":\d+$"
+    $RemoteIP   = "$($Request.RemoteEndPoint)" -replace ":\d+$" -replace "^\[.+\]$"
+    $RemoteAuth = $API.RemoteAPI -and $API.APIauth
+    
+    if ($RemoteAuth -or $API.AllowIPs) {
+    
+        $IsAuth = (-not $RemoteAuth -or ($Context.User.Identity.IsAuthenticated -and $Context.User.Identity.Name -eq $API.APIuser -and $Context.User.Identity.Password -eq $API.APIpassword)) -and (-not $API.AllowIPs -or $RemoteIP -eq "" -or ($API.AllowIPs | Where-Object {$RemoteIP -like $_} | Measure-Object).Count)
 
         if ($API.MaxLoginAttempts -gt 0 -and $RemoteIP -ne "") {
 
@@ -110,6 +111,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/info" {
             $Data = $API.Info
+            break
+        }
+        "/remoteip" {
+            $Data = $RemoteIP
             break
         }
         "/console" {

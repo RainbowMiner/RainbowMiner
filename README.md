@@ -709,6 +709,13 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **UIFullBenchmarkList** = Show non-extended benchmarks in minerlist [default=0]
 - **APIPort** = enter a free web-interface port localhost:<port> [default=4000]
 - **APIThreads** = Enter number of possible, parallel API threads (0=automatic, see notes) [default=0]
+- **APIauth** = set to "1" for username/password auth on localhost [default=0]
+- **APIuser** = enter an username for localhost accessability
+- **APIpassword** = enter a password for localhost accessability
+- **APIlockConfig** = set to "1" to lock config and disable save via API/localhost [default=0]
+- **APImaxLoginAttemps** = Maximum number of failed login attempts, until IP gets blocked (0=turn off) [default=3]
+- **APIblockLoginAttemptsTime** = Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds) [default=30m]
+- **APIallowIPs** = Restrict access to the API to specific IP addresses [default=]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically [default=1]
 - **EnableUpdateDuringPause** = set to 1 if you want RainbowMiner to be updated automatically, even if it is paused [default=1]
 - **EnableUpdateWhenScheduled** = set to 1 if the automatic updates should be scheduled: set EnableUpdate to 1 for a schedule in scheduler.config.txt (also, EnableAutoUpdate must be set to 1) [default=0]
@@ -842,13 +849,7 @@ For Client (Runmode=client) setup:
 
 For Server (Runmode=server) setup:
 
-- **APIport** = enter a free web-interface port localhost:<port> [default=4000]
-- **APIauth** = set to "1" for username/password auth on localhost [default=0]
-- **APIuser** = enter an username for localhost accessability
-- **APIpassword** = enter a password for localhost accessability
-- **APIlockConfig** = set to "1" to lock config and disable save via API/localhost [default=0]
-- **APImaxLoginAttemps** = Maximum number of failed login attempts, until IP gets blocked (0=turn off) [default=3]
-- **APIblockLoginAttemptsTime** = Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds) [default=30m]
+- make sure to set **APIport**, **APIauth**, **APIuser**, **APIpassword**, **APIallowIPs**
 
 
 #### Set electricity cost handling

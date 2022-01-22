@@ -25,11 +25,9 @@
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
     $API.MachineName = $Session.MachineName
     $API.Debug       = $Session.LogLevel -eq "Debug"
-    $API.LockConfig  = $Session.Config.APIlockConfig
-    $API.MaxLoginAttempts = $Session.Config.APImaxLoginAttemps
-    $API.BlockLoginAttemptsTime = ConvertFrom-Time $Session.Config.APIblockLoginAttemptsTime
     $API.PauseMiners = [PSCustomObject]@{Pause = $false;PauseIA = $false;PauseIAOnly = $false}
 
+    Set-APIConfig
     Set-APICredentials
 
     # Setup the global HTTP listener
@@ -102,6 +100,13 @@ Function Stop-APIServer {
     $Global:APIHttpListener = $null
 
     Remove-Variable "API" -Scope Global -Force
+}
+
+function Set-APIConfig {
+    $API.LockConfig  = $Session.Config.APIlockConfig
+    $API.MaxLoginAttempts = $Session.Config.APImaxLoginAttemps
+    $API.BlockLoginAttemptsTime = ConvertFrom-Time $Session.Config.APIblockLoginAttemptsTime
+    $API.AllowIPs    = $Session.Config.APIallowIPs
 }
 
 function Set-APICredentials {

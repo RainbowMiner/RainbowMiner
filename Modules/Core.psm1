@@ -874,10 +874,13 @@ function Invoke-Core {
         $API.APIPassword = $Session.Config.APIPassword
         $API.MaxLoginAttemps = $Session.Config.APImaxLoginAttemps
         $API.BlockLoginAttemptsTime = ConvertFrom-Time $Session.Config.APIblockLoginAttemptsTime
+        $API.AllowIPs = $Session.Config.APIallowIPs
         $API.MachineName = $Session.MachineName
     }
 
-    $API.LockConfig = $Session.Config.APIlockConfig
+    if ($CheckConfig -or $Session.RoundCounter -eq 0) {
+        Set-APIConfig
+    }
 
     $API.PauseMiners.Pause       = $Global:PauseMiners.Test()
     $API.PauseMiners.PauseIA     = $Global:PauseMiners.TestIA()
