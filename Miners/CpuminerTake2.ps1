@@ -23,7 +23,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "take2"; Params = ""; FaultTolerance = 8; ExtendInterval = 3; ExcludePoolName = "^MoneroOcean"} #RTM/Take2
+    [PSCustomObject]@{MainAlgorithm = "take2"; Params = ""; FaultTolerance = 8; ExtendInterval = 3; ExcludePoolName = "^C3pool|^MoneroOcean"} #RTM/Take2
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
