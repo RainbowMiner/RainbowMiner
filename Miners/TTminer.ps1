@@ -92,7 +92,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
                 $Pass = "$($Pools.$Algorithm_Norm.Pass)"
-                if ($Pass -and $Pools.$Algorithm_Norm.Name -eq "MoneroOcean") {
+                if ($Pass -and $Pools.$Algorithm_Norm.Name -match "^C3pool|^MoneroOcean") {
                     $Pass = $Pass -replace ":[^:]+~","~"
                 }
 
