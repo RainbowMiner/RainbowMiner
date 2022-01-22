@@ -41,7 +41,7 @@ if ($IsLinux) {
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
-$ExcludePools = "^FlexPool|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Nicehash|^PoolSexy|^SuprNova|^Zpool"
+$ExcludePools = "^C3pool|^FlexPool|^MiningDutch|^MiningRigRentals|^MoneroOcean|^Nicehash|^PoolSexy|^SuprNova|^Zpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
