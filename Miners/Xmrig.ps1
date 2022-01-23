@@ -152,7 +152,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "ghostrider";                 MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8; UseMO = $true}
     [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "panthera";                   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
+    [PSCustomObject]@{MainAlgorithm = "panthera";                   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU"); ForceMO = $true}
     [PSCustomObject]@{MainAlgorithm = "rx/0";                       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/arq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/grft";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")} #CUDA Plugin v6.12.0 doesn't support GRFT, v6.15.0 has memory bug
@@ -234,7 +234,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
                     $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
-                    $UseMO = $_.UseMO -and $Pools.$Algorithm_Norm.Name -match "^C3pool|^MoneroOcean"
+                    $UseMO = ($_.UseMO -and $Pools.$Algorithm_Norm.Name -match "^C3pool|^MoneroOcean") -or $_.ForceMO
 
                     if ($ByParameters) {
                         $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Name -match "Nicehash") {" --nicehash"}) --donate-level=0 --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
