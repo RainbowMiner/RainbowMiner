@@ -2478,8 +2478,8 @@ function Invoke-Core {
         try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Miner_Difficulty=0.0}
         if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}|{workername:$($Session.Config.WorkerName)}",$(@($Miner.DeviceModel -split '\-' | Foreach-Object {if ($Session.Config.Devices.$_.Worker) {$Session.Config.Devices.$_.Worker} else {$Session.Config.WorkerName}} | Select-Object -Unique) -join '_') -replace "{workername:(.+?)}","`$1"}
 
-        if (-not $Miner.ExtendInterval) {$Miner.ExtendInterval = 1}
-        if (-not $Miner.Penalty)        {$Miner.Penalty = 0}
+        if (-not $Miner.ExtendInterval -or $Session.Config.DisableExtendInterval) {$Miner.ExtendInterval = 1}
+        if (-not $Miner.Penalty) {$Miner.Penalty = 0}
     })
 
     if ($Miner_CommonCommands_array -ne $null) {Remove-Variable "Miner_CommonCommands_array"}
@@ -2719,6 +2719,7 @@ function Invoke-Core {
             $ActiveMiner.DevFee             = $Miner.DevFee
             $ActiveMiner.OCprofile          = $Miner.OCprofile
             $ActiveMiner.EnableOCprofile    = $Session.Config.EnableOCProfiles
+            $ActiveMiner.ExtendInterval     = $Miner.ExtendInterval
             $ActiveMiner.FaultTolerance     = $Miner.FaultTolerance
             $ActiveMiner.Penalty            = $Miner.Penalty
             $ActiveMiner.ManualUri          = "$Miner_ManualUri"
@@ -2849,7 +2850,7 @@ function Invoke-Core {
         
         #Get most profitable miner combination
 
-        $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$(if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval})}, {$_.Algorithm[0] -eq $_.BaseAlgorithm[0]})
+        $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$_.ExtendInterval}, {$_.Algorithm[0] -eq $_.BaseAlgorithm[0]})
 
         $BestMiners = @()
 
@@ -3241,7 +3242,7 @@ function Invoke-Core {
         if ($Session.Benchmarking) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmarkCount) miner$(if ($MinersNeedingBenchmarkCount -gt 1){'s'}) left, interval is set to $($Session.Config.BenchmarkInterval) seconds."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
-            if ($Session.Config.UIFullBenchmarkList -or (-not $Session.Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0)) {
+            if ($Session.Config.UIFullBenchmarkList -or $MinersNeedingBenchmarkWithEI -gt 0) {
                 $BenchmarkMinutes = [Math]::Ceiling($Session.Config.BenchmarkInterval/60)
                 Write-Host " "
                 Write-Host "Please be patient!" -BackgroundColor Yellow -ForegroundColor Black
@@ -3249,7 +3250,7 @@ function Invoke-Core {
                     Write-Host "RainbowMiner will benchmark $($MinersNeedingBenchmarkWithEI) out of $($MinersNeedingBenchmarkCount) miner$(if ($MinersNeedingBenchmarkCount -gt 1){'s'}) with extended intervals!" -ForegroundColor Yellow
                     Write-Host "These algorithms need a longer time to reach an accurate average hashrate." -ForegroundColor Yellow
                     Write-Host "After that, benchmarking will be much faster ($($BenchmarkMinutes)-$($BenchmarkMinutes*2) minutes per miner)." -ForegroundColor Yellow
-                    Write-Host "If you do not want that accuracy, set DisableExtendInterval to 0 in your config.txt." -ForegroundColor Yellow
+                    Write-Host "If you do not want that accuracy, set DisableExtendInterval to 1 in your config.txt." -ForegroundColor Yellow
                 }
                 $OldForegroundColor = [console]::ForegroundColor
                 [console]::ForegroundColor = "Yellow"
