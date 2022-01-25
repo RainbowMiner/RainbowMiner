@@ -362,7 +362,7 @@ function Start-Core {
         Set-PresetDefault
 
         if (-not (Test-Path $ConfigFile)) {
-            $Parameters = @{VersionCompatibility=$Session.Version}
+            $Parameters = [PSCustomObject]@{VersionCompatibility=$Session.Version}
             $Session.DefaultValues.Keys | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction Ignore -Force}
             Set-ContentJson -PathToFile $ConfigFile -Data $Parameters > $null        
         } else {
