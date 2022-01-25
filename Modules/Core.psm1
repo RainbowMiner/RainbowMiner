@@ -376,11 +376,11 @@ function Start-Core {
                     Write-Log -Level Warn "The file $ConfigFileForUpdate contains JSON syntax errors: $($_.Exception.Message)"
                     $ConfigForUpdate = $null
                 }
-                if ($ConfigForUpdate) {
+                if ($ConfigForUpdate -is [PSCustomObject]) {
                     $ConfigForUpdate_changed = $false
                     if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force}
                     $MPHLegacyUpdate = if ($ConfigForUpdate.PSObject.Properties.Name -icontains "API_ID") {@{UserName=$ConfigForUpdate.UserName;API_ID=$ConfigForUpdate.API_ID;API_Key=$ConfigForUpdate.API_Key}}
-                    Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) | Foreach-Object {
+                    Compare-Object @($ConfigForUpdate.PSObject.Properties.Name | Select-Object) @($Session.DefaultValues.Keys) | Foreach-Object {
                         if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
                         elseif ($_.SideIndicator -eq "<=" -and @("API_ID","API_Key","UserName","LocalAPIport","RemoteAPI","ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
                     }
