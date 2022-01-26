@@ -5332,7 +5332,7 @@ function Set-DevicesConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker=""}
+            $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker="";EnableLHR=""}
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1"
             $Devices = Get-Device "amd","intel","nvidia","cpu" -IgnoreOpenCL
             $Devices | Select-Object -Unique Type,Model | Foreach-Object {

@@ -1129,6 +1129,7 @@ function Invoke-Core {
                     $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                     $Session.Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Session.Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                     $Session.Config.Devices.$p | Add-Member DisableDualMining ($Session.Config.Devices.$p.DisableDualMining -and (Get-Yes $Session.Config.Devices.$p.DisableDualMining)) -Force
+                    $Session.Config.Devices.$p | Add-Member EnableLHR $(if ("$($Session.Config.Devices.$p.EnableLHR)" -ne "") {Get-Yes $Session.Config.Devices.$p.EnableLHR} else {$null}) -Force
                     if ($p -ne "CPU" -and -not $Session.Config.Devices.$p.DefaultOCprofile) {
                         $Session.Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force
                         if ($Session.Config.EnableOCprofiles) {

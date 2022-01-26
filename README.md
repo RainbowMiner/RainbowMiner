@@ -1408,7 +1408,7 @@ Each device group can be bound to/excluded from specific algorithm and miners by
 Example:
 
     {
-      "GTX1050Ti": [
+      "RTX3060": [
         {
           "Algorithm": "Ethash,x16r",
           "ExcludeAlgorithm": "",
@@ -1417,7 +1417,8 @@ Example:
           "DisableDualMining": "1",
           "DefaultOCprofile": "Profile1",
           "PowerAdjust": "100",
-          "Worker": "my1050"
+          "Worker": "my3060",
+          "EnableLHR": "1"
         }
       ],
       "R290X": [
@@ -1429,17 +1430,19 @@ Example:
           "DisableDualMining": "1",
           "DefaultOCprofile": "Profile1",
           "PowerAdjust": "87.5",
-          "Worker": ""
+          "Worker": "",
+          "EnableLHR": ""
         }
       ]      
     }
 
 This configuration would:
-- bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner
+- bind all RTX3060 in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner
 - setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
 - for custom overclocking Profile1 is used as default for this GPU type
 - set a power adjust factor of 87.5% to the Radeon R290X (if RainbowMiner reported 250W with factor 100%, it will now show 250W x 87.5 / 100 = 175W)
-- the pool worker name for the GTX1050Ti will be set to "my1050". If used in combos, the individual worker names will be combined with _ (underscore)
+- the pool worker name for the RTX3060 will be set to "my3060". If used in combos, the individual worker names will be combined with _ (underscore)
+- the miners Trex and Teamblack will be forced to use LHR magic for the RTX3060s, because "EnableLHR" is set to "1". Leave it empty for automatically use, set to "0" for don't use.
 
 
 ### Config\gpugroups.config.txt

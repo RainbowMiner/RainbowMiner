@@ -2744,7 +2744,7 @@ function Start-Setup {
                     if ($Device_Name -eq '') {throw}
 
                     if (-not $DevicesActual.$Device_Name) {
-                        $DevicesActual | Add-Member $Device_Name ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";PowerAdjust="100"}) -Force
+                        $DevicesActual | Add-Member $Device_Name ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";PowerAdjust="100";EnableLHR=""}) -Force
                         Set-ContentJson -PathToFile $ConfigFiles["Devices"].Path -Data $DevicesActual > $null
                     }
 
@@ -2756,7 +2756,7 @@ function Start-Setup {
 
                         $DeviceConfig = $DevicesActual.$Device_Name.PSObject.Copy()
 
-                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining","defaultocprofile","poweradjust")) > $null
+                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining","defaultocprofile","poweradjust","enablelhr")) > $null
                         $DeviceSetupSteps.Add("save") > $null
                                         
                         do {
@@ -2781,6 +2781,9 @@ function Start-Setup {
                                     "defaultocprofile" {                                                        
                                         $DeviceConfig.DefaultOCprofile = Read-HostString -Prompt "Select the default overclocking profile for this device ($(if ($DeviceConfig.DefaultOCprofile) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $DeviceConfig.DefaultOCprofile -Characters "A-Z0-9" -Valid @($OCprofilesActual.PSObject.Properties.Name | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
+                                    "enablelhr" {
+                                        $DeviceConfig.EnableLHR = Read-HostString -Prompt "Explicitly instruct miners to use LHR magic: 1=use, 0=don't use, $(if ($DeviceConfig.EnableLHR -ne '') {"enter 'clear'"} else {"leave empty"})=automatically use" -Default $DeviceConfig.EnableLHR -Valid @("0","1") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
                                     "poweradjust" {                                                        
                                         $DeviceConfig.PowerAdjust = Read-HostDouble -Prompt "Adjust power consumption to this value in percent, e.g. 75 would result in Power x 0.75 (enter 100 for original value)" -Default $DeviceConfig.PowerAdjust -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
@@ -2794,6 +2797,7 @@ function Start-Setup {
                                         $DeviceConfig | Add-Member ExcludeMinerName $($DeviceConfig.ExcludeMinerName -join ",") -Force
                                         $DeviceConfig | Add-Member DisableDualMining $(if (Get-Yes $DeviceConfig.DisableDualMining){"1"}else{"0"}) -Force
                                         $DeviceConfig | Add-Member PowerAdjust "$($DeviceConfig.PowerAdjust)" -Force
+                                        $DeviceConfig | Add-Member EnableLHR "$($DeviceConfig.EnableLHR)" -Force
 
                                         $DevicesActual | Add-Member $Device_Name $DeviceConfig -Force
                                         $DevicesActualSave = [PSCustomObject]@{}
