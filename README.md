@@ -1779,6 +1779,7 @@ The following are the pool parameters:
 - **UseWorkerName**: Enter list of workernames that should be explicitly used for MRR (leave empty for all) [default=]
 - **ExcludeWorkerName**: Enter list of workernames that should explicitly excluded from the use with MRR (leave empty for none) [default=]
 - **EnableMining**: Enable switching to MiningRigRentals, even it is not rentend (not recommended) [default=0]
+- **EnableMaintenanceMode**: Set to "1" if you are planning to shut down your rig for any reason (e.g. maintenance). RainbowMiner will then disable all unrented rigs, until you reset the parameter back to "0" [default=0]
 - **EnableAutoCreate**: Automatically create MRR-rigs [default=0]
 - **EnableAutoUpdate**: Automatically update MRR-rigs [default=0]
 - **EnableAutoExtend**: Automatically extend MRR rentals, when low average hashrate [default=0]

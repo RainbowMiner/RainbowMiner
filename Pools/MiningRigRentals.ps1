@@ -30,6 +30,7 @@ param(
     [Bool]$EnableUpdatePriceModifier = $false,
     [Bool]$EnablePowerDrawAddOnly = $false,
     [Bool]$AllowExtensions = $false,
+    [Bool]$EnableMaintenanceMode = $false,
     [String]$AutoCreateAlgorithm = "",
     [String]$AutoCreateMinProfitPercent = "50",
     [String]$AutoCreateMinCPUProfitBTC = "0.00001",
@@ -134,6 +135,10 @@ elseif ($UpdateInterval_Seconds -lt 600) {$UpdateInterval_Seconds = 600}
 
 if ($AllRigs_Request) {
 
+    if ($EnableMaintenanceMode) {
+        Write-Log -Level Warn "$($Name): Maintenance mode activated - all unrented rigs will be disabled."
+    }
+
     [hashtable]$Pool_RegionsTable = @{}
 
     $Pool_AllHosts = Get-MiningRigRentalServers
@@ -193,7 +198,7 @@ if ($AllRigs_Request) {
             } elseif ($Session.MRRBenchmarkStatus[$Worker1]) {
                 $API.UpdateMRR = $true
                 $Session.MRRBenchmarkStatus[$Worker1] = $false
-            } else {
+            } elseif (-not $EnableMaintenanceMode) {
                 $NotRentedSince_Seconds = ((Get-Date).ToUniversalTime() - $Session.MRRRentalTimestamp[$Worker1]).TotalSeconds
 
                 if (-not $PauseBetweenRentals_Seconds -or $PauseBetweenRentals_Seconds -lt $NotRentedSince_Seconds) {
