@@ -133,11 +133,14 @@ $ExtensionMessageTime_Hours  = (ConvertFrom-Time "$ExtensionMessageTime") / 3600
 if (-not $UpdateInterval_Seconds) {$UpdateInterval_Seconds = 3600}
 elseif ($UpdateInterval_Seconds -lt 600) {$UpdateInterval_Seconds = 600}
 
-if ($AllRigs_Request) {
+if ($EnableMaintenanceMode) {
+    Write-Log -Level Warn "$($Name): Maintenance mode activated - all unrented rigs disabled."
+} elseif ($Session.PauseRentals) {
+    Write-Log -Level Info "$($Name): Paused by scheduler - all unrented rigs disabled."
+    $EnableMaintenanceMode = $true
+}
 
-    if ($EnableMaintenanceMode) {
-        Write-Log -Level Warn "$($Name): Maintenance mode activated - all unrented rigs will be disabled."
-    }
+if ($AllRigs_Request) {
 
     [hashtable]$Pool_RegionsTable = @{}
 
@@ -686,7 +689,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $MRRRigControl = @($Workers.ForEach({
         $RigName = $_
         $RigUpdated = $RigNow
-        $RigPriceFactor = $MRRConfig.$RigName.PriceFactor
+        $RigPriceFactor = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} else {$MRRConfig.$RigName.PriceFactor}
 
         $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
             $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)
@@ -784,7 +787,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
                             $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
 
-                            $RigPriceFactor    = $MRRConfig.$RigName.PriceFactor
+                            $RigPriceFactor    = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} else {$MRRConfig.$RigName.PriceFactor}
 
                             $RigControl_Data   = $null
 

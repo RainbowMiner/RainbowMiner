@@ -3428,10 +3428,13 @@ function Start-Setup {
                         @{Label="Update"; Expression={"$(if (Get-Yes $_.Update) {"1"} else {"0"})"};align="center"}
                         @{Label="EnableMHC"; Expression={"$(if ($_.EnableMiningHeatControl -eq '') {'*'} elseif (Get-Yes $_.EnableMiningHeatControl) {"1"} else {"0"})"};align="center"}
                         @{Label="MHC"; Expression={"$(if ($_.MiningHeatControl -eq '') {'*'} else {$_.MiningHeatControl})"};align="right"}
+                        @{Label="PauseRentals"; Expression={"$(if (Get-Yes $_.PauseRentals) {"1"} else {"0"})"};align="center"}
+                        @{Label="MRR-PF"; Expression={"$(if ($_.MRRPriceFactor -eq '') {'*'} else {$_.MRRPriceFactor})"};align="right"}
                     ) | Out-Host
                     Write-Host "DayofWeek: *=all $(((0..6) | %{"$($_)=$([DayOfWeek]$_)"}) -join ' ')"
                     Write-Host "EnableMHC = EnableMiningHeatControl, *=default, 0=disable, 1=enable"
                     Write-Host "MHC = MiningHeatControl value 0..5"
+                    Write-Host "MRR-PF = MRRPriceFactor, *=default"
                     Write-Host " "
                     [console]::ForegroundColor = $p
 
@@ -3450,6 +3453,8 @@ function Start-Setup {
                         EnableUpdate = "0"
                         EnableMiningHeatControl = ""
                         MiningHeatControl = ""
+                        PauseRentals = "0"
+                        MRRPriceFactor = ""
                         Algorithm = ""
                         ExcludeAlgorithm = ""
                         CoinSymbol = ""
@@ -3472,7 +3477,7 @@ function Start-Setup {
                     $SchedulerSetupStep = 0
 
                     if ($Scheduler_Action -ne "d") {
-                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableupdate","enableminingheatcontrol","miningheatcontrol","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","poolname","excludepoolname")) > $null
+                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableupdate","enableminingheatcontrol","miningheatcontrol","pauserentals","mrrpricefactor","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","poolname","excludepoolname")) > $null
                     }
                     $SchedulerSetupSteps.Add("save") > $null
 
@@ -3527,6 +3532,15 @@ function Start-Setup {
                                         } else {$mhc = ""}
                                     }
                                 }
+                                "pauserentals" {
+                                    $Schedule.PauseRentals = Read-HostBool -Prompt "Disable all unrented rigs during this schedule?" -Default $Schedule.PauseRentals | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "mrrpricefactor" {
+                                    $Schedule.MRRPriceFactor = Read-HostString -Prompt "Enter a specific price factor for MiningRigRentals during this schedule, $(if ($Schedule.MRRPriceFactor -ne '') {"enter 'clear'"} else {"leave empty"}) for global default)" -Default $Schedule.MRRPriceFactor -Characters "0-9\.," | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    if ($Schedule.MRRPriceFactor -ne "") {
+                                        $Schedule.MRRPriceFactor = $Schedule.MRRPriceFactor -replace ",","."
+                                    }
+                                }
                                 "algorithm" {
                                     $Schedule.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine during this schedule ($(if ($Schedule.Algorithm) {"enter 'clear'"} else {"leave empty"}) for all)" -Default $Schedule.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
@@ -3568,6 +3582,8 @@ function Start-Setup {
                                             EnableUpdate = if (Get-Yes $_.EnableUpdate) {"1"} else {"0"}
                                             EnableMiningHeatControl = "$($_.EnableMiningHeatControl)"
                                             MiningHeatControl = "$($_.MiningHeatControl)"
+                                            PauseRentals = if (Get-Yes $_.PauseRentals) {"1"} else {"0"}
+                                            MRRPriceFactor = "$($_.MRRPriceFactor)"
                                             Algorithm  = "$($_.Algorithm -join ",")"
                                             ExcludeAlgorithm  = "$($_.ExcludeAlgorithm -join ",")"
                                             CoinSymbol  = "$($_.CoinSymbol -join ",")"

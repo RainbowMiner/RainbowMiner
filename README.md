@@ -1650,6 +1650,8 @@ Define different power prices and/or pause miners for different timespans.
 - EnableUpdate: set to "1" to allow automatic updates during this timespan (and if EnableUpdateWhenScheduled is set to 1 in config.txt) [default=0]
 - EnableMiningHeatControl: set to "1" to allow mining heat control during this timespan (and if EnableMiningHeatControl is set to 1 in config.txt) [default=0]
 - MiningHeatControl: set specific mining heat control value, during that timespan
+- PauseRentals: if set to "1", all unrented rigs will be paused during this timespan
+- MRRPriceFactor: set specific price factor for MiningRigRentals, during that timespan
 - Algorithm: restrict mining to specific algorithms, during that timespan
 - ExcludeAlgorithm: disallow mining to specific algorithms, during that timespan
 - CoinSymbol: restrict mining to specific coin symbols, during that timespan

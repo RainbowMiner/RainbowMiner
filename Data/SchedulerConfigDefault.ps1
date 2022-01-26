@@ -9,6 +9,8 @@
     EnableUpdate = "0"
     EnableMiningHeatControl = ""
     MiningHeatControl = ""
+    PauseRentals = "0"
+    MRRPriceFactor = ""
     Algorithm  = ""
     ExcludeAlgorithm = ""
     CoinSymbol = ""
