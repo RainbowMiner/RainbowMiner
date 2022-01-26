@@ -141,6 +141,7 @@ function Start-Core {
         $Session.ReportMinerData = $false
         $Session.ReportPoolsData = $false
         $Session.ReportDeviceData = $false
+        $Session.ReportUnclean = $false
         $Session.TimeDiff = 0
         $Session.PhysicalCPUs = 0
         $Session.UserConfig = $null
@@ -164,7 +165,6 @@ function Start-Core {
         Write-Log -Level Error "Cannot run RainbowMiner: $($_.Exception.Message)"
         $false
     }
-
 
     Write-Host "Checking for VM .. " -NoNewline
     try {
@@ -516,6 +516,21 @@ function Start-Core {
 
     #Load databases, that only need updates once in a while
     Get-WorldCurrencies -Silent -EnableRemoteUpdate
+
+    #Check for unclean shutdown
+    try {
+        Write-Host "Checking last shutdown .. " -NoNewline
+        if (Test-Path ".\Data\rbm.pid") {
+            Write-Host "crashed" -ForegroundColor Red
+            $Session.ReportUnclean = $true
+        } else {
+            Write-Host "ok" -ForegroundColor Green
+        }
+
+        $PID | Out-File ".\Data\rbm.pid"
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
 
     $true
 }
@@ -3850,6 +3865,9 @@ function Stop-Core {
             }
         }
     }
+
+    if (Test-Path ".\Data\rbm.pid") {Remove-Item ".\Data\rbm.pid" -Force -ErrorAction Ignore}
+
     Stop-Autoexec
     [console]::TreatControlCAsInput = $false
 }
@@ -4171,9 +4189,11 @@ function Invoke-ReportMinerStatus {
         $Session.ConsoleCapture = $false
     }
 
-    $Version = "RainbowMiner $($Session.Version.ToString())"
-    $Status = if ($Global:PauseMiners.Test()) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
-    $ReportRates = [PSCustomObject]@{}
+    $Version      = "RainbowMiner $($Session.Version.ToString())"
+    $Status       = if ($Global:PauseMiners.Test()) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
+    $UncleanAlert = if ($Session.ReportUnclean) {$Session.ReportUnclean = $false; $true} else {$false}
+    $ReportRates  = [PSCustomObject]@{}
+
     $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
     [System.Collections.Generic.List[string]]$Including_Strings = @()
@@ -4337,9 +4357,45 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
+
             Write-Log -Level Info "Go report, go! $($ReportUrl)"
-            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)"; cputemp = "$(($Session.SysInfo.Cpus.Temperature | Measure-Object -Average).Average)"; cpuload = "$($Session.SysInfo.CpuLoad)"; cpupower = "$(($Session.SysInfo.Cpus.PowerDraw | Measure-Object -Sum).Sum)"; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Depth 10 -Compress; rates = ConvertTo-Json $ReportRates -Depth 10 -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; maxcrashes = "$($Session.Config.MinerStatusMaxCrashesPerHour)"; crashalert=$CrashAlert; crashdata=$CrashData; diskmingbalert=$DiskMinGBAlert; console=$Console; devices=$DeviceData; data = $minerreport}
+
+            $Response = Invoke-GetUrl $ReportUrl -body @{
+                            user           = $Session.Config.MinerStatusKey
+                            email          = $Session.Config.MinerStatusEmail
+                            pushoverkey    = $Session.Config.PushOverUserKey
+                            worker         = $Session.Config.WorkerName
+                            machinename    = $Session.MachineName
+                            machineip      = $Session.MyIP
+                            cpu            = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)"
+                            cputemp        = "$(($Session.SysInfo.Cpus.Temperature | Measure-Object -Average).Average)"
+                            cpuload        = "$($Session.SysInfo.CpuLoad)"
+                            cpupower       = "$(($Session.SysInfo.Cpus.PowerDraw | Measure-Object -Sum).Sum)"
+                            version        = $Version
+                            status         = $Status
+                            profit         = "$Profit"
+                            powerdraw      = "$PowerDraw"
+                            earnings_avg   = "$($Session.Earnings_Avg)"
+                            earnings_1d    = "$($Session.Earnings_1d)"
+                            pool_totals    = ConvertTo-Json @($Pool_Totals | Select-Object) -Depth 10 -Compress
+                            rates          = ConvertTo-Json $ReportRates -Depth 10 -Compress
+                            interval       = $ReportInterval
+                            uptime         = "$((Get-Uptime).TotalSeconds)"
+                            sysuptime      = "$((Get-Uptime -System).TotalSeconds)"
+                            maxtemp        = "$($Session.Config.MinerStatusMaxTemp)"
+                            tempalert      = $TempAlert
+                            maxcrashes     = "$($Session.Config.MinerStatusMaxCrashesPerHour)"
+                            crashalert     = $CrashAlert
+                            crashdata      = $CrashData
+                            diskmingbalert = $DiskMinGBAlert
+                            uncleanalert   = $UncleanAlert
+                            console        = $Console
+                            devices        = $DeviceData
+                            data           = $minerreport
+                        }
+
             Write-Log -Level Info "Done report, done."
+
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | Select-Object -first 1}
             else {
                 $ReportStatus = $Response.Status
