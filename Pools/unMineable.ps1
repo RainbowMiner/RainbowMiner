@@ -123,7 +123,7 @@ $Pools_Data | ForEach-Object {
         if (-not $InfoOnly) {
             $Pool_ProfitRequest = [PSCustomObject]@{}
             try {
-                $Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unminable.com/v3/calculate/reward" -tag $Name -delay 100 -cycletime 120 -body @{algo=$Pool_RewardAlgo;coin=$Pool_Currency;mh=100}                
+                $Pool_ProfitRequest = Invoke-RestMethodAsync "https://api.unminable.com/v3/calculate/reward" -tag $Name -delay 100 -cycletime 120 -body @{algo=$Pool_RewardAlgo;coin=$Pool_Currency;mh=100}
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "Pool profit API ($Name) has failed for coin $($Pool_Currency). "
