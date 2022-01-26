@@ -96,7 +96,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
-            $LHRCUDA = if (($Miner_Device | Where-Object {$_.IsLHR} | Measure-Object).Count -gt 0) {
+            $LHRCUDA = if (($Miner_Device | Where-Object {$_.IsLHR -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR -ne $null} | Measure-Object).Count -gt 0) {
                 ($Miner_Device | Foreach-Object {"$(if (($_.IsLHR -and $Session.Config.Devices."$($_.Model_Base)".EnableLHR -eq $null) -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR) {1} else {0})"}) -join ','
             }
 
