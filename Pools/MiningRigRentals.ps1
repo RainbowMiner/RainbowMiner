@@ -987,7 +987,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $CreateRig["minhours"] = $RigMinHours
                                             $CreateRig["maxhours"] = $RigMaxHours
 
-                                            $CreateRig["extensions"] = ($MRRConfig.$RigName.AllowExtensions -and $Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions -eq $null) -or ($Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions)
+                                            $CreateRig["extensions"] = -not $EnableMaintenanceMode -and (($MRRConfig.$RigName.AllowExtensions -and $Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions -eq $null) -or ($Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions))
 
                                             if ($RigRunMode -eq "create" -or $EnableUpdatePriceModifier) {
                                                 $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent -ne $null) {$Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent} else {$RigModifier}
