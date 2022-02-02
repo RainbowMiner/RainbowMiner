@@ -9,18 +9,18 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "1.47"
+$Version = "1.49"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.47-teamblack/TeamBlackMiner_1_47_Ubuntu_18_04_Cuda_11_5.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.49-teamblack/TeamBlackMiner_1_49_Ubuntu_18_04_Cuda_11_5.tar.xz"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.47-teamblack/TeamBlackMiner_1_47_Ubuntu_18_04_Cuda_11_4.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.49-teamblack/TeamBlackMiner_1_49_Ubuntu_18_04_Cuda_11_4.tar.xz"
             Cuda = "11.4"
         }
     )
@@ -29,11 +29,11 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.47-teamblack/TeamBlackMiner_1_47_cuda_11_5.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.49-teamblack/TeamBlackMiner_1_49_cuda_11_5.7z"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.47-teamblack/TeamBlackMiner_1_47_cuda_11_4.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.49-teamblack/TeamBlackMiner_1_49_cuda_11_4.7z"
             Cuda = "11.4"
         }
     )
