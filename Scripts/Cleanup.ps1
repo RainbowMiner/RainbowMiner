@@ -1353,6 +1353,10 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.8.0.2")) {
+        $AddAlgorithm += @("Blake3")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
