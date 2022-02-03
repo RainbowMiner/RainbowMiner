@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.24.8"
+$Version = "0.25.1"
 $DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.8-trex/t-rex-0.24.8-linux.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-trex/t-rex-0.25.1-linux.tar.gz"
             Cuda   = "9.2"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.24.8-trex/t-rex-0.24.8-win.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.25.1-trex/t-rex-0.25.1-win.zip"
             Cuda   = "9.2"
         }
     )
@@ -35,17 +35,20 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DevFee = 2.0} #Autolykos2 (new with 0.21.0)
+    [PSCustomObject]@{MainAlgorithm = "blake3"; Params = ""; MinMemGB = 2; ExtendInterval = 2} #Blake3/ALPH (new with 0.25.1)
     [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Etchash (new with 0.18.8)
     [PSCustomObject]@{MainAlgorithm = "ethash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DualZIL = $true} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 2; ExtendInterval = 3} #Ethash+Autolycos2/ERG (new with 0.24.1)
+    [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "blake3"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 2; ExtendInterval = 3} #Ethash+Blake3/ALPH (new with 0.25.1)
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 4; ExtendInterval = 3} #Ethash+FiroPow/RVN (new with 0.24.6)
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "kawpow"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 4; ExtendInterval = 3} #Ethash+KawPow/RVN (new with 0.24.1)
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondAlgorithm = "octopus"; DAG = $true; Params = ""; MinMemGB = 4; MinMemGB2nd = 4; ExtendInterval = 3} #Ethash+Octopus/CFX (new with 0.24.1)
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2; ExtendInterval = 3; Algorithm = "ethash"; DualZIL = $true} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 2; ExtendInterval = 3} #Ethash+Autolycos2/ERG (new with 0.24.1)
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3} #Ethash+FiroPow/RVN (new with 0.24.6)
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "kawpow"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3} #Ethash+KawPow/RVN (new with 0.24.1)
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "octopus"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3} #Ethash+Octopus/CFX (new with 0.24.1)
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 2; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+Autolycos2/ERG (new with 0.24.1)
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "blake3"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 2; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+Blake3/ALPH (new with 0.25.1)
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+FiroPow/RVN (new with 0.24.6)
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "kawpow"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+KawPow/RVN (new with 0.24.1)
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "octopus"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+Octopus/CFX (new with 0.24.1)
     [PSCustomObject]@{MainAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 4; ExtendInterval = 3} #FiroPoW (new with 0.22.0)
     [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = ""; ExtendInterval = 3} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
