@@ -87,6 +87,7 @@
     "blake2bglt": "Blake2b",
     "blake2bsha3": "Blake2bSHA3",
     "blake2s": "Blake2s",
+    "blake3": "Blake3",
     "blakecoin": "Blakecoin",
     "blakevanilla": "BlakeVanilla",
     "bmw": "BMW",
