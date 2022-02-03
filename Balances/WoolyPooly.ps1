@@ -13,6 +13,7 @@ $Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AE";   port = 20000; host = "ae"; rpc = "aeternity-1"}
     [PSCustomObject]@{symbol = "AION"; port = 33333; host = "aion"; rpc = "aion-1"}
+    [PSCustomObject]@{symbol = "ALPH"; port = 3106; host = "alph"; rpc = "alph-1"}
     [PSCustomObject]@{symbol = "BTG";  port = 3090; host = "btg"; rpc = "btg-1"}
     [PSCustomObject]@{symbol = "CFX";  port = 3094; host = "cfx"; rpc = "cfx-1"}
     [PSCustomObject]@{symbol = "CTXC"; port = 40000; host = "cortex"; rpc = "cortex-1"}

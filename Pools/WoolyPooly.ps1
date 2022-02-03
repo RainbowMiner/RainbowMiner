@@ -30,17 +30,18 @@ catch {
 }
 
 #$Result = (Invoke-WebRequest "https://woolypooly.com/js/app.5956a294.js").Content
-#if ($Result -match "coins:({.+?}}})") {
-#    $Tech = ConvertFrom-Json $Matches[1]
-#    $Tech | Sort-Object coin | Foreach-Object {
+#if ($Result -match "coins:({.+?}})}") {
+#    $Tech = ConvertFrom-Json "$($Matches[1] -replace "!0","1" -replace "!1","0" -replace ":(\.\d)",':0$1' -replace "https:/", "httpsxxx" -replace "http:/", "httpxxx" -replace "([a-zA-Z0-9]+):",'"$1":' -replace "httpxxx","http:/" -replace "httpsxxx","https:/")"
+#    $Tech.PSObject.Properties.Value | Sort-Object name | Foreach-Object {
 #        $PoolHost = $_.servers[0].urls
-#        "[PSCustomObject]@{symbol = `"$($_.coin)`"; port = $($PoolHost -split ':' | Select-Object -Last 1); host = `"$($PoolHost -replace "\..+$")`"; rpc = `"$($PoolHost -replace "\..+$")-1`"}"
+#        "[PSCustomObject]@{symbol = `"$($_.name)`"; port = $($PoolHost -split ':' | Select-Object -Last 1); host = `"$($PoolHost -replace "\..+$")`"; rpc = `"$($PoolHost -replace "\..+$")-1`"}"
 #    }
 #}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AE";   port = 20000; host = "ae"; rpc = "aeternity-1"}
     [PSCustomObject]@{symbol = "AION"; port = 33333; host = "aion"; rpc = "aion-1"}
+    [PSCustomObject]@{symbol = "ALPH"; port = 3106; host = "alph"; rpc = "alph-1"}
     [PSCustomObject]@{symbol = "BTG";  port = 3090; host = "btg"; rpc = "btg-1"}
     [PSCustomObject]@{symbol = "CFX";  port = 3094; host = "cfx"; rpc = "cfx-1"}
     [PSCustomObject]@{symbol = "CTXC"; port = 40000; host = "cortex"; rpc = "cortex-1"}
