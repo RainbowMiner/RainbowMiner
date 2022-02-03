@@ -20,6 +20,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AEON";  port = 1145; fee = 0.9; rpc = "aeon"; region = @("de","fi","hk")}
+    [PSCustomObject]@{symbol = "ALPH";  port = 1199; fee = 0.0; rpc = "alephium"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "ARQ";   port = 1143; fee = 0.9; rpc = "arqma"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "BEAM";  port = 1130; fee = 0.9; rpc = "beam"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "TUBE";  port = 1120; fee = 0.9; rpc = "bittube"; region = @("de","fi","ca","us","hk","sg","tr"); diffFactor = 40}
