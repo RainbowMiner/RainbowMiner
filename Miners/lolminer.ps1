@@ -100,7 +100,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 ) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-			            $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $Miner_Name = if ($SecondAlgorithm_Norm) {(@($Name) + @($MainAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'} else {(@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'}
                         $DeviceIDsAll = $Miner_Device.BusId_Type_Mineable_Index -join ',' #"$($Miner_Device.BusId -join ',') --devicesbypcie"
                         $First = $false
                     }
