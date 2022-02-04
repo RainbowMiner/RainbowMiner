@@ -13,14 +13,15 @@ $Version = "1.50"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
+    $Version  = "1.51"
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.50-teamblack/TeamBlackMiner_1_50_Ubuntu_18_04_Cuda_11_5_fixed.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.51-teamblack/TeamBlackMiner_1_51_Ubuntu_18_04_Cuda_11_5.tar.xz"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.50-teamblack/TeamBlackMiner_1_50_Ubuntu_18_04_Cuda_11_4_fixed.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.51-teamblack/TeamBlackMiner_1_51_Ubuntu_18_04_Cuda_11_4.tar.xz"
             Cuda = "11.4"
         }
     )
