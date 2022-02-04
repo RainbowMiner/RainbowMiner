@@ -43,11 +43,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETC"} #Etchash
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "SHA256ton"} #Etchash + SHA256ton
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "SHA256ton"} #Ethash + SHA256ton
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "SHA256ton"} #Ethash + SHA256ton
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 2;   Params = "--algo TON";        Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #SHA256ton/TON
     [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ubqhash
-    [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "SHA256ton"} #Ubqhash + SHA256ton
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "SHA256ton"} #Ubqhash + SHA256ton
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -164,7 +164,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					            ExtendInterval = $_.ExtendInterval
                                 Penalty        = 0
 							    DevFee         = [PSCustomObject]@{
-                                                ($MainAlgorithm_Norm) = $_.DevFee
+                                                ($MainAlgorithm_Norm) = $_.Fee
                                                 ($SecondAlgorithm_Norm) = 0
 							                }
 						        Uri            = $Uri
