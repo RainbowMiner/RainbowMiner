@@ -1732,18 +1732,20 @@ class Lol : Miner {
             return
         }
 
-        $HashRate_Name  = [String]$this.Algorithm[0]
-        $HashRate_Value = [Double](ConvertFrom-Hash "$($Data.Session.Performance_Summary)$($Data.Session.Performance_Unit -replace "g?/s$")")
+        $PowerDraw      = [Double]($Data.Workers.Power | Measure-Object -Sum).Sum
 
-        $PowerDraw      = [Double]$Data.Session.TotalPower
+        for ($i=0; $i -lt [int]$Data.Num_Algorithms; $i++) {
+            $HashRate_Name  = [String]$this.Algorithm[$i]
+            $HashRate_Value = [Double]($Data.Algorithms[$i].Total_Performance * $Data.Algorithms[$i].Performance_Factor)
 
-        if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
 
-            $Accepted_Shares = [Int64]$Data.Session.Accepted
-            $Stale_Shares    = [Int64]$Data.Session.Stale
-            $Rejected_Shares = [Int64]$Data.Session.Submitted - $Accepted_Shares - $Stale_Shares
-            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+                $Accepted_Shares = [Int64]$Data.Algorithms[$i].Total_Accepted
+                $Stale_Shares    = [Int64]$Data.Algorithms[$i].Total_Stales
+                $Rejected_Shares = [Int64]$Data.Algorithms[$i].Total_Rejected
+                $this.UpdateShares($i,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+            }
         }
 
         $this.AddMinerData($Data,$HashRate,$null,$PowerDraw)
