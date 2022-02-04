@@ -1745,6 +1745,8 @@ class Lol : Miner {
                 $Stale_Shares    = [Int64]$Data.Algorithms[$i].Total_Stales
                 $Rejected_Shares = [Int64]$Data.Algorithms[$i].Total_Rejected
                 $this.UpdateShares($i,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+            } elseif ($i -gt 0) {
+                $HashRate = [PSCustomObject]@{}
             }
         }
 
