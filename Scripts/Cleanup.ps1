@@ -1357,6 +1357,10 @@ try {
         $AddAlgorithm += @("Blake3")
     }
 
+    if ($Version -le (Get-Version "4.8.0.4")) {
+        $AddAlgorithm += @("Xdag")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
