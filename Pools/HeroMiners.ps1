@@ -118,7 +118,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -asobject
         foreach ($Pool_Port in $Pool_Ports) {
             if ($Pool_Port) {
-                $First = $true
                 foreach ($Pool_Region in $Pool_Regions) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
@@ -130,7 +129,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                         StablePrice   = 0
                         MarginOfError = 0
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                        Host          = "$(if (-not $First) {"$($Pool_Region)."})$($Pool_HostPath).herominers.com"
+                        Host          = "$($Pool_Region).$($Pool_HostPath).herominers.com"
                         Port          = if ($Pool_Port.CPU -ne $null) {$Pool_Port.CPU} else {$_.port}
                         Ports         = if ($Pool_Port.CPU -ne $null) {$Pool_Port} else {$null}
                         User          = "$($Pool_Wallet.wallet)$(if ($Pool_Request.config.fixedDiffEnabled) {if ($Pool_Wallet.difficulty) {"$($Pool_Request.config.fixedDiffSeparator)$($Pool_Wallet.difficulty)"} else {"{diff:$($Pool_Request.config.fixedDiffSeparator)`$difficulty}"}})"
@@ -159,7 +158,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                         Worker        = "{workername:$Worker}"
                         Email         = $Email
                     }
-                    $First = $false
                 }
             }
             $Pool_SSL = $true
