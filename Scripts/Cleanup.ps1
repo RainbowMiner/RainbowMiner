@@ -1359,6 +1359,7 @@ try {
 
     if ($Version -le (Get-Version "4.8.0.4")) {
         $AddAlgorithm += @("Xdag")
+        $RemoveMinerStats += @("NVIDIA-Lolminer-*hash-*SHA256ton_HashRate.txt")
     }
 
     ###
