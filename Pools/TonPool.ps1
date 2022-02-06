@@ -35,7 +35,7 @@ $Pool_Host           = "next.ton-pool.com"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
-$Pool_Port           = 4444
+$Pool_Port           = $null
 $Pool_PoolFee        = 5
 #$Pool_Factor         = 1e9
 #$Pool_EthProxy       = "ethproxy"
