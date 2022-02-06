@@ -109,8 +109,8 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     BaseAlgorithm  = $Algorithm_Norm_0
                     Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                     LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-                    MiningPriority = -2
-                    MiningAffinity = "0x1"
+                    MiningPriority = -1
+                    #MiningAffinity = "0x1"
 				}
 			}
 		}
