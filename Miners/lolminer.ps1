@@ -142,7 +142,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             }
                         }
                         if (-not $Pool_Arguments) {
-                            $Pool_Arguments = "--pool $(if ($MainAlgorithm_Norm -eq "SHA256ton") {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --user $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pass $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($MainAlgorithm_Norm -ne "SHA256ton") {" --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
+                            $Pool_Arguments = "--pool $(if ($MainAlgorithm_Norm -eq "SHA256ton") {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port) {":$($Pool_Port)"}) --user $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pass $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($MainAlgorithm_Norm -ne "SHA256ton") {" --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
                         }
 
                         if ($SecondAlgorithm_Norm) {
