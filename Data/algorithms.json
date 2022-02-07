@@ -397,6 +397,7 @@
     "curvehash": "CurveHash",
     "dagger": "Ethash",
     "daggerhashimoto": "Ethash",
+    "darkcoin": "SHA256ton",
     "darkcoinmod": "X11",
     "dash": "X11",
     "dashcoin": "X11",
