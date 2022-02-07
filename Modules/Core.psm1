@@ -1203,7 +1203,7 @@ function Invoke-Core {
                         }
                     }
 
-                    foreach ($q in @("CoinSymbol","Currency","Host","Port")) {
+                    foreach ($q in @("CoinSymbol","Currency","Host")) {
                         if ("$($UPool.$q)" -eq "") {$UPool.Enable = $false;Break}
                     }
                     $UPool
