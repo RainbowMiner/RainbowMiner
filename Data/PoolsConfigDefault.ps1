@@ -432,6 +432,9 @@
         "Tecracoin" = [PSCustomObject]@{
             Currencies=@("TCR")
         }
+        "ToncoinPool" = [PSCustomObject]@{
+            Currencies=@("TON")
+        }
         "TonPool" = [PSCustomObject]@{
             Currencies=@("TON")
         }
