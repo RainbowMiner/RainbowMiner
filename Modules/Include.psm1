@@ -3372,7 +3372,7 @@ function Get-Device {
                             }
 
                             if ($Vendor_Name -eq "NVIDIA") {
-                                $Device.IsLHR = $Model -in @("RTX3060","RTX3060TI","RTX3070","RTX3070TI","RTX3080","RTX3080TI") -and $Device.SubId -notin @("2204","2206","2484","2486")
+                                $Device.IsLHR = $Model -match "^RTX30[1-8]0" -and $Device.SubId -notin @("2204","2206","2484","2486")
                             }
 
                             $Global:GlobalCachedDevices += $Device
