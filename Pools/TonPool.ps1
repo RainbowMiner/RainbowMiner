@@ -70,6 +70,7 @@ if ($Pool_User -or $InfoOnly) {
             SSL           = $true
             Updated       = $Stat.Updated
             PoolFee       = $Pool_PoolFee
+            PaysLive      = $true
             DataWindow    = $DataWindow
             Workers       = $null
             Hashrate      = $Stat.Hashrate_Live
