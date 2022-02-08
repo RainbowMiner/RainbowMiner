@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.43"
+$Version = "1.44"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.43-lolminer/lolMiner_v1.43_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.44-lolminer/lolMiner_v1.44_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.43-lolminer/lolMiner_v1.43_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.44-lolminer/lolMiner_v1.44_Win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -92,7 +92,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 $MinMemGB = $_.MinMemGb
             }
 
-            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $SecondAlgorithm -or $_.Vendor -eq "AMD" -or $_.OpenCL.Architecture -in @("Turing","Ampere"))}
+            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $SecondAlgorithm -or $_.Vendor -eq "AMD" -or $_.OpenCL.Architecture -in @("Pascal","Turing","Ampere"))}
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
 				if ($Miner_Device -and
@@ -142,14 +142,14 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             }
                         }
                         if (-not $Pool_Arguments) {
-                            $Pool_Arguments = "--pool $(if ($MainAlgorithm_Norm -eq "SHA256ton") {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port) {":$($Pool_Port)"}) --user $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pass $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($MainAlgorithm_Norm -ne "SHA256ton") {" --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
+                            $Pool_Arguments = "--pool $(if ($MainAlgorithm_Norm -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.Protocol) {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port) {":$($Pool_Port)"}) --user $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pass $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($MainAlgorithm_Norm -ne "SHA256ton") {" --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
                         }
 
                         if ($SecondAlgorithm_Norm) {
 
                             $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
 
-                            $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm -eq "SHA256ton") {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($Pools.$SecondAlgorithm_Norm.Host)$(if ($SecondPool_Port) {":$($SecondPool_Port)"}) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
+                            $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($Pools.$SecondAlgorithm_Norm.Host)$(if ($SecondPool_Port) {":$($SecondPool_Port)"}) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
 
 					        [PSCustomObject]@{
 						        Name           = $Miner_Name
