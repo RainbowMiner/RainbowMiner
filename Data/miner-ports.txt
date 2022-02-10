@@ -119,7 +119,7 @@
 343	FireIceNvidia (linux)
 344	Phoenix42
 345	GrinGoldMiner
-346	TTminer3
+346	Gminer275
 347	Gminer255
 348	NinjaRig
 349	SrbMinerMulti
