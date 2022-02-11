@@ -83,7 +83,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
 			$SecondAlgorithm = $_.SecondAlgorithm
-			$SecondAlgorithm_Norm = if ($_.SecondAlgorithm) {Get-Algorithm $_.SecondAlgorithm} else {$null}
+			$SecondAlgorithm_Norm_0 = if ($_.SecondAlgorithm) {Get-Algorithm $_.SecondAlgorithm} else {$null}
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
@@ -92,16 +92,19 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 $MinMemGB = $_.MinMemGb
             }
 
-            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $SecondAlgorithm -or $_.Vendor -eq "AMD" -or $_.OpenCL.Architecture -in @("Pascal","Turing","Ampere"))}
+            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB)}
+
+            if ($SecondAlgorithm -and $_.Vendor -eq "NVIDIA" -and (-not ($Miner_Device | Where-Object {$_.OpenCL.Architecture -in @("Pascal","Turing","Ampere")} | Measure-Object).Count)) {
+                #no dual mining, if not at least one GPU is available
+                $Miner_Device = $null
+            }
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
-				if ($Miner_Device -and
-                    $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch $_.ExcludePoolName) -and
-                    (-not $SecondAlgorithm_Norm -or ($Pools.$SecondAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Name -notmatch $_.ExcludePoolName)))
-                ) {
+				if ($Miner_Device -and $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                        $Miner_Name = if ($SecondAlgorithm_Norm) {(@($Name) + @($MainAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'} else {(@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'}
+                        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $Miner_Name_Dual = if ($_.SecondAlgorithm) {(@($Name) + @($MainAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'}
                         $DeviceIDsAll  = $Miner_Device.BusId_Type_Mineable_Index -join ',' #"$($Miner_Device.BusId -join ',') --devicesbypcie"
                         $DeviceLHRsAll = if ($Miner_Vendor -eq "NVIDIA") {($Miner_Device | Foreach-Object {if ($_.IsLHR) {"auto"} else {"off"}}) -join ','}
                         $First = $false
@@ -146,41 +149,46 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             $Pool_Arguments = "--pool $(if ($MainAlgorithm_Norm -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.Protocol) {"$($Pools.$MainAlgorithm_Norm.Protocol)://"})$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port) {":$($Pool_Port)"}) --user $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pass $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($MainAlgorithm_Norm -ne "SHA256ton") {" --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
                         }
 
-                        if ($SecondAlgorithm_Norm) {
+                        if ($SecondAlgorithm_Norm_0) {
 
-                            $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
+                            foreach($SecondAlgorithm_Norm in @($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")) {
+                                if ($Pools.$SecondAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
 
-                            $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($Pools.$SecondAlgorithm_Norm.Host)$(if ($SecondPool_Port) {":$($SecondPool_Port)"}) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
+                                    $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
 
-					        [PSCustomObject]@{
-						        Name           = $Miner_Name
-						        DeviceName     = $Miner_Device.Name
-						        DeviceModel    = $Miner_Model
-						        Path           = $Path
-						        Arguments      = "$($Pool_Arguments)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
-						        HashRates      = [PSCustomObject]@{
-                                                    $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
-                                                    $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week
-                                                 }
-						        API            = "Lol"
-						        Port           = $Miner_Port
-                                FaultTolerance = $_.FaultTolerance
-					            ExtendInterval = $_.ExtendInterval
-                                Penalty        = 0
-							    DevFee         = [PSCustomObject]@{
-                                                ($MainAlgorithm_Norm) = $_.Fee
-                                                ($SecondAlgorithm_Norm) = 0
-							                }
-						        Uri            = $Uri
-						        ManualUri      = $ManualUri
-                                Version        = $Version
-                                PowerDraw      = 0
-                                BaseName       = $Name
-                                BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)"
-                                Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
-                                LogFile        = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
-                                ListDevices    = "--list-devices"
-					        }
+                                    $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($Pools.$SecondAlgorithm_Norm.Host)$(if ($SecondPool_Port) {":$($SecondPool_Port)"}) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
+
+					                [PSCustomObject]@{
+						                Name           = $Miner_Name_Dual
+						                DeviceName     = $Miner_Device.Name
+						                DeviceModel    = $Miner_Model
+						                Path           = $Path
+						                Arguments      = "$($Pool_Arguments)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
+						                HashRates      = [PSCustomObject]@{
+                                                            $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week
+                                                            $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week
+                                                         }
+						                API            = "Lol"
+						                Port           = $Miner_Port
+                                        FaultTolerance = $_.FaultTolerance
+					                    ExtendInterval = $_.ExtendInterval
+                                        Penalty        = 0
+							            DevFee         = [PSCustomObject]@{
+                                                        ($MainAlgorithm_Norm) = $_.Fee
+                                                        ($SecondAlgorithm_Norm) = 0
+							                        }
+						                Uri            = $Uri
+						                ManualUri      = $ManualUri
+                                        Version        = $Version
+                                        PowerDraw      = 0
+                                        BaseName       = $Name
+                                        BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)"
+                                        Benchmarked    = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
+                                        LogFile        = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
+					                }
+                                }
+                            }
+
                         } else {
 					        [PSCustomObject]@{
 						        Name           = $Miner_Name
