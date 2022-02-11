@@ -2734,7 +2734,9 @@ class Xgminer : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = @{command = "summary"; parameter = ""} | ConvertTo-Json -Depth 10 -Compress
+        $DualMining = $this.Algorithm.Count -eq 2
+
+        $Request = @{command = "summary$(if ($DualMining) {"+summary2"})"; parameter = ""} | ConvertTo-Json -Depth 10 -Compress
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}
@@ -2778,6 +2780,38 @@ class Xgminer : Miner {
             $Accepted_Shares  = [Int64]$Data.SUMMARY.accepted
             $Rejected_Shares  = [Int64]$Data.SUMMARY.rejected
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+
+            if ($DualMining) {
+                $HashRate_Name = [String]$this.Algorithm[1]
+                $HashRate_Value = If ($Data.SUMMARY2.HS_5s) { [Double]$Data.SUMMARY2.HS_5s }
+                elseif ($Data.SUMMARY2.KHS_5s) { [Double]$Data.SUMMARY2.KHS_5s * 1e3 }
+                elseif ($Data.SUMMARY2.MHS_5s) { [Double]$Data.SUMMARY2.MHS_5s * 1e6 }
+                elseif ($Data.SUMMARY2.GHS_5s) { [Double]$Data.SUMMARY2.GHS_5s * 1e9 }
+                elseif ($Data.SUMMARY2.THS_5s) { [Double]$Data.SUMMARY2.THS_5s * 1e12 }
+                elseif ($Data.SUMMARY2.PHS_5s) { [Double]$Data.SUMMARY2.PHS_5s * 1e15 }
+                elseif ($Data.SUMMARY2.KHS_30s) { [Double]$Data.SUMMARY2.KHS_30s * 1e3 }
+                elseif ($Data.SUMMARY2.MHS_30s) { [Double]$Data.SUMMARY2.MHS_30s * 1e6 }
+                elseif ($Data.SUMMARY2.GHS_30s) { [Double]$Data.SUMMARY2.GHS_30s * 1e9 }
+                elseif ($Data.SUMMARY2.THS_30s) { [Double]$Data.SUMMARY2.THS_30s * 1e12 }
+                elseif ($Data.SUMMARY2.PHS_30s) { [Double]$Data.SUMMARY2.PHS_30s * 1e15 }
+                elseif ($Data.SUMMARY2.HS_av) { [Double]$Data.SUMMARY2.HS_av }
+                elseif ($Data.SUMMARY2.KHS_av) { [Double]$Data.SUMMARY2.KHS_av * 1e3 }
+                elseif ($Data.SUMMARY2.MHS_av) { [Double]$Data.SUMMARY2.MHS_av * 1e6 }
+                elseif ($Data.SUMMARY2.GHS_av) { [Double]$Data.SUMMARY2.GHS_av * 1e9 }
+                elseif ($Data.SUMMARY2.THS_av) { [Double]$Data.SUMMARY2.THS_av * 1e12 }
+                elseif ($Data.SUMMARY2.PHS_av) { [Double]$Data.SUMMARY2.PHS_av * 1e15 }
+
+                if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                    $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                    $Difficulty_Value = [Double]$Data.SUMMARY2.Difficulty_Accepted
+                    $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+                    $Accepted_Shares  = [Int64]$Data.SUMMARY2.accepted
+                    $Rejected_Shares  = [Int64]$Data.SUMMARY2.rejected
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
+                }
+            }
         }
 
         $this.AddMinerData($Response,$HashRate,$Difficulty)
