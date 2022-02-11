@@ -1,0 +1,24 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navsaveminerstats" class="h2">Download Backup of Miner Statistics</h1>
+</div>
+
+<form id="formConfig" method="POST" action="/saveminerstats">
+    <div class="card mb-3">
+        <select id="select--MinerName" name="MinerName" class="form-control">
+            <option value="all">All Miners</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Download Backup now</button>
+    </div>
+</form>
+
+<script type="text/javascript">
+
+$(function() {
+    $.get("/availminerstats").done(function (data) {
+        $.each(data,function(ix,miner) {if (miner.Statcount > 0) {console.log(miner.Name);$("#select--MinerName").append("<option value=\""+miner.Name+"\">"+miner.Name+" ("+miner.Statcount+")</option>")}})
+    });
+});
+
+</script>
+<!--#include file="/parts/foot.html" -->

@@ -237,6 +237,19 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = if ($API.FastestMiners) {ConvertTo-Json $API.FastestMiners -Depth 10} else {"[]"}
             Break
         }
+        "/availminers" {
+            $Data = if ($Session.AvailMiners) {ConvertTo-Json $Session.AvailMiners -Depth 10} else {"[]"}
+        }
+        "/availminerstats" {
+            $Data = if ($Session.AvailMiners) {
+                ConvertTo-Json @($Session.AvailMiners | Foreach-Object {
+                    [PSCustomObject]@{
+                        Name = $_
+                        Statcount = (Get-ChildItem ".\Stats\Miners" -File -Filter "*-$($_)-*_Hashrate.txt" | Measure-Object).Count
+                    }
+                }) -Depth 10
+            } else {"[]"}
+        }
         "/disabled" {
             $Data = ConvertTo-Json @((Get-Stat -Disabled).Keys | Select-Object) -Depth 10
             Break
@@ -565,6 +578,43 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             if ($ConfigActual) {Remove-Variable "ConfigActual"}
             if ($Sorted)       {Remove-Variable "Sorted"}
             if ($DataSaved)    {Remove-Variable "DataSaved"}
+            Break
+        }
+        "/loadminerstats" {
+            
+
+            Break
+        }
+        "/saveminerstats" {
+            $Miner = "$(if ($Parameters.MinerName -and $Parameters.MinerName -ne "all") {$Parameters.MinerName -replace "[^A-Za-z0-9]"} else {"all"})"
+            if ($Miner -eq "all" -or $Session.AvailMiners -contains $Miner) {
+                $ZipDate     = Get-Date -Format "yyyy-MM-dd"
+                $ZipFileName = "minerstats-$($Miner)-$($ZipDate).zip"
+                $ZipPath     = Join-Path (Resolve-Path ".\Logs") $ZipFileName
+                $StatsPath   = Join-Path (Resolve-Path ".\Stats\Miners") "*$(if ($Miner -ne "all") {"-$($Miner)-*"})_HashRate.txt"
+                if ($IsWindows) {
+                    $Params = @{
+                        FilePath     = "7z.exe"
+                        ArgumentList = "a `"$($ZipPath)`" `"$($StatsPath)`" -y -tzip"
+                        WindowStyle  = "Hidden"
+                    }
+                } else {
+                    $Params = @{
+                        FilePath     = "7z"
+                        ArgumentList = "a `"$($ZipPath)`" `"$($StatsPath)`" -y -tzip"
+                    }
+                }
+
+                $Params.PassThru = $true
+                (Start-Process @Params).WaitForExit()>$null
+
+                $Data = [System.IO.File]::ReadAllBytes($ZipPath)
+                $ContentType = Get-MimeType ".zip"
+                $ContentFileName = $ZipFileName
+
+                Remove-Item $ZipPath -Force -ErrorAction Ignore
+
+            }
             Break
         }
         "/config" {
