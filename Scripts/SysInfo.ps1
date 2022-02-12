@@ -17,7 +17,7 @@ if ($IsWindows -and (Test-IsElevated)) {
 
     #start a new instance of GetCPU.exe
     $GetCPU_FilePath = [IO.Path]::GetFullPath(".\Includes\getcpu\GetCPU.exe")
-    $GetCPU_Process = Start-SubProcess -FilePath $GetCPU_FilePath -ArgumentList "reg" -WorkingDirectory (Split-Path $GetCPU_FilePath)
+    $GetCPU_Process = Start-SubProcess -FilePath $GetCPU_FilePath -ArgumentList "--repeat=10000" -WorkingDirectory (Split-Path $GetCPU_FilePath)
 }
 
 $count = 0
