@@ -166,6 +166,18 @@ function Start-Core {
         $false
     }
 
+    if ($IsWindows) {
+        Write-Host "Unblocking files .. " -NoNewline
+        try {
+            Get-ChildItem ".\Includes" -Recurse | Unblock-File -ErrorAction Stop
+            Write-Host "ok" -ForegroundColor Green
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Unblocking files failed: $($_.Exception.Message)"
+            Write-Host "failed" -ForegroundColor Red
+        }
+    }
+
     Write-Host "Checking for VM .. " -NoNewline
     try {
         if ($IsLinux) {
