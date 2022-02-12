@@ -7943,7 +7943,9 @@ function Get-SysInfo {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $False)]
-        [int]$PhysicalCPUs = 1
+        [int]$PhysicalCPUs = 1,
+        [Parameter(Mandatory = $false)]
+        [bool]$FromRegistry = $false
     )
 
     if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
@@ -7963,7 +7965,11 @@ function Get-SysInfo {
 
         $GetCPU_Data = if (Test-IsElevated) {
             try {
-                Invoke-Exe ".\Includes\getcpu\GetCPU.exe" | ConvertFrom-Json -ErrorAction Stop
+                if ($FromRegistry) {
+                    Get-ItemPropertyValue "HKCU:\Software\RainbowMiner" -Name "GetCPU" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                } else {
+                    Invoke-Exe ".\Includes\getcpu\GetCPU.exe" | ConvertFrom-Json -ErrorAction Stop
+                }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
