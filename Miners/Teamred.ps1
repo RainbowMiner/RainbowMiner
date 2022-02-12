@@ -10,15 +10,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.9.2"
+$Version = "0.9.2.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-teamred/teamredminer-v0.9.2-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2.1-teamred/teamredminer-v0.9.2.1-linux.tgz"
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-teamred/teamredminer-v0.9.2-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2.1-teamred/teamredminer-v0.9.2.1-win.zip"
     $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
@@ -94,9 +94,13 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
         $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $_.ExcludeArchitecture -or $_.OpenCL.Architecture -notin $_.ExcludeArchitecture)}
+        $Miner_ExcludeArch = $_.ExcludeArchitecture
+        $Miner_Arch = $_.Architecture
 
-        if ($SecondAlgorithm_Norm_0 -and $_.Architecture -and (-not ($Miner_Device | Where-Object {$_.OpenCL.Architecture -in $_.Architecture} | Measure-Object).Count)) {
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $Miner_ExcludeArch -or $_.OpenCL.Architecture -notin $Miner_ExcludeArch)}
+        $Miner_Device_Dual = if ($SecondAlgorithm_Norm_0) {$Miner_Device | Where-Object {-not $Miner_Arch -or $_.OpenCL.Architecture -in $Miner_Arch}}
+
+        if ($SecondAlgorithm_Norm_0 -and $Miner_Arch -and (-not ($Miner_Device_Dual | Measure-Object).Count)) {
             $Miner_Device = $null
         }
 
@@ -118,8 +122,9 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 if ($First) {
 				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $Miner_Name_Dual = if ($_.SecondAlgorithm) {(@($Name) + @($MainAlgorithm_Norm_0) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'}
-                    $DeviceIDsAll = $Device.Type_Vendor_Index -join ','
+                    $Miner_Name_Dual = if ($SecondAlgorithm_Norm_0) {(@($Name) + @($MainAlgorithm_Norm_0) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'}
+                    $DeviceIDsAll  = $Miner_Device.Type_Vendor_Index -join ','
+                    $DeviceIDsDual = if ($SecondAlgorithm_Norm_0) {$Miner_Device_Dual.Type_Vendor_Index -join ','}
 
                     $Pool_Host = $Pools.$MainAlgorithm_Norm_0.Host
                     $Pool_User = $Pools.$MainAlgorithm_Norm_0.User
@@ -158,7 +163,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
                             $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
 
-                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -o $($Pools.$SecondAlgorithm_Norm.Protocol)://$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"}) --$($_.SecondAlgorithm)_end"
+                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($Pools.$SecondAlgorithm_Norm.Protocol)://$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"}) --$($_.SecondAlgorithm)_end"
 
 				            [PSCustomObject]@{
 					            Name           = $Miner_Name_Dual
