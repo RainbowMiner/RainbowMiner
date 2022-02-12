@@ -7957,7 +7957,7 @@ function Get-SysInfo {
                     Utilization = 0
                     PowerDraw   = 0
                     Temperature = 0
-                    Method      = "ohm"
+                    Method      = "lhm"
             }
         } | Select-Object)
 
