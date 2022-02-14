@@ -2409,13 +2409,37 @@ function Stop-SubProcess {
                     # shutdown Windows miners
                     #
 
-                    if ($Job.OwnWindow) {
-                        $Process.CloseMainWindow() > $null
-                    } else {
+                    $Shutdown_Title = "$($Title) PID $($Process.Id)$(if ($Name) {": $($Name)"})"
+
+                    try {
                         if (-not $Process.HasExited) {
-                            Write-Log -Level Info "Attempting to kill $($Title) PID $($Process.Id)$(if ($Name) {": $($Name)"})"
-                            Stop-Process -InputObject $Process -ErrorAction Ignore -Force
+                            Write-Log -Level Info "Send Ctrl+C to $($Shutdown_Title)"
+                            if (Send-CtrlC $Process.Id) {
+                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 20) {
+                                    Start-Sleep -Milliseconds 500
+                                }
+                                if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
+                                    Write-Log -Level Warn "$($Title) failed to close within 20 seconds$(if ($Name) {": $($Name)"})"
+                                }
+                            }
                         }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "Problem closing $($Title) PID $($Process.Id): $($_.Exception.Message)"
+                    }
+
+                    try {
+                        if ($Job.OwnWindow) {
+                            $Process.CloseMainWindow() > $null
+                        } else {
+                            if (-not $Process.HasExited) {
+                                Write-Log -Level Info "Attempting to kill $($Shutdown_Title)"
+                                Stop-Process -InputObject $Process -ErrorAction Ignore -Force
+                            }
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Info "Failed to $(if ($Job.OwnWindow) {"close main window of"} else {"kill"}) $($Title) PID $($Process.Id): $($_.Exception.Message)"
                     }
 
                 } else {
