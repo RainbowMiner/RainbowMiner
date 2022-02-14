@@ -2413,7 +2413,7 @@ function Stop-SubProcess {
                         $Process.CloseMainWindow() > $null
                     } else {
                         if (-not $Process.HasExited) {
-                            Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
+                            Write-Log -Level Info "Attempting to kill $($Title) PID $($Process.Id)$(if ($Name) {": $($Name)"})"
                             Stop-Process -InputObject $Process -ErrorAction Ignore -Force
                         }
                     }
@@ -8334,3 +8334,25 @@ function Get-LastUserInput {
     }
 }
 
+function Send-CtrlC {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $True)]
+        [int]$ProcessID,
+        [Parameter(Mandatory = $False)]
+        [string]$Signal = "SIGINT" #SIGINT sends Ctrl+C, SIGBREAK sends Ctrl+Break
+    )
+    $Result = $false
+    try {
+        if ($IsWindows) {
+            $WinKillResult = Invoke-Exe ".\Includes\windows-kill\$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\windows-kill.exe" -WorkingDirectory $Pwd -ArgumentList "-$($Signal) $($ProcessID)"
+            $Result = $WinKillResult -match "success" -and $WinKillResult -match "pid:$($ProcessId)"
+            if (-not $Result) {
+                Write-Log -Level Info "Send-CtrlC to PID $($ProcessID) failed: $("$($WinKillResult)".Trim() -split "[`r`n]+" | Select-Object -Last 1)"
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+    $Result
+}
