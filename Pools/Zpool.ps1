@@ -48,7 +48,7 @@ catch {
 $Pool_Regions = @("na","eu","sea","jp")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Currencies = @("BTC","DOGE") + @($PoolCoins_Request.PSObject.Properties | Where-Object {$_.Value.conversion_disabled -ne "1" -and $_.Name -notmatch "^HashTap"} | Foreach-Object {if ($_.Value.symbol -eq $null){$_.Name} else {$_.Value.symbol}} | Select-Object -Unique) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
+$Pool_Currencies = @("BTC","DOGE") + @($PoolCoins_Request.PSObject.Properties | Where-Object {$_.Value.conversion_disabled -ne "1" -and $_.Name -notmatch "HashTap"} | Foreach-Object {if ($_.Value.symbol -eq $null){$_.Name} else {$_.Value.symbol}} | Select-Object -Unique) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 if ($PoolCoins_Request) {
     $PoolCoins_Algorithms = @($Pool_Request.PSObject.Properties.Value | Where-Object coins -eq 1 | Select-Object -ExpandProperty name -Unique)
     if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
@@ -59,7 +59,7 @@ if (-not $InfoOnly -and $Pool_Currencies.Count -gt 1) {
     $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
 }
 
-$Pool_Request.PSObject.Properties.Name | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | Where-Object {$_ -notmatch "HashTap" -and $Pool_Request.$_.name -notmatch "HashTap"} | ForEach-Object {
     $Pool_Host = "mine.zpool.ca"
     $Pool_Port = $Pool_Request.$_.port
     $Pool_Algorithm = $Pool_Request.$_.name
