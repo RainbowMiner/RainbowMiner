@@ -1371,6 +1371,7 @@ try {
             Get-ChildItem ".\Stats\Miners" -Filter "*lolminer-$($lolAlgo)-*_Hashrate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "lolminer-$($lolAlgo)-","lolminer-$($lolAlgo)_SHA256ton-") -Force -ErrorAction Ignore}
         }
         Get-ChildItem ".\Stats\Miners" -Filter "*Teamred-Ethash-*_Hashrate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Teamred-Ethash-","Teamred-Ethash_SHA256ton-") -Force -ErrorAction Ignore}
+        $RemoveMinerStats += @("CPU-SrbminerMulti-*_HashRate.txt")
     }
 
     ###
