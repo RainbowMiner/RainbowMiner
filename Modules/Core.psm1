@@ -3847,7 +3847,13 @@ function Stop-Core {
         }
     })
     if ($IsWindows) {
-        Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
+        Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Foreach-Object {
+            if ($_.Name -eq "GetCPU.exe" -and $_.ExecutablePath -like "$(Get-Location)\Includes\getcpu\*") {
+                if (Send-CtrlC $_.ProcessId) {Start-Sleep -Milliseconds 500}
+            } elseif ($_.ExecutablePath -like "$(Get-Location)\Bin\*") {
+                Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore
+            }
+        }
     } elseif ($IsLinux) {
         Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/Bin/*" -or $_.Path -like "$(Get-Location)/IncludesLinux/bin/*"} | Foreach-Object {
             if (Test-OCDaemon) {

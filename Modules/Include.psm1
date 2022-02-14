@@ -8370,7 +8370,7 @@ function Send-CtrlC {
     try {
         if ($IsWindows) {
             $WinKillResult = Invoke-Exe ".\Includes\windows-kill\$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\windows-kill.exe" -WorkingDirectory $Pwd -ArgumentList "-$($Signal) $($ProcessID)"
-            $Result = $WinKillResult -match "success" -and $WinKillResult -match "pid:$($ProcessId)"
+            $Result = $WinKillResult -match "success" -and $WinKillResult -match "$($ProcessId)"
             if (-not $Result) {
                 Write-Log -Level Info "Send-CtrlC to PID $($ProcessID) failed: $("$($WinKillResult)".Trim() -split "[`r`n]+" | Select-Object -Last 1)"
             }
