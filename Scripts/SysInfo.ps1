@@ -11,7 +11,7 @@ if ($ControllerProcess -eq $null) {return}
 
 $ControllerProcess.Handle >$null
 
-if ($IsWindows -and (Test-IsElevated)) {
+if ($False -and $IsWindows -and (Test-IsElevated)) {
     #kill off all running GetCPU.exe
     try {Get-Process -Name "GetCPU" -ErrorAction Ignore | Foreach-Object {$_.Kill()}} catch {}
 
