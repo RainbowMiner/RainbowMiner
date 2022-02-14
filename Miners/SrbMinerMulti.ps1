@@ -28,7 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cosa"             ;              Params = ""; Fee = 2.00;               Vendor = @("CPU")} #Cosanta/COSA
     [PSCustomObject]@{MainAlgorithm = "cpupower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
     [PSCustomObject]@{MainAlgorithm = "curvehash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Curvehash
-    [PSCustomObject]@{MainAlgorithm = "dynamo"           ;              Params = ""; Fee = 3.00;               Vendor = @("CPU")} #Dynamo/DYNAMO
+    [PSCustomObject]@{MainAlgorithm = "dynamo"           ;              Params = ""; Fee = 3.00;               Vendor = @("CPU"); MaxRejectedShareRatio = 0.5} #Dynamo/DYNAMO
     [PSCustomObject]@{MainAlgorithm = "ghostrider"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 0.9; ExtendInterval = 3; ExcludePoolName = "^C3pool|^MoneroOcean"} #Ghostrider/RPT
     [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #HeavyHash/OBTC
     [PSCustomObject]@{MainAlgorithm = "minotaur"         ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #Minotaur/RING Coin
@@ -194,6 +194,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
 					    Uri            = $Uri
                         FaultTolerance = $_.FaultTolerance
 					    ExtendInterval = if ($_.ExtendInterval) {$_.ExtendInterval} elseif ($Miner_Vendor -eq "CPU") {2} else {$null}
+                        MaxRejectedShareRatio = if ($_.MaxRejectedShareRatio) {$_.MaxRejectedShareRatio} else {$null}
                         Penalty        = 0
 					    DevFee         = $_.Fee
 					    ManualUri      = $ManualUri
