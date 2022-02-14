@@ -1366,6 +1366,13 @@ try {
         $AddAlgorithm += @("Dynamo")
     }
 
+    if ($Version -le (Get-Version "4.8.0.7")) {
+        foreach ($lolAlgo in @("Ethash","Etchash","UbqHash")) {
+            Get-ChildItem ".\Stats\Miners" -Filter "*lolminer-$($lolAlgo)-*_Hashrate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "lolminer-$($lolAlgo)-","lolminer-$($lolAlgo)_SHA256ton-") -Force -ErrorAction Ignore}
+        }
+        Get-ChildItem ".\Stats\Miners" -Filter "*Teamred-Ethash-*_Hashrate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Teamred-Ethash-","Teamred-Ethash_SHA256ton-") -Force -ErrorAction Ignore}
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
