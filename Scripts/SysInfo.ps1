@@ -13,7 +13,21 @@ $ControllerProcess.Handle >$null
 
 if ($False -and $IsWindows -and (Test-IsElevated)) {
     #kill off all running GetCPU.exe
-    try {Get-Process -Name "GetCPU" -ErrorAction Ignore | Foreach-Object {$_.Kill()}} catch {}
+    try {
+        Get-Process -Name "GetCPU" -ErrorAction Ignore | Foreach-Object {
+            if (Send-CtrlC $_.Id) {
+                $StopWatch = [System.Diagnostics.Stopwatch]::New()
+                $StopWatch.Start()
+                while (-not $_.HasExited -and $StopWatch.Elapsed.TotalSeconds -le 10) {
+                    Start-Sleep -Milliseconds 500
+                }
+            }
+
+            if (-not $_.HasExited) {
+                $_.Kill()
+            }
+        }
+    } catch {}
 
     #start a new instance of GetCPU.exe
     $GetCPU_FilePath = [IO.Path]::GetFullPath(".\Includes\getcpu\GetCPU.exe")
