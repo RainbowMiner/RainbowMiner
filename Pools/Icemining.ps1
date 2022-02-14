@@ -69,6 +69,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
 
     $Pool_User = "$($Wallets.$Pool_Currency).{workername:$Worker}"
     $Pool_Protocol = "$(if ($Pool_Currency -ne "TON") {"stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"})"
+    $Pool_Fee = if ($PoolCoins_Request.$Pool_Currency.reward_model.PPLNS -ne $null) {[double]$PoolCoins_Request.$Pool_Currency.reward_model.PPLNS} else {$_.fee}
 
     $Pool_Pass = if ($Pool_Currency -eq "SIN") {
         "c=$Pool_Currency{diff:,d=`$difficulty}$(if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"})"
@@ -95,7 +96,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = if ($_.ssl) {$true} else {$false}
             Updated       = $Stat.Updated
-            PoolFee       = $_.fee
+            PoolFee       = $Pool_Fee
             Workers       = $PoolCoins_Request.$Pool_Currency.workers
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
