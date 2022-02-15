@@ -41,18 +41,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";                MinMemGb = 3;   Params = "--algo BEAM-I";     Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3";              MinMemGb = 3;   Params = "--algo BEAM-II";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5,3
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETC"} #Etchash
-    [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = @("Pascal","Turing","Ampere")} #Etchash + SHA256ton
-    [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = @("Turing","Ampere")} #Etchash + Blake3
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = 2} #Etchash + SHA256ton
+    [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = 1} #Etchash + Blake3
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = @("Pascal","Turing","Ampere")} #Ethash + SHA256ton
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = @("Turing","Ampere")} #Ethash + Blake3
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = 2} #Ethash + SHA256ton
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = 1} #Ethash + Blake3
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = @("Pascal","Turing","Ampere")} #Ethash for low memory coins + SHA256ton
-    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = @("Turing","Ampere")} #Ethash for low memory coins + Blake3
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = 2} #Ethash for low memory coins + SHA256ton
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = 1} #Ethash for low memory coins + Blake3
     [PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 2;   Params = "--algo TON";        Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #SHA256ton/TON
     [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ubqhash
-    [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = @("Pascal","Turing","Ampere")} #Ubqhash + SHA256ton
-    [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = @("Turing","Ampere")} #Ubqhash + Blake3
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; OpenCLArch = 2} #Ubqhash + SHA256ton
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 3; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3"; OpenCLArch = 1} #Ubqhash + Blake3
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -70,6 +70,12 @@ if ($InfoOnly) {
     }
     return
 }
+
+$OpenCLArch_Types = @(
+    @("Ampere")
+    @("Turing","Ampere")
+    @("Pascal","Turing","Ampere")
+)
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
@@ -98,8 +104,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB)}
 
-            if ($_.OpenCLArch -and $_.Vendor -eq "NVIDIA") {
-                if (-not ($Miner_Device | Where-Object {$_.OpenCL.Architecture -in $_.OpenCLArch} | Measure-Object).Count) {
+            if ($_.OpenCLArch -ne $null -and $_.Vendor -eq "NVIDIA") {
+                $OpenCLArch = $OpenCLArch_Types[$_.OpenCLArch]
+                if (-not ($Miner_Device | Where-Object {$_.OpenCL.Architecture -in $OpenCLArch} | Measure-Object).Count) {
                     #no mining, if not at least one GPU is available
                     $Miner_Device = $null
                 }
