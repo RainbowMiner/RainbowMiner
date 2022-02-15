@@ -1374,6 +1374,10 @@ try {
         $RemoveMinerStats += @("CPU-SrbminerMulti-*_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.8.0.8")) {
+        $RemoveMinerStats += @("CPU-SrbminerMulti-*Dynamo_HashRate.txt")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
