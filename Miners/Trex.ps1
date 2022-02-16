@@ -194,7 +194,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                                     Version        = $Version
                                     PowerDraw      = 0
                                     BaseName       = $Name
-                                    BaseAlgorithm  = $Algorithm_Norm_0
+                                    BaseAlgorithm  = "$($Algorithm_Norm_0)-$($SecondAlgorithm_Norm_0)"
                                     Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                                     LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
 				                }
