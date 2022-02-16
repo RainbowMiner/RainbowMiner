@@ -170,6 +170,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                                     $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($Pools.$SecondAlgorithm_Norm.Host)$(if ($SecondPool_Port) {":$($SecondPool_Port)"}) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm_0 -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
 
+                                    #temporary fix for v1.45 on TonPool
+                                    if ($Pools.$SecondAlgorithm_Norm.Name -match "^TonPool") {$SecondPool_Arguments = "$($SecondPool_Arguments) --ton-mode 2"}
+
 					                [PSCustomObject]@{
 						                Name           = $Miner_Name
 						                DeviceName     = $Miner_Device.Name
