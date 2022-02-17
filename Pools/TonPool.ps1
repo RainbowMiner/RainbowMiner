@@ -27,11 +27,14 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us")
+$Pool_Regions = @("eu")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Currency       = "TON"
-$Pool_Host           = "next.ton-pool.com"
+#$Pool_Host           = "next.ton-pool.com"
+#$Pool_Protocol       = "https"
+$Pool_Host            = "{region}1.stratum.ton-pool.com/stratum"
+$Pool_Protocol        = "wss"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
@@ -61,8 +64,8 @@ if ($Pool_User -or $InfoOnly) {
             Price         = $Stat.$StatAverage #instead of .Live
             StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "https"
-            Host          = $Pool_Host
+            Protocol      = $Pool_Protocol
+            Host          = $Pool_Host -replace "{region}",$Pool_Region
             Port          = $Pool_Port
             User          = "$($Wallets.$Pool_Currency)"
             Pass          = "x"
