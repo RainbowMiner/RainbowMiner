@@ -1298,6 +1298,20 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = $API.LockMiners | ConvertTo-Json
             Break
         }
+        "/resetworkers" {
+            if ($Session.Config.MinerStatusKey -match "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$") {
+                $Result = Invoke-GetUrl "https://rbminer.net/api/reset_workers.php?user=$($Session.Config.MinerStatusKey)" -timeout 10
+                if ($Result.status) {
+                    $Data = "The signal to delete all offline workers was successfully sent to rbminer.net."
+                } else {
+                    $Data = "Failed to send reset signal to rbminer.net."
+                }
+                if ($Result) {Remove-Variable "Result"}
+            } else {
+                $Data = "No valid MinerStatusKey found in config.txt"
+            }
+            Break
+        }
         "/applyoc" {
             $API.ApplyOC = $true
             $Data = "Please wait, OC will be applied asap"

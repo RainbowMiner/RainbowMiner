@@ -37,7 +37,7 @@
 </table>
 
 <div id="remoteworkersandminers">
-    <h3 class="mt-4 h-selector" id="h-remoteworkers">Remote Workers</h3>
+    <h3 class="mt-4 h-selector" id="h-remoteworkers">Remote Workers <a href="#" id="resetworkers" class="btn btn-primary">Delete Offline Workers</a></h3>
     <table id="remoteworkers" class="table mb-4"
            data-toggle="table"
            data-url="/remoteminers"
@@ -198,6 +198,17 @@ $(function () {
         $.ajax({
             url: '/lockminers', success: function (result) {
                 $("#lockminers").html(result ? "Unlock" : "Lock");
+            }
+        })
+    });
+
+    $("#resetworkers").click(function (event) {
+        event.stopPropagation()
+        $.ajax({
+            url: '/resetworkers', success: function (result) {
+                $('.modal-body').text(result);
+                $('.modal-title').text('Reset Workers');
+                $('#myModal').modal({ show: true });
             }
         })
     });
