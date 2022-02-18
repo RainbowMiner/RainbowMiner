@@ -2415,11 +2415,11 @@ function Stop-SubProcess {
                         if (-not $Process.HasExited) {
                             Write-Log -Level Info "Send Ctrl+C to $($Shutdown_Title)"
                             if (Send-CtrlC $Process.Id) {
-                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
+                                while (-not $Process.HasExited -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
                                     Start-Sleep -Milliseconds 500
                                 }
-                                if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
-                                    Write-Log -Level Warn "$($Title) failed to close within 20 seconds$(if ($Name) {": $($Name)"})"
+                                if (-not $Process.HasExited -and $WaitForExit -gt 0) {
+                                    Write-Log -Level Warn "$($Title) failed to close within $($WaitForExit) seconds$(if ($Name) {": $($Name)"})"
                                 }
                             }
                         }
