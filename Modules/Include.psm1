@@ -2415,7 +2415,7 @@ function Stop-SubProcess {
                         if (-not $Process.HasExited) {
                             Write-Log -Level Info "Send Ctrl+C to $($Shutdown_Title)"
                             if (Send-CtrlC $Process.Id) {
-                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 20) {
+                                while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
                                     Start-Sleep -Milliseconds 500
                                 }
                                 if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
@@ -2430,6 +2430,7 @@ function Stop-SubProcess {
 
                     try {
                         if ($Job.OwnWindow) {
+                            Write-Log -Level Info "Attempting to close main window $($Shutdown_Title)"
                             $Process.CloseMainWindow() > $null
                         } else {
                             if (-not $Process.HasExited) {
@@ -2772,6 +2773,68 @@ function Invoke-Exe {
         }
     }
 }
+
+function Invoke-Process {
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true,ValueFromPipeline = $True)]
+        [String]$FilePath, 
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$WorkingDirectory = "",
+        [Parameter(Mandatory = $false)]
+        [Int]$WaitForExit = 5,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ExpandLines,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ExcludeEmptyLines,
+        [Parameter(Mandatory = $false)]
+        [Switch]$AutoWorkingDirectory = $false
+    )
+
+    try {
+        if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
+
+        $stdOutTempFile = "$env:TEMP\$((New-Guid).Guid)"
+        $stdErrTempFile = "$env:TEMP\$((New-Guid).Guid)"
+
+        $startProcessParams = @{
+            FilePath               = if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath}
+            ArgumentList           = $ArgumentList
+            RedirectStandardError  = $stdErrTempFile
+            RedirectStandardOutput = $stdOutTempFile
+            PassThru               = $true;
+            NoNewWindow            = $true;
+        }
+
+        if ($WorkingDirectory -ne '') {$startProcessParams['WorkingDirectory'] = $WorkingDirectory}
+
+        $cmd = Start-Process @startProcessParams
+        $cmdOk = if ($cmd.HasExited) {$true} elseif ($cmd.Handle) {$cmd.WaitForExit($WaitForExit*1000)} else {$false}
+        $cmdOutput = Get-Content -Path $stdOutTempFile -Raw -ErrorAction Ignore
+        $cmdError = Get-Content -Path $stdErrTempFile -Raw -ErrorAction Ignore
+        $Global:LASTEXEEXITCODE = $cmd.ExitCode
+        if (-not $cmdOk -or $cmd.ExitCode -ne 0) {
+            if ($cmdError) {
+                throw $cmdError.Trim()
+            }
+            if ($cmdOutput) {
+                throw $cmdOutput.Trim()
+            }
+        } else {
+            if ([string]::IsNullOrEmpty($cmdOutput) -eq $false) {
+                if ($ExpandLines) {foreach ($line in @($cmdOutput -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$cmdOutput}
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not start process $FilePath $($ArgumentList): $($_.Exception.Message)"
+    } finally {
+        Remove-Item -Path $stdOutTempFile, $stdErrTempFile -Force -ErrorAction Ignore
+    }
+}
+
 
 function Invoke-TcpRequest {
     [CmdletBinding()]
@@ -8369,7 +8432,7 @@ function Send-CtrlC {
     $Result = $false
     try {
         if ($IsWindows) {
-            $WinKillResult = Invoke-Exe ".\Includes\windows-kill\$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\windows-kill.exe" -WorkingDirectory $Pwd -ArgumentList "-$($Signal) $($ProcessID)"
+            $WinKillResult = Invoke-Process ".\Includes\windows-kill\$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\windows-kill.exe" -ArgumentList "-$($Signal) $($ProcessID)"
             $Result = $WinKillResult -match "success" -and $WinKillResult -match "$($ProcessId)"
             if (-not $Result) {
                 Write-Log -Level Info "Send-CtrlC to PID $($ProcessID) failed: $("$($WinKillResult)".Trim() -split "[`r`n]+" | Select-Object -Last 1)"
