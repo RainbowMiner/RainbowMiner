@@ -2411,22 +2411,22 @@ function Stop-SubProcess {
 
                     $Shutdown_Title = "$($Title) PID $($Process.Id)$(if ($Name) {": $($Name)"})"
 
-                    try {
-                        if (-not $Process.HasExited) {
-                            Write-Log -Level Info "Send Ctrl+C to $($Shutdown_Title)"
-                            if (Send-CtrlC $Process.Id) {
-                                while (-not $Process.HasExited -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
-                                    Start-Sleep -Milliseconds 500
-                                }
-                                if (-not $Process.HasExited -and $WaitForExit -gt 0) {
-                                    Write-Log -Level Warn "$($Title) failed to close within $($WaitForExit) seconds$(if ($Name) {": $($Name)"})"
-                                }
-                            }
-                        }
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                        Write-Log -Level Warn "Problem closing $($Title) PID $($Process.Id): $($_.Exception.Message)"
-                    }
+                    #try {
+                    #    if (-not $Process.HasExited) {
+                    #        Write-Log -Level Info "Send Ctrl+C to $($Shutdown_Title)"
+                    #        if (Send-CtrlC $Process.Id) {
+                    #            while (-not $Process.HasExited -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
+                    #                Start-Sleep -Milliseconds 500
+                    #            }
+                    #            if (-not $Process.HasExited -and $WaitForExit -gt 0) {
+                    #                Write-Log -Level Warn "$($Title) failed to close within $($WaitForExit) seconds$(if ($Name) {": $($Name)"})"
+                    #            }
+                    #        }
+                    #    }
+                    #} catch {
+                    #    if ($Error.Count){$Error.RemoveAt(0)}
+                    #    Write-Log -Level Warn "Problem closing $($Title) PID $($Process.Id): $($_.Exception.Message)"
+                    #}
 
                     try {
                         if ($Job.OwnWindow) {
