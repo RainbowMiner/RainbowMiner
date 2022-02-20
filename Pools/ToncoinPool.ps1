@@ -48,7 +48,7 @@ if (-not $InfoOnly) {
     $Pool_TSL      = try {((Get-Date).ToUniversalTime() - ([datetime]$Pool_Request.lastChallengeSolved).ToUniversalTime()).TotalSeconds} catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.poolHashrate -Quiet
-    if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+    #if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 }
 
 if ($Pool_User -or $InfoOnly) {
