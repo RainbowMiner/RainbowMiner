@@ -17,7 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://pplns.toncoinpool.io/api/v1/public/network" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://toncoinpool.io/api/v1/public/network" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -35,7 +35,7 @@ $Pool_Host           = "pplns.toncoinpool.io/stratum"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
-$Pool_Port           = $null
+$Pool_Port           = 443
 $Pool_PoolFee        = 0
 #$Pool_Factor         = 1e9
 #$Pool_EthProxy       = "ethproxy"

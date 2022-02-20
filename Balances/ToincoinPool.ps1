@@ -20,7 +20,7 @@ if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalanc
 $Count = 0
 $Payout_Currencies | Where-Object {$_.Name -eq "TON"} | Foreach-Object {
     try {
-        $Request = Invoke-RestMethodAsync "https://pplns.toncoinpool.io/api/v1/public/miners/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://toncoinpool.io/api/v1/public/miners/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if ($Request.stats -eq $null) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
