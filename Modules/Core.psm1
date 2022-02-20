@@ -1660,7 +1660,7 @@ function Invoke-Core {
                                     Write-Log -Level Warn "Invalid MSIAprofile for $($CcMinerNameToAdd) in miners.config.txt: `"$($p.MSIAprofile)`" (empty or 1-5 allowed, only)"
                                     $p.MSIAprofile = ""
                                 }
-                                if ($p.Difficulty -ne $null) {$p.Difficulty = $p.Difficulty -replace "[^\d]"}
+                                if ($p.Difficulty -ne $null) {$p.Difficulty = $p.Difficulty -replace "[^\d\.]"}
                                 if ($p.Affinity) {
                                     $CPUAffinityInt = (ConvertFrom-CPUAffinity $p.Affinity -ToInt) -band $CPU_GlobalAffinityMask
                                     if ($CPUAffinityInt) {
