@@ -65,7 +65,7 @@ $Pool_Host           = "server1.whalestonpool.com"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
-$Pool_Port           = 4444
+$Pool_Port           = 443
 $Pool_PoolFee        = 0
 #$Pool_Factor         = 1e9
 #$Pool_EthProxy       = "ethproxy"
