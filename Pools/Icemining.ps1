@@ -46,7 +46,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2; hashrate = "progpow"}
     [PSCustomObject]@{symbol="NIM";             region = @("us"); host=@("nimiq.icemining.ca"); port=2053; fee = 1.25; ssl = $true}
     #[PSCustomObject]@{symbol="SIN";             region = @("us","eu","asia"); host=@("stratum.icemining.ca","eu.icemining.ca","asia.icemining.ca"); port=4205; fee = 1}
-    [PSCustomObject]@{symbol="TON";             region = @("us"); host=@("ton.hashrate.to"); port=4003; fee = 1}
+    [PSCustomObject]@{symbol="TON";             region = @("us"); host=@("ton.hashrate.to"); port=4003; fee = 1; ssl = $true}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
