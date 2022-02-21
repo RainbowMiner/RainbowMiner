@@ -14,20 +14,6 @@
                     ]
     },
     {
-        "symbol":  "ELLA",
-        "coin":  "Ellaism",
-        "algo":  "Ethash",
-        "rpc":  "ell.baikalmine.com",
-        "host":  "ell.baikalmine.com",
-        "port":  [
-                     1010
-                 ],
-        "fee":  0.5,
-        "regions":  [
-                        "eu"
-                    ]
-    },
-    {
         "symbol":  "ETC",
         "coin":  "Ethereum Classic",
         "algo":  "Ethash",
@@ -49,20 +35,6 @@
         "host":  "eth.baikalmine.com",
         "port":  [
                      5050
-                 ],
-        "fee":  0.5,
-        "regions":  [
-                        "eu"
-                    ]
-    },
-    {
-        "symbol":  "EXP",
-        "coin":  "Expanse",
-        "algo":  "Ethash",
-        "rpc":  "exp.baikalmine.com",
-        "host":  "exp.baikalmine.com",
-        "port":  [
-                     7171
                  ],
         "fee":  0.5,
         "regions":  [

@@ -40,7 +40,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/stats" -tag $Name -cycletime 120
             if (-not $Pool_Request -or ($Pool_Request.mainStats -eq $null -and $Pool_Request.hashrate -eq $null)) {throw}
-            $PoolBlocks_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/blocks" -tag $Name -cycletime 120 -delay 250
+            #$PoolBlocks_Request = Invoke-RestMethodAsync "https://$($_.rpc)/api/blocks" -tag $Name -cycletime 120 -delay 250
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -57,7 +57,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_TSL      = (Get-UnixTimestamp) - $Pool_Request.stats.lastBlockFound
         }
         $Timestamp_24h = (Get-UnixTimestamp) - 24*3600
-        $Pool_BLK = ($PoolBlocks_Request.candidates | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.immature | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.matured | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count
+        $Pool_BLK = $null #($PoolBlocks_Request.candidates | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.immature | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.matured | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
@@ -88,7 +88,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Workers       = $Pool_Workers
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
+                BLK           = $null #$Stat.BlockRate_Average
                 WTM           = $true
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
