@@ -124,34 +124,33 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					$Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)_$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $DeviceIDsAll  = $Miner_Device.Type_Vendor_Index -join ','
                     $DeviceIDsDual = if ($SecondAlgorithm_Norm_0) {$Miner_Device_Dual.Type_Vendor_Index -join ','}
-
-                    $Pool_Host = $Pools.$MainAlgorithm_Norm_0.Host
-                    $Pool_User = $Pools.$MainAlgorithm_Norm_0.User
-                    $Pool_Protocol = $Pools.$MainAlgorithm_Norm_0.Protocol
-
-                    $IsVerthash = $MainAlgorithm_Norm_0 -eq "Verthash"
-
-                    [System.Collections.Generic.List[string]]$AdditionalParams = @("--watchdog_disabled")
-                    if ($Pools.$MainAlgorithm_Norm_0.Name -match "^bsod" -and $MainAlgorithm_Norm_0 -eq "x16rt") {
-                        $AdditionalParams.Add("--no_ntime_roll")
-                    }
-                    if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^cn") {
-                        $AdditionalParams.Add("--allow_large_alloc")
-                    }
-                    if ($_.MainAlgorithm -eq "nimiq") {
-                        $Pool_User = $Pools.$MainAlgorithm_Norm_0.Wallet
-                        $Pool_Protocol = "stratum+tcp"
-                        $AdditionalParams.Add("--nimiq_worker=$($Pools.$MainAlgorithm_Norm_0.Worker)")
-                        #if ($Pools.$MainAlgorithm_Norm_0.Name -match "Icemining") {
-                        #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
-                        #}
-                    } elseif ($IsVerthash) {
-                        $AdditionalParams.Add("--verthash_file='$($DatFile)'")
-                    }
                     $First = $False
                 }
 
-				$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
+                $Pool_User = $Pools.$MainAlgorithm_Norm.User
+                $Pool_Protocol = $Pools.$MainAlgorithm_Norm.Protocol
+                $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
+                $Pool_Host = if ($Pool_Port) {if ($Pools.$MainAlgorithm_Norm.Host -match "^([^/]+)/(.+)$") {"$($Matches[1]):$($Pool_Port)/$($Matches[2])"} else {"$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)"}} else {$Pools.$MainAlgorithm_Norm.Host}
+
+                $IsVerthash = $MainAlgorithm_Norm_0 -eq "Verthash"
+
+                [System.Collections.Generic.List[string]]$AdditionalParams = @("--watchdog_disabled")
+                if ($Pools.$MainAlgorithm_Norm.Name -match "^bsod" -and $MainAlgorithm_Norm_0 -eq "x16rt") {
+                    $AdditionalParams.Add("--no_ntime_roll")
+                }
+                if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^cn") {
+                    $AdditionalParams.Add("--allow_large_alloc")
+                }
+                if ($_.MainAlgorithm -eq "nimiq") {
+                    $Pool_User = $Pools.$MainAlgorithm_Norm.Wallet
+                    $Pool_Protocol = "stratum+tcp"
+                    $AdditionalParams.Add("--nimiq_worker=$($Pools.$MainAlgorithm_Norm.Worker)")
+                    #if ($Pools.$MainAlgorithm_Norm_0.Name -match "Icemining") {
+                    #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
+                    #}
+                } elseif ($IsVerthash) {
+                    $AdditionalParams.Add("--verthash_file='$($DatFile)'")
+                }
 
                 if ($SecondAlgorithm_Norm_0) {
 
@@ -161,15 +160,15 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                             (-not $_.SecondPoolName -or $_.SecondPoolName -match $Pools.$SecondAlgorithm_Norm.Name)) {
 
                             $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
-
-                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($Pools.$SecondAlgorithm_Norm.Protocol)://$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"}) --$($_.SecondAlgorithm)_end"
+                            $SecondPool_Host = if ($SecondPool_Port) {if ($Pools.$SecondAlgorithm_Norm.Host -match "^([^/]+)/(.+)$") {"$($Matches[1]):$($SecondPool_Port)/$($Matches[2])"} else {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"}} else {$Pools.$SecondAlgorithm_Norm.Host}
+                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($Pools.$SecondAlgorithm_Norm.Protocol)://$($SecondPool_Host) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"}) --$($_.SecondAlgorithm)_end"
 
 				            [PSCustomObject]@{
 					            Name           = $Miner_Name
 					            DeviceName     = $Miner_Device.Name
 					            DeviceModel    = $Miner_Model
 					            Path           = $Path
-					            Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host):$($Pool_Port) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) $($SecondPool_Arguments) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					            Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) $($SecondPool_Arguments) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					            HashRates      = [PSCustomObject]@{
                                                     $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
                                                     $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm_0)_HashRate".Week
@@ -204,7 +203,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host):$($Pool_Port) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					    Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
 					    API            = "Xgminer"
 					    Port           = $Miner_Port
