@@ -61,7 +61,7 @@ $Pool_Regions = @("ru")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Currency       = "TON"
-$Pool_Host           = "server1.whalestonpool.com"
+$Pool_Host           = "stratum.whalestonpool.com/stratum"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
@@ -92,7 +92,7 @@ if ($Pool_User -or $InfoOnly) {
             Price         = $Stat.$StatAverage #instead of .Live
             StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "https"
+            Protocol      = "wss"
             Host          = $Pool_Host
             Port          = $Pool_Port
             User          = "$($Wallets.$Pool_Currency)"
