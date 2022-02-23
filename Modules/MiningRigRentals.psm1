@@ -670,6 +670,8 @@ function Get-MiningRigRentalAlgos {
         return
     }
 
+    $Pool_Request.data | Foreach-Object {$_.display = $_.display.Trim()}
+
     $Pool_Request.data
 }
 
