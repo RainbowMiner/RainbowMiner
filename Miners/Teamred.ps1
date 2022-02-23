@@ -128,7 +128,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 }
 
                 $Pool_User = $Pools.$MainAlgorithm_Norm.User
-                $Pool_Protocol = $Pools.$MainAlgorithm_Norm.Protocol
+                $Pool_Protocol = if ($Pools.$MainAlgorithm_Norm.Protocol -eq "wss") {"stratum+tcp"} else {$Pools.$MainAlgorithm_Norm.Protocol}
                 $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
                 $Pool_Host = if ($Pool_Port) {if ($Pools.$MainAlgorithm_Norm.Host -match "^([^/]+)/(.+)$") {"$($Matches[1]):$($Pool_Port)/$($Matches[2])"} else {"$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)"}} else {$Pools.$MainAlgorithm_Norm.Host}
 
@@ -159,9 +159,10 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                             (-not $_.SecondExcludePoolName -or $_.SecondExcludePoolName -notmatch $Pools.$SecondAlgorithm_Norm.Name) -and
                             (-not $_.SecondPoolName -or $_.SecondPoolName -match $Pools.$SecondAlgorithm_Norm.Name)) {
 
-                            $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
-                            $SecondPool_Host = if ($SecondPool_Port) {if ($Pools.$SecondAlgorithm_Norm.Host -match "^([^/]+)/(.+)$") {"$($Matches[1]):$($SecondPool_Port)/$($Matches[2])"} else {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"}} else {$Pools.$SecondAlgorithm_Norm.Host}
-                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($Pools.$SecondAlgorithm_Norm.Protocol)://$($SecondPool_Host) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"}) --$($_.SecondAlgorithm)_end"
+                            $SecondPool_Protocol  = if ($Pools.$SecondAlgorithm_Norm.Protocol -eq "wss") {"stratum+tcp"} else {$Pools.$SecondAlgorithm_Norm.Protocol}
+                            $SecondPool_Port      = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
+                            $SecondPool_Host      = if ($SecondPool_Port) {if ($Pools.$SecondAlgorithm_Norm.Host -match "^([^/]+)/(.+)$") {"$($Matches[1]):$($SecondPool_Port)/$($Matches[2])"} else {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"}} else {$Pools.$SecondAlgorithm_Norm.Host}
+                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($SecondPool_Protocol)://$($SecondPool_Host) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"}) --$($_.SecondAlgorithm)_end"
 
 				            [PSCustomObject]@{
 					            Name           = $Miner_Name
