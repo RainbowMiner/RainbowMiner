@@ -37,16 +37,16 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us","eu","asia")
+$Pool_Regions = @("fi","de","sg","eu-north","tr","us-west")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     #[PSCustomObject]@{symbol="EPIC-Cuckatoo31"; region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2}
-    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2; hashrate = "randomx"}
-    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2; hashrate = "progpow"}
+    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("eu-north","de","tr","us-west"); host=@("epic.eu-north.hashrate.to","epic.eu-de.hashrate.to","epic.tr.hashrate.to","epic.us-west.hashrate.to"); port=4000; fee = 2; hashrate = "randomx"}
+    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("eu-north","de","tr","us-west"); host=@("epic.eu-north.hashrate.to","epic.eu-de.hashrate.to","epic.tr.hashrate.to","epic.us-west.hashrate.to"); port=4000; fee = 2; hashrate = "progpow"}
     [PSCustomObject]@{symbol="NIM";             region = @("us"); host=@("nimiq.icemining.ca"); port=2053; fee = 1.25; ssl = $true}
     #[PSCustomObject]@{symbol="SIN";             region = @("us","eu","asia"); host=@("stratum.icemining.ca","eu.icemining.ca","asia.icemining.ca"); port=4205; fee = 1}
-    [PSCustomObject]@{symbol="TON";             region = @("us"); host=@("ton.hashrate.to"); port=4003; fee = 1; ssl = $true}
+    [PSCustomObject]@{symbol="TON";             region = @("fi","de","sg","ca"); host=@("ton.fi.hashrate.to","ton.de.hashrate.to","ton.sg.hashrate.to","ton.ca.hashrate.to"); port=4003; fee = 1; ssl = $true}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
