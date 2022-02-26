@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.9.1"
+$Version = "0.9.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.1-srbminermulti/SRBMiner-Multi-0-9-1-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-srbminermulti/SRBMiner-Multi-0-9-2-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.1-srbminermulti/SRBMiner-Multi-0-9-1-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-srbminermulti/SRBMiner-Multi-0-9-2-win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
@@ -28,7 +28,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cosa"             ;              Params = ""; Fee = 2.00;               Vendor = @("CPU")} #Cosanta/COSA
     [PSCustomObject]@{MainAlgorithm = "cpupower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
     [PSCustomObject]@{MainAlgorithm = "curvehash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Curvehash
-    [PSCustomObject]@{MainAlgorithm = "dynamo"           ;              Params = ""; Fee = 3.00;               Vendor = @("CPU"); MaxRejectedShareRatio = 0.99} #Dynamo/DYNAMO
     [PSCustomObject]@{MainAlgorithm = "ghostrider"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 0.9; ExtendInterval = 3; ExcludePoolName = "^C3pool|^MoneroOcean"} #Ghostrider/RPT
     [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #HeavyHash/OBTC
     [PSCustomObject]@{MainAlgorithm = "minotaur"         ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #Minotaur/RING Coin
@@ -81,6 +80,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight_turtle";             Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightTurtle
     [PSCustomObject]@{MainAlgorithm = "cryptonight_upx"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightUPX
     [PSCustomObject]@{MainAlgorithm = "cryptonight_xhv"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightXHV
+    [PSCustomObject]@{MainAlgorithm = "dynamo"           ;              Params = ""; Fee = 1.00;               Vendor = @("CPU","AMD"); ExcludeYiimp = $true} #Dynamo/DYNAMO
     [PSCustomObject]@{MainAlgorithm = "etchash"          ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
     [PSCustomObject]@{MainAlgorithm = "ethash"           ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"  ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); ExcludePoolName="^Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
@@ -160,7 +160,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
 		    foreach($Algorithm_Norm in $All_Algorithms) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.PoolsConfigDefault."$($Pools.$Algorithm_Norm.Name)".Yiimp)) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

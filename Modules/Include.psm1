@@ -5627,7 +5627,7 @@ function Set-PoolsConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";MaxTimeToFind="";Region="";SSL="";BalancesKeepAlive=""}
-            $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
+            $Session.PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools")})
             $Userpools = @()
             if ($UserpoolsPathToFile) {
@@ -5639,7 +5639,7 @@ function Set-PoolsConfigDefault {
                     $Userpools = @($UserpoolsConfig | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique)
                 }
             }
-            $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+            $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Session.PoolsConfigDefault.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
             if ($Pools.Count -gt 0 -or $Userpools.Count -gt 0) {
                 $Pools + $Userpools | Sort-Object -Unique | Foreach-Object {
                     $Pool_Name = $_
@@ -5653,9 +5653,9 @@ function Set-PoolsConfigDefault {
                                 if (-not $Setup_Currencies) {$Setup_Currencies = @("BTC")}
                             } else {
                                 $Setup_Currencies = @("BTC")
-                                if ($Setup.$Pool_Name) {
-                                    if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
-                                    $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
+                                if ($Session.PoolsConfigDefault.$Pool_Name) {
+                                    if ($Session.PoolsConfigDefault.$Pool_Name.Fields) {$Setup_Content = $Session.PoolsConfigDefault.$Pool_Name.Fields}
+                                    $Setup_Currencies = @($Session.PoolsConfigDefault.$Pool_Name.Currencies)            
                                 }
                             }
                             $Setup_Currencies | Foreach-Object {
@@ -5664,11 +5664,11 @@ function Set-PoolsConfigDefault {
                             }
                         }
                     }
-                    if ($Setup.$Pool_Name.Fields -ne $null) {
-                        foreach($SetupName in $Setup.$Pool_Name.Fields.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Setup.$Pool_Name.Fields.$SetupName -Force}}
+                    if ($Session.PoolsConfigDefault.$Pool_Name.Fields -ne $null) {
+                        foreach($SetupName in $Session.PoolsConfigDefault.$Pool_Name.Fields.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Session.PoolsConfigDefault.$Pool_Name.Fields.$SetupName -Force}}
                     }
                     foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Default.$SetupName -Force}}
-                    if ($Setup.$Pool_Name.Autoexchange -and (Get-Yes $Setup_Content.EnableAutoCoin)) {
+                    if ($Session.PoolsConfigDefault.$Pool_Name.Autoexchange -and (Get-Yes $Setup_Content.EnableAutoCoin)) {
                         $Setup_Content.EnableAutoCoin = "0" # do not allow EnableAutoCoin for pools with autoexchange feature
                     }
                     $Done | Add-Member $Pool_Name $Setup_Content
