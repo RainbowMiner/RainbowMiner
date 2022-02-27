@@ -27,7 +27,7 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("eu","us","asia")
+$Pool_Regions = @("eu","us","asia","hk")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Currency       = "TON"
