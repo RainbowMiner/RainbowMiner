@@ -33,8 +33,10 @@
     "se":  "NorthernEurope",
     "sg":  "SoutheastAsia",
     "sz":  "HongKong",
+    "texas": "Texas",
     "tr":  "WesternAsia",
     "tw":  "Taiwan",
+    "tx":  "Texas",
     "usacentral": "USCentral",
     "usaeast": "USEast",
     "usanw": "USNorthWest",
@@ -44,6 +46,7 @@
     "useast": "USEast",
     "usnw": "USNorthWest",
     "ussouth": "USSouth",
+    "ustx": "Texas",
     "uswest": "USWest",
     "wa":  "WesternAsia"
 }
