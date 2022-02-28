@@ -16,7 +16,7 @@
     "Taiwan": ["HongKong", "SoutheastAsia", "Asia", "India"],
     "Texas": ["US", "USCentral", "USWest", "USEast", "USNorthWest", "Canada"],
     "UK": ["CentralEurope", "Germany", "NorthernEurope", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
-    "US": ["USCentral", "USWest", "USNorthWest", "USEast", "Canada"],
+    "US": ["USCentral", "USWest", "USNorthWest", "Texas", "USEast", "Canada"],
     "USCentral": ["US", "USEast", "USWest", "Texas", "USNorthWest", "Canada"],
 	"USEast": ["US", "Texas", "Canada", "USCentral", "USWest", "USNorthWest"],
     "USNorthWest": ["USWest", "US", "USCentral", "USEast", "Texas", "Canada"],
