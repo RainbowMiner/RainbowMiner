@@ -71,6 +71,20 @@
     "info": "Port information here is depreciated, please see /rig/port"
   },
   {
+    "id": "24",
+    "name": "ru-kra01.miningrigrentals.com",
+    "region": "eu-ru",
+    "ipv4": [
+      "31.184.204.39"
+    ],
+    "ipv6": [
+      "2a03:90c0:75::12"
+    ],
+    "port": "3333",
+    "ethereum_port": "3344",
+    "info": "Port information here is depreciated, please see /rig/port"
+  },
+  {
     "id": "6",
     "name": "us-central01.miningrigrentals.com",
     "region": "us-central",
@@ -127,6 +141,20 @@
     "info": "Port information here is depreciated, please see /rig/port"
   },
   {
+    "id": "22",
+    "name": "us-tx01.miningrigrentals.com",
+    "region": "us-tx",
+    "ipv4": [
+      "144.202.65.232"
+    ],
+    "ipv6": [
+      "2001:19f0:6401:158:5400:3ff:fed4:34f0"
+    ],
+    "port": "3333",
+    "ethereum_port": "3344",
+    "info": "Port information here is depreciated, please see /rig/port"
+  },
+  {
     "id": "4",
     "name": "us-west01.miningrigrentals.com",
     "region": "us-west",
@@ -177,6 +205,20 @@
     ],
     "ipv6": [
       "2001:19f0:b001:e93:5400:02ff:fed7:1df7"
+    ],
+    "port": "3333",
+    "ethereum_port": "3344",
+    "info": "Port information here is depreciated, please see /rig/port"
+  },
+  {
+    "id": "25",
+    "name": "hk-01.miningrigrentals.com",
+    "region": "hk",
+    "ipv4": [
+      "5.188.33.83"
+    ],
+    "ipv6": [
+      "2a03:90c0:2c6::ec"
     ],
     "port": "3333",
     "ethereum_port": "3344",
