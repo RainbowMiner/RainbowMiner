@@ -102,6 +102,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
             BLK           = $Stat.BlockRate_Average
             TSL           = $PoolCoins_Request.$Pool_Currency.timesincelast
             WTM           = $true
+            EthMode       = if ($Pool_Algorithm_Norm -eq "SHA256ton") {"icemining"} else {$null}
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1
