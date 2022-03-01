@@ -172,15 +172,20 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                                     $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($SecondPool_Host) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm_0 -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
 
-                                    #temporary fix for v1.45 on TonPool
-                                    if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol -eq "https"  -and $Pools.$SecondAlgorithm_Norm.Name -match "^TonPool") {$SecondPool_Arguments = "$($SecondPool_Arguments) --ton-mode 2"}
+                                    $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthProxy) {
+                                        Switch ($Pools.$SecondAlgorithm_Norm.EthProxy) {
+                                            "icemining" {6}
+                                            "toncoinpool" {3}
+                                            "tonpool" {2}
+                                        }
+                                    }
 
 					                [PSCustomObject]@{
 						                Name           = $Miner_Name
 						                DeviceName     = $Miner_Device.Name
 						                DeviceModel    = $Miner_Model
 						                Path           = $Path
-						                Arguments      = "$($Pool_Arguments)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
+						                Arguments      = "$($Pool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
 						                HashRates      = [PSCustomObject]@{
                                                             $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
                                                             $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm_0)_HashRate".Week
@@ -208,8 +213,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                         } else {
 
-                            #temporary fix for v1.45 on TonPool
-                            if ($MainAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.Protocol -eq "https" -and $Pools.$MainAlgorithm_Norm.Name -match "^TonPool") {$Pool_Arguments = "$($Pool_Arguments) --ton-mode 2"}
+                            $TonMode = if ($MainAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.EthProxy) {
+                                Switch ($Pools.$MainAlgorithm_Norm.EthProxy) {
+                                    "icemining" {6}
+                                    "toncoinpool" {3}
+                                    "tonpool" {2}
+                                }
+                            }
 
 					        [PSCustomObject]@{
 						        Name           = $Miner_Name
