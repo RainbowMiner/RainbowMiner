@@ -69,7 +69,7 @@ $Pool_Coin           = Get-Coin $Pool_Currency
 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 $Pool_PoolFee        = 0
 #$Pool_Factor         = 1e9
-#$Pool_EthProxy       = "ethproxy"
+$Pool_EthProxy       = "icemining"
 
 $Pool_User           = $Wallets.$Pool_Currency
 
