@@ -159,10 +159,12 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                             (-not $_.SecondExcludePoolName -or $_.SecondExcludePoolName -notmatch $Pools.$SecondAlgorithm_Norm.Name) -and
                             (-not $_.SecondPoolName -or $_.SecondPoolName -match $Pools.$SecondAlgorithm_Norm.Name)) {
 
+                            $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthProxy) {$Pools.$SecondAlgorithm_Norm.EthProxy} else {$null}
+
                             $SecondPool_Protocol  = if ($Pools.$SecondAlgorithm_Norm.Protocol -eq "wss") {"stratum+tcp"} else {$Pools.$SecondAlgorithm_Norm.Protocol}
                             $SecondPool_Port      = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
                             $SecondPool_Host      = if ($SecondPool_Port) {if ($Pools.$SecondAlgorithm_Norm.Host -match "^([^/]+)/(.+)$") {"$($Matches[1]):$($SecondPool_Port)/$($Matches[2])"} else {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"}} else {$Pools.$SecondAlgorithm_Norm.Host}
-                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($SecondPool_Protocol)://$($SecondPool_Host) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"}) --$($_.SecondAlgorithm)_end"
+                            $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($SecondPool_Protocol)://$($SecondPool_Host) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($TonMode) {" --ton_pool_mode=$($TonMode)"}) --$($_.SecondAlgorithm)_end"
 
 				            [PSCustomObject]@{
 					            Name           = $Miner_Name
@@ -199,12 +201,15 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                     }
 
                 } else {
+
+                    $TonMode = if ($MainAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.EthProxy) {$Pools.$MainAlgorithm_Norm.EthProxy} else {$null}
+
 				    [PSCustomObject]@{
 					    Name           = $Miner_Name
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					    Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($TonMode) {" --ton_pool_mode=$($TonMode)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
 					    API            = "Xgminer"
 					    Port           = $Miner_Port
