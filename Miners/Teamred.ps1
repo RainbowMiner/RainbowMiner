@@ -159,7 +159,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                             (-not $_.SecondExcludePoolName -or $_.SecondExcludePoolName -notmatch $Pools.$SecondAlgorithm_Norm.Name) -and
                             (-not $_.SecondPoolName -or $_.SecondPoolName -match $Pools.$SecondAlgorithm_Norm.Name)) {
 
-                            $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthProxy) {$Pools.$SecondAlgorithm_Norm.EthProxy} else {$null}
+                            $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthMode) {$Pools.$SecondAlgorithm_Norm.EthMode} else {$null}
 
                             $SecondPool_Protocol  = if ($Pools.$SecondAlgorithm_Norm.Protocol -eq "wss") {"stratum+tcp"} else {$Pools.$SecondAlgorithm_Norm.Protocol}
                             $SecondPool_Port      = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
@@ -202,7 +202,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
                 } else {
 
-                    $TonMode = if ($MainAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.EthProxy) {$Pools.$MainAlgorithm_Norm.EthProxy} else {$null}
+                    $TonMode = if ($MainAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.EthMode) {$Pools.$MainAlgorithm_Norm.EthMode} else {$null}
 
 				    [PSCustomObject]@{
 					    Name           = $Miner_Name

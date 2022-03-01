@@ -172,8 +172,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                                     $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($SecondPool_Host) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm_0 -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
 
-                                    $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthProxy) {
-                                        Switch ($Pools.$SecondAlgorithm_Norm.EthProxy) {
+                                    $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthMode) {
+                                        Switch ($Pools.$SecondAlgorithm_Norm.EthMode) {
                                             "icemining" {6}
                                             "toncoinpool" {3}
                                             "tonpool" {2}
@@ -213,8 +213,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                         } else {
 
-                            $TonMode = if ($MainAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.EthProxy) {
-                                Switch ($Pools.$MainAlgorithm_Norm.EthProxy) {
+                            $TonMode = if ($MainAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$MainAlgorithm_Norm.EthMode) {
+                                Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                                     "icemining" {6}
                                     "toncoinpool" {3}
                                     "tonpool" {2}
