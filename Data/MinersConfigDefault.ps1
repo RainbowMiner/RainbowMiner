@@ -31,6 +31,8 @@
         )
         "CcminerKlausT" = [PSCustomObject[]]@(            
             [PSCustomObject]@{MainAlgorithm = "lyra2v3"; SecondaryAlgorithm = ""; Params = "-i 24"; OCprofile = "Profile4"; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaya"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
         )
         "CcminerTpruvot" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 21"; OCprofile = "Profile4"; MSIAprofile = "4"}

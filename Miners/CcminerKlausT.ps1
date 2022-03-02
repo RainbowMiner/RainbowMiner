@@ -12,20 +12,28 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826-cuda114-linux.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda114-linux.7z"
             Cuda = "11.4"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda102-linux.7z"
+            Cuda = "10.2"
         }
     )
-    $Version = "8.26"
+    $Version = "8.26x"
 } else {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826-cuda114-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda114-x64.7z"
             Cuda = "11.4"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda102-x64.7z"
+            Cuda = "10.2"
         }
     )
-    $Version = "8.26"
+    $Version = "8.26x"
 }
 $ManualUri = "https://github.com/KlausT/ccminer/releases"
 $Port = "140{0:d2}"
@@ -36,6 +44,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bitcoin"; Params = ""; ExtendInterval = 2} #SHA256
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; ExtendInterval = 3} #Neoscrypt
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaya"; Params = ""; ExtendInterval = 3} #Neoscrypt-Xaya
     [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""; ExtendInterval = 2} #Qubit
 )
 
