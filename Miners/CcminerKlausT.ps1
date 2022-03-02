@@ -43,6 +43,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bitcoin"; Params = ""; ExtendInterval = 2} #SHA256
+    [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""; ExtendInterval = 2} #MyriadGroestl
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; ExtendInterval = 3} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaya"; Params = ""; ExtendInterval = 3} #Neoscrypt-Xaya
     [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""; ExtendInterval = 2} #Qubit
