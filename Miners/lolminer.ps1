@@ -176,7 +176,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                         Switch ($Pools.$SecondAlgorithm_Norm.EthMode) {
                                             "icemining" {6}
                                             "toncoinpool" {3}
-                                            "tonpool" {2}
+                                            "tonpool" {6}
                                         }
                                     }
 
