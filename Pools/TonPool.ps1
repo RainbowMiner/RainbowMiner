@@ -41,7 +41,7 @@ $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 $Pool_Port           = 443
 $Pool_PoolFee        = 5
 #$Pool_Factor         = 1e9
-$Pool_EthProxy       = "icemining"
+$Pool_EthProxy       = "tonpool"
 
 $Pool_User           = $Wallets.$Pool_Currency
 
