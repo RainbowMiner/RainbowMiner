@@ -1652,7 +1652,7 @@ function Invoke-Core {
                                     $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.MainAlgorithm)"
                                     if ($p.SecondaryAlgorithm) {
                                         $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.SecondaryAlgorithm)"
-                                        $Intensity = @($p.Intensity -replace "[^0-9,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique)
+                                        $Intensity = @($p.Intensity -replace "[^0-9\.,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique)
                                         if ($p.Intensity -ne $null) {$p.Intensity = $Intensity} else {$p | Add-Member Intensity $Intensity -Force}
                                     }
                                 }
