@@ -2982,11 +2982,12 @@ function Invoke-Core {
             }
         }
 
-        if ($Global:PauseMiners.Test([PauseStatus]::ByScheduler) -and (($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner} | Measure-Object).Count -or $Session.IsExclusiveRun)) {$Global:PauseMiners.Reset([PauseStatus]::ByScheduler)}
+        $ExclusiveBestMiners_Count = ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner} | Measure-Object).Count
 
-        if (-not $Global:PauseMiners.Test() -and -not $Session.AutoUpdate -and $Session.Profitable) {
-            $MinersRunning = $true
-            $BestMiners_Combo | ForEach-Object {$_.Best = $true}
+        if ($Global:PauseMiners.Test([PauseStatus]::ByScheduler) -and ($ExclusiveBestMiners_Count -or $Session.IsExclusiveRun)) {$Global:PauseMiners.Reset([PauseStatus]::ByScheduler)}
+
+        if ((-not $Global:PauseMiners.Test() -or $ExclusiveBestMiners_Count) -and -not $Session.AutoUpdate -and $Session.Profitable) {
+            $BestMiners_Combo | Where-Object {-not $Global:PauseMiners.Test() -or $_.IsExclusiveMiner} | ForEach-Object {$_.Best = $true; $MinersRunning = $true}
         }
 
         #Cleanup
