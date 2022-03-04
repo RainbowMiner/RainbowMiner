@@ -1,4 +1,5 @@
 ﻿using module ..\Modules\Include.psm1
+using module ..\Modules\PauseMiners.psm1
 using module ..\Modules\MiningRigRentals.psm1
 
 param(
@@ -30,6 +31,7 @@ param(
     [Bool]$EnableUpdatePriceModifier = $false,
     [Bool]$EnablePowerDrawAddOnly = $false,
     [Bool]$AllowExtensions = $false,
+    [Bool]$AllowRentalDuringPause = $false,
     [Bool]$EnableMaintenanceMode = $false,
     [String]$AutoCreateAlgorithm = "",
     [String]$AutoCreateMinProfitPercent = "50",
@@ -158,6 +160,9 @@ if ($AllRigs_Request) {
         $AllRigs_Request = $AllRigs_Request | Where-Object {$_.id -notin @($Remove_Rigs)}
     }
 
+    $MRRConfig = Get-ConfigContent "MRR"
+    if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+
     foreach ($Worker1 in $Workers) {
 
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
@@ -186,6 +191,8 @@ if ($AllRigs_Request) {
 
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
 
+        $AllowRentalDuringPause_Value  = if ($MRRConfig.$Worker1.AllowRentalDuringPause -ne $null -and $MRRConfig.$Worker1.AllowRentalDuringPause -ne "") {Get-Yes $MRRConfig.$Worker1.AllowRentalDuringPause} else {$AllowRentalDuringPause}
+
         if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
             if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and -not $_.status.rented -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) {
                 Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" > $null
@@ -197,14 +204,20 @@ if ($AllRigs_Request) {
             $Valid_Rigs = @()
 
             if ((Compare-Object $Devices_Benchmarking $Workers_Devices[$Worker1] -ExcludeDifferent -IncludeEqual | Measure-Object).Count) {
+
                 $Session.MRRBenchmarkStatus[$Worker1] = $true
+
             } elseif ($Session.MRRBenchmarkStatus[$Worker1]) {
+
                 $API.UpdateMRR = $true
                 $Session.MRRBenchmarkStatus[$Worker1] = $false
-            } elseif (-not $EnableMaintenanceMode) {
+
+            } elseif (-not $EnableMaintenanceMode -and (($AllowRentalDuringPause_Value -and -not $Global:PauseMiners.Test([PauseStatus]::ByError)) -or -not $Global:PauseMiners.Test())) {
+
                 $NotRentedSince_Seconds = ((Get-Date).ToUniversalTime() - $Session.MRRRentalTimestamp[$Worker1]).TotalSeconds
 
                 if (-not $PauseBetweenRentals_Seconds -or $PauseBetweenRentals_Seconds -lt $NotRentedSince_Seconds) {
+
                     $DeviceAlgorithm        = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
                     $DeviceExcludeAlgorithm = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
@@ -331,8 +344,10 @@ if ($AllRigs_Request) {
                                 $Rental_SetStatus = $true
 
                                 if ($Rental_AvgHashrate -and $Rental_AdvHashrate -and $Rental_AvgHashrate -lt $Rental_AdvHashrate) {
-                                    $MRRConfig = Get-ConfigContent "MRR"
-                                    if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+                                    if ($MRRConfig -eq $null) {
+                                        $MRRConfig = Get-ConfigContent "MRR"
+                                        if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+                                    }
                                     $AutoExtendTargetPercent_Value  = if ($MRRConfig.$Worker1.AutoExtendTargetPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendTargetPercent -ne "") {$MRRConfig.$Worker1.AutoExtendTargetPercent} else {$AutoExtendTargetPercent}
                                     $AutoExtendTargetPercent_Value  = [Double]("$($AutoExtendTargetPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
                                     $AutoExtendMaximumPercent_Value = if ($MRRConfig.$Worker1.AutoExtendMaximumPercent -ne $null -and $MRRConfig.$Worker1.AutoExtendMaximumPercent -ne "") {$MRRConfig.$Worker1.AutoExtendMaximumPercent} else {$AutoExtendMaximumPercent}
@@ -582,7 +597,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         if ($MRRConfig.$RigName -eq $null) {$MRRConfig | Add-Member $RigName ([PSCustomObject]@{}) -Force}
             
-        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice","EnableUpdateTitle","EnableUpdateDescription","EnableUpdatePriceModifier","EnablePowerDrawAddOnly","AllowExtensions")) {
+        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice","EnableUpdateTitle","EnableUpdateDescription","EnableUpdatePriceModifier","EnablePowerDrawAddOnly","AllowExtensions","AllowRentalDuringPause")) {
             #boolean
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {Get-Yes $MRRConfig.$RigName.$fld} else {Get-Variable $fld -ValueOnly -ErrorAction Ignore}
