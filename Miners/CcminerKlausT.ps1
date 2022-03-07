@@ -7,37 +7,52 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
+$ManualUri = "https://github.com/KlausT/ccminer/releases"
+$Port = "140{0:d2}"
+$DevFee = 0.0
+$Version = "8.26x2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda114-linux.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda116-linux.7z"
+            Cuda = "11.6"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda115-linux.7z"
+            Cuda = "11.5"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda114-linux.7z"
             Cuda = "11.4"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda102-linux.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda102-linux.7z"
             Cuda = "10.2"
         }
     )
-    $Version = "8.26x"
 } else {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda114-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda116-x64.7z"
+            Cuda = "11.6"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda115-x64.7z"
+            Cuda = "11.5"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda114-x64.7z"
             Cuda = "11.4"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x-cuda102-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda102-x64.7z"
             Cuda = "10.2"
         }
     )
-    $Version = "8.26x"
 }
-$ManualUri = "https://github.com/KlausT/ccminer/releases"
-$Port = "140{0:d2}"
-$DevFee = 0.0
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
