@@ -16,6 +16,8 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+if (-not $Wallets.AION -and -not $InfoOnly) {return}
+
 $Pool_Request = [PSCustomObject]@{}
 
 $ok = $false
@@ -48,25 +50,36 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
         $Pool_BlocksRequest = @()
         try {
             $Pool_BlocksRequest = Invoke-RestMethodAsync "https://api.aionpool.tech/api/pools/$($Pool_Id)/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
-            $Pool_BlocksRequest = @($Pool_BlocksRequest | Where-Object {$_.status -ne "orphaned"} | Foreach-Object {Get-Date $_.created})
+            $Pool_BlocksRequest = @($Pool_BlocksRequest | Where-Object {$_.status -ne "orphaned"} | Foreach-Object {[PSCustomObject]@{created = Get-Date $_.created;status = $_.status;reward = $_.reward}})
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }
+
+        $btcRewardLive = 0
+
         if ($ok -and ($Pool_BlocksRequest | Measure-Object).Count) {
             $timestamp24h = (Get-Date).AddHours(-24).ToUniversalTime()
-            $blocks_measure = $Pool_BlocksRequest | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
-            $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds} else {1})*$blocks_measure.Count)
-            $Pool_TSL = ((Get-Date).ToUniversalTime() - $Pool_BlocksRequest[0]).TotalSeconds
+
+            $Pool_BlocksRequest_Completed = $Pool_BlocksRequest | Where-Object {$_.created -gt $timestamp24h -and $_.status -eq "confirmed"}
+
+            $blocks_measure = $Pool_BlocksRequest_Completed | Measure-Object -Minimum -Maximum -Property created
+            $blocks_reward  = ($Pool_BlocksRequest_Completed | Measure-Object -Average -Property reward).Average
+
+            $Pool_BLK       = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds} else {1})*$blocks_measure.Count)
+            $Pool_TSL       = ((Get-Date).ToUniversalTime() - $Pool_BlocksRequest[0].created).TotalSeconds
+
+            $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+            $btcRewardLive  = if ($_.poolStats.poolHashrate) {$btcPrice * $blocks_reward * $Pool_BLK / $_.poolStats.poolHashrate} else {0}
         }
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_Ports = @(foreach ($Port_Type in @("GPU","SSL")) {($_.ports.PSObject.Properties | Where-Object {$_.Value.name -match $Port_Type} | Select-Object -First 1).Name})
+    $Pool_Ports = @(foreach ($Port_SSL in @($false,$true)) {($_.ports.PSObject.Properties | Where-Object {$_.Value.tls -eq $Port_SSL} | Select-Object -First 1).Name})
 
     foreach ($Pool_Region in $Pool_Regions) {
         $Pool_SSL = $false
@@ -95,7 +108,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
-                    WTM           = $true
+                    WTM           = -not $btcRewardLive
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
