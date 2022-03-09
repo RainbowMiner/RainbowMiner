@@ -70,29 +70,54 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
 
     $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} else {$null}
 
-    $Pool_Data      = ($Pools_Request.$Pool_RpcPath.modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}).algo_stats
-    $Pool_AlgoStats = if ($Pool_Data) {$Pool_Data.PSObject.Properties | Where-Object {$_.Name -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm} | Foreach-Object {$_.Value}}
-
-    $Pool_Request = [PSCustomObject]@{}
-
     if (-not $InfoOnly) {
+        $Pool_BlocksRequest = [PSCustomObject]@{}
         try {
-            $Pool_Request = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/blocks" -tag $Name -timeout 15 -cycletime 120).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
+            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/blocks" -tag $Name -timeout 20 -cycletime 120).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
+            Write-Log -Level Info "Pool blocks API ($Name) for $Pool_Currency has failed. "
         }
+
+        $Pool_StatsRequest  = [PSCustomObject]@{}
+        try {
+            $Pool_StatsRequest  = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/stats?simple=false" -tag $Name -timeout 20 -cycletime 3600).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Pool stats API ($Name) for $Pool_Currency has failed. "
+        }
+
+        $Pool_Data      = $Pools_Request.$Pool_RpcPath.modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
+        $Pool_AlgoStats = if ($Pool_Data) {$Pool_Data.algo_stats.PSObject.Properties | Where-Object {$_.Name -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm} | Foreach-Object {$_.Value}}
 
         $timestamp = Get-UnixTimestamp
         $timestamp24h = $timestamp - 86400
 
-        $blocks = @($Pool_Request.immature | Select-Object) + @($Pool_Request.matured | Select-Object)
-        $blocks_measure = $blocks.timestamp | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
-        $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
-        $Pool_TSL = $timestamp - ($blocks.timestamp | Measure-Object -Maximum).Maximum
+        $Pool_BlocksRequest_Completed = $Pool_BlocksRequest.matured | Where-Object {$_.timestamp -gt $timestamp24h -and -not $_.orphan}
 
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_AlgoStats.hashrate -BlockRate $Pool_BLK -Quiet
+        $blocks_measure = $Pool_BlocksRequest_Completed | Measure-Object -Minimum -Maximum -Property timestamp
+        $blocks_reward  = ($Pool_BlocksRequest_Completed | Measure-Object -Average -Property reward).Average
+        $blocks_count   = $blocks_measure.Count
+
+        if ($blocks_measure -and $Pool_BlocksRequest.immature -and $Pool_BlocksRequest.immature.Count) {
+            $blocks_measure_immature = $Pool_BlocksRequest.immature | Where-Object {$_.timestamp -gt $timestamp24h} | Measure-Object -Minimum -Maximum -Property timestamp
+            if ($blocks_measure_immature.Maximum -gt $blocks_measure.Maximum) {$blocks_measure.Maximum = $blocks_measure_immature.Maximum}
+            if (-not $blocks_measure.Minimum) {$blocks_measure.Minimum = $blocks_measure_immature.Minimum}
+            $blocks_count += (1-($Pool_BlocksRequest.rate | Select-Object -First 1).orphan) * $blocks_measure_immature.Count
+        }
+
+        $Pool_BLK       = $(if ($blocks_count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_count
+        $Pool_TSL       = $timestamp - (@($Pool_BlocksRequest.immature | Select-Object) + @($Pool_BlocksRequest.matured | Select-Object) | Measure-Object -Maximum -Property timestamp).Maximum
+        $Pool_HR        = ($Pool_StatsRequest.perfomance | Where-Object {($_.algo -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm) -and (Get-UnixTimestamp (Get-Date $_.created)) -ge $blocks_measure.Minimum} | Measure-Object -Average -Property poolHashrate).Average
+
+        if (-not $Pool_HR) {$Pool_HR = ($Pool_StatsRequest.perfomance | Where-Object {$_.algo -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm} | Measure-Object -Average -Property poolHashrate).Average}
+
+        $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+        $btcRewardLive  = if ($Pool_HR) {$btcPrice * $blocks_reward * $Pool_BLK / $Pool_HR} else {0}
+
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_AlgoStats.hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -103,9 +128,9 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
             CoinName      = $Pool_Coin.Name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
-            Price         = 0
-            StablePrice   = 0
-            MarginOfError = 0
+            Price         = $Stat.$StatAverage #instead of .Live
+            StablePrice   = $Stat.$StatAverageStable
+            MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
             Host          = "pool.woolypooly.com"
             Port          = $Pool_Port
@@ -113,7 +138,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
             Pass          = "x"
             Region        = $Pool_Region
             SSL           = $Pool_SSL
-            WTM           = $true
+            WTM           = -not $btcRewardLive
             Updated       = $Stat.Updated
             Workers       = $Pool_AlgoStats.minersTotal
             PoolFee       = $Pools_Request.$Pool_RpcPath.fee
