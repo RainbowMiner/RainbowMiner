@@ -71,7 +71,7 @@ function Start-Core {
                 $PSUpdateMessage = "To update, run `"sudo ./install.sh -pu`" in folder $($PWD)"
             }
             Write-Host $PSUpdateMessage -BackgroundColor Yellow -ForegroundColor Black
-            Write-Log -Level Info $PSUpdateMessage
+            Write-Log $PSUpdateMessage
             Write-Host " "
         }
 
@@ -173,7 +173,7 @@ function Start-Core {
             Write-Host "ok" -ForegroundColor Green
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Unblocking files failed: $($_.Exception.Message)"
+            Write-Log "Unblocking files failed: $($_.Exception.Message)"
             Write-Host "failed" -ForegroundColor Red
         }
     }
@@ -237,7 +237,7 @@ function Start-Core {
 
     if ($Session.Curl) {
         Write-Host "ok$(if (Test-Path ".\curl.txt") {" (permanently enabled by curl.txt file)";$Session.EnableCurl = $true})" -ForegroundColor Green
-        Write-Log -Level Info "Curl $($IsCurl): $($Session.Curl)"
+        Write-Log "Curl $($IsCurl): $($Session.Curl)"
     } else {
         Write-Host "not found" -ForegroundColor Red
         $Session.EnableCurl = $false
@@ -299,7 +299,7 @@ function Start-Core {
                             $PageFile_Warn += "Pagefile on $($PageFileLetter) initial size is not equal maximum size."
                         }
                     }
-                    Write-Log -Level Info "$($_.Name) is set to initial size $($_.InitialSize) MB and maximum size $($_.MaximumSize) MB"
+                    Write-Log "$($_.Name) is set to initial size $($_.InitialSize) MB and maximum size $($_.MaximumSize) MB"
                 }
                 $PageFileMaxSize = ($PageFileInfo | Measure-Object -Property MaximumSize -Sum).Sum
 
@@ -352,10 +352,10 @@ function Start-Core {
                                     Write-Log -Level Warn $Matches[1]
                                 } elseif ($_ -match "^SUCCESS:\s*(.+)$") {
                                     Write-Host $Matches[1] -ForegroundColor Green
-                                    Write-Log -Level Info $Matches[1]
+                                    Write-Log $Matches[1]
                                 } else {
                                     Write-Host $_
-                                    Write-Log -Level Info $_
+                                    Write-Log $_
                                 }
                             }
                         }
@@ -452,10 +452,10 @@ function Start-Core {
                                             Write-Log -Level Warn $Matches[1]
                                         } elseif ($_ -match "^SUCCESS:\s*(.+)$") {
                                             Write-Host $Matches[1] -ForegroundColor Green
-                                            Write-Log -Level Info $Matches[1]
+                                            Write-Log $Matches[1]
                                         } else {
                                             Write-Host $_
-                                            Write-Log -Level Info $_
+                                            Write-Log $_
                                         }
                                     }
                                 }
@@ -676,7 +676,7 @@ function Invoke-Core {
                             if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
                             $RestartRunspaces = $true
                         }
-                        Write-Log -Level Info "Proxy settings have changed: Restarting HttpClient$(if ($RestartRunspaces) {" and Runspaces"})"
+                        Write-Log "Proxy settings have changed: Restarting HttpClient$(if ($RestartRunspaces) {" and Runspaces"})"
                         Initialize-HttpClient -Restart > $null
                     }
                 }
@@ -714,7 +714,7 @@ function Invoke-Core {
 
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
     if ($CheckConfig) {
-        if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating config data"}
+        if ($Session.RoundCounter -ne 0) {Write-Log "Updating config data"}
         #for backwards compatibility
         if ($Session.Config.Type -ne $null) {$Session.Config | Add-Member DeviceName $Session.Config.Type -Force;$Session.Config | Add-Member ExcludeDeviceName @() -Force}
         if ($Session.Config.GPUs -ne $null -and $Session.Config.GPUs) {
@@ -785,7 +785,7 @@ function Invoke-Core {
         $EnableCurl = $Session.EnableCurl
         $Session.EnableCurl = $Session.Curl -and ($Session.Config.EnableCurl -or (Test-Path ".\curl.txt"))
         if ($EnableCurl -ne $Session.EnableCurl) {
-            Write-Log -Level Info "cURL $(if ($Session.EnableCurl) {"enabled"} else {"disabled"})"
+            Write-Log "cURL $(if ($Session.EnableCurl) {"enabled"} else {"disabled"})"
         }
 
         #crosscheck for invalid cpu mining parameters to avoid system overload
@@ -815,7 +815,7 @@ function Invoke-Core {
 
     if (-not $RestartRunspaces) {
         if (-not $Internet_ok) {
-            Write-Log -Level Info "Internet is down"
+            Write-Log "Internet is down"
 
             if ((Test-Path Variable:Global:AsyncLoader) -and -not $AsyncLoader.Pause) {$AsyncLoader.Pause = $true}
 
@@ -858,9 +858,9 @@ function Invoke-Core {
 
         if ($Internet_ok) {
             if ($Session.Config.DisableInternetCheck) {
-                Write-Log -Level Info "Internet check is disabled"
+                Write-Log "Internet check is disabled"
             } else {
-                Write-Log -Level Info "Internet is ok"
+                Write-Log "Internet is ok"
             }
             if ((Test-Path Variable:Global:AsyncLoader) -and $AsyncLoader.Pause) {$AsyncLoader.Pause = $false}
         }
@@ -920,7 +920,7 @@ function Invoke-Core {
             $Session.SysInfo = Get-ContentByStreamReader ".\Data\sysinfo.json" | ConvertFrom-Json -ErrorAction Stop
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "SysInfo.json contains syntax error: $($_.Exception.Message)"
+            Write-Log "SysInfo.json contains syntax error: $($_.Exception.Message)"
         }
     }
 
@@ -997,7 +997,7 @@ function Invoke-Core {
     #Check for algorithms config
     if (Set-ConfigDefault "Algorithms") {
         if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {
-            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating algorithms config data"}
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating algorithms config data"}
             $AllAlgorithms = Get-ConfigContent "Algorithms" -UpdateLastWriteTime
             if (Test-Config "Algorithms" -Health) {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
@@ -1039,7 +1039,7 @@ function Invoke-Core {
     $CheckCoins = $false
     if (Set-ConfigDefault "Coins") {
         if ($CheckConfig -or -not $Session.Config.Coins -or (Test-Config "Coins" -LastWriteTime) -or ($ConfigBackup.Coins -and (Compare-Object $Session.Config.Coins $ConfigBackup.Coins | Measure-Object).Count)) {
-            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating coins config data"}
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating coins config data"}
             $AllCoins = Get-ConfigContent "Coins" -UpdateLastWriteTime
             if (Test-Config "Coins" -Health) {
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
@@ -1075,7 +1075,7 @@ function Invoke-Core {
     #Check for oc profile config
     if (Set-ConfigDefault "OCProfiles") {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.OCProfiles -or (Test-Config "OCProfiles" -LastWriteTime))) {
-            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating ocprofiles config data"}
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating ocprofiles config data"}
             $AllOCProfiles = Get-ConfigContent "OCProfiles" -UpdateLastWriteTime
             if (Test-Config "OCProfiles" -Health) {
                 $Session.Config | Add-Member OCProfiles $AllOCProfiles -Force
@@ -1087,7 +1087,7 @@ function Invoke-Core {
     #Check for scheduler config
     if (Set-ConfigDefault "Scheduler") {
         if ($CheckConfig -or $Session.Config.Scheduler -eq $null -or (Test-Config "Scheduler" -LastWriteTime)) {
-            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating scheduler config data"}
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating scheduler config data"}
             $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
             if (Test-Config "Scheduler" -Health) {
                 if ($AllScheduler -isnot [array] -and $AllScheduler.value -ne $null) {$AllScheduler = $AllScheduler.value}
@@ -1129,7 +1129,7 @@ function Invoke-Core {
     #Check for devices config
     if (Set-ConfigDefault "Devices") {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Devices -or (Test-Config "Devices" -LastWriteTime))) {
-            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating devices config data"}
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating devices config data"}
             $AllDevices = Get-ConfigContent "Devices" -UpdateLastWriteTime
             if (Test-Config "Devices" -Health) {
                 $Session.Config | Add-Member Devices $AllDevices -Force
@@ -1161,7 +1161,7 @@ function Invoke-Core {
     #Check for gpugroups config
     if (Set-ConfigDefault "GpuGroups") {
         if ($CheckConfig -or -not $Session.Config.GpuGroups -or (Test-Config "GpuGroups" -LastWriteTime) -or ($ConfigBackup.GpuGroups -and (Compare-Object $Session.Config.GpuGroups $ConfigBackup.GpuGroups | Measure-Object).Count)) {
-            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating gpugroups config data"}
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating gpugroups config data"}
             $AllGpuGroups = Get-ConfigContent "GpuGroups" -UpdateLastWriteTime
             if (Test-Config "GpuGroups" -Health) {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{})  -Force
@@ -1247,7 +1247,7 @@ function Invoke-Core {
     }
 
     $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_} | ForEach-Object {
-        Write-Log -Level Info "Alas! Missing pool $_ will be added to config manually"
+        Write-Log "Alas! Missing pool $_ will be added to config manually"
         $Session.Config.Pools | Add-Member $_ (
             [PSCustomObject]@{
                 BTC     = $Session.Config.Wallet
@@ -1261,7 +1261,7 @@ function Invoke-Core {
     }
 
     if ($CheckPools) {
-        if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating pools config data"}
+        if ($Session.RoundCounter -ne 0) {Write-Log "Updating pools config data"}
         foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
             foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","CoinSymbolPBM","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet")) {
                 if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @($Session.Config.Pools.$p.$q -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
@@ -1346,7 +1346,7 @@ function Invoke-Core {
     $Global:PauseMiners.Set([PauseStatus]::ByScheduler,$PauseByScheduler)
 
     if ($Scheduler) {
-        Write-Log -Level Info "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To)"
+        Write-Log "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To)"
     }
 
     $Session.CurrentPowerPrice              = $PowerPrice
@@ -1517,13 +1517,13 @@ function Invoke-Core {
 
     #Clear pool cache if the pool configuration has changed
     if ($Global:AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {
-        Write-Log -Level Info "Resetting AllPools data store"
+        Write-Log "Resetting AllPools data store"
         $Global:AllPools = $null
     }
 
     #load device(s) information and device combos
     if ($CheckConfig -or $CheckCombos -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0 -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName | Measure-Object).Count -gt 0) {
-        if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Device configuration changed. Refreshing now."}
+        if ($Session.RoundCounter -ne 0) {Write-Log "Device configuration changed. Refreshing now."}
 
         #Load information about the devices
         $Global:DeviceCache.Devices = @()
@@ -1631,7 +1631,7 @@ function Invoke-Core {
     #Check for miner config
     if (Set-ConfigDefault "Miners") {
         if ($CheckConfig -or -not $Session.Config.Miners -or (Test-Config "Miners" -LastWriteTime)) {
-            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating miners config data"}
+            if ($Session.RoundCounter -ne 0) {Write-Log "Updating miners config data"}
             $MinersConfig = Get-ConfigContent "Miners" -UpdateLastWriteTime
             if (Test-Config "Miners" -Health) {
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
@@ -1894,7 +1894,7 @@ function Invoke-Core {
     }
 
     if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object {$_.SideIndicator -EQ "=>" -and $_.InputObject -ne "MiningRigRentals"} | Select-Object -ExpandProperty InputObject) {
-        Write-Log -Level Info "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
+        Write-Log "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
         $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
     }
 
@@ -2280,10 +2280,10 @@ function Invoke-Core {
                     }
                     if ($Miner_HR -gt 0) {$Fastlane_Success++} else {$Fastlane_Failed++}
                 })
-                Write-Log -Level Info "Fastlane benchmarks: $Fastlane_Success x success, $Fastlane_Failed x failed"
+                Write-Log "Fastlane benchmarks: $Fastlane_Success x success, $Fastlane_Failed x failed"
                 if ($Session.RoundCounter -eq 0) {Write-Host "ok ($Fastlane_Success x success, $Fastlane_Failed x failed)" -ForegroundColor Green}
             } else {
-                Write-Log -Level Info "Failed to get fastlane benchmark results from rbminer.net"
+                Write-Log "Failed to get fastlane benchmark results from rbminer.net"
                 if ($Session.RoundCounter -eq 0) {Write-Host "failed" -ForegroundColor Red}
             }
 
@@ -2534,7 +2534,7 @@ function Invoke-Core {
         $Miners_DownloadList = @($AllMiners.Where({$AllMiners_VersionCheck[$_.BaseName] -ne $true}) | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "IsMiner"; expression = {$true}})
         if ($Miners_DownloadList.Count -gt 0 -and $Global:Downloader.State -ne "Running") {
             Clear-Host
-            Write-Log -Level Info "Starting download of $($Miners_DownloadList.Count) miners."
+            Write-Log "Starting download of $($Miners_DownloadList.Count) miners."
             if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) miners) .."}
             $Global:Downloader = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadList) -FilePath .\Scripts\Downloader.ps1
         }
@@ -2543,7 +2543,7 @@ function Invoke-Core {
         if ($Miners_DownloadListPrq.Count -gt 0 -and $Miners_DownloadList.Count -eq 0) {
             $Miners_DownloadMsgPrq = @($AllMiners.Where({$_.PrerequisitePath -and $_.PrerequisiteMsg}).Where({-not (Test-Path $_.PrerequisitePath)}) | Select-Object -Unique PrerequisiteMsg | Foreach-Object {$_.PrerequisiteMsg})
             if ($Global:Downloader.State -ne "Running" -and $Global:DownloaderPrq.State -ne "Running") {
-                Write-Log -Level Info "Starting download of $($Miners_DownloadListPrq.Count) pre-requisites."
+                Write-Log "Starting download of $($Miners_DownloadListPrq.Count) pre-requisites."
                 if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadListPrq.Count) pre-requisites) .."}
                 $Global:DownloaderPrq = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -ArgumentList ($Miners_DownloadListPrq) -FilePath .\Scripts\Downloader.ps1
             }
@@ -2787,7 +2787,7 @@ function Invoke-Core {
             #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
         }
         else {
-            Write-Log -Level Info "New miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+')"
+            Write-Log "New miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+')"
             try {
                 $ActiveMiner = New-Object $Miner.API -Property @{
                     Name                 = $Miner.Name
@@ -3003,7 +3003,7 @@ function Invoke-Core {
     #Stop failed miners
     $Global:ActiveMiners.ForEach({
         if ($_.GetStatus() -eq [MinerStatus]::RunningFailed) {
-            Write-Log -Level Info "Stopping crashed miner ($($_.Name)) "
+            Write-Log "Stopping crashed miner ($($_.Name)) "
             $_.CrashCount++
             Write-ActivityLog $_ -Crashed 1
             $_.SetStatus([MinerStatus]::Idle)
@@ -3013,7 +3013,7 @@ function Invoke-Core {
     #Stop miners in the active list depending on if they are the most profitable
     $Global:ActiveMiners.Where({(-not $_.Best -or $Session.RestartMiners -or $_.Restart) -and $_.Activated -gt 0 -and $_.Status -eq [MinerStatus]::Running}).ForEach({
         $Miner = $_
-        Write-Log -Level Info "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/'). "
+        Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/'). "
         $Miner.SetStatus([MinerStatus]::Idle)
         $Miner.Stopped = $true
         $Miner.Restart = $false
@@ -3411,7 +3411,7 @@ function Invoke-Core {
             Write-Host "[Client-Mode] Server $($UserConfig.ServerName):$($UserConfig.ServerPort) does not respond." -ForegroundColor Red
         }
         Write-Host " "
-        Write-Log -Level Info "Client-Mode: $(if ($ServerConnected) {"Connected"} else {"Not connected"}) to $($UserConfig.ServerName):$($UserConfig.ServerPort)"
+        Write-Log "Client-Mode: $(if ($ServerConnected) {"Connected"} else {"Not connected"}) to $($UserConfig.ServerName):$($UserConfig.ServerPort)"
     }
     if ($UserConfig.RunMode -eq "Server") {
         if ($API.RemoteAPI) {
@@ -3429,7 +3429,7 @@ function Invoke-Core {
             Write-Host "[Server-Mode] Server has not been started. Run RainbowMiner with admin privileges." -ForegroundColor Red
         }
         Write-Host " "
-        Write-Log -Level Info "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($UserConfig.APIport)"} else {"not started!"})"
+        Write-Log "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($UserConfig.APIport)"} else {"not started!"})"
     }
 
     #Check for updated RainbowMiner
@@ -3495,7 +3495,7 @@ function Invoke-Core {
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
-        Write-Log -Level Info "Runtime interval changed from $($Session.CurrentInterval) to $NextInterval seconds. "
+        Write-Log "Runtime interval changed from $($Session.CurrentInterval) to $NextInterval seconds. "
         $RoundEnd = $RoundEnd.AddSeconds($NextInterval-$Session.CurrentInterval)
         $Session.CurrentInterval = $NextInterval
     }
@@ -4129,7 +4129,7 @@ function Set-MinerStats {
 
                 $Miner.Speed_Live[$Miner_Index] = [Double]$Miner_Speed
 
-                Write-Log -Level Info "$($Miner.BaseName) $(if ($Miner_Benchmarking) {"benchmarking"} else {"mining"}) $($Miner_Algorithm) on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner_Benchmarking) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance[$Miner.Algorithm.IndexOf($Miner_Algorithm)]*100))%"} else {$Miner.Rounds})"
+                Write-Log "$($Miner.BaseName) $(if ($Miner_Benchmarking) {"benchmarking"} else {"mining"}) $($Miner_Algorithm) on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner_Benchmarking) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance[$Miner.Algorithm.IndexOf($Miner_Algorithm)]*100))%"} else {$Miner.Rounds})"
 
                 $Stat = $null
                 if ($Miner_Speed -or -not $Miner_Benchmarking -or $Miner.CrashCount -ge $Session.Config.MaxCrashesDuringBenchmark) {
@@ -4222,7 +4222,7 @@ function Invoke-ReportMinerStatus {
     if ($Session.ReportMinerData) {$Including_Strings.Add("minerdata") > $null}
     if ($Session.ReportPoolsData) {$Including_Strings.Add("poolsdata") > $null}
     if ($Session.ReportDeviceData){$Including_Strings.Add("devicedata") > $null}
-    Write-Log -Level Info "Pinging monitoring server$(if ($Including_Strings.Count) {" (including $($Including_Strings -join ", "))"}). "
+    Write-Log "Pinging monitoring server$(if ($Including_Strings.Count) {" (including $($Including_Strings -join ", "))"}). "
 
     $Profit = 0.0
     $PowerDraw = 0.0
@@ -4324,7 +4324,7 @@ function Invoke-ReportMinerStatus {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Miner Status $($ReportUrl) failed to create crash alerts. "
+            Write-Log "Miner Status $($ReportUrl) failed to create crash alerts. "
         }
     }
 
@@ -4342,7 +4342,7 @@ function Invoke-ReportMinerStatus {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Miner Status $($ReportUrl) failed to add current console.txt. "
+            Write-Log "Miner Status $($ReportUrl) failed to add current console.txt. "
         }
     }
 
@@ -4363,7 +4363,7 @@ function Invoke-ReportMinerStatus {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Miner Status $($ReportUrl) failed to create device data. "
+            Write-Log "Miner Status $($ReportUrl) failed to create device data. "
         }
         $Session.ReportDeviceData = $false
     }
@@ -4379,7 +4379,7 @@ function Invoke-ReportMinerStatus {
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
 
-            Write-Log -Level Info "Go report, go! $($ReportUrl)"
+            Write-Log "Go report, go! $($ReportUrl)"
 
             $Response = Invoke-GetUrl $ReportUrl -body @{
                             user           = $Session.Config.MinerStatusKey
@@ -4415,7 +4415,7 @@ function Invoke-ReportMinerStatus {
                             data           = $minerreport
                         }
 
-            Write-Log -Level Info "Done report, done."
+            Write-Log "Done report, done."
 
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | Select-Object -first 1}
             else {
@@ -4470,7 +4470,7 @@ function Invoke-ReportMinerStatus {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Info "Miner Status $($ReportUrl) has failed. "
+        Write-Log "Miner Status $($ReportUrl) has failed. "
     }
 }
 
@@ -4550,7 +4550,7 @@ function Update-Rates {
     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
     if (-not $NewRates.Count) {
-        Write-Log -Level Info "Coinbase is down, using fallback. "
+        Write-Log "Coinbase is down, using fallback. "
         try {
             $AltCoinbase = Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json"
             if ($AltCoinbase.BTC) {
@@ -4573,14 +4573,14 @@ function Update-Rates {
             $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
             if (-not $RatesAPI.status) {
-                Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
+                Write-Log "Rbminer.net/cmc failed for $($SymbolStr)"
             } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
                 $RatesAPI.data.PSObject.Properties | Foreach-Object {$Global:Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}
             }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Rbminer.net/cmc API for $($SymbolStr) has failed. "
+            Write-Log "Rbminer.net/cmc API for $($SymbolStr) has failed. "
         }
     }
 }

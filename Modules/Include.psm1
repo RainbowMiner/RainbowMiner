@@ -120,7 +120,7 @@ function Confirm-Cuda {
     $max = [Math]::min($ver1.Count,$ver2.Count)
 
     for($i=0;$i -lt $max;$i++) {
-        if ([int]$ver1[$i] -lt [int]$ver2[$i]) {if ($Warning -ne "") {Write-Log -Level Info "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};return $false}
+        if ([int]$ver1[$i] -lt [int]$ver2[$i]) {if ($Warning -ne "") {Write-Log "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};return $false}
         if ([int]$ver1[$i] -gt [int]$ver2[$i]) {return $true}
     }
     $true
@@ -252,7 +252,7 @@ function Get-WhatToMineData {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "WhatToMiner datagrabber failed. "
+            Write-Log "WhatToMiner datagrabber failed. "
             return
         }
     }
@@ -1993,7 +1993,7 @@ function Start-SubProcessInBackground {
         ([regex]"\s-+[\w\-_]+[\s=]+([^'`"][^\s]*,[^\s]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value -replace "'","``'")'"}
         ([regex]"\s-+[\w\-_]+[\s=]+([\[][^\s]+)").Matches(" $ArgumentListToBlock") | Foreach-Object {$ArgumentListToBlock=$ArgumentListToBlock -replace [regex]::Escape($_.Groups[1].Value),"'$($_.Groups[1].Value -replace "'","``'")'"}
         if ($ArgumentList -ne $ArgumentListToBlock) {
-            Write-Log -Level Info "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
+            Write-Log "Start-SubProcessInBackground argumentlist: $($ArgumentListToBlock)"
             $ArgumentList = $ArgumentListToBlock
         }
     }
@@ -2268,7 +2268,7 @@ function Start-SubProcessInScreen {
     
     if ($JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
 
-    $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log -Level Info "$_"}
+    $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log "$_"}
     
     [PSCustomObject]@{
         ScreenName = $ScreenName
@@ -2317,7 +2317,7 @@ function Get-SubProcessIds {
             $Running += $_.ProcessId
             $ProcessFound++
             $_.ProcessId
-            Write-Log -Level Info "$($_.ProcessId) found for $FilePath"
+            Write-Log "$($_.ProcessId) found for $FilePath"
         }
         $WaitCount++
     } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -gt $MultiProcess))
@@ -2381,7 +2381,7 @@ function Stop-SubProcess {
                 }
 
                 if ($ShutdownUrl -ne "") {
-                    Write-Log -Level Info "Trying to shutdown $($Title) via API$(if ($Name) {": $($Name)"})"
+                    Write-Log "Trying to shutdown $($Title) via API$(if ($Name) {": $($Name)"})"
                     $oldProgressPreference = $Global:ProgressPreference
                     $Global:ProgressPreference = "SilentlyContinue"
                     try {
@@ -2413,7 +2413,7 @@ function Stop-SubProcess {
 
                     #try {
                     #    if (-not $Process.HasExited) {
-                    #        Write-Log -Level Info "Send Ctrl+C to $($Shutdown_Title)"
+                    #        Write-Log "Send Ctrl+C to $($Shutdown_Title)"
                     #        if (Send-CtrlC $Process.Id) {
                     #            while (-not $Process.HasExited -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
                     #                Start-Sleep -Milliseconds 500
@@ -2430,17 +2430,17 @@ function Stop-SubProcess {
 
                     try {
                         if ($Job.OwnWindow) {
-                            Write-Log -Level Info "Attempting to close main window $($Shutdown_Title)"
+                            Write-Log "Attempting to close main window $($Shutdown_Title)"
                             $Process.CloseMainWindow() > $null
                         } else {
                             if (-not $Process.HasExited) {
-                                Write-Log -Level Info "Attempting to kill $($Shutdown_Title)"
+                                Write-Log "Attempting to kill $($Shutdown_Title)"
                                 Stop-Process -InputObject $Process -ErrorAction Ignore -Force
                             }
                         }
                     } catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
-                        Write-Log -Level Info "Failed to $(if ($Job.OwnWindow) {"close main window of"} else {"kill"}) $($Title) PID $($Process.Id): $($_.Exception.Message)"
+                        Write-Log "Failed to $(if ($Job.OwnWindow) {"close main window of"} else {"kill"}) $($Title) PID $($Process.Id): $($_.Exception.Message)"
                     }
 
                 } else {
@@ -2452,13 +2452,13 @@ function Stop-SubProcess {
                     if ($Job.ScreenName) {
                         try {
                             if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
-                                Write-Log -Level Info "Send ^C to $($Title)'s screen $($Job.ScreenName)"
+                                Write-Log "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
                                 $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
                                 if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                     $Cmd = "screen $ArgumentList"
                                     $Msg = Invoke-OCDaemon -Cmd $Cmd
-                                    if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
+                                    if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
                                 } else {
                                     $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
                                     $Screen_Process.WaitForExit(5000) > $null
@@ -2477,16 +2477,16 @@ function Stop-SubProcess {
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                                 if (-not $Process.HasExited -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
-                                    Write-Log -Level Info "Call start-stop-daemon to kill $($Title)"
+                                    Write-Log "Call start-stop-daemon to kill $($Title)"
                                     $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
                                     if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                         $Cmd = "start-stop-daemon $ArgumentList"
                                         $Msg = Invoke-OCDaemon -Cmd $Cmd
-                                        if ($Msg) {Write-Log -Level Info "OCDaemon for $Cmd reports: $Msg"}
+                                        if ($Msg) {Write-Log "OCDaemon for $Cmd reports: $Msg"}
                                     } else {
                                         $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
                                         if (-not $StartStopDaemon_Process.WaitForExit(10000)) {
-                                            Write-Log -Level Info "start-stop-daemon failed to close $($Title) within 10 seconds$(if ($Name) {": $($Name)"})"
+                                            Write-Log "start-stop-daemon failed to close $($Title) within 10 seconds$(if ($Name) {": $($Name)"})"
                                         }
                                     }
                                 }
@@ -2500,7 +2500,7 @@ function Stop-SubProcess {
                         }
                     } else {
                         $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-                            Write-Log -Level Info "Attempting to kill $($Title) PID $($_.Id)$(if ($Name) {": $($Name)"})"
+                            Write-Log "Attempting to kill $($Title) PID $($_.Id)$(if ($Name) {": $($Name)"})"
                             if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                                 Invoke-OCDaemon -Cmd "kill $($_.Id)" > $null
                             } else {
@@ -2516,7 +2516,7 @@ function Stop-SubProcess {
                 #
 
                 while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le $WaitForExit) {
-                    Write-Log -Level Info "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.TotalSeconds)s elapsed)$(if ($Name) {": $($Name)"})"
+                    Write-Log "Wait for exit of $($Title) PID $($_) ($($StopWatch.Elapsed.TotalSeconds)s elapsed)$(if ($Name) {": $($Name)"})"
                     Start-Sleep -Seconds 1
                 }
 
@@ -2540,7 +2540,7 @@ function Stop-SubProcess {
         $Job.ProcessId | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
                 if (-not $Process.HasExited) {
-                    Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
+                    Write-Log "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
                     #if ($IsLinux -and (Test-OCDaemon)) {
                     #    Invoke-OCDaemon -Cmd "kill -9 $($_.Id)" > $null
                     #} else {
@@ -2572,7 +2572,7 @@ function Stop-SubProcess {
                 if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                     $Cmd = "screen $ArgumentList"
                     $Msg = Invoke-OCDaemon -Cmd $Cmd
-                    if ($Msg) {Write-Log -Level Info "OCDaemon for `"$Cmd`" reports: $Msg"}
+                    if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
                 } else {
                     $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
                     $Screen_Process.WaitForExit(5000) > $null
@@ -3260,10 +3260,10 @@ function Get-Device {
                     }
                 }
                 if ($OpenCL_Devices) {
-                    Write-Log -Level Info "CUDA found: successfully configured devices via nvidia-smi"
+                    Write-Log "CUDA found: successfully configured devices via nvidia-smi"
                     $Platform_Devices = [PSCustomObject]@{PlatformId=0;Vendor="NVIDIA";Devices=$OpenCL_Devices}
                 } else {
-                    Write-Log -Level Info "CUDA found: failed to configure devices via nvidia-smi"
+                    Write-Log "CUDA found: failed to configure devices via nvidia-smi"
                 }
             }
         }
@@ -3537,7 +3537,7 @@ function Get-Device {
                 }
 
                 if ($Need_Sort) {
-                    Write-Log -Level Info "OpenCL platforms have changed from initial run. Resorting indices."
+                    Write-Log "OpenCL platforms have changed from initial run. Resorting indices."
                     $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
                 }
 
@@ -4015,7 +4015,7 @@ function Get-DeviceName {
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Info "Could not read GPU data for vendor $($Vendor). "
+        Write-Log "Could not read GPU data for vendor $($Vendor). "
     }
 }
 
@@ -5965,7 +5965,7 @@ function Get-ConfigContent {
                 $Session.ConfigFiles[$ConfigName].Healthy=$true
             }
         }
-        catch {if ($Error.Count){$Error.RemoveAt(0)}; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log -Level Info "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; if (-not $WorkerName) {$Session.ConfigFiles[$ConfigName].Healthy=$false}}
+        catch {if ($Error.Count){$Error.RemoveAt(0)}; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; if (-not $WorkerName) {$Session.ConfigFiles[$ConfigName].Healthy=$false}}
     }
 }
 
@@ -6468,9 +6468,9 @@ param(
             }
 
             $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
-            if ($Session.LogLevel -eq "Debug") {Write-Log -Level Info "New HttpClient created"}
+            if ($Session.LogLevel -eq "Debug") {Write-Log "New HttpClient created"}
         } catch {
-            Write-Log -Level Info "The installed .net version doesn't support HttpClient yet: $($_.Exception.Message)"
+            Write-Log "The installed .net version doesn't support HttpClient yet: $($_.Exception.Message)"
             $Global:GlobalHttpClient = $false
         }
     }
@@ -6630,7 +6630,7 @@ Param(
             $Data = (Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit $Timeout) -split "#~#"
 
             if ($Session.LogLevel -eq "Debug") {
-                Write-Log -Level Info "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $($CurlCommand)"
+                Write-Log "CURL[$($Global:LASTEXEEXITCODE)][$($Data[-1])] $($CurlCommand)"
             }
 
             if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^2\d\d") {
@@ -6686,7 +6686,7 @@ Param(
         if (-not $forceIWR -and (Initialize-HttpClient)) {
 
             if ($Session.LogLevel -eq "Debug") {
-                Write-Log -Level Info "Using HttpClient to $($method)-$($requestmethod) $($requesturl)"
+                Write-Log "Using HttpClient to $($method)-$($requestmethod) $($requesturl)"
             }
 
             try {
@@ -6730,11 +6730,11 @@ Param(
                         }
 
                         if ($Session.LogLevel -eq "Debug") {
-                            Write-Log -Level Info "--> $(if ($IsForm) {"FORM"} else {"BODY"}): $(ConvertTo-Json $fx -Depth 10)"
+                            Write-Log "--> $(if ($IsForm) {"FORM"} else {"BODY"}): $(ConvertTo-Json $fx -Depth 10)"
                         }
                     } else {
                         if ($Session.LogLevel -eq "Debug") {
-                            Write-Log -Level Info "--> PLAIN: $($body)"
+                            Write-Log "--> PLAIN: $($body)"
                         }
                         $content.Content = [System.Net.Http.StringContent]::new($body,[System.Text.Encoding]::UTF8,'plain/text')
                     }
@@ -6752,7 +6752,7 @@ Param(
                 } elseif ($task.Wait($timeout*1000)) {
 
                     if ($Session.LogLevel -eq "Debug") {
-                        Write-Log -Level Info "--> Result: $($task.Result.StatusCode) IsFaulted=$($task.Result.isFaulted) Status=$($task.Status)"
+                        Write-Log "--> Result: $($task.Result.StatusCode) IsFaulted=$($task.Result.isFaulted) Status=$($task.Status)"
                     }
 
                     $Result.Status = -not $task.Result.isFaulted -and $task.Status -eq [System.Threading.Tasks.TaskStatus]::RanToCompletion
@@ -6841,7 +6841,7 @@ Param(
             }
 
             if ($Session.LogLevel -eq "Debug") {
-                Write-Log -Level Info "Using IWR to $($method)-$($requestmethod) $($requesturl)"
+                Write-Log "Using IWR to $($method)-$($requestmethod) $($requesturl)"
             }
             
             $Proxy = Get-Proxy
@@ -7090,7 +7090,7 @@ Param(
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -and (Test-Path ".\Cache\$($Jobkey).asy")
             $AsyncLoader.Jobs.$Jobkey = $JobData
             $AsyncLoader.Jobs.$Jobkey.Index = $AsyncLoader.Jobs.Count
-            #Write-Log -Level Info "New job $($Jobkey): $($JobData.Url)" 
+            #Write-Log "New job $($Jobkey): $($JobData.Url)" 
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
             $AsyncLoader.Jobs.$JobKey.LastRequest=(Get-Date).ToUniversalTime()
@@ -7674,10 +7674,10 @@ param(
             Start-Sleep 1
             Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","off") -AutoWorkingDirectory >$null
             Start-Sleep 1
-            Write-Log -Level Info "Disabled/Enabled device(s) $DeviceId"
+            Write-Log "Disabled/Enabled device(s) $DeviceId"
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Failed to disable/enable device(s) $($DeviceId): $($_.Exception.Message)"
+            Write-Log "Failed to disable/enable device(s) $($DeviceId): $($_.Exception.Message)"
         }
     }
 }
@@ -8221,7 +8221,7 @@ param(
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Info "Binance server call: $($_.Exception.Message)"
+                    Write-Log "Binance server call: $($_.Exception.Message)"
                 }
             }
         }
@@ -8242,7 +8242,7 @@ param(
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 "Binance API call: $($_.Exception.Message)"
-                Write-Log -Level Info "Binance API call: $($_.Exception.Message)"
+                Write-Log "Binance API call: $($_.Exception.Message)"
             }
         }
 
@@ -8310,7 +8310,7 @@ param(
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Info "Nicehash server call: $($_.Exception.Message)"
+                    Write-Log "Nicehash server call: $($_.Exception.Message)"
                 }
             }
         }
@@ -8340,7 +8340,7 @@ param(
                 $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Info "Nicehash API call: $($_.Exception.Message)"
+                Write-Log "Nicehash API call: $($_.Exception.Message)"
             }
         }
 
@@ -8365,7 +8365,7 @@ function Invoke-Reboot {
             Restart-Computer -Force -ErrorAction Stop
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Restart-Computer command failed. Falling back to shutdown."
+            Write-Log "Restart-Computer command failed. Falling back to shutdown."
             shutdown /r /f /t 10 /c "RainbowMiner scheduled restart" 2>$null
             if ($LastExitCode -ne 0) {
                 throw "shutdown cannot reboot $($Session.MachineName) ($LastExitCode)"
@@ -8435,7 +8435,7 @@ function Send-CtrlC {
             $WinKillResult = Invoke-Exe ".\Includes\windows-kill\$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x32"})\windows-kill.exe" -ArgumentList "-$($Signal) $($ProcessID)"
             $Result = $WinKillResult -match "success" -and $WinKillResult -match "$($ProcessId)"
             if (-not $Result) {
-                Write-Log -Level Info "Send-CtrlC to PID $($ProcessID) failed: $("$($WinKillResult)".Trim() -split "[`r`n]+" | Select-Object -Last 1)"
+                Write-Log "Send-CtrlC to PID $($ProcessID) failed: $("$($WinKillResult)".Trim() -split "[`r`n]+" | Select-Object -Last 1)"
             }
         }
     } catch {
