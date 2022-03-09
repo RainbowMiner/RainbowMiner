@@ -395,6 +395,7 @@
     "cuckoocycle32": "Cuckatoo32",
     "cuckoocyclecortex": "Cuckaroo30",
     "curvehash": "CurveHash",
+    "curve": "CurveHash",
     "dagger": "Ethash",
     "daggerhashimoto": "Ethash",
     "darkcoin": "SHA256ton",
