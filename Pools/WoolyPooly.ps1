@@ -95,7 +95,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
         $timestamp = Get-UnixTimestamp
         $timestamp24h = $timestamp - 86400
 
-        $Pool_BlocksRequest_Completed = $Pool_BlocksRequest.matured | Where-Object {$_.timestamp -gt $timestamp24h -and -not $_.orphan}
+        $Pool_BlocksRequest_Completed = $Pool_BlocksRequest.matured | Where-Object {$_.timestamp -gt $timestamp24h -and -not $_.orphan -and ($_.algo -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm)}
 
         $blocks_measure = $Pool_BlocksRequest_Completed | Measure-Object -Minimum -Maximum -Property timestamp
         $blocks_reward  = ($Pool_BlocksRequest_Completed | Measure-Object -Average -Property reward).Average
