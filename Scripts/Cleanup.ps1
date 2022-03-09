@@ -1378,6 +1378,11 @@ try {
         $RemoveMinerStats += @("CPU-SrbminerMulti-*Dynamo_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.8.1.8")) {
+        $RemovePoolStats += @("*_AION_Profit.txt")
+    }
+
+
     ###
     ### END OF VERSION CHECKS
     ###
