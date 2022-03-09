@@ -49,8 +49,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
         $Pool_Id = $_.id
         $Pool_BlocksRequest = @()
         try {
-            $Pool_BlocksRequest = Invoke-RestMethodAsync "https://api.aionpool.tech/api/pools/$($Pool_Id)/blocks?pageSize=500" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
-            $Pool_BlocksRequest = @($Pool_BlocksRequest | Where-Object {$_.status -ne "orphaned"} | Foreach-Object {[PSCustomObject]@{created = Get-Date $_.created;status = $_.status;reward = $_.reward}})
+            $Pool_BlocksRequest = @((Invoke-RestMethodAsync "https://api.aionpool.tech/api/pools/$($Pool_Id)/blocks?pageSize=1000" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120) | Foreach-Object {[PSCustomObject]@{created = Get-Date $_.created;status = $_.status;reward = $_.reward}})
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -61,18 +60,44 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
         $btcRewardLive = 0
 
         if ($ok -and ($Pool_BlocksRequest | Measure-Object).Count) {
+
+            $Pool_PerformanceRequest = @()
+            try {
+                $Pool_PerformanceRequest = @((Invoke-RestMethodAsync "https://api.aionpool.tech/api/pools/$($Pool_Id)/performance" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 3600).stats | Foreach-Object {[PSCustomObject]@{created = Get-Date $_.created;hashrate = $_.poolHashrate}})
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Info "Pool performance API ($Name) for $Pool_Currency has failed. "
+            }
+
             $timestamp24h = (Get-Date).AddHours(-24).ToUniversalTime()
 
-            $Pool_BlocksRequest_Completed = $Pool_BlocksRequest | Where-Object {$_.created -gt $timestamp24h -and $_.status -eq "confirmed"}
+            $Pool_BlocksRequest_Status = $Pool_BlocksRequest | Where-Object {$_.created -gt $timestamp24h} | Group-Object -Property status
 
-            $blocks_measure = $Pool_BlocksRequest_Completed | Measure-Object -Minimum -Maximum -Property created
-            $blocks_reward  = ($Pool_BlocksRequest_Completed | Measure-Object -Average -Property reward).Average
+            $blocks_measure = ($Pool_BlocksRequest_Status | Where-Object {$_.Name -eq "confirmed"}).Group | Measure-Object -Minimum -Maximum -Property created
+            $blocks_reward  = (($Pool_BlocksRequest_Status | Where-Object {$_.Name -eq "confirmed"}).Group | Measure-Object -Average -Property reward).Average
 
-            $Pool_BLK       = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds} else {1})*$blocks_measure.Count)
+            $blocks_count   = $blocks_measure.Count
+
+            if (($Pool_BlocksRequest_Status | Where-Object {$_.Name -eq "pending"}).Count) {
+                $blocks_measure_pending = ($Pool_BlocksRequest_Status | Where-Object {$_.Name -eq "pending"}).Group | Measure-Object -Minimum -Maximum -Property created
+                if ($blocks_measure.Maximum -lt $blocks_measure_pending.Maximum) {$blocks_measure.Maximum = $blocks_measure_pending.Maximum}
+                if (-not $blocks_measure.Minimum) {$blocks_measure.Minimum = $blocks_measure_pending.Minimum}
+                $blocks_count += (1 - ($Pool_BlocksRequest_Status | Where-Object {$_.Name -eq "orphaned"}).Count / (($Pool_BlocksRequest_Status | Where-Object {$_.Name -eq "orphaned"}).Count + ($Pool_BlocksRequest_Status | Where-Object {$_.Name -eq "confirmed"}).Count)) * $blocks_measure_pending.Count
+            }
+
+            $Pool_BLK       = $(if ($blocks_count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalSeconds} else {1})*$blocks_count
             $Pool_TSL       = ((Get-Date).ToUniversalTime() - $Pool_BlocksRequest[0].created).TotalSeconds
 
+            if (($Pool_PerformanceRequest | Measure-Object).Count) {
+                $Pool_HR = ($Pool_PerformanceRequest | Where-Object {$_.created -ge $blocks_measure.Minimum} | Measure-Object -Average -Property hashrate).Average
+                if (-not $Pool_HR) {$Pool_HR = ($Pool_PerformanceRequest | Measure-Object -Average -Property hashrate).Average}
+            } else {
+                $Pool_HR = $_.poolStats.poolHashrate
+            }
+
             $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
-            $btcRewardLive  = if ($_.poolStats.poolHashrate) {$btcPrice * $blocks_reward * $Pool_BLK / $_.poolStats.poolHashrate} else {0}
+            $btcRewardLive  = if ($Pool_HR) {$btcPrice * $blocks_reward * $Pool_BLK / $Pool_HR} else {0}
         }
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
