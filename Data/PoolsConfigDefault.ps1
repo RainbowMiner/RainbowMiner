@@ -89,9 +89,6 @@
             SetupFields=[PSCustomObject]@{Password="Enter your C3pool password (eMail or Password)"}
             Currencies=@("XMR")
         }
-        "Cortexmint" = [PSCustomObject]@{
-            Currencies=@("CTXC")
-        }
         "CpuPool" = [PSCustomObject]@{
             Currencies=@("CPU","MBC")
         }
@@ -396,9 +393,6 @@
             Fields=[PSCustomObject]@{API_Key="";Password="x"}
             SetupFields=[PSCustomObject]@{API_Key="Enter your poolium.win API-Key";Password="Enter your poolium.win password"}
             Currencies=@("VRM")
-        }
-        "PoolSexy" = [PSCustomObject]@{
-            Currencies=@("DBIX")
         }
         "ProHashing" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_Key="";AECurrency="BTC";EnableAPIKeyForMiners="0"}
