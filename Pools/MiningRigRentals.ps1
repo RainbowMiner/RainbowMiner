@@ -293,17 +293,29 @@ if ($AllRigs_Request) {
                     $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
                     $Rental_CheckForExtensionMessage = $AllowExtensions -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
 
-                    $Rental_Check = ($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage
-
                     try {
+
+                        $Rental_Result_CacheTime = if (($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage) {0} else {[Math]::Max([double]$_.status.hours*3600 - [Math]::Max($Session.CurrentInterval,$Session.Config.Interval),0)}
+
+                        $Rental_Result_Saved = Get-MiningRigRentalStat $Worker1 $_.rental_id
+
                         try {
-                            $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60 -Cache $(if ($Rental_Check) {0} else {[double]$_.status.hours*3600})
+                            if ($Rental_Result_CacheTime -and $Rental_Result_Saved.end -and ((Get-Date).ToUniversalTime().AddSeconds($Rental_Result_CacheTime) -gt [DateTime]::Parse("$($Rental_Result_Saved.end -replace "\s+UTC$")"))) {
+                                $Rental_Result_CacheTime = 0
+                                Write-Log "$($Name): Status update for rental #$($_.rental_id) on $($Worker1)"
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+
+                        try {
+                            $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)" $API_Key $API_Secret -method "GET" -Timeout 60 -Cache $Rental_Result_CacheTime
                             if ($Rental_Result.id -eq $_.rental_id) {
                                 Set-MiningRigRentalStat $Worker1 $Rental_Result
                             }
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
-                            $Rental_Result = Get-MiningRigRentalStat $Worker1 $_.rental_id
+                            $Rental_Result = $Rental_Result_Saved
                         }
 
                         if ($Rental_Result) {
@@ -314,7 +326,7 @@ if ($AllRigs_Request) {
                                     $Pool_Price *= $_.price.BTC.price/$_.price."$($Rental_Result.price.currency)".price
                                 }
                             }
-                            if ($Rental_Check) {
+                            if (-not $Rental_Result_CacheTime) {
                                 $Rental_AdvHashrate = [double]$Rental_Result.hashrate.advertised.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.advertised.type)")
                                 $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
                             }

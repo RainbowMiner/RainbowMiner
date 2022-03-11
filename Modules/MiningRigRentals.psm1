@@ -531,7 +531,7 @@ function Get-MiningRigRentalStat {
     }
     if ($RentalError) {
         if (Test-Path $Path) {
-            Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is $($RentalError) and will be removed. "
+            Write-Log -Level Warn "Stat file $([IO.Path]::GetFileName($Path)) is $($RentalError) and will be removed. "
             Remove-Item -Path $Path -Force -Confirm:$false
         }
     } else {
