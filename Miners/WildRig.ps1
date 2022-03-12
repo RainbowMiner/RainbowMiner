@@ -24,7 +24,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "0x10";                      Vendor = @("AMD","NVIDIA"); Params = ""} #0x10/CHOX
+    [PSCustomObject]@{MainAlgorithm = "0x10";                      Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2} #0x10/CHOX
     [PSCustomObject]@{MainAlgorithm = "aergo";                     Vendor = @("AMD");          Params = ""} #Aergo
     [PSCustomObject]@{MainAlgorithm = "anime";                     Vendor = @("AMD");          Params = ""} #Anime
     [PSCustomObject]@{MainAlgorithm = "bcd";                       Vendor = @("AMD");          Params = ""} #BCD
