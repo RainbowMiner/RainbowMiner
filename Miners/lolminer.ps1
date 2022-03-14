@@ -113,7 +113,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             }
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
-				if ($Miner_Device -and $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+				if ($Miner_Device -and $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch $_.ExcludePoolName) -and ($Pools.$MainAlgorithm_Norm.Name -ne "MiningRigRentals" -or $Pools.$MainAlgorithm_Norm.Port -notmatch "^33\d\d$")) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -126,6 +126,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $EthStratum = if ($MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy) {
                         Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                             "ethproxy" {"ETHPROXY"}
+                            "qtminer" {if ($Pools.$MainAlgorithm_Norm.Name -eq "MiningRigRentals") {"ETHPROXY"} else {"ETHV1"}}
                             default {"ETHV1"}
                         }
                     }
