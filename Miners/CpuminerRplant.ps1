@@ -77,7 +77,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi5"; Params = ""} #Combode Coin
     [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b, Jayddee faster
-    [PSCustomObject]@{MainAlgorithm = "phichox"; Params = ""} #phiCHOX/CHOX
+    #[PSCustomObject]@{MainAlgorithm = "phichox"; Params = ""} #phiCHOX/CHOX algo has changed 03/01/2022
     [PSCustomObject]@{MainAlgorithm = "quark"; Params = ""} #Quark
     [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
     ####[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
