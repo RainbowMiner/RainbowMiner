@@ -17,7 +17,8 @@ $EnableContest = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.86-gminer/gminer_2_86_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.88-gminer/gminer_2_88_linux64.tar.xz"
+    $Version = "2.88"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.86-gminer/gminer_2_86_windows64.zip"
