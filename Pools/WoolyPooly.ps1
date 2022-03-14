@@ -21,7 +21,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Request       = [PSCustomObject]@{}
 try {
-    $Pools_Request = Invoke-RestMethodAsync "https://api.woolypooly.com/api/stats" -tag $Name -timeout 15 -cycletime 120
+    $Pools_Request = Invoke-RestMethodAsync "https://api.woolypooly.com/api/stats" -tag $Name -timeout 15 -cycletime 120 -delay 250
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -42,7 +42,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "AE";   port = 20000; host = "ae"; rpc = "aeternity-1"}
     [PSCustomObject]@{symbol = "AION"; port = 33333; host = "aion"; rpc = "aion-1"}
     [PSCustomObject]@{symbol = "ALPH"; port = 3106; host = "alph"; rpc = "alph-1"}
-    [PSCustomObject]@{symbol = "BTG";  port = 3090; host = "btg"; rpc = "btg-1"}
     [PSCustomObject]@{symbol = "CFX";  port = 3094; host = "cfx"; rpc = "cfx-1"}
     [PSCustomObject]@{symbol = "CTXC"; port = 40000; host = "cortex"; rpc = "cortex-1"}
     [PSCustomObject]@{symbol = "ERG";  port = 3100; host = "erg"; rpc = "ergo-1"}
@@ -51,11 +50,13 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "firo"; rpc = "firo-1"}
     [PSCustomObject]@{symbol = "FLUX"; port = 3092; host = "zel"; rpc = "zel-1"}
     [PSCustomObject]@{symbol = "GRIN-PRI";  port = 12000; host = "grin"; rpc = "grin-1"}
+    [PSCustomObject]@{symbol = "KVA"; port = 3112; host = "kva"; rpc = "kva-1"}
     [PSCustomObject]@{symbol = "MWC-PRI"; port = 11000; host = "mwc"; rpc = "mwc-1"}
+    [PSCustomObject]@{symbol = "RTM"; port = 3110; host = "rtm"; rpc = "rtm-1"}
     [PSCustomObject]@{symbol = "RVN";  port = 55555; host = "rvn"; rpc = "raven-1"}
-    [PSCustomObject]@{symbol = "SERO"; port = 8008; host = "sero"; rpc = "sero-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
     [PSCustomObject]@{symbol = "VTC"; port = 3102; host = "vtc"; rpc = "vtc-1"}
+    [PSCustomObject]@{symbol = "XMR"; port = 3108; host = "xmr"; rpc = "xmr-1"}
 )
 
 $Pool_PayoutScheme = "PPLNS"
@@ -73,7 +74,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
     if (-not $InfoOnly) {
         $Pool_BlocksRequest = [PSCustomObject]@{}
         try {
-            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/blocks" -tag $Name -timeout 20 -cycletime 120).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
+            $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/blocks" -tag $Name -timeout 20 -cycletime 120 -delay 250).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -82,7 +83,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
 
         $Pool_StatsRequest  = [PSCustomObject]@{}
         try {
-            $Pool_StatsRequest  = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/stats?simple=false" -tag $Name -timeout 20 -cycletime 3600).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
+            $Pool_StatsRequest  = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/stats?simple=false" -tag $Name -timeout 20 -cycletime 3600 -delay 250).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
