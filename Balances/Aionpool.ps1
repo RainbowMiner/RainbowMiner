@@ -34,16 +34,17 @@ if (-not $ok) {
 $Count = 0
 $Payout_Currencies | Where-Object {@($Pool_Request.pools | Foreach-Object {$_.coin.type} | Select-Object -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
     try {
-        $Pool_Id = ($Pool_Request.pools | Where-Object {$_.coin.type -eq $_.Name}).id
+        $Payout_Currency = $_.Name
+        $Pool_Id = ($Pool_Request.pools | Where-Object {$_.coin.type -eq $Payout_Currency}).id
         $Request = Invoke-RestMethodAsync "https://api.aionpool.tech/api/pools/$($Pool_Id)/miners/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if ($Request.totalPaid -eq $null) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
+            Write-Log -Level Info "Pool Balance API ($Name) for $($Payout_Currency) returned nothing. "
         } else {
             [PSCustomObject]@{
-                Caption     = "$($Name) ($($_.Name))"
+                Caption     = "$($Name) ($($Payout_Currency))"
 				BaseName    = $Name
-                Currency    = $_.Name
+                Currency    = $Payout_Currency
                 Balance     = [Decimal]$Request.pendingBalance
                 Pending     = [Decimal]0
                 Total       = [Decimal]$Request.pendingBalance
