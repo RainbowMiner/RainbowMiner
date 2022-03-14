@@ -1382,6 +1382,13 @@ try {
         $RemovePoolStats += @("*_AION_Profit.txt")
     }
 
+    if ($Version -le (Get-Version "4.8.1.9")) {
+        foreach ($lolAlgo in @("Ethash","Etchash","UbqHash")) {
+            Get-ChildItem ".\Stats\Miners" -Filter "*lolminer-$($lolAlgo)_SHA256ton-*_Hashrate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "lolminer-$($lolAlgo)_SHA256ton-","lolminer-$($lolAlgo)-SHA256ton-") -Force -ErrorAction Ignore}
+            Get-ChildItem ".\Stats\Miners" -Filter "*lolminer-$($lolAlgo)_Blake3-*_Hashrate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "lolminer-$($lolAlgo)_Blake3-","lolminer-$($lolAlgo)-Blake3-") -Force -ErrorAction Ignore}
+        }
+    }
+
 
     ###
     ### END OF VERSION CHECKS
