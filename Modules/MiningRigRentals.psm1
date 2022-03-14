@@ -76,7 +76,9 @@ param(
     [Parameter(Mandatory = $False)]
     [switch]$ForceLocal,
     [Parameter(Mandatory = $False)]
-    [switch]$Raw
+    [switch]$Raw,
+    [Parameter(Mandatory = $False)]
+    [switch]$Force = $false
 )
 
     if ($JobKey -and $JobData) {
@@ -103,7 +105,7 @@ param(
     $Result = $null
 
     if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
-    if (-not $Cache -or -not $Global:MRRCache[$JobKey] -or -not $Global:MRRCache[$JobKey].request -or -not $Global:MRRCache[$JobKey].request.success -or $Global:MRRCache[$JobKey].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if (-not $Cache -or $Force -or -not $Global:MRRCache[$JobKey] -or -not $Global:MRRCache[$JobKey].request -or -not $Global:MRRCache[$JobKey].request.success -or $Global:MRRCache[$JobKey].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
         $Remote = $false
 
@@ -199,6 +201,9 @@ param(
         } else {
             $Global:MRRCache[$JobKey] = $Result
         }
+    } elseif ($Global:MRRCache.ContainsKey($JobKey)) {
+        $Global:MRRCache[$JobKey] = $null
+        $Global:MRRCache.Remove($JobKey)
     }
 
     if ($Result -ne $null) {
