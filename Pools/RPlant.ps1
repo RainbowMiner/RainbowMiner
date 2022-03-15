@@ -36,6 +36,8 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symb
     $Pool_Currency       = $_.symbol
     $Pool_Algorithm      = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Coin           = Get-Coin $Pool_Currency
+    $Pool_CoinName       = if ($Pool_Coin) {$Pool_Coin.Name} else {(Get-Culture).TextInfo.ToTitleCase($_.info.coin)}
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets.$Pool_Currency
     $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
@@ -56,7 +58,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symb
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         Algorithm0    = $Pool_Algorithm_Norm
-                        CoinName      = $_.Value.name
+                        CoinName      = $Pool_CoinName
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
                         Price         = 0
