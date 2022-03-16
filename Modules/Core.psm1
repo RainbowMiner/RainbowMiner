@@ -4448,6 +4448,9 @@ function Invoke-ReportMinerStatus {
                 if ($Response.Compare -ne $null) {
                     $API.CompareMiners = ConvertTo-Json @($Response.Compare | Select-Object) -Depth 10
                 }
+                if ($Response.IP -ne $null) {
+                    $API.RemoteIP = $Response.IP
+                }
             }
             $ReportDone = $true
             
@@ -4576,6 +4579,9 @@ function Update-Rates {
                 Write-Log "Rbminer.net/cmc failed for $($SymbolStr)"
             } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
                 $RatesAPI.data.PSObject.Properties | Foreach-Object {$Global:Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}
+                if ($RatesAPI.ip -ne $null) {
+                    $API.RemoteIP = $RatesAPI.ip
+                }
             }
         }
         catch {

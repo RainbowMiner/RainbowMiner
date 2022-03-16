@@ -114,7 +114,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             break
         }
         "/remoteip" {
-            $Data = $RemoteIP
+            $Data = if ($API.RemoteIP) {ConvertTo-Json $API.RemoteIP -ErrorAction Ignore -Depth 10} else {$null}
             break
         }
         "/console" {

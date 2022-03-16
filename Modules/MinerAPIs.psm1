@@ -1833,6 +1833,7 @@ class MiniZ : Miner {
 
             $Accepted_Shares  = [Int64]($Data.result.accepted_shares | Measure-Object -Sum).Sum
             $Rejected_Shares  = [Int64]($Data.result.rejected_shares | Measure-Object -Sum).Sum
+            #$Stale_Shares     = [Int64]($Data.result.stale_shares | Measure-Object -Sum).SUm
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
