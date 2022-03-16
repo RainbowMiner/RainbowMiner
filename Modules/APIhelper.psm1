@@ -16,6 +16,7 @@ param (
         ".png" {"image/png"}
         ".jpg" {"image/jpeg"}
         ".gif" {"image/gif"}
+        ".svg" {"image/svg+xml"}
         ".ps1" {"text/html"} # ps1 files get executed, assume their response is html
         ".7z"  {"application/x-7z-compressed”}
         ".zip" {"application/zip”}

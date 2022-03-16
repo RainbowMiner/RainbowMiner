@@ -71,6 +71,7 @@ $(function () {
 
     start_uptime = Date.now();
     last_uptime  = 0;
+    last_iso = '';
 
     (function p() {
         $.ajax({
@@ -79,6 +80,12 @@ $(function () {
                 if (!last_uptime || parseInt(result.Uptime.Seconds) < last_uptime) {
                     start_uptime = Date.now();
                     last_uptime = parseInt(result.Uptime.Seconds);
+                }
+
+                if (result.RemoteIP && (last_iso != result.RemoteIP.country.code)) {
+                    last_iso = result.RemoteIP.country.code;
+                    $("#country--data").html(result.RemoteIP.ip + '<br />' + result.RemoteIP.country.name);
+                    $("#country--flag").html('<img src="/images/flags/' + last_iso.toLowerCase() + '.svg" style="height:32px" />');
                 }
 
                 var currency = ($("#profit_currency option").length)? $("#profit_currency option:selected").val() : window.localStorage.getItem("currency");

@@ -1258,7 +1258,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                         Seconds  = [int64]$Timer.TotalSeconds
                                     }
 
-            $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Power=$API.CurrentPower;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json -Depth 10
+            $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Power=$API.CurrentPower;Uptime=$Uptime;SysUptime=$SysUptime;RemoteIP=$API.RemoteIP} | ConvertTo-Json -Depth 10
             Remove-Variable "Timer" -ErrorAction Ignore
             Remove-Variable "Uptime" -ErrorAction Ignore
             Remove-Variable "SysUptime" -ErrorAction Ignore
