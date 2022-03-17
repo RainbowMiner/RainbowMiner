@@ -830,7 +830,9 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [String]$LogFile = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$Quiet = $false
+        [Switch]$Quiet = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$IsFastlaneValue = $false
     )
 
     $Updated = $Updated.ToUniversalTime()
@@ -885,6 +887,7 @@ function Set-Stat {
                         Ratio_Live         = [Double]$Stat.Ratio_Live
                         Benchmarked        = $Benchmarked
                         LogFile            = $LogFile
+                        IsFL               = [Bool]$Stat.IsFL
                         #Ratio_Average      = [Double]$Stat.Ratio_Average
                     }
                     Break
@@ -973,13 +976,32 @@ function Set-Stat {
             if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
 
             if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
+                $StatResetValue = $null
+
+                $Stat.Failed += 10
+                
+                if ($Stat.Failed -ge 30) {
+                    $Stat.Failed = 30
+
+                    if ($mode -eq "Miners" -and $Stat.IsFL) {
+                        $StatResetValue  = $Stat.Value
+                        $IsFastlaneValue = $false
+                        $Stat = $null
+                    }
+                }
+
                 if (-not $Quiet) {
-                    if ($mode -eq "Miners") {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "}
+                    if ($mode -eq "Miners") {
+                        if ($StatResetValue -ne $null) {
+                            Write-Log -Level $LogLevel "Stat file ($Name) will be reset, because fastlane benchmark value $($StatResetValue | ConvertTo-Hash) is too far off of $($Value | ConvertTo-Hash). "
+                        } else {
+                            Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "
+                        }
+                    } 
                     elseif ($UplimProtection -gt 1.0) {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value.ToString()) is at least $($UplimProtection.ToString()) times above the hourly average. "}
                     else {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value.ToString()) is outside fault tolerance $($ToleranceMin.ToString()) to $($ToleranceMax.ToString()). "}
                 }
-                $Stat.Failed += 10
-                if ($Stat.Failed -gt 30) {$Stat.Failed = 30}
+
             } else {
                 $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
                 $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
@@ -1019,6 +1041,7 @@ function Set-Stat {
                             Ratio_Live         = $Ratio
                             Benchmarked        = $Benchmarked
                             LogFile            = $LogFile
+                            IsFL               = $false
                             #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                         }
                         Break
@@ -1125,6 +1148,7 @@ function Set-Stat {
                     Ratio_Live         = $Ratio
                     Benchmarked        = $StartTime
                     LogFile            = $LogFile
+                    IsFL               = $IsFastlaneValue
                     #Ratio_Average      = $Ratio
                 }
                 Break
@@ -1232,6 +1256,7 @@ function Set-Stat {
                     Ratio_Live         = [Double]$Stat.Ratio_Live
                     Benchmarked        = [DateTime]$Stat.Benchmarked
                     LogFile            = [String]$Stat.LogFile
+                    IsFL               = [Bool]$Stat.IsFL
                     #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
                 Break

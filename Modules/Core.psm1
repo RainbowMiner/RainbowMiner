@@ -762,7 +762,7 @@ function Invoke-Core {
         $Session.Config.PoolStatAverageStable =  Get-StatAverage $Session.Config.PoolStatAverageStable -Default "Week"
         $Session.Config.MaxTimeSinceLastBlock = ConvertFrom-Time $Session.Config.MaxTimeSinceLastBlock
         $Session.Config.FastlaneBenchmarkTypeCPU = if ($Session.Config.FastlaneBenchmarkTypeCPU -in @("avg","min","max")) {$Session.Config.FastlaneBenchmarkTypeCPU} else {"avg"}
-        $Session.Config.FastlaneBenchmarkTypeCPU = if ($Session.Config.FastlaneBenchmarkTypeCPU -in @("avg","min","max")) {$Session.Config.FastlaneBenchmarkTypeCPU} else {"avg"}
+        $Session.Config.FastlaneBenchmarkTypeGPU = if ($Session.Config.FastlaneBenchmarkTypeGPU -in @("avg","min","max")) {$Session.Config.FastlaneBenchmarkTypeGPU} else {"avg"}
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if ($Session.Config.OCResetInterval -gt 0 -and $Session.Config.OCResetInterval -lt 600) {$Session.Config.OCResetInterval = 600}
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
@@ -2227,7 +2227,7 @@ function Invoke-Core {
     if ($ComboAlgos -ne $null) {Remove-Variable "ComboAlgos"}
 
     #Handle fastlane benchmarks
-    if (-not ($Session.RoundCounter % 10) -and $Session.Config.EnableFastlaneBenchmark) {
+    if (-not ($Session.RoundCounter % 50) -and $Session.Config.EnableFastlaneBenchmark) {
         $SkipBenchmarksData = [PSCustomObject]@{}
         $SkipBenchmarksCount = 0
         $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.HashRates.PSObject.Properties.Name.Count -eq 1}).ForEach({
@@ -2276,7 +2276,9 @@ function Invoke-Core {
                     if (($Miner_HR -gt 0) -or -not $Session.Config.EnableFastlaneBenchmarkMissing) {
                         $_.HashRates."$($_.HashRates.PSObject.Properties.Name)" = $Miner_HR
                         $_.PowerDraw             = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.pd} | Measure-Object -Sum).Sum
-                        Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 10) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -Quiet > $null
+                        if ($_.HashRates.PSObject.Properties.Name -eq $Miner_Algo) {
+                            Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 10) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -IsFastlaneValue -Quiet > $null
+                        }
                     }
                     if ($Miner_HR -gt 0) {$Fastlane_Success++} else {$Fastlane_Failed++}
                 })
