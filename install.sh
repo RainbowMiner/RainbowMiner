@@ -8,7 +8,7 @@ function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4
 
 pwsh_major_version="7"
 pwsh_minor_version="2"
-pwsh_build_version="1"
+pwsh_build_version="2"
 
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
 
