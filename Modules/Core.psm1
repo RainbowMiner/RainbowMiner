@@ -3615,7 +3615,7 @@ function Invoke-Core {
                             }
 
         if ($keyPressedValue) {
-            $API.CmdKey = $keyPressedValue
+
             switch ($keyPressedValue) {
                 "S" { 
                     $Session.SkipSwitchingPrevention = $true
@@ -3733,6 +3733,9 @@ function Invoke-Core {
                     Break
                 }
             }
+
+            $API.CmdKey = "$(if ($keyPressed) {$keyPressedValue})"
+
         }
         $WaitRound++
 
