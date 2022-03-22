@@ -331,7 +331,7 @@
                         PriceFactorMin="Minimum profit multiplicator (only of use, if PriceFactorDecayPercent is greater than 0)"
                         PriceFactorDecayPercent="Enter percentage for decay of the profit multiplicator over time (0 = disable)"
                         PriceFactorDecayTime="Enter the profit multiplicator decay interval (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes)"
-                        PriceRiseExtensionPercent="Enter price rise for extentions of a rental (in percent, e.g. 10 means 10% price rise)"
+                        PriceRiseExtensionPercent="Enter price rise for extensions of a rental (in percent, e.g. 10 means 10% price rise)"
                         PowerDrawFactor="Enter powerdraw multiplicator (only if UsePowerPrice is enabled): minimum price = minimum price + (miner's power draw - rig's average power draw) 24 / 1000 x powerdrawprice x this multiplicator"
                         EnablePowerDrawAddOnly="Add the powerdraw cost difference only, if it is greater than 0"
                         EnableUpdateTitle="Enable automatic updating of rig titles (disable, if you prefer to edit your rig titles online at MRR)"
