@@ -50,6 +50,7 @@ param(
     [String]$PriceFactorMin = "1.1",
     [String]$PriceFactorDecayPercent = "10",
     [String]$PriceFactorDecayTime = "4h",
+    [String]$PriceRiseExtensionPercent = "0",
     [String]$PowerDrawFactor = "1.0",
     [String]$PriceCurrencies = "BTC",
     [String]$MinHours = "3",
@@ -295,13 +296,13 @@ if ($AllRigs_Request) {
 
                     try {
 
-                        $Rental_Result_CacheTime  = [Math]::Max([double]$_.status.hours*3600 - [Math]::Max($Session.CurrentInterval,$Session.Config.Interval),0)
+                        $Rental_Result_CacheTime  = [Math]::Max([double]$_.status.hours*3600 - 5*[Math]::Max($Session.CurrentInterval,$Session.Config.Interval),0)
                         $Rental_Result_Force      = ($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage -or -not $Rental_Result_CacheTime
 
                         $Rental_Result_Saved = Get-MiningRigRentalStat $Worker1 $_.rental_id
 
                         try {
-                            if (-not $Rental_Result_Force -and $Rental_Result_Saved.end -and ((Get-Date).ToUniversalTime().AddSeconds($Rental_Result_CacheTime) -gt [DateTime]::Parse("$($Rental_Result_Saved.end -replace "\s+UTC$")"))) {
+                            if (-not $Rental_Result_Force -and $Rental_Result_Saved.end -and ((Get-Date).ToUniversalTime().AddSeconds($Rental_Result_CacheTime) -gt (Get-Date "$($Rental_Result_Saved.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
                                 $Rental_Result_Force = $true
                                 Write-Log "$($Name): Force status update for rental #$($_.rental_id) on $($Worker1)"
                             }
@@ -438,7 +439,7 @@ if ($AllRigs_Request) {
                     }
 
                     try {
-                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-15) -gt [DateTime]::Parse("$($Rental_Result.end -replace "\s+UTC$")"))) {
+                        if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-15) -gt (Get-Date "$($Rental_Result.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
 
                             #Manual override to end rentals in case of server failure
 
@@ -595,6 +596,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $RigGroupsRemove = @()
     $RigMinProfit = 0.00001
     $RigServer = $null
+    $RigCurrentRentals = @{}
 
     $UniqueRigs_Request = $AllRigs_Request.Where({(([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1})
 
@@ -624,7 +626,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         $AutoCreateMinProfitBTC = "-1"
 
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoBonusExtendTimes","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PowerDrawFactor","MinHours","MaxHours")) {
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoBonusExtendTimes","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceRiseExtensionPercent","PowerDrawFactor","MinHours","MaxHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -680,19 +682,27 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     
     if ($RentalIDs) {
         $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($RentalIDs -join ";")" $API_Key $API_Secret -method "GET" -Timeout 60
-        foreach ($RigName in $Workers) {
-            if (-not $MRRConfig.$RigName.AutoBonusExtendForHours -or -not $MRRConfig.$RigName.AutoBonusExtendByHours) {continue}
-            $Rental_Result | Where-Object {$_.rig.description -match "\[$RigName\]"} | Foreach-Object {
-                $ExtendBy = [Math]::Min([Math]::Floor([double]$_.length/$MRRConfig.$RigName.AutoBonusExtendForHours),$MRRConfig.$RigName.AutoBonusExtendTimes) * $MRRConfig.$RigName.AutoBonusExtendByHours - [double]$_.extended
-                if ($ExtendBy -gt 0) {
-                    try {                    
-                        $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$($_.rig.id)/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
-                        if ($Extend_Result.success) {
-                            Write-Log -Level Info "$($Name): Extended rental #$($_.id) for $(Get-MiningRigRentalAlgorithm $_.rig.type) on $($RigName) for $ExtendBy bonus-hours."
+
+        foreach ($RigName in $Workers) {            
+
+            if ($Rental_Result_Current = $Rental_Result | Where-Object {$_.rig.description -match "\[$RigName\]"} | Select-Object) {
+
+                Set-MiningRigRentalStat $RigName $Rental_Result_Current
+
+                $RigCurrentRentals[$RigName] = $Rental_Result_Current
+
+                if ($MRRConfig.$RigName.AutoBonusExtendForHours -and $MRRConfig.$RigName.AutoBonusExtendByHours) {
+                    $ExtendBy = [Math]::Min([Math]::Floor([double]$Rental_Result_Current.length/$MRRConfig.$RigName.AutoBonusExtendForHours),$MRRConfig.$RigName.AutoBonusExtendTimes) * $MRRConfig.$RigName.AutoBonusExtendByHours - [double]$Rental_Result_Current.extended
+                    if ($ExtendBy -gt 0) {
+                        try {                    
+                            $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$($Rental_Result_Current.rig.id)/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
+                            if ($Extend_Result.success) {
+                                Write-Log -Level Info "$($Name): Extended rental #$($Rental_Result_Current.id) for $(Get-MiningRigRentalAlgorithm $Rental_Result_Current.rig.type) on $($RigName) for $ExtendBy bonus-hours."
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-Log -Level Warn "$($Name): Unable to extend rental #$($Rental_Result_Current.id) $(Get-MiningRigRentalAlgorithm $_.rig.type) on $($RigName) for $ExtendBy bonus-hours: $($_.Exception.Message)"
                         }
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                        Write-Log -Level Warn "$($Name): Unable to extend rental #$($_.id) $(Get-MiningRigRentalAlgorithm $_.rig.type) on $($RigName) for $ExtendBy bonus-hours: $($_.Exception.Message)"
                     }
                 }
             }
@@ -897,8 +907,20 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 if ($RigSpeed -gt 0) {
                                     $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
                                     if ($RigPowerDiff -lt 0 -and $MRRConfig.$RigName.EnablePowerDrawAddOnly) {$RigPowerDiff = 0}
-                                    $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed
-                                    $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed} else {$RigMinPrice}
+
+                                    $RigSpeed_Current = $RigSpeed
+                                    if ($RigCurrentRentals[$RigName]) {
+                                        $RigSpeed_Current = [Math]::Min([double]$RigCurrentRentals[$RigName].hashrate.advertised.hash * $(ConvertFrom-Hash "1$($RigCurrentRentals[$RigName].hashrate.advertised.type)"),$RigSpeed)
+                                    }
+
+                                    $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed_Current
+                                    $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed_Current} else {$RigMinPrice}
+
+                                    if ($MRRConfig.$RigName.PriceRiseExtensionPercent -and $RigCurrentRentals[$RigName]) {
+                                        $PriceExtensionFactor = 1 + $MRRConfig.$RigName.PriceRiseExtensionPercent/100
+                                        $RigMinPrice *= $PriceExtensionFactor
+                                        $RigPrice    *= $PriceExtensionFactor
+                                    }
        
                                     if ($IsHandleRig -or (($RigRevenue -lt $RigMaxRevenueFactor*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
 
@@ -1092,7 +1114,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
                                                         $RigUpdated = $false
                                                         if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
-                                                            if ($RigCreated -lt $MaxAPICalls) {
+                                                            #if ($RigCreated -lt $MaxAPICalls) {
                                                                 $RigUpdated = $true
                                                                 try {
                                                                     $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
@@ -1101,7 +1123,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                                     Write-Log -Level Warn "$($Name): Unable to update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                                 }
                                                                 $RigCreated++
-                                                            }
+                                                            #}
                                                         } else {
                                                             $RigUpdated = $true
                                                             $RigsToUpdate += $CreateRig
@@ -1111,7 +1133,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         }
                                                     }
 
-                                                    if ($RigPool -and $RigCreated -lt $MaxAPICalls) {
+                                                    if ($RigPool) { # -and $RigCreated -lt $MaxAPICalls) {
                                                         $RigPoolCurrent = $RigPools[$RigPools_Id] | Where-Object {$_.user -match "mrx$" -or $_.pass -match "^mrx"  -or $_.pass -match "=mrx" -or $_.user -eq "rbm.worker1"} | Select-Object -First 1
                                                         if ((-not $RigPoolCurrent -and ($RigPools[$RigPools_Id] | Measure-Object).Count -lt 5) -or ($RigPoolCurrent -and ($RigPoolCurrent.host -ne $RigPool.Host -or $RigPoolCurrent.user -ne $RigPool.User -or $RigPoolCurrent.pass -ne $RigPool.Pass))) {
                                                             try {
@@ -1138,7 +1160,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                                         #temporary fix
                                                         @($RigPools[$RigPools_Id] | Where-Object {$_.user -eq "rbm.worker1"} | Select-Object) + @($RigPools[$RigPools_Id] | Where-Object {$_.pass -match "ID=mrx"} | Select-Object -Skip 1) | Foreach-Object {
-                                                            if ($RigCreated -lt $MaxAPICalls) {
+                                                            #if ($RigCreated -lt $MaxAPICalls) {
                                                                 try {
                                                                     $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)/pool/$($_.priority)" $API_Key $API_Secret -method "DELETE" -Timeout 60
                                                                     if ($Result.success) {
@@ -1149,7 +1171,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                                     if ($Error.Count){$Error.RemoveAt(0)}
                                                                     Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                                 }
-                                                            }
+                                                            #}
                                                         }
                                                     }
                                                 })
