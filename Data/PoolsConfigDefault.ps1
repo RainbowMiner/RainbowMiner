@@ -118,7 +118,7 @@
             Currencies=@("XWP")
         }
         "FlexPool" = [PSCustomObject]@{
-            Currencies=@("ETH")
+            Currencies=@("ETC","ETH")
         }
         "FlockPool" = [PSCustomObject]@{
             Currencies=@("RTM")
