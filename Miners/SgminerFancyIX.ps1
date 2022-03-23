@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0
-$Version = "0.9.0"
+$Version = "0.9.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-FancyIX\sgminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.0-fancyix/sgminer-fancyIX-linux-amd64-0.9.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.1-fancyix/sgminer-fancyIX-linux-amd64-0.9.1.tar.gz"
 } else {
     $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.0-fancyix/sgminer-fancyIX-win64-0.9.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.1-fancyix/sgminer-fancyIX-win64-0.9.1.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $InfoOnly) {return} # No AMD/INTEL present in system
