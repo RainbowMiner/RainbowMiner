@@ -18,13 +18,12 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Config.Pools.$Name.Walle
     $ok = $false
 
     $Pool_BalanceRequest  = [PSCustomObject]@{}
-    $Pool_TotalRequest    = [PSCustomObject]@{}
-    $Pool_PaymentsRequest = [PSCustomObject]@{}
+    $Pool_StatsRequest    = [PSCustomObject]@{}
 
     try {
         $Pool_BalanceRequest = Invoke-RestMethodAsync "https://api.flexpool.io/v2/miner/balance?coin=$($Pool_Currency)&address=$($Pool_Wallet)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
         $Pool_StatsRequest   = Invoke-RestMethodAsync "https://api.flexpool.io/v2/miner/paymentsStats?coin=$($Pool_Currency)&address=$($Pool_Wallet)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
-        $ok = -not $Pool_BalanceRequest.error -and -not $Pool_TotalRequest.error
+        $ok = -not $Pool_BalanceRequest.error -and -not $Pool_StatsRequest.error
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -37,20 +36,23 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Config.Pools.$Name.Walle
 
     $Pool_PaymentsData = @()
 
-    $page = 0
-    do {
-        $ok = $false
-        try {
-            $Pool_PaymentsResult = Invoke-RestMethodAsync "https://api.flexpool.io/v2/miner/payments?coin=$($Pool_Currency)&address=$($Pool_Wallet)&page=$($page)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
-            $ok = -not $Pool_PaymentsResult.error -and (++$page -lt $Pool_PaymentsResult.result.totalPages)
-            if (-not $Pool_PaymentsResult.error) {
-                $Pool_PaymentsResult.result.data | Foreach-Object {$Pool_PaymentsData += $_}
+    if ($Pool_StatsRequest.result.lastPayment) {
+        $page = 0
+        do {
+            $ok = $false
+            $Pool_PaymentsRequest = [PSCustomObject]@{}
+            try {
+                $Pool_PaymentsRequest = Invoke-RestMethodAsync "https://api.flexpool.io/v2/miner/payments?coin=$($Pool_Currency)&address=$($Pool_Wallet)&page=$($page)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
+                $ok = -not $Pool_PaymentsRequest.error -and (++$page -lt $Pool_PaymentsRequest.result.totalPages)
+                if (-not $Pool_PaymentsRequest.error) {
+                    $Pool_PaymentsRequest.result.data | Foreach-Object {$Pool_PaymentsData += $_}
+                }
             }
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-        }
-    } until (-not $ok)
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        } until (-not $ok)
+    }
 
     $Unpaid = [Decimal]$Pool_BalanceRequest.result.balance / $_.divisor
     $Paid   = [Decimal]$Pool_StatsRequest.result.stats.totalPaid / $_.divisor
