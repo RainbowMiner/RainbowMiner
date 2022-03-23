@@ -103,6 +103,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
             PenaltyFactor = 1
             Disabled      = $false
             HasMinerExclusions = $false
+            Price_0       = 0.0
             Price_Bias    = 0.0
             Price_Unbias  = 0.0
             Wallet        = $Pool_User

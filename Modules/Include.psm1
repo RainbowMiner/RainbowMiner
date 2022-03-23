@@ -1661,6 +1661,7 @@ function Get-PoolsContent {
                 if ($c.Price -eq $null)       {$c.Price = 0}
                 if ($c.StablePrice -eq $null) {$c.StablePrice = 0}
 
+                $c.Price_0       = $c.Price
                 $c.Price        *= $Pool_Factor
                 $c.StablePrice  *= $Pool_Factor
                 $c.PenaltyFactor = $Pool_Factor

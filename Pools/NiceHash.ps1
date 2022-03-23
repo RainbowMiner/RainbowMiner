@@ -190,6 +190,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                         PenaltyFactor = 1
 					    Disabled      = $false
 					    HasMinerExclusions = $false
+                        Price_0       = 0.0
 					    Price_Bias    = 0.0
 					    Price_Unbias  = 0.0
                         Wallet        = $Wallets.BTC

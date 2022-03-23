@@ -116,6 +116,7 @@ $Pools_Data | Where-Object {[double]$Pools_Request.pools."$($_.symbol)".speed_po
         PenaltyFactor = 1
         Disabled      = $false
         HasMinerExclusions = $false
+        Price_0       = 0.0
         Price_Bias    = 0.0
         Price_Unbias  = 0.0
         Wallet        = $Wallets."$($_.symbol)"

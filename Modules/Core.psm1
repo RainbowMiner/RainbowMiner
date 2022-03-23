@@ -1304,7 +1304,7 @@ function Invoke-Core {
             $Pool_MaxTimeToFind         = if ($Pool_MaxTimeToFind -ne "") {ConvertFrom-Time $Pool_MaxTimeToFind} else {$null}
 
             ([ordered]@{
-                DataWindow            = (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)
+                DataWindow            = "$(Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)"
                 Penalty               = ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2))
                 MaxMarginOfError      = ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2))
                 SwitchingHysteresis   = $(if ($Pool_SwHyst) {[Math]::Max([Math]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null})
@@ -1494,7 +1494,7 @@ function Invoke-Core {
                 $c.PSObject.Properties.Name | Where-Object {$Session.Config.Pools.$p."$($_)-Params"} | Foreach-Object {$cparams | Add-Member $_ $Session.Config.Pools.$p."$($_)-Params" -Force}
                 $Session.Config.Pools.$p | Add-Member Wallets $c -Force
                 $Session.Config.Pools.$p | Add-Member Params $cparams -Force
-                $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
+                $Session.Config.Pools.$p | Add-Member DataWindow "$(Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)" -Force
                 $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
                 $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]100}} else {[Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)}) -Force
                 $Session.Config.Pools.$p | Add-Member SSL ([bool]$Session.Config.Pools.$p.SSL) -Force
@@ -1988,6 +1988,7 @@ function Invoke-Core {
             Get-PoolsContent "WhatToMine" -Parameters @{Pools = $Pools_WTM; StatSpan = $RoundSpan; InfoOnly = $false; StatAverage = $UserConfig.Pools.WhatToMine.StatAverage; StatAverageStable = $UserConfig.Pools.WhatToMine.StatAverageStable} | Foreach-Object {
                 $Pool_WTM = $_
                 $Pools_WTM | Where-Object {$_.Price -eq 0 -and $_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol -and (-not $_.WTMMode -or $_.WTMMode -eq $Pool_WTM.Mode)} | Foreach-Object {
+                   $_.Price_0       = $Pool_WTM.Price
                    $_.Price         = $Pool_WTM.Price * $_.PenaltyFactor
                    $_.StablePrice   = $Pool_WTM.StablePrice * $_.PenaltyFactor
                    $_.MarginOfError = $Pool_WTM.MarginOfError

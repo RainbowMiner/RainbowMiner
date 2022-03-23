@@ -81,6 +81,7 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 PenaltyFactor = 1
                 Disabled      = $false
                 HasMinerExclusions = $false
+                Price_0       = 0.0
                 Price_Bias    = 0.0
                 Price_Unbias  = 0.0
                 Wallet        = $Wallets.$Pool_Currency

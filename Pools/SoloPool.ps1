@@ -120,6 +120,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
             PenaltyFactor = 1
             Disabled      = $false
             HasMinerExclusions = $false
+            Price_0       = 0.0
             Price_Bias    = 0.0
             Price_Unbias  = 0.0
             Wallet        = $Pool_Wallet
