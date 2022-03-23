@@ -85,6 +85,7 @@ if ($InfoOnly) {
         PenaltyFactor = 1
         Disabled      = $false
         HasMinerExclusions = $false
+        Price_0       = 0.0
         Price_Bias    = 0.0
         Price_Unbias  = 0.0
         Wallet        = $Wallets.BTC
@@ -1295,6 +1296,7 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
                 PenaltyFactor = 0.01
 			    Disabled      = $false
 			    HasMinerExclusions = $false
+                Price_0       = 0.0
 			    Price_Bias    = 0.0
 			    Price_Unbias  = 0.0
                 Wallet        = $_.Wallet
