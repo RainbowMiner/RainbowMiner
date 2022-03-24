@@ -905,6 +905,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 $RigPowerDiff   = 0
                                 $RigMinPrice    = 0
                                 $RigPrice       = 0
+                                $RigExtPercent  = 0
 
                                 if ($RigSpeed -gt 0) {
                                     $RigPowerDiff   = if ($Session.Config.UsePowerPrice -and $RigPower -gt 0 -and $RigDevicePowerDraw -gt 0) {($RigPower - $RigDevicePowerDraw) * 24/1000 * $Session.PowerPriceBTC * $MRRConfig.$RigName.PowerDrawFactor} else {0}
@@ -920,6 +921,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                     if ($MRRConfig.$RigName.PriceRiseExtensionPercent -and $RigCurrentRentals[$RigName]) {
                                         $PriceExtensionFactor = 1 + $MRRConfig.$RigName.PriceRiseExtensionPercent/100
+                                        $RigExtPercent = $MRRConfig.$RigName.PriceRiseExtensionPercent
                                         $RigMinPrice *= $PriceExtensionFactor
                                         $RigPrice    *= $PriceExtensionFactor
                                     }
@@ -1131,7 +1133,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             $RigsToUpdate += $CreateRig
                                                         }
                                                         if ($RigUpdated) {
-                                                            Write-Log -Level Info "$($Name): Update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day, minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
+                                                            Write-Log -Level Info "$($Name): Update$(if ($RigCurrentRentals[$RigName]) {" rented"}) rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day,$(if ($RigExtPercent -gt 0) {" rise=$($RigExtPercent)%,"}) minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
                                                         }
                                                     }
 
