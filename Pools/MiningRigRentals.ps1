@@ -843,7 +843,9 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                             $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
 
-                                $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $_.name
+                                $RigMRRid     = $_.name
+
+                                $Algorithm_Norm  = Get-MiningRigRentalAlgorithm $RigMRRid
                                 $RigPower     = 0
                                 $RigSpeed     = 0
                                 $RigRevenue   = 0
@@ -892,7 +894,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         } else {
                                             $RigPower   = $RigDevicePowerDraw
                                             $RigRevenue = 0
-                                            $RigMRRid   = $_.name
                                             $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
                                                 $RigSpeed = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
                                             })
@@ -912,14 +913,14 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                     if ($RigPowerDiff -lt 0 -and $MRRConfig.$RigName.EnablePowerDrawAddOnly) {$RigPowerDiff = 0}
 
                                     $RigSpeed_Current = $RigSpeed
-                                    if ($RigCurrentRentals[$RigName]) {
+                                    if ($RigCurrentRentals.ContainsKey($RigName) -and $RigCurrentRentals[$RigName].rig.type -eq $RigMRRid) {
                                         $RigSpeed_Current = [Math]::Min([double]$RigCurrentRentals[$RigName].hashrate.advertised.hash * $(ConvertFrom-Hash "1$($RigCurrentRentals[$RigName].hashrate.advertised.type)"),$RigSpeed)
                                     }
 
                                     $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed_Current
                                     $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed_Current} else {$RigMinPrice}
 
-                                    if ($MRRConfig.$RigName.PriceRiseExtensionPercent -and $RigCurrentRentals[$RigName]) {
+                                    if ($MRRConfig.$RigName.PriceRiseExtensionPercent -and $RigCurrentRentals.ContainsKey($RigName) -and $RigCurrentRentals[$RigName].rig.type -eq $RigMRRid) {
                                         $PriceExtensionFactor = 1 + $MRRConfig.$RigName.PriceRiseExtensionPercent/100
                                         $RigExtPercent = $MRRConfig.$RigName.PriceRiseExtensionPercent
                                         $RigMinPrice *= $PriceExtensionFactor
@@ -928,7 +929,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
        
                                     if ($IsHandleRig -or (($RigRevenue -lt $RigMaxRevenueFactor*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
 
-                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($_.name): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
                                         $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
 
@@ -955,7 +956,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                         $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply))}
 
-                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($_.name): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
                                         if ($IsHandleRig -or $RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) {
 
@@ -987,7 +988,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + $Session.Config.DefaultPoolRegion.Where({$_ -ne $Session.Config.Region}) | Select-Object)}
                                             $CreateRig = if ($RigRunMode -eq "create") {
                                                 @{
-                                                    type          = $_.name
+                                                    type          = $RigMRRid
                                                     status	      = "disabled"
                                                     server	      = $RigServer.name
                                                     ndevices      = 1
@@ -1085,7 +1086,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                             } elseif ($RigRunMode -eq "update") {
 
-                                                $RigMRRid = $_.name
                                                 $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
 
                                                     $RigPools_Id = [int]$_.id
@@ -1133,7 +1133,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             $RigsToUpdate += $CreateRig
                                                         }
                                                         if ($RigUpdated) {
-                                                            Write-Log -Level Info "$($Name): Update$(if ($RigCurrentRentals[$RigName]) {" rented"}) rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day,$(if ($RigExtPercent -gt 0) {" rise=$($RigExtPercent)%,"}) minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
+                                                            Write-Log -Level Info "$($Name): Update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $(if ($_.rental_id) {"rental=$($_.rental_id), "})hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day,$(if ($RigExtPercent -gt 0) {" rise=$($RigExtPercent)%,"}) minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
                                                         }
                                                     }
 
