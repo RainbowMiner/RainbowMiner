@@ -105,6 +105,7 @@ function Start-Core {
             Scheduler     = @{Path='';LastWriteTime=0;Healthy=$false}
             Combos        = @{Path='';LastWriteTime=0;Healthy=$false}
             MRR           = @{Path='';LastWriteTime=0;Healthy=$true}
+            MRRAlgorithms = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
         [System.Collections.Generic.List[string]]$Session.GetTicker = @()
@@ -1004,7 +1005,7 @@ function Invoke-Core {
                 $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
                     $a = $_
                     $Session.Config.Algorithms | Add-Member $a $AllAlgorithms.$a -Force
-                    $Algo_MRRPriceModifierPercent = "$($Session.Config.Algorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
+                    #$Algo_MRRPriceModifierPercent = "$($Session.Config.Algorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
                     $Algo_MaxTimeToFind           = (ConvertFrom-Time $Session.Config.Algorithms.$a.MaxTimeToFind)
                     ([ordered]@{
                         Penalty                 = ([Math]::Round([double]($Session.Config.Algorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
@@ -1014,9 +1015,9 @@ function Invoke-Core {
                         MaxTimeToFind           = $Algo_MaxTimeToFind
                         MSIAprofile             = ([int]$Session.Config.Algorithms.$a.MSIAprofile)
                         MinBLKRate              = $(if ($Algo_MaxTimeToFind) {86400/$Algo_MaxTimeToFind} else {0})
-                        MRREnable               = $(if ($Session.Config.Algorithms.$a.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRREnable} else {$true})
-                        MRRAllowExtensions      = $(if ($Session.Config.Algorithms.$a.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRRAllowExtensions} else {$null})
-                        MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
+                        #MRREnable               = $(if ($Session.Config.Algorithms.$a.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRREnable} else {$true})
+                        #MRRAllowExtensions      = $(if ($Session.Config.Algorithms.$a.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRRAllowExtensions} else {$null})
+                        #MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
                         MinerName               = @(if ($Session.Config.Algorithms.$a.MinerName){[regex]::split("$($Session.Config.Algorithms.$a.MinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
                         ExcludeMinerName        = @(if ($Session.Config.Algorithms.$a.ExcludeMinerName){[regex]::split("$($Session.Config.Algorithms.$a.ExcludeMinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
                     }).GetEnumerator() | Foreach-Object {

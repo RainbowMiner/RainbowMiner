@@ -1389,6 +1389,64 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.8.2.3")) {
+        $Changes_MRRAlgorithms = 0
+        $MRRAlgorithmsConfigActual = [PSCustomObject]@{}
+        if (Test-Path $MRRAlgorithmsConfigFile) {
+            try {
+                $MRRAlgorithmsConfigActual = Get-Content $MRRAlgorithmsConfigFile -Raw | ConvertFrom-Json -ErrorAction Ignore
+            } catch {
+                $MRRAlgorithmsConfigActual = [PSCustomObject]@{}
+            }
+        }
+
+        if (Test-Path $AlgorithmsConfigFile) {
+            $Changes_Algorithms = 0
+            try {
+                $AlgorithmsConfigActual = Get-Content $AlgorithmsConfigFile -Raw | ConvertFrom-Json -ErrorAction Ignore
+                $AlgorithmsConfigActual.PSObject.Properties.Name | Foreach-Object {
+                    $Algo = $_
+                    $MRREnable = $MRRAllowExtensions = $MRRPriceModifierPercent = ""
+                    if ([bool]$AlgorithmsConfigActual.$_.PSObject.Properties["MRREnable"]) {
+                        $MRREnable = "$($AlgorithmsConfigActual.$_.MRREnable)"
+                        $AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRREnable")
+                        $Changes_Algorithms++
+                    }
+                    if ([bool]$AlgorithmsConfigActual.$_.PSObject.Properties["MRRAllowExtensions"]) {
+                        $MRRAllowExtensions = "$($AlgorithmsConfigActual.$_.MRRAllowExtensions)"
+                        $AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRRAllowExtensions")
+                        $Changes_Algorithms++
+                    }
+                    if ([bool]$AlgorithmsConfigActual.$_.PSObject.Properties["MRRPriceModifierPercent"]) {
+                        $MRRPriceModifierPercent = "$($AlgorithmsConfigActual.$_.MRRPriceModifierPercent)"
+                        $AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRRPriceModifierPercent")
+                        $Changes_Algorithms++
+                    }
+                    if ($MRRAllowExtensions -ne "" -or $MRRPriceModifierPercent -ne "" -or $MRREnable -eq "0") {
+                        $MRREnable = if (Get-Yes $MRREnable) {"1"} else {"0"}
+                        if ($MRRAlgorithmsConfigActual.$Algo) {
+                            $MRRAlgorithmsConfigActual.$Algo.Enable = $MRREnable
+                            $MRRAlgorithmsConfigActual.$Algo.AllowExtensions = $MRRAllowExtensions
+                            $MRRAlgorithmsConfigActual.$Algo.PriceModifierPercent = $MRRPriceModifierPercent
+                        } else {
+                            $MRRAlgorithmsConfigActual | Add-Member $Algo ([PSCustomObject]@{Enable=$MRREnable;PriceModifierPercent=$MRRPriceModifierPercent;PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";AllowExtensions=$MRRAllowExtensions}) -Force
+                        }
+                        $Changes_MRRAlgorithms++
+                    }
+                }
+            } catch {
+            }
+
+            if ($Changes_Algorithms) {
+                $AlgorithmsConfigActual | ConvertTo-Json -Depth 10 | Set-Content $AlgorithmsConfigFile -Encoding UTF8
+            }
+            if ($Changes_MRRAlgorithms) {
+                $MRRAlgorithmsConfigActual | ConvertTo-Json -Depth 10 | Set-Content $MRRAlgorithmsConfigFile -Encoding UTF8
+            }
+
+            $ChangesTotal += $Changes_Algorithms + $Changes_MRRAlgorithms
+        }
+    }
 
     ###
     ### END OF VERSION CHECKS

@@ -165,6 +165,14 @@ if ($AllRigs_Request) {
     $MRRConfig = Get-ConfigContent "MRR"
     if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
 
+    if (Set-MiningRigRentalAlgorithmsConfigDefault) {
+        if (-not $Session.Config.MRRAlgorithms -or (Test-Config "MRRAlgorithms" -LastWriteTime) -or ($Session.MRRUpdateInterval -ne $UpdateInterval_Seconds)) {
+            Write-Log "$($Name): Updating algorithms config data"
+            Update-MiningRigRentalAlgorithmsConfig -UpdateInterval $UpdateInterval_Seconds
+            $Session.MRRUpdateInterval = $UpdateInterval_Seconds
+        }
+    }
+
     foreach ($Worker1 in $Workers) {
 
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
@@ -227,7 +235,7 @@ if ($AllRigs_Request) {
 
                     $Rigs_Request | Select-Object id,type | Foreach-Object {
                         $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
-                        if ((Get-Yes $Session.Config.Algorithms.$Pool_Algorithm_Norm.MRREnable) -and ($ActiveAlgorithms -icontains $Pool_Algorithm_Norm) -and -not (
+                        if ((Get-Yes $Session.Config.MRRAlgorithms.$Pool_Algorithm_Norm.Enable) -and ($ActiveAlgorithms -icontains $Pool_Algorithm_Norm) -and -not (
                             ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
                             ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
                             ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
@@ -603,7 +611,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $UniqueRigs_Request = $AllRigs_Request.Where({(([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1})
 
     #
-    # 1. gather config per workername
+    # 1. gather config per workername and algorithm
     #
 
     if ($MRRConfig -eq $null) {
@@ -676,6 +684,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         $MRRConfig.$RigName.PriceFactorDecayTime = [Math]::Max((ConvertFrom-Time "$($MRRConfig.$RigName.PriceFactorDecayTime)"),$UpdateInterval_Seconds) / 3600
     }
 
+    if (Set-MiningRigRentalAlgorithmsConfigDefault -Force) {
+        Write-Log "$($Name): Updating algorithms config data (forced)"
+        Update-MiningRigRentalAlgorithmsConfig -UpdateInterval $UpdateInterval_Seconds
+    }
+
     #
     # 2. Auto extend rented rigs, if bonus applicable
     #
@@ -731,12 +744,30 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         $RigName = $_
         $RigUpdated = $RigNow
         $RigPriceFactor = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} else {$MRRConfig.$RigName.PriceFactor}
+        $RigAlgos = [PSCustomObject]@{}
 
         $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
-            $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)
-            While ($TimeC -gt 0) {
-                $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
-                $TimeC--
+            if ($MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
+                $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)
+                While ($TimeC -gt 0) {
+                    $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
+                    $TimeC--
+                }
+            }
+            $Session.Config.MRRAlgorithms.PSObject.Properties | Where-Object {$_.Value.Enable -and ($_.Value.PriceFactor -ne $Null -or $_.Value.PriceFactorDecayTime -ne $Null -or $_.Value.PriceFactorDecayPercent -ne $Null -or $_.Value.PriceFactorMin -ne $Null)} | Foreach-Object {
+                $Algo = $_.Name
+                $Algo_PriceFactor    = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} elseif ($_.Value.PriceFactor -ne $Null) {$_.Value.PriceFactor} else {$MRRConfig.$RigName.PriceFactor}
+                $Algo_DecayTime      = if ($_.Value.PriceFactorDecayTime -ne $Null) {$_.Value.PriceFactorDecayTime} else {$MRRConfig.$RigName.PriceFactorDecayTime}
+                $Algo_DecayPercent   = if ($_.Value.PriceFactorDecayPercent -ne $Null) {$_.Value.PriceFactorDecayPercent} else {$MRRConfig.$RigName.PriceFactorDecayPercent}
+                $Algo_PriceFactorMin = if ($_.Value.PriceFactorMin -ne $Null) {$_.Value.PriceFactorMin} else {$MRRConfig.$RigName.PriceFactorMin}
+                if ($Algo_DecayTime -gt 0) {
+                    $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $Algo_DecayTime)
+                    While ($TimeC -gt 0) {
+                        $Algo_PriceFactor = [Math]::Max($Algo_PriceFactor * (1 - $Algo_DecayPercent/100),$MRRConfig.$Algo_PriceFactorMin)
+                        $TimeC--
+                    }
+                }
+                $RigAlgos | Add-Member $Algo $Algo_PriceFactor -Force
             }
             $RigUpdated = [DateTime]$_.LastReset
         }
@@ -744,6 +775,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             Name         = $RigName
             PriceFactor  = $RigPriceFactor
             LastReset    = $RigUpdated
+            Algorithms   = $RigAlgos
         }
     }) | Select-Object)
 
@@ -830,12 +862,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                             $RigPriceFactor    = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} else {$MRRConfig.$RigName.PriceFactor}
 
-                            $RigControl_Data   = $null
+                            $RigControl_Data   = if ($RigRunMode -eq "update") {$MRRRigControl | Where-Object {$_.Name -eq $RigName}} else {$null}
 
-                            if ($RigRunMode -eq "update" -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
-                                if ($RigControl_Data = $MRRRigControl | Where-Object {$_.Name -eq $RigName}) {
-                                    $RigPriceFactor = $RigControl_Data.PriceFactor
-                                }
+                            if ($RigControl_Data -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
+                                $RigPriceFactor = $RigControl_Data.PriceFactor
                             }
 
                             $DeviceAlgorithm        = @($RigModels | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
@@ -851,9 +881,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 $RigRevenue   = 0
                                 $RigMaxRevenueFactor = 10
 
+                                $RigPriceFactor_Algorithm = if ($RigControl_Data -and $RigControl_Data.Algorithms.$Algorithm_Norm) {$RigControl_Data.Algorithms.$Algorithm_Norm} else {$RigPriceFactor}
+
                                 $SuggestedPrice = if ($_.suggested_price.unit) {[Double]$_.suggested_price.amount / (ConvertFrom-Hash "1$($_.suggested_price.unit -replace "\*.+$")")} else {0}
 
-                                if ((Get-Yes $Session.Config.Algorithms.$Algorithm_Norm.MRREnable) -and -not (
+                                if ((Get-Yes $Session.Config.MRRAlgorithms.$Algorithm_Norm.Enable) -and -not (
                                         ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Algorithm_Norm) -or
                                         ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Algorithm_Norm) -or
                                         ($Session.Config.Pools.$Name.Algorithm.Count -and $Session.Config.Pools.$Name.Algorithm -inotcontains $Algorithm_Norm) -or
@@ -917,12 +949,15 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         $RigSpeed_Current = [Math]::Min([double]$RigCurrentRentals[$RigName].hashrate.advertised.hash * $(ConvertFrom-Hash "1$($RigCurrentRentals[$RigName].hashrate.advertised.type)"),$RigSpeed)
                                     }
 
-                                    $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed_Current
+                                    $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor_Algorithm + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed_Current
                                     $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed_Current} else {$RigMinPrice}
 
-                                    if ($MRRConfig.$RigName.PriceRiseExtensionPercent -and $RigCurrentRentals.ContainsKey($RigName) -and $RigCurrentRentals[$RigName].rig.type -eq $RigMRRid) {
-                                        $PriceExtensionFactor = 1 + $MRRConfig.$RigName.PriceRiseExtensionPercent/100
-                                        $RigExtPercent = $MRRConfig.$RigName.PriceRiseExtensionPercent
+                                    if ($RigCurrentRentals.ContainsKey($RigName) -and $RigCurrentRentals[$RigName].rig.type -eq $RigMRRid) {
+                                        $RigExtPercent = if ($Session.Config.MRRAlgorithms.$Algorithm_Norm.PriceRiseExtensionPercent) {$Session.Config.MRRAlgorithms.$Algorithm_Norm.PriceRiseExtensionPercent} elseif ($MRRConfig.$RigName.PriceRiseExtensionPercent) {$MRRConfig.$RigName.PriceRiseExtensionPercent} else {0}
+                                    }
+
+                                    if ($RigExtPercent) {
+                                        $PriceExtensionFactor = 1 + $RigExtPercent/100
                                         $RigMinPrice *= $PriceExtensionFactor
                                         $RigPrice    *= $PriceExtensionFactor
                                     }
@@ -1046,10 +1081,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $CreateRig["minhours"] = $RigMinHours
                                             $CreateRig["maxhours"] = $RigMaxHours
 
-                                            $CreateRig["extensions"] = -not $EnableMaintenanceMode -and (($MRRConfig.$RigName.AllowExtensions -and $Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions -eq $null) -or ($Session.Config.Algorithms.$Algorithm_Norm.MRRAllowExtensions))
+                                            $CreateRig["extensions"] = -not $EnableMaintenanceMode -and (($MRRConfig.$RigName.AllowExtensions -and $Session.Config.MRRAlgorithms.$Algorithm_Norm.AllowExtensions -eq $null) -or ($Session.Config.MRRAlgorithms.$Algorithm_Norm.AllowExtensions))
 
                                             if ($RigRunMode -eq "create" -or $EnableUpdatePriceModifier) {
-                                                $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent -ne $null) {$Session.Config.Algorithms.$Algorithm_Norm.MRRPriceModifierPercent} else {$RigModifier}
+                                                $CreateRig["price"]["btc"]["modifier"] = if ($Session.Config.MRRAlgorithms.$Algorithm_Norm.PriceModifierPercent -ne $null) {$Session.Config.MRRAlgorithms.$Algorithm_Norm.PriceModifierPercent} else {$RigModifier}
                                                 $CreateRig["price"]["btc"]["modifier"] = "$(if ($CreateRig["price"]["btc"]["modifier"] -gt 0) {"+"})$($CreateRig["price"]["btc"]["modifier"])"
                                             }
 

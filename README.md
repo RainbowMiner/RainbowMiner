@@ -1482,9 +1482,6 @@ Example:
           "MaxTimeToFind": "1.5h",
           "MSIAprofile": 4,
           "OCprofile": "Profile4",
-          "MRRPriceModifierPercent": "-10",
-          "MRREnable": "1",
-          "MRRAllowExtensions": "1",
           "MinerName": "Gminer,CcminerTpruvot",
           "ExcludeMinerName": ""
         }
@@ -1497,9 +1494,6 @@ This configuration would:
 - **MaxTimeToFind**: set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 - **MSIAprofile**: set the MSI Afterburner overclocking profile to 4 (if MSIA is used)
 - **OCprofile**: set the overclocking profile to "Profile4" (if the RainbowMiner oc is used)
-- **MRRPriceModifierPercent**: if pool MiningRigRentals is in use, the X17 mining rig will use a price modifier of -10% (relative to suggested price)
-- **MRREnable**: if pool MiningRigRentals is in use, all X17 workers will be announced on MRR (set to "0" to disable a specific algorithm)
-- **MRRAllowExtensions**: if pool MiningRigRentals is in use, renters may extend their X17 rental (set to "0" to forbid extension)
 - **MinerName**: only Gminer and CcminerTpruvot are allowed to mine X17 (leave empty for all X17 miners)
 - **ExcludeMinerName**: no excluded miners for X17 (in case you want to disable a specific miner for that algorithm, add it to this list)
 
@@ -1536,6 +1530,22 @@ This configuration would:
 - if a RVN block has been found within the timespan of 5 minutes (PostBlockMining) at a pool that has "EnablePostBlockMining" set to "1", RainbowMiner will force mining RVN on this pool
 - switching to postblock mining only, if the post block miner's profit is at least 80% of the best miner's profit (field "MinProfitPercent")
 
+### Config\mrr.config.txt
+
+If pool MiningRigRentals is in use, this file contains per worker name specific configuration parameters. Setting any parameter to a value other then empty string will override the same-name main parameter in pools.config.txt
+
+### Config\mrralgorithms.config.txt
+
+If pool MiningRigRentals is in use, this file contains per algorithm specific configuration parameters.
+
+- **Enable**: set to "0" in order to disable a specific algorithm for MiningRigRentals [default=1]
+- **PriceModifierPercent**: if set to a non-empty value, this will override the PriceModifierPercent parameter in pools.config.txt and/or mrr.config.txt for an algorithm
+- **AllowExtensions**: if set to a non-empty value ("0" or "1"), this will override the AllowExtensions parameter in pools.config.txt and/or mrr.config.txt for an algorithm
+- **PriceFactor**: if set to a non-empty value, this will override the PriceFactor parameter in pools.config.txt and/or mrr.config.txt for an algorithm
+- **PriceFactorMin**: if set to a non-empty value, this will override the PriceFactorMin parameter in pools.config.txt and/or mrr.config.txt for an algorithm
+- **PriceFactorDecayPercent**: if set to a non-empty value, this will override the PriceFactorDecayPercent parameter in pools.config.txt and/or mrr.config.txt for an algorithm
+- **PriceFactorDecayTime**: if set to a non-empty value, this will override the PriceFactorDecayTime parameter in pools.config.txt and/or mrr.config.txt for an algorithm
+- **PriceRiseExtensionPercent**: if set to a non-empty value, this will override the PriceRiseExtensionPercent parameter in pools.config.txt and/or mrr.config.txt for an algorithm
 
 ### Config\ocprofiles.config.txt
 

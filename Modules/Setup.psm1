@@ -90,7 +90,7 @@ function Start-Setup {
 
         $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
 
-        $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions=""}
+        $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile=""}
         $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
         $MRRDefault        = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
         $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";MaxTimeToFind="";Region="";SSL="";BalancesKeepAlive=""}
@@ -2891,7 +2891,7 @@ function Start-Setup {
                         $AlgorithmConfig = $AlgorithmsActual.$Algorithm_Name.PSObject.Copy()
                         foreach($SetupName in $AlgorithmsDefault.PSObject.Properties.Name) {if ($AlgorithmConfig.$SetupName -eq $null){$AlgorithmConfig | Add-Member $SetupName $AlgorithmsDefault.$SetupName -Force}}
 
-                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","ocprofile","msiaprofile","mrrpricemodifierpercent")) > $null
+                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","ocprofile","msiaprofile")) > $null
                         $AlgorithmSetupSteps.Add("save") > $null
 
                         do {
@@ -2927,10 +2927,6 @@ function Start-Setup {
                                             $AlgorithmSetupStepStore = $true
                                         }
                                     }
-                                    "mrrpricemodifierpercent" {
-                                        $AlgorithmConfig.MRRPriceModifierPercent = Read-HostString -Prompt "MiningRigRentals autoprice modifier in percent (e.g. +10 will increase suggested prices by 10%, valid range is -30 .. 30, $(if ($AlgorithmConfig.MRRPriceModifierPercent) {"enter 'clear'"} else {"leave empty"}) to use global value AutoPriceModifierPercent in pools.config.txt)" -Default $AlgorithmConfig.MRRPriceModifierPercent | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $AlgorithmConfig.MRRPriceModifierPercent = "$($AlgorithmConfig.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
-                                    }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -2940,7 +2936,6 @@ function Start-Setup {
                                         $AlgorithmConfig | Add-Member MinWorkers $AlgorithmConfig.MinWorkers -Force
                                         $AlgorithmConfig | Add-Member OCprofile $AlgorithmConfig.OCprofile -Force
                                         $AlgorithmConfig | Add-Member MSIAprofile $AlgorithmConfig.MSIAprofile -Force
-                                        $AlgorithmConfig | Add-Member MRRPriceModifierPercent $AlgorithmConfig.MRRPriceModifierPercent -Force
 
                                         $AlgorithmsActual | Add-Member $Algorithm_Name $AlgorithmConfig -Force
                                         $AlgorithmsActualSave = [PSCustomObject]@{}

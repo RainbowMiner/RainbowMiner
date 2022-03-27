@@ -5235,7 +5235,7 @@ function Set-AlgorithmsConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MRRPriceModifierPercent="";MRREnable="1";MRRAllowExtensions="";MinerName="";ExcludeMinerName=""}
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MinerName="";ExcludeMinerName=""}
             $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1"
             $AllAlgorithms = Get-Algorithms -Values
             foreach ($Algorithm in $AllAlgorithms) {
@@ -5878,7 +5878,7 @@ function Set-ConfigLastWriteTime {
         [string]$ConfigName
     )
     if (Test-Config $ConfigName -Exists) {
-        $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTimeUtc        
+        $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTimeUtc
     }
 }
 
@@ -5894,16 +5894,25 @@ function Set-ConfigDefault {
     )
 
     Switch ($ConfigName) {
-        "Algorithms"  {Set-AlgorithmsConfigDefault -Folder $Folder -Force:$Force;Break}
-        "Coins"       {Set-CoinsConfigDefault -Folder $Folder -Force:$Force;Break}
-        "Combos"      {Set-CombosConfigDefault -Folder $Folder -Force:$Force;Break}
-        "Devices"     {Set-DevicesConfigDefault -Folder $Folder -Force:$Force;Break}
-        "GpuGroups"   {Set-GpuGroupsConfigDefault -Folder $Folder -Force:$Force;Break}
-        "Miners"      {Set-MinersConfigDefault -Folder $Folder -Force:$Force;Break}
-        "OCProfiles"  {Set-OCProfilesConfigDefault -Folder $Folder -Force:$Force;Break}
-        "Pools"       {Set-PoolsConfigDefault -Folder $Folder -Force:$Force;Break}
-        "Scheduler"   {Set-SchedulerConfigDefault -Folder $Folder -Force:$Force;Break}
-        "Userpools"   {Set-UserpoolsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Algorithms"    {Set-AlgorithmsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Coins"         {Set-CoinsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Combos"        {Set-CombosConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Devices"       {Set-DevicesConfigDefault -Folder $Folder -Force:$Force;Break}
+        "GpuGroups"     {Set-GpuGroupsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Miners"        {Set-MinersConfigDefault -Folder $Folder -Force:$Force;Break}
+        "OCProfiles"    {Set-OCProfilesConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Pools"         {Set-PoolsConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Scheduler"     {Set-SchedulerConfigDefault -Folder $Folder -Force:$Force;Break}
+        "Userpools"     {Set-UserpoolsConfigDefault -Folder $Folder -Force:$Force;Break}
+        default {
+            $ConfigName = "$(if ($Folder) {"$Folder/"})$($ConfigName)"
+            $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+            if ((Test-Config $ConfigName) -and -not (Test-Path $PathToFile)) {
+                Set-ContentJson -PathToFile $PathToFile -Data ([PSCustomObject]@{}) > $null
+                $Session.ConfigFiles[$ConfigName].Healthy = $true
+                $Session.ConfigFiles[$ConfigName].LastWriteTime = 0
+            }
+        }
     }
 }
 

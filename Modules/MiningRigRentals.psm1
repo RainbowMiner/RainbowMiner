@@ -15,7 +15,7 @@
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoExtend="";AutoExtendTargetPercent="";AutoExtendMaximumPercent="";AutoBonusExtendForHours="";AutoBonusExtendByHours="";AutoBonusExtendTimes="";EnableAutoPrice="";EnableMinimumPrice="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";PowerDrawFactor="";MinHours="";MaxHours="";AllowExtensions="";AllowRentalDuringPause="";PriceCurrencies="";Title = "";Description = "";ProfitAverageTime = ""}
+            $Default = [PSCustomObject]@{EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoExtend="";AutoExtendTargetPercent="";AutoExtendMaximumPercent="";AutoBonusExtendForHours="";AutoBonusExtendByHours="";AutoBonusExtendTimes="";EnableAutoPrice="";EnableMinimumPrice="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";PowerDrawFactor="";MinHours="";MaxHours="";AllowExtensions="";AllowRentalDuringPause="";PriceCurrencies="";Title ="";Description="";ProfitAverageTime=""}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
             
             foreach ($RigName in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Workers) | Select-Object -Unique)) {
@@ -38,6 +38,95 @@
         }
     }
     Test-Config $ConfigName -Exists
+}
+
+function Set-MiningRigRentalAlgorithmsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Folder = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "$(if ($Folder) {"$Folder/"})MRRAlgorithms"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile) -or (Test-Config $ConfigName -LastWriteTime) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MRRAlgorithmsConfigDefault.ps1").LastWriteTimeUtc) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Default = [PSCustomObject]@{Enable="1";PriceModifierPercent="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";AllowExtensions=""}
+            $Setup = Get-ChildItemContent ".\Data\MRRAlgorithmsConfigDefault.ps1"
+            $AllAlgorithms = Get-MiningRigRentalAlgos
+            foreach ($Algorithm in $AllAlgorithms) {
+                $Algorithm_Norm = Get-MiningRigRentalAlgorithm $Algorithm.name
+                if (-not $Preset.$Algorithm_Norm) {$Preset | Add-Member $Algorithm_Norm $(if ($Setup.$Algorithm_Norm) {$Setup.$Algorithm_Norm} else {[PSCustomObject]@{}}) -Force}
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Algorithm_Norm.$SetupName -eq $null){$Preset.$Algorithm_Norm | Add-Member $SetupName $Default.$SetupName -Force}}
+            }
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {                
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
+                $Sorted | Add-Member $_ $Preset.$_ -Force
+            }
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            $Session.ConfigFiles[$ConfigName].Healthy = $true
+            Set-ConfigLastWriteTime $ConfigName
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+            $Session.ConfigFiles[$ConfigName].Healthy = $false
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
+function Update-MiningRigRentalAlgorithmsConfig {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [Int]$UpdateInterval = 3600
+    )
+
+    $AllAlgorithms = Get-ConfigContent "MRRAlgorithms" -UpdateLastWriteTime
+
+    if (Test-Config "MRRAlgorithms" -Health) {
+        $Session.Config | Add-Member MRRAlgorithms ([PSCustomObject]@{}) -Force
+        $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
+            $a = $_
+            $Session.Config.MRRAlgorithms | Add-Member $a $AllAlgorithms.$a -Force
+
+            $Algo_Params = [ordered]@{
+                Enable          = $(if ($Session.Config.MRRAlgorithms.$a.Enable -ne $null) {Get-Yes $Session.Config.MRRAlgorithms.$a.Enable} else {$true})
+                AllowExtensions = $(if ($Session.Config.MRRAlgorithms.$a.AllowExtensions -ne "" -and $Session.Config.MRRAlgorithms.$a.AllowExtensions -ne $null) {Get-Yes $Session.Config.MRRAlgorithms.$a.AllowExtensions} else {$null})
+            }
+            foreach ($Algo_Param in @("PriceModifierPercent","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceFactorDecayTime","PriceRiseExtensionPercent")) {
+                if ($Algo_Param -match "Time$") {
+                    $val = "$($Session.Config.MRRAlgorithms.$a.$Algo_Param)".Trim()
+                    $Algo_Params[$Algo_Param] = if ($val -ne "") {[Math]::Max((ConvertFrom-Time "$($val)"),$UpdateInterval) / 3600} else {$null}
+                } else {
+                    $val = "$($Session.Config.MRRAlgorithms.$a.$Algo_Param -replace ",","." -replace "[^\d\.\-]+")"
+                    $Algo_Params[$Algo_Param] = if ($val -ne "") {[Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {$val[0] + "$($val.Substring(1) -replace "[^0-9\.]")"})} else {$null}
+                }
+            }
+            if ($Algo_Params["PriceModifierPercent"] -ne $Null) {
+                $Algo_Params["PriceModifierPercent"] = [Math]::Max(-30,[Math]::Min(30,[Math]::Round($Algo_Params["PriceModifierPercent"],2)))
+            }
+                
+            $Algo_Params.GetEnumerator() | Foreach-Object {
+                if ([bool]$Session.Config.MRRAlgorithms.$a.PSObject.Properties["$($_.Name)"]) {
+                    $Session.Config.MRRAlgorithms.$a."$($_.Name)" = $_.Value
+                } else {
+                    $Session.Config.MRRAlgorithms.$a | Add-Member "$($_.Name)" $_.Value -Force
+                }
+            }
+        }
+    }
+    if ($AllAlgorithms -ne $null) {Remove-Variable "AllAlgorithms"}
 }
 
 function Invoke-MiningRigRentalRequest {
