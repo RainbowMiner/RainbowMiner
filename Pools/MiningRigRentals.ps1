@@ -166,7 +166,6 @@ if ($AllRigs_Request) {
     if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
 
     if (Set-MiningRigRentalAlgorithmsConfigDefault) {
-        Write-Log "$($Name): All ok with mrralgorithms.config.txt"
         if (-not $Session.Config.MRRAlgorithms -or (Test-Config "MRRAlgorithms" -LastWriteTime) -or ($Session.MRRUpdateInterval -ne $UpdateInterval_Seconds)) {
             Write-Log "$($Name): Updating algorithms config data"
             Update-MiningRigRentalAlgorithmsConfig -UpdateInterval $UpdateInterval_Seconds
@@ -748,8 +747,9 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         $RigAlgos = [PSCustomObject]@{}
 
         $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
+            $RigLastReset = $_.LastReset
             if ($MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
-                $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)
+                $TimeC = [Math]::Floor(($RigNow - $RigLastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)
                 While ($TimeC -gt 0) {
                     $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
                     $TimeC--
@@ -762,7 +762,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 $Algo_DecayPercent   = if ($_.Value.PriceFactorDecayPercent -ne $Null) {$_.Value.PriceFactorDecayPercent} else {$MRRConfig.$RigName.PriceFactorDecayPercent}
                 $Algo_PriceFactorMin = if ($_.Value.PriceFactorMin -ne $Null) {$_.Value.PriceFactorMin} else {$MRRConfig.$RigName.PriceFactorMin}
                 if ($Algo_DecayTime -gt 0) {
-                    $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $Algo_DecayTime)
+                    $TimeC = [Math]::Floor(($RigNow - $RigLastReset).TotalHours / $Algo_DecayTime)
                     While ($TimeC -gt 0) {
                         $Algo_PriceFactor = [Math]::Max($Algo_PriceFactor * (1 - $Algo_DecayPercent/100),$Algo_PriceFactorMin)
                         $TimeC--
@@ -770,7 +770,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 }
                 $RigAlgos | Add-Member $Algo $Algo_PriceFactor -Force
             }
-            $RigUpdated = [DateTime]$_.LastReset
+            $RigUpdated = [DateTime]$RigLastReset
         }
         [PSCustomObject]@{
             Name         = $RigName
