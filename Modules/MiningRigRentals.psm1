@@ -74,7 +74,6 @@ function Set-MiningRigRentalAlgorithmsConfigDefault {
             }
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
             $Session.ConfigFiles[$ConfigName].Healthy = $true
-            Set-ConfigLastWriteTime $ConfigName
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}
