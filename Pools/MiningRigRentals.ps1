@@ -166,6 +166,7 @@ if ($AllRigs_Request) {
     if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
 
     if (Set-MiningRigRentalAlgorithmsConfigDefault) {
+        Write-Log "$($Name): All ok with mrralgorithms.config.txt"
         if (-not $Session.Config.MRRAlgorithms -or (Test-Config "MRRAlgorithms" -LastWriteTime) -or ($Session.MRRUpdateInterval -ne $UpdateInterval_Seconds)) {
             Write-Log "$($Name): Updating algorithms config data"
             Update-MiningRigRentalAlgorithmsConfig -UpdateInterval $UpdateInterval_Seconds
@@ -763,7 +764,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 if ($Algo_DecayTime -gt 0) {
                     $TimeC = [Math]::Floor(($RigNow - $_.LastReset).TotalHours / $Algo_DecayTime)
                     While ($TimeC -gt 0) {
-                        $Algo_PriceFactor = [Math]::Max($Algo_PriceFactor * (1 - $Algo_DecayPercent/100),$MRRConfig.$Algo_PriceFactorMin)
+                        $Algo_PriceFactor = [Math]::Max($Algo_PriceFactor * (1 - $Algo_DecayPercent/100),$Algo_PriceFactorMin)
                         $TimeC--
                     }
                 }
