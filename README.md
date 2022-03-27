@@ -58,7 +58,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
     - **Nvidia official downloads**:
       - [Nvidia Driver Version v471.41 - Windows 10](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win10-64bit-international-dch-whql.exe)
       - [Nvidia Driver Version v471.41 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win7-64bit-international-whql.exe)
-    - **AMD**: [AMD Adrenalin 2021 Edition 21.8.2](https://drivers.amd.com/drivers/non-whql-radeon-software-adrenalin-2020-21.8.2-win10-64bit-aug25.exe) - if you run into trouble, try older versions.
+    - **AMD**: [AMD Adrenalin 2022 Edition 22.3.2](https://drivers.amd.com/drivers/amd-software-adrenalin-edition-22.3.2-win10-win11-march24.exe) - if you run into trouble, try older versions from here: https://www.amd.com/de/support
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
 Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
