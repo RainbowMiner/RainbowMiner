@@ -163,11 +163,11 @@
     {
         "symbol":  "SIN",
         "match":  "^S",
-        "rpc":  "https://blockbook.sinovate.io/api/v2/address/{w}?details=basic",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "totalReceived",
-        "divisor":  100000000
+        "rpc":  "https://explorer.sinovate.io/ext/getbalance/{w}",
+        "address":  "",
+        "balance":  "#",
+        "received":  "",
+        "divisor":  1
     },
     {
         "symbol":  "TON",

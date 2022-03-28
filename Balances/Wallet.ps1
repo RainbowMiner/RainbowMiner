@@ -68,7 +68,7 @@ foreach ($Wallet_Data in $Wallets_Data) {
             $Success = $true
             try {
                 $Request = Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$Wallet_Address)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
-                if (($Wallet_Data.verify -eq $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.address -replace "{w}",$Wallet_Address)")" -ne $Wallet_Address) -or 
+                if (($Wallet_Data.verify -eq $null -and $Wallet_Data.address -ne "" -and "$(Invoke-Expression "`$Request.$($Wallet_Data.address -replace "{w}",$Wallet_Address)")" -ne $Wallet_Address) -or 
                     ($Wallet_Data.verify -eq "exists" -and "$(Invoke-Expression "`$Request.$($Wallet_Data.verify_value -replace "{w}",$Wallet_Address)")" -eq "") -or
                     ($Wallet_Data.verify -ne "exists" -and $Wallet_Data.verify -ne $null -and "$(Invoke-Expression "`$Request.$($Wallet_Data.verify -replace "{w}",$Wallet_Address)")" -ne $Wallet_Data.verify_value)
                     ) {$Success = $false}
@@ -90,21 +90,25 @@ foreach ($Wallet_Data in $Wallets_Data) {
                     ($Request.balances | Where-Object {$_.asset_type -eq "native"} | Select-Object -ExpandProperty balance | Measure-Object -Sum).Sum
                 }
                 default {
-                    $val = $null
-                    $Wallet_Data.balance -replace "{w}",$Wallet_Address -split "\." | Foreach-Object {
-                        if ($_ -match '^(.+)\[([^\]]+)\]$') {
-                            $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
-                            $arrp = $Matches[2].Split("=",2)
-                            if ($arrp[0] -match '^\d+$') {
-                                $val = $val[[int]$arrp[0]]
+                    if ($Wallet_Data.balance -eq "#") {
+                        $Request
+                    } else {
+                        $val = $null
+                        $Wallet_Data.balance -replace "{w}",$Wallet_Address -split "\." | Foreach-Object {
+                            if ($_ -match '^(.+)\[([^\]]+)\]$') {
+                                $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Request."$($Matches[1])"}
+                                $arrp = $Matches[2].Split("=",2)
+                                if ($arrp[0] -match '^\d+$') {
+                                    $val = $val[[int]$arrp[0]]
+                                } else {
+                                    $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                                }
                             } else {
-                                $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                                $val = if ($val -ne $null) {$val.$_} else {$Request.$_}
                             }
-                        } else {
-                            $val = if ($val -ne $null) {$val.$_} else {$Request.$_}
                         }
+                        $val
                     }
-                    $val
                 }
             })
 
