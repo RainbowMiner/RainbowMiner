@@ -746,35 +746,34 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         $RigPriceFactor = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} else {$MRRConfig.$RigName.PriceFactor}
         $RigAlgos = [PSCustomObject]@{}
 
-        $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
-            $RigLastReset = $_.LastReset
-            if ($MRRConfig.$RigName.PriceFactorDecayTime -gt 0) {
-                $TimeC = [Math]::Floor(($RigNow - $RigLastReset).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)
-                While ($TimeC -gt 0) {
-                    $RigPriceFactor = [Math]::Max($RigPriceFactor * (1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100),$MRRConfig.$RigName.PriceFactorMin)
-                    $TimeC--
+        if (-not $RigCurrentRentals.ContainsKey($RigName)) {
+            $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
+                $RigUpdated = [DateTime]$_.LastReset
+                if ($MRRConfig.$RigName.PriceFactorDecayTime -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and ($TimeC = [Math]::Floor(($RigNow - $RigUpdated).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)) -gt 0) {
+                    $RigPriceFactor *= [Math]::Pow(1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100,$TimeC)
                 }
             }
-            $Session.Config.MRRAlgorithms.PSObject.Properties | Where-Object {$_.Value.Enable -and ($_.Value.PriceFactor -ne $Null -or $_.Value.PriceFactorDecayTime -ne $Null -or $_.Value.PriceFactorDecayPercent -ne $Null -or $_.Value.PriceFactorMin -ne $Null)} | Foreach-Object {
-                $Algo = $_.Name
-                $Algo_PriceFactor    = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} elseif ($_.Value.PriceFactor -ne $Null) {$_.Value.PriceFactor} else {$MRRConfig.$RigName.PriceFactor}
+        }
+
+        $Session.Config.MRRAlgorithms.PSObject.Properties | Where-Object {$_.Value.Enable -and ($_.Value.PriceFactor -ne $Null -or $_.Value.PriceFactorDecayTime -ne $Null -or $_.Value.PriceFactorDecayPercent -ne $Null -or $_.Value.PriceFactorMin -ne $Null)} | Foreach-Object {
+            $Algo = $_.Name
+            $Algo_PriceFactor    = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} elseif ($_.Value.PriceFactor -ne $Null) {$_.Value.PriceFactor} else {$MRRConfig.$RigName.PriceFactor}
+            $Algo_PriceFactorMin = if ($_.Value.PriceFactorMin -ne $Null) {$_.Value.PriceFactorMin} else {$MRRConfig.$RigName.PriceFactorMin}
+
+            if (-not $RigCurrentRentals.ContainsKey($RigName)) {
                 $Algo_DecayTime      = if ($_.Value.PriceFactorDecayTime -ne $Null) {$_.Value.PriceFactorDecayTime} else {$MRRConfig.$RigName.PriceFactorDecayTime}
                 $Algo_DecayPercent   = if ($_.Value.PriceFactorDecayPercent -ne $Null) {$_.Value.PriceFactorDecayPercent} else {$MRRConfig.$RigName.PriceFactorDecayPercent}
-                $Algo_PriceFactorMin = if ($_.Value.PriceFactorMin -ne $Null) {$_.Value.PriceFactorMin} else {$MRRConfig.$RigName.PriceFactorMin}
-                if ($Algo_DecayTime -gt 0) {
-                    $TimeC = [Math]::Floor(($RigNow - $RigLastReset).TotalHours / $Algo_DecayTime)
-                    While ($TimeC -gt 0) {
-                        $Algo_PriceFactor = [Math]::Max($Algo_PriceFactor * (1 - $Algo_DecayPercent/100),$Algo_PriceFactorMin)
-                        $TimeC--
-                    }
+
+                if ($Algo_DecayTime -gt 0 -and $Algo_DecayPercent -gt 0 -and ($TimeC = [Math]::Floor(($RigNow - $RigUpdated).TotalHours / $Algo_DecayTime)) -gt 0) {
+                    $Algo_PriceFactor *= [Math]::Pow(1 - $Algo_DecayPercent/100,$TimeC)
                 }
-                $RigAlgos | Add-Member $Algo $Algo_PriceFactor -Force
             }
-            $RigUpdated = [DateTime]$RigLastReset
+            $RigAlgos | Add-Member $Algo ([Math]::Round([Math]::Max($Algo_PriceFactor,$Algo_PriceFactorMin),3)) -Force
         }
+
         [PSCustomObject]@{
             Name         = $RigName
-            PriceFactor  = $RigPriceFactor
+            PriceFactor  = [Math]::Round([Math]::Max($RigPriceFactor,$MRRConfig.$RigName.PriceFactorMin),3)
             LastReset    = $RigUpdated
             Algorithms   = $RigAlgos
         }
