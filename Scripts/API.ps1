@@ -1682,6 +1682,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     [PSCustomObject]@{
                         Name = $_.Name
                         PriceFactor = $_.PriceFactor
+                        Algorithms = $_.Algorithms
                         LastReset = "$(([datetime]$_.LastReset).ToString("yyyy-MM-dd HH:mm:ss"))"
                     }
                 }
