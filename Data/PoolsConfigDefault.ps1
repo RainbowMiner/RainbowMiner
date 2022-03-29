@@ -449,6 +449,7 @@
             Currencies=@("VOLLAR")
         }
         "WoolyPooly" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Penalty=30}
             Currencies=@("CFX","ETH","VEIL")
         }
         "WoolyPoolySolo" = [PSCustomObject]@{
