@@ -1446,6 +1446,16 @@ try {
 
             $ChangesTotal += $Changes_Algorithms + $Changes_MRRAlgorithms
         }
+
+        Get-ChildItem ".\Stats\Miners" -Filter "NVIDIA-MiniZ-*Etchash_Hashrate.txt" -File | Foreach-Object {
+            try {
+                $CurrentStat = Get-Content $_.FullName -Raw | ConvertFrom-Json -ErrorAction Stop
+                if ($CurrentStat.Live -eq 0) {
+                    Remove-Item $_.FullName -Force -ErrorAction Stop
+                    $ChangesTotal++
+                }
+            } catch {}
+        }
     }
 
     ###
