@@ -1458,6 +1458,17 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.8.2.6")) {
+        try {
+            $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            if ([bool]$PoolsActual.PSObject.Properties["WoolyPooly"] -and [bool]$PoolsActual.WoolyPooly.PSObject.Properties["Penalty"] -and $PoolsActual.WoolyPooly.Penalty -in @("","0")) {
+                $PoolsActual.WoolyPooly.Penalty = "30"
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                $ChangesTotal++
+            }
+        } catch {}
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
