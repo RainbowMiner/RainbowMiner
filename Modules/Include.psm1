@@ -128,13 +128,12 @@ function Confirm-Cuda {
 
 function Get-NvidiaArchitecture {
     [CmdLetBinding()]
-    param($Model,$ComputeCapability = "")
-    Switch ($Model) {
-        {"$($ComputeCapability)" -in @("8.0","8.6") -or $_ -match "^RTX30\d{2}" -or $_ -match "^RTXA\d{4}"  -or $_ -match "^AM"} {"Ampere";Break}
-        {"$($ComputeCapability)" -in @("7.5")       -or $_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing";Break}
-        {"$($ComputeCapability)" -in @("6.0","6.1") -or $_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX"  -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal";Break}
-        default {"Other"}
-    }
+    param([string]$Model,[string]$ComputeCapability = "")
+    $ComputeCapability = $ComputeCapability -replace "[^\d\.]"
+    if     ($ComputeCapability -in @("8.0","8.6") -or $Model -match "^RTX30\d{2}" -or $Model -match "^RTXA\d{4}"  -or $Model -match "^AM") {"Ampere"}
+    elseif ($ComputeCapability -in @("7.5")       -or $Model -match "^RTX20\d{2}" -or $Model -match "^GTX16\d{2}" -or $Model -match "^TU") {"Turing"}
+    elseif ($ComputeCapability -in @("6.0","6.1") -or $Model -match "^GTX10\d{2}" -or $Model -match "^GTXTitanX"  -or $Model -match "^GP" -or $Model -match "^P" -or $Model -match "^GT1030") {"Pascal"}
+    else   {"Other"}
 }
 
 function Get-PoolPayoutCurrencies {
