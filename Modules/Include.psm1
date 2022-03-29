@@ -128,11 +128,11 @@ function Confirm-Cuda {
 
 function Get-NvidiaArchitecture {
     [CmdLetBinding()]
-    param($Model)
+    param($Model,$ComputeCapability = "")
     Switch ($Model) {
-        {$_ -match "^RTX30\d{2}" -or $_ -match "^RTXA\d{4}"  -or $_ -match "^AM"} {"Ampere";Break}
-        {$_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing";Break}
-        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX"  -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal";Break}
+        {"$($ComputeCapability)" -in @("8.0","8.6") -or $_ -match "^RTX30\d{2}" -or $_ -match "^RTXA\d{4}"  -or $_ -match "^AM"} {"Ampere";Break}
+        {"$($ComputeCapability)" -in @("7.5")       -or $_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing";Break}
+        {"$($ComputeCapability)" -in @("6.0","6.1") -or $_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX"  -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal";Break}
         default {"Other"}
     }
 }
@@ -3399,7 +3399,7 @@ function Get-Device {
 
                     if ($Vendor_Name -eq "NVIDIA") {
                         $Codec = "CUDA"
-                        $Device_OpenCL.Architecture = Get-NvidiaArchitecture $Model
+                        $Device_OpenCL.Architecture = Get-NvidiaArchitecture $Model $Device_OpenCL.DeviceCapability
                     } else {
                         $Codec = "OpenCL"
                     }
