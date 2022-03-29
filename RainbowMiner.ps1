@@ -369,7 +369,7 @@ if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyComm
 
 Initialize-Session
 
-$Session.Version         = "4.8.2.4"
+$Session.Version         = "4.8.2.5"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
