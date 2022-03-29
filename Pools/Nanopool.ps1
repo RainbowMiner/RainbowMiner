@@ -97,7 +97,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Host          = "$($_.rpc)-$($Pool_Region)1.nanopool.org"
                     Port          = $Pool_Port
                     User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
-                    Pass          = "x"
+                    Pass          = if ($Params.$Pool_Currency) {$Params.$Pool_Currency} else {"x"}
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
                     Updated       = $Stat.Updated
