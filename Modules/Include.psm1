@@ -130,9 +130,9 @@ function Get-NvidiaArchitecture {
     [CmdLetBinding()]
     param($Model)
     Switch ($Model) {
-        {$_ -match "^RTX30\d{2}"                             -or $_ -match "^AM"} {"Ampere";Break}
+        {$_ -match "^RTX30\d{2}" -or $_ -match "^RTXA\d{4}"  -or $_ -match "^AM"} {"Ampere";Break}
         {$_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing";Break}
-        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX" -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal";Break}
+        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX"  -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal";Break}
         default {"Other"}
     }
 }
