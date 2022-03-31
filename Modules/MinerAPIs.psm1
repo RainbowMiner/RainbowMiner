@@ -1859,29 +1859,31 @@ class Nanominer : Miner {
                 ";Automatic config file created by RainbowMiner",
                 ";Do not edit!",
                 "mport=-$($this.Port)",
-                "webPort = 0",
-                "Watchdog = false",
-                "noLog = true",
+                "webPort=0",
+                "Watchdog=false",
+                "noLog=true",
                 "",
                 "[$($Parameters.Algo)]",
                 "wallet=$($Parameters.Wallet)",
                 "rigName=$($Parameters.Worker)",
-                "pool1 = $($Parameters.Host):$($Parameters.Port)",
-                "devices =$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})"
+                "pool1=$($Parameters.Host):$($Parameters.Port)",
+                "devices=$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})",
+                "useSSL=$(if ($Parameters.SSL) {"true"} else {"false"})"
             )
             if ($Parameters.PaymentId -ne $null) {$FileC += "paymentId=$($Parameters.PaymentId)"}
             if ($Parameters.Pass)                {$FileC += "rigPassword=$($Parameters.Pass)"}
             if ($Parameters.Email)               {$FileC += "email=$($Parameters.Email)"}
-            if ($Parameters.Threads)             {$FileC += "cpuThreads = $($Parameters.Threads)"}
+            if ($Parameters.Threads)             {$FileC += "cpuThreads=$($Parameters.Threads)"}
             if ($Parameters.Coin)                {$FileC += "coin=$($Parameters.Coin)"}
             if ($Parameters.Protocol)            {$FileC += "protocol=$($Parameters.Protocol)"}
+            if ($Parameters.LHR)                 {$FileC += "lhr=$($Parameters.LHR)"}
 
             if ($Parameters.ZilWallet -and $Parameters.ZilPool) {
                 $FileC += ""
                 $FileC += "[zil]"
-                $FileC += "wallet = $($Parameters.ZilWallet)"
-                $FileC += "zilEpoch = 0 ; number of DAG epoch for caching"
-                $FileC += "pool1 = $($Parameters.ZilPool)"
+                $FileC += "wallet=$($Parameters.ZilWallet)"
+                $FileC += "zilEpoch=0 ; number of DAG epoch for caching"
+                $FileC += "pool1=$($Parameters.ZilPool)"
             }
 
             $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8

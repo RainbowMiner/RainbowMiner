@@ -151,6 +151,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Email     = $Pools.$Algorithm_Norm.Email
                         Threads   = if ($Miner_Vendor -eq "CPU") {$CPUThreads} else {$null}
                         Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.BusId_Type_Mineable_Index} else {$null}
+                        LHR       = "$(if ($Miner_Vendor -eq "NVIDIA" -and $Algorithm_Norm -match "^Etc?hash") {($Miner_Device | Foreach-Object {if ($_.IsLHR) {"0"} else {"off"}}) -join ','})"
 				    }
 
 				    [PSCustomObject]@{
