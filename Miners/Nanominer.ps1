@@ -111,7 +111,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
 		    foreach($Algorithm_Norm in $All_Algorithms) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or ($Pools.$Algorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol))) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or ($Pools.$Algorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol)) -and (-not $Pools.$Algorithm_Norm.SSL -or $Pools.$Algorithm_Norm.Name -notmatch "^MoneroOcean")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -140,7 +140,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Algo      = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                         Coin      = $Pools.$Algorithm_Norm.CoinSymbol
 					    Host      = $Pools.$Algorithm_Norm.Host
-					    Port      = $Pools.$Algorithm_Norm.Port
+					    Port      = $Pool_Port
 					    SSL       = $Pools.$Algorithm_Norm.SSL
 					    Wallet    = $Wallet
                         ZilWallet = $ZilWallet
