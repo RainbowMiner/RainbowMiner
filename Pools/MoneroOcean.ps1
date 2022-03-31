@@ -32,8 +32,8 @@ $Pool_PoolFee = 0.68 # cost for exchange
 
 $Pool_CPUPort_Test = $Global:GlobalCPUInfo.Cores * $Global:GlobalCPUInfo.MaxClockSpeed * 4 / 1000
 $Pool_CPUPort_Base = if ($Pool_CPUPort_Test -gt 0) {[Math]::Min([Math]::Pow(2,1+[Math]::Floor([Math]::Log($Pool_CPUPort_Test,2))),8192)} else {16}
-$Pool_GPUPost_Test = $Global:DeviceCache.Devices.Where({$_.type -eq "gpu"}).Count
-$Pool_GPUPort_Base = if ($Pool_GPUPost_Test -gt 1) {8192} else {1024}
+#$Pool_GPUPost_Test = $Global:DeviceCache.Devices.Where({$_.type -eq "gpu"}).Count
+$Pool_GPUPort_Base = 128 #if ($Pool_GPUPost_Test -gt 1) {8192} else {1024}
 
 $Pool_Request | Group-Object -Property algo | ForEach-Object {
     $IsFirst = $true
@@ -55,8 +55,14 @@ $Pool_Request | Group-Object -Property algo | ForEach-Object {
         $CPUPort_Base = if ($Pool_Algorithm_Norm -match "^Cucka") {1} else {$Pool_CPUPort_Base}
         $GPUPort_Base = if ($Pool_Algorithm_Norm -match "^Cucka") {1} else {$Pool_GPUPort_Base}
 
-        foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
-            $Port = if ($Pool_Protocol -match "ssl") {20000} else {10000}
+        foreach($Pool_SSL in @($false,$true)) {
+            if ($Pool_SSL) {
+                $Pool_Protocol = "stratum+ssl"
+                $Port = 20000
+            } else {
+                $Pool_Protocol = "stratum+tcp"
+                $Port = 10000
+            }
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
 			    Algorithm0    = $Pool_Algorithm_Norm
@@ -73,7 +79,7 @@ $Pool_Request | Group-Object -Property algo | ForEach-Object {
                 User          = "$($Wallets.XMR)"
                 Pass          = "{workername:$Worker}:$($Password)~$($_.algo)"
                 Region        = Get-Region "US"
-                SSL           = $Pool_Protocol -match "ssl"
+                SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
                 #WTM           = $true
                 PoolFee       = $Pool_PoolFee + $_.fee
