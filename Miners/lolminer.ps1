@@ -145,9 +145,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if (-not $_.Pers -or $PersCoin -or $_.ParamsAutoPers) {
 
                         $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
-
-                        if ($Pools.$MainAlgorithm_Norm.Host -match "ethermine") {$Pool_Port = 14444}
-
                         $Pool_Host = if ($Pool_Port -and $Pools.$MainAlgorithm_Norm.Host -notmatch "^[^/]+/.+$") {"$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)"} else {$Pools.$MainAlgorithm_Norm.Host}
                         $Pool_User = if ($Pools.$MainAlgorithm_Norm.Host -match "miningrigrentals") {$Pools.$MainAlgorithm_Norm.User -replace "\.","*"} else {$Pools.$MainAlgorithm_Norm.User}
 
