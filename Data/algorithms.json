@@ -39,6 +39,8 @@
     "argon2wrkz": "Argon2Wrkz",
     "astralhash": "GLTAstralHash",
     "astrobwt": "AstroBWT",
+    "astrobwt2": "AstroBWTv2",
+    "astrobwtv2": "AstroBWTv2",
     "autolykos": "Autolykos2",
     "autolykos2": "Autolykos2",
     "autolykosv2": "Autolykos2",
