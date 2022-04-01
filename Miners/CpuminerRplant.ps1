@@ -47,7 +47,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "curvehash"; Params = ""} #CurveHash/Oblivion, still broken in v4.5.18
     [PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Deepcoin (DCN)
     [PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #Diamond
-    [PSCustomObject]@{MainAlgorithm = "gr"; Params = ""; FaultTolerance = 8; ExtendInterval = 3; ExcludePoolName = "^C3pool|^MoneroOcean"} #Ghostrider/Take5
+    [PSCustomObject]@{MainAlgorithm = "gr"; Params = ""; FaultTolerance = 8; ExtendInterval = 3; ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider/Take5
     [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
     [PSCustomObject]@{MainAlgorithm = "heavyhash"; Params = ""} #HeavyHash
     [PSCustomObject]@{MainAlgorithm = "hex"; Params = ""} #h16r-hex
@@ -65,9 +65,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyrav2v3
     #[PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
-    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #Lyra2z330
+    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "Zpool"} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
-    [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""; ExcludePoolName = "^MiningRigRentals"} #Minotaurx
+    [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""; ExcludePoolName = "MiningRigRentals"} #Minotaurx
     [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #Myriad-groestl
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt(128,2,1)
     [PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #NIST5
@@ -150,7 +150,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
         $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity --no-smart"})"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -179,6 +179,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     BaseAlgorithm  = $Algorithm_Norm_0
                     Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                     LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                    ExcludePoolName = $_.ExcludePoolName
 				}
 			}
 		}

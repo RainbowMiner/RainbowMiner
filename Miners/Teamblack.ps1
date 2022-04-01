@@ -41,7 +41,7 @@ if ($IsLinux) {
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
-$ExcludePools = "^C3pool|^FlexPool|^MiningDutch|^MoneroOcean|^Nicehash|^PoolSexy|^SuprNova|^Zpool"
+$ExcludePools = "C3pool|FlexPool|MiningDutch|MoneroOcean|Nicehash|PoolSexy|SuprNova|Zpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
@@ -101,7 +101,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             }
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and -not $Pools.$Algorithm_Norm.SSL -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Name -match $_.IncludePoolName) -and -not $Pools.$Algorithm_Norm.SSL) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and -not $Pools.$Algorithm_Norm.SSL -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Name -match $_.IncludePoolName) -and -not $Pools.$Algorithm_Norm.SSL) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -135,6 +135,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                         BaseAlgorithm  = $Algorithm_Norm_0
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                        ExcludePoolName = $_.ExcludePoolName
 				    }
 			    }
 		    }

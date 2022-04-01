@@ -28,7 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cosa"             ;              Params = ""; Fee = 2.00;               Vendor = @("CPU")} #Cosanta/COSA
     [PSCustomObject]@{MainAlgorithm = "cpupower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
     [PSCustomObject]@{MainAlgorithm = "curvehash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Curvehash
-    [PSCustomObject]@{MainAlgorithm = "ghostrider"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 0.9; ExtendInterval = 3; ExcludePoolName = "^C3pool|^MoneroOcean"} #Ghostrider/RPT
+    [PSCustomObject]@{MainAlgorithm = "ghostrider"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 0.9; ExtendInterval = 3; ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider/RPT
     [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #HeavyHash/OBTC
     [PSCustomObject]@{MainAlgorithm = "minotaur"         ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #Minotaur/RING Coin
     [PSCustomObject]@{MainAlgorithm = "minotaurx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Minotaurx/LCC
@@ -80,20 +80,20 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight_upx"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightUPX
     [PSCustomObject]@{MainAlgorithm = "cryptonight_xhv"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightXHV
     [PSCustomObject]@{MainAlgorithm = "dynamo"           ;              Params = ""; Fee = 1.00;               Vendor = @("CPU","AMD"); ExcludeYiimp = $true} #Dynamo/DYNAMO
-    [PSCustomObject]@{MainAlgorithm = "etchash"          ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
-    [PSCustomObject]@{MainAlgorithm = "ethash"           ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="^Nicehash"} #ethash
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"  ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); ExcludePoolName="^Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "firepow"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","CPU"); ExcludePoolName="^Nicehash"} #FiroPow/FIRO
+    [PSCustomObject]@{MainAlgorithm = "etchash"          ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="Nicehash"} #ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"           ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="Nicehash"} #ethash
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"  ; DAG = $true; Params = "--enable-ethash-leak-fix"; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); ExcludePoolName="Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "firepow"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #FiroPow/FIRO
     [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 1.00;               Vendor = @("AMD")} #HeavyHash/OBTC
     [PSCustomObject]@{MainAlgorithm = "k12"              ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
-    [PSCustomObject]@{MainAlgorithm = "kawpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","CPU"); ExcludePoolName="^Nicehash"} #KawPow/RVN
+    [PSCustomObject]@{MainAlgorithm = "kawpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #KawPow/RVN
     [PSCustomObject]@{MainAlgorithm = "keccak"           ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "lyra2v2_webchain" ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Mintme.com/MINTME
-    [PSCustomObject]@{MainAlgorithm = "progpow_epic"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="^Nicehash"} #ProgPowEPIC/EPIC
-    [PSCustomObject]@{MainAlgorithm = "progpow_sero"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="^Nicehash"} #ProgPowSERO/SERO
-    [PSCustomObject]@{MainAlgorithm = "progpow_veil"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="^Nicehash"} #ProgPowVEIL/VEIL
-    [PSCustomObject]@{MainAlgorithm = "progpow_veriblock"; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="^Nicehash"} #vProgPow/VBLK
-    [PSCustomObject]@{MainAlgorithm = "progpow_zano"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="^Nicehash"} #ProgPowZANO/ZANO
+    [PSCustomObject]@{MainAlgorithm = "progpow_epic"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowEPIC/EPIC
+    [PSCustomObject]@{MainAlgorithm = "progpow_sero"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowSERO/SERO
+    [PSCustomObject]@{MainAlgorithm = "progpow_veil"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowVEIL/VEIL
+    [PSCustomObject]@{MainAlgorithm = "progpow_veriblock"; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #vProgPow/VBLK
+    [PSCustomObject]@{MainAlgorithm = "progpow_zano"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowZANO/ZANO
     [PSCustomObject]@{MainAlgorithm = "ubqhash"          ;              Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
     [PSCustomObject]@{MainAlgorithm = "verthash"         ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU")} #Verthash
     [PSCustomObject]@{MainAlgorithm = "verushash"        ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Verushash
@@ -159,7 +159,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
 		    foreach($Algorithm_Norm in $All_Algorithms) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.PoolsConfigDefault."$($Pools.$Algorithm_Norm.Name)".Yiimp)) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.PoolsConfigDefault."$($Pools.$Algorithm_Norm.Name)".Yiimp)) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -211,6 +211,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
                         SetLDLIBRARYPATH = $false
                         ListDevices    = "--list-devices"
+                        ExcludePoolName = $_.ExcludePoolName
 				    }
 			    }
 		    }

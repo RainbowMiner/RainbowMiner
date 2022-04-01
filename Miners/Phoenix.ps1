@@ -27,7 +27,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "etchash"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Etchash
     [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory" ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @(); ExcludePoolName = "^SuprNova"} #ProgPow
+    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @(); ExcludePoolName = "SuprNova"} #ProgPow
     [PSCustomObject]@{MainAlgorithm = "ubqhash"    ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #UbqHash
 )
 $CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1 -gbase 0"
@@ -98,7 +98,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 			            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -149,6 +149,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         BaseAlgorithm  = $Algorithm_Norm_0
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                        ExcludePoolName = $_.ExcludePoolName
 					}
 				}
 			}

@@ -23,29 +23,29 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $InfoOnly) {return} # No AMD/INTEL present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "allium";         Params = "--gpu-threads 1 --worksize 256 -I 23 --difficulty-multiplier 0.5"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "allium_navi";    Params = "--gpu-threads 1 --worksize 256 -I 22 --difficulty-multiplier 0.5"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "argon2d";        Params = "--gpu-threads 2 --worksize 64"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "chainox";        Params = "--gpu-threads 1 --worksize 256"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "chainox_navi";   Params = "--gpu-threads 1 --worksize 256"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "groestlcoin";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "groestlcoin_navi"; Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "heavyhash";      Params = "--gpu-threads 4 --worksize 128 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "heavyhash_navi"; Params = "--gpu-threads 4 --worksize 128 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3";        Params = "--gpu-threads 1 --worksize 256 -I 24"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z_navi";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "lyra2zz";        Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "mtp";            Params = "-I 20"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt";      Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt_navi"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaja"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaja_navi"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "phi2";           Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "phi2_navi";      Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "yescrypt";       Params = "--gpu-threads 1 --worksize 256 -I 20"; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "x22i";           Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
-    [PSCustomObject]@{MainAlgorithm = "x25x";           Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "^Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "allium";         Params = "--gpu-threads 1 --worksize 256 -I 23 --difficulty-multiplier 0.5"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "allium_navi";    Params = "--gpu-threads 1 --worksize 256 -I 22 --difficulty-multiplier 0.5"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "argon2d";        Params = "--gpu-threads 2 --worksize 64"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "chainox";        Params = "--gpu-threads 1 --worksize 256"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "chainox_navi";   Params = "--gpu-threads 1 --worksize 256"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "groestlcoin";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "groestlcoin_navi"; Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "heavyhash";      Params = "--gpu-threads 4 --worksize 128 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "heavyhash_navi"; Params = "--gpu-threads 4 --worksize 128 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";        Params = "--gpu-threads 1 --worksize 256 -I 24"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";         Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z_navi";    Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz";        Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "mtp";            Params = "-I 20"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt";      Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt_navi"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaja"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaja_navi"; Params = "--gpu-threads 1 --worksize 256 -I 17"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "phi2";           Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "phi2_navi";      Params = "--gpu-threads 1 --worksize 256 -I 22"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "yescrypt";       Params = "--gpu-threads 1 --worksize 256 -I 20"; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "x22i";           Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "Nicehash"}
+    [PSCustomObject]@{MainAlgorithm = "x25x";           Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2; ExcludePoolName = "Nicehash"}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -79,7 +79,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL")) {
             $Miner_Device = $Device | Where-Object {($_.Model -notmatch "^RX[56]\d\d\d" -and $MainAlgorithm -eq $_.MainAlgorithm) -or ($_.Model -match "^RX[56]\d\d\d" -and $MainAlgorithm -ne $_.MainAlgorithm)}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -110,6 +110,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL")) {
                         BaseAlgorithm  = $Algorithm_Norm_0
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                        ExcludePoolName = $_.ExcludePoolName
 				    }
 			    }
 		    }

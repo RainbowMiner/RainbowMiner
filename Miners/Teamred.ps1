@@ -117,8 +117,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
 		foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
 			if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and
-                (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Pools.$MainAlgorithm_Norm.Name) -and
-                (-not $_.PoolName -or $_.PoolName -match $Pools.$MainAlgorithm_Norm.Name)) {
+                (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and
+                (-not $_.PoolName -or $Pools.$MainAlgorithm_Norm.Host -match $_.PoolName)) {
                 if ($First) {
 				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 					$Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)_$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -170,8 +170,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
                         foreach($SecondAlgorithm_Norm in @($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")) {
                             if ($Pools.$SecondAlgorithm_Norm.Host -and
-                                (-not $_.SecondExcludePoolName -or $_.SecondExcludePoolName -notmatch $Pools.$SecondAlgorithm_Norm.Name) -and
-                                (-not $_.SecondPoolName -or $_.SecondPoolName -match $Pools.$SecondAlgorithm_Norm.Name)) {
+                                (-not $_.SecondExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $_.SecondExcludePoolName) -and
+                                (-not $_.SecondPoolName -or $Pools.$SecondAlgorithm_Norm.Host -match $_.SecondPoolName)) {
 
                                 $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthMode) {$Pools.$SecondAlgorithm_Norm.EthMode} else {$null}
 
@@ -210,6 +210,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                                     PrerequisitePath = if ($IsVerthash) {$DatFile} else {$null}
                                     PrerequisiteURI  = "$(if ($IsVerthash) {"https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"})"
                                     PrerequisiteMsg  = "$(if ($IsVerthash) {"Downloading verthash.dat (1.2GB) in the background, please wait!"})"
+                                    ExcludePoolName = $_.ExcludePoolName
 				                }
                             }
                         }
@@ -244,6 +245,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                         PrerequisiteURI  = "$(if ($IsVerthash) {"https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"})"
                         PrerequisiteMsg  = "$(if ($IsVerthash) {"Downloading verthash.dat (1.2GB) in the background, please wait!"})"
                         ListDevices    = "--list_devices"
+                        ExcludePoolName = $_.ExcludePoolName
 				    }
                 }
 			}

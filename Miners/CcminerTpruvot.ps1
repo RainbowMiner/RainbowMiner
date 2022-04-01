@@ -37,7 +37,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "exosis"; Params = "-N 1"} #Exosis
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
-    #[PSCustomObject]@{MainAlgorithm = "graft"; Params = ""; ExcludePoolName = "^Nicehash"} #CryptoNightV7
+    #[PSCustomObject]@{MainAlgorithm = "graft"; Params = ""; ExcludePoolName = "Nicehash"} #CryptoNightV7
     [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""; FaultTolerance = 0.5} #Groestl
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"; FaultTolerance = 0.5} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JHA
@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
     #[PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "-N 1"} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin        
-    #[PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"; ExcludePoolName = "^Nicehash"} #CryptoNightV8
+    #[PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"; ExcludePoolName = "Nicehash"} #CryptoNightV8
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 1"} #PHI
@@ -136,7 +136,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -166,6 +166,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     BaseAlgorithm  = $Algorithm_Norm_0
                     Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                     LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                    ExcludePoolName = $_.ExcludePoolName
 				}
 			}
 		}

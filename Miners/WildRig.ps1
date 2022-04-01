@@ -36,7 +36,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dedal";                     Vendor = @("AMD");          Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";                    Vendor = @("AMD");          Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";                      Vendor = @("AMD");          Params = ""} #Geek
-    [PSCustomObject]@{MainAlgorithm = "ghostrider";                Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; FaultTolerance = 8; ExcludePoolName = "^C3pool|^MoneroOcean"} #Ghostrider
+    [PSCustomObject]@{MainAlgorithm = "ghostrider";                Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; FaultTolerance = 8; ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "glt-astralhash";            Vendor = @("AMD");        Params = ""} #GLT-AstralHash
     [PSCustomObject]@{MainAlgorithm = "glt-globalhash";            Vendor = @("AMD");        Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";             Vendor = @("AMD");        Params = ""} #GLT-JeongHash
@@ -47,7 +47,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD");          Params = ""} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "honeycomb";                 Vendor = @("AMD");          Params = ""} #Honeycomb broken since v0.17.6
-    [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^unMineable"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "unMineable"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "lyra2tdc";                  Vendor = @("AMD");          Params = ""; DevFee = 2.0} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";                   Vendor = @("AMD");          Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";               Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
@@ -59,9 +59,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi5";                      Vendor = @("AMD","NVIDIA"); Params = ""} #PHI5
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2} #ProgPowEthercore
-    [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #ProgPowSero
-    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #ProgPowVeil
-    [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Fairpool"} #ProgPowZ
+    [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Beepool"} #ProgPowSero
+    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Beepool"} #ProgPowVeil
+    [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest";                Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";                   Vendor = @("AMD");          Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #SHA256csm
@@ -73,7 +73,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel";                Vendor = @("AMD");          Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";                    Vendor = @("AMD");          Params = ""} #Tribus
     #[PSCustomObject]@{MainAlgorithm = "veil";                      Vendor = @("AMD");          Params = ""; Algorithm = "x16rt"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt-VEIL
-    [PSCustomObject]@{MainAlgorithm = "vprogpow";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "^Beepool"} #vProgPoW
+    [PSCustomObject]@{MainAlgorithm = "vprogpow";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Beepool"} #vProgPoW
     [PSCustomObject]@{MainAlgorithm = "wildkeccak";                Vendor = @("AMD");          Params = ""; ExtendInterval = 3; DevFee = 2.0} #Wildkeccak
     [PSCustomObject]@{MainAlgorithm = "x11k";                      Vendor = @("AMD","NVIDIA"); Params = ""} #X11k
     [PSCustomObject]@{MainAlgorithm = "x16r";                      Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
@@ -134,7 +134,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Params = "$($WatchdogParams)$(if ($Pools.$Algorithm_Norm_0.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm_0.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm_0.CoinSymbol.ToLower()).bin "})$($_.Params)"
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -168,6 +168,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
                         ListDevices    = "--print-devices"
                         ListPlatforms  = "--print-platforms"
+                        ExcludePoolName = $_.ExcludePoolName
 				    }
 			    }
 		    }

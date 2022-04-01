@@ -95,7 +95,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Name -match $_.IncludePoolName)) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Host -match $_.IncludePoolName)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($_.Xintensity) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -129,6 +129,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                         PrerequisitePath = $DatFile
                         PrerequisiteURI  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"
                         PrerequisiteMsg  = "Downloading verthash.dat (1.2GB) in the background, please wait!"
+                        ExcludePoolName = $_.ExcludePoolName
 				    }
 			    }
 		    }

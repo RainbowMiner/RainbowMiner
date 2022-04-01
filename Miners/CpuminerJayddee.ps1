@@ -32,7 +32,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "argon2d-uis";  Params = ""} #Argon2Unitus
     #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""} #axiom
     [PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
-    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; ExcludePoolName = "^Nicehash"} #blake2s
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; ExcludePoolName = "Nicehash"} #blake2s
     [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
     #[PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""} #bmw512
     #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = "--param-key `"CPUpower: The number of CPU working or available for proof-of-work mining`""; Algorithm = "yespower"} #CpuPower
@@ -45,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #HODL
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyra2v3
-    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "^Zpool"} #lyra2z330, CpuminerRplant faster
+    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "Zpool"} #lyra2z330, CpuminerRplant faster
     #[PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""} #m7m, (CpuminerRKZ faster)
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RNG
     [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""} #pentablake
@@ -176,7 +176,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
         $DeviceParams = "$(if ($CPUThreads){" -t $CPUThreads"})$(if ($CPUAffinity){" --cpu-affinity $CPUAffinity"})$(if ($IsVerthash) {" --data-file $VerthashDatFile_Quoted"})"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -207,6 +207,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                     PrerequisitePath = if ($IsVerthash) {$VerthashDatFile} else {$null}
                     PrerequisiteURI  = "$(if ($IsVerthash) {"https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-verthash/verthash.dat"})"
                     PrerequisiteMsg  = "$(if ($IsVerthash) {"Downloading verthash.dat (1.2GB) in the background, please wait!"})"
+                    ExcludePoolName = $_.ExcludePoolName
 				}
 			}
 		}

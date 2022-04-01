@@ -36,8 +36,8 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp-classic"; MinMemGB = 5; Params = ""; ExtendInterval = 2; ExcludePoolName = "^(MiningRigRentals|NiceHash)"} #MTP
-    [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2; ExcludePoolName = "^(MiningRigRentals|NiceHash)"} #MTPTcr
+    [PSCustomObject]@{MainAlgorithm = "mtp-classic"; MinMemGB = 5; Params = ""; ExtendInterval = 2; ExcludePoolName = "(MiningRigRentals|NiceHash)"} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2; ExcludePoolName = "(MiningRigRentals|NiceHash)"} #MTPTcr
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -81,7 +81,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Miner_Device | Measure-Object).Count -le 6 -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName)) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Miner_Device | Measure-Object).Count -le 6 -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

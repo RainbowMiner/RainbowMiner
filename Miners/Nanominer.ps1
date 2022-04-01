@@ -44,15 +44,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos";               Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
-    [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "^F2Pool"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD");     ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "^F2Pool"} #Ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD");     ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EtcHash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "FiroPow";    DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ZombieMode = $true} #FiroPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "Octopus";    DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("NVIDIA");       ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #Octopus/Conflux
     [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0} #RandomX
     [PSCustomObject]@{MainAlgorithm = "Verushash";               Params = ""; MinMemGb = 3;  Vendor = @("CPU");          ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes")} #Verushash
-    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "^F2Pool"} #UbqHash
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "F2Pool"} #UbqHash
     #[PSCustomObject]@{MainAlgorithm = "Verthash";                Params = ""; MinMemGb = 2;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0} #Verthash
 )
 
@@ -111,7 +111,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
 		    foreach($Algorithm_Norm in $All_Algorithms) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or ($Pools.$Algorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol)) -and (-not $Pools.$Algorithm_Norm.SSL -or $Pools.$Algorithm_Norm.Name -notmatch "^MoneroOcean")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or ($Pools.$Algorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol)) -and (-not $Pools.$Algorithm_Norm.SSL -or $Pools.$Algorithm_Norm.Name -notmatch "^MoneroOcean")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -177,6 +177,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
                         #ListDevices    = "-d"
+                        ExcludePoolName = $_.ExcludePoolName
 				    }
 			    }
 		    }
