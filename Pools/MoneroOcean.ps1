@@ -80,6 +80,7 @@ $Pool_Request | Group-Object -Property algo | ForEach-Object {
                 Pass          = "{workername:$Worker}:$($Password)~$($_.algo)"
                 Region        = Get-Region "US"
                 SSL           = $Pool_SSL
+                SSLSelfSigned = $Pool_SSL
                 Updated       = $Stat.Updated
                 #WTM           = $true
                 PoolFee       = $Pool_PoolFee + $_.fee

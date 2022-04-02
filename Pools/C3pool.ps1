@@ -29,6 +29,7 @@ catch {
 }
 
 $Pool_PoolFee = 0.68 # cost for exchange
+$Pool_Region  = Get-Region "CN"
 
 $Pool_Request | Group-Object -Property algo | ForEach-Object {
     $IsFirst = $true
@@ -47,7 +48,14 @@ $Pool_Request | Group-Object -Property algo | ForEach-Object {
 
         $IsFirst = $false
 
-        foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
+        foreach($Pool_SSL in @($false,$true)) {
+            if ($Pool_SSL) {
+                $Pool_Protocol = "stratum+ssl"
+                $Port = 33333
+            } else {
+                $Pool_Protocol = "stratum+tcp"
+                $Port = 15555
+            }
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
 			    Algorithm0    = $Pool_Algorithm_Norm
@@ -59,11 +67,12 @@ $Pool_Request | Group-Object -Property algo | ForEach-Object {
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = $Pool_Protocol
                 Host          = "mine.c3pool.com"
-                Port          = if ($Pool_Protocol -match "ssl") {33333} else {15555}
+                Port          = $Port
                 User          = "$($Wallets.XMR)"
                 Pass          = "{workername:$Worker}:$($Password)~$($_.algo)"
-                Region        = Get-Region "CN"
-                SSL           = $Pool_Protocol -match "ssl"
+                Region        = $Pool_Region
+                SSL           = $Pool_SSL
+                SSLSelfSigned = $Pool_SSL
                 Updated       = $Stat.Updated
                 #WTM           = $true
                 PoolFee       = $Pool_PoolFee + $_.fee

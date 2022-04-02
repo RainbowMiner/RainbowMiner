@@ -130,6 +130,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                     Pass          = "ID={workername:$Worker},c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency{diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
+                    SSLSelfSigned = $Pool_SSL
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_shared

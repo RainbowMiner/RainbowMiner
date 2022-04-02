@@ -137,6 +137,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
                     Pass          = "ID={workername:$Worker},c=$(if ($Pool_Currency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_Currency}),m=solo{diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
+                    SSLSelfSigned = $Pool_SSL
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     DataWindow    = $DataWindow
