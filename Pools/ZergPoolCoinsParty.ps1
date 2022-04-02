@@ -73,7 +73,6 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
     $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
 
     $Pool_Host = "$($PoolCoins_Request.$Pool_CoinSymbol.algo).mine.zergpool.com"
-    $Pool_Port = [int]$PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
     if ($Pool_Algorithm -eq "cryptonight_fast") {$Pool_Algorithm = "cryptonight_fast2"} #temp. fix since MSR is mined with CnFast2
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
@@ -81,8 +80,6 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {[Math]::Min($Pool_Fee,$Pool_Request.$Pool_Algorithm.fees)} else {$Pool_Fee}
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
-
-    if ($Pool_CoinSymbol -eq "CURVE") {$Pool_Port = 3343}
 
     $Divisor = 1e9 * [Double]$PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor
     if ($Divisor -le 0) {
@@ -114,13 +111,13 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 
         foreach($Pool_SSL in ($false,$true)) {
             if ($Pool_SSL) {
-                $Pool_Port_SSL = $Pool_Port + 10000
+                if (-not $PoolCoins_Request.$Pool_CoinSymbol.tls_port) {continue}
+                $Pool_Port_SSL = [int]$PoolCoins_Request.$Pool_CoinSymbol.tls_port
                 $Pool_Protocol = "stratum+ssl"
             } else {
-                $Pool_Port_SSL = $Pool_Port
+                $Pool_Port_SSL = [int]$PoolCoins_Request.$Pool_CoinSymbol.port
                 $Pool_Protocol = "stratum+tcp"
             }
-
             foreach($Pool_Region in $Pool_Regions) {
                 #Option 2/3
                 [PSCustomObject]@{

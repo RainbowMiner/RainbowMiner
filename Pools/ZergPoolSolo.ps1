@@ -74,7 +74,6 @@ if (-not $InfoOnly) {
 
 $Pool_Request.PSObject.Properties.Name | ForEach-Object {
     $Pool_Host = "$($Pool_Request.$_.name).mine.zergpool.com"
-    $Pool_Port = [int]$Pool_Request.$_.port
     $Pool_Algorithm = $Pool_Request.$_.name
     if ($Pool_Algorithm -eq "cryptonight_fast") {$Pool_Algorithm = "cryptonight_fast2"} #temp. fix since MSR is mined with CnFast2
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
@@ -112,13 +111,13 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
 
     foreach($Pool_SSL in ($false,$true)) {
         if ($Pool_SSL) {
-            $Pool_Port_SSL = $Pool_Port + 10000
+            if (-not $Pool_Request.$_.tls_port) {continue}
+            $Pool_Port_SSL = [int]$Pool_Request.$_.tls_port
             $Pool_Protocol = "stratum+ssl"
         } else {
-            $Pool_Port_SSL = $Pool_Port
+            $Pool_Port_SSL = [int]$Pool_Request.$_.port
             $Pool_Protocol = "stratum+tcp"
         }
-
         foreach($Pool_Region in $Pool_Regions) {
             foreach($Pool_Currency in $Pool_Currencies) {
                 $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
