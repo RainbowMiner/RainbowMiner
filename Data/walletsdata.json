@@ -29,6 +29,15 @@
         "divisor":  100000000
     },
     {
+        "symbol":  "CHOX",
+        "match":  "^5",
+        "rpc":  "https://explorer.chainox.net/ext/getbalance/{w}",
+        "address":  "",
+        "balance":  "#",
+        "received":  "",
+        "divisor":  1
+    },
+    {
         "symbol":  "CRO",
         "match":  "^cro",
         "rpc":  "https://crypto.org/explorer/api/v1/accounts/{w}",
