@@ -31,8 +31,8 @@ catch {
 
 $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency;$Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
 
-    $Pool_Coin = Get-Coin $Pool_Currency
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Coin = Get-Coin $Pool_Currency -Algorithm $Pool_Algorithm_Norm
 
     if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
         $Pool_Wallet = $Wallets."$($_.altsymbol)"
