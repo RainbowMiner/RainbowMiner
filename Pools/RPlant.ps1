@@ -34,10 +34,17 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.symbol
-    $Pool_Algorithm      = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
-    $Pool_Coin           = Get-Coin $Pool_Currency
-    $Pool_CoinName       = if ($Pool_Coin) {$Pool_Coin.Name} else {(Get-Culture).TextInfo.ToTitleCase($_.info.coin)}
+    
+    $Pool_Coin           = Get-Coin $Pool_Currency -Algorithm $_.algo
+    
+    if ($Pool_Coin) {
+        $Pool_Algorithm_Norm = $Pool_Coin.Algo
+        $Pool_CoinName       = $Pool_Coin.Name
+    } else {
+        $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+        $Pool_CoinName       = (Get-Culture).TextInfo.ToTitleCase($_.info.coin)
+    }
+
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets.$Pool_Currency
     $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
