@@ -160,7 +160,7 @@
             Yiimp=$true
         }
         "Hashpool" = [PSCustomObject]@{
-            Currencies=@("TRB","HNS","CKB")
+            Currencies=@("TON","HNS","CKB")
         }
         "Hashrefinery" = [PSCustomObject]@{
             Currencies=@("BTC")
