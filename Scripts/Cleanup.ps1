@@ -1469,6 +1469,22 @@ try {
         } catch {}
     }
 
+    if ($Version -le (Get-Version "4.8.2.8")) {
+        try {
+            $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            if ([bool]$PoolsActual.PSObject.Properties["2MinersAE"] -and -not $PoolsActual."2MinersAE".CoinSymbol) {
+                if ([bool]$PoolsActual."2MinersAE".PSObject.Properties["CoinSymbol"]) {
+                    $PoolsActual."2MinersAE".CoinSymbol = "ETH"
+                } else {
+                    $PoolsActual."2MinersAE" | Add-Member CoinSymbol "ETH" -Force
+                }
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                $ChangesTotal++
+            }
+        } catch {}
+    }
+
+
     ###
     ### END OF VERSION CHECKS
     ###
