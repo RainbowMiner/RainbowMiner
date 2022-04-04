@@ -492,55 +492,55 @@ if ($AllRigs_Request) {
                     #if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
                     #if ($Pool_Algorithm_Norm -eq "Tensority") {$Miner_Port = 3333}
 
-                    $Pool_SSL = $Pool_Algorithm_Norm -in @("EquihashR25x5","EquihashR25x5x3")
-
                     #END temporary fixes
                     
                     $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
                     $Rigs_UserSep   = if (@("ProgPowVeil","ProgPowZ","Ubqhash") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
 
-                    [PSCustomObject]@{
-                        Algorithm     = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
-					    Algorithm0    = $Pool_Algorithm_Norm
-                        CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{if ($Error.Count){$Error.RemoveAt(0)};"$($_.status.hours)h"}} else {""}
-                        CoinSymbol    = $Pool_CoinSymbol
-                        Currency      = $Pool_Currency
-                        Price         = $Pool_Price
-                        StablePrice   = $Stat.$StatAverageStable
-                        MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                        Host          = $Miner_Server
-                        Port          = $Miner_Port
-                        User          = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
-                        Pass          = "x"
-                        Region        = $Pool_RegionsTable."$($_.region)"
-                        SSL           = $Pool_SSL
-                        Updated       = $Stat.Updated
-                        PoolFee       = $Pool_Fee
-                        Exclusive     = ($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable
-                        Idle          = if (($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable) {$false} else {-not $EnableMining}
-                        Failover      = @($Pool_Failover | Select-Object -ExpandProperty name | Foreach-Object {
-                            [PSCustomObject]@{
-                                Protocol = "stratum+tcp"
-                                Host     = $_
-                                Port     = if ($Miner_Port -match "^33\d\d$") {$Miner_Port} else {3333}
-                                User     = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
-                                Pass     = "x"
-                            }
-                        })
-                        EthMode       = if ($Miner_Port -match "^33\d\d$" -and $Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {"qtminer"} else {$null}
-                        Name          = $Name
-                        Penalty       = 0
-                        PenaltyFactor = 1
-					    Disabled      = $false
-					    HasMinerExclusions = $false
-                        Price_0       = 0.0
-					    Price_Bias    = 0.0
-					    Price_Unbias  = 0.0
-                        Wallet        = ""
-                        Worker        = $Worker1
-                        Email         = $Email
+                    foreach ($Pool_SSL in @($false,$true)) {
+                        [PSCustomObject]@{
+                            Algorithm     = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
+					        Algorithm0    = $Pool_Algorithm_Norm
+                            CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{if ($Error.Count){$Error.RemoveAt(0)};"$($_.status.hours)h"}} else {""}
+                            CoinSymbol    = $Pool_CoinSymbol
+                            Currency      = $Pool_Currency
+                            Price         = $Pool_Price
+                            StablePrice   = $Stat.$StatAverageStable
+                            MarginOfError = $Stat.Week_Fluctuation
+                            Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                            Host          = $Miner_Server
+                            Port          = $Miner_Port
+                            User          = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
+                            Pass          = "x"
+                            Region        = $Pool_RegionsTable."$($_.region)"
+                            SSL           = $Pool_SSL
+                            Updated       = $Stat.Updated
+                            PoolFee       = $Pool_Fee
+                            Exclusive     = ($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable
+                            Idle          = if (($_.status.status -eq "rented" -or $_.status.rented) -and $Pool_RigEnable) {$false} else {-not $EnableMining}
+                            Failover      = @($Pool_Failover | Select-Object -ExpandProperty name | Foreach-Object {
+                                [PSCustomObject]@{
+                                    Protocol = "stratum+tcp"
+                                    Host     = $_
+                                    Port     = if ($Miner_Port -match "^33\d\d$") {$Miner_Port} else {3333}
+                                    User     = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
+                                    Pass     = "x"
+                                }
+                            })
+                            EthMode       = if ($Miner_Port -match "^33\d\d$" -and $Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {"qtminer"} else {$null}
+                            Name          = $Name
+                            Penalty       = 0
+                            PenaltyFactor = 1
+					        Disabled      = $false
+					        HasMinerExclusions = $false
+                            Price_0       = 0.0
+					        Price_Bias    = 0.0
+					        Price_Unbias  = 0.0
+                            Wallet        = ""
+                            Worker        = $Worker1
+                            Email         = $Email
+                        }
                     }
                 }
 
