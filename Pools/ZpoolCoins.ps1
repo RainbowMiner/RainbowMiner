@@ -59,7 +59,6 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$_ -notmatch "HashTa
     $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
 
     $Pool_Host = "mine.zpool.ca"
-    $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
@@ -84,43 +83,56 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$_ -notmatch "HashTa
     $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} else {$AECurrency}
 
     if (($Pool_ExCurrency -and $Wallets.$Pool_ExCurrency) -or $InfoOnly) {
-        $Pool_Params = if ($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)") {",$($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)")"} elseif ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"} 
-        foreach($Pool_Region in $Pool_Regions) {
-            #Option 2/3
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_CoinSymbol
-                Currency      = $Pool_ExCurrency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.$StatAverageStable
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
-                Port          = $Pool_Port
-                User          = $Wallets.$Pool_ExCurrency
-                Pass          = "{workername:$Worker},c=$Pool_ExCurrency,zap=$Pool_CoinSymbol{diff:,d=`$difficulty}$Pool_Params"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_PoolFee
-                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-				ErrorRatio    = $Stat.ErrorRatio
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_0       = 0.0
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_ExCurrency
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+        $Pool_Params = if ($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)") {",$($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)")"} elseif ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"}
+
+        foreach($Pool_SSL in ($false,$true)) {
+            if ($Pool_SSL) {
+                if (-not $PoolCoins_Request.$Pool_CoinSymbol.ssl_port) {continue}
+                $Pool_Port_SSL = [int]$PoolCoins_Request.$Pool_CoinSymbol.ssl_port
+                $Pool_Protocol = "stratum+ssl"
+            } else {
+                $Pool_Port_SSL = [int]$PoolCoins_Request.$Pool_CoinSymbol.port
+                $Pool_Protocol = "stratum+tcp"
+            }
+
+            foreach($Pool_Region in $Pool_Regions) {
+                #Option 2/3
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    Algorithm0    = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin
+                    CoinSymbol    = $Pool_CoinSymbol
+                    Currency      = $Pool_ExCurrency
+                    Price         = $Stat.$StatAverage #instead of .Live
+                    StablePrice   = $Stat.$StatAverageStable
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = $Pool_Protocol
+                    Host          = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
+                    Port          = $Pool_Port_SSL
+                    User          = $Wallets.$Pool_ExCurrency
+                    Pass          = "{workername:$Worker},c=$Pool_ExCurrency,zap=$Pool_CoinSymbol{diff:,d=`$difficulty}$Pool_Params"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_SSL
+                    SSLSelfSigned = $Pool_SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $Pool_PoolFee
+                    Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
+                    Hashrate      = $Stat.HashRate_Live
+                    BLK           = $Stat.BlockRate_Average
+                    TSL           = $Pool_TSL
+				    ErrorRatio    = $Stat.ErrorRatio
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_0       = 0.0
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Wallets.$Pool_ExCurrency
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
             }
         }
     }
