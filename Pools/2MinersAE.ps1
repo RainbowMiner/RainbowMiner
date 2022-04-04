@@ -33,25 +33,26 @@ catch {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18; currencies = @("BTC","ETC")}
+    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18; currencies = @("BTC","NANO","ETH")}
 )
 
-$Pool_Currencies = @("BTC", "NANO", "ETH") | Where-Object {$Wallets.$_ -or $InfoOnly}
-
-if (-not $InfoOnly -and $Pool_Currencies.Count -gt 1) {
-    if ($AECurrency -eq "" -or $AECurrency -notin $Pool_Currencies) {$AECurrency = $Pool_Currencies | Select-Object -First 1}
-    $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
-}
-
-if (-not $Pool_Currencies -and -not $InfoOnly) {
-    Write-Log -Level Warn "No (autoexchange-)wallet defined for pool $Name "
-    return
-}
-
 $Pools_Data | ForEach-Object {
+
+    $Pool_Currencies = $_.currencies | Where-Object {$Wallets.$_ -or $InfoOnly}
+
+    if (-not $InfoOnly -and $Pool_Currencies.Count -gt 1) {
+        if ($AECurrency -eq "" -or $AECurrency -notin $Pool_Currencies) {$AECurrency = $Pool_Currencies | Select-Object -First 1}
+        $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
+    }
+
+    if (-not $Pool_Currencies -and -not $InfoOnly) {
+        return
+    }
+
     $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
     $Pool_Host = "$($_.rpc).2miners.com"
     $Pool_Fee = $_.fee
     $Pool_Divisor = $_.divisor

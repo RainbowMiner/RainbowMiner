@@ -6,7 +6,7 @@
             Fields=[PSCustomObject]@{AECurrency=""}
             SetupFields=[PSCustomObject]@{AECurrency = "Enter your 2MinersAE autoexchange currency"}
             Autoexchange=$true
-            Currencies=@("BTC","ETH","NANO")
+            Currencies=@("BTC","NANO")
         }
         "2MinersSolo" = [PSCustomObject]@{
             Currencies=@("FIRO")
