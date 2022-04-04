@@ -11,14 +11,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "200{0:d2}"
 $DevFee = 0.0
-$Version = "3.19.6"
+$Version = "3.19.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.19.6-jayddee/cpuminer-opt-3.19.6-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.19.7-jayddee/cpuminer-opt-3.19.7-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.19.6-jayddee/cpuminer-opt-3.19.6-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.19.7-jayddee/cpuminer-opt-3.19.7-windows.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
