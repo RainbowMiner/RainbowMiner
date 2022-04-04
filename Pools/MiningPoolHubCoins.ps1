@@ -51,7 +51,7 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.symbol} | ForEach-Object {
     $Pool_Algorithm = $_.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
 
-    $Pool_Coin      = Get-Coin "$($Pool_CoinSymbol)$(if ($_.coin_name -match '-') {"-$($Pool_Algorithms.$Pool_Algorithm)"})"
+    $Pool_Coin      = Get-Coin $Pool_CoinSymbol -Algorithm $Pool_Algorithms.$Pool_Algorithm
     if ($Pool_Coin) {
         $Pool_Algorithm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
