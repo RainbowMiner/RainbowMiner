@@ -861,17 +861,17 @@ Param(
     [Switch]$UpdateLocalCopy
 )
     try {
-        $PoolsData = Invoke-RestMethodAsync "https://rbminer.net/api/data/mrrpools.json" -Tag "MiningRigRentals" -cycletime 1800
+        $PoolsData = Invoke-RestMethodAsync "https://rbminer.net/api/data/mrrpoolsall.json" -Tag "MiningRigRentals" -cycletime 1800
         if ($UpdateLocalCopy) {
-            Set-ContentJson -PathToFile ".\Data\mrrpools.json" -Data $PoolsData -Compress > $null
+            Set-ContentJson -PathToFile ".\Data\mrrpoolsall.json" -Data $PoolsData -Compress > $null
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Rbminer.net/api/data/mrrpools.json could not be reached"
+        Write-Log -Level Warn "Rbminer.net/api/data/mrrpoolsall.json could not be reached"
     }
     if (-not $PoolsData) {
         try {
-            $PoolsData = Get-ContentByStreamReader ".\Data\mrrpools.json" | ConvertFrom-Json -ErrorAction Stop
+            $PoolsData = Get-ContentByStreamReader ".\Data\mrrpoolsall.json" | ConvertFrom-Json -ErrorAction Stop
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
     }
     $PoolsData
