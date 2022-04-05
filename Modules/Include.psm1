@@ -2879,6 +2879,8 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet,
         [Parameter(Mandatory = $false)]
+        [Switch]$UseSSL,
+        [Parameter(Mandatory = $false)]
         [Switch]$WriteOnly,
         [Parameter(Mandatory = $false)]
         [Switch]$ReadToEnd
@@ -2890,10 +2892,19 @@ function Invoke-TcpRequest {
             $Uri = [System.Uri]::New($Server)
             $Server = $Uri.Host
             $Port   = $Uri.Port
+            $UseSSL = $Uri.Scheme -eq "https"
         }
         $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
         #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
-        $Stream = $Client.GetStream()
+
+        if ($UseSSL) {
+            $tcpStream = $Client.GetStream()
+            $Stream = [System.Net.Security.SslStream]::new($tcpStream,$false,({$True} -as [Net.Security.RemoteCertificateValidationCallback]))
+            $Stream.AuthenticateAsClient($Server)
+        } else {
+            $Stream = $Client.GetStream()
+        }
+
         $Writer = [System.IO.StreamWriter]::new($Stream)
         if (-not $WriteOnly -or $Uri) {$Reader = [System.IO.StreamReader]::new($Stream)}
         $client.SendTimeout = $Timeout * 1000
@@ -2939,6 +2950,7 @@ function Invoke-TcpRequest {
         if ($Reader) {$Reader.Dispose()}
         if ($Writer) {$Writer.Dispose()}
         if ($Stream) {$Stream.Dispose()}
+        if ($tcpStream) {$tcpStream.Dispose()}
     }
 
     $Response

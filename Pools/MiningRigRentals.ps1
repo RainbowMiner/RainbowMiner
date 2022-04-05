@@ -557,6 +557,7 @@ if ($AllRigs_Request) {
                                             Worker = $Worker1
                                             Method = if ($Pool_Rig.port -match "^33\d\d$") {"EthProxy"} else {"Stratum"}
                                             WaitForResponse = $_.status.status -eq "rented" -or $_.status.rented
+                                            SSL    = [bool]$SSL
                                         }
                                         Failover = @($Pool_Failover | Select-Object -ExpandProperty name)
                     }) > $null
