@@ -3131,16 +3131,17 @@ class Xmrig6 : Miner {
                 $ArgumentList = ("--algo=$($Parameters.Algorithm) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
                 if ($Job.XJob) {
-                    $wait = 0
-                    While ($wait -lt 60) {
-                        if (($ThreadsConfig = @(Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).$Device | Select-Object)) {
+                    $StopWatch = [System.Diagnostics.StopWatch]::New()
+                    $StopWatch.Restart()
+                    do {
+                        if ($ThreadsConfig = (Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).$Device | Select-Object) {
                             ConvertTo-Json $ThreadsConfig -Depth 10 | Set-Content $ThreadsConfigFile -Force
                             break
                         }
                         Start-Sleep -Milliseconds 500
                         $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
-                        if ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
-                    }
+                    } while ($StopWatch.Elapsed.TotalSeconds -lt 30 -and ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)))
+                    $StopWatch = $null
                 }
                 if ($Job) {
                     Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
