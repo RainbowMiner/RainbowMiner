@@ -125,7 +125,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})";$Miner_Protocol_Auto = $true}
 					}
 
-                    if ($Pools.$Algorithm_Norm.Name -eq "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
+                    if ($Pools.$Algorithm_Norm.Host -match "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
 
                     $EnvVars = @()
                     if ($Pools.$Algorithm_Norm.SSL) {

@@ -135,7 +135,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 $IsVerthash = $MainAlgorithm_Norm_0 -eq "Verthash"
 
                 [System.Collections.Generic.List[string]]$AdditionalParams = @("--watchdog_disabled")
-                if ($Pools.$MainAlgorithm_Norm.Name -match "^bsod" -and $MainAlgorithm_Norm_0 -eq "x16rt") {
+                if ($Pools.$MainAlgorithm_Norm.Host -match "bsod" -and $MainAlgorithm_Norm_0 -eq "x16rt") {
                     $AdditionalParams.Add("--no_ntime_roll")
                 }
                 if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^cn") {

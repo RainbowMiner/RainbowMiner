@@ -101,7 +101,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             }
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and -not $Pools.$Algorithm_Norm.SSL -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Name -match $_.IncludePoolName) -and -not $Pools.$Algorithm_Norm.SSL) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and -not $Pools.$Algorithm_Norm.SSL -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Host -match $_.IncludePoolName) -and -not $Pools.$Algorithm_Norm.SSL) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -112,7 +112,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                     }
 				    $Pool_Port   = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
                     $Pool_Wallet = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
-                    if ($Pools.$Algorithm_Norm.Name -eq "MiningRigRentals") {$Pool_Wallet = $Pool_Wallet -replace "\.","*"}
+                    if ($Pools.$Algorithm_Norm.Host -match "MiningRigRentals") {$Pool_Wallet = $Pool_Wallet -replace "\.","*"}
 
 				    [PSCustomObject]@{
 					    Name           = $Miner_Name

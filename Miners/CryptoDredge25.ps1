@@ -130,7 +130,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     #$Hashrate = if ($Algorithm -eq "argon2d-nim") {($Miner_Device | Foreach-Object {Get-NimqHashrate $_.Model} | Measure-Object -Sum).Sum}
                     $First = $false
                 }
-                if ($Algorithm -eq "argon2d-nim" -and $Pools.$Algorithm_Norm.Name -eq "Icemining") {
+                if ($Algorithm -eq "argon2d-nim" -and $Pools.$Algorithm_Norm.Host -match "Icemining") {
                     $Pool_Proto = "wss"
                     $Pool_User  = $Pools.$Algorithm_Norm.Wallet
                     if ($Pool_User -match "^([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})\s*([A-Z0-9]{4})$") {

@@ -91,7 +91,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-                        Arguments      = "--api-port=`$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParamsGlobal)$($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
+                        Arguments      = "--api-port=`$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($DeviceParamsGlobal)$($DeviceParams)$(if ($Pools.$Algorithm_Norm.Host -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
 					    API            = "XMRig"
 					    Port           = $Miner_Port

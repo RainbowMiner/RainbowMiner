@@ -84,7 +84,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
                             "url"       = "$($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)"
                             "user"      = $Pools.$Algorithm_Norm.User
                             "pass"      = if ($Pools.$Algorithm_Norm.Pass) {$Pools.$Algorithm_Norm.Pass} else {"x"}
-                            "nicehash"  = $Pools.$Algorithm_Norm.Name -match "NiceHash"
+                            "nicehash"  = $Pools.$Algorithm_Norm.Host -match "NiceHash"
                             "keepalive" = $true
                             "enabled"   = $true
                             "tls"       = $Pools.$Algorithm_Norm.SSL

@@ -241,10 +241,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
                     $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
-                    $UseMO = ($_.UseMO -and $Pools.$Algorithm_Norm.Name -match "^C3pool|^MoneroOcean") -or $_.ForceMO
+                    $UseMO = ($_.UseMO -and $Pools.$Algorithm_Norm.Host -match "C3pool|MoneroOcean") -or $_.ForceMO
 
                     if ($ByParameters) {
-                        $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Name -match "Nicehash") {" --nicehash"}) --donate-level=0 --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
+                        $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Host -match "Nicehash") {" --nicehash"}) --donate-level=0 --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
                     } else {
                         $Arguments = [PSCustomObject]@{
                             Algorithm    = $Algorithm
@@ -275,7 +275,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     "user"      = $Pools.$Algorithm_Norm.User
                                     "pass"      = if ($Pools.$Algorithm_Norm.Pass) {$Pools.$Algorithm_Norm.Pass} else {"x"}
                                     "rig-id"    = $Pools.$Algorithm_Norm.Worker
-                                    "nicehash"  = $Pools.$Algorithm_Norm.Name -match "NiceHash"
+                                    "nicehash"  = $Pools.$Algorithm_Norm.Host -match "NiceHash"
                                     "keepalive" = $true
                                     "enabled"   = $true
                                     "tls"       = $Pools.$Algorithm_Norm.SSL

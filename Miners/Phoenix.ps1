@@ -118,7 +118,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						default            {"-proto 1"}
 					}
 
-                    if ($Pools.$Algorithm_Norm.Name -eq "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
+                    if ($Pools.$Algorithm_Norm.Host -match "F2pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
 
                     $CoinSymbol = $Pools.$Algorithm_Norm.CoinSymbol
                     $Coin = if ($Algorithm_Norm -match "ProgPow") {"bci"}
@@ -132,7 +132,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						DeviceName     = $Miner_Device.Name
 						DeviceModel    = $Miner_Model
 						Path           = $Path
-						Arguments      = "-cdmport `$mport -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {"-wal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) -stales $(if ($Pools.$Algorithm_Norm.Name -in @("FlexPool","Nicehash")) {0} else {1}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
+						Arguments      = "-cdmport `$mport -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Host -notmatch "nicehash") {"-wal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) -stales $(if ($Pools.$Algorithm_Norm.Host -match "FlexPool|Nicehash") {0} else {1}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
 						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 						API            = "Claymore"
 						Port           = $Miner_Port

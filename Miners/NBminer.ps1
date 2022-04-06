@@ -123,7 +123,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog$(if ($Pools.$MainAlgorithm_Norm.Name -notmatch "^Flexpool|^Nicehash") {" --share-check 0"}) $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog$(if ($Pools.$MainAlgorithm_Norm.Host -notmatch "Flexpool|Nicehash") {" --share-check 0"}) $($_.Params)"
 							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
 							API            = "NBminer"
 							Port           = $Miner_Port

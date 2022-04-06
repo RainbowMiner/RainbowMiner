@@ -84,7 +84,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
 					ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
                     Penalty        = 0
                     MaxRejectedShareRatio = $_.MaxRejectedShareRatio
-					DevFee         = if ($Pools.$Algorithm_Norm.Name -eq "FlockPool") {1.50} else {$DevFee}
+					DevFee         = if ($Pools.$Algorithm_Norm.Host -match "FlockPool") {1.50} else {$DevFee}
 					ManualUri      = $ManualUri
                     Version        = $Version
                     PowerDraw      = 0
