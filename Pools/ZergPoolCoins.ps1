@@ -49,7 +49,7 @@ $Pool_AddRefcode = "$(if ($Session.Config.ReduceZergPoolFee -and -not $Session.I
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Currencies = @("BTC", "DASH", "LTC","TRX","USDT") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
+$Pool_Currencies = @("BTC", "DASH", "LTC","TRX","USDT","BNB") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
 if (-not $InfoOnly) {
     $USDT_Token = if ($Pool_Currencies -contains "USDT") {
