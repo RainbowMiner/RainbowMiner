@@ -23,10 +23,10 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ALPH";  port = 1199; fee = 0.0; rpc = "alephium"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "ARQ";   port = 1143; fee = 0.9; rpc = "arqma"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "BEAM";  port = 1130; fee = 0.9; rpc = "beam"; region = @("de","fi","ca","us","hk","sg","tr")}
-    [PSCustomObject]@{symbol = "TUBE";  port = 1120; fee = 0.9; rpc = "bittube"; region = @("de","fi","ca","us","hk","sg","tr"); cycles = 40}
+    [PSCustomObject]@{symbol = "TUBE";  port = 1120; fee = 0.9; rpc = "bittube"; region = @("de","fi","ca","us","hk","sg","tr"); diffFactor = 40}
     [PSCustomObject]@{symbol = "CCX";   port = 1115; fee = 0.9; rpc = "conceal"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "CFX";   port = 1170; fee = 0.9; rpc = "conflux"; region = @("de","fi","ca","us","hk","sg","tr")}
-    [PSCustomObject]@{symbol = "CTXC";  port = 1155; fee = 0.9; rpc = "cortex"; region = @("de","fi","ca","hk","sg","tr"); cycles = 42}
+    [PSCustomObject]@{symbol = "CTXC";  port = 1155; fee = 0.9; rpc = "cortex"; region = @("de","fi","ca","hk","sg","tr"); diffFactor = 42}
     [PSCustomObject]@{symbol = "DERO";  port = 1117; fee = 0.9; rpc = "dero"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "XEQ";   port = 1195; fee = 0.9; rpc = "equilibria"; region = @("de","fi","ca","hk","sg","tr")}
     [PSCustomObject]@{symbol = "ERG";   port = 1180; fee = 0.9; rpc = "ergo"; region = @("de","fi","ca","us","hk","sg","tr")}
@@ -41,7 +41,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "QRL";   port = 1166; fee = 0.9; rpc = "qrl"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "RVN";   port = 1140; fee = 0.9; rpc = "ravencoin"; region = @("de","fi","ca","us","hk","sg","tr"); diffFactor = [Math]::Pow(2,32)}
     [PSCustomObject]@{symbol = "XLA";   port = 1190; fee = 0.9; rpc = "scala"; region = @("de","fi","ca","us","hk","sg","tr")}
-    [PSCustomObject]@{symbol = "XWP";   port = 1123; fee = 0.9; rpc = "swap"; region = @("de","fi","ca","us","hk","sg","tr"); cycles = 32}
+    [PSCustomObject]@{symbol = "XWP";   port = 1123; fee = 0.9; rpc = "swap"; region = @("de","fi","ca","us","hk","sg","tr"); diffFactor = 32}
     [PSCustomObject]@{symbol = "TRTL";  port = 1160; fee = 0.9; rpc = "turtlecoin"; region = @("de","fi","ca","us","hk","sg","tr")}
     [PSCustomObject]@{symbol = "UPX";   port = 1177; fee = 0.9; rpc = "uplexa"; region = @("de","fi","ca","us","hk","sg","tr")}
 
