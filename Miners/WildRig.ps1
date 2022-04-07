@@ -29,7 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "anime";                     Vendor = @("AMD");          Params = ""} #Anime
     [PSCustomObject]@{MainAlgorithm = "bcd";                       Vendor = @("AMD");          Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";                   Vendor = @("AMD");          Params = ""} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "blake2b-btcc";              Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("TNET")} #Blake2b-TNET/BTCC
+    [PSCustomObject]@{MainAlgorithm = "blake2b-btcc";              Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("BCHC","TNET")} #Blake2b-TNET/BTCC
     [PSCustomObject]@{MainAlgorithm = "blake2b-glt";               Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("GLT")} #Blake2b-GLT
     [PSCustomObject]@{MainAlgorithm = "bmw512";                    Vendor = @("AMD","NVIDIA"); Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD");          Params = ""} #C11
