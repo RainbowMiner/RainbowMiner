@@ -1485,7 +1485,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.8.3.0")) {
-        $RemovePoolStats += @("Herominers_CTXC_Profit.txt")
+        $RemovePoolStats += @("HeroMiners_CTXC_Profit.txt")
     }
 
     ###
