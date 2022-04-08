@@ -1484,6 +1484,9 @@ try {
         } catch {}
     }
 
+    if ($Version -le (Get-Version "4.8.3.0")) {
+        $RemovePoolStats += @("Herominers_CTXC_Profit.txt")
+    }
 
     ###
     ### END OF VERSION CHECKS
