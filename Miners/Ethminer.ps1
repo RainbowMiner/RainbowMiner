@@ -19,7 +19,7 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-18-cuda11.2-linux-amd64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-ethminer/ethminer-0.19.0-18-cuda11.6-linux-amd64.7z"
             Cuda = "11.2"
         },
         [PSCustomObject]@{
