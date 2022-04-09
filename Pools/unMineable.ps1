@@ -139,7 +139,8 @@ $Pools_Data | ForEach-Object {
         }
 
         if ($ok -or $InfoOnly) {
-            $Pool_Wallet = "$($Pool_Currency):$($Wallets.$Pool_Currency).{workername:$Worker}$(if ($Pool_Referrals.$Pool_Currency) {"#$($Pool_Referrals.$Pool_Currency)"})"
+            $Pool_Referal = if ($Params.$Pool_Currency -match "^\w{4}-\w{4}$") {$Params.$Pool_Currency} elseif ($Pool_Referrals.$Pool_Currency) {$Pool_Referrals.$Pool_Currency}
+            $Pool_Wallet = "$($Pool_Currency):$($Wallets.$Pool_Currency).{workername:$Worker}$(if ($Pool_Referal) {"#$($Pool_Referal)"})"
 
             foreach($Pool_Region in $_.region) {
                 [PSCustomObject]@{
@@ -159,7 +160,7 @@ $Pools_Data | ForEach-Object {
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
-                    PoolFee       = if ($Pool_Referrals.$Pool_Currency) {0.75} else {1.0}
+                    PoolFee       = if ($Pool_Referal) {0.75} else {1.0}
                     PaysLive      = $true
                     DataWindow    = $DataWindow
 				    ErrorRatio    = $Stat.ErrorRatio
