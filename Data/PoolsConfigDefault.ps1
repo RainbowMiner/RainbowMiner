@@ -448,6 +448,12 @@
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
+        "ViaBTC" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{"ETH-PaymentMode"="pplns";"ETC-PaymentMode"="pplns";API_Key=""}
+            SetupFields=[PSCustomObject]@{"ETH-PaymentMode" = "Enter your ETH-setup payment mode (pps, pplns or solo) for proper fee calculation";"ETC-PaymentMode" = "Enter your ETC-setup payment mode (pps, pplns or solo) for proper fee calculation";API_Key = "Enter your ViaBTC API key (adds your balance)"}
+            Currencies=@("ETH","ETC")
+            Autoexchange=$true
+        }
         "WoolyPooly" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=30}
             Currencies=@("CFX","ETH","VEIL")
