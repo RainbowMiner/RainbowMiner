@@ -1837,6 +1837,8 @@ lt=50]
 - **StartMessage**: Message, that will be sent to the renter at the start of the rental
 - **ExtensionMessageTime**: Send the ExtensionMessage to the renter, when the remaining rental time drops below this value (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=2h]
 - **ExtensionMessage**: Message, that will be sent to the renter, when remaining rental time drops below ExtensionMessageTime
+- **PoolOfflineMessageTime**: Send the PoolOfflineMessage to the renter, after the renter's pool has been offline for this value (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=3m]
+- **PoolOfflineMessage**: Message, that will be sent to the renter, after the renter's pool has been offline for PoolOfflineMessageTime
 - **ProfitAverageTime**: Enter the device profit moving average time period (Minute,Minute_5,Minute_10,Hour,Day,ThreeDay,Week), [default=Day]
 - **PauseBetweenRentals**: Disable rigs on MRR after a rental for some time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=10m]
 

@@ -296,6 +296,8 @@
                         StartMessage="Dear renter, thank you for renting my rig. It will be up-and-running in no time: offline pool or zero hashrate is normal in the first 5-10 minutes. Please allow at least 10 minutes to pass before raising an issue. Happy mining! (Automated message, do not respond)"
                         ExtensionMessageTime="2h"
                         ExtensionMessage="Dear renter, your rental will end soon. Now would be a good time to extend the rental, if you are happy with the result."
+                        PoolOfflineMessageTime="3m"
+                        PoolOfflineMessage="Dear renter, it looks like your pool is currently offline. Please check your settings."
                         ProfitAverageTime="Day"
                         PauseBetweenRentals="10m"
                         UseHost=""

@@ -62,6 +62,8 @@ param(
     [String]$StartMessage = "",
     [String]$ExtensionMessage = "",
     [String]$ExtensionMessageTime = "",
+    [String]$PoolOfflineMessage = "",
+    [String]$PoolOfflineMessageTime = "3m",
     [String]$UseHost = ""
 )
 
@@ -105,6 +107,7 @@ $ExcludeRentalId_Array = @($ExcludeRentalId -split "[,; ]+" | Where-Object {$_} 
 
 $StartMessage = "$StartMessage".Trim()
 $ExtensionMessage = "$ExtensionMessage".Trim()
+$PoolOfflineMessage = "$PoolOfflineMessage".Trim()
 
 if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
     $Workers = $Workers.Where({($UseWorkerName_Array.Count -eq 0 -or $UseWorkerName_Array -contains $_) -and ($ExcludeWorkerName_Array.Count -eq 0 -or $ExcludeWorkerName_Array -notcontains $_)})
@@ -133,6 +136,7 @@ if ($Session.MRRRigGroups       -eq $null) {
 $UpdateInterval_Seconds      = ConvertFrom-Time "$UpdateInterval"
 $PauseBetweenRentals_Seconds = ConvertFrom-Time "$PauseBetweenRentals"
 $ExtensionMessageTime_Hours  = (ConvertFrom-Time "$ExtensionMessageTime") / 3600
+$PoolOfflineMessageTime_Minutes  = (ConvertFrom-Time "$PoolOfflineMessageTime") / 60
 
 if (-not $UpdateInterval_Seconds) {$UpdateInterval_Seconds = 3600}
 elseif ($UpdateInterval_Seconds -lt 600) {$UpdateInterval_Seconds = 600}
@@ -288,9 +292,12 @@ if ($AllRigs_Request) {
                 $Pool_Price = $Stat.$StatAverage
                 $Pool_Currency = "BTC"
 
-                $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
+                $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {
+                    Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus -MinutesUntilOffline $PoolOfflineMessageTime_Minutes
+                }
 
                 if ($Pool_RigEnable -and $_.rental_id -in $ExcludeRentalId_Array) {
+                    Write-Log -Level Info "$($Name): rig id #$($Pool_RigId) disabled, because it is on the ExcludeRentalId list in pools.config.txt"
                     $Pool_RigEnable = $false
                 }
 
@@ -359,6 +366,21 @@ if ($AllRigs_Request) {
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                             Write-Log -Level Warn "$($Name): Unable to handle start message for rental #$($_.rental_id): $($_.Exception.Message)"
+                        }
+                    }
+
+                    if (-not $Pool_RigEnable -and $PoolOfflineMessage -ne "" -and $_.poolstatus -eq "offline" -and -not $Pool_RigStatus.poolofflinemessagesent) {
+                        try {
+                            $PoolOfflineMessage_Result = $null
+
+                            $PoolOfflineMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$PoolOfflineMessage} -method "PUT" -Timeout 60
+
+                            Write-Log -Level Info "$($Name): Pool offline message $(if (-not $PoolOfflineMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+
+                            Set-MiningRigRentalStatus $Pool_RigId -Status "poolofflinemessagesent" > $null
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-Log -Level Warn "$($Name): Unable to handle pool offline message for rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
 
@@ -456,7 +478,7 @@ if ($AllRigs_Request) {
                             if ($_.status.status -eq "rented") {$_.status.status = "available"}
                             $Pool_RigEnable = $false
 
-                            Write-Log -Level Warn "MiningRigRentals: cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1) that ended $($Rental_Result.end)."
+                            Write-Log -Level Warn "$($Name): cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1) that ended $($Rental_Result.end)."
                         }
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
