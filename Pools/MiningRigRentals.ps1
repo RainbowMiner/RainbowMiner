@@ -63,7 +63,8 @@ param(
     [String]$ExtensionMessage = "",
     [String]$ExtensionMessageTime = "",
     [String]$PoolOfflineMessage = "",
-    [String]$PoolOfflineMessageTime = "3m",
+    [String]$PoolOfflineTime = "3m",
+    [String]$PoolOfflineRetryTime = "15m",
     [String]$UseHost = ""
 )
 
@@ -133,10 +134,11 @@ if ($Session.MRRRigGroups       -eq $null) {
     }
 }
 
-$UpdateInterval_Seconds      = ConvertFrom-Time "$UpdateInterval"
-$PauseBetweenRentals_Seconds = ConvertFrom-Time "$PauseBetweenRentals"
-$ExtensionMessageTime_Hours  = (ConvertFrom-Time "$ExtensionMessageTime") / 3600
-$PoolOfflineMessageTime_Minutes  = (ConvertFrom-Time "$PoolOfflineMessageTime") / 60
+$UpdateInterval_Seconds       = ConvertFrom-Time "$UpdateInterval"
+$PauseBetweenRentals_Seconds  = ConvertFrom-Time "$PauseBetweenRentals"
+$ExtensionMessageTime_Hours   = (ConvertFrom-Time "$ExtensionMessageTime") / 3600
+$PoolOfflineTime_Seconds      = ConvertFrom-Time "$PoolOfflineTime"
+$PoolOfflineRetryTime_Seconds = ConvertFrom-Time "$PoolOfflineRetryTime"
 
 if (-not $UpdateInterval_Seconds) {$UpdateInterval_Seconds = 3600}
 elseif ($UpdateInterval_Seconds -lt 600) {$UpdateInterval_Seconds = 600}
@@ -293,7 +295,7 @@ if ($AllRigs_Request) {
                 $Pool_Currency = "BTC"
 
                 $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {
-                    Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus -MinutesUntilOffline $PoolOfflineMessageTime_Minutes
+                    Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus -SecondsUntilOffline $PoolOfflineTime_Seconds -SecondsUntilRetry $PoolOfflineRetryTime_Seconds
                 }
 
                 if ($Pool_RigEnable -and $_.rental_id -in $ExcludeRentalId_Array) {
