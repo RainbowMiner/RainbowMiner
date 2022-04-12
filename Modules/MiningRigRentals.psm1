@@ -728,9 +728,9 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Status = "",
     [Parameter(Mandatory = $False)]
-    [int]$SecondsUntilOffline = 3,
+    [int]$SecondsUntilOffline = 180,
     [Parameter(Mandatory = $False)]
-    [int]$SecondsUntilRetry = 15
+    [int]$SecondsUntilRetry = 900
 )
     if ($Session.MRRStatus -eq $null) {[hashtable]$Session.MRRStatus = @{}}
     $RigKey = "$RigId"
