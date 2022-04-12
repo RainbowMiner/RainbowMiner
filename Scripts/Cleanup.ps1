@@ -1488,6 +1488,28 @@ try {
         $RemovePoolStats += @("HeroMiners_CTXC_Profit.txt")
     }
 
+    if ($Version -le (Get-Version "4.8.3.1")) {
+        try {
+            $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            $Changes_Removal = 0
+            if ([bool]$PoolsActual.PSObject.Properties["ProHashingCoins"]) {
+                if ([bool]$PoolsActual.ProHashingCoins.PSObject.Properties["BTC"]) {
+                    $PoolsActual.ProHashingCoins.PSObject.Properties.Remove("BTC")
+                    $Changes_Removal++
+                }
+                if ([bool]$PoolsActual.ProHashingCoins.PSObject.Properties["BTC-Params"]) {
+                    $PoolsActual.ProHashingCoins.PSObject.Properties.Remove("BTC-Params")
+                    $Changes_Removal++
+                }
+            }
+            if ($Changes_Removal) {
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                $ChangesTotal += $Changes_Removal
+            }
+        } catch {}
+    }
+
+
     ###
     ### END OF VERSION CHECKS
     ###
