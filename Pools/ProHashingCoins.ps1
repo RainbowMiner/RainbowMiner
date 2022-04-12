@@ -13,12 +13,17 @@ param(
     [String]$StatAverageStable = "Week",
     [alias("UserName")]
     [String]$User = "",
+    [String]$AECurrency = "",
+    [String]$API_Key = "",
+    [Bool]$EnableAPIKeyForMiners = $false,
     [String]$PPMode = "pps"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if (-not $User -and -not $InfoOnly) {return}
+
+$AllowZero = $true
 
 $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
@@ -56,6 +61,11 @@ $Pool_Host = "prohashing.com"
 $Pool_Regions = @("us","eu")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
+$Pool_Currencies = @("BTC") + @($PoolCoins_Request.data.PSObject.Properties.Name | Where-Object {$_ -notmatch "_"}) | Select-Object -Unique
+
+if ($InfoOnly) {$AECurrency = "BTC"}
+elseif ($AECurrency -eq "" -or $AECurrency -notin $Pool_Currencies) {$AECurrency = $Pool_Currencies | Select-Object -First 1}
+
 if ($PPMode) {$Pool_PPMode = $PPMode}
 else {
     $Pool_PPMode = if ($User -match "@(pps|fpps|pplns|solo)") {
@@ -75,6 +85,7 @@ $PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $
     $Pool_Factor     = [double]$Pool_Request.data.$Pool_Algorithm.mbtc_mh_factor
     $Pool_TSL        = [int]$_.Value.timesincelast
     $Pool_BLK        = [int]$_.Value."24h_blocks"
+    $Pool_Workers    = [int]$_.Value.workers
 
     if ($Pool_Factor -le 0) {
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
@@ -90,13 +101,16 @@ $PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $
     }
 
     foreach($Pool_Region in $Pool_Regions) {
-        $Pool_Params = if ($Params.$Pool_CoinSymbol) {",$($Params.$Pool_CoinSymbol)"}
+        $Pool_Params = if ($Params.$AECurrency) {
+            $Pool_ParamsCurrency = "$(if ($Pool_APIKey) {$Params.$AECurrency -replace "k=[0-9a-f]+" -replace ",+","," -replace "^,+" -replace ",+$"} else {$Params.$AECurrency})"
+            if ($Pool_ParamsCurrency) {",$($Pool_ParamsCurrency)"}
+        }
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
             CoinName      = $Pool_CoinName
             CoinSymbol    = $Pool_CoinSymbol
-            Currency      = $Pool_CoinSymbol
+            Currency      = $AECurrency
             Price         = 0
             StablePrice   = 0
             MarginOfError = 0
@@ -111,7 +125,7 @@ $PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $
             PoolFee       = $Pool_PoolFee
             DataWindow    = $DataWindow
             Hashrate      = $Stat.HashRate_Live
-            Workers       = $null
+            Workers       = $Pool_Workers
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
             WTM           = $true
