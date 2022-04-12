@@ -25,6 +25,7 @@
     "argon2dcrds":  "Argon2d250",
     "argon2dd250":  "Argon2d250",
     "argon2ddyn":  "Argon2dDyn",
+    "argon2ddynamic":  "Argon2dDyn",
     "argon2dglt":  "Argon2dGLT",
     "argon2dnim":  "Argon2dNim",
     "argon2duis":  "Argon2d4096",
