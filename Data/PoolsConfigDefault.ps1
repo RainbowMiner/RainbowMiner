@@ -403,7 +403,21 @@
             Currencies=@("VRM")
         }
         "ProHashing" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_Key="";AECurrency="BTC";EnableAPIKeyForMiners="0"}
+            Fields=[PSCustomObject]@{User="";AECurrency="BTC";API_Key="";EnableAPIKeyForMiners="0"}
+            SetupFields=[PSCustomObject]@{User="Enter your ProHashing username";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
+            Currencies=@()
+            Autoexchange=$true
+            BalancesKeepAlive="90d"
+        }
+        "ProHashingCoins" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{User="";AECurrency="BTC";PPMode="pps";API_Key="";EnableAPIKeyForMiners="0"}
+            SetupFields=[PSCustomObject]@{User="Enter your ProHashing username";PPMode="Enter the payout/mining mode (pps,pplns or solo)";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
+            Currencies=@()
+            Autoexchange=$true
+            BalancesKeepAlive="90d"
+        }
+        "ProHashingCoinsSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{User="";AECurrency="BTC";API_Key="";EnableAPIKeyForMiners="0"}
             SetupFields=[PSCustomObject]@{User="Enter your ProHashing username";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
             Autoexchange=$true
