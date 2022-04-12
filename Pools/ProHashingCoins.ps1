@@ -123,6 +123,7 @@ $PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $
             SSL           = $false
             Updated       = $Stat.Updated
             PoolFee       = $Pool_PoolFee
+            PaysLive      = $PPMode -eq "pps"
             DataWindow    = $DataWindow
             Hashrate      = $Stat.HashRate_Live
             Workers       = $Pool_Workers
