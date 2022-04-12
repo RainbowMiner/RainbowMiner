@@ -1509,6 +1509,29 @@ try {
         } catch {}
     }
 
+    if ($Version -le (Get-Version "4.8.3.2")) {
+        try {
+            $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            $Changes_Removal = 0
+            if ([bool]$PoolsActual.PSObject.Properties["ProHashingCoins"]) {
+                if ([bool]$PoolsActual.ProHashingCoins.PSObject.Properties["AECurrency"]) {
+                    $PoolsActual.ProHashingCoins.PSObject.Properties.Remove("AECurrency")
+                    $Changes_Removal++
+                }
+            }
+            if ([bool]$PoolsActual.PSObject.Properties["ProHashingCoinsSolo"]) {
+                if ([bool]$PoolsActual.ProHashingCoinsSolo.PSObject.Properties["AECurrency"]) {
+                    $PoolsActual.ProHashingCoinsSolo.PSObject.Properties.Remove("AECurrency")
+                    $Changes_Removal++
+                }
+            }
+            if ($Changes_Removal) {
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                $ChangesTotal += $Changes_Removal
+            }
+        } catch {}
+    }
+
 
     ###
     ### END OF VERSION CHECKS
