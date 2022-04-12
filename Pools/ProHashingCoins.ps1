@@ -118,7 +118,7 @@ $PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $
             Host          = "$(if ($Pool_Region -eq "eu") {"eu."})$Pool_Host"
             Port          = $Pool_Port
             User          = $User
-            Pass          = "a=$($_),c=$($Pool_CoinName.ToLower()),n={workername:$Worker}$(if ($Pool_PPMode -ne "pps") {",m=$($Pool_PPMode)"}){diff:,d=`$difficulty}$Pool_Params"
+            Pass          = "a=$($Pool_Algorithm),c=$($Pool_CoinName.ToLower()),n={workername:$Worker}$(if ($Pool_PPMode -ne "pps") {",m=$($Pool_PPMode)"}){diff:,d=`$difficulty}$Pool_Params"
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated
