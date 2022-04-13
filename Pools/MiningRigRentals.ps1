@@ -295,6 +295,7 @@ if ($AllRigs_Request) {
                 $Pool_Currency = "BTC"
 
                 $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {
+                    if ($_.poolstatus -eq "offline") {Write-Log -Level Info "$($Name): set rig id #$($Pool_RigId) rental status to $($_.poolstatus)"}
                     Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus -SecondsUntilOffline $PoolOfflineTime_Seconds -SecondsUntilRetry $PoolOfflineRetryTime_Seconds
                 }
 

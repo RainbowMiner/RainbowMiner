@@ -751,7 +751,7 @@ param(
                 if ($Session.MRRStatus[$RigKey].wait) {$Session.MRRStatus[$RigKey].next = $time.AddSeconds($SecondsUntilRetry);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $false}
                 else {$Session.MRRStatus[$RigKey].next = $time.AddSeconds($SecondsUntilOffline);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $true}
             }
-        } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddSeconds($SecondsUntilOffline); wait = $true; enable = $true; extended = $(if ($Status -eq "extended") {$true} else {$false}); extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false}); startmessagesent = $(if ($Status -eq "startmessagesent") {$true} else {$false}); poolofflinemessagesent = $(if ($Status -eq "poolofflinemessagesent") {$true} else {$false})}}
+        } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time;wait = $false;enable = $true;extended = $(if ($Status -eq "extended") {$true} else {$false});extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false});startmessagesent = $(if ($Status -eq "startmessagesent") {$true} else {$false});poolofflinemessagesent = $(if ($Status -eq "poolofflinemessagesent") {$true} else {$false})}}
         $Session.MRRStatus[$RigKey].enable
     }
 }
