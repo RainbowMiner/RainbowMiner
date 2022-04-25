@@ -15,7 +15,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if (-not $InfoOnly -and -not $Wallets.XMR -and -not $Password) {return}
+if (-not $InfoOnly -and (-not $Wallets.XMR -or -not $Password)) {return}
 
 $Pool_Request = [PSCustomObject]@{}
 
