@@ -1532,6 +1532,18 @@ try {
         } catch {}
     }
 
+    if ($Version -le (Get-Version "4.8.3.3")) {
+        $Changes = 0
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($ConfigActual.ExcludeMinerName -ne "`$ExcludeMinerName" -and (Get-ConfigArray $ConfigActual.ExcludeMinerName) -inotcontains "Nsgminer") {
+            $ConfigActual | Add-Member ExcludeMinerName "$((@(Get-ConfigArray $ConfigActual.ExcludeMinerName | Select-Object) + "Nsgminer") -join ',')" -Force
+            $Changes++
+        }
+        if ($Changes) {
+            $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal += $Changes
+        }
+    }
 
     ###
     ### END OF VERSION CHECKS
