@@ -1539,6 +1539,10 @@ try {
             $ConfigActual | Add-Member ExcludeMinerName "$((@(Get-ConfigArray $ConfigActual.ExcludeMinerName | Select-Object) + "Nsgminer") -join ',')" -Force
             $Changes++
         }
+        if ($ConfigActual.ServerConfigName -ne "`$ServerConfigName" -and (Get-ConfigArray $ConfigActual.ServerConfigName) -inotcontains "mrralgorithms") {
+            $ConfigActual | Add-Member ServerConfigName "$((@(Get-ConfigArray $ConfigActual.ServerConfigName | Select-Object) + "mrralgorithms") -join ',')" -Force
+            $Changes++;
+        }
         if ($Changes) {
             $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
