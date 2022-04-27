@@ -110,7 +110,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$_ -notmatch "HashTa
                     Host          = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
                     Port          = $Pool_Port_SSL
                     User          = $Wallets.$Pool_ExCurrency
-                    Pass          = "{workername:$Worker},c=$Pool_ExCurrency,zap=$Pool_CoinSymbol{diff:,d=`$difficulty}$Pool_Params"
+                    Pass          = "{workername:$Worker},c=$Pool_ExCurrency,zap=$Pool_CoinSymbol{diff:,sd=`$difficulty}$Pool_Params"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
                     SSLSelfSigned = $Pool_SSL

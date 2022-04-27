@@ -110,7 +110,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$_ -notmatch "HashTap" -a
                     Host          = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
                     Port          = $Pool_Port_SSL
                     User          = $Wallets.$Pool_Currency
-                    Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+                    Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,sd=`$difficulty}$Pool_Params"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
                     SSLSelfSigned = $Pool_SSL
