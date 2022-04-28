@@ -69,8 +69,8 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
     $Pool_CoinSymbol = $_
     $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}    
 
-    $Pool_Host = "$($PoolCoins_Request.$Pool_CoinSymbol.algo).mine.zergpool.com"
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
+    $Pool_Host = "$($Pool_Algorithm).mine.zergpool.com"
     if ($Pool_Algorithm -eq "cryptonight_fast") {$Pool_Algorithm = "cryptonight_fast2"} #temp. fix since MSR is mined with CnFast2
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
@@ -127,7 +127,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                     StablePrice   = $Stat.$StatAverageStable
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = $Pool_Protocol
-                    Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
+                    Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$($Pool_Algorithm).$($Pool_Region).mine.zergpool.com"}
                     Port          = $Pool_Port_SSL
                     User          = $Wallets.$Pool_ExCurrency
                     Pass          = "ID={workername:$Worker},c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency,m=solo{diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
