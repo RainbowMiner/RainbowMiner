@@ -118,7 +118,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                     Algorithm     = $Pool_Algorithm_Norm
                     Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
-                    CoinSymbol    = $Pool_CoinSymbol
+                    CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_ExCurrency
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.$StatAverageStable
