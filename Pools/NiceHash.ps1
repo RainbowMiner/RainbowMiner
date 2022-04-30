@@ -52,17 +52,6 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 }
 
 [hashtable]$Pool_Algorithms = @{}
-[hashtable]$Pool_RegionsTable = @{}
-[hashtable]$Pool_FailoverRegionsTable = @{}
-
-#$Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
-$Pool_Regions = @("eu-west", "eu-north", "usa-west", "usa-east")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-foreach($Pool_Region in $Pool_Regions) {
-    $Pool_FailoverRegions = @(Get-Region2 $Pool_RegionsTable.$Pool_Region | Where-Object {$Pool_RegionsTable.ContainsValue($_)})
-    [array]::Reverse($Pool_FailoverRegions)
-    $Pool_FailoverRegionsTable.$Pool_Region = $Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Sort-Object -Descending {$Pool_FailoverRegions.IndexOf($Pool_RegionsTable.$_)} | Select-Object -Unique -First 3
-}
 
 $Pool_PoolFee = if (-not $InfoOnly -and $Global:NHWallets[$Wallets.BTC]) {5.0} else {2.0}
 
@@ -70,10 +59,9 @@ $Grin29_Algorithm = (Get-Coin "GRIN").algo
 
 $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and [Double]$_.speed -gt 0) -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
-    $Pool_Data = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
-    $Pool_Port = $Pool_Data.port
-
+    $Pool_Data      = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.algorithm -eq $Pool_Algorithm}
     $Pool_Algorithm = $Pool_Algorithm.ToLower()
+    $Pool_Host      = "$($Pool_Algorithm).auto.nicehash.com"
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
@@ -101,23 +89,58 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
         $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
     }
 
-    $Pool_Host = ".nicehash.com"
-
     $Pool_IsEthash = $Pool_Algorithm_Norm -match "^Etc?hash"
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
     }
 
-    foreach($Pool_Region in $Pool_Regions) {
-        if ($Wallets.BTC -or $InfoOnly) {
-            $This_Host = "$Pool_Algorithm.$Pool_Region$Pool_Host"
-            $Pool_Failover = @($Pool_FailoverRegionsTable.$Pool_Region | Foreach-Object {"$Pool_Algorithm.$_$Pool_Host"})
+    if ($Wallets.BTC -or $InfoOnly) {
 
-            foreach($Pool_Protocol in @("stratum+tcp")) { #,"stratum+ssl")) { #temporarily suspend SSL
+        foreach($Pool_SSL in @($false,$true)) {
+            if ($Pool_SSL) {
+                $Pool_Protocol = "stratum+ssl"
+                $Pool_Port     = 443
+            } else {
+                $Pool_Protocol = "stratum+tcp"
+                $Pool_Port     = $Pool_Data.port
+            }
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+				Algorithm0    = $Pool_Algorithm_Norm
+                CoinName      = "$($Pool_Coin.Name)"
+                CoinSymbol    = "$Pool_CoinSymbol"
+                Currency      = "BTC"
+                Price         = $Stat.$StatAverage
+                StablePrice   = $Stat.$StatAverageStable
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = $Pool_Protocol
+                Host          = $Pool_Host
+                Port          = $Pool_Port
+                User          = "$($Wallets.BTC).{workername:$Worker}"
+                Pass          = "x"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $Pool_SSL
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_PoolFee
+                PaysLive      = $true
+                EthMode       = $Pool_EthProxy
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+				Disabled      = $false
+				HasMinerExclusions = $false
+                Price_0       = 0.0
+				Price_Bias    = 0.0
+				Price_Unbias  = 0.0
+                Wallet        = $Wallets.BTC
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
+            }
+            if ($Pool_IsEthash) {
                 [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-					Algorithm0    = $Pool_Algorithm_Norm
+                    Algorithm     = "$($Pool_Algorithm_Norm)NH"
+					Algorithm0    = "$($Pool_Algorithm_Norm)NH"
                     CoinName      = "$($Pool_Coin.Name)"
                     CoinSymbol    = "$Pool_CoinSymbol"
                     Currency      = "BTC"
@@ -125,24 +148,15 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                     StablePrice   = $Stat.$StatAverageStable
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = $Pool_Protocol
-                    Host          = $This_Host
+                    Host          = $Pool_Host
                     Port          = $Pool_Port
                     User          = "$($Wallets.BTC).{workername:$Worker}"
                     Pass          = "x"
-                    Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $Pool_Protocol -match "ssl"
+                    Region        = "US"
+                    SSL           = $Pool_SSL
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     PaysLive      = $true
-                    Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
-                                        [PSCustomObject]@{
-                                            Protocol = $Pool_Protocol
-                                            Host     = $_
-                                            Port     = $Pool_Port
-                                            User     = "$($Wallets.BTC).{workername:$Worker}"
-                                            Pass     = "x"
-                                        }
-                                    })
                     EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
@@ -155,49 +169,6 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                     Wallet        = $Wallets.BTC
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
-                }
-                if ($Pool_IsEthash) {
-                    [PSCustomObject]@{
-                        Algorithm     = "$($Pool_Algorithm_Norm)NH"
-					    Algorithm0    = "$($Pool_Algorithm_Norm)NH"
-                        CoinName      = "$($Pool_Coin.Name)"
-                        CoinSymbol    = "$Pool_CoinSymbol"
-                        Currency      = "BTC"
-                        Price         = $Stat.$StatAverage
-                        StablePrice   = $Stat.$StatAverageStable
-                        MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = $Pool_Protocol
-                        Host          = $This_Host
-                        Port          = $Pool_Port
-                        User          = "$($Wallets.BTC).{workername:$Worker}"
-                        Pass          = "x"
-                        Region        = $Pool_RegionsTable.$Pool_Region
-                        SSL           = $Pool_Protocol -match "ssl"
-                        Updated       = $Stat.Updated
-                        PoolFee       = $Pool_PoolFee
-                        PaysLive      = $true
-                        Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
-                                            [PSCustomObject]@{
-                                                Protocol = $Pool_Protocol
-                                                Host     = $_
-                                                Port     = $Pool_Port
-                                                User     = "$($Wallets.BTC).{workername:$Worker}"
-                                                Pass     = "x"
-                                            }
-                                        })
-                        EthMode       = $Pool_EthProxy
-                        Name          = $Name
-                        Penalty       = 0
-                        PenaltyFactor = 1
-					    Disabled      = $false
-					    HasMinerExclusions = $false
-                        Price_0       = 0.0
-					    Price_Bias    = 0.0
-					    Price_Unbias  = 0.0
-                        Wallet        = $Wallets.BTC
-                        Worker        = "{workername:$Worker}"
-                        Email         = $Email
-                    }
                 }
             }
         }
