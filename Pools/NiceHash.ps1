@@ -103,7 +103,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                 $Pool_Port     = 443
             } else {
                 $Pool_Protocol = "stratum+tcp"
-                $Pool_Port     = $Pool_Data.port
+                $Pool_Port     = 9200
             }
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
