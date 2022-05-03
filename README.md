@@ -56,7 +56,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
     - **Nvidia official downloads**:
-      - [Nvidia Driver Version v471.41 - Windows 10](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win10-64bit-international-dch-whql.exe)
+      - [Nvidia Driver Version v512.15 - Windows 10](https://international.download.nvidia.com/Windows/512.15/512.15-desktop-win10-win11-64bit-international-dch-whql.exe)
       - [Nvidia Driver Version v471.41 - Windows 7,8,8.1](https://international.download.nvidia.com/Windows/471.41/471.41-desktop-win7-64bit-international-whql.exe)
     - **AMD**: [AMD Adrenalin 2022 Edition 22.3.2](https://drivers.amd.com/drivers/amd-software-adrenalin-edition-22.3.2-win10-win11-march24.exe) - if you run into trouble, try older versions from here: https://www.amd.com/de/support
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
