@@ -102,10 +102,10 @@ Nvidia has kindly supplied a ppa for their official drivers.
 
 3. now install the new Nvidia driver and reboot
 
-       sudo apt -y install nvidia-headless-450 nvidia-driver-450 nvidia-compute-utils-450 nvidia-cuda-toolkit
+       sudo apt -y install nvidia-headless-510 nvidia-driver-510 nvidia-compute-utils-510 nvidia-cuda-toolkit
        sudo reboot
 
-**Important: check which version of the Nvidia driver you need (i.e. which is compatible with your graphics card)** You can check on the Nvidia website which products are supported by each driver (the latest one is usually the best if you have a recent graphics card). Not doing so can cause black screen on reboot. Only the main version is needed (don't bother about the number after the point, so if latest driver is 430.24, just write 430).
+**Important: check which version of the Nvidia driver you need (i.e. which is compatible with your graphics card)** You can check on the Nvidia website which products are supported by each driver (the latest one is usually the best if you have a recent graphics card). Not doing so can cause black screen on reboot. Only the main version is needed (don't bother about the number after the point, so if latest driver is 510.60, just write 510).
 
 ###### Optional Overclocking for Nvidia:
 
