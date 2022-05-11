@@ -723,6 +723,7 @@
     "tethashv1": "TEThashV1",
     "timetravel": "Timetravel",
     "timetravel10": "Bitcore",
+    "ton": "SHA256ton",
     "tonpow": "SHA256ton",
     "trezarcoin": "NeoScrypt",
     "tribus": "Tribus",
