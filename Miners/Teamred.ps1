@@ -160,6 +160,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
                     foreach($Intensity in @($Miner_Intensity)) {
 
+                        $Intensity = try {[double]$Intensity} catch {if ($Error.Count){$Error.RemoveAt(0)};0}
+
                         if ($Intensity -gt 0) {
                             $Miner_Name_Dual = (@($Name) + @("$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)-$([int]($Intensity*100))") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                             $DeviceIntensitiesAll = (",$($Intensity)"*($Miner_Device | Measure-Object).Count) -replace "^,"
