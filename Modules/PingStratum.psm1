@@ -67,14 +67,14 @@ param(
     [Parameter(Mandatory = $False)]
     [bool]$WaitForResponse = $False,
     [Parameter(Mandatory = $False)]
-    [ValidateSet("Stratum","EthProxy")]
+    [ValidateSet("Stratum","EthProxy","Qtminer")]
     [string]$Method = "Stratum",
     [Parameter(Mandatory = $false)]
     [Switch]$UseSSL
 )    
-    $Request = if ($Method -eq "EthProxy") {"{`"id`": 1, `"method`": `"login`", `"params`": {`"login`": `"$($User)`", `"pass`": `"$($Pass)`", `"rigid`": `"$($Worker)`", `"agent`": `"RainbowMiner/$($Session.Version)`"}}"} else {"{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": [`"$($User)`"]}"}
+    $Request = if ($Method -eq "EthProxy") {"{`"id`": 1, `"method`": `"login`", `"params`": {`"login`": `"$($User)`", `"pass`": `"$($Pass)`", `"rigid`": `"$($Worker)`", `"agent`": `"RainbowMiner/$($Session.Version)`"}}"} elseif ($Method -eq "Qtminer") {"{`"id`":1, `"jsonrpc`":`"2.0`", `"method`":`"eth_login`", `"params`":[`"$($User)`",`"$($Pass)`"]}"} else {"{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": [`"$($User)`"]}"}
     #"{`"id`":1, `"jsonrpc`":`"2.0`", `"method`":`"eth_submitLogin`", `"params`":[`"$($User)`"]}"
-
+    
     try {
         if ($WaitForResponse) {
             $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -UseSSL:$UseSSL

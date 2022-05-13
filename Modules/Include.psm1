@@ -2895,6 +2895,9 @@ function Invoke-TcpRequest {
             $UseSSL = $Uri.Scheme -eq "https"
         }
         $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
+        $client.SendTimeout = $Timeout * 1000
+        $client.ReceiveTimeout = $Timeout * 1000
+
         #$Client.LingerState = [System.Net.Sockets.LingerOption]::new($true, 0)
 
         if ($UseSSL) {
@@ -2907,8 +2910,6 @@ function Invoke-TcpRequest {
 
         $Writer = [System.IO.StreamWriter]::new($Stream)
         if (-not $WriteOnly -or $Uri) {$Reader = [System.IO.StreamReader]::new($Stream)}
-        $client.SendTimeout = $Timeout * 1000
-        $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
 
         if ($Uri) {
@@ -7564,19 +7565,21 @@ param(
     [Parameter(Mandatory = $False)]
     [bool]$WaitForResponse = $False,
     [Parameter(Mandatory = $False)]
-    [ValidateSet("Stratum","EthProxy")]
-    [string]$Method = "Stratum"
+    [ValidateSet("Stratum","EthProxy","Qtminer")]
+    [string]$Method = "Stratum",
+    [Parameter(Mandatory = $false)]
+    [Switch]$UseSSL
 )    
-    $Request = if ($Method -eq "EthProxy") {"{`"id`": 1, `"method`": `"login`", `"params`": {`"login`": `"$($User)`", `"pass`": `"$($Pass)`", `"rigid`": `"$($Worker)`", `"agent`": `"RainbowMiner/$($Session.Version)`"}}"} else {"{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": [`"RainbowMiner/$($Session.Version)`"]}"}
+    $Request = if ($Method -eq "EthProxy") {"{`"id`": 1, `"method`": `"login`", `"params`": {`"login`": `"$($User)`", `"pass`": `"$($Pass)`", `"rigid`": `"$($Worker)`", `"agent`": `"RainbowMiner/$($Session.Version)`"}}"} elseif ($Method -eq "qtminer") {"{`"id`":1, `"jsonrpc`":`"2.0`", `"method`":`"eth_login`", `"params`":[`"$($User)`",`"$($Pass)`"]}"} else {"{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": [`"RainbowMiner/$($Session.Version)`"]}"}
     try {
         if ($WaitForResponse) {
-            $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet
+            $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -UseSSL:$UseSSL -Quiet
             if ($Result) {
                 $Result = ConvertFrom-Json $Result -ErrorAction Stop
                 if ($Result.id -eq 1 -and -not $Result.error) {$true}
             }
         } else {
-            Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet -WriteOnly > $null
+            Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet -WriteOnly -UseSSL:$UseSSL > $null
             $true
         }
     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
