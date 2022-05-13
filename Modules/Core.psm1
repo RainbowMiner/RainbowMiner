@@ -2072,6 +2072,9 @@ function Invoke-Core {
         $SortedPools = @($NewPools | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL})
         foreach($Algorithm_Name in @($NewPools.ForEach({$_.Algorithm.ToLower()}) | Select-Object -Unique)) {
             $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.DisabledDueToCoinSymbolPBM},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
+            #if ($Session.Config.SSL -and -not [bool]$Pools.PSObject.Properties[$Algorithm_Name]) {
+            #    $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.DisabledDueToCoinSymbolPBM -and -not $_.SSL},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
+            #}
         }
         if ($SortedPools -ne $null) {Remove-Variable "SortedPools"}
 
@@ -3215,23 +3218,24 @@ function Invoke-Core {
         Write-Host $Miner_DeviceTitle
         Write-Host $("=" * $Miner_DeviceTitle.Length)
 
-        [System.Collections.Generic.List[hashtable]]$Miner_Table = @(
-            @{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}},
-            @{Label = "Fee"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.DevFee.$_) {'{0:p2}' -f ($m.DevFee.$_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'},
-            @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}},
-            @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'},
-            @{Label = "Diff"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.Difficulties.$_) {($m.Difficulties.$_ | ConvertTo-Float) -replace " "} else {"-"}}) -join ','}; Align = 'right'},
-            @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
-        )
-        foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
-            $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
+        [System.Collections.Generic.List[hashtable]]$Miner_Table = @()
+
+        foreach ($col in $Session.Config.UIProfitColumns) {
+            Switch ($col) {
+                "Miner"     {$Miner_Table.Add(@{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}})}
+                "Fee"       {$Miner_Table.Add(@{Label = "Fee"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.DevFee.$_) {'{0:p2}' -f ($m.DevFee.$_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'})}
+                "Algorithm" {$Miner_Table.Add(@{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}})}
+                "Speed"     {$Miner_Table.Add(@{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'})}
+                "Diff"      {$Miner_Table.Add(@{Label = "Diff"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.Difficulties.$_) {($m.Difficulties.$_ | ConvertTo-Float) -replace " "} else {"-"}}) -join ','}; Align = 'right'})}
+                "Power"     {$Miner_Table.Add(@{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'})}
+                "Profit"    {foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {$Miner_Table.Add(@{Label = "$Miner_Currency/Day"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"})}}
+                "TTF"       {$Miner_Table.Add(@{Label = "TTF"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.BLK) {86400/$_.BLK | ConvertTo-TTF} else {"-"}}}; Align = 'right'})}
+                "Accuracy"  {$Miner_Table.Add(@{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'})}
+                "Pool"      {$Miner_Table.Add(@{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}})}
+                "PoolFee"   {$Miner_Table.Add(@{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'})}
+                "Wallet"    {$Miner_Table.Add(@{Label = "Wallet"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.Wallet) {if ($_.Wallet.Length -le 8) {"$($_.Wallet)"} else {"$($_.Wallet.Substring(0,3))..$($_.Wallet.Substring($_.Wallet.Length-3,3))"}} else {"-"}}}})}
+            }
         }
-        $Miner_Table.AddRange([System.Collections.Generic.List[hashtable]]@(
-            @{Label = "TTF"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.BLK) {86400/$_.BLK | ConvertTo-TTF} else {"-"}}}; Align = 'right'},
-            @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
-            @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}}
-            @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
-        )) > $null
 
         $Miners_Count = 0
         $Miners.Where({$_.DeviceModel -eq $Miner_DeviceModel -and ($_.HashRates.PSObject.Properties.Value -gt 0 -or $_.Profit -eq $null)}) | Sort-Object @{Expression = {if ($Session.Benchmarking -and $Session.Config.UIsorting -ne "profit") {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.Benchmarking -or $Session.Config.UIsorting -eq "profit") {$_.Profit}}; Descending = $true}, @{Expression = {if ($Session.Benchmarking -and $Session.Config.UIsorting -eq "profit") {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.IsExclusiveRun -or $Session.IsDonationRun -or $Session.IsServerDonationRun -or $MinersNeedingBenchmarkCount -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Where-Object {$Miners_Count -lt [Math]::Min($LimitMiners,5) -or ($Session.Config.UIstyle -ne "full" -and $_.HashRates.PSObject.Properties.Value -gt 0) -or ($_.Profit+$(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})) -ge $Miner_ProfitMin -or $_.Profit -eq $null;$Miners_Count++} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
@@ -3339,7 +3343,7 @@ function Invoke-Core {
 
     if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {
         #Display watchdog timers
-        $Global:WatchdogTimers.Where({$_.Kicked -gt $Session.Timer.AddSeconds( - $Session.WatchdogReset)}) | Format-Table -Wrap (
+        $Global:WatchdogTimers.Where({$_.Kicked -gt $WDResetTime}) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName -replace '\-.*$'}},
             @{Label = "Device"; Expression = {@(Get-DeviceModelName $Global:DeviceCache.Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 

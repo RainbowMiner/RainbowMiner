@@ -169,6 +169,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$UIFullBenchmarkList = $false, # if set to $true, the benchmarking table will show non-extended miners, too
     [Parameter(Mandatory = $false)]
+    [Array]$UIProfitColumns = @("Miner","Fee","Algorithm","Speed","Diff","Power","Profit","TTF","Accuracy","Pool","PoolFee","Wallet"),
+    [Parameter(Mandatory = $false)]
     [Switch]$UseTimeSync = $false, # if set to $true, the windows time service will be used to synchronize the PC time with world time (needs admin rights)
     [Parameter(Mandatory = $false)]
     [Double]$PowerPrice = 0, # price for 1 kW/h (kilowatt per hour) in USD, EUR or other (set currency with parameter PowerPriceCurrency)
