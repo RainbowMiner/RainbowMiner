@@ -36,6 +36,8 @@ if (-not $InfoOnly) {
     }
 }
 
+$Pool_Wallet = $Wallets.BTC
+
 try {
     $Pool_Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag $Name -timeout 20
     $Pool_MiningRequest = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/algorithms/" -tag $Name -cycle 3600 -timeout 20
@@ -53,7 +55,7 @@ if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_Mi
 
 [hashtable]$Pool_Algorithms = @{}
 
-$Pool_PoolFee = if (-not $InfoOnly -and $Global:NHWallets[$Wallets.BTC]) {5.0} else {2.0}
+$Pool_PoolFee = if (-not $InfoOnly -and $Global:NHWallets[$Pool_Wallet]) {5.0} else {2.0}
 
 $Grin29_Algorithm = (Get-Coin "GRIN").algo
 
@@ -95,7 +97,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
     }
 
-    if ($Wallets.BTC -or $InfoOnly) {
+    if ($Pool_Wallet -or $InfoOnly) {
 
         foreach($Pool_SSL in @($false,$true)) {
             if ($Pool_SSL) {
@@ -117,7 +119,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                 Protocol      = $Pool_Protocol
                 Host          = $Pool_Host
                 Port          = $Pool_Port
-                User          = "$($Wallets.BTC).{workername:$Worker}"
+                User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $Pool_SSL
@@ -133,7 +135,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                 Price_0       = 0.0
 				Price_Bias    = 0.0
 				Price_Unbias  = 0.0
-                Wallet        = $Wallets.BTC
+                Wallet        = $Pool_Wallet
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
@@ -150,7 +152,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                     Protocol      = $Pool_Protocol
                     Host          = $Pool_Host
                     Port          = $Pool_Port
-                    User          = "$($Wallets.BTC).{workername:$Worker}"
+                    User          = "$($Pool_Wallet).{workername:$Worker}"
                     Pass          = "x"
                     Region        = "US"
                     SSL           = $Pool_SSL
@@ -166,7 +168,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00 -and 
                     Price_0       = 0.0
 					Price_Bias    = 0.0
 					Price_Unbias  = 0.0
-                    Wallet        = $Wallets.BTC
+                    Wallet        = $Pool_Wallet
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
                 }
