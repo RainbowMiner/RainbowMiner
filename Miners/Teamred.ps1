@@ -41,9 +41,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";               MinMemGb = 8;   Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "etchash";          DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3}
-    [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "ton"; SecondPoolName = "Icemining|ToncoinPool|TonPool|TONWhales"}
+    [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "ton"; SecondPoolName = "hashrate|toncoinpool|ton-pool|whalestonpool"}
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; Algorithm = "ethash"}
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "ton"; SecondPoolName = "Icemining|ToncoinPool|TonPool|TONWhales"}
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "ton"; SecondPoolName = "hashrate|toncoinpool|ton-pool|whalestonpool"}
     [PSCustomObject]@{MainAlgorithm = "firopow";          DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3}
     [PSCustomObject]@{MainAlgorithm = "kawpow";           DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3";                     MinMemGb = 1.5; Params = ""; DevFee = 2.5}
@@ -51,7 +51,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp";                           MinMemGb = 5;   Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "nimiq";                         MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "phi2";                          MinMemGb = 1.5; Params = ""; DevFee = 3.0}
-    [PSCustomObject]@{MainAlgorithm = "ton";                           MinMemGb = 1.5; Params = ""; DevFee = 3.0; ExtendInterval = 2; PoolName = "Icemining|ToncoinPool|TonPool|TONWhales"}
+    [PSCustomObject]@{MainAlgorithm = "ton";                           MinMemGb = 1.5; Params = ""; DevFee = 3.0; ExtendInterval = 2; PoolName = "hashrate|toncoinpool|ton-pool|whalestonpool"}
     [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";                   MinMemGb = 1.5; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "verthash";                      MinMemGb = 1.5; Params = ""; DevFee = 2.0}
     [PSCustomObject]@{MainAlgorithm = "trtl_chukwa2";                  MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeArchitecture = @("gfx1010","gfx1011","gfx1012","gfx1030","gfx1031","gfx1032")}
@@ -94,6 +94,11 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
         $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
+        #Zombie-mode since v0.7.14
+        if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
+            $MinMemGB = $_.MinMemGB
+        }
+
         $Miner_ExcludeArch = $_.ExcludeArchitecture
         $Miner_Arch = $_.Architecture
 
@@ -102,11 +107,6 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
         if ($SecondAlgorithm_Norm_0 -and $Miner_Arch -and (-not ($Miner_Device_Dual | Measure-Object).Count)) {
             $Miner_Device = $null
-        }
-
-        #Zombie-mode since v0.7.14
-        if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
-            $MinMemGB = $_.MinMemGB
         }
 
         $Miner_DevFee = $_.DevFee
