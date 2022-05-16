@@ -2731,6 +2731,11 @@ class Wrapper : Miner {
 
 
 class Xgminer : Miner {
+    [String]GetArguments() {
+        $Arguments = $this.Arguments -replace "\`$mport2",($this.Port + 1) -replace "\`$mport",$this.Port
+        return $Arguments
+    }
+
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
@@ -2739,7 +2744,7 @@ class Xgminer : Miner {
 
         $DualMining = $this.Algorithm.Count -eq 2
 
-        $Request = @{command = "summary$(if ($DualMining) {"+summary2"})"; parameter = ""} | ConvertTo-Json -Depth 10 -Compress
+        $Request = @{command = "summary"; parameter = ""} | ConvertTo-Json -Depth 10 -Compress
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}
@@ -2785,33 +2790,44 @@ class Xgminer : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
             if ($DualMining) {
+
+                try {
+                    $Response = Invoke-TcpRequest $Server ($this.Port + 1) $Request -Timeout $Timeout -ErrorAction Stop -Quiet
+                    $Data = $Response.Substring($Response.IndexOf("{"), $Response.LastIndexOf("}") - $Response.IndexOf("{") + 1) -replace " ", "_" | ConvertFrom-Json -ErrorAction Stop
+                }
+                catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Info "Failed to connect to miner $($this.Name), second algorithm $($this.Algorithm[1]). "
+                    return
+                }
+
                 $HashRate_Name = [String]$this.Algorithm[1]
-                $HashRate_Value = If ($Data.SUMMARY2.HS_5s) { [Double]$Data.SUMMARY2.HS_5s }
-                elseif ($Data.SUMMARY2.KHS_5s) { [Double]$Data.SUMMARY2.KHS_5s * 1e3 }
-                elseif ($Data.SUMMARY2.MHS_5s) { [Double]$Data.SUMMARY2.MHS_5s * 1e6 }
-                elseif ($Data.SUMMARY2.GHS_5s) { [Double]$Data.SUMMARY2.GHS_5s * 1e9 }
-                elseif ($Data.SUMMARY2.THS_5s) { [Double]$Data.SUMMARY2.THS_5s * 1e12 }
-                elseif ($Data.SUMMARY2.PHS_5s) { [Double]$Data.SUMMARY2.PHS_5s * 1e15 }
-                elseif ($Data.SUMMARY2.KHS_30s) { [Double]$Data.SUMMARY2.KHS_30s * 1e3 }
-                elseif ($Data.SUMMARY2.MHS_30s) { [Double]$Data.SUMMARY2.MHS_30s * 1e6 }
-                elseif ($Data.SUMMARY2.GHS_30s) { [Double]$Data.SUMMARY2.GHS_30s * 1e9 }
-                elseif ($Data.SUMMARY2.THS_30s) { [Double]$Data.SUMMARY2.THS_30s * 1e12 }
-                elseif ($Data.SUMMARY2.PHS_30s) { [Double]$Data.SUMMARY2.PHS_30s * 1e15 }
-                elseif ($Data.SUMMARY2.HS_av) { [Double]$Data.SUMMARY2.HS_av }
-                elseif ($Data.SUMMARY2.KHS_av) { [Double]$Data.SUMMARY2.KHS_av * 1e3 }
-                elseif ($Data.SUMMARY2.MHS_av) { [Double]$Data.SUMMARY2.MHS_av * 1e6 }
-                elseif ($Data.SUMMARY2.GHS_av) { [Double]$Data.SUMMARY2.GHS_av * 1e9 }
-                elseif ($Data.SUMMARY2.THS_av) { [Double]$Data.SUMMARY2.THS_av * 1e12 }
-                elseif ($Data.SUMMARY2.PHS_av) { [Double]$Data.SUMMARY2.PHS_av * 1e15 }
+                $HashRate_Value = If ($Data.SUMMARY.HS_5s) { [Double]$Data.SUMMARY.HS_5s }
+                elseif ($Data.SUMMARY.KHS_5s) { [Double]$Data.SUMMARY.KHS_5s * 1e3 }
+                elseif ($Data.SUMMARY.MHS_5s) { [Double]$Data.SUMMARY.MHS_5s * 1e6 }
+                elseif ($Data.SUMMARY.GHS_5s) { [Double]$Data.SUMMARY.GHS_5s * 1e9 }
+                elseif ($Data.SUMMARY.THS_5s) { [Double]$Data.SUMMARY.THS_5s * 1e12 }
+                elseif ($Data.SUMMARY.PHS_5s) { [Double]$Data.SUMMARY.PHS_5s * 1e15 }
+                elseif ($Data.SUMMARY.KHS_30s) { [Double]$Data.SUMMARY.KHS_30s * 1e3 }
+                elseif ($Data.SUMMARY.MHS_30s) { [Double]$Data.SUMMARY.MHS_30s * 1e6 }
+                elseif ($Data.SUMMARY.GHS_30s) { [Double]$Data.SUMMARY.GHS_30s * 1e9 }
+                elseif ($Data.SUMMARY.THS_30s) { [Double]$Data.SUMMARY.THS_30s * 1e12 }
+                elseif ($Data.SUMMARY.PHS_30s) { [Double]$Data.SUMMARY.PHS_30s * 1e15 }
+                elseif ($Data.SUMMARY.HS_av) { [Double]$Data.SUMMARY.HS_av }
+                elseif ($Data.SUMMARY.KHS_av) { [Double]$Data.SUMMARY.KHS_av * 1e3 }
+                elseif ($Data.SUMMARY.MHS_av) { [Double]$Data.SUMMARY.MHS_av * 1e6 }
+                elseif ($Data.SUMMARY.GHS_av) { [Double]$Data.SUMMARY.GHS_av * 1e9 }
+                elseif ($Data.SUMMARY.THS_av) { [Double]$Data.SUMMARY.THS_av * 1e12 }
+                elseif ($Data.SUMMARY.PHS_av) { [Double]$Data.SUMMARY.PHS_av * 1e15 }
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
                     $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
 
-                    $Difficulty_Value = [Double]$Data.SUMMARY2.Difficulty_Accepted
+                    $Difficulty_Value = [Double]$Data.SUMMARY.Difficulty_Accepted
                     $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
 
-                    $Accepted_Shares  = [Int64]$Data.SUMMARY2.accepted
-                    $Rejected_Shares  = [Int64]$Data.SUMMARY2.rejected
+                    $Accepted_Shares  = [Int64]$Data.SUMMARY.accepted
+                    $Rejected_Shares  = [Int64]$Data.SUMMARY.rejected
                     $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
                 }
             }
