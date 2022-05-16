@@ -142,6 +142,7 @@
 366	VertHashSP
 367	FiroPOWNvidia
 368	ClaymoreDual
+369	Gminer294
 
 400	Sgminer
 401	SgminerBitcore
