@@ -70,7 +70,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_User     = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+    $Pool_User     = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -ne "TON") {".{workername:$Worker}"})"
     $Pool_Protocol = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
     $Pool_Fee      = if ($PoolCoins_Request.$Pool_Currency.reward_model.PPLNS -ne $null) {[double]$PoolCoins_Request.$Pool_Currency.reward_model.PPLNS} else {$_.fee}
     $Pool_Pass     = if ($Pool_Currency -eq "SIN") {
