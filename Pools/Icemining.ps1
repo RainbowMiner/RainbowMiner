@@ -41,12 +41,15 @@ $Pool_Regions = @("fi","de","sg","eu-north","tr","us-west")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
+    [PSCustomObject]@{symbol="ALPH";            region = @("ca");                                host="alph.%region%.hashrate.to"; port=4010; fee = 1}
     #[PSCustomObject]@{symbol="EPIC-Cuckatoo31"; region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2}
-    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("eu-north","de","tr","us-west"); host=@("epic.eu-north.hashrate.to","epic.eu-de.hashrate.to","epic.tr.hashrate.to","epic.us-west.hashrate.to"); port=4000; fee = 2; hashrate = "randomx"}
-    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("eu-north","de","tr","us-west"); host=@("epic.eu-north.hashrate.to","epic.eu-de.hashrate.to","epic.tr.hashrate.to","epic.us-west.hashrate.to"); port=4000; fee = 2; hashrate = "progpow"}
-    [PSCustomObject]@{symbol="NIM";             region = @("us"); host=@("nimiq.icemining.ca"); port=2053; fee = 1.25; ssl = $true}
-    #[PSCustomObject]@{symbol="SIN";             region = @("us","eu","asia"); host=@("stratum.icemining.ca","eu.icemining.ca","asia.icemining.ca"); port=4205; fee = 1}
-    [PSCustomObject]@{symbol="TON";             region = @("fi","de","sg","ca"); host=@("ton.fi.hashrate.to","ton.de.hashrate.to","ton.sg.hashrate.to","ton.ca.hashrate.to"); port=4003; fee = 1; ssl = $true}
+    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("ca","eu-north","de","tr","hk","sg"); host="epic.%region%.hashrate.to"; port=4000; fee = 2; hashrate = "randomx"}
+    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("ca","hk","sg");                      host="epic.%region%.hashrate.to"; port=4100; fee = 2; hashrate = "randomx"; ssl = $true}
+    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("ca","eu-north","de","tr","hk","sg"); host="epic.%region%.hashrate.to"; port=4000; fee = 2; hashrate = "progpow"}
+    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("ca","hk","sg");                      host="epic.%region%.hashrate.to"; port=4100; fee = 2; hashrate = "progpow"; ssl = $true}
+    [PSCustomObject]@{symbol="NIM";             region = @("ca");                                host="nimiq.icemining.ca";        port=2053; fee = 1.25; ssl = $true}
+    [PSCustomObject]@{symbol="TON";             region = @("ca","fi","de","sg","hk","tr");       host="ton.%region%.hashrate.to";  port=4003; fee = 1}
+    [PSCustomObject]@{symbol="TON";             region = @("sg","hk");                           host="ton.%region%.hashrate.to";  port=4103; fee = 1; ssl = $true}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
@@ -67,11 +70,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_User = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-    $Pool_Protocol = "$(if ($Pool_Currency -ne "TON") {"stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"})"
-    $Pool_Fee = if ($PoolCoins_Request.$Pool_Currency.reward_model.PPLNS -ne $null) {[double]$PoolCoins_Request.$Pool_Currency.reward_model.PPLNS} else {$_.fee}
-
-    $Pool_Pass = if ($Pool_Currency -eq "SIN") {
+    $Pool_User     = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+    $Pool_Protocol = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
+    $Pool_Fee      = if ($PoolCoins_Request.$Pool_Currency.reward_model.PPLNS -ne $null) {[double]$PoolCoins_Request.$Pool_Currency.reward_model.PPLNS} else {$_.fee}
+    $Pool_Pass     = if ($Pool_Currency -eq "SIN") {
         "c=$Pool_Currency{diff:,d=`$difficulty}$(if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"})"
     } else {
         "$(if ($Params.$Pool_Currency) {$Params.$Pool_Currency} else {"x"})"
@@ -89,7 +91,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
             StablePrice   = 0
             MarginOfError = 0
             Protocol      = $Pool_Protocol
-            Host          = "$($_.host[$i])"
+            Host          = "$($_.host -replace "%region%",$Pool_Region)"
             Port          = $_.port
             User          = $Pool_User
             Pass          = $Pool_Pass
