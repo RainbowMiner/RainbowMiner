@@ -35,11 +35,6 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
     return
 }
 
-[hashtable]$Pool_RegionsTable = @{}
-
-$Pool_Regions = @("fi","de","sg","eu-north","tr","us-west")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-
 $Pools_Data = @(
     [PSCustomObject]@{symbol="ALPH";            region = @("ca");                                host="alph.%region%.hashrate.to"; port=4010; fee = 1}
     #[PSCustomObject]@{symbol="EPIC-Cuckatoo31"; region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2}
@@ -51,6 +46,9 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol="TON";             region = @("ca","fi","de","sg","hk","tr");       host="ton.%region%.hashrate.to";  port=4003; fee = 1}
     [PSCustomObject]@{symbol="TON";             region = @("sg","hk");                           host="ton.%region%.hashrate.to";  port=4103; fee = 1; ssl = $true}
 )
+
+[hashtable]$Pool_RegionsTable = @{}
+$Pools_Data.region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
     $Pool_Coin           = Get-Coin $_.symbol
