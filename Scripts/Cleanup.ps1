@@ -1549,6 +1549,10 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.8.4.2")) {
+        $RemoveMinerStats += @("AMD-Teamred-Ethash-SHA256ton-*_HashRate.txt")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
