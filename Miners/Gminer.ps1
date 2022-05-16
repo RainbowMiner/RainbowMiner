@@ -11,22 +11,21 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "2.94"
+$Version = "2.95"
 $DeviceCapability = "5.0"
 $EnableContest = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.94-gminer/gminer_2_94_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.95-gminer/gminer_2_95_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.94-gminer/gminer_2_94_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.95-gminer/gminer_2_95_windows64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Aeternity";                    MinMemGb = 4;                     Params = "--algo aeternity";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckoo29/Aeternity
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                    MinMemGb = 3;                     Params = "--algo BeamHashIII"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $false} #BeamHash3 (BEAM)
     [PSCustomObject]@{MainAlgorithm = "Cortex";                       MinMemGb = 8;                     Params = "--algo cortex";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $false; Fee = 5.0} #Cortex
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";                 MinMemGb = 2;                     Params = "--algo 144_5";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $true} #Equihash 144,5
