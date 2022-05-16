@@ -178,6 +178,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                                 $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthMode) {$Pools.$SecondAlgorithm_Norm.EthMode} else {$null}
 
                                 $SecondPool_Protocol  = if ($Pools.$SecondAlgorithm_Norm.Protocol -eq "wss") {"stratum+tcp"} else {$Pools.$SecondAlgorithm_Norm.Protocol}
+                                if ($SecondPool_Protocol -eq "") {$SecondPool_Protocol = "stratum+$(if ($Pools.$SecondAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
                                 $SecondPool_Port      = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
                                 $SecondPool_Host      = if ($SecondPool_Port) {if ($Pools.$SecondAlgorithm_Norm.Host -match "^([^/]+)/(.+)$") {"$($Matches[1]):$($SecondPool_Port)/$($Matches[2])"} else {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"}} else {$Pools.$SecondAlgorithm_Norm.Host}
                                 $SecondPool_Arguments = "--$($_.SecondAlgorithm) -d $($DeviceIDsDual) -o $($SecondPool_Protocol)://$($SecondPool_Host) -u $($Pools.$SecondAlgorithm_Norm.Wallet).$($Pools.$SecondAlgorithm_Norm.Worker)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($TonMode) {" --ton_pool_mode=$($TonMode)"}) --$($_.SecondAlgorithm)_end"
