@@ -3222,18 +3222,18 @@ function Invoke-Core {
 
         foreach ($col in $Session.Config.UIProfitColumns) {
             Switch ($col) {
-                "Miner"     {$Miner_Table.Add(@{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}})}
-                "Fee"       {$Miner_Table.Add(@{Label = "Fee"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.DevFee.$_) {'{0:p2}' -f ($m.DevFee.$_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'})}
-                "Algorithm" {$Miner_Table.Add(@{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}})}
-                "Speed"     {$Miner_Table.Add(@{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'})}
-                "Diff"      {$Miner_Table.Add(@{Label = "Diff"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.Difficulties.$_) {($m.Difficulties.$_ | ConvertTo-Float) -replace " "} else {"-"}}) -join ','}; Align = 'right'})}
-                "Power"     {$Miner_Table.Add(@{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'})}
-                "Profit"    {foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {$Miner_Table.Add(@{Label = "$Miner_Currency/Day"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"})}}
-                "TTF"       {$Miner_Table.Add(@{Label = "TTF"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.BLK) {86400/$_.BLK | ConvertTo-TTF} else {"-"}}}; Align = 'right'})}
-                "Accuracy"  {$Miner_Table.Add(@{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'})}
-                "Pool"      {$Miner_Table.Add(@{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}})}
-                "PoolFee"   {$Miner_Table.Add(@{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'})}
-                "Wallet"    {$Miner_Table.Add(@{Label = "Wallet"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.Wallet) {if ($_.Wallet.Length -le 8) {"$($_.Wallet)"} else {"$($_.Wallet.Substring(0,3))..$($_.Wallet.Substring($_.Wallet.Length-3,3))"}} else {"-"}}}})}
+                "Miner"     {$Miner_Table.Add(@{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}})>$null}
+                "Fee"       {$Miner_Table.Add(@{Label = "Fee"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.DevFee.$_) {'{0:p2}' -f ($m.DevFee.$_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'})>$null}
+                "Algorithm" {$Miner_Table.Add(@{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}})>$null}
+                "Speed"     {$Miner_Table.Add(@{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'})>$null}
+                "Diff"      {$Miner_Table.Add(@{Label = "Diff"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.Difficulties.$_) {($m.Difficulties.$_ | ConvertTo-Float) -replace " "} else {"-"}}) -join ','}; Align = 'right'})>$null}
+                "Power"     {$Miner_Table.Add(@{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'})>$null}
+                "Profit"    {foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {$Miner_Table.Add(@{Label = "$Miner_Currency/Day"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"})>$null}}
+                "TTF"       {$Miner_Table.Add(@{Label = "TTF"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.BLK) {86400/$_.BLK | ConvertTo-TTF} else {"-"}}}; Align = 'right'})>$null}
+                "Accuracy"  {$Miner_Table.Add(@{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'})>$null}
+                "Pool"      {$Miner_Table.Add(@{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}})>$null}
+                "PoolFee"   {$Miner_Table.Add(@{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'})>$null}
+                "Wallet"    {$Miner_Table.Add(@{Label = "Wallet"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.Wallet) {if ($_.Wallet.Length -le 8) {"$($_.Wallet)"} else {"$($_.Wallet.Substring(0,3))..$($_.Wallet.Substring($_.Wallet.Length-3,3))"}} else {"-"}}}})>$null}
             }
         }
 
