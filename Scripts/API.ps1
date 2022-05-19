@@ -691,6 +691,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $NewFile = "$DebugPath\$($_.Name)"
                 $PurgeString = Get-ContentByStreamReader $_
                 $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
+                $PurgeString = $PurgeString -replace "onnected to [^\s]+:\d+","onnected to XXX:NNN"  -replace "Server [^\s]+:\d+","Server XXX:NNN" -replace "Port=\d+","Port=NNN" -replace "(\d+\.){3}\d+:\d+","X.X.X.X:NNN" -replace "(\d+\.){3}\d+","X.X.X.X" -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
                 Out-File -InputObject $PurgeString -FilePath $NewFile
                 Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
             }
