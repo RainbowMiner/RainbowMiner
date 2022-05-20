@@ -198,6 +198,13 @@ function Start-Setup {
                         }
                     }
                 }
+            } else {
+                $Config.APIauth = $true
+                $Config.APIuser = ($Session.MachineName -replace "[^a-z0-9]+").ToLower()
+                $lCharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray()
+                $nCharSet = "0123456789".ToCharArray()
+                $sCharSet = "/*-+,!?=()@;:._".ToCharArray()
+                $Config.APIpassword = ((1..10 | %{$lCharset | Get-Random}) + (1..3 | %{$nCharset | Get-Random}) + (1..2 | %{$sCharset | Get-Random}) | Sort-Object {Get-Random}) -join ""
             }
 
             $ConfigSetup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
@@ -643,7 +650,7 @@ function Start-Setup {
                         }
                         "apiuser" {
                             if (Get-Yes $Config.APIauth) {
-                                $Config.APIuser = Read-HostString -Prompt "Enter an API username ($(if ($Config.APIuser) {"enter 'clear'"} else {"leave empty"}) to disable auth)" -Default $Config.APIuser -Characters "A-Z0-9" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.APIuser = Read-HostString -Prompt "Enter an API username (only letters and numbers allowed, $(if ($Config.APIuser) {"enter 'clear'"} else {"leave empty"}) to disable auth)" -Default $Config.APIuser -Characters "A-Z0-9" -MinLength 3 -MaxLength 30 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
