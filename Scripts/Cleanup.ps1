@@ -1553,6 +1553,18 @@ try {
         $RemoveMinerStats += @("AMD-Teamred-Ethash-SHA256ton-*_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.8.4.6")) {
+        Get-ChildItem ".\Stats\Pools" -File | Foreach-Object {
+            try {
+                $StatOne = Get-Content $_.FullName -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                if ($StatOne.Hour_Fluctuation -ge 0.3) {
+                    Remove-Item $_.FullName -Force
+                    $ChangesTotal++
+                }
+            } catch {}
+        }
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
