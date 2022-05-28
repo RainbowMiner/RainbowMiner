@@ -27,6 +27,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Aeternity";                    MinMemGb = 4;                     Params = "--algo aeternity";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckoo29/Aeternity
+    [PSCustomObject]@{MainAlgorithm = "BeamHash3";                    MinMemGb = 3;                     Params = "--algo BeamHashIII"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $false} #BeamHash3 (BEAM)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
