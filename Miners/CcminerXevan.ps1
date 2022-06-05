@@ -21,7 +21,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #Lyra2RE2 (alexis78 is faster)
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
-    [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"} #Xevan
+    [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1 -i 21"} #Xevan
 
     # ASIC - never profitable 12/05/2018
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
@@ -57,7 +57,7 @@ if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersi
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
     $Miner_Model = $_.Model
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model -and $_.OpenCL.Architecture -in @("Other","Pascal")})
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
     $Commands.ForEach({
 
