@@ -2358,6 +2358,7 @@ function Invoke-Core {
             $Miner_CommonCommands = $Miner_Arguments = $Miner_Difficulty = ''
             $Miner_MSIAprofile = 0
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = $Miner_ShareCheck = -1
+            $Miner_HashAdjust = $Miner_Hash2Adjust = -111
             $Miner_CommonCommands_found = $false
             [System.Collections.Generic.List[string]]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
             $Miner_CommonCommands_array.AddRange([System.Collections.Generic.List[string]]@($Miner.BaseAlgorithm -split '-' | Select-Object))
@@ -2368,6 +2369,8 @@ function Invoke-Core {
                     if ($Session.Config.Miners.$Miner_CommonCommands.Difficulty -and $Miner_Difficulty -eq '') {$Miner_Difficulty = $Session.Config.Miners.$Miner_CommonCommands.Difficulty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Session.Config.Miners.$Miner_CommonCommands.MSIAprofile}
                     if ($Session.Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and $Miner_Penalty -eq -1) {$Miner_Penalty = [double]$Session.Config.Miners.$Miner_CommonCommands.Penalty}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.HashAdjust -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.HashAdjust -ne '' -and $Miner_HashAdjust -eq -111) {$Miner_HashAdjust = [double]$Session.Config.Miners.$Miner_CommonCommands.HashAdjust}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.Hash2Adjust -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.Hash2Adjust -ne '' -and $Miner_Hash2Adjust -eq -111) {$Miner_Hash2Adjust = [double]$Session.Config.Miners.$Miner_CommonCommands.Hash2Adjust}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ShareCheck -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.ShareCheck -ne '' -and $Miner_ShareCheck -eq -1) {$Miner_ShareCheck = [int]$Session.Config.Miners.$Miner_CommonCommands.ShareCheck}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Session.Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Session.Config.Miners.$Miner_CommonCommands.FaultTolerance}
@@ -2384,6 +2387,8 @@ function Invoke-Core {
                     if ($Session.Config.Miners.$Miner_CommonCommands.Difficulty -and $Miner_Difficulty -eq '') {$Miner_Difficulty = $Session.Config.Miners.$Miner_CommonCommands.Difficulty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -ge 0 -and $Session.Config.Miners.$Miner_CommonCommands.MSIAprofile -ne $Miner_MSIAprofile) {$Miner_MSIAprofile = if (-not $Miner_MSIAprofile){[int]$Session.Config.Miners.$Miner_CommonCommands.MSIAprofile}else{-1}}
                     if ($Session.Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and [double]$Session.Config.Miners.$Miner_CommonCommands.Penalty -gt $Miner_Penalty) {$Miner_Penalty = [double]$Session.Config.Miners.$Miner_CommonCommands.Penalty}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.HashAdjust -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.HashAdjust -ne '' -and $Miner_HashAdjust -eq -111) {$Miner_HashAdjust = [double]$Session.Config.Miners.$Miner_CommonCommands.HashAdjust}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.Hash2Adjust -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.Hash2Adjust -ne '' -and $Miner_Hash2Adjust -eq -111) {$Miner_Hash2Adjust = [double]$Session.Config.Miners.$Miner_CommonCommands.Hash2Adjust}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ShareCheck -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.ShareCheck -ne '' -and $Session.Config.Miners.$Miner_CommonCommands.ShareCheck -ne $Miner_ShareCheck) {$Miner_ShareCheck = [int]$Session.Config.Miners.$Miner_CommonCommands.ShareCheck}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -and [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -gt $Miner_ExtendInterval) {$Miner_ExtendInterval = [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Session.Config.Miners.$Miner_CommonCommands.FaultTolerance -and [double]$Session.Config.Miners.$Miner_CommonCommands.FaultTolerance -gt $Miner_FaultTolerance) {$Miner_FaultTolerance = [double]$Session.Config.Miners.$Miner_CommonCommands.FaultTolerance}
@@ -2450,6 +2455,7 @@ function Invoke-Core {
         foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner.OCprofile[$p] -eq '') {$Miner.OCprofile[$p]=if ($Miner_AlgoNames.Count -eq 1 -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
 
         $NoResult = $false
+        $i = 0
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object {
             $Miner.DevFee.$_ = ([Double]$(if (-not $Session.Config.IgnoreFees) {$Miner.DevFee.$_} else {0}))
 
@@ -2464,11 +2470,16 @@ function Invoke-Core {
                 if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
                 if (-not $Miner.Disabled -and $Disabled.ContainsKey($Miner_Name)) {$Miner.Disabled = $true}
                 $Miner.HashRates.$_       = [Double]$Miner.HashRates.$_
+                $Miner_HashAdjustFactor   = if ($i) {$Miner_Hash2Adjust} else {$Miner_HashAdjust}
+                if ($Miner_HashAdjustFactor -ne -111) {
+                    $Miner.HashRates.$_ *= 1 + $Miner_HashAdjustFactor/100
+                }
                 $Miner.Difficulties[$_]   = ([Double]$Global:StatsCache.$Miner_Name.Diff_Average)
                 $Miner.Ratios[$_]         = ([Double]$Global:StatsCache.$Miner_Name.Ratio_Live)
                 $Miner_Profits[$_]        = ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
                 $Miner_Profits_Bias[$_]   = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
                 $Miner_Profits_Unbias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
+                $i++
             }
         }
 

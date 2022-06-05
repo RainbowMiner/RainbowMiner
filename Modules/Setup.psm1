@@ -2138,7 +2138,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable","tuning","intensity","affinity","threads","sharecheck")) > $null
+                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","hashadjust","hash2adjust","disable","tuning","intensity","affinity","threads","sharecheck")) > $null
                 $MinerSetupSteps.Add("save") > $null                         
 
                 do { 
@@ -2189,12 +2189,14 @@ function Start-Setup {
                                     ExtendInterval = ""
                                     FaultTolerance = ""
                                     Penalty = ""
+                                    HashAdjust = ""
                                     Difficulty = ""
                                     Disable = "0"
                                     Tuning = "0"
                                     ShareCheck = ""
                                 }
                                 if ($EditSecondaryAlgorithm) {
+                                    $EditMinerConfig | Add-Member Hash2Adjust "" -Force
                                     $EditMinerConfig | Add-Member Intensity "" -Force
                                 }
                                 if ($EditDeviceName -match "^CPU") {
@@ -2236,6 +2238,18 @@ function Start-Setup {
                             "penalty" {
                                 $EditMinerConfig.Penalty = Read-HostDouble -Prompt "Use a penalty in % (enter -1 to not change penalty)" -Default $(if ($EditMinerConfig.Penalty -eq ''){-1}else{$EditMinerConfig.Penalty}) -Min -1 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 if ($EditMinerConfig.Penalty -lt 0) {$EditMinerConfig.Penalty=""}
+                            }
+                            "hashadjust" {
+                                $EditMinerConfig.HashAdjust = Read-HostString -Prompt "Adjust primary hashrate by % ($(if ($EditMinerConfig.HashAdjust) {"enter 'clear'"} else {"leave empty"}) for no adjust)" -Default $EditMinerConfig.HashAdjust | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $EditMinerConfig.HashAdjust = $EditMinerConfig.HashAdjust -replace ",","." -replace "[^\d\.\-]+"
+                            }
+                            "hash2adjust" {
+                                if ($EditSecondaryAlgorithm) {
+                                    $EditMinerConfig.Hash2Adjust = Read-HostString -Prompt "Adjust secondary hashrate by % ($(if ($EditMinerConfig.Hash2Adjust) {"enter 'clear'"} else {"leave empty"}) for no adjust)" -Default $EditMinerConfig.Hash2Adjust | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $EditMinerConfig.Hash2Adjust = $EditMinerConfig.Hash2Adjust -replace ",","." -replace "[^\d\.\-]+"
+                                } else {
+                                    $MinerSetupStepStore = $false
+                                }
                             }
                             "disable" {
                                 $MinerSetupStepStore = $false
