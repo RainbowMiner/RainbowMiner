@@ -779,7 +779,7 @@ function Invoke-Core {
         #Speed up restart
         if (-not $Session.RoundCounter -and -not $Session.Config.Quickstart -and (Test-Path ".\Logs\timerpools.json") -and (Get-ChildItem ".\Logs\timerpools.json" -ErrorAction Ignore | Where-Object {$_.LastWriteTime -gt (Get-Date).AddHours(-3)} | Measure-Object).Count) {$Session.Config.Quickstart = $true}
 
-        if ($Session.CurrentPowerPrice -eq $null) {$Session.CurrentPowerPrice = $Session.Config.PowerPrice}
+        if ($Session.CurrentPowerPrice -eq $null) {$Session.CurrentPowerPrice = Get-PowerPrice}
 
         $Session.LogLevel = $Session.Config.LogLevel
 
@@ -949,6 +949,8 @@ function Invoke-Core {
     $MSIAenabled = $IsWindows -and -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
     $Session.OCmode = if ($MSIAenabled) {"msia"} elseif ($Session.Config.EnableOCProfiles) {"ocp"} else {"off"}
 
+    $PowerPriceCurrency = if ($Session.Config.OctopusTariffCode -ne '') {"GBP"} else {$Session.Config.PowerPriceCurrency}
+
     if ($CheckConfig) {
         $API.Info = ConvertTo-Json ([PSCustomObject]@{
                                 Version                = $ConfirmedVersion.Version
@@ -959,7 +961,7 @@ function Invoke-Core {
                                 AlgorithmMap           = (Get-AlgorithmMap)
                                 OCmode                 = $Session.OCmode
                                 UsePowerPrice          = $Session.Config.UsePowerPrice
-                                PowerPriceCurrency     = $Session.Config.PowerPriceCurrency
+                                PowerPriceCurrency     = $PowerPriceCurrency
                                 FixedCostPerDay        = $Session.Config.FixedCostPerDay
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
                                 IsWindows              = $Global:IsWindows
@@ -1112,8 +1114,8 @@ function Invoke-Core {
                         $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                     }
 
-                    $PowerPrice = if ($_.PowerPrice -eq "") {$Session.Config.PowerPrice} else {$_.PowerPrice}
-                    try {$PowerPrice = [Double]$PowerPrice} catch {if ($Error.Count){$Error.RemoveAt(0)};$PowerPrice = $Session.Config.PowerPrice}
+                    $PowerPrice = if ($_.PowerPrice -eq "") {Get-PowerPrice} else {$_.PowerPrice}
+                    try {$PowerPrice = [Double]$PowerPrice} catch {if ($Error.Count){$Error.RemoveAt(0)};$PowerPrice = Get-PowerPrice}
                     $_.PowerPrice = $PowerPrice
                     $MiningHeatControl = if ($_.MiningHeatControl -eq "") {$Session.Config.MiningHeatControl} else {$_.MiningHeatControl}
                     try {$MiningHeatControl = [Double]$MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)};$MiningHeatControl = $Session.Config.MiningHeatControl}
@@ -1333,7 +1335,7 @@ function Invoke-Core {
 
     #Get PowerPrice and Scheduler events
     $PauseByScheduler        = $false
-    $PowerPrice              = [Double]$Session.Config.PowerPrice
+    $PowerPrice              = [Double](Get-PowerPrice)
     $EnableMiningHeatControl = $Session.Config.EnableMiningHeatControl
     $MiningHeatControl       = $Session.Config.MiningHeatControl
     $PauseRentals            = $false
@@ -1734,13 +1736,13 @@ function Invoke-Core {
     $Session.FixedCostPerDayBTC   = 0
     $Session.CurrentPowerPriceBTC = 0
 
-    if ($Session.Config.PowerPriceCurrency) {
-        if ($PowerPrice_Rate = [Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)") {
+    if ($PowerPriceCurrency) {
+        if ($PowerPrice_Rate = [Double]$Global:Rates."$($PowerPriceCurrency)") {
             $Session.PowerPriceBTC        = [Double]$Session.Config.PowerPrice/$PowerPrice_Rate
             $Session.FixedCostPerDayBTC   = [Double]$Session.Config.FixedCostPerDay/$PowerPrice_Rate
             $Session.CurrentPowerPriceBTC = [Double]$Session.CurrentPowerPrice/$PowerPrice_Rate
         } elseif ($Session.CurrentPowerPrice) {
-            Write-Log -Level Warn "Powerprice currency $($Session.Config.PowerPriceCurreny) not found. Cost of electricity will be ignored."
+            Write-Log -Level Warn "Powerprice currency $($PowerPriceCurreny) not found. Cost of electricity will be ignored."
         }
     }
 

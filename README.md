@@ -860,6 +860,7 @@ For Server (Runmode=server) setup:
 
 - **PowerPrice** = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
 - **PowerOffset** = power offset to allow consideration for overhead power [default=0]
+- **OctopusTariffCode** = if you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current trariff code. It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
 - **PowerPriceCurrency** = currency of your PowerPrice [default=USD]
 - **FixedCostPerDay** = cumulative fixed costs per day (in power price currency) [default=0]
 - **UsePowerPrice** = set to (1), if electricity cost and/or fixed cost should be substracted from profits [default=0]

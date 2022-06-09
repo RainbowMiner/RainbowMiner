@@ -6613,7 +6613,7 @@ Param(
     }
 
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
-    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -replace "{unixtimestamp}",(Get-UnixTimestamp)
+    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -replace "{unixtimestamp}",(Get-UnixTimestamp) -replace "{iso8601timestamp}",((Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK"))
 
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
@@ -8400,6 +8400,29 @@ param(
         }
     }
     $Global:NHCache[$keystr].request
+}
+
+function Get-PowerPrice {
+    $PowerPrice = $Session.Config.PowerPrice
+
+    if ($Session.Config.OctopusTariffCode -ne '') {
+        if ($Session.Config.OctopusTariffCode -match "^E-[12]R-([A-Z0-9-]+)-[A-Z]$") {
+            $ProductCode = $Matches[1]
+            try {
+                $fromto = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK")
+                $OctopusRequest = Invoke-RestMethodAsync "https://api.octopus.energy/v1/products/$($ProductCode)/electricity-tariffs/$($Session.Config.OctopusTariffCode)/standard-unit-rates/?period_from={iso8601timestamp}" -timeout 10 -cycletime 600 -tag "octopuspower"
+                if ($OctopusRequest.count) {
+                    $OctopusRequest.results | Where-Object {(-not $_.valid_from -or $_.valid_from -le $fromto) -and (-not $_.valid_to -or $_.valid_to -gt $fromto)} | Foreach-Object {$PowerPrice = ([double]$_.value_inc_vat) / 100}
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Info "Octopus tariff code $($Session.Config.OctopusTariffCode) is not in the Octopus database. Sometimes the letter code part is correct, but the date part isn't. Try AGILE-18-02-21 or GO-18-06-12 or SILVER-2017-1"
+            }
+        } else {
+            Write-Log -Level Warn "Octopus tariff code has the wrong syntax. Use E-1R-{product_code}-{region_code}"
+        }
+    }
+    $PowerPrice
 }
 
 function Invoke-Reboot {

@@ -269,6 +269,15 @@
                         </div>
                     </div>
                     <div class="form-group row">
+                        <label for="inputOctopusTariffCode" class="col-sm-2 col-form-label">Octopus Tariff Code</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputOctopusTariffCode" name="OctopusTariffCode" placeholder="E-1R-...">
+                            <div id="inputOctopusTariffCodeHelp" class="form-text text-muted">
+                                If you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current trariff code. <br />It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
                         <label for="inputFixedCostPerDay" class="col-sm-2 col-form-label">Fixed Cost per Day</label>
                         <div class="input-group col-sm-10">
                             <input type="number" class="form-control" id="inputFixedCostPerDay" name="FixedCostPerDay" min="0" step="0.00000001" data-number-to-fixed="8" data-number-stepfactor="100000000" placeholder="enter cumulative fixed costs per day" aria-describedby="addto-inputFixedCostPerDay">
