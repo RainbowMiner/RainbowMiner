@@ -5567,7 +5567,7 @@ function Set-MinersConfigDefault {
                                     if ($SetupDevice -eq "CPU") {
                                         [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params="";MSIAprofile="";OCprofile="";Difficulty="";Penalty="";HashAdjust="";Disable="0";Tuning="0";ShareCheck="";Affinity="";Threads=""}
                                     } elseif ($s -ne "") {
-                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params="";MSIAprofile="";OCprofile="";Difficulty="";Penalty="";HashAdjust="";Hash2Adjust="";Disable="0";Tuning="0";ShareCheck=""}
+                                        [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params="";MSIAprofile="";OCprofile="";Difficulty="";Penalty="";HashAdjust="";Hash2Adjust="";Disable="0";Tuning="0";ShareCheck="";Intensity=""}
                                     } else {
                                         [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params="";MSIAprofile="";OCprofile="";Difficulty="";Penalty="";HashAdjust="";Disable="0";Tuning="0";ShareCheck=""}
                                     }
