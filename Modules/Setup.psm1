@@ -824,7 +824,7 @@ function Start-Setup {
                         }
                         "serverconfigname" {
                             if ($Config.RunMode -eq "client" -and (Get-Yes $Config.EnableServerConfig)) {
-                                $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","ocprofiles","pools","scheduler") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","mrr","mrralgorithms","ocprofiles","pools","scheduler","userpools") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }

@@ -1565,6 +1565,16 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.8.4.8")) {
+        $Changes = 0
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($ConfigActual.ServerConfigName -ne "`$ServerConfigName" -and (Get-ConfigArray $ConfigActual.ServerConfigName) -inotcontains "userpools") {
+            $ConfigActual | Add-Member ServerConfigName "$((@(Get-ConfigArray $ConfigActual.ServerConfigName | Select-Object) + "userpools") -join ',')" -Force
+            $Changes++;
+        }
+    }
+
+
     ###
     ### END OF VERSION CHECKS
     ###

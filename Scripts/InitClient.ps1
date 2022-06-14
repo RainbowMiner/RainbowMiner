@@ -60,7 +60,7 @@ do {
     $Config.EnableServerPools = Read-HostBool -Prompt "Use the server's pool/coins/balance statistics and mine exactly to those pools (except for MiningRigRentals)? " -Default $Config.EnableServerPools
     $Config.EnableServerConfig = Read-HostBool -Prompt "Enable automatic download of selected server config files? " -Default $Config.EnableServerConfig
     if (Get-Yes $Config.EnableServerConfig) {
-        $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","mrr","ocprofiles","pools","scheduler")
+        $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","mrr","mrralgorithms","ocprofiles","pools","scheduler","userpools")
         $Config.GroupName = Read-HostString -Prompt "Enter a group name, if you want to group clients together for shared config files " -Default $Config.GroupName -Characters "A-Z0-9"
         $Config.EnableServerExcludeList = Read-HostBool -Prompt "Use the server's exclusion variable list?" -Default $Config.EnableServerExcludeList
         if (-not (Get-Yes $Config.EnableServerExcludeList)) {
