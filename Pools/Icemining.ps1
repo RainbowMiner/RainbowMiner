@@ -36,11 +36,11 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol="ALPH";            region = @("ca");                                host="alph.%region%.hashrate.to"; port=4010; fee = 1}
+    #[PSCustomObject]@{symbol="ALPH";            region = @("ca");                                host="alph.%region%.hashrate.to"; port=4010; fee = 1}
     #[PSCustomObject]@{symbol="EPIC-Cuckatoo31"; region = @("us"); host=@("epic.hashrate.to"); port=4000; fee = 2}
-    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("ca","eu-north","de","tr","hk","sg"); host="epic.%region%.hashrate.to"; port=4000; fee = 2; hashrate = "randomx"}
+    [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("ca","eu-north","eu-de","tr","hk","sg"); host="epic.%region%.hashrate.to"; port=4000; fee = 2; hashrate = "randomx"}
     [PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("ca","hk","sg");                      host="epic.%region%.hashrate.to"; port=4100; fee = 2; hashrate = "randomx"; ssl = $true}
-    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("ca","eu-north","de","tr","hk","sg"); host="epic.%region%.hashrate.to"; port=4000; fee = 2; hashrate = "progpow"}
+    [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("ca","eu-north","eu-de","tr","hk","sg"); host="epic.%region%.hashrate.to"; port=4000; fee = 2; hashrate = "progpow"}
     [PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("ca","hk","sg");                      host="epic.%region%.hashrate.to"; port=4100; fee = 2; hashrate = "progpow"; ssl = $true}
     [PSCustomObject]@{symbol="NIM";             region = @("ca");                                host="nimiq.icemining.ca";        port=2053; fee = 1.25; ssl = $true}
     [PSCustomObject]@{symbol="TON";             region = @("ca","fi","de","sg","hk","tr");       host="ton.%region%.hashrate.to";  port=4003; fee = 1}
