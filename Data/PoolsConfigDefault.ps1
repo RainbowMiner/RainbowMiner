@@ -21,6 +21,9 @@
         "6Block" = [PSCustomObject]@{
             Currencies=@("HNS")
         }
+        "AccPool" = [PSCustomObject]@{
+            Currencies=@("KAS")
+        }
         "Acepool" = [PSCustomObject]@{
             Currencies=@("BEAM","XGM")
         }
