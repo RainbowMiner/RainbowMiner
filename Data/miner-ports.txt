@@ -123,10 +123,10 @@
 347	Gminer255
 348	NinjaRig
 349	SrbMinerMulti
-350	FireIceRX
-351	FireIceRXAmd (linux)
-352	FireIceRXCpu (linux)
-353	FireIceRXNvidia (linux)
+350	SrbMinerMulti094
+351	
+352	
+353	
 354	Gminer258
 355	ProgPOWSeroNvidia
 356	6Miner
