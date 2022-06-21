@@ -944,6 +944,65 @@ class BMiner : Miner {
     }
 }
 
+class BzMiner : Miner {
+
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "localhost"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate = [PSCustomObject]@{}
+
+        try {
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/status" -Timeout $Timeout -ForceHttpClient
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
+            return
+        }
+
+        $Count = $this.Algorithm.Count
+        $Devices = $Data.devices | Where-Object {$_.status.Count -eq $Count -and $_.hashrate.Count -eq $Count -and $_.status[0] -eq 3} | Select-Object
+
+        $HashRate_Name = [String]$this.Algorithm[0]
+        $HashRate_Value = [double]($Devices | Foreach-Object {$_.hashrate[0]} | Measure-Object -Sum).Sum
+
+        $PowerDraw      = [Double]($Devices | Foreach-Object {$_.power} | Measure-Object -Sum).Sum
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]($Devices | Foreach-Object {$_.valid_solutions[0]} | Measure-Object -Sum).Sum
+            $Rejected_Shares = [Int64]($Devices | Foreach-Object {$_.rejected_solutions[0]} | Measure-Object -Sum).Sum
+            $Stale_Shares    = [Int64]($Devices | Foreach-Object {$_.stale_solutions[0]} | Measure-Object -Sum).Sum
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+
+            if ($this.Algorithm[1]) {
+                $HashRate_Name = [String]$this.Algorithm[1]
+                $HashRate_Value = [double]($Devices | Foreach-Object {$_.hashrate[1]} | Measure-Object -Sum).Sum
+
+                if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                    $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                    $Accepted_Shares = [Int64]($Devices | Foreach-Object {$_.valid_solutions[1]} | Measure-Object -Sum).Sum
+                    $Rejected_Shares = [Int64]($Devices | Foreach-Object {$_.rejected_solutions[1]} | Measure-Object -Sum).Sum
+                    $Stale_Shares    = [Int64]($Devices | Foreach-Object {$_.stale_solutions[1]} | Measure-Object -Sum).Sum
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+                }
+            }
+        }
+
+        $this.AddMinerData("",$HashRate,$null,$PowerDraw)
+
+        $this.CleanupMinerData()
+    }
+}
+
 
 class Cast : Miner {
     [Void]UpdateMinerData () {
