@@ -163,7 +163,7 @@
             Yiimp=$true
         }
         "Hashpool" = [PSCustomObject]@{
-            Currencies=@("TON","HNS","CKB")
+            Currencies=@("HNS","CKB")
         }
         "Hashrefinery" = [PSCustomObject]@{
             Currencies=@("BTC")
@@ -455,15 +455,6 @@
         }
         "Tecracoin" = [PSCustomObject]@{
             Currencies=@("TCR")
-        }
-        "ToncoinPool" = [PSCustomObject]@{
-            Currencies=@("TON")
-        }
-        "TonPool" = [PSCustomObject]@{
-            Currencies=@("TON")
-        }
-        "TONWhales" = [PSCustomObject]@{
-            Currencies=@("TON")
         }
         "unMineable" = [PSCustomObject]@{
             Currencies=@("BTC","BTT","ETH","TRX","UNI","XTZ","YFI")
