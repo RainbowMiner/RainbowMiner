@@ -33,6 +33,9 @@
         "Aionpool" = [PSCustomObject]@{
             Currencies=@("AION")
         }
+        "AlphPool" = [PSCustomObject]@{
+            Currencies=@("ALPH")
+        }
         "BaikalMine" = [PSCustomObject]@{
             Currencies=@("REOSC")
         }
