@@ -9,10 +9,30 @@
         "divisor":  1E+18
     },
     {
+        "symbol":  "ALPH",
+        "match":  "^1",
+        "rpc":  "https://mainnet-backend.alephium.org/addresses/{w}/balance",
+        "address":  "",
+        "balance":  "balance",
+        "received":  "",
+        "divisor":  1E+18
+    },
+    {
         "symbol":  "BCH",
-        "match":  "^[1q]",
+        "match":  "^1",
         "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
         "address":  "data.{w}.address.legacy",
+        "balance":  "data.{w}.address.balance",
+        "received":  "data.{w}.address.received",
+        "divisor":  100000000,
+        "verify":  "context.code",
+        "verify_value":  "200"
+    },
+    {
+        "symbol":  "BCH",
+        "match":  "^q",
+        "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
+        "address":  "data.{w}.address.cashaddr",
         "balance":  "data.{w}.address.balance",
         "received":  "data.{w}.address.received",
         "divisor":  100000000,
@@ -114,7 +134,7 @@
     {
         "symbol":  "LCC",
         "match":  "^C|^MATH",
-        "rpc":  "https://chainz.cryptoid.info/lcc/api.dws?q=addressinfo&a={w}",
+        "rpc":  "https://chainz.cryptoid.info/lcc/api.dws?q=addressinfo\u0026a={w}",
         "address":  "address",
         "balance":  "balance",
         "received":  "",
@@ -187,7 +207,7 @@
         "received":  "",
         "divisor":  1000000000,
         "verify":  "ok",
-        "verify_value":  "true"
+        "verify_value":  true
     },
     {
         "symbol":  "VRSC",
