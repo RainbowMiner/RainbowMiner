@@ -105,8 +105,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
             $Pool_SoloMining = $false
             $Pool_Workers    = [int]$Pool_Request.pool.workers
             $Pool_Hashrate   = [decimal]$Pool_Request.pool.hashrate
+            $blocks          = $Pool_Request.pool.blocks | Where-Object {$_ -match "^[0-9a-fx]+:.*?(\d{10}):" -and ($Matches[1] -ge $timestamp24h)} | Foreach-Object {$Matches[1]}
+            $blocks_measure  = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
+            $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
             $Pool_TSL        = [int]($timestamp - ([decimal]$PooL_Request.pool.stats.lastBlockFound/1000))
-            $Pool_BLK        = ($Pool_Request.pool.blocks | Where-Object {$_ -match "^[0-9a-f]+:(\d+)" -and ($Matches[1] -ge $timestamp24h)} | Measure-Object).Count
 
             $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
