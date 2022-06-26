@@ -47,7 +47,7 @@ $Pool_User           = $Wallets.$Pool_Currency
 
 if (-not $InfoOnly) {
     $btcPrice       = if ($Global:Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:Rates."$($Pool_Coin.Symbol)"} else {0}
-    $btcRewardLive  = $btcPrice * $Pool_Request.income.last_24h / 1e18
+    $btcRewardLive  = $btcPrice * $Pool_Request.income.last_1h / 1e18
 
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.total_hashrate_v2.last_10min -Quiet
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
