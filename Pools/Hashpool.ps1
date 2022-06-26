@@ -44,7 +44,7 @@ $Pools_Data =  @(
     [PSCustomObject]@{symbol = "KDA"; port = 3700; fee = 1.0; rpc = "kda"}
     [PSCustomObject]@{symbol = "NXS"; port = 9012; fee = 1.0; rpc = "nxs"}
     [PSCustomObject]@{symbol = "PMEER"; port = 9966; fee = 1.0; rpc = "meer"}
-    [PSCustomObject]@{symbol = "TON"; port = @(9055,19055); fee = 1.0; rpc = "ton"; ethproxy = "icemining"}
+    #[PSCustomObject]@{symbol = "TON"; port = @(9055,19055); fee = 1.0; rpc = "ton"; ethproxy = "icemining"}
     
 )
 
