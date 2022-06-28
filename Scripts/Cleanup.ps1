@@ -1574,6 +1574,9 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.8.4.9")) {
+        $AddAlgorithm += @("RandomXDAG")
+    }
 
     ###
     ### END OF VERSION CHECKS
