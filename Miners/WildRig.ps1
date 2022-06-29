@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.31.4"
+$Version = "0.31.5"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.31.4-wildrigmulti/wildrig-multi-linux-0.31.4.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.31.5-wildrigmulti/wildrig-multi-linux-0.31.5.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.31.4-wildrigmulti/wildrig-multi-windows-0.31.4.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.31.5-wildrigmulti/wildrig-multi-windows-0.31.5.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -32,8 +32,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "blake2b-btcc";              Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("BCHC","TNET")} #Blake2b-TNET/BTCC
     [PSCustomObject]@{MainAlgorithm = "blake2b-glt";               Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("GLT")} #Blake2b-GLT
     [PSCustomObject]@{MainAlgorithm = "bmw512";                    Vendor = @("AMD","NVIDIA"); Params = ""} #BMW512
-    [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD");          Params = ""} #CurveHash
-    [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD");          Params = ""} #Dedal
+    [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD");          Params = ""} #C11
+    [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD","NVIDIA"); Params = ""} #CurveHash
     [PSCustomObject]@{MainAlgorithm = "dedal";                     Vendor = @("AMD");          Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";                    Vendor = @("AMD");          Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";                      Vendor = @("AMD");          Params = ""} #Geek
