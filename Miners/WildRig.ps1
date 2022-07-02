@@ -48,7 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD");          Params = ""} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "honeycomb";                 Vendor = @("AMD");          Params = ""} #Honeycomb broken since v0.17.6
-    [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "unMineable"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "unMineable"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "lyra2tdc";                  Vendor = @("AMD");          Params = ""; DevFee = 2.0} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";                   Vendor = @("AMD");          Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";               Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
@@ -59,10 +59,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr";                   Vendor = @("AMD");          Params = ""} #MTPTcr, new in v0.20.0 beta, --split-job 4
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi5";                      Vendor = @("AMD","NVIDIA"); Params = ""} #PHI5
-    [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2} #ProgPowEthercore
-    [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Beepool"} #ProgPowSero
-    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Beepool"} #ProgPowVeil
-    [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Fairpool"} #ProgPowZ
+    [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowEthercore
+    [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Beepool"} #ProgPowSero
+    [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Beepool"} #ProgPowVeil
+    [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "rainforest";                Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";                   Vendor = @("AMD");          Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #SHA256csm
@@ -74,7 +74,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel";                Vendor = @("AMD");          Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";                    Vendor = @("AMD");          Params = ""} #Tribus
     #[PSCustomObject]@{MainAlgorithm = "veil";                      Vendor = @("AMD");          Params = ""; Algorithm = "x16rt"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt-VEIL
-    [PSCustomObject]@{MainAlgorithm = "vprogpow";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 2; ExcludePoolName = "Beepool"} #vProgPoW
+    [PSCustomObject]@{MainAlgorithm = "vprogpow";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Beepool"} #vProgPoW
     [PSCustomObject]@{MainAlgorithm = "wildkeccak";                Vendor = @("AMD");          Params = ""; ExtendInterval = 3; DevFee = 2.0} #Wildkeccak
     [PSCustomObject]@{MainAlgorithm = "x11k";                      Vendor = @("AMD","NVIDIA"); Params = ""} #X11k
     [PSCustomObject]@{MainAlgorithm = "x16r";                      Vendor = @("AMD");          Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
