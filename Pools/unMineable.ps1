@@ -34,46 +34,51 @@ if (-not $Pool_CoinsRequest.coins) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us","eu","asia")
+$Pool_Regions = @("us","ca","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "ethash";  port = 3333; ethproxy = "ethstratumnh"; rpc = "ethash";  divisor = 1e6; region = @("us","eu","asia")}
-    [PSCustomObject]@{algo = "etchash"; port = 3333; ethproxy = "ethstratumnh"; rpc = "etchash"; divisor = 1e6; region = @("us")}
-    [PSCustomObject]@{algo = "randomx"; port = 3333; ethproxy = $null;          rpc = "rx";      divisor = 1;   region = @("us","eu","asia")}
-    [PSCustomObject]@{algo = "kawpow";  port = 3333; ethproxy = "stratum";      rpc = "kp";      divisor = 1e6; region = @("us"); rewardalgo = "x16rv2"}
+    [PSCustomObject]@{algo = "autolycos2"; port = @(3333,4444); ethproxy = $null;          rpc = "autolycos";  divisor = 1e6; region = @("us","ca","eu","asia"); rewardalgo = "autolycos"}
+    [PSCustomObject]@{algo = "ethash";     port = @(3333);      ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "etchash";    port = @(3333);      ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "randomx";    port = @(3333,443);  ethproxy = $null;          rpc = "rx";         divisor = 1;   region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "kawpow";     port = @(3333);      ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; region = @("us","eu","asia")}
 )
 
 $Pool_Referrals = [PSCustomObject]@{
     "1INCH" = "fy3x-kyu5"
     AAVE = "41qp-kz9q"
     ADA = "6va0-s40b"
-    ALGO = "vrl4-jzoe"
-    ATOM = "uy7u-k3ji"
+    ALGO = "mnh2-9i5u"
+    APE = "tho7-kex8"
+    ATOM = "rkzy-ct1s"
+    AVAX = "daax-rm2h"
     BAND = "d04a-ce0q"
     BAT = "9gwg-r21y"
     BCH = "d5n0-12uj"
     BNB = "09eg-lit0"
     BTC = "9fh9-4fa8"
     BTG = "ad7b-d4tl"
-    BTT = "2tik-a8gp"
     CAKE = "jvjw-oe6g"
     CHZ = "s205-1crw"
-    CRO = "w5l8-z507"
+    CRO = "e5vr-nl66"
     DASH = "ux3r-os4a"
     DGB = "ysw1-6l8f"
     DOGE = "5oln-msuu"
-    ELON = "b30y-6838"
+    ELON = "re67-y6da"
     ENJ = "f2j8-u7yh"
     EOS = "vxnn-bcmf"
     ETC = "rd39-9u37"
     ETH = "61lr-wpcz"
+    FTM = "gqgp-02zh"
     FUN = "nh4x-spqg"
+    GALA = "48ne-szrx"
     GAS = "7sae-7dyj"
     HOT = "et4j-moy3"
     ICX = "cnsz-7dbi"
     KNC = "isfr-bpog"
     LINK = "8tm5-1sts"
+    LSK = "6nli-2hpf"
     LTC = "siif-qx8i"
     MANA = "awsm-eqwi"
     MATIC = "kn0o-dzfz"
@@ -82,11 +87,10 @@ $Pool_Referrals = [PSCustomObject]@{
     NEO = "9vwe-a1uc"
     QTUM = "yd6u-nsc6"
     REP = "mn87-e9jl"
-    RSR = "j0gb-4x91"
+    RSR = "s9v8-1yff"
     RVN = "7mkm-dj0t"
     SC = "whhb-qst0"
     SHIB = "dqak-tlkv"
-    SKY = "5j29-3kag"
     SOL = "44vx-wkp4"
     SUSHI = "vzm5-yhp6"
     TRX = "zxih-o6yi"
@@ -142,41 +146,46 @@ $Pools_Data | ForEach-Object {
             $Pool_Referal = if ($Params.$Pool_Currency -match "^\w{4}-\w{4}$") {$Params.$Pool_Currency} elseif ($Pool_Referrals.$Pool_Currency) {$Pool_Referrals.$Pool_Currency}
             $Pool_Wallet = "$($Pool_Currency):$($Wallets.$Pool_Currency).{workername:$Worker}$(if ($Pool_Referal) {"#$($Pool_Referal)"})"
 
-            foreach($Pool_Region in $_.region) {
-                [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-                    Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_CurrencyData.name
-                    CoinSymbol    = $Pool_Currency
-                    Currency      = $Pool_Currency
-                    Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.$StatAverageStable
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+tcp"
-                    Host          = "$($_.rpc)$(if ($_.region.Count -gt 1) {"-$($Pool_Region)"}).unmineable.com"
-                    Port          = $_.port
-                    User          = $Pool_Wallet
-                    Pass          = "x"
-                    Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $false
-                    Updated       = $Stat.Updated
-                    PoolFee       = if ($Pool_Referal) {0.75} else {1.0}
-                    PaysLive      = $true
-                    DataWindow    = $DataWindow
-				    ErrorRatio    = $Stat.ErrorRatio
-                    EthMode       = $Pool_EthProxy
-                    Name          = $Name
-                    Penalty       = 0
-                    PenaltyFactor = 1
-                    Disabled      = $false
-                    HasMinerExclusions = $false
-                    Price_0       = 0.0
-                    Price_Bias    = 0.0
-                    Price_Unbias  = 0.0
-                    Wallet        = $Pool_Wallet
-                    Worker        = "{workername:$Worker}"
-                    Email         = $Email
+            $Pool_SSL = $false
+            foreach($Pool_Port in $_.port) {
+                $Pool_Protocol = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                foreach($Pool_Region in $_.region) {
+                    [PSCustomObject]@{
+                        Algorithm     = $Pool_Algorithm_Norm
+                        Algorithm0    = $Pool_Algorithm_Norm
+                        CoinName      = $Pool_CurrencyData.name
+                        CoinSymbol    = $Pool_Currency
+                        Currency      = $Pool_Currency
+                        Price         = $Stat.$StatAverage #instead of .Live
+                        StablePrice   = $Stat.$StatAverageStable
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = $Pool_Protocol
+                        Host          = "$($_.rpc)$(if ($_.region.Count -gt 1) {"-$($Pool_Region)"}).unmineable.com"
+                        Port          = $_.port
+                        User          = $Pool_Wallet
+                        Pass          = "x"
+                        Region        = $Pool_RegionsTable.$Pool_Region
+                        SSL           = $Pool_SSL
+                        Updated       = $Stat.Updated
+                        PoolFee       = if ($Pool_Referal) {0.75} else {1.0}
+                        PaysLive      = $true
+                        DataWindow    = $DataWindow
+				        ErrorRatio    = $Stat.ErrorRatio
+                        EthMode       = $Pool_EthProxy
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Disabled      = $false
+                        HasMinerExclusions = $false
+                        Price_0       = 0.0
+                        Price_Bias    = 0.0
+                        Price_Unbias  = 0.0
+                        Wallet        = $Pool_Wallet
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
+                    }
                 }
+                $Pool_SSL = $true
             }
         }
     }
