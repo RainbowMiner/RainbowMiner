@@ -38,7 +38,7 @@ $Pool_Regions = @("us","ca","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "autolycos2"; port = @(3333,4444); ethproxy = $null;          rpc = "autolycos";  divisor = 1e6; region = @("us","ca","eu","asia"); rewardalgo = "autolycos"}
+    [PSCustomObject]@{algo = "autolykos2"; port = @(3333,4444); ethproxy = $null;          rpc = "autolykos";  divisor = 1e6; region = @("us","ca","eu","asia"); rewardalgo = "autolykos"}
     [PSCustomObject]@{algo = "ethash";     port = @(3333);      ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "etchash";    port = @(3333);      ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; region = @("us","eu","asia")}
     [PSCustomObject]@{algo = "randomx";    port = @(3333,443);  ethproxy = $null;          rpc = "rx";         divisor = 1;   region = @("us","eu","asia")}
