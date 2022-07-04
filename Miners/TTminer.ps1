@@ -76,7 +76,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         $IsMTP = $_.MainAlgorithm -match "^MTP"
 
-        $Cuda = "$(if ($IsLinux) {
+        $Cuda = "$(if ($false -and $IsLinux) {
             "-$(if (-not $IsMTP -and (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "11.2")) {"112"} elseif (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.2") {"102"} else {"92"})"
         })"
         
