@@ -35,11 +35,9 @@ if (-not $DownloaderConfig) {
 
 $Name = "RainbowMiner"
 
-$Proxy = Get-Proxy
-
 try {
     $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
-    $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 30 -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
+    $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 30
 
     $RemoteVersion = ($Request.tag_name -replace '^v')
     if ($RemoteVersion) {
@@ -53,7 +51,7 @@ try {
         }
     }
 
-    Write-Host "Repair & Update v$($RemoveVersion)" -ForegroundColor Yellow
+    Write-Host "Repair & Update v$($RemoteVersion)" -ForegroundColor Yellow
     Write-Host " (1/3) Downloading $($DownloadURI) .. "
         
     if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" | Out-Null}
@@ -62,14 +60,14 @@ try {
 
     if ($DownloadURI -eq "") {throw}
 
-    Invoke-WebRequest $DownloadURI -OutFile $FileName -UseBasicParsing -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
+    Invoke-WebRequest $DownloadURI -OutFile $FileName -UseBasicParsing
 
     if (-not (Test-Path $FileName) -or (Get-Item $FileName).Length -lt 2MB) {throw}
 
     Write-Host " (2/3) Deleting and backup old files .."
 
     @("Start.bat","start.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
-    if (Test-Path "MinersOldVersions") {$PreserveMiners = Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty Name) @(Get-ChildItem "MinersOldVersions" | Select-Object -ExpandProperty Name) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject}
+    if ((Test-Path "Miners") -and (Test-Path "MinersOldVersions")) {$PreserveMiners = Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty Name) @(Get-ChildItem "MinersOldVersions" | Select-Object -ExpandProperty Name) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject}
     @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}
     Get-ChildItem ".\Data" -Filter "*.json" -File | Where-Object {$_.Name -notin @("lastdrun.json","localapiport.json","minerdata.json","mrrinfo.json","poolsdata.json","unprofitable.json","version.json")} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
 
@@ -151,7 +149,7 @@ try {
     Write-Host "Repair & Update finished." -ForegroundColor Green
 }
 catch {
-    Write-Host "$Name failed to update. Please download manually at $($RBMVersion.ManuaURI)" -ForegroundColor Yellow
+    Write-Host "$Name failed to update. Please download manually at $($DownloadURI)" -ForegroundColor Yellow
     if ($calledfrom -ne "core") {
         $message = "Press any key to return to $name"
         if ($psISE)
