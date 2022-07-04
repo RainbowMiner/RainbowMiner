@@ -156,11 +156,12 @@
     {
         "symbol":  "OBTC",
         "match":  "^bc1",
-        "rpc":  "https://txrat.com/ext/getaddress/{w}",
+        "rpc":  "https://explorer.powx.org:4221/address/{w}",
         "address":  "address",
-        "balance":  "balance",
-        "received":  "",
-        "divisor":  1
+        "balance":  "",
+        "received":  "chain_stats.funded_txo_sum",
+        "divisor":  100000000,
+        "spent":  "chain_stats.spent_txo_sum"
     },
     {
         "symbol":  "QTUM",

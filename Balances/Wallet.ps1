@@ -85,6 +85,11 @@ foreach ($Wallet_Data in $Wallets_Data) {
 
             $Wallet_Info = $Wallet_Address -replace "^0x"
 
+            $Wallet_Received = $null
+            if ($Wallet_Data.received) {
+                $Wallet_Received = [Decimal](Invoke-Expression "`$Request.$($Wallet_Data.received)")
+            }
+
             $Wallet_Balance = [Decimal]$(Switch ($Wallet_Symbol) {
                 "XLM" {
                     ($Request.balances | Where-Object {$_.asset_type -eq "native"} | Select-Object -ExpandProperty balance | Measure-Object -Sum).Sum
@@ -92,6 +97,11 @@ foreach ($Wallet_Data in $Wallets_Data) {
                 default {
                     if ($Wallet_Data.balance -eq "#") {
                         $Request
+                    } elseif ($Wallet_Data.balance -eq "" -and $Wallet_Received -ne $null) {
+                        $val = $Wallet_Received
+                        if ($Wallet_Data.spent) {
+                            $val -= [Decimal](Invoke-Expression "`$Request.$($Wallet_Data.spent)")
+                        }
                     } else {
                         $val = $null
                         $Wallet_Data.balance -replace "{w}",$Wallet_Address -split "\." | Foreach-Object {
@@ -120,7 +130,7 @@ foreach ($Wallet_Data in $Wallets_Data) {
                     Balance     = $Wallet_Balance / $Wallet_Data.divisor
                     Pending     = 0
                     Total       = $Wallet_Balance / $Wallet_Data.divisor
-                    Earned      = if ($Wallet_Data.received) {[Decimal](Invoke-Expression "`$Request.$($Wallet_Data.received)") / $Wallet_Data.divisor} else {$null}
+                    Earned      = $Wallet_Received / $Wallet_Data.divisor
                     Payouts     = @()
                     LastUpdated = (Get-Date).ToUniversalTime()
             }
