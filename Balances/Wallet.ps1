@@ -102,6 +102,7 @@ foreach ($Wallet_Data in $Wallets_Data) {
                         if ($Wallet_Data.spent) {
                             $val -= [Decimal](Invoke-Expression "`$Request.$($Wallet_Data.spent)")
                         }
+                        $val
                     } else {
                         $val = $null
                         $Wallet_Data.balance -replace "{w}",$Wallet_Address -split "\." | Foreach-Object {
