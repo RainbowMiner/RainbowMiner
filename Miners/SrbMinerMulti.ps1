@@ -158,7 +158,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and ($Miner_Vendor -eq "CPU" -or $_.OpenCL.Architecture -notin $InValidArchitecture)})
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and $Device.Count -and -not $_.SecondaryAlgorithm}).ForEach({
+        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and $Device.Count}).ForEach({
             $First = $true
 
             $MainAlgorithm = $_.MainAlgorithm

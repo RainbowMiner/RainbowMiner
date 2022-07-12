@@ -2448,6 +2448,7 @@ class SrbMinerMulti : Miner {
 
         $Server = "localhost"
         $Timeout = 10 #seconds
+        $DualMining = $this.Algorithm.Count -eq 2
 
         $Request = ""
         $Response = ""
@@ -2466,25 +2467,47 @@ class SrbMinerMulti : Miner {
 
         $Type = if ($Data.total_cpu_workers -gt 0) {"cpu"} else {"gpu"}
 
-        $Data = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
+        $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[0]}
 
         $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = [double]$Data.hashrate."1min"
+        $HashRate_Value = [double]$Data0.hashrate."1min"
 
-        if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.hashrate.$Type.total}
+        if (-not $HashRate_Value) {$HashRate_Value = [double]$Data0.hashrate.$Type.total}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
 
-            $Difficulty_Value = [Double]$Data.pool.difficulty
+            $Difficulty_Value = [Double]$Data0.pool.difficulty
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
 
-            $Accepted_Shares = [Int64]$Data.shares.accepted
-            $Rejected_Shares = [Int64]$Data.shares.rejected
+            $Accepted_Shares = [Int64]$Data0.shares.accepted
+            $Rejected_Shares = [Int64]$Data0.shares.rejected
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+
+            if ($DualMining) {
+
+                $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[1]}
+
+                $HashRate_Name = [String]$this.Algorithm[1]
+                $HashRate_Value = [double]$Data0.hashrate."1min"
+
+                if (-not $HashRate_Value) {$HashRate_Value = [double]$Data0.hashrate.$Type.total}
+
+                if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                    $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                    $Difficulty_Value = [Double]$Data0.pool.difficulty
+                    $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+                    $Accepted_Shares = [Int64]$Data0.shares.accepted
+                    $Rejected_Shares = [Int64]$Data0.shares.rejected
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
+                }
+
+            }
         }
 
-        $this.AddMinerData($Response,$HashRate)
+        $this.AddMinerData($Response,$HashRate,$Difficulty)
 
         $this.CleanupMinerData()
     }
