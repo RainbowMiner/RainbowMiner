@@ -21,7 +21,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pools_Data = @(
     #ASIC
     [PSCustomObject]@{symbol = "AEON";  port = 30112; fee = 0.9; rpc = "aeon"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "KRB";  port = 30192; fee = 0.9; rpc = "krb"; regions = @("eu")}
+    #[PSCustomObject]@{symbol = "KRB";  port = 30192; fee = 0.9; rpc = "krb"; regions = @("eu")}
     [PSCustomObject]@{symbol = "QWC";   port = 30052; fee = 0.9; rpc = "qwertycoin";   regions = @("eu")}
 
     #Other
@@ -37,7 +37,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "SUMO";  port = 30152; fee = 0.9; rpc = "sumokoin"; regions = @("eu")}
     #[PSCustomObject]@{symbol = "TRTL";  port = 30132; fee = 0.9; rpc = "turtle"; regions = @("eu")}
     [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "XCASH"; port = 30062;  fee = 0.9; rpc = "xcash"; regions = @("eu")}
+    #[PSCustomObject]@{symbol = "XCASH"; port = 30062;  fee = 0.9; rpc = "xcash"; regions = @("eu")}
 )
 
 $Pools_Requests = [hashtable]@{}
