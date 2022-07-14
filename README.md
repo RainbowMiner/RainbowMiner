@@ -23,7 +23,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, 6Block, Acepool, Aionmine, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlockMasters, Bsod, C3pool, EthashPool, Ethermine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Minerpool, Minafacil, MinerRocks, MiningDutch, MiningPoolHub, MiningPoolOvh, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, MoneroOcean, Nanopool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Poolin, Poolium, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, [Zergpool](https://zergpool.com/?address=&refcode=78f6ec9427d56069f93709d7805a6a56) and Zpool)**
+- **Profit auto-switch between pools (2Miners, 6Block, Acepool, Aionmine, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlockMasters, C3pool, EthashPool, Ethermine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Minerpool, Minafacil, MinerRocks, MiningDutch, MiningPoolHub, MiningPoolOvh, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, MoneroOcean, Nanopool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Poolin, Poolium, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, [Zergpool](https://zergpool.com/?address=&refcode=78f6ec9427d56069f93709d7805a6a56) and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -228,7 +228,7 @@ Alternative: start as Linux `screen`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Acepool, Aionmine, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, Bsod, BsodParty, BsodSolo, C3pool, CpuPool, Crazypool, EthashPool, Ethermine, Ezil, F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, Minafacil, Minerpool, MinerRocks, Minexmr, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningPoolOvh, MiningRigRentals, Mintpond, MoneroOcean, Nanopool, NiceHash, NLpool, Poolin, Poolium, ProHashing, ProHashingCoins, ProHashingCoinsSolo, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Acepool, Aionmine, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, C3pool, CpuPool, Crazypool, EthashPool, Ethermine, Ezil, F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, Minafacil, Minerpool, MinerRocks, Minexmr, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningPoolOvh, MiningRigRentals, Mintpond, MoneroOcean, Nanopool, NiceHash, NLpool, Poolin, Poolium, ProHashing, ProHashingCoins, ProHashingCoinsSolo, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -369,9 +369,6 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 </details>
 <details><summary>BlockMastersCoins</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC, mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 </details>
-<details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>BsodParty</summary> https://bsod.pw/ no auto-exchange, a separate wallet address is needed for each coin you want to mine solo together with others. Set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
-<details><summary>BsodSolo</summary> https://bsod.pw/ no auto-exchange, a separate wallet address is needed for each coin you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>C3pool</summary> https://c3pool.com/oldui/en/ auto-exchange and payout in XMR, enter your Monero wallet address and a password (either a real password or your email-address) into pools.config.txt to start mining</details>
 <details><summary>CpuPool</summary> http://cpu-pool.com/ specialized on CPU mining, no auto-exchange, a separate wallet is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Crazypool</summary> https://crazypool.org/ no auto-exchange, a separate wallet address is needed for each coin (ETH, ETC, UBQ) you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -444,9 +441,9 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 
 If you plan to mine through Nicehash, I strongly recommend, that you register an account with them ([https://www.nicehash.com/register](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1)). In this case, NiceHash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
 This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). Payout via Bitcoin-Lightning channel possible.</details>
-<details><summary>Notes for the pools BlockCruncher, BlockMasters, Bsod, CryptoKnight, GosCx, Hashcryptos, HashPool, Icemining, Minerpool, MinerRocks, NLpool, PocketWhale, ProHashing, Ravenminer, YiiMP and Zpool</summary>
+<details><summary>Notes for the pools BlockCruncher, BlockMasters, CryptoKnight, GosCx, Hashcryptos, HashPool, Icemining, Minerpool, MinerRocks, NLpool, PocketWhale, ProHashing, Ravenminer, YiiMP and Zpool</summary>
   
-The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Bsod, CryptoKnight, GosCx, Icemining, Minerpool, MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
+The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools GosCx, Icemining, Minerpool, MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
 <details><summary>Notes for [ZergPool](https://zergpool.com/?address=&refcode=78f6ec9427d56069f93709d7805a6a56)</summary>
 
@@ -454,9 +451,9 @@ The mining fee of all ZergPools can be reduced from 0.5% to 0.3% by setting "Red
 </details>
 <details><summary>Notes for Solo- and Party-mining</summary>
   
-Bsod.pw, Gos.cx and ZergPool allow solo mining and party mining. This is achieved by adding parameters "m=solo" or "m=party.yourpassword" to the password of the pool. There are two ways to achieve this with RainbowMiner:
-- either supply `"BTC-Params": "m=solo",` / `"BTC-Params": "m=party.password",` in pools.config.txt and use the standard pools modules "Bsod", "GosCx", "Zergpool", "ZergpoolCoins"
-- or use the special pool modules "BsodSolo", "BsodParty", "GosCxSolo", "GosCxParty", "ZergpoolSolo", "ZergpoolParty", "ZergpoolCoinsSolo", "ZergpoolCoinsParty" - in case of party mining, these pool modules come with an extra parameter "PartyPassword" in pools.config.txt
+Gos.cx and ZergPool allow solo mining and party mining. This is achieved by adding parameters "m=solo" or "m=party.yourpassword" to the password of the pool. There are two ways to achieve this with RainbowMiner:
+- either supply `"BTC-Params": "m=solo",` / `"BTC-Params": "m=party.password",` in pools.config.txt and use the standard pools modules "GosCx", "Zergpool", "ZergpoolCoins"
+- or use the special pool modules "GosCxSolo", "GosCxParty", "ZergpoolSolo", "ZergpoolParty", "ZergpoolCoinsSolo", "ZergpoolCoinsParty" - in case of party mining, these pool modules come with an extra parameter "PartyPassword" in pools.config.txt
 </details>
 
 
@@ -1184,11 +1181,11 @@ This example will focus mining operations to pool Ethermine, comparing this pool
 
 #### Allow mining algorithm when pool hashrate equals to 0
 
-All pool modules contain a check for an algorithm hashrate to be greater than 0. If you want to mine a special currency, even if you are the only miner (e.g. solo mining on BsodSolo), set field "AllowZero" to "1":
+All pool modules contain a check for an algorithm hashrate to be greater than 0. If you want to mine a special currency, even if you are the only miner (e.g. solo mining on GosxSolo), set field "AllowZero" to "1":
 
 Example:
 
-    "BsodSolo": {
+    "GosxSolo": {
         "SUQA": "<YOUR_SUQA_ADDRESS>",
         "Worker": "$WorkerName",
         "FocusWallet": "SUQA",
