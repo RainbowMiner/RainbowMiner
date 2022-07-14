@@ -1578,6 +1578,10 @@ try {
         $AddAlgorithm += @("RandomXDAG")
     }
 
+    if ($Version -le (Get-Version "4.8.5.1")) {
+        $AddAlgorithm += @("Mike")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
