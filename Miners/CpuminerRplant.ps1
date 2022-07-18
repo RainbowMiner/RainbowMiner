@@ -66,7 +66,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "Zpool"} #Lyra2z330
-    [PSCustomObject]@{MainAlgorithm = "mike"; Params = ""} #Mike/VKAX
+    [PSCustomObject]@{MainAlgorithm = "mike"; FaultTolerance = 8; ExtendInterval = 3; Params = ""} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
     [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""; ExcludePoolName = "MiningRigRentals"} #Minotaurx
     [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #Myriad-groestl
