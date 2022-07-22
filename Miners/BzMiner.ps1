@@ -11,14 +11,14 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "9.2.1"
+$Version = "10.0.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v9.2.1-bzminer/bzminer_v9.2.1_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.0.0-bzminer/bzminer_v10.0.0_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v9.2.1-bzminer/bzminer_v9.2.1_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.0.0-bzminer/bzminer_v10.0.0_windows.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
@@ -38,6 +38,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "kaspa";                        MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "prohashing|miningrigrentals"} #Kaspa
     #[PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "prohashing"} #KawPow
     [PSCustomObject]@{MainAlgorithm = "olhash";                       MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00; ExcludePoolName = "prohashing|miningrigrentals"} #Olhash/Overline
+    [PSCustomObject]@{MainAlgorithm = "woodcoin";                     MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00; ExcludePoolName = "prohashing|miningrigrentals"} #Skein2/WoodCoin LOG
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

@@ -105,7 +105,7 @@
 329	Gminer
 330	MiniZ
 331	ProgPOWNvidia
-332	Bminer1220
+332	BzMiner
 333	TTminer
 334	Energiminer
 335	GrinProMiner
