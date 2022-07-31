@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "1.0.2"
+$Version = "1.0.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-srbminermulti/SRBMiner-Multi-1-0-2-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.3-srbminermulti/SRBMiner-Multi-1-0-3-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-srbminermulti/SRBMiner-Multi-1-0-2-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.3-srbminermulti/SRBMiner-Multi-1-0-3-win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
@@ -32,6 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cpupower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
     [PSCustomObject]@{MainAlgorithm = "ghostrider"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 0.9; ExtendInterval = 3; ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider/RPT
     [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #HeavyHash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "mike"             ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 8; ExtendInterval = 3} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaur"         ;              Params = ""; Fee = 0.00;               Vendor = @("CPU")} #Minotaur/RING Coin
     [PSCustomObject]@{MainAlgorithm = "minotaurx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Minotaurx/LCC
     [PSCustomObject]@{MainAlgorithm = "panthera"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Panthera
@@ -88,9 +89,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"  ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); ExcludePoolName="Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "firepow"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #FiroPow/FIRO
     [PSCustomObject]@{MainAlgorithm = "frkhash"          ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Frkhash/EXP
-    [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 1.00;               Vendor = @("AMD")} #HeavyHash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "heavyhash"        ;              Params = ""; Fee = 0.85;               Vendor = @("AMD")} #HeavyHash/OBTC
     [PSCustomObject]@{MainAlgorithm = "k12"              ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD","CPU")} #kangaroo12/AEON from 2019-10-25
-    [PSCustomObject]@{MainAlgorithm = "kaspa"            ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU")} #Kaspa/KAS
+    [PSCustomObject]@{MainAlgorithm = "kaspa"            ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Kaspa/KAS
     [PSCustomObject]@{MainAlgorithm = "kawpow"           ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #KawPow/RVN
     [PSCustomObject]@{MainAlgorithm = "keccak"           ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "lyra2v2_webchain" ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Mintme.com/MINTME
