@@ -508,14 +508,14 @@ if ($AllRigs_Request) {
                     # hardcoded fixes due to MRR stratum or API failures
                     #
 
-                    #if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
+                    #if ($Pool_Algorithm_Norm -eq "Kawpow") {
                     #    $Miner_Server = ($Pool_Failover | Select-Object -First 1).name
                     #    $Miner_Port   = 3333
                     #    $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
                     #}
 
                     #if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
-                    #if ($Pool_Algorithm_Norm -eq "Tensority") {$Miner_Port = 3333}
+                    #if ($Pool_Algorithm_Norm -eq "KawPow") {$Miner_Port = 3333}
 
                     #END temporary fixes
                     

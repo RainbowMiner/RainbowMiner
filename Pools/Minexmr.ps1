@@ -47,6 +47,7 @@ if (-not $InfoOnly) {
     $Pool_TSL   = [int]((Get-UnixTimestamp) - $Pool_Request.pool.lastBlockFound/1000)
     $Pool_Price = if ($Global:Rates.XMR) {$Pool_Request.network.reward/($Pool_Request.network.difficulty*1e12)*86400/$Global:Rates.XMR} else {0}
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_Request.pool.blocksDay -Quiet
+    Write-Log -Level Warn "Pool $($Name) will shutdown on August 12th 2022"
 }
 
 if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
