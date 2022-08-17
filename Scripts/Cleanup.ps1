@@ -1582,6 +1582,10 @@ try {
         $AddAlgorithm += @("Mike")
     }
 
+    if ($Version -le (Get-Version "4.8.5.3")) {
+        $AddAlgorithm += @("SHA512256d")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###

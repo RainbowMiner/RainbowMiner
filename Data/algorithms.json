@@ -706,6 +706,8 @@
     "sha256ton": "SHA256ton",
     "sha3": "Keccak",
     "sha3d": "SHA3d",
+    "sha512256d": "SHA512256d",
+    "sha512256dradiant": "SHA512256d",
     "shabal": "Axiom",
     "shabal256": "Axiom",
     "shavite3": "shavite3",
