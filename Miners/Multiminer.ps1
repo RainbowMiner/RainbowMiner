@@ -18,11 +18,11 @@ $Version = "1.2.0"
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2ad";    MinMemGb = 2;  Params = ""; Blocksize = 8192;  ExtendInterval = 2; Vendor = ("NVIDIA")} #Argon2ad
-    [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 2;  Params = ""; Blocksize = 250;   ExtendInterval = 2; Vendor = ("NVIDIA")} #Argon2d250
-    [PSCustomObject]@{MainAlgorithm = "argon2d500";  MinMemGb = 2;  Params = ""; Blocksize = 500;   ExtendInterval = 2; Vendor = ("NVIDIA")} #Argon2d500
-    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 2;  Params = ""; Blocksize = 4096;  ExtendInterval = 2; Vendor = ("NVIDIA")} #Argon2d4096
-    [PSCustomObject]@{MainAlgorithm = "argon2d16000"; MinMemGb = 2; Params = ""; Blocksize = 16000; ExtendInterval = 2; Vendor = ("NVIDIA")} #Argon2d16000
+    [PSCustomObject]@{MainAlgorithm = "argon2ad";    MinMemGb = 2;  Params = ""; Blocksize = 8192;  ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2ad
+    [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 2;  Params = ""; Blocksize = 250;   ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d250
+    [PSCustomObject]@{MainAlgorithm = "argon2d500";  MinMemGb = 2;  Params = ""; Blocksize = 500;   ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d500
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 2;  Params = ""; Blocksize = 4096;  ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d4096
+    [PSCustomObject]@{MainAlgorithm = "argon2d16000"; MinMemGb = 2; Params = ""; Blocksize = 16000; ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d16000
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
