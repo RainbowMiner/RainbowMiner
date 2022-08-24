@@ -1583,7 +1583,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.8.5.3")) {
-        $AddAlgorithm += @("SHA512256d")
+        $AddAlgorithm += @("Pufferfish2","SHA512256d")
     }
 
     ###
