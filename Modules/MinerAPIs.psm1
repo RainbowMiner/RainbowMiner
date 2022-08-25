@@ -1921,7 +1921,7 @@ class Nanominer : Miner {
                 "webPort=0",
                 "Watchdog=false",
                 "noLog=true",
-                "",
+                "$(if ($Parameters.Coin -eq "ETH") {"switchToEtc=false"})",
                 "[$($Parameters.Algo)]",
                 "wallet=$($Parameters.Wallet)",
                 "rigName=$($Parameters.Worker)",
