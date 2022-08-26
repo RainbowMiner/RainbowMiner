@@ -1,6 +1,7 @@
 ﻿using module ..\Modules\Include.psm1
 using module ..\Modules\PauseMiners.psm1
 using module ..\Modules\MiningRigRentals.psm1
+using module ..\Modules\MinerAPIs.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -62,6 +63,8 @@ param(
     [String]$StartMessage = "",
     [String]$ExtensionMessage = "",
     [String]$ExtensionMessageTime = "",
+    [String]$DiffMessage = "",
+    [String]$DiffMessageTime = "",
     [String]$PoolOfflineMessage = "",
     [String]$PoolOfflineTime = "3m",
     [String]$PoolOfflineRetryTime = "15m",
@@ -107,6 +110,7 @@ $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {
 $ExcludeRentalId_Array = @($ExcludeRentalId -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 
 $StartMessage = "$StartMessage".Trim()
+$DiffMessage = "$DiffMessage".Trim()
 $ExtensionMessage = "$ExtensionMessage".Trim()
 $PoolOfflineMessage = "$PoolOfflineMessage".Trim()
 
@@ -137,6 +141,7 @@ if ($Session.MRRRigGroups       -eq $null) {
 $UpdateInterval_Seconds       = ConvertFrom-Time "$UpdateInterval"
 $PauseBetweenRentals_Seconds  = ConvertFrom-Time "$PauseBetweenRentals"
 $ExtensionMessageTime_Hours   = (ConvertFrom-Time "$ExtensionMessageTime") / 3600
+$DiffMessageTime_Seconds      = ConvertFrom-Time "$DiffMessageTime"
 $PoolOfflineTime_Seconds      = ConvertFrom-Time "$PoolOfflineTime"
 $PoolOfflineRetryTime_Seconds = ConvertFrom-Time "$PoolOfflineRetryTime"
 
@@ -281,6 +286,8 @@ if ($AllRigs_Request) {
             $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
             $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
 
+            $Optimal_Difficulty = $_.optimal_diff
+
             $Divisor = Get-MiningRigRentalsDivisor $_.price.type
             $Pool_Price = $_.price.BTC.price
 
@@ -293,6 +300,10 @@ if ($AllRigs_Request) {
             if ($Pool_Rig) {
                 $Pool_Price = $Stat.$StatAverage
                 $Pool_Currency = "BTC"
+
+                $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
+
+                $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
 
                 $Pool_RigEnable = if ($_.status.status -eq "rented" -or $_.status.rented) {
                     if ($_.poolstatus -eq "offline") {Write-Log -Level Info "$($Name): set rig id #$($Pool_RigId) rental status to $($_.poolstatus)"}
@@ -371,6 +382,7 @@ if ($AllRigs_Request) {
                             Write-Log -Level Warn "$($Name): Unable to handle start message for rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
+
 
                     if (-not $Pool_RigEnable -and $PoolOfflineMessage -ne "" -and $_.poolstatus -eq "offline" -and -not $Pool_RigStatus.poolofflinemessagesent) {
                         try {
@@ -472,6 +484,59 @@ if ($AllRigs_Request) {
                         }
                     }
 
+                    if ($DiffMessage -ne "") {
+                        try {
+                            $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.Pool -contains "MiningRigRentals" -and $_.Algorithm -contains $Pool_Algorithm_Norm_With_Model}).ForEach({
+
+                                $Pool_DiffIsOk = $true
+
+                                if ($Pool_Diff = $_.GetDifficulty($Pool_Algorithm_Norm_With_Model)) {
+                                    if ($Pool_Diff -lt 0.9*$Optimal_Difficulty.min -or $Pool_Diff -gt 1.1*$Optimal_Difficulty.max) {
+
+                                        $Pool_DiffIsOk = $false
+
+                                        Set-MiningRigRentalStatus $Pool_RigId -Status "diffisbad" > $null
+
+                                        $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
+
+                                        if (-not $Pool_RigStatus.diffmessagesent -and ($Pool_RigStatus.diffisbadsince -lt (Get-Date).ToUniversalTime().AddSeconds(-$DiffMessageTime_Seconds))) {
+
+                                            try {
+                                                $DiffMessage_Result = $null
+
+                                                $Rig_DiffMessage = Get-MiningRigRentalsSubst $DiffMessage -Subst @{
+                                                    "Type"        = $RigType
+                                                    "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
+                                                    "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
+                                                    "CurrentDiff" = if ($Pool_Diff -ge 10) {[Math]::Round($Pool_Diff,0)} else {$Pool_Diff}
+                                                    "MinDiffFmt"     = ConvertTo-Float $Optimal_Difficulty.min
+                                                    "MaxDiffFmt"     = ConvertTo-Float $Optimal_Difficulty.max
+                                                    "CurrentDiffFmt" = ConvertTo-Float $Pool_Diff
+                                                }
+
+                                                $DiffMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$Rig_DiffMessage} -method "PUT" -Timeout 60
+
+                                                Write-Log -Level Info "$($Name): Difficulty message $(if (-not $DiffMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+
+                                                Set-MiningRigRentalStatus $Pool_RigId -Status "diffmessagesent" > $null
+                                            } catch {
+                                                if ($Error.Count){$Error.RemoveAt(0)}
+                                                Write-Log -Level Warn "$($Name): Unable to handle diff message for rental #$($_.rental_id): $($_.Exception.Message)"
+                                            }
+
+                                        }
+                                    }
+                                }
+
+                                if ($Pool_DiffIsOk) {
+                                    Set-MiningRigRentalStatus $Pool_RigId -Status "diffisok" > $null
+                                }
+                            })
+                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+
+                    }
+
+
                     try {
                         if ($Rental_Result.end -and ((Get-Date).ToUniversalTime().AddMinutes(-15) -gt (Get-Date "$($Rental_Result.end -replace "\s+UTC$","Z")").ToUniversalTime())) {
 
@@ -519,13 +584,11 @@ if ($AllRigs_Request) {
 
                     #END temporary fixes
                     
-                    $Rigs_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
-
                     $Rigs_UserSep   = if (@("ProgPowVeil","ProgPowZ","Ubqhash") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
 
                     foreach ($Pool_SSL in @($false,$true)) {
                         [PSCustomObject]@{
-                            Algorithm     = "$Pool_Algorithm_Norm$(if ($Rigs_Model) {"-$Rigs_Model"})"
+                            Algorithm     = $Pool_Algorithm_Norm_With_Model
 					        Algorithm0    = $Pool_Algorithm_Norm
                             CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{if ($Error.Count){$Error.RemoveAt(0)};"$($_.status.hours)h"}} else {""}
                             CoinSymbol    = $Pool_CoinSymbol

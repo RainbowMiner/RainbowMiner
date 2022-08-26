@@ -710,11 +710,17 @@ function Get-MiningRigRentalStatus {
 [cmdletbinding()]   
 param(
     [Parameter(Mandatory = $True)]
-    [Int]$RigId
+    [Int]$RigId,
+    [Parameter(Mandatory = $False)]
+    [String]$Status = ""
 )
     if ($Session.MRRStatus -ne $null) {
         $RigKey = "$RigId"
-        $Session.MRRStatus[$RigKey]
+        if ($Status -eq "") {
+            $Session.MRRStatus[$RigKey]
+        } else {
+            $Session.MRRStatus[$RigKey][$Status]
+        }
     }
 }
 
@@ -745,13 +751,16 @@ param(
             elseif ($Status -eq "notextended") {$Session.MRRStatus[$RigKey].extended = $false}
             elseif ($Status -eq "extensionmessagesent") {$Session.MRRStatus[$RigKey].extensionmessagesent = $true}
             elseif ($Status -eq "startmessagesent") {$Session.MRRStatus[$RigKey].startmessagesent = $true}
+            elseif ($Status -eq "diffmessagesent") {$Session.MRRStatus[$RigKey].diffmessagesent = $true}
+            elseif ($Status -eq "diffisok") {$Session.MRRStatus[$RigKey].diffisbadsince = $null;$Pool_RigStatus.diffmessagesent = $false}
+            elseif ($Status -eq "diffisbad") {if ($Session.MRRStatus[$RigKey].diffisbadsince -eq $null) {$Session.MRRStatus[$RigKey].diffisbadsince = $time}}
             elseif ($Status -eq "poolofflinemessagesent") {$Session.MRRStatus[$RigKey].poolofflinemessagesent = $true}
             elseif ($Status -eq "online") {$Session.MRRStatus[$RigKey].next = $time;$Session.MRRStatus[$RigKey].wait = $false;$Session.MRRStatus[$RigKey].enable = $true;$Session.MRRStatus[$RigKey].poolofflinemessagesent = $false}
             elseif ($time -ge $Session.MRRStatus[$RigKey].next) {
                 if ($Session.MRRStatus[$RigKey].wait) {$Session.MRRStatus[$RigKey].next = $time.AddSeconds($SecondsUntilRetry);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $false}
                 else {$Session.MRRStatus[$RigKey].next = $time.AddSeconds($SecondsUntilOffline);$Session.MRRStatus[$RigKey].wait = $Session.MRRStatus[$RigKey].enable = $true}
             }
-        } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time;wait = $false;enable = $true;extended = $(if ($Status -eq "extended") {$true} else {$false});extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false});startmessagesent = $(if ($Status -eq "startmessagesent") {$true} else {$false});poolofflinemessagesent = $(if ($Status -eq "poolofflinemessagesent") {$true} else {$false})}}
+        } else {$Session.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time;wait = $false;enable = $true;extended = $(if ($Status -eq "extended") {$true} else {$false});extensionmessagesent = $(if ($Status -eq "extensionmessagesent") {$true} else {$false});startmessagesent = $(if ($Status -eq "startmessagesent") {$true} else {$false});diffmessagesent = $(if ($Status -eq "diffmessagesent") {$true} else {$false});diffisbadsince = $null;poolofflinemessagesent = $(if ($Status -eq "poolofflinemessagesent") {$true} else {$false})}}
         $Session.MRRStatus[$RigKey].enable
     }
 }

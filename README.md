@@ -1834,6 +1834,8 @@ lt=50]
 - **StartMessage**: Message, that will be sent to the renter at the start of the rental
 - **ExtensionMessageTime**: Send the ExtensionMessage to the renter, when the remaining rental time drops below this value (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=2h]
 - **ExtensionMessage**: Message, that will be sent to the renter, when remaining rental time drops below ExtensionMessageTime
+- **DiffMessageTime**: Send the DiffMessage to the renter, when the current difficulty stays out of the optimum difficulty for this time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=30m]
+- **DiffMessage**: Message, that will be sent to the renter, if the current difficulty stays out of the optimum difficulty for DiffMessageTime (substitutions: %type% = algorithm, %mindiff% = min. optimum diffculty as integer, %maxdiff% = max. optimum difficulty as integer, %currentdiff% = current difficulty as integer, %mindifffmt% = min. optimum diffculty formatted, %maxdifffmt% = max. optimum difficulty formatted, %currentdifffmt% = current difficulty formatted) 
 - **PoolOfflineTime**: time a renter's pools has to be offline, until it is temporary disabled and the pool offline message is sent (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=3m]
 - **PoolOfflineRetryTime**: time after which we will retry to connect to a disabled renter's pool (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=15m]
 - **PoolOfflineMessage**: Message, that will be sent to the renter, after a renter's pool has been offline for PoolOfflineTime
