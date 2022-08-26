@@ -530,7 +530,7 @@ class Miner {
                             }
                         }
 
-                        $this.AddMinerData($Line_Simple,[PSCustomObject]@{[String]$this.Algorithm = $HashRates},$null,$null,$Devices)
+                        $this.AddMinerData($Line_Simple,[PSCustomObject]@{[String]$this.Algorithm[0] = $HashRates},$null,$null,$Devices)
                     }
                 }
             }
@@ -580,17 +580,25 @@ class Miner {
         $this.Data = @()
     }
 
-    [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm) {
+    [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm[0]) {
         $Intervals  = [Math]::Max($this.ExtendInterval,1)
         $Timeframe  = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
-        return ($this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe} | Foreach-Object {$_.Difficulty."$($Algorithm -replace '\-.*$')"} | Measure-Object -Average).Average
+        return ($this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe} | Foreach-Object {
+            $Diff = $_.Difficulty.$Algorithm
+            if (-not $Diff -and $Algorithm -match "-") {$Diff = $_.Difficulty."$($Algorithm -replace '\-.*$')"}
+            $Diff
+        } | Measure-Object -Average).Average
     }
 
-    [Double]GetCurrentDifficulty([String]$Algorithm = [String]$this.Algorithm) {
-        return $this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Select-Object -Last 1 | Foreach-Object {$_.Difficulty."$($Algorithm -replace '\-.*$')"}
+    [Double]GetCurrentDifficulty([String]$Algorithm = [String]$this.Algorithm[0]) {
+        return $this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Select-Object -Last 1 | Foreach-Object {
+            $Diff = $_.Difficulty.$Algorithm
+            if (-not $Diff -and $Algorithm -match "-") {$Diff = $_.Difficulty."$($Algorithm -replace '\-.*$')"}
+            $Diff
+        }
     }
 
-    [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm,[Bool]$Safe = $true) {
+    [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm[0],[Bool]$Safe = $true) {
         if (($this.Data | Where-Object Device | Measure-Object).Count) {
             $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
         } else {
