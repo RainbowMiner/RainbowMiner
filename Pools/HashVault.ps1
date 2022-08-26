@@ -47,7 +47,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Request       = [PSCustomObject]@{}
     $Pool_PortsRequest  = [PSCustomObject]@{}
     $Pool_Blocks        = @([PSCustomObject]@{})
-    $Pool_Ports         = @([PSCustomObject]@{})
+    $Pool_Ports         = @([PSCustomObject]@{CPU=80;GPU=3333;RIG=3333},[PSCustomObject]@{CPU=80;GPU=3333;RIG=3333})
 
     $ok = $true
     #https://api.hashvault.pro/v3/haven
@@ -57,7 +57,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_Blocks = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/pool/blocks?limit=100&page=0&pooltype=collective" -tag $Name -timeout 15 -cycletime 120
             #$Pool_PortsRequest = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/pool/ports" -tag $Name -timeout 15 -cycletime 86400
             #$Pool_Ports   = Get-PoolPortsFromRequest $Pool_PortsRequest.pplns -mCPU "low" -mGPU "mid" -mRIG "(high|ultra)" -descField "description"
-            $Pool_Ports = @([PSCustomObject]@{CPU=80;GPU=3333;RIG=3333})
+            #$Pool_Ports = @([PSCustomObject]@{CPU=80;GPU=3333;RIG=3333},[PSCustomObject]@{CPU=80;GPU=3333;RIG=3333})
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
