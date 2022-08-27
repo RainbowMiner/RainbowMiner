@@ -286,7 +286,10 @@ if ($AllRigs_Request) {
             $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
             $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
 
-            $Optimal_Difficulty = $_.optimal_diff
+            $Optimal_Difficulty = [PSCustomObject]@{
+                min = ConvertFrom-Hash "$($_.optimal_diff.min)$($_.price.type)"
+                max = ConvertFrom-Hash "$($_.optimal_diff.max)$($_.price.type)"
+            }
 
             $Divisor = Get-MiningRigRentalsDivisor $_.price.type
             $Pool_Price = $_.price.BTC.price
@@ -504,6 +507,7 @@ if ($AllRigs_Request) {
                                 $Pool_DiffIsOk = $true
 
                                 if ($Pool_Diff = $_.GetDifficulty($Pool_Algorithm_Norm_With_Model)) {
+                                    Write-Log -Level Warn "$($Name): $($Pool_Algorithm_Norm_With_Model) mines at $($Pool_Diff) (optimum is $(if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}) - $(if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}))"
                                     if ($Pool_Diff -lt 0.9*$Optimal_Difficulty.min -or $Pool_Diff -gt 1.1*$Optimal_Difficulty.max) {
 
                                         $Pool_DiffIsOk = $false
