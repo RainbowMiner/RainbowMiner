@@ -371,7 +371,20 @@ if ($AllRigs_Request) {
                             $StartMessage_Result = $null
 
                             if ($Rental_Result.length -and (([double]$Rental_Result.length + [double]$Rental_Result.extended - [double]$Rental_Result.rig.status.hours) -lt 5/60)) {
-                                $StartMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$StartMessage} -method "PUT" -Timeout 60
+
+                                $Pool_Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Pool_Algorithm_Norm
+
+                                $Rig_StartMessage = Get-MiningRigRentalsSubst $StartMessage -Subst @{
+                                    "Algorithm"   = $Pool_Algorithm_Norm_Mapped
+                                    "Coin"        = $Pool_CoinSymbol
+                                    "Type"        = $Pool_Algorithm
+                                    "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
+                                    "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
+                                    "MinDiffFmt"  = "$(ConvertTo-Float $Optimal_Difficulty.min)" -replace " "
+                                    "MaxDiffFmt"  = "$(ConvertTo-Float $Optimal_Difficulty.max)" -replace " "
+                                }
+
+                                $StartMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$Rig_StartMessage} -method "PUT" -Timeout 60
                             }
 
                             Write-Log -Level Info "$($Name): Start message $(if (-not $StartMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
@@ -504,14 +517,18 @@ if ($AllRigs_Request) {
                                             try {
                                                 $DiffMessage_Result = $null
 
+                                                $Pool_Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Pool_Algorithm_Norm
+
                                                 $Rig_DiffMessage = Get-MiningRigRentalsSubst $DiffMessage -Subst @{
-                                                    "Type"        = $RigType
+                                                    "Algorithm"   = $Pool_Algorithm_Norm_Mapped
+                                                    "Coin"        = $Pool_CoinSymbol
+                                                    "Type"        = $Pool_Algorithm
                                                     "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
                                                     "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
                                                     "CurrentDiff" = if ($Pool_Diff -ge 10) {[Math]::Round($Pool_Diff,0)} else {$Pool_Diff}
-                                                    "MinDiffFmt"     = ConvertTo-Float $Optimal_Difficulty.min
-                                                    "MaxDiffFmt"     = ConvertTo-Float $Optimal_Difficulty.max
-                                                    "CurrentDiffFmt" = ConvertTo-Float $Pool_Diff
+                                                    "MinDiffFmt"     = "$(ConvertTo-Float $Optimal_Difficulty.min)" -replace " "
+                                                    "MaxDiffFmt"     = "$(ConvertTo-Float $Optimal_Difficulty.max)" -replace " "
+                                                    "CurrentDiffFmt" = "$(ConvertTo-Float $Pool_Diff)" -replace " "
                                                 }
 
                                                 $DiffMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$Rig_DiffMessage} -method "PUT" -Timeout 60

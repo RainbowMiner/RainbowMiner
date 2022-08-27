@@ -1831,16 +1831,29 @@ lt=50]
 - **PriceCurrencies**: List of accepted currencies (must contain BTC) [default=BTC]
 - **Title**: Title for autocreate, make sure it contains %algorithm% or %algorithmex% or %display%, and %rigid% (values will be substituted like that: %algorithm% with algorithm, %algorithmex% with algorithm plus coin info if needed, %coininfo% with eventual coin info, %display% with MRR specific display title, %rigid% with an unique rigid, %workername% with the workername, %type% with either CPU or GPU, %typecpu% with CPU or empty, %typegpu% with GPU or empty)";Description="Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=%algorithmex% mining with RainbowMiner rig %rigid%]
 - **Description**: Description for autocreate, %workername% will be substituted with rig's workername. Make sure you add [%workername%] (including the square brackets!) [default=Autostart mining with RainbowMiner (https://rbminer.net) on Windows. This rig is idle and will activate itself, as soon, as you rent it. [%workername%]]
-- **StartMessage**: Message, that will be sent to the renter at the start of the rental
+- **StartMessage**: Message, that will be sent to the renter at the start of the rental. See below for possible substitution variables.
 - **ExtensionMessageTime**: Send the ExtensionMessage to the renter, when the remaining rental time drops below this value (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=2h]
 - **ExtensionMessage**: Message, that will be sent to the renter, when remaining rental time drops below ExtensionMessageTime
 - **DiffMessageTime**: Send the DiffMessage to the renter, when the current difficulty stays out of the optimum difficulty for this time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes, set to 0 or empty to disable) [default=30m]
-- **DiffMessage**: Message, that will be sent to the renter, if the current difficulty stays out of the optimum difficulty for DiffMessageTime (substitutions: %type% = algorithm, %mindiff% = min. optimum diffculty as integer, %maxdiff% = max. optimum difficulty as integer, %currentdiff% = current difficulty as integer, %mindifffmt% = min. optimum diffculty formatted, %maxdifffmt% = max. optimum difficulty formatted, %currentdifffmt% = current difficulty formatted) 
+- **DiffMessage**: Message, that will be sent to the renter, if the current difficulty stays out of the optimum difficulty for DiffMessageTime. See below for possible substitution variables.
 - **PoolOfflineTime**: time a renter's pools has to be offline, until it is temporary disabled and the pool offline message is sent (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=3m]
 - **PoolOfflineRetryTime**: time after which we will retry to connect to a disabled renter's pool (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=15m]
 - **PoolOfflineMessage**: Message, that will be sent to the renter, after a renter's pool has been offline for PoolOfflineTime
 - **ProfitAverageTime**: Enter the device profit moving average time period (Minute,Minute_5,Minute_10,Hour,Day,ThreeDay,Week), [default=Day]
 - **PauseBetweenRentals**: Disable rigs on MRR after a rental for some time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=10m]
+
+##### Substitution variables for StartMessage and DiffMessage:
+- %Algorithm%      = normalized algorithm name
+- %Type%           = Miningrigrental's algorithm name
+- %Coin%           = coin symbol, if applicable
+- %MinDiff%        = optimum minimum difficulty
+- %MaxDiff%        = optimum maximum difficulty
+- %CurrentDiff%    = current difficulty (only DiffMessage)
+- %MinDiffFmt%     = formatted* optimum minimum difficulty
+- %MaxDiffFmt%     = formatted* optimum maximum difficulty
+- %CurrentDiffFmt% = formatted* current difficulty (only DiffMessage)
+
+* %...fmt% will format numbers like that: 0.035 -> 35m, 120,000 -> 120k, 53,100,000 -> 53.1M
 
 ##### Hints:
 
