@@ -507,7 +507,7 @@ if ($AllRigs_Request) {
                                 $Pool_DiffIsOk = $true
 
                                 if ($Pool_Diff = $_.GetDifficulty($Pool_Algorithm_Norm_With_Model)) {
-                                    Write-Log -Level Warn "$($Name): $($Pool_Algorithm_Norm_With_Model) mines at $($Pool_Diff) (optimum is $(if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}) - $(if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}))"
+                                    #Write-Log -Level Warn "$($Name): $($Pool_Algorithm_Norm_With_Model) mines at $($Pool_Diff) (optimum is $(if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}) - $(if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}))"
                                     if ($Pool_Diff -lt 0.9*$Optimal_Difficulty.min -or $Pool_Diff -gt 1.1*$Optimal_Difficulty.max) {
 
                                         $Pool_DiffIsOk = $false
