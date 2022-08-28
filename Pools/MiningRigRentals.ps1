@@ -287,8 +287,8 @@ if ($AllRigs_Request) {
             $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
 
             $Optimal_Difficulty = [PSCustomObject]@{
-                min = ConvertFrom-Hash "$($_.optimal_diff.min)$($_.price.type)"
-                max = ConvertFrom-Hash "$($_.optimal_diff.max)$($_.price.type)"
+                min = $_.optimal_diff.min
+                max = $_.optimal_diff.max
             }
 
             $Divisor = Get-MiningRigRentalsDivisor $_.price.type
