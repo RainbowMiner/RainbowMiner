@@ -296,7 +296,7 @@
                         PriceCurrencies="BTC"
                         Title = "%algorithmex% mining with RainbowMiner rig %rigid%"
                         Description = "Autostart mining with RainbowMiner (https://rbminer.net) on $(if ($IsWindows) {"Windows"} else {"Linux"}). This rig is idle and will activate itself, as soon, as you rent it. %workername%"
-                        StartMessage="Dear renter, thank you for renting my rig. It will be up-and-running in no time: offline pool or zero hashrate is normal in the first 5-10 minutes. Please allow at least 10 minutes to pass before raising an issue. Please make sure, that your pool's difficulty is between %mindiff% and %maxdiff% to get the advertised hashrate. Happy mining! (Automated message, do not respond)"
+                        StartMessage="Dear renter, thank you for renting my rig. It will be up-and-running in no time: offline pool or zero hashrate is normal in the first 5-10 minutes. Please allow at least 10 minutes to pass before raising an issue. Please make sure, that your pool's difficulty is between %mindifffmt% (%mindiff%) and %maxdifffmt% (%maxdiff%) to get the advertised hashrate. Happy mining! (Automated message, do not respond)"
                         ExtensionMessageTime="2h"
                         ExtensionMessage="Dear renter, your rental will end soon. Now would be a good time to extend the rental, if you are happy with the result."
                         DiffMessageTime="15m"
