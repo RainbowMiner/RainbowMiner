@@ -12,10 +12,10 @@ $Payout_Currencies_Solo = @($Config.Pools."$($Name)Solo".Wallets.PSObject.Proper
 #https://rvn.minerpool.org/api/worker_stats?address=REMkW2wqvLrKiH8ANPfoVtVQ8d4A8UdavD&window_days=0
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "FLUX";  port = 2033;  fee = 1.0; rpc = "flux"; rewards = "hourlyRewardsPerSol"}
-    [PSCustomObject]@{symbol = "RVN";   port = 16059; fee = 1.0; rpc = "rvn";  rewards = "hourlyRewardsPerHash"}
-    [PSCustomObject]@{symbol = "TENT";  port = 3034;  fee = 4.0; rpc = "tent"; rewards = "hourlyRewardsPerSol"}
-    [PSCustomObject]@{symbol = "ZER";   port = 15058; fee = 1.0; rpc = "zer";  rewards = "hourlyRewardsPerSol"}
+    [PSCustomObject]@{symbol = "FIRO";  port = 14058;         fee = 1.0; rpc = "firo"; rewards = "hourlyRewardsPerHash"}
+    [PSCustomObject]@{symbol = "FLUX";  port = @(2033,2034);  fee = 1.0; rpc = "flux"; rewards = "hourlyRewardsPerSol"}
+    [PSCustomObject]@{symbol = "NEOX";  port = 10059;         fee = 1.0; rpc = "neox"; rewards = "hourlyRewardsPerHash"}
+    [PSCustomObject]@{symbol = "RVN";   port = 16059;         fee = 1.0; rpc = "rvn";  rewards = "hourlyRewardsPerHash"}
 )
 
 $Count = 0
