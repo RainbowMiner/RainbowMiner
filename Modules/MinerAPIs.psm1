@@ -1062,7 +1062,7 @@ class Ccminer : Miner {
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}
-        $Difficulty = [PSCustomObject]@{}
+        #$Difficulty = [PSCustomObject]@{}
 
         try {
             $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
@@ -1080,8 +1080,8 @@ class Ccminer : Miner {
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
 
-            $Difficulty_Value = [Double]$Data.DIFF
-            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+            #$Difficulty_Value = [Double]$Data.DIFF
+            #$Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
     
             $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
             $Rejected_Shares = [Int64]($Data.REJ | Measure-Object -Sum).Sum
