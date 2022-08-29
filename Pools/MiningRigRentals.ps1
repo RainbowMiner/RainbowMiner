@@ -383,8 +383,8 @@ if ($AllRigs_Request) {
                                     "Type"        = $Pool_Algorithm
                                     "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
                                     "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
-                                    "MinDiffFmt"  = "$(ConvertTo-Float $Optimal_Difficulty.min)" -replace " "
-                                    "MaxDiffFmt"  = "$(ConvertTo-Float $Optimal_Difficulty.max)" -replace " "
+                                    "MinDiffFmt"  = "$($Optimal_Difficulty.min | ConvertTo-Float)" -replace " "
+                                    "MaxDiffFmt"  = "$($Optimal_Difficulty.max | ConvertTo-Float)" -replace " "
                                 }
 
                                 $StartMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$Rig_StartMessage} -method "PUT" -Timeout 60
@@ -530,9 +530,9 @@ if ($AllRigs_Request) {
                                                     "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
                                                     "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
                                                     "CurrentDiff" = if ($Pool_Diff -ge 10) {[Math]::Round($Pool_Diff,0)} else {$Pool_Diff}
-                                                    "MinDiffFmt"     = "$(ConvertTo-Float $Optimal_Difficulty.min)" -replace " "
-                                                    "MaxDiffFmt"     = "$(ConvertTo-Float $Optimal_Difficulty.max)" -replace " "
-                                                    "CurrentDiffFmt" = "$(ConvertTo-Float $Pool_Diff)" -replace " "
+                                                    "MinDiffFmt"     = "$($Optimal_Difficulty.min | ConvertTo-Float)" -replace " "
+                                                    "MaxDiffFmt"     = "$($Optimal_Difficulty.max | ConvertTo-Float)" -replace " "
+                                                    "CurrentDiffFmt" = "$($Pool_Diff | ConvertTo-Float)" -replace " "
                                                 }
 
                                                 $DiffMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$Rig_DiffMessage} -method "PUT" -Timeout 60
