@@ -1836,7 +1836,7 @@ function Start-Setup {
                             $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "ssl" {
-                            $Config.SSL = Read-HostBool -Prompt "Enable use SSL stratum connection, if available" -Default $Config.SSL | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.SSL = Read-HostInt -Prompt "Configure SSL usage: 0=prefer non-SSL over SSL, 1=prefel SSL over non-SSL, 2=use SSL pools only" -Default $Config.SSL -Min 0 -Max 2 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "save" {
                             Write-Host " "
@@ -2012,7 +2012,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableDebugMode $(if (Get-Yes $Config.EnableDebugMode){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableVerboseAsyncloader $(if (Get-Yes $Config.EnableVerboseAsyncloader){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member RestartComputerHours $Config.RestartComputerHours -Force
-                            $ConfigActual | Add-Member SSL $(if (Get-Yes $Config.SSL){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member SSL $Config.SSL -Force
 
                             $ConfigActual | ConvertTo-Json -Depth 10 | Out-File $ConfigFiles["Config"].Path -Encoding utf8
 
@@ -2683,8 +2683,8 @@ function Start-Setup {
                                     }
                                     "ssl" {
                                         $Pool_Actual_SSL = if ($PoolConfig.SSL -ne "") {$PoolConfig.SSL} else {-1}
-                                        $Pool_Actual_SSL = Read-HostInt -Prompt "Enable use SSL stratum connection, if available (-1=use value in config.txt)" -Default $Pool_Actual_SSL -Min -1 -Max 1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.SSL = "$(if ($Pool_Actual_SSL -ne -1) {Get-Yes $Pool_Actual_SSL})"
+                                        $Pool_Actual_SSL = Read-HostInt -Prompt "Enable use SSL stratum connection, if available (-1=use value in config.txt)" -Default $Pool_Actual_SSL -Min -1 -Max 2 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.SSL = "$(if ($Pool_Actual_SSL -ne -1) {$Pool_Actual_SSL})"
                                     }
                                     "stataverage" {
                                         Write-Host " "

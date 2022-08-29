@@ -16,7 +16,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Array]$DefaultPoolRegion = @("us","eu"), #europe/us/asia
     [Parameter(Mandatory = $false)]
-    [Switch]$SSL = $false, 
+    [Int]$SSL = 0,  #0=prefer non-SSL over SSL, 1=prefer SSL over non-SSL, 2=use SSL pools only
     [Parameter(Mandatory = $false)]
     [Alias("Device", "Type")]
     [Array]$DeviceName = @(), #i.e. CPU, GPU, GPU#02, AMD, NVIDIA, AMD#02, OpenCL#03#02 etc.

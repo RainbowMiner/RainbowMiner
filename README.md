@@ -884,7 +884,7 @@ For Server (Runmode=server) setup:
 - **EnableFastlaneBenchmarkMissing** = if EnableFastlaneBenchmark="1": set to 1 if you want to benchmark all device/miners/algos not found on rbminer.net [default=1]
 - **MaxCrashesDuringBenchmark** = maximum number of crashes allowed, until a benchmark fails [default=2]
 - **MinimumMiningIntervals** = minimum number of intervals a miner will run, before switching will be allowed [default=1]
-- **SSL** = set to 1, if only ssl connections wanted
+- **SSL** = configure ssl usage: 0=prefer non-SSL over SSL pools, 1=prefer SSL over non-SSL pools, 2=use SSL pools only [default=0]
 - **Proxy** = set your proxy address here, if you are using one
 - **EnableCurl** = set to 1 to use cURL instead of the build-in web requests (enable this, if you get frequent "Asyncloader is crashed" warnings) [default=0]
 - **Delay** = extra delay in secondes, between switching to avoid blue screen [default=0]
