@@ -1088,7 +1088,8 @@ class Ccminer : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData($Response,$HashRate,$Difficulty)
+        $this.AddMinerData($Response,$HashRate)
+        #$this.AddMinerData($Response,$HashRate,$Difficulty) too bad! Ccminer shows network diff and not share diff
 
         $this.CleanupMinerData()
     }
