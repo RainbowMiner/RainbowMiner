@@ -1776,19 +1776,22 @@ filter ConvertTo-Float {
     [CmdletBinding()]
     $Num = $_
 
-    switch ([math]::floor([math]::log($Num, 1e3))) {
+    [Double]$OutNum = $null
+    if (-not [Double]::TryParse($Num,[ref]$OutNum)) {$OutNum = 0}
+
+    switch ([math]::floor([math]::log($OutNum, 1e3))) {
         "-Infinity" {"0  ";Break}
-        -2 {"{0:n2} µ" -f ($Num * 1e6);Break}
-        -1 {"{0:n2} m" -f ($Num * 1e3);Break}
-         0 {"{0:n2}  " -f ($Num / 1);Break}
-         1 {"{0:n2} k" -f ($Num / 1e3);Break}
-         2 {"{0:n2} M" -f ($Num / 1e6);Break}
-         3 {"{0:n2} G" -f ($Num / 1e9);Break}
-         4 {"{0:n2} T" -f ($Num / 1e12);Break}
-         5 {"{0:n2} P" -f ($Num / 1e15);Break}
-         6 {"{0:n2} E" -f ($Num / 1e18);Break}
-         7 {"{0:n2} Z" -f ($Num / 1e21);Break}
-         Default {"{0:n2} Y" -f ($Num / 1e24)}
+        -2 {"{0:n2} µ" -f ($OutNum * 1e6);Break}
+        -1 {"{0:n2} m" -f ($OutNum * 1e3);Break}
+         0 {"{0:n2}  " -f ($OutNum / 1);Break}
+         1 {"{0:n2} k" -f ($OutNum / 1e3);Break}
+         2 {"{0:n2} M" -f ($OutNum / 1e6);Break}
+         3 {"{0:n2} G" -f ($OutNum / 1e9);Break}
+         4 {"{0:n2} T" -f ($OutNum / 1e12);Break}
+         5 {"{0:n2} P" -f ($OutNum / 1e15);Break}
+         6 {"{0:n2} E" -f ($OutNum / 1e18);Break}
+         7 {"{0:n2} Z" -f ($OutNum / 1e21);Break}
+         Default {"{0:n2} Y" -f ($OutNum / 1e24)}
     }
 }
 
