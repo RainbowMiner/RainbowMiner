@@ -505,10 +505,11 @@ if ($AllRigs_Request) {
 
                             $Pool_DiffIsOk = $true
 
-                            $Pool_Diff = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.Pool -contains "MiningRigRentals" -and $_.Algorithm -contains $Pool_Algorithm_Norm_With_Model}).ForEach({$_.GetDifficulty($Pool_Algorithm_Norm_With_Model)}) | Select-Object -First 1) -as [double]
+                            $Threads_Result = Invoke-MiningRigRentalRequest "/rig/$($Pool_RigId)/threads" $API_Key $API_Secret
+                            $Pool_Diff = ($Threads_Result.threads | Select-Object -First 1).difficulty.share -as [double]
+                            $Threads_Result = $null
                             if (-not $Pool_Diff) {
-                                $Threads_Result = Invoke-MiningRigRentalRequest "/rig/$($Pool_RigId)/threads" $API_Key $API_Secret
-                                $Pool_Diff = ($Threads_Result.threads | Select-Object -First 1).difficulty.share -as [double]
+                                $Pool_Diff = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.Pool -contains "MiningRigRentals" -and $_.Algorithm -contains $Pool_Algorithm_Norm_With_Model}).ForEach({$_.GetDifficulty($Pool_Algorithm_Norm_With_Model)}) | Select-Object -First 1) -as [double]
                             }
                             if ($Pool_Diff) {
 
