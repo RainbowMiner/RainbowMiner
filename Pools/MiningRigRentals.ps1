@@ -287,8 +287,8 @@ if ($AllRigs_Request) {
             $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
 
             $Optimal_Difficulty = [PSCustomObject]@{
-                min = $_.optimal_diff.min
-                max = $_.optimal_diff.max
+                min = $_.optimal_diff.min -as [double]
+                max = $_.optimal_diff.max -as [double]
             }
 
             $Divisor = Get-MiningRigRentalsDivisor $_.price.type
@@ -502,57 +502,61 @@ if ($AllRigs_Request) {
 
                     if ($DiffMessage -ne "") {
                         try {
-                            $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.Pool -contains "MiningRigRentals" -and $_.Algorithm -contains $Pool_Algorithm_Norm_With_Model}).ForEach({
 
-                                $Pool_DiffIsOk = $true
+                            $Pool_DiffIsOk = $true
 
-                                if ($Pool_Diff = $_.GetDifficulty($Pool_Algorithm_Norm_With_Model)) {
-                                    #Write-Log -Level Warn "$($Name): $($Pool_Algorithm_Norm_With_Model) mines at $($Pool_Diff) (optimum is $(if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}) - $(if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}))"
-                                    if ($Pool_Diff -lt 0.9*$Optimal_Difficulty.min -or $Pool_Diff -gt 1.1*$Optimal_Difficulty.max) {
+                            $Pool_Diff = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.Pool -contains "MiningRigRentals" -and $_.Algorithm -contains $Pool_Algorithm_Norm_With_Model}).ForEach({$_.GetDifficulty($Pool_Algorithm_Norm_With_Model)}) | Select-Object -First 1) -as [double]
+                            if (-not $Pool_Diff) {
+                                $Threads_Result = Invoke-MiningRigRentalRequest "/rig/$($Pool_RigId)/threads" $API_Key $API_Secret
+                                $Pool_Diff = ($Threads_Result.threads | Select-Object -First 1).difficulty.share -as [double]
+                            }
+                            if ($Pool_Diff) {
 
-                                        $Pool_DiffIsOk = $false
+                                if ($Pool_Diff -lt 0.9*$Optimal_Difficulty.min -or $Pool_Diff -gt 1.1*$Optimal_Difficulty.max) {
 
-                                        Set-MiningRigRentalStatus $Pool_RigId -Status "diffisbad" > $null
+                                    $Pool_DiffIsOk = $false
 
-                                        $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
+                                    Set-MiningRigRentalStatus $Pool_RigId -Status "diffisbad" > $null
 
-                                        if (-not $Pool_RigStatus.diffmessagesent -and ($Pool_RigStatus.diffisbadsince -lt (Get-Date).ToUniversalTime().AddSeconds(-$DiffMessageTime_Seconds))) {
+                                    $Pool_RigStatus = Get-MiningRigRentalStatus $Pool_RigId
 
-                                            try {
-                                                $DiffMessage_Result = $null
+                                    if (-not $Pool_RigStatus.diffmessagesent -and ($Pool_RigStatus.diffisbadsince -lt (Get-Date).ToUniversalTime().AddSeconds(-$DiffMessageTime_Seconds))) {
 
-                                                $Pool_Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Pool_Algorithm_Norm
+                                        try {
+                                            $DiffMessage_Result = $null
 
-                                                $Rig_DiffMessage = Get-MiningRigRentalsSubst $DiffMessage -Subst @{
-                                                    "Algorithm"   = $Pool_Algorithm_Norm_Mapped
-                                                    "Coin"        = $Pool_CoinSymbol
-                                                    "Type"        = $Pool_Algorithm
-                                                    "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
-                                                    "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
-                                                    "CurrentDiff" = if ($Pool_Diff -ge 10) {[Math]::Round($Pool_Diff,0)} else {$Pool_Diff}
-                                                    "MinDiffFmt"     = "$($Optimal_Difficulty.min | ConvertTo-Float)" -replace " "
-                                                    "MaxDiffFmt"     = "$($Optimal_Difficulty.max | ConvertTo-Float)" -replace " "
-                                                    "CurrentDiffFmt" = "$($Pool_Diff | ConvertTo-Float)" -replace " "
-                                                }
+                                            $Pool_Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Pool_Algorithm_Norm
 
-                                                $DiffMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$Rig_DiffMessage} -method "PUT" -Timeout 60
-
-                                                Write-Log -Level Info "$($Name): Difficulty message $(if (-not $DiffMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
-
-                                                Set-MiningRigRentalStatus $Pool_RigId -Status "diffmessagesent" > $null
-                                            } catch {
-                                                if ($Error.Count){$Error.RemoveAt(0)}
-                                                Write-Log -Level Warn "$($Name): Unable to handle diff message for rental #$($_.rental_id): $($_.Exception.Message)"
+                                            $Rig_DiffMessage = Get-MiningRigRentalsSubst $DiffMessage -Subst @{
+                                                "Algorithm"   = $Pool_Algorithm_Norm_Mapped
+                                                "Coin"        = $Pool_CoinSymbol
+                                                "Type"        = $Pool_Algorithm
+                                                "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
+                                                "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
+                                                "CurrentDiff" = if ($Pool_Diff -ge 10) {[Math]::Round($Pool_Diff,0)} else {$Pool_Diff}
+                                                "MinDiffFmt"     = "$($Optimal_Difficulty.min | ConvertTo-Float)" -replace " "
+                                                "MaxDiffFmt"     = "$($Optimal_Difficulty.max | ConvertTo-Float)" -replace " "
+                                                "CurrentDiffFmt" = "$($Pool_Diff | ConvertTo-Float)" -replace " "
                                             }
 
+                                            $DiffMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$Rig_DiffMessage} -method "PUT" -Timeout 60
+
+                                            Write-Log -Level Info "$($Name): Difficulty message $(if (-not $DiffMessage_Result.success) {"NOT "})sent to rental #$($_.rental_id) for $Pool_Algorithm_Norm on $Worker1"
+
+                                            Set-MiningRigRentalStatus $Pool_RigId -Status "diffmessagesent" > $null
+                                        } catch {
+                                            if ($Error.Count){$Error.RemoveAt(0)}
+                                            Write-Log -Level Warn "$($Name): Unable to handle diff message for rental #$($_.rental_id): $($_.Exception.Message)"
                                         }
+
                                     }
                                 }
+                            }
 
-                                if ($Pool_DiffIsOk) {
-                                    Set-MiningRigRentalStatus $Pool_RigId -Status "diffisok" > $null
-                                }
-                            })
+                            if ($Pool_DiffIsOk) {
+                                Set-MiningRigRentalStatus $Pool_RigId -Status "diffisok" > $null
+                            }
+
                         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
                     }

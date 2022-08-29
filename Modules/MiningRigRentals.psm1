@@ -752,7 +752,7 @@ param(
             elseif ($Status -eq "extensionmessagesent") {$Session.MRRStatus[$RigKey].extensionmessagesent = $true}
             elseif ($Status -eq "startmessagesent") {$Session.MRRStatus[$RigKey].startmessagesent = $true}
             elseif ($Status -eq "diffmessagesent") {$Session.MRRStatus[$RigKey].diffmessagesent = $true}
-            elseif ($Status -eq "diffisok") {$Session.MRRStatus[$RigKey].diffisbadsince = $null;$Pool_RigStatus.diffmessagesent = $false}
+            elseif ($Status -eq "diffisok") {$Session.MRRStatus[$RigKey].diffisbadsince = $null;$Session.MRRStatus[$RigKey].diffmessagesent = $false}
             elseif ($Status -eq "diffisbad") {if ($Session.MRRStatus[$RigKey].diffisbadsince -eq $null) {$Session.MRRStatus[$RigKey].diffisbadsince = $time}}
             elseif ($Status -eq "poolofflinemessagesent") {$Session.MRRStatus[$RigKey].poolofflinemessagesent = $true}
             elseif ($Status -eq "online") {$Session.MRRStatus[$RigKey].next = $time;$Session.MRRStatus[$RigKey].wait = $false;$Session.MRRStatus[$RigKey].enable = $true;$Session.MRRStatus[$RigKey].poolofflinemessagesent = $false}
