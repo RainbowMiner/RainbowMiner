@@ -611,7 +611,7 @@ Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### 1. setup overclocking profiles
 
-Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (Â°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (ÂµV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
@@ -1101,7 +1101,7 @@ The price pulled from the pool's API is being averaged down with a defined movin
 The averaging time can be defined:
 
 - for live price: using the parameter "StatAverage". It overrides the global default set by the config.txt parameter "PoolStatAverage" [default=Minute_10]
-- for stable price: using the parameter "StatAverageStabe". It overrides the global default set by the config.txt parameter "PoolStatAverageStable" [default=Week]
+- for stable price: using the parameter "StatAverageStable". It overrides the global default set by the config.txt parameter "PoolStatAverageStable" [default=Week]
 
 Possible values are:
 
@@ -1125,7 +1125,7 @@ Example:
     }
 
 
-#### Define the algorithms and coins of a pool
+#### Define the Algorithms and Coins of a pool
     
 Per default all algorithms of a pool will be used. To define your own set of algorithm, there are two additional fields:
 
@@ -1636,10 +1636,10 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
     }
 
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
-- ThermalLimit: in °C, set to 0, if you do not want this to be changed
+- ThermalLimit: in Â°C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
-- LockVoltagePoint: in µV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- LockVoltagePoint: in ÂµV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 - LockMemoryClock: in MHz, set to "*", if you do not want this to be changed or "0", if MemoryClock should be unlocked
 - LockCoreClock: in MHz, set to "*", if you do not want this to be changed or "0", if CoreClock should be unlocked
 - PreCmd/PreCmdArguments: define a command to be executed before the miner starts. PreCmd is the path to the binary, PreCmdArguments are optional arguments for that command.
