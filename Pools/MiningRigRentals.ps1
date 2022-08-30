@@ -65,6 +65,7 @@ param(
     [String]$ExtensionMessageTime = "",
     [String]$DiffMessage = "",
     [String]$DiffMessageTime = "",
+    [String]$DiffMessageTolerancyPercent = "10",
     [String]$PoolOfflineMessage = "",
     [String]$PoolOfflineTime = "3m",
     [String]$PoolOfflineRetryTime = "15m",
@@ -512,8 +513,16 @@ if ($AllRigs_Request) {
                                 $Pool_Diff = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.Pool -contains "MiningRigRentals" -and $_.Algorithm -contains $Pool_Algorithm_Norm_With_Model}).ForEach({$_.GetDifficulty($Pool_Algorithm_Norm_With_Model)}) | Select-Object -First 1) -as [double]
                             }
                             if ($Pool_Diff) {
+                                if ($MRRConfig -eq $null) {
+                                    $MRRConfig = Get-ConfigContent "MRR"
+                                    if ($MRRConfig -eq $null) {$MRRConfig = [PSCustomObject]@{}}
+                                }
+                                $DiffMessageTolerancyPercent_Value  = if ($Session.Config.MRRAlgorithms.$Pool_Algorithm_Norm.DiffMessageTolerancyPercent -ne $null -and $Session.Config.MRRAlgorithms.$Pool_Algorithm_Norm.DiffMessageTolerancyPercent -ne "") {$Session.Config.MRRAlgorithms.$Pool_Algorithm_Norm.DiffMessageTolerancyPercent}
+                                                                      elseif ($MRRConfig.$Worker1.DiffMessageTolerancyPercent -ne $null -and $MRRConfig.$Worker1.DiffMessageTolerancyPercent -ne "") {$MRRConfig.$Worker1.DiffMessageTolerancyPercent}
+                                                                      else {$DiffMessageTolerancyPercent}
+                                $DiffMessageTolerancyPercent_Value  = [Double]("$($DiffMessageTolerancyPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
 
-                                if ($Pool_Diff -lt 0.9*$Optimal_Difficulty.min -or $Pool_Diff -gt 1.1*$Optimal_Difficulty.max) {
+                                if ($Pool_Diff -lt (1 - $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.min -or $Pool_Diff -gt (1 + $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.max) {
 
                                     $Pool_DiffIsOk = $false
 
