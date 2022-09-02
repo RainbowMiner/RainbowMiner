@@ -1101,7 +1101,7 @@ The price pulled from the pool's API is being averaged down with a defined movin
 The averaging time can be defined:
 
 - for live price: using the parameter "StatAverage". It overrides the global default set by the config.txt parameter "PoolStatAverage" [default=Minute_10]
-- for stable price: using the parameter "StatAverageStabe". It overrides the global default set by the config.txt parameter "PoolStatAverageStable" [default=Week]
+- for stable price: using the parameter "StatAverageStable". It overrides the global default set by the config.txt parameter "PoolStatAverageStable" [default=Week]
 
 Possible values are:
 
@@ -1125,7 +1125,7 @@ Example:
     }
 
 
-#### Define the algorithms and coins of a pool
+#### Define the Algorithms and Coins of a pool
     
 Per default all algorithms of a pool will be used. To define your own set of algorithm, there are two additional fields:
 
