@@ -91,7 +91,7 @@
 315	SRBMiner
 316	Trex
 317	lolMiner
-318	Eminer
+318	lolMiner154
 319	Trex19
 320	JceminerCpu
 321	JceminerAmd
