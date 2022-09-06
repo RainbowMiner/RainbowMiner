@@ -1176,19 +1176,15 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                 $CreateRig["device_ram"] = $RigDeviceRam
                                             }
 
-                                            $Rig_Title       = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithmex% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%(algorithm|algorithmex|display)%") {"%algorithmex% $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
-                                            $Rig_Description = Get-MiningRigRentalsSubst "$(if ($MRRConfig.$RigName.Description -notmatch "%workername%") {"$($MRRConfig.$RigName.Description)[$RigName]"} elseif ($MRRConfig.$RigName.Description -notmatch "\[%workername%\]") {$MRRConfig.$RigName.Description -replace "%workername%","[$RigName]"} else {$MRRConfig.$RigName.Description})" -Subst $RigSubst
-
-                                            if ($Rig_Description -notmatch "\[$RigName\]") {
-                                                $Rig_Description = "$($Rig_Description)[$RigName]"
-                                            }
-
                                             if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateTitle) {
-                                                $CreateRig["name"] = $Rig_Title
+                                                $CreateRig["name"] = Get-MiningRigRentalsSubst "$(if (-not $MRRConfig.$RigName.Title -or $MRRConfig.$RigName.Title -eq "%algorithm% mining") {"%algorithmex% mining with RainbowMiner rig %rigid%"} elseif ($MRRConfig.$RigName.Title -notmatch "%(algorithm|algorithmex|display)%") {"%algorithmex% $($MRRConfig.$RigName.Title)"} else {$MRRConfig.$RigName.Title})" -Subst $RigSubst
                                             }
 
                                             if ($RigRunMode -eq "create" -or $MRRConfig.$RigName.EnableUpdateDescription) {
-                                                $CreateRig["description"] = $Rig_Description
+                                                $CreateRig["description"] = Get-MiningRigRentalsSubst "$(if ($MRRConfig.$RigName.Description -notmatch "%workername%") {"$($MRRConfig.$RigName.Description)[$RigName]"} elseif ($MRRConfig.$RigName.Description -notmatch "\[%workername%\]") {$MRRConfig.$RigName.Description -replace "%workername%","[$RigName]"} else {$MRRConfig.$RigName.Description})" -Subst $RigSubst
+                                                if ($CreateRig["description"] -notmatch "\[$RigName\]") {
+                                                    $CreateRig["description"] = "$($CreateRig["description"])[$RigName]"
+                                                }
                                             }
 
                                             $CreateRig["price"] = @{
@@ -1234,12 +1230,21 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $RigPool = $PoolsData | Where-Object {$_.Algorithm -eq $Algorithm_Norm -and -not $_.SSL} | Sort-Object -Descending {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)} | Select-Object -First 1
                                             if ($RigRunMode -eq "create") {
 
-                                                if ($RigRunMode -eq "create" -and $OrphanedRigs_Request -and ($OrphanedRig = $OrphanedRigs_Request | Where-Object {$_.name -eq $Rig_Title} | Select-Object -First 1)) {
+                                                if ($OrphanedRigs_Request -and ($OrphanedRig = $OrphanedRigs_Request | Where-Object {$_.name -eq $CreateRig["name"]} | Select-Object -First 1)) {
 
                                                     # Orphaned rig found: recover it!
+
                                                     $CreateRig["id"] = $OrphanedRig.id
-                                                    $CreateRig["description"] = $Rig_Description
+
+                                                    if ($RigGroupId -and ([int]$OrphanedRig.riggroup -ne $RigGroupId)) {
+                                                        $RigGroupsAdd += [PSCustomObject]@{groupid = $RigGroupId;rigid = $OrphanedRig.id}
+                                                        if ([int]$_.riggroup) {
+                                                            $RigGroupsRemove += [PSCustomObject]@{groupid = [int]$OrphanedRig.riggroup;rigid = $OrphanedRig.id}
+                                                        }
+                                                    }
+
                                                     $RigsToUpdate += $CreateRig
+
                                                     Write-Log -Level Info "$($Name): Recover rig #$($CreateRig["id"]) $($Algorithm_Norm) [$($RigName)]: $(if ($_.rental_id) {"rental=$($_.rental_id), "})hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day,$(if ($RigExtPercent -gt 0) {" rise=$($RigExtPercent)%,"}) minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
 
                                                 } else {
