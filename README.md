@@ -1842,6 +1842,7 @@ lt=50]
 - **PoolOfflineMessage**: Message, that will be sent to the renter, after a renter's pool has been offline for PoolOfflineTime
 - **ProfitAverageTime**: Enter the device profit moving average time period (Minute,Minute_5,Minute_10,Hour,Day,ThreeDay,Week), [default=Day]
 - **PauseBetweenRentals**: Disable rigs on MRR after a rental for some time (in seconds, verbose allowed, e.g. 1.5h = 1.5 hours, 30m = 30 minutes) [default=10m]
+- **EnableRecoveryMode**: if you have orphaned rigs due to empty description or if you have unintentionally removed the [%workername%] tag, set this to "1" and RainbowMiner will try to match all orphaned rigs to the unique rig titles and eventually recover the description. Since the recovery mode adds another pretty lengthy API call, make sure to disable (set "EnableRecoverMode" to "0"), after all rigs have been recovered. [default=0]
 
 ##### Substitution variables for StartMessage and DiffMessage:
 - %Algorithm%      = normalized algorithm name
