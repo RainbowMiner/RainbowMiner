@@ -11,20 +11,22 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "10.0.4"
+$Version = "11.0.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.0.4-bzminer/bzminer_v10.0.4_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.0.2-bzminer/bzminer_v11.0.2_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.0.4-bzminer/bzminer_v10.0.4_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.0.2-bzminer/bzminer_v11.0.2_windows.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alph";                         MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00; ExcludePoolName = "prohashing|miningrigrentals"} #Blake3/Alephium
+    [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "prohashing|miningrigrentals"} #ERG/Autolykos2
+    [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "kaspa"; ExcludePoolName = "prohashing|miningrigrentals"} #ERG/Autolykos2+Kaspa
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "prohashing|miningrigrentals"} #Etchash
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "alph"; ExcludePoolName = "prohashing|miningrigrentals"} #Etchash+Blake3
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "kaspa"; ExcludePoolName = "prohashing|miningrigrentals"} #Etchash+Kaspa
@@ -37,6 +39,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ixi";                          MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00; ExcludePoolName = "prohashing|miningrigrentals"} #Argon2Ixi/Ixian
     [PSCustomObject]@{MainAlgorithm = "kaspa";                        MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "prohashing|miningrigrentals"} #Kaspa
     #[PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "prohashing|miningrigrentals"} #KawPow
+    [PSCustomObject]@{MainAlgorithm = "neox";            DAG = $true; MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "prohashing|miningrigrentals"} #NEOXA/KawPow
     [PSCustomObject]@{MainAlgorithm = "olhash";                       MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00; ExcludePoolName = "prohashing|miningrigrentals"} #Olhash/Overline
     [PSCustomObject]@{MainAlgorithm = "woodcoin";                     MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00; ExcludePoolName = "prohashing|miningrigrentals"} #Skein2/WoodCoin LOG
 )
