@@ -108,7 +108,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
     if (-not $InfoOnly) {
         $NewStat = $false; if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$NewStat = $true; $DataWindow = "actual_last24h_solo"}
         $Pool_Price = Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factor
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -Actual24h $($Pool_Request.$_.actual_last24h/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -Difficulty $PoolCoins_Request.$Pool_CoinSymbol.difficulty -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -Actual24h $($Pool_Request.$_.actual_last24h_shared/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -Difficulty $PoolCoins_Request.$Pool_CoinSymbol.difficulty -Quiet
     }
 
     foreach($Pool_SSL in ($false,$true)) {

@@ -92,10 +92,10 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 
     if (-not $InfoOnly) {
         if ($Pool_Request.$Pool_Algorithm.coins -eq 1) {
-            $Pool_Actual24h   = $Pool_Request.$Pool_Algorithm.actual_last24h/1000
+            $Pool_Actual24h   = $Pool_Request.$Pool_Algorithm.actual_last24h_solo/1000
             $Pool_Estimate24h = $Pool_Request.$Pool_Algorithm.estimate_last24h
         } else {
-            $Pool_Actual24h   = $PoolCoins_Request.$Pool_CoinSymbol.actual_last24h/1000
+            $Pool_Actual24h   = $PoolCoins_Request.$Pool_CoinSymbol.actual_last24h_solo/1000
             $Pool_Estimate24h = $PoolCoins_Request.$Pool_CoinSymbol.estimate_last24
         }
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -Difficulty $Pool_Diff -Quiet
