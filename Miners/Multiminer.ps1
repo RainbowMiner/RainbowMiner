@@ -8,28 +8,28 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\GPU-Multiminer\multiminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-multiminerrbm/multiminer-rbm-v1.2.0-win64.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-multiminerrbm/multiminer-rbm-v1.2.0a-win64.7z"
 $ManualUri = "https://github.com/RainbowMiner/multiminer/releases"
 $Port = "339{0:d2}"
 $DevFee = 0.0
 $Cuda = "10.2"
-$Version = "1.2.0"
+$Version = "1.2.0a"
 
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2ad";    MinMemGb = 2;  Params = ""; Blocksize = 8192;  ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2ad
-    [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 2;  Params = ""; Blocksize = 250;   ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d250
-    [PSCustomObject]@{MainAlgorithm = "argon2d500";  MinMemGb = 2;  Params = ""; Blocksize = 500;   ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d500
-    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 2;  Params = ""; Blocksize = 4096;  ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d4096
-    [PSCustomObject]@{MainAlgorithm = "argon2d16000"; MinMemGb = 2; Params = ""; Blocksize = 16000; ExtendInterval = 3; Vendor = ("NVIDIA")} #Argon2d16000
+    [PSCustomObject]@{MainAlgorithm = "argon2ad";    MinMemGb = 2;  Params = ""; Blocksize = 8192;  ExtendInterval = 3; Vendor = ("AMD","NVIDIA")} #Argon2ad
+    [PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 2;  Params = ""; Blocksize = 250;   ExtendInterval = 3; Vendor = ("AMD","NVIDIA")} #Argon2d250
+    [PSCustomObject]@{MainAlgorithm = "argon2d500";  MinMemGb = 2;  Params = ""; Blocksize = 500;   ExtendInterval = 3; Vendor = ("AMD","NVIDIA")} #Argon2d500
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 2;  Params = ""; Blocksize = 4096;  ExtendInterval = 3; Vendor = ("AMD","NVIDIA")} #Argon2d4096
+    [PSCustomObject]@{MainAlgorithm = "argon2d16000"; MinMemGb = 2; Params = ""; Blocksize = 16000; ExtendInterval = 3; Vendor = ("AMD","NVIDIA")} #Argon2d16000
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("NVIDIA")
+        Type      = @("AMD","NVIDIA")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
@@ -43,11 +43,13 @@ if ($InfoOnly) {
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-foreach ($Miner_Vendor in @("NVIDIA")) {
+foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
         $Miner_Vendor = $_.Vendor
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+
+        $DeviceIndex = if ($Miner_Vendor -eq "AMD") {"Type_Index"} else {"Type_Vendor_Index"}
 
         $Commands.Where({$Miner_Vendor -in $_.Vendor}).ForEach({
             $First = $true
@@ -63,7 +65,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = ($Miner_Device | ForEach-Object {$_.Type_Vendor_Index +1}) -join ','
+                        $DeviceIDsAll = ($Miner_Device | ForEach-Object {$_.$DeviceIndex +1}) -join ','
                         $BatchSize    = ($Miner_Device | Foreach-Object {[Math]::Floor($_.OpenCL.GlobalMemsizeGB/$Blocksize)} | Measure-Object -Minimum).Minimum*32
                         $First = $false
                     }
