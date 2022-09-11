@@ -33,6 +33,7 @@ catch {
 }
 
 $Pools_Data = @(
+    [PSCustomObject]@{rpc = "erg";   symbol = "ERG";   port = 8888; fee = 1.0; divisor = 1e9;  currencies = @("BTC","ERG")}
     [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18; currencies = @("BTC","ETC")}
     [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18; currencies = @("BTC","NANO","ETH")}
 )
@@ -104,6 +105,10 @@ $Pools_Data | ForEach-Object {
         $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
         $reward         = $(if ($blocks) {($blocks | Where-Object {$_.reward -gt 0}| Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
         $btcPrice       = if ($Global:Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:Rates."$($Pool_Coin.Symbol)"} else {0}
+
+        if (-not $btcPrice -and -not $Global:Rates.ContainsKey($Pool_Coin.Symbol)) {
+            $Global:Rates[$Pool_Coin.Symbol] = 0
+        }
 
         if ($_.cycles) {
             $addName         = $Pool_Algorithm_Norm -replace "[^\d]"

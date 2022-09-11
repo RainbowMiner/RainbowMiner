@@ -23,16 +23,19 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "grin";  symbol = "GRIN-PRI";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "mwc";   symbol = "MWC-PRI"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "neox";  symbol = "NEOX";  port = 4040; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
-    [PSCustomObject]@{rpc = "firo";  symbol = "FIRO";   port = 8080; fee = 1.0; divisor = 1e8; altsymbol = "XZC"}
+    [PSCustomObject]@{rpc = "firo";  symbol = "FIRO";  port = 8080; fee = 1.0; divisor = 1e8; altsymbol = "XZC"}
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "flux";  symbol = "FLUX";   port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
+    [PSCustomObject]@{rpc = "flux";  symbol = "FLUX";  port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
     [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
 
     #AutoExchange currencies
+    [PSCustomObject]@{rpc = "erg";   symbol = "BTC";   port = 8888; fee = 1.0; divisor = 1e9; aesymbol = "ERG"}
+    [PSCustomObject]@{rpc = "etc";   symbol = "BTC";   port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
     [PSCustomObject]@{rpc = "eth";   symbol = "BTC";   port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
-    [PSCustomObject]@{rpc = "eth";   symbol = "NANO";   port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
+    [PSCustomObject]@{rpc = "eth";   symbol = "NANO";  port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
 )
 
 $Payout_Currencies | Where-Object {$Pool_Currency = $_.Name;$Pool_Data = $Pools_Data | Where-Object {$_.symbol -eq $Pool_Currency -or $_.altsymbol -eq $Pool_Currency};$Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
