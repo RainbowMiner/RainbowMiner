@@ -136,6 +136,14 @@ function Get-NvidiaArchitecture {
     else   {"Other"}
 }
 
+function Get-AMDArchitecture {
+    [CmdLetBinding()]
+    param([string]$Model,[string]$Architecture = "")
+    if     ($Architecture -in @("gfx1010","gfx1011","gfx1012") -or $Model -match "^RX5\d00") {"RDNA1"}
+    elseif ($Architecture -in @("gfx1030","gfx1031","gfx1032","gfx1033","gfx1034","gfx1035") -or $Model -match "^RX6\d00") {"RDNA2"}
+    else   {"Other"}
+}
+
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
@@ -831,7 +839,11 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$IsFastlaneValue = $false
+        [Switch]$IsFastlaneValue = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Reset = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ResetIfZero = $false
     )
 
     $Updated = $Updated.ToUniversalTime()
@@ -848,7 +860,7 @@ function Set-Stat {
 
     $SmallestValue = 1E-20
 
-    if ($Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached) {
+    if (-not $Reset -and ($Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached)) {
         try {
             if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
 
@@ -952,6 +964,8 @@ function Set-Stat {
                     }
                 }
             }
+
+            if ($ResetIfZero -and -not $Stat.Live) {throw}
 
             $ToleranceMin = $Value
             $ToleranceMax = $Value
