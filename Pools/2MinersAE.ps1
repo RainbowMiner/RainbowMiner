@@ -106,7 +106,7 @@ $Pools_Data | ForEach-Object {
         $reward         = $(if ($blocks) {($blocks | Where-Object {$_.reward -gt 0}| Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
         $btcPrice       = if ($Global:Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:Rates."$($Pool_Coin.Symbol)"} else {0}
 
-        if (-not $btcPrice -and -not $Global:Rates.ContainsKey($Pool_Coin.Symbol)) {
+        if ($ResetIfZero = -not $btcPrice -and -not $Global:Rates.ContainsKey($Pool_Coin.Symbol)) {
             $Global:Rates[$Pool_Coin.Symbol] = 0
         }
 
@@ -117,12 +117,12 @@ $Pools_Data | ForEach-Object {
             $Divisor         = 1
             $Hashrate        = $Pool_Request.hashrates.$addName
         } else {
-            $btcRewardLive   = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
+            $Hashrate        = $Pool_Request.hashrate
+            $btcRewardLive   = if ($Hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Hashrate} else {0}
             $addName         = ""
             $Divisor         = 1
-            $Hashrate        = $Pool_Request.hashrate
         }
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Hashrate -BlockRate $Pool_BLK -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Hashrate -BlockRate $Pool_BLK -Quiet -ResetIfZero:$ResetIfZero
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
