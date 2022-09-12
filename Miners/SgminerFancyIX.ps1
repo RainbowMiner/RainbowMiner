@@ -71,6 +71,9 @@ foreach ($Miner_Vendor in @("AMD","INTEL")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
+        $Miner_PlatformId = $Device | Select-Object -ExpandProperty PlatformId -Unique
+        if ($Miner_PlatformId -isnot [int]) {return}
+
         $Commands.ForEach({
 
             $MainAlgorithm = $_.MainAlgorithm -replace "_navi$"
@@ -85,7 +88,6 @@ foreach ($Miner_Vendor in @("AMD","INTEL")) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-                        $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
                         $First = $false
                     }
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}

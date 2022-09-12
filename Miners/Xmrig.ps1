@@ -206,6 +206,12 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
+        $Miner_PlatformId = $null
+        if ($Miner_Vendor -in @("AMD","INTEL")) {
+            $Miner_PlatformId = $Device | Select-Object -ExpandProperty PlatformId -Unique
+            if ($Miner_PlatformId -isnot [int]) {return}
+        }
+
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev") -and ($IsWindows -or $_.MainAlgorithm -ne "astrobwt/v2")}).ForEach({
             $First = $True
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
@@ -229,14 +235,14 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $CPUThreads = $null
                         $CPUAffinity = $null
                         $DeviceParams = Switch ($Miner_Vendor) {
-                            "AMD" {"--opencl --opencl-devices=$($Miner_Device.Type_Vendor_Index -join ',') --opencl-platform=$($Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId) --no-cpu";break}
+                            "AMD" {"--opencl --opencl-devices=$($Miner_Device.Type_Vendor_Index -join ',') --opencl-platform=$($Miner_PlatformId) --no-cpu";break}
                             "CPU" {
                                 $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
                                 $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
                                 "$(if ($ByParameters -and $CPUThreads){" -t $CPUThreads"})$(if ($ByParameters -and $CPUAffinity){" --cpu-affinity=$CPUAffinity"})"
                                 break
                             } #{"$(if ($Session.Config.CPUMiningThreads -and $Global:GlobalCPUInfo.Threads){"--cpu-max-threads-hint=$([Math]::Ceiling($Session.Config.CPUMiningThreads/$Global:GlobalCPUInfo.Threads*100))"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"}
-                            "INTEL" {"--opencl --opencl-devices=$($Miner_Device.Type_Vendor_Index -join ',') --opencl-platform=$($Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId) --no-cpu";break}
+                            "INTEL" {"--opencl --opencl-devices=$($Miner_Device.Type_Vendor_Index -join ',') --opencl-platform=$($Miner_PlatformId) --no-cpu";break}
                             "NVIDIA" {"--cuda --cuda-loader=$CudaLib --cuda-devices=$($Miner_Device.Type_Vendor_Index -join ',') --no-nvml --no-cpu";break}
                         }
                     }

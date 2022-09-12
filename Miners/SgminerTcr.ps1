@@ -47,6 +47,9 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
     $Miner_Model = $_.Model
     $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
+    $Miner_PlatformId = $Miner_Device | Select-Object -ExpandProperty PlatformId -Unique
+    if ($Miner_PlatformId -isnot [int]) {return}
+
     $Commands.ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
@@ -57,7 +60,6 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'    
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-                    $Miner_PlatformId = $Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
                     $First = $false
                 }
 

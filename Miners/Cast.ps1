@@ -55,6 +55,9 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
     $Miner_Model = $_.Model
     $Devices = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
+    $PlatformId = $Devices | Select-Object -ExpandProperty PlatformId -Unique
+    if ($PlatformId -isnot [int]) {return}
+
     $Commands.ForEach({
         $First = $true
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
@@ -78,7 +81,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--remoteaccess --remoteport `$mport -S $($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --opencl $($Miner_Device | Select-Object -First 1 -ExpandProperty PlatformId) -G $($DeviceIDsAll) --fastjobswitch --intensity -1$(if ($Pools.$Algorithm_Norm.Host -notmatch "NiceHash") {" --nonicehash"}) $($_.Params)" 
+					Arguments      = "--remoteaccess --remoteport `$mport -S $($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --opencl $($PlatformId) -G $($DeviceIDsAll) --fastjobswitch --intensity -1$(if ($Pools.$Algorithm_Norm.Host -notmatch "NiceHash") {" --nonicehash"}) $($_.Params)" 
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Cast"
 					Port           = $Miner_Port

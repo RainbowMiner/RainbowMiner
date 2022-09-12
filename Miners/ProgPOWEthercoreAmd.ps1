@@ -46,6 +46,9 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
     $Miner_Model = $_.Model
     $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
+    $Miner_PlatformId = $Device | Select-Object -ExpandProperty PlatformId -Unique
+    if ($Miner_PlatformId -isnot [int]) {return}
+
     $Commands.ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
