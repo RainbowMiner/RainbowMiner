@@ -100,7 +100,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow_veil"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowVEIL/VEIL
     [PSCustomObject]@{MainAlgorithm = "progpow_veriblock"; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #vProgPow/VBLK
     [PSCustomObject]@{MainAlgorithm = "progpow_zano"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowZANO/ZANO
-    [PSCustomObject]@{MainAlgorithm = "pufferfish2bmb"   ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU"); Architecture=@("gfx1030","gfx1031","gfx1032","gfx1033","gfx1034","gfx1035")} #Pufferfishbmb/BMB
+    [PSCustomObject]@{MainAlgorithm = "pufferfish2bmb"   ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU"); Compute=@("RDNA2")} #Pufferfishbmb/BMB
     [PSCustomObject]@{MainAlgorithm = "sha3d"            ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #SHA3d/KCN,YCN
     [PSCustomObject]@{MainAlgorithm = "sha512_256d_radiant";            Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU")} #SHA512256d/RAD
     [PSCustomObject]@{MainAlgorithm = "ubqhash"          ;              Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
@@ -149,7 +149,7 @@ if ($InfoOnly) {
     return
 }
 
-$InValidArchitecture = @("Pitcairn","Tahiti","Hawaii","Fiji","Tonga","gfx600","gfx601","gfx701","gfx702","gfx802","gfx803")
+$ValidCompute = @("RDNA2","RDNA1","CGN51","CGN50","CGN4")
 
 if (-not (Test-Path "$(Join-Path $Session.MainPath "Bin\ANY-SRBMinerMulti\Cache\verthash.dat")")) {
     $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
@@ -167,7 +167,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and ($Miner_Vendor -eq "CPU" -or $_.OpenCL.Architecture -notin $InValidArchitecture)})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and ($Miner_Vendor -eq "CPU" -or $_.OpenCL.DeviceCapability -in $ValidCompute)})
 
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and $Device.Count}).ForEach({
             $First = $true
@@ -178,7 +178,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
             $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
 
-            $Architecture = $_.Architecture
+            $Compute = $_.Compute
 
             $DeviceParams = ""
 
@@ -195,7 +195,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
         
-            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or ($_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb) -and (-not $Architecture -or $_.OpenCL.Architecture -in $Architecture))}
+            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or ($_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb) -and (-not $Compute -or $_.OpenCL.DeviceCapability -in $Compute))}
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
             $All_SecondAlgorithms = if ($SecondAlgorithm_Norm_0) {if ($Miner_Vendor -eq "CPU") {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)")} else {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")}} else {$null}
