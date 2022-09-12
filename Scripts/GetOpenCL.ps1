@@ -22,6 +22,7 @@ try {
         [PSCustomObject]@{
             PlatformId=$PlatformId
             Vendor=$PlatformVendor
+            Name="$($_.Name) $($_.Version)"
             Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
                 [PSCustomObject]@{
                     DeviceIndex      = $Device_Index
