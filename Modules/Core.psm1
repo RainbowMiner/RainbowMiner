@@ -1899,6 +1899,28 @@ function Invoke-Core {
         if ($Scheduler.ExcludePoolName.Count) {$Test_ExcludePoolName = @($Test_ExcludePoolName + $Scheduler.ExcludePoolName | Select-Object -Unique)}
     }
 
+    # detect "the merge"
+    try {
+        $TheMerge_Request = Invoke-RestMethodAsync "https://api.watcher.guru/ethmerge/predictions" -cycletime 120 -timeout 10 -tag "themerge"
+        if ($TheMerge_Request.meta.isComplete -or ($TheMerge_Request.meta.targetDifficulty -and ([decimal]$TheMerge_Request.current.totalDifficulty -ge [decimal]$TheMerge_Request.meta.targetDifficulty))) {
+            $TheMerge_When = "has happened, ETH will be excluded automatically"
+            if ("ETH" -notin $Test_ExcludeCoinSymbol) {
+                $Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + "ETH" | Select-Object -Unique)
+            }
+        } else {
+            $TheMerge_Time_Seconds  = [int]$TheMerge_Request.predicted.timestamp - (Get-UnixTimestamp)
+            $TheMerge_Time_Days     = [Math]::floor($TheMerge_Time_Seconds / 86400)
+            $TheMerge_Time_Seconds -= $TheMerge_Time_Days * 86400
+            $TheMerge_Time_Hours    = [Math]::floor($TheMerge_Time_Seconds / 3600)
+            $TheMerge_Time_Seconds -= $TheMerge_Time_Hours * 3600
+            $TheMerge_Time_Minutes = [Math]::floor($TheMerge_Time_Seconds / 60)
+            $TheMerge_Time_Seconds -= $TheMerge_Time_Minutes * 60
+            $TheMerge_When = "$($TheMerge_Time_Days)d $($TheMerge_Time_Hours):$($TheMerge_Time_Minutes):$($TheMerge_Time_Seconds)"
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+
     if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object {$_.SideIndicator -EQ "=>" -and $_.InputObject -ne "MiningRigRentals"} | Select-Object -ExpandProperty InputObject) {
         Write-Log "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
         $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
@@ -3460,6 +3482,9 @@ function Invoke-Core {
         Write-Host " "
         Write-Log "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($UserConfig.APIport)"} else {"not started!"})"
     }
+
+    Write-Host "Est. Time Remaining until The Merge: $($TheMerge_When)"
+    Write-Host " "
 
     #Check for updated RainbowMiner
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
