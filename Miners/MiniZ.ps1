@@ -89,8 +89,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-            $ExcludeCompute = $_.ExcludeCompute
-            $Compute = $_.Compute
+            $ExcludeCompute = if ($Miner_Vendor -eq "AMD") {$_.ExcludeCompute}
+            $Compute = if ($Miner_Vendor -eq "AMD") {$_.Compute}
             
             $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $ExcludeCompute) -and (-not $Compute -or $_.OpenCL.DeviceCapability -in $Compute)}
 
