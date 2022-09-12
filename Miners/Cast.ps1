@@ -71,7 +71,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 if ($First) {
 		            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 		            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $DeviceIDsAll = ($Miner_Device | ForEach-Object {'{0:x}' -f $_.Type_Vendor_Index}) -join ','
+                    $DeviceIDsAll = ($Miner_Device | ForEach-Object {'{0:x}' -f $_.Type_PlatformId_Index}) -join ','
                     $First = $false
                 }
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
