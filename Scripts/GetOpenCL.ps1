@@ -9,7 +9,7 @@ $Result = [PSCustomObject]@{
 [System.Collections.Generic.List[string]]$AllPlatforms = @()
 try {
     $PlatformId = 0
-    $Result.Platform_Devices = [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
+    $Result.Platform_Devices = [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {
         $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
         $Device_Index = 0
         $PlatformVendor = switch -Regex ([String]$_.Vendor) { 
