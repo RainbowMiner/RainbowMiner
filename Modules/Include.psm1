@@ -136,12 +136,26 @@ function Get-NvidiaArchitecture {
     else   {"Other"}
 }
 
-function Get-AMDArchitecture {
+function Get-AMDComputeCapability {
     [CmdLetBinding()]
     param([string]$Model,[string]$Architecture = "")
-    if     ($Architecture -in @("gfx1010","gfx1011","gfx1012") -or $Model -match "^RX5\d00") {"RDNA1"}
-    elseif ($Architecture -in @("gfx1030","gfx1031","gfx1032","gfx1033","gfx1034","gfx1035") -or $Model -match "^RX6\d00") {"RDNA2"}
-    else   {"Other"}
+    $Architecture = $Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+"
+
+    try {
+        if ($Script:AmdArchDB -eq $null) {$Script:AmdArchDB = Get-ContentByStreamReader ".\Data\amdarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
+
+        foreach($Arch in $Script:AmdArchDB.PSObject.Properties) {
+            $Arch_Match = $Arch.Value -join "|"
+            if ($Model -match $Arch_Match -or $Architecture -match $Arch_Match) {
+                return $Arch.Name
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "No architecture found for AMD $($Model)/$($Architecture)"
+    }
+        
+    $Architecture
 }
 
 function Get-PoolPayoutCurrencies {
@@ -3406,7 +3420,7 @@ function Get-Device {
 
                     if ($Model -eq "") { #alas! empty
                         if ($Device_OpenCL.Architecture) {
-                            $Model = "$($Device_OpenCL.Architecture)"
+                            $Model = "$($Device_OpenCL.Architecture -replace ":.+$")"
                             $Device_Name = "$($Device_Name)$(if ($Device_Name) {" "})$($Model)"
                         } elseif ($InstanceId -and $InstanceId -match "VEN_([0-9A-F]{4}).+DEV_([0-9A-F]{4}).+SUBSYS_([0-9A-F]{4,8})") {
                             try {
@@ -3430,6 +3444,9 @@ function Get-Device {
                         $Device_OpenCL.Architecture = Get-NvidiaArchitecture $Model $Device_OpenCL.DeviceCapability
                     } else {
                         $Codec = "OpenCL"
+                        if ($Vendor_Name -eq "AMD") {
+                            $Device_OpenCL.DeviceCapability = Get-AMDComputeCapability $Model $Device_OpenCL.Architecture
+                        }
                     }
 
                     $Device = [PSCustomObject]@{
