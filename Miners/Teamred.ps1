@@ -122,8 +122,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 if ($First) {
 				    $Miner_Port = $Port -f (2 * ($Miner_Device | Select-Object -First 1 -ExpandProperty Index))
 					$Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)_$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $DeviceIDsAll  = $Miner_Device.Type_Vendor_Index -join ','
-                    $DeviceIDsDual = if ($SecondAlgorithm_Norm_0) {$Miner_Device_Dual.Type_Vendor_Index -join ','}
+                    $DeviceIDsAll  = $Miner_Device.BusId_Type_Vendor_Index -join ','
+                    $DeviceIDsDual = if ($SecondAlgorithm_Norm_0) {$Miner_Device_Dual.BusId_Type_Vendor_Index -join ','}
                     $First = $False
                 }
 
@@ -188,7 +188,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					                DeviceName     = $Miner_Device.Name
 					                DeviceModel    = $Miner_Model
 					                Path           = $Path
-					                Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) $($SecondPool_Arguments)$(if ($DeviceIntensitiesAll) {"  --dual_intensity=$($DeviceIntensitiesAll)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					                Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"}) $($SecondPool_Arguments)$(if ($DeviceIntensitiesAll) {"  --dual_intensity=$($DeviceIntensitiesAll)"}) --api_listen=`$mport --bus_reorder $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					                HashRates      = [PSCustomObject]@{
                                                         $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week
                                                         $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week
@@ -228,7 +228,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) --opencl_order -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($TonMode) {" --ton_pool_mode=$($TonMode)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					    Arguments      = "-a $(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}) -d $($DeviceIDsAll) -o $($Pool_Protocol)://$($Pool_Host) -u $($Pool_User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($TonMode) {" --ton_pool_mode=$($TonMode)"}) --api_listen=`$mport --bus_reorder $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
 					    API            = "Xgminer"
 					    Port           = $Miner_Port
