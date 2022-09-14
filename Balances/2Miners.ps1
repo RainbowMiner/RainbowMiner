@@ -57,16 +57,21 @@ $Payout_Currencies | Where-Object {
         $Request = [PSCustomObject]@{}
         $Divisor = if ($_.divisor) {$_.divisor} else {[Decimal]1e8}
 
+        $Pool_Name = $Name
+        if ($_.aesymbol) {
+            $Pool_Name = "$($Name)AE"
+            $Pool_Currency = $_.aesymbol
+        }
+
         try {
             $Request = Invoke-RestMethodAsync "https://$($_.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Pool_Wallet -pidchar '.')" -cycletime ($Config.BalanceUpdateMinutes*60)
 
             if (-not $Request.stats -or -not $Divisor) {
-                Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
+                Write-Log -Level Info "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) returned nothing. "
             } else {
-                if ($_.aesymbol) {$Pool_Currency = $_.aesymbol}
                 [PSCustomObject]@{
-                    Caption     = "$($Name) ($Pool_Currency)"
-				    BaseName    = $Name
+                    Caption     = "$($Pool_Name) ($Pool_Currency)"
+				    BaseName    = $Pool_Name
                     Currency    = $Pool_Currency
                     Balance     = [Decimal]$Request.stats.balance / $Divisor
                     Pending     = [Decimal]$Request.stats.immature / $Divisor
@@ -79,7 +84,7 @@ $Payout_Currencies | Where-Object {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
+            Write-Log -Level Verbose "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) has failed. "
         }
     }
 }
