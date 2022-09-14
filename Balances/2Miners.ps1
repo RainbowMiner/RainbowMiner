@@ -58,8 +58,10 @@ $Payout_Currencies | Where-Object {
         $Divisor = if ($_.divisor) {$_.divisor} else {[Decimal]1e8}
 
         $Pool_Name = $Name
+        $Pool_Info = $null
         if ($_.aesymbol) {
             $Pool_Name = "$($Name)AE"
+            $Pool_Info = "AE $($Pool_Currency)"
             $Pool_Currency = $_.aesymbol
         }
 
@@ -72,6 +74,7 @@ $Payout_Currencies | Where-Object {
                 [PSCustomObject]@{
                     Caption     = "$($Pool_Name) ($Pool_Currency)"
 				    BaseName    = $Pool_Name
+                    Info        = $Pool_Info
                     Currency    = $Pool_Currency
                     Balance     = [Decimal]$Request.stats.balance / $Divisor
                     Pending     = [Decimal]$Request.stats.immature / $Divisor
