@@ -36,37 +36,50 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "etc";   symbol = "BTC";   port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
     [PSCustomObject]@{rpc = "eth";   symbol = "BTC";   port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
     [PSCustomObject]@{rpc = "eth";   symbol = "NANO";  port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
+    [PSCustomObject]@{rpc = "rvn";   symbol = "BTC";   port = 8888; fee = 1.0; divisor = 1e9; aesymbol = "RVN"}
 )
 
-$Payout_Currencies | Where-Object {$Pool_Currency = $_.Name;$Pool_Data = $Pools_Data | Where-Object {$_.symbol -eq $Pool_Currency -or $_.altsymbol -eq $Pool_Currency};$Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.Name)")} | Foreach-Object {
+$Payout_Currencies | Where-Object {
+        $Pool_Currency = $_.Name
+        $Pool_Wallet   = $_.Value
+        $Pool_Data = $Pools_Data | Where-Object {
+            ($_.symbol -eq $Pool_Currency -or $_.altsymbol -eq $Pool_Currency) -and
+            (-not $_.aesymbol -or "$($Name)AE" -notin $Config.PoolName -or (
+                (-not $Config.Pools."$($Name)AE".CoinSymbol.Count -or $_.aesymbol -in $Config.Pools."$($Name)AE".CoinSymbol) -and
+                (-not $Config.Pools."$($Name)AE".ExcludeCoinSymbol.Count -or $_.aesymbol -notin $Config.Pools."$($Name)AE".ExcludeCoinSymbol)
+            ))
+        }
+        $Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Pool_Currency -notin $Config.ExcludeCoinsymbolBalances)
+    } | Foreach-Object {
 
-    $Request = [PSCustomObject]@{}
-    $Divisor = if ($Pool_Data.divisor) {$Pool_Data.divisor} else {[Decimal]1e8}
+    $Pool_Data | Foreach-Object {
 
-    $Pool_Wallet = $_.Value
+        $Request = [PSCustomObject]@{}
+        $Divisor = if ($_.divisor) {$_.divisor} else {[Decimal]1e8}
 
-    try {
-        $Request = Invoke-RestMethodAsync "https://$($Pool_Data.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Pool_Wallet -pidchar '.')" -cycletime ($Config.BalanceUpdateMinutes*60)
+        try {
+            $Request = Invoke-RestMethodAsync "https://$($_.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Pool_Wallet -pidchar '.')" -cycletime ($Config.BalanceUpdateMinutes*60)
 
-        if (-not $Request.stats -or -not $Divisor) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
-        } else {
-            if ($Pool_Data.aesymbol -ne $null) {$Pool_Currency = $Pool_Data.aesymbol}
-            [PSCustomObject]@{
-                Caption     = "$($Name) ($Pool_Currency)"
-				BaseName    = $Name
-                Currency    = $Pool_Currency
-                Balance     = [Decimal]$Request.stats.balance / $Divisor
-                Pending     = [Decimal]$Request.stats.immature / $Divisor
-                Total       = ([Decimal]$Request.stats.balance + [Decimal]$Request.stats.immature ) / $Divisor
-                Paid        = [Decimal]$Request.stats.paid / $Divisor
-                Payouts     = @(Get-BalancesPayouts $Request.payments -Divisor $Divisor | Select-Object)
-                LastUpdated = (Get-Date).ToUniversalTime()
+            if (-not $Request.stats -or -not $Divisor) {
+                Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
+            } else {
+                if ($_.aesymbol) {$Pool_Currency = $_.aesymbol}
+                [PSCustomObject]@{
+                    Caption     = "$($Name) ($Pool_Currency)"
+				    BaseName    = $Name
+                    Currency    = $Pool_Currency
+                    Balance     = [Decimal]$Request.stats.balance / $Divisor
+                    Pending     = [Decimal]$Request.stats.immature / $Divisor
+                    Total       = ([Decimal]$Request.stats.balance + [Decimal]$Request.stats.immature ) / $Divisor
+                    Paid        = [Decimal]$Request.stats.paid / $Divisor
+                    Payouts     = @(Get-BalancesPayouts $Request.payments -Divisor $Divisor | Select-Object)
+                    LastUpdated = (Get-Date).ToUniversalTime()
+                }
             }
         }
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
+        }
     }
 }
