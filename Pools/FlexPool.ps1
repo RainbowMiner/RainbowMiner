@@ -22,7 +22,6 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC";  ports = @(4444,5555); fee = 0.9; divisor = 1e18; stratum = "etc-%region%.flexpool.io"; regions = @("us-east","de","sg","asia"); altstratum = [PSCustomObject]@{asia="sgeetc.gfwroute.co"}}
-    [PSCustomObject]@{symbol = "ETH";  ports = @(4444,5555); fee = 0.9; divisor = 1e18; stratum = "eth-%region%.flexpool.io"; regions = @("us-east","us-west","de","se","sg","au","br","kr","hk","asia"); altstratum = [PSCustomObject]@{asia="eth-hke.flexpool.io"}}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$InfoOnly -or $Wallets.$Pool_Currency} | Foreach-Object {

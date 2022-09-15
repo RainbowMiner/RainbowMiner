@@ -18,7 +18,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = Get-Region "ca"
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin="ETH";host="eth.ss.poolin.me";fee=1.0;divisor=1}
+    [PSCustomObject]@{coin="ETC";host="etc.ss.poolin.one";fee=1.0;divisor=1}
+    [PSCustomObject]@{coin="ETF";host="etf.ss.poolin.one";fee=1.0;divisor=1}
+    [PSCustomObject]@{coin="ETHW";host="ethw.ss.poolin.one";fee=1.0;divisor=1}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {

@@ -13,7 +13,7 @@ param(
     [String]$StatAverageStable = "Week"
 )
 
-if (-not $InfoOnly -and -not (Compare-Object @("ETH","ETC","ETP") @($Wallets.PSObject.Properties.Name | Select-Object) -IncludeEqual -ExcludeDifferent)) {return}
+if (-not $InfoOnly -and -not (Compare-Object @("ETC","ETP") @($Wallets.PSObject.Properties.Name | Select-Object) -IncludeEqual -ExcludeDifferent)) {return}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 

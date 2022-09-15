@@ -21,12 +21,9 @@ $Pool_Regions = @("us","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ETH";    port = @(1100); fee = 0.0; rpc = "eth-"}
     [PSCustomObject]@{symbol = "ETC";    port = @(5500); fee = 0.0; rpc = ""}
-    [PSCustomObject]@{symbol = "XMR";    port = @(4400); fee = 0.0; rpc = ""}
     [PSCustomObject]@{symbol = "RVN";    port = @(6600); fee = 0.0; rpc = ""}
     [PSCustomObject]@{symbol = "BTG";    port = @(8800); fee = 0.0; rpc = ""}
-    [PSCustomObject]@{symbol = "XWP";    port = @(9900); fee = 0.0; rpc = ""}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {

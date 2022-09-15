@@ -20,7 +20,6 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{stratum = "mining.viabtc.io"; symbol = "ETC"; port = 3010}
-    [PSCustomObject]@{stratum = "eth.viabtc.io";    symbol = "ETH"; port = 3333}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {

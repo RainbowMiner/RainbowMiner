@@ -27,7 +27,6 @@ $Pool_RegionsTable["asia"] = Get-Region "sea"
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC"; port = @(4444,24443)}
-    [PSCustomObject]@{symbol = "ETH"; port = @(5555,25443)}
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}

@@ -21,8 +21,8 @@ $Pool_Region_Default = "asia"
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://rbminer.net/api/data/f2pool.json" -tag $Name -cycletime 300
-    $Pool_Request.PSObject.Properties.Value.Region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+    $Pool_Request = Invoke-RestMethodAsync "http://rbminer.net/api/data/f2pool2022.json" -tag $Name -cycletime 300
+    $Pool_Request.PSObject.Properties.Value.stratum.region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -49,10 +49,9 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_SSL = $Pool_Currency -in @("BEAM")
-
     $Pool_Wallet = Get-WalletWithPaymentId $Pool_Wallet -pidchar '.'
-    foreach($Region in $_.region) {
+
+    foreach($Pool_Stratum in $_.stratum) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             Algorithm0    = $Pool_Algorithm_Norm
@@ -62,13 +61,13 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             Price         = $Stat.$StatAverage #instead of .Live
             StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-            Host          = "$($_.host)$(if ($Region -ne "asia") {"-$($Region)"}).f2pool.com"
-            Port          = if ($Pool_Currency -eq "ETH" -and $Pool_Wallet -match "^0x[0-9a-f]{40}") {8008} else {$_.port}
+            Protocol      = "stratum+$(if ($Pool_Stratum.ssl) {"ssl"} else {"tcp"})"
+            Host          = "$($Pool_Stratum.host).f2pool.com"
+            Port          = if ($Pool_Currency -eq "ETH" -and $Pool_Wallet -match "^0x[0-9a-f]{40}") {8008} else {$Pool_Stratum.port}
             User          = "$($Pool_Wallet).{workername:$Worker}"
             Pass          = "x"
-            Region        = $Pool_RegionsTable.$Region
-            SSL           = $Pool_SSL
+            Region        = $Pool_RegionsTable."$($Pool_Stratum.region)"
+            SSL           = $Pool_Stratum.ssl
             Updated       = $Stat.Updated
             PoolFee       = $_.fee
             DataWindow    = $DataWindow

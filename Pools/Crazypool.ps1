@@ -22,7 +22,6 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{rpc = "etc.crazypool.org"; symbol = "ETC"; port = @(7000,7777); fee = 1}
-    [PSCustomObject]@{rpc = "eth.crazypool.org"; symbol = "ETH"; port = @(3333,5555); fee = 1}
     [PSCustomObject]@{rpc = "ubq.crazypool.org"; symbol = "UBQ"; port = @(3335); fee = 1}
 )
 

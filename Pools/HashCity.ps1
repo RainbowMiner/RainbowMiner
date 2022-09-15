@@ -60,7 +60,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "DASH"; port = 4000; fee = 0.0; rpc = "dash"}
     [PSCustomObject]@{symbol = "DBIX"; port = 4646; fee = 1.0; rpc = "dbix"}
     [PSCustomObject]@{symbol = "ETC";  port = 8888; fee = 1.0; rpc = "etc"}
-    [PSCustomObject]@{symbol = "ETH";  port = 7777; fee = 1.0; rpc = "eth"}
     [PSCustomObject]@{symbol = "EXP";  port = 9999; fee = 1.0; rpc = "exp"}
     [PSCustomObject]@{symbol = "LTC";  port = 3000; fee = 0.0; rpc = "ltc"}
     [PSCustomObject]@{symbol = "LTHN"; port = 4545; fee = 1.0; rpc = "lthn"}

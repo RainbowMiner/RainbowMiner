@@ -7,7 +7,9 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin="ETH";host="ryj-va.s.eksy.org";fee=1.0;divisor=1}
+    [PSCustomObject]@{coin="ETC";host="etc.ss.poolin.me";fee=1.0;divisor=1}
+    [PSCustomObject]@{coin="ETF";host="etf.ss.poolin.one";fee=1.0;divisor=1}
+    [PSCustomObject]@{coin="ETHW";host="ethw.ss.poolin.one";fee=1.0;divisor=1}
 )
 
 $Count = 0
