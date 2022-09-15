@@ -45,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";              Vendor = @("AMD");        Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";             Vendor = @("AMD");        Params = ""} #GLT-PawelHash
     [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("AMD");        Params = ""; ExtendInterval = 2} #Heavyhash/OBTC
-    [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("NVIDIA");     Params = ""; ExtendInterval = 2; DevFee = 2.0} #Heavyhash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("NVIDIA");     Params = ""; ExtendInterval = 2; DevFee = 2.0; FaultTolerance = 0.4} #Heavyhash/OBTC
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD");          Params = ""} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "honeycomb";                 Vendor = @("AMD");          Params = ""} #Honeycomb broken since v0.17.6
