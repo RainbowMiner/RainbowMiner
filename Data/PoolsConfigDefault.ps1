@@ -11,13 +11,6 @@
         "2MinersSolo" = [PSCustomObject]@{
             Currencies=@("FIRO")
         }
-        "572133Club" = [PSCustomObject]@{
-            Currencies=@("KYAN")
-            Yiimp=$true
-        }
-        "666Pool" = [PSCustomObject]@{
-            Currencies=@("PMEER")
-        }
         "6Block" = [PSCustomObject]@{
             Currencies=@("HNS")
         }
@@ -40,55 +33,15 @@
             Currencies=@("REOSC")
         }
         "BaikalMinePPS" = [PSCustomObject]@{
-            Currencies=@("ETH","ETC")
+            Currencies=@("ETC")
         }
         "BaikalMineSolo" = [PSCustomObject]@{
             Currencies=@("REOSC")
         }
-        "BeePool" = [PSCustomObject]@{
-            Currencies=@("ETH","RVN")
-        }
         "Binance" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{API_Key="";API_Secret="";EnableShowWallets="0"}
             SetupFields=[PSCustomObject]@{API_Key = "Enter your Binance API key (adds balance)";API_Secret = "Enter your Binance API secret (pulls balance)";EnableShowWallets="List your Binance wallets (0=no, 1=yes)"}
-            Currencies=@("ETH")
-        }
-        "BlazePool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=22}
-            Currencies=@("BTC")
-            Autoexchange=$true
-            Yiimp=$true
-        }
-        "Blockmasters" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=50}
-            Currencies=@("BTC")
-            Autoexchange=$true
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
-        "BlockmastersCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=50}
-            Currencies=@("BTC")
-            Yiimp=$true
-            BalancesKeepAlive="90d"
-        }
-        "Bsod" = [PSCustomObject]@{
-            Currencies=@("RVN","SIN")
-            Yiimp=$true
-        }
-        "BsodParty" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
-            SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
-            Currencies=@("RVN","SIN")
-            Yiimp=$true
-        }
-        "BsodSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1"}
-            Currencies=@("RVN","SIN")
-            Yiimp=$true
-        }
-        "BtcPrivate" = [PSCustomObject]@{
-            Currencies=@("BTCP")
+            Currencies=@("ETC")
         }
         "C3pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
@@ -99,32 +52,28 @@
             Currencies=@("CPU","MBC")
         }
         "Crazypool" = [PSCustomObject]@{
-            Currencies=@("ETH","ETC","UBQ")
-        }
-        "CryptoKnight" = [PSCustomObject]@{
-            Currencies=@("XWP")
+            Currencies=@("ETC","UBQ")
         }
         "EthashPool" = [PSCustomObject]@{
-            Currencies=@("ETC","ETH","ETP")
+            Currencies=@("ETC","ETP")
         }
         "Ethermine" = [PSCustomObject]@{
-            Currencies=@("ETH")
+            Currencies=@("ETC","RVN","ERG")
         }
         "Ezil" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{EnableLolminerDual="1";EnableNanominerDual="1";EnableTrexDual="1"}
             SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, Lolminer will dual mine ZIL on Ezil for various algorithms";EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms";EnableTrexDual="If you set this to 1, Trex will dual mine ZIL on Ezil for Ethash"}
-            Currencies=@("ETH","ETC","ZIL")
+            Currencies=@("ETC","ZIL")
         }
         "F2pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{UserName=""}
             SetupFields=[PSCustomObject]@{UserName="Enter your f2pool username, if you want to see balances"}
-            Currencies=@("ETH","GRIN","BEAM","XMR","FIRO")
-        }
-        "FairPool" = [PSCustomObject]@{
-            Currencies=@("XWP")
+            Currencies=@("ETC","RVN","ERG","BEAM")
         }
         "FlexPool" = [PSCustomObject]@{
-            Currencies=@("ETC","ETH")
+            Fields=[PSCustomObject]@{EnableBzminerDual="1"}
+            SetupFields=[PSCustomObject]@{EnableBzminerDual="If you set this to 1, Bzminer will dual/triple mine ZIL on Flexpool for various algorithms"}
+            Currencies=@("ETC","ZIL")
         }
         "FlockPool" = [PSCustomObject]@{
             Currencies=@("RTM")
@@ -177,28 +126,28 @@
             Currencies=@("XMR")
         }
         "Hellominer" = [PSCustomObject]@{
-            Currencies=@("RVN","XWP")
+            Currencies=@("ETC","RVN")
         }
         "HeroMiners" = [PSCustomObject]@{
-            Currencies=@("ERG","XWP")
+            Currencies=@("ETC","RVN","ERG","XWP")
         }
         "Hiveon" = [PSCustomObject]@{
-            Currencies=@("ETH","ETC")
+            Currencies=@("ETC")
         }
         "Icemining" = [PSCustomObject]@{
-            Currencies=@("SIN","MWC")
+            Currencies=@("EPIC","NIM")
         }
         "KuCoin" = [PSCustomObject]@{
-            Currencies=@("ETH")
+            Currencies=@()
         }
         "LeafPool" = [PSCustomObject]@{
             Currencies=@("BEAM")
         }
         "LuckyPool" = [PSCustomObject]@{
-            Currencies=@("XWP")
+            Currencies=@("ZANO","XWP")
         }
         "LuckPool" = [PSCustomObject]@{
-            Currencies=@("VRSC","YEC")
+            Currencies=@("VRSC")
         }
         "Luxor" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User=""}
@@ -222,7 +171,7 @@
             Currencies=@("FLUX","TENT","VDL")
         }
         "MinerRocks" = [PSCustomObject]@{
-            Currencies=@("XMR")
+            Currencies=@("TUBE")
         }
         "MiningDutch" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=3}
@@ -372,7 +321,7 @@
             Autoexchange=$true
         }
         "MintPond" = [PSCustomObject]@{
-            Currencies=@("FIRO")
+            Currencies=@("FIRO","RVN")
         }
         "MoneroOcean" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
@@ -382,7 +331,7 @@
         "Nanopool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Email=""}
             SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address"}
-            Currencies=@("ETH")
+            Currencies=@("ETC","RVN","ERG")
         }
         "NiceHash" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{OrganizationID="";API_Key="";API_Secret="";StatAverage="Minute_5";MaxMarginOfError="0";EnableShowWallets="0"}
@@ -404,9 +353,18 @@
             BalancesKeepAlive="30d"
         }
         "Poolin" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{API_ETH_PUID="";API_ETH_ReadToken=""}
-            SetupFields=[PSCustomObject]@{API_ETH_PUID="For ETH balance, enter your miner subaccount puid (https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)";API_ETH_ReadToken="For ETH balance, enter your miner subaccount read-token (starts with wow; https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"}
-            Currencies=@("ETH")
+            Fields=[PSCustomObject]@{API_ETH_PUID="";API_ETH_ReadToken="";API_ETC_PUID="";API_ETC_ReadToken="";API_ETF_PUID="";API_ETF_ReadToken="";API_ETHW_PUID="";API_ETHW_ReadToken=""}
+            SetupFields=[PSCustomObject]@{
+                API_ETH_PUID="For ETH balance, enter your miner subaccount puid (https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+                API_ETH_ReadToken="For ETH balance, enter your miner subaccount read-token (starts with wow; https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+                API_ETC_PUID="For ETC balance, enter your miner subaccount puid (https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+                API_ETC_ReadToken="For ETC balance, enter your miner subaccount read-token (starts with wow; https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+                API_ETF_PUID="For ETF balance, enter your miner subaccount puid (https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+                API_ETF_ReadToken="For ETF balance, enter your miner subaccount read-token (starts with wow; https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+                API_ETHW_PUID="For ETHW balance, enter your miner subaccount puid (https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+                API_ETHW_ReadToken="For ETHW balance, enter your miner subaccount read-token (starts with wow; https://github.com/iblockin/pool_web_api_doc/blob/master/api_en.md)"
+            }
+            Currencies=@("ETC")
         }
         "Poolium" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{API_Key="";Password="x"}
@@ -441,16 +399,13 @@
             Currencies=@("GRIMM")
         }
         "RPlant" = [PSCustomObject]@{
-            Currencies=@("BIN","CPU","MBC")
+            Currencies=@("BTX","CURVE","MGPC")
         }
         "SeroPool" = [PSCustomObject]@{
             Currencies=@("SERO")
         }
         "SoloPool" = [PSCustomObject]@{
-            Currencies=@("ETC","ETH","SAFE","SEL","XMR","XWP","ZERO")
-        }
-        "SparkPool" = [PSCustomObject]@{
-            Currencies=@("ETH","CKB","BEAM")
+            Currencies=@("ERG","RVN","FIRO")
         }
         "Sunpool" = [PSCustomObject]@{
             Currencies=@("GRIMM","BEAM","ATOMI")
@@ -465,23 +420,23 @@
             Currencies=@("TCR")
         }
         "unMineable" = [PSCustomObject]@{
-            Currencies=@("BTC","BTT","ETH","TRX","UNI","XTZ","YFI")
+            Currencies=@("BTC","BTT","ETC","TRX","UNI","XTZ","YFI")
         }
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
         "ViaBTC" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{"ETH-PaymentMode"="pplns";"ETC-PaymentMode"="pplns";API_Key=""}
-            SetupFields=[PSCustomObject]@{"ETH-PaymentMode" = "Enter your ETH-setup payment mode (pps, pplns or solo) for proper fee calculation";"ETC-PaymentMode" = "Enter your ETC-setup payment mode (pps, pplns or solo) for proper fee calculation";API_Key = "Enter your ViaBTC API key (adds your balance)"}
-            Currencies=@("ETH","ETC")
+            Fields=[PSCustomObject]@{"ETC-PaymentMode"="pplns";API_Key=""}
+            SetupFields=[PSCustomObject]@{"ETC-PaymentMode" = "Enter your ETC-setup payment mode (pps, pplns or solo) for proper fee calculation";API_Key = "Enter your ViaBTC API key (adds your balance)"}
+            Currencies=@("ETC")
             Autoexchange=$true
         }
         "WoolyPooly" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=30}
-            Currencies=@("CFX","ETH","VEIL")
+            Currencies=@("CFX","ETC","RVN","ERG","VEIL")
         }
         "WoolyPoolySolo" = [PSCustomObject]@{
-            Currencies=@("CFX","ETH","VEIL")
+            Currencies=@("CFX","ETC","RVN","ERG","VEIL")
         }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
