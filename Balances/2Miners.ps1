@@ -40,16 +40,16 @@ $Pools_Data = @(
 )
 
 $Payout_Currencies | Where-Object {
-        $Pool_Currency = $_.Name
-        $Pool_Wallet   = $_.Value
+        $Pool_CoinSymbol = $_.Name
+        $Pool_Wallet     = $_.Value
         $Pool_Data = $Pools_Data | Where-Object {
-            ($_.symbol -eq $Pool_Currency -or $_.altsymbol -eq $Pool_Currency) -and
+            ($_.symbol -eq $Pool_CoinSymbol -or $_.altsymbol -eq $Pool_CoinSymbol) -and
             (-not $_.aesymbol -or "$($Name)AE" -notin $Config.PoolName -or (
                 (-not $Config.Pools."$($Name)AE".CoinSymbol.Count -or $_.aesymbol -in $Config.Pools."$($Name)AE".CoinSymbol) -and
                 (-not $Config.Pools."$($Name)AE".ExcludeCoinSymbol.Count -or $_.aesymbol -notin $Config.Pools."$($Name)AE".ExcludeCoinSymbol)
             ))
         }
-        $Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Pool_Currency -notin $Config.ExcludeCoinsymbolBalances)
+        $Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Pool_CoinSymbol -notin $Config.ExcludeCoinsymbolBalances)
     } | Foreach-Object {
 
     $Pool_Data | Foreach-Object {
@@ -57,11 +57,12 @@ $Payout_Currencies | Where-Object {
         $Request = [PSCustomObject]@{}
         $Divisor = if ($_.divisor) {$_.divisor} else {[Decimal]1e8}
 
-        $Pool_Name = $Name
-        $Pool_Info = $null
+        $Pool_Name     = $Name
+        $Pool_Currency = $Pool_CoinSymbol
+        $Pool_Info     = $null
         if ($_.aesymbol) {
-            $Pool_Name = "$($Name)AE"
-            $Pool_Info = "AE $($Pool_Currency)"
+            $Pool_Name     = "$($Name)AE"
+            $Pool_Info     = "AE $($Pool_CoinSymbol)"
             $Pool_Currency = $_.aesymbol
         }
 
