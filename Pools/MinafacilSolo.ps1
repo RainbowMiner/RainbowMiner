@@ -116,6 +116,8 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Wallets.$_ -or $Inf
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
                 WTM           = $Price_BTC -eq 0
+                Difficulty    = $Stat.Diff_Average
+                SoloMining    = $true
 			    ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
                 Penalty       = 0
