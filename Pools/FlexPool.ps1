@@ -22,6 +22,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC";  ports = @(4444,5555); fee = 0.9; divisor = 1e18; stratum = "etc-%region%.flexpool.io"; regions = @("us-east","de","sg","asia"); altstratum = [PSCustomObject]@{asia="sgeetc.gfwroute.co"}}
+    [PSCustomObject]@{symbol = "ZIL";  ports = @(4444,5555); fee = 0.9; divisor = 1e18; stratum = "zil.flexpool.io"; regions = @("us-east")}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$InfoOnly -or $Wallets.$Pool_Currency} | Foreach-Object {
@@ -102,100 +103,136 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$InfoOnly -or $Wallets.$P
         $Pool_SSL = $false
         $Pool_Stratum = if ($_.altstratum.$Pool_Region -ne $null) {$_.altstratum.$Pool_Region} else {$_.stratum -replace "%region%",$Pool_Region}
         foreach($Pool_Port in $_.ports) {
-            $Pool_Protocol = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = $Pool_Protocol
-                Host          = $Pool_Stratum
-                Port          = $Pool_Port
-                User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $Pool_SSL
-                Updated       = $Stat.Updated
-                PoolFee       = $_.fee
-                Failover      = @($Pool_FailoverStratumTable.$Pool_Region | Foreach-Object {
-                                    [PSCustomObject]@{
-                                        Protocol = $Pool_Protocol
-                                        Host     = $_
-                                        Port     = $Pool_Port
-                                        User     = "$($Pool_User).{workername:$Worker}"
-                                        Pass     = "x"
-                                    }
-                                })
-                DataWindow    = $DataWindow
-                Workers       = $Pool_Workers.result
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-                WTM           = $true
-                ErrorRatio    = $Stat.ErrorRatio
-                EthMode       = "ethproxy"
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_0       = 0.0
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
-            [PSCustomObject]@{
-                Algorithm     = "$($Pool_Algorithm_Norm)FP"
-                Algorithm0    = "$($Pool_Algorithm_Norm)FP"
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = $Pool_Protocol
-                Host          = $Pool_Stratum
-                Port          = $Pool_Port
-                User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $Pool_SSL
-                Updated       = $Stat.Updated
-                PoolFee       = $_.fee
-                Failover      = @($Pool_FailoverStratumTable.$Pool_Region | Foreach-Object {
-                                    [PSCustomObject]@{
-                                        Protocol = $Pool_Protocol
-                                        Host     = $_
-                                        Port     = $Pool_Port
-                                        User     = "$($Pool_User).{workername:$Worker}"
-                                        Pass     = "x"
-                                    }
-                                })
-                DataWindow    = $DataWindow
-                Workers       = $Pool_Workers.result
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-                WTM           = $true
-                ErrorRatio    = $Stat.ErrorRatio
-                EthMode       = "ethproxy"
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_0       = 0.0
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+            if ($Pool_Currency -ne "ZIL") {
+                $Pool_Protocol = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    Algorithm0    = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = 0
+                    StablePrice   = 0
+                    MarginOfError = 0
+                    Protocol      = $Pool_Protocol
+                    Host          = $Pool_Stratum
+                    Port          = $Pool_Port
+                    User          = "$($Pool_User).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $_.fee
+                    Failover      = @($Pool_FailoverStratumTable.$Pool_Region | Foreach-Object {
+                                        [PSCustomObject]@{
+                                            Protocol = $Pool_Protocol
+                                            Host     = $_
+                                            Port     = $Pool_Port
+                                            User     = "$($Pool_User).{workername:$Worker}"
+                                            Pass     = "x"
+                                        }
+                                    })
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_Workers.result
+                    Hashrate      = $Stat.HashRate_Live
+                    BLK           = $Stat.BlockRate_Average
+                    TSL           = $Pool_TSL
+                    WTM           = $true
+                    ErrorRatio    = $Stat.ErrorRatio
+                    EthMode       = "ethproxy"
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_0       = 0.0
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Pool_User
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
+                [PSCustomObject]@{
+                    Algorithm     = "$($Pool_Algorithm_Norm)FP"
+                    Algorithm0    = "$($Pool_Algorithm_Norm)FP"
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = 0
+                    StablePrice   = 0
+                    MarginOfError = 0
+                    Protocol      = $Pool_Protocol
+                    Host          = $Pool_Stratum
+                    Port          = $Pool_Port
+                    User          = "$($Pool_User).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $_.fee
+                    Failover      = @($Pool_FailoverStratumTable.$Pool_Region | Foreach-Object {
+                                        [PSCustomObject]@{
+                                            Protocol = $Pool_Protocol
+                                            Host     = $_
+                                            Port     = $Pool_Port
+                                            User     = "$($Pool_User).{workername:$Worker}"
+                                            Pass     = "x"
+                                        }
+                                    })
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_Workers.result
+                    Hashrate      = $Stat.HashRate_Live
+                    BLK           = $Stat.BlockRate_Average
+                    TSL           = $Pool_TSL
+                    WTM           = $true
+                    ErrorRatio    = $Stat.ErrorRatio
+                    EthMode       = "ethproxy"
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_0       = 0.0
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Pool_User
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
+            } elseif ($EnableBzminerDual) {
+                [PSCustomObject]@{
+                    Algorithm     = "ZilliqaFP"
+                    Algorithm0    = "ZilliqaFP"
+                    CoinName      = "Zilliqa"
+                    CoinSymbol    = "ZIL"
+                    Currency      = "ZIL"
+                    Price         = 1e-15
+                    StablePrice   = 1e-15
+                    MarginOfError = 0
+                    Protocol      = "zmp"
+                    Host          = "zil.flexpool.io"
+                    Port          = $Pool_Port
+                    User          = "$($Wallets.ZIL).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_Ssl
+                    Updated       = (Get-Date).ToUniversalTime()
+                    PoolFee       = 1.0
+                    DataWindow    = $DataWindow
+                    Workers       = $null
+                    EthMode       = $Pool_EthProxy
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_0       = 0.0
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Wallets.ZIL
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
             }
             $Pool_SSL = $true
         }
