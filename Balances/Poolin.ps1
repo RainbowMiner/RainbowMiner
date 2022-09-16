@@ -8,7 +8,6 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{coin="ETC";host="etc.ss.poolin.me";fee=1.0;divisor=1}
-    [PSCustomObject]@{coin="ETF";host="etf.ss.poolin.one";fee=1.0;divisor=1}
     [PSCustomObject]@{coin="ETHW";host="ethw.ss.poolin.one";fee=1.0;divisor=1}
 )
 

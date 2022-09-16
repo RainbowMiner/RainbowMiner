@@ -19,7 +19,6 @@ $Pool_Region_Default = Get-Region "ca"
 
 $Pools_Data = @(
     [PSCustomObject]@{coin="ETC";host="etc.ss.poolin.one";fee=1.0;divisor=1}
-    [PSCustomObject]@{coin="ETF";host="etf.ss.poolin.one";fee=1.0;divisor=1}
     [PSCustomObject]@{coin="ETHW";host="ethw.ss.poolin.one";fee=1.0;divisor=1}
 )
 
