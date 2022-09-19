@@ -1,4 +1,4 @@
- using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -59,7 +59,7 @@ if (-not $InfoOnly -and $Pool_Currencies.Count -ge 1) {
     $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -eq $AECurrency}
 }
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | ForEach-Object {
     $Pool_Host = "mine.zpool.ca"
     $Pool_Algorithm = $Pool_Request.$_.name
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
