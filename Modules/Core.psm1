@@ -3465,9 +3465,6 @@ function Invoke-Core {
         Write-Log "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($UserConfig.APIport)"} else {"not started!"})"
     }
 
-    Write-Host "Est. Time Remaining until The Merge: $($TheMerge_When)"
-    Write-Host " "
-
     #Check for updated RainbowMiner
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
         if ($Session.Config.EnableAutoUpdate) {
