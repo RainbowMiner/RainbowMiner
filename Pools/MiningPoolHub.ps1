@@ -46,7 +46,7 @@ $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
 $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol} | ForEach-Object {
     $Pool_Hosts     = $_.all_host_list.split(";")
-    $Pool_Port      = if ($_.current_mining_coin_symbol -eq "VTC") {20534} else {$_.algo_switch_port} #temp. fix VTC on port 17032 doesn't work 2021/02/06
+    $Pool_Port      = $_.algo_switch_port
     $Pool_CoinSymbol= $_.current_mining_coin_symbol
 
     $Pool_Algorithm = $_.algo
