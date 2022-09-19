@@ -46,7 +46,7 @@ $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
 $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol} | ForEach-Object {
     $Pool_Hosts     = $_.all_host_list.split(";")
-    $Pool_Port      = if ($_.current_mining_coin_symbol -eq "VTC") {20534} else {$_.algo_switch_port} #temp. fix VTC on port 17032 doesn't work 2021/02/06
+    $Pool_Port      = $_.algo_switch_port
     $Pool_CoinSymbol= $_.current_mining_coin_symbol
 
     $Pool_Algorithm = $_.algo
@@ -63,14 +63,21 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol}
 
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
-    if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
-
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Divisor = 1e9
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -Quiet
+    }
+
+    # temporary fixes for API errors
+    Switch ($Pool_CoinSymbol) {
+        "VTC" {$Pool_Port = 20534}
+    }
+
+    Switch ($Pool_Algorithm_Norm) {
+        "KawPow" {$Pool_Hosts = $Pool_Hosts | Where-Object {$_ -match "us-east"}}
     }
 
     foreach($Pool_Host in $Pool_Hosts) {

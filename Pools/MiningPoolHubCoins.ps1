@@ -64,8 +64,6 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.symbol} | ForEach-Object {
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
-    if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
-
     $Divisor = 1e9
 
     $Pool_TSL = if ($_.time_since_last_block -eq "-") {$null} else {[int64]$_.time_since_last_block}
@@ -73,6 +71,15 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.symbol} | ForEach-Object {
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinName)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate (ConvertFrom-Hash $_.pool_hash) -FaultDetection $true -FaultTolerance 5 -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+    }
+
+    # temporary fixes for API errors
+    #Switch ($Pool_CoinSymbol) {
+    #    "VTC" {$Pool_Port = 20534}
+    #}
+
+    Switch ($Pool_Algorithm_Norm) {
+        "KawPow" {$Pool_Hosts = $Pool_Hosts | Where-Object {$_ -match "us-east"}}
     }
 
     foreach($Pool_Host in $Pool_Hosts) {
