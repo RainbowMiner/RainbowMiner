@@ -1,13 +1,25 @@
 ﻿using module ..\Modules\Include.psm1
 
 param(
-    $Config
+    $Config,
+    $UsePools
 )
 
-#https://xzc.2miners.com/api/accounts/aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)AE".Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
+$Payout_Currencies = @()
+foreach($PoolExt in @("","AE","Solo")) {
+    if (-not $UsePools -or "$($Name)$($PoolExt)" -in $UsePools) {
+        $Payout_Currencies += @($Config.Pools."$($Name)$($PoolExt)".Wallets.PSObject.Properties | Select-Object)
+    }
+}
+
+$Payout_Currencies = $Payout_Currencies | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
+
+if (-not $Payout_Currencies) {
+    Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
+    return
+}
 
 $Pools_Data = @(
     [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
@@ -18,7 +30,6 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "ctxc";  symbol = "CTXC";  port = 2222; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "erg";   symbol = "ERG";   port = 9999; fee = 1.5; divisor = 1e9}
     [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e9}
-    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "ethw";  symbol = "ETHW";  port = 2020; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e9}
     [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e9}
@@ -35,8 +46,6 @@ $Pools_Data = @(
     #AutoExchange currencies
     [PSCustomObject]@{rpc = "erg";   symbol = "BTC";   port = 8888; fee = 1.0; divisor = 1e9; aesymbol = "ERG"}
     [PSCustomObject]@{rpc = "etc";   symbol = "BTC";   port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
-    [PSCustomObject]@{rpc = "eth";   symbol = "BTC";   port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
-    [PSCustomObject]@{rpc = "eth";   symbol = "NANO";  port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
     [PSCustomObject]@{rpc = "rvn";   symbol = "BTC";   port = 8888; fee = 1.0; divisor = 1e8; aesymbol = "RVN"}
 )
 

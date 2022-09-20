@@ -1,12 +1,28 @@
 ﻿using module ..\Modules\Include.psm1
 
 param(
-    $Config
+    $Config,
+    $UsePools
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Users = @([PSCustomObject]@{User=$Config.Pools.$Name.User;API_Key=$Config.Pools.$Name.API_Key}) + [PSCustomObject]@{User=$Config.Pools."$($Name)Coins".User;API_Key=$Config.Pools."$($Name)Coins".API_Key} + [PSCustomObject]@{User=$Config.Pools."$($Name)CoinsSolo".User;API_Key=$Config.Pools."$($Name)CoinsSolo".API_Key} | Where-Object {$_.User -and $_.API_Key} | Select-Object User,API_Key -Unique | Sort-Object User 
+
+
+$Pool_Users = @()
+foreach($PoolExt in @("","Coins","CoinsSolo")) {
+    if (-not $UsePools -or "$($Name)$($PoolExt)" -in $UsePools) {
+        $Pool_Users += [PSCustomObject]@{User=$Config.Pools."$($Name)$($PoolExt)".User;API_Key=$Config.Pools."$($Name)$($PoolExt)".API_Key}
+    }
+}
+
+$Pool_Users = $Pool_Users | Where-Object {$_.User -and $_.API_Key} | Select-Object User,API_Key -Unique | Sort-Object User 
+
+if (-not $Pool_Users) {
+    Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no usernames specified. "
+    return
+}
 
 $Pool_Users | Foreach-Object {
 

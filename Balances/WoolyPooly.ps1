@@ -1,14 +1,25 @@
 ﻿using module ..\Modules\Include.psm1
 
 param(
-    $Config
+    $Config,
+    $UsePools
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
+$Payout_Currencies = @()
+foreach($PoolExt in @("","Solo")) {
+    if (-not $UsePools -or "$($Name)$($PoolExt)" -in $UsePools) {
+        $Payout_Currencies += @($Config.Pools."$($Name)$($PoolExt)".Wallets.PSObject.Properties | Select-Object)
+    }
+}
 
-#https://api.woolypooly.com/api/veil-1/accounts/bv1q46w7plr5lzjrn643m30g09vve8r3g4cheksr4p
+$Payout_Currencies = $Payout_Currencies | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
+
+if (-not $Payout_Currencies) {
+    Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
+    return
+}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AE";   port = 20000; host = "ae"; rpc = "aeternity-1"}

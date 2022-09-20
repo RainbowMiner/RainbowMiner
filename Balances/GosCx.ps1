@@ -1,14 +1,22 @@
 ﻿using module ..\Modules\Include.psm1
 
 param(
-    $Config
+    $Config,
+    $UsePools
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Request = [PSCustomObject]@{}
 
-$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Party".Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
+$Payout_Currencies = @()
+foreach($PoolExt in @("","Party","Solo")) {
+    if (-not $UsePools -or "$($Name)$($PoolExt)" -in $UsePools) {
+        $Payout_Currencies += @($Config.Pools."$($Name)$($PoolExt)".Wallets.PSObject.Properties | Select-Object)
+    }
+}
+
+$Payout_Currencies = $Payout_Currencies | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
 
 if (-not $Payout_Currencies) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "

@@ -1,13 +1,19 @@
 ﻿using module ..\Modules\Include.psm1
 
 param(
-    $Config
+    $Config,
+    $UsePools
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
-$Payout_Currencies_Solo = @($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
+$Payout_Currencies = if (-not $UsePools -or $Name -in $UsePools) {@($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value}
+$Payout_Currencies_Solo = if (-not $UsePools -or "$($Name)Solo" -in $UsePools) {@($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object) | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value}
+
+if (-not $Payout_Currencies -and -not $Payout_Currencies_Solo) {
+    Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
+    return
+}
 
 #https://rvn.minerpool.org/api/worker_stats?address=REMkW2wqvLrKiH8ANPfoVtVQ8d4A8UdavD&window_days=0
 
