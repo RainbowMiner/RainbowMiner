@@ -37,7 +37,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "etc";   symbol = "BTC";   port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
     [PSCustomObject]@{rpc = "eth";   symbol = "BTC";   port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
     [PSCustomObject]@{rpc = "eth";   symbol = "NANO";  port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETH"}
-    [PSCustomObject]@{rpc = "rvn";   symbol = "BTC";   port = 8888; fee = 1.0; divisor = 1e9; aesymbol = "RVN"}
+    [PSCustomObject]@{rpc = "rvn";   symbol = "BTC";   port = 8888; fee = 1.0; divisor = 1e8; aesymbol = "RVN"}
 )
 
 $Payout_Currencies | Where-Object {
