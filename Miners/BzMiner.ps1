@@ -109,7 +109,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($Session.Config.Pools.FlexPool.EnableBzminerDual -and $Pools.ZilliqaFP) {
                         if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
                             $ZilCount  = if ($SecondAlgorithm_Norm_0) {3} else {2}
-                            $ZilParams = "-a$($ZilCount) zil -w$($ZilCount) $($Pools.ZilliqaFP.User) -p$($ZilCount) $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) "
+                            $ZilParams = "--a$($ZilCount) zil --w$($ZilCount) $($Pools.ZilliqaFP.User) --p$($ZilCount) $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) "
                         }
                     }
 
