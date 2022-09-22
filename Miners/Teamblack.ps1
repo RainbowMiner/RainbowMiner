@@ -9,12 +9,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "1.68"
+$Version = "1.69"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
 
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
+
+    $Version = "1.68"
 
     $UriCuda = @(
         [PSCustomObject]@{
@@ -33,7 +35,7 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.68-teamblack/TeamBlackMiner_1_68_cuda_11_5.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.69-teamblack/TeamBlackMiner_1_69_cuda_11_5.7z"
             Cuda = "11.5"
         }
     )
@@ -45,7 +47,7 @@ $ExcludePools = "MiningDutch|MoneroOcean|Nicehash|PoolSexy|SuprNova|Zpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = "$($ExcludePools)|ProHashing"} #Ethash for low memory DAG
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = "$($ExcludePools)$(if ($Version -eq "1.68") {"|ProHashing"})"} #Ethash for low memory DAG
     [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "ethashnh";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Ethash Nicehash type
     [PSCustomObject]@{MainAlgorithm = "ethashfp";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Ethash Flexpool type
