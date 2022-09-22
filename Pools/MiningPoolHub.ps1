@@ -88,8 +88,8 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol}
                 CoinName      = $Pool_CoinName
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.$StatAverageStable
+                Price         = 0 #$Stat.$StatAverage #instead of .Live
+                StablePrice   = 0 #$Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = $Pool_Host
@@ -98,6 +98,7 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol}
                 Pass          = "x{diff:,d=`$difficulty}"
                 Region        = $Pool_RegionsTable."$($Pool_Host -replace "\..+$")"
                 SSL           = $false
+                WTM           = $true
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
                 EthMode       = $Pool_EthProxy
