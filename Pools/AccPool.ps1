@@ -18,7 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Fee = 2
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol="KAS"; region=@("eu","ca","ru","hk"); host="acc-pool.pw"; web="kaspa.acc-pool.pw"; port=16061; fee=2}
+    [PSCustomObject]@{symbol="KAS"; region=@("eu","ca","us","ru","hk"); host="acc-pool.pw"; web="kaspa.acc-pool.pw"; port=16061; fee=2}
 )
 
 [hashtable]$Pool_RegionsTable = @{}
@@ -45,7 +45,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
             $Pool_Request = $null
         }
     } catch {
-
+        if ($Error.Count){$Error.RemoveAt(0)}
     }
 
     if (-not $InfoOnly) {
