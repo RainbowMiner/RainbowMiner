@@ -14,6 +14,8 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Config.Pools.$Name.Walle
 
     $Pool_Wallet   = $Config.Pools.$Name.Wallets.$Pool_Currency -replace "^kaspa:"
 
+    $Divisor = 1
+
     $Request = [PSCustomObject]@{}
 
     try {
