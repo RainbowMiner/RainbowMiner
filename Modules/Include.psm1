@@ -1794,7 +1794,7 @@ function Get-BalancesPayouts {
                 [PSCustomObject]@{
                     Date     = $(if ($DateTime -is [DateTime]) {$DateTime.ToUniversalTime()} elseif ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
                     Amount   = [Double]$Amount / $Divisor
-                    Txid     = "$(if ($TxField) {$_.$TxField} elseif ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash} elseif ($_.transactionId) {$_.transactionId} elseif ($_.hash) {$_.hash})"
+                    Txid     = "$(if ($TxField) {$_.$TxField} elseif ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash} elseif ($_.transactionId) {$_.transactionId} elseif ($_.hash) {$_.hash})".Trim()
                 }
             }
         }
