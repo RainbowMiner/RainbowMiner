@@ -17,7 +17,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Config.Pools.$Name.Walle
     $Request = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-WebRequestAsync "https://kaspa.acc-pool.pw/api/$($Pool_Wallet)/" -tag $Name -timeout 15 -cycletime ($Config.BalanceUpdateMinutes*60) -delay 100
+        $Request = Invoke-RestMethodAsync "https://kaspa.acc-pool.pw/api/$($Pool_Wallet)/" -tag $Name -timeout 15 -cycletime ($Config.BalanceUpdateMinutes*60) -delay 100
         if ($Request.status -ne "success") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
