@@ -975,6 +975,8 @@ class BzMiner : Miner {
         }
 
         $Count = $this.Algorithm.Count
+        if ($Data.pools.Count -gt $Count -and $Data.pools[$Data.pools.Count-1].algorithm -eq "zil") {$Count++}
+
         $Devices = $Data.devices | Where-Object {$_.status.Count -eq $Count -and $_.hashrate.Count -eq $Count -and $_.status[0] -eq 3} | Select-Object
 
         $HashRate_Name = [String]$this.Algorithm[0]
