@@ -92,6 +92,8 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+
+    $Pool_MemorySize = "$(if ($Pool_Algorithm_Norm -eq "EthashLowMemory") {",l=`$memsizegb"})"
     
     if (-not $InfoOnly) {
         $NewStat = -not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")
@@ -118,7 +120,7 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
             Host          = "$(if ($Pool_Region -eq "eu") {"eu."})$Pool_Host"
             Port          = $Pool_Port
             User          = $User
-            Pass          = "a=$($_),n={workername:$Worker}{diff:,d=`$difficulty}$($Pool_APIKey)$($Pool_Params)"
+            Pass          = "a=$($_),n={workername:$Worker}{diff:,d=`$difficulty}$($Pool_MemorySize)$($Pool_APIKey)$($Pool_Params)"
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated

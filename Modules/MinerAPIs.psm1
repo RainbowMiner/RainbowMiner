@@ -62,6 +62,7 @@ class Miner {
     [string]$MiningAffinity
     [int]$ShareCheck = 0
     [int]$StaticPort = 0
+    [int]$MemSizeGB = 0
     [string]$ManualUri
     [Double[]]$RejectedShareRatio
     [String]$EthPillEnable = "disable"
@@ -101,7 +102,7 @@ class Miner {
     hidden [Array]$Data = @()
 
     [String]GetArguments() {
-        return $this.Arguments -replace "\`$mport",$this.Port
+        return $this.Arguments -replace "\`$mport",$this.Port -replace "\`$memsizegb",$this.MemSizeGB
     }
 
     [String]GetMinerDeviceName() {
@@ -192,6 +193,9 @@ class Miner {
 
             Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
+            $Device = Get-Device -Name $this.DeviceName
+            $this.MemSizeGB = ($Device | Where-Object {$_.Type -eq "Gpu"} | Foreach-Object {$_.OpenCL.GlobalMemSizeGB} | Measure-Object -Maximum).Maximum
+
             $DeviceVendor = $this.GetVendor()
 
             $ArgumentList = $this.GetArguments()
@@ -200,8 +204,7 @@ class Miner {
                         elseif ($this.EthPillEnableMTP -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("MTP")               -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnableMTP}
 
             if ($Prescription -and -not ($this.Name -match "^ClaymoreDual" -and $ArgumentList -match "-strap")) {
-                $Prescription_Device = Get-Device -Name $this.DeviceName
-                $Prescription_Device = $Prescription_Device | Where-Object {$_.Model_Base -in @("GTX1080","GTX1080Ti","TITANXP")}
+                $Prescription_Device = $Device | Where-Object {$_.Model_Base -in @("GTX1080","GTX1080Ti","TITANXP")}
                 $Prescription = switch ($Prescription) {
                     "RevA" {"revA";Break}
                     "RevB" {"revB";Break}
@@ -217,7 +220,9 @@ class Miner {
                     $this.EthPillJob = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -Vendor $DeviceVendor -SetLDLIBRARYPATH -WinTitle "OhGodAnETHlargementPill-r2 --$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')"
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
+                $Prescription_Device = $null
             }
+
             $Now = Get-Date
             $this.StartTime = $Now.ToUniversalTime()
             $this.LogFile   = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$($Now.ToString("yyyy-MM-dd_HH-mm-ss")).txt")
@@ -230,6 +235,8 @@ class Miner {
                     $this.WrapperJob = Start-Wrapper -ProcessId $this.GetProcessId() -LogPath $this.LogFile
                 }
             }
+
+            $Device = $null
         }
     }
 
