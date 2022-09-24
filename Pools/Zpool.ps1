@@ -60,14 +60,22 @@ if (-not $InfoOnly -and $Pool_Currencies.Count -ge 1) {
 }
 
 $Pool_Request.PSObject.Properties.Name | ForEach-Object {
-    $Pool_Host = "mine.zpool.ca"
-    $Pool_Algorithm = $Pool_Request.$_.name
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin = $Pool_Coins.$Pool_Algorithm.Name
-    $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
-    $Pool_PoolFee = [Double]$Pool_Request.$_.fees
-    if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
+    $Pool_Algorithm  = $Pool_Request.$_.name
+    $Pool_Host       = "mine.zpool.ca"
+    $Pool_CoinName   = $Pool_Coins.$Pool_Algorithm.Name
+    $Pool_CoinSymbol = $Pool_Coins.$Pool_Algorithm.Symbol
+    $Pool_PoolFee    = [Double]$Pool_Request.$_.fees
+
+    if ($Pool_CoinName -and -not $Pool_CoinSymbol) {$Pool_CoinSymbol = Get-CoinSymbol $Pool_CoinName}
+
+    if ($Pool_Algorithm -eq "ethash" -and $Pool_CoinSymbol) {
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
+    } else {
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    }
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
 
     $Pool_Factor = [double]$Pool_Request.$_.mbtc_mh_factor
     if ($Pool_Factor -le 0) {
@@ -100,8 +108,8 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin
-                    CoinSymbol    = $Pool_Symbol
+                    CoinName      = $Pool_CoinName
+                    CoinSymbol    = $Pool_CoinSymbol
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.$StatAverageStable
@@ -121,6 +129,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
                     Workers       = $Pool_Request.$_.workers
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
+                    EthMode       = $Pool_EthProxy
                     ErrorRatio    = $Stat.ErrorRatio
                     Name          = $Name
                     Penalty       = 0

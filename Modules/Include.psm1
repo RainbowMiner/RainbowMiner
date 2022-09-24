@@ -4403,14 +4403,25 @@ function Get-Algorithm {
             ParameterSetName = '',   
             ValueFromPipeline = $True,
             Mandatory = $false)]
-        [String]$Algorithm = ""
+        [String]$Algorithm = "",
+        [Parameter(Mandatory = $false)]
+        [String]$CoinSymbol = ""
     )
     if ($Algorithm -eq '*') {$Algorithm}
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
         if (-not (Test-Path Variable:Global:GlobalAlgorithms)) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
-        if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {$Global:GlobalAlgorithms[$Algorithm]} else {$Algorithm}
+        if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {
+            $Algorithm = $Global:GlobalAlgorithms[$Algorithm]
+            if ($CoinSymbol -ne "" -and $Algorithm -eq "Ethash" -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 10) -le 5) {
+                if ($DAGSize -le 2) {$Algorithm = "$($Algorithm)2g"}
+                elseif ($DAGSize -le 3) {$Algorithm = "$($Algorithm)3g"}
+                elseif ($DAGSize -le 4) {$Algorithm = "$($Algorithm)4g"}
+                elseif ($DAGSize -le 5) {$Algorithm = "$($Algorithm)5g"}
+            }
+        }
+        $Algorithm
     }
 }
 
@@ -4431,8 +4442,10 @@ function Get-Coin {
     else {
         if (-not (Test-Path Variable:Global:GlobalCoinsDB)) {Get-CoinsDB -Silent}
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
-        if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
-        elseif ($Algorithm -ne "" -and $Global:GlobalCoinsDB.ContainsKey("$CoinSymbol-$Algorithm")) {$Global:GlobalCoinsDB["$CoinSymbol-$Algorithm"]}
+        $Coin = if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
+                elseif ($Algorithm -ne "" -and $Global:GlobalCoinsDB.ContainsKey("$CoinSymbol-$Algorithm")) {$Global:GlobalCoinsDB["$CoinSymbol-$Algorithm"]}
+        if ($Coin.Algo -eq "Ethash") {$Coin.Algo = Get-Algorithm $Coin.Algo -CoinSymbol $CoinSymbol}
+        $Coin
     }
 }
 

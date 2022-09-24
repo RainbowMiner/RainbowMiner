@@ -33,6 +33,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
 
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_Coin = Get-Coin $Pool_Currency -Algorithm $Pool_Algorithm_Norm
+    if ($Pool_Algorithm_Norm -ne $Pool_Coin.Algo) {$Pool_Algorithm_Norm = $Pool_Coin.Algo}
 
     if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
         $Pool_Wallet = $Wallets."$($_.altsymbol)"

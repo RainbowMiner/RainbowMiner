@@ -54,16 +54,21 @@ $Pool_Currencies = @("BTC","LTC","DASH","DGB","KMD","RVN","DOGE") + @($PoolCoins
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
 $PoolCoins_Request.PSObject.Properties.Name | ForEach-Object {
-
     $Pool_CoinSymbol = $_
-    $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
+    $Pool_CoinName   = $PoolCoins_Request.$Pool_CoinSymbol.name
+    $Pool_Algorithm  = $PoolCoins_Request.$Pool_CoinSymbol.algo
+    $Pool_Host       = "mine.zpool.ca"
+    $Pool_PoolFee    = if ($Pool_Request.$Pool_Algorithm) {[double]$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_Currency   = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
 
-    $Pool_Host = "mine.zpool.ca"
-    $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
-    $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {[double]$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    if ($Pool_Algorithm -eq "ethash") {
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
+    } else {
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    }
+
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
 
     $Pool_Factor = [double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
     if ($Pool_Factor -le 0) {
@@ -100,7 +105,7 @@ $PoolCoins_Request.PSObject.Properties.Name | ForEach-Object {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin
+                    CoinName      = $Pool_CoinName
                     CoinSymbol    = $Pool_CoinSymbol
                     Currency      = $Pool_ExCurrency
                     Price         = $Stat.$StatAverage #instead of .Live
@@ -120,6 +125,7 @@ $PoolCoins_Request.PSObject.Properties.Name | ForEach-Object {
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
+                    EthMode       = $Pool_EthProxy
                     ErrorRatio    = $Stat.ErrorRatio
                     Name          = $Name
                     Penalty       = 0
