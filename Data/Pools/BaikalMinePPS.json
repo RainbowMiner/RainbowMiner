@@ -12,19 +12,5 @@
         "regions":  [
                         "eu"
                     ]
-    },
-    {
-        "symbol":  "ETH",
-        "coin":  "Ethereum",
-        "algo":  "Ethash",
-        "rpc":  "eth-pps.baikalmine.com",
-        "host":  "eth-pps.baikalmine.com",
-        "port":  [
-                     4040
-                 ],
-        "fee":  0.5,
-        "regions":  [
-                        "eu"
-                    ]
     }
 ]

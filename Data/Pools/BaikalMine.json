@@ -28,13 +28,13 @@
                     ]
     },
     {
-        "symbol":  "ETH",
-        "coin":  "Ethereum",
+        "symbol":  "ETHW",
+        "coin":  "EthereumPoW",
         "algo":  "Ethash",
-        "rpc":  "eth.baikalmine.com",
-        "host":  "eth.baikalmine.com",
+        "rpc":  "ethw.baikalmine.com",
+        "host":  "ethw.baikalmine.com",
         "port":  [
-                     5050
+                     1515
                  ],
         "fee":  0.5,
         "regions":  [
@@ -42,13 +42,13 @@
                     ]
     },
     {
-        "symbol":  "MOAC",
-        "coin":  "Moac",
+        "symbol":  "DAE",
+        "coin":  "DAEfrom",
         "algo":  "Ethash",
-        "rpc":  "moac.baikalmine.com",
-        "host":  "moac.baikalmine.com",
+        "rpc":  "dae.baikalmine.com",
+        "host":  "dae.baikalmine.com",
         "port":  [
-                     4444
+                     7070
                  ],
         "fee":  0.5,
         "regions":  [

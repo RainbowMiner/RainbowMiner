@@ -26,33 +26,5 @@
         "regions":  [
                         "eu"
                     ]
-    },
-    {
-        "symbol":  "ETH",
-        "coin":  "Ethereum",
-        "algo":  "Ethash",
-        "rpc":  "eth-solo.baikalmine.com",
-        "host":  "eth-solo.baikalmine.com",
-        "port":  [
-                     1145
-                 ],
-        "fee":  1.0,
-        "regions":  [
-                        "eu"
-                    ]
-    },
-    {
-        "symbol":  "MOAC",
-        "coin":  "Moac",
-        "algo":  "Ethash",
-        "rpc":  "moac-solo.baikalmine.com",
-        "host":  "moac-solo.baikalmine.com",
-        "port":  [
-                     4545
-                 ],
-        "fee":  1.0,
-        "regions":  [
-                        "eu"
-                    ]
     }
 ]
