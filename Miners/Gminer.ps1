@@ -31,13 +31,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";                MinMemGb = 2;                     Params = "--algo 125_4";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $true} #Equihash 125,4/ZelHash
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";                 MinMemGb = 0.5;                   Params = "--algo 210_9";       Vendor = @("NVIDIA");       ExtendInterval = 2; AutoPers = $true} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Etchash
-    [PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo ton";    Vendor = @("NVIDIA");       ExtendInterval = 3; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Etchash + SHA256ton
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGb = 3;                     Params = "--algo ethash --dalgo ton";     Vendor = @("NVIDIA");       ExtendInterval = 3; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Ethash + SHA256ton
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGb = 1;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGb = 4;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash --dalgo ton";     Vendor = @("NVIDIA");       ExtendInterval = 3; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Ethash for low memory coins + SHA256ton
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 1;                     Params = "--algo ton";         Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 2.00} #SHA256ton/TON
+
+    #[PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo ton";    Vendor = @("NVIDIA");       ExtendInterval = 3; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Etchash + SHA256ton
+    #[PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGb = 3;                     Params = "--algo ethash --dalgo ton";     Vendor = @("NVIDIA");       ExtendInterval = 3; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Ethash + SHA256ton
+    #[PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash --dalgo ton";     Vendor = @("NVIDIA");       ExtendInterval = 3; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Ethash for low memory coins + SHA256ton
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

@@ -45,6 +45,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos";               Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";              Params = ""; MinMemGb = 14; Vendor = @("AMD");          ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
     [PSCustomObject]@{MainAlgorithm = "Ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL");  ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";   DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","INTEL");  ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g";   DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL");  ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL");  ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g";   DAG = $true; Params = ""; MinMemGb = 4;  Vendor = @("AMD","INTEL");  ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL"); ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EtcHash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "FiroPow";    DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ZombieMode = $true} #FiroPOW

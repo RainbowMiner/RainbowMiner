@@ -52,7 +52,11 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash DAG >= 4GB
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"   ; MinMemGB = 1; Params = @(); ExtendInterval = 3} #Ethash DAG < 2GB
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"   ; MinMemGB = 2; Params = @(); ExtendInterval = 3} #Ethash DAG < 3GB
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"   ; MinMemGB = 3; Params = @(); ExtendInterval = 3} #Ethash DAG < 4GB
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"   ; MinMemGB = 4; Params = @(); ExtendInterval = 3} #Ethash DAG < 5GB
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory" ; MinMemGB = 2; Params = @(); ExtendInterval = 3} #Ethash for low memory coins
 )
 

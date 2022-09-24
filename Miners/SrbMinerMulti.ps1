@@ -87,6 +87,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dynamo"           ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU"); ExcludeYiimp = $true} #Dynamo/DYNAMO
     [PSCustomObject]@{MainAlgorithm = "etchash"          ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="Nicehash"} #ethash
     [PSCustomObject]@{MainAlgorithm = "ethash"           ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="Nicehash"} #ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 1; Vendor = @("AMD"); ExcludePoolName="Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); ExcludePoolName="Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); ExcludePoolName="Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 4; Vendor = @("AMD"); ExcludePoolName="Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"  ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); ExcludePoolName="Nicehash"; Algorithm = "ethash"} #ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "firepow"          ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 3; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #FiroPow/FIRO
     [PSCustomObject]@{MainAlgorithm = "frkhash"          ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #Frkhash/EXP
@@ -130,6 +134,30 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash"           ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "heavyhash"} #ethash + HeavyHash/OBTC
     [PSCustomObject]@{MainAlgorithm = "ethash"           ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "kaspa"} #ethash + Kaspa
     [PSCustomObject]@{MainAlgorithm = "ethash"           ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "sha512_256d_radiant"} #ethash + Radiant
+
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 1; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_alephium"; Algorithm = "ethash"} #ethash for low memory coins + Alephium/ALPH
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 1; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_ironfish"; Algorithm = "ethash"} #ethash for low memory coins + Ironfish/IRON
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 1; Vendor = @("AMD"); SecondaryAlgorithm = "heavyhash"; Algorithm = "ethash"} #ethash for low memory coins + HeavyHash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 1; Vendor = @("AMD"); SecondaryAlgorithm = "kaspa"; Algorithm = "ethash"} #ethash for low memory coins + Kaspa
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 1; Vendor = @("AMD"); SecondaryAlgorithm = "sha512_256d_radiant"; Algorithm = "ethash"} #ethash for low memory coins + Radiant
+
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_alephium"; Algorithm = "ethash"} #ethash for low memory coins + Alephium/ALPH
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_ironfish"; Algorithm = "ethash"} #ethash for low memory coins + Ironfish/IRON
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); SecondaryAlgorithm = "heavyhash"; Algorithm = "ethash"} #ethash for low memory coins + HeavyHash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); SecondaryAlgorithm = "kaspa"; Algorithm = "ethash"} #ethash for low memory coins + Kaspa
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); SecondaryAlgorithm = "sha512_256d_radiant"; Algorithm = "ethash"} #ethash for low memory coins + Radiant
+
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_alephium"; Algorithm = "ethash"} #ethash for low memory coins + Alephium/ALPH
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_ironfish"; Algorithm = "ethash"} #ethash for low memory coins + Ironfish/IRON
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "heavyhash"; Algorithm = "ethash"} #ethash for low memory coins + HeavyHash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "kaspa"; Algorithm = "ethash"} #ethash for low memory coins + Kaspa
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD"); SecondaryAlgorithm = "sha512_256d_radiant"; Algorithm = "ethash"} #ethash for low memory coins + Radiant
+
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 4; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_alephium"; Algorithm = "ethash"} #ethash for low memory coins + Alephium/ALPH
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 4; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_ironfish"; Algorithm = "ethash"} #ethash for low memory coins + Ironfish/IRON
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 4; Vendor = @("AMD"); SecondaryAlgorithm = "heavyhash"; Algorithm = "ethash"} #ethash for low memory coins + HeavyHash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 4; Vendor = @("AMD"); SecondaryAlgorithm = "kaspa"; Algorithm = "ethash"} #ethash for low memory coins + Kaspa
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"         ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 4; Vendor = @("AMD"); SecondaryAlgorithm = "sha512_256d_radiant"; Algorithm = "ethash"} #ethash for low memory coins + Radiant
 
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"  ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_alephium"; Algorithm = "ethash"} #ethash for low memory coins + Alephium/ALPH
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"  ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 2; Vendor = @("AMD"); SecondaryAlgorithm = "blake3_ironfish"; Algorithm = "ethash"} #ethash for low memory coins + Ironfish/IRON

@@ -26,6 +26,10 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash"        ; DAG = $true; MinMemGB = 3;   Params = "-A ETHASH%CUDA%";                   ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g"      ; DAG = $true; MinMemGB = 1;   Params = "-A ETHASH%CUDA%";                   ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g"      ; DAG = $true; MinMemGB = 2;   Params = "-A ETHASH%CUDA%";                   ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g"      ; DAG = $true; MinMemGB = 3;   Params = "-A ETHASH%CUDA%";                   ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g"      ; DAG = $true; MinMemGB = 4;   Params = "-A ETHASH%CUDA%";                   ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "Etchash"       ; DAG = $true; MinMemGB = 3;   Params = "-A ETHASH%CUDA% -coin ETC";         ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Etchash 
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory" ; DAG = $true; MinMemGB = 2;   Params = "-A ETHASH%CUDA%";                 ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash for low memory coins
     #[PSCustomObject]@{MainAlgorithm = "KawPow"        ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA%";                  ExtendInterval = 2; ExcludePoolName = "MiningPoolHub"} #KAWPOW (RVN,ZELS)
@@ -39,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "vProgPoW"      ; DAG = $true; MinMemGB = 3;   Params = "-A PROGPOW%CUDA% -coin VBK";        ExtendInterval = 2; ExcludePoolName = "Nicehash"} #ProgPoWSero (VBK)
 )
 
-$CoinSymbols = @("EPIC","SERO","ZANO","ZCOIN","ETC","ETH","CLO","PIRL","MUSIC","EXP","ETP","UBQ","TCR","ZELS","VBK","RVN","VEIL")
+$CoinSymbols = @("EPIC","SERO","ZANO","ZCOIN","ETC","ETHW","CLO","PIRL","MUSIC","EXP","ETP","UBQ","TCR","ZELS","VBK","RVN","VEIL")
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 

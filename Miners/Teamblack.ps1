@@ -16,15 +16,13 @@ if ($IsLinux) {
 
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 
-    $Version = "1.68"
-
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.68-teamblack/TeamBlackMiner_1_68_Ubuntu_18_04_Cuda_11_5.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.69-teamblack/TeamBlackMiner_1_69_Ubuntu_18_04_Cuda_11_5.tar.xz"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.68-teamblack/TeamBlackMiner_1_68_Ubuntu_18_04_Cuda_11_4.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.69-teamblack/TeamBlackMiner_1_69_Ubuntu_18_04_Cuda_11_4.tar.xz"
             Cuda = "11.4"
         }
     )
@@ -47,6 +45,10 @@ $ExcludePools = "MiningDutch|MoneroOcean|Nicehash|PoolSexy|SuprNova|Zpool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash2g";   DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash3g";   DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash4g";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash5g";   DAG = $true; Params = ""; MinMemGb = 4;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = "$($ExcludePools)$(if ($Version -eq "1.68") {"|ProHashing"})"} #Ethash for low memory DAG
     [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "ethashnh";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Ethash Nicehash type

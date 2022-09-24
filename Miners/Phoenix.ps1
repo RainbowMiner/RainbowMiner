@@ -26,6 +26,10 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "etchash"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Etchash
     [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash2g"     ; MinMemGB = 1; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash DAG < 2GB
+    [PSCustomObject]@{MainAlgorithm = "ethash3g"     ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash DAG < 3GB
+    [PSCustomObject]@{MainAlgorithm = "ethash4g"     ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash DAG < 4GB
+    [PSCustomObject]@{MainAlgorithm = "ethash5g"     ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash DAG < 5GB
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory" ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @(); ExcludePoolName = "SuprNova"} #ProgPow
     [PSCustomObject]@{MainAlgorithm = "ubqhash"    ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #UbqHash
@@ -44,6 +48,7 @@ $CoinXlat = [PSCustomObject]@{
     "ETC" = "etc"
     "ETH" = "eth"
     "ETHO" = "etho"
+    "ETHW" = "ethw"
     "ETP" = "etp"
     "EXP" = "exp"
     "MIX" = "mix"
