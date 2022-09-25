@@ -2499,8 +2499,8 @@ function Invoke-Core {
                     }
                     Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate.txt" | Remove-Item -ErrorAction Ignore
                 }
+                $NeedsReset = $true
             }
-            $NeedsReset = $true
         }
 
         $NoResult = $false
