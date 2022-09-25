@@ -2527,13 +2527,21 @@ function Invoke-Core {
             $Miner_UriJson = Join-Path (Get-MinerInstPath $Miner.Path) "_uri.json"
             $Miner_Uri = ""
             if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-ContentByStreamReader $Miner_UriJson | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI; $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTimeUtc}
-            $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI            
+            $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI
         }
 
-        if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null -and $Global:StatsCache.ContainsKey("$($Miner.Name)_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate") -and $Global:StatsCache["$($Miner.Name)_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate"].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {
-            Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate.txt" | Remove-Item -ErrorAction Ignore
-            if ($Miner.BaseAlgorithm -match '-') {
-                Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate.txt" | Remove-Item -ErrorAction Ignore
+        if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null) {
+            $Miner_StatKey = "$($Miner.Name)_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate"
+            if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and $Global:StatsCache[$Miner_StatKey].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {
+                Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate.txt" | Remove-Item -ErrorAction Ignore
+                $Global:StatsCache.Remove($Miner_StatKey)
+                if ($Miner.BaseAlgorithm -match '-') {
+                    $Miner_StatKey = "$($Miner.Name)_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate"
+                    if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
+                        $Global:StatsCache.Remove($Miner_StatKey)
+                    }
+                    Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate.txt" | Remove-Item -ErrorAction Ignore
+                }
             }
         }
 
