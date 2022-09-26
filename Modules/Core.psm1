@@ -87,6 +87,13 @@ function Start-Core {
         $Global:CrashCounter    = @()
         $Global:AlgorithmMinerName = @()
 
+        try {
+            $Global:AlgoVariants = Get-ContentByStreamReader ".\Data\algovariantsdb.json" | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Error loading algorithm variants DB: $($_.Exception.Message)"
+        }
+
         $Global:PauseMiners = [PauseMiners]::new()
 
         $Global:AllPools = $null
@@ -738,6 +745,18 @@ function Invoke-Core {
         }
         $Session.Config.Algorithm = @($Session.Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
+        if ($Session.Config.EnableAlgorithmVariants) {
+            if ($Session.Config.Algorithm.Count) {
+                $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Algorithm} | Foreach-Object {
+                    $Session.Config.Algorithm = @($Session.Config.Algorithm + $_.Value | Select-Object -Unique)
+                }
+            }
+            if ($Session.Config.ExcludeAlgorithm.Count) {
+                $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.ExcludeAlgorithm} | Foreach-Object {
+                    $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm + $_.Value | Select-Object -Unique)
+                }
+            }
+        }
         if (-not $Session.Config.Region) {$Session.Config | Add-Member Region "US" -Force}
         $Session.Config.Region = Get-Region $Session.Config.Region
         $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique)
@@ -1117,6 +1136,23 @@ function Invoke-Core {
                         $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                     }
 
+                    if ($Session.Config.EnableAlgorithmVariants) {
+                        if ($_.Algorithm.Count) {
+                            $SchedulerAlgorithm = $_.Algorithm
+                            $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $SchedulerAlgorithm} | Foreach-Object {
+                                $SchedulerAlgorithm = @($SchedulerAlgorithm + $_.Value | Select-Object -Unique)
+                            }
+                            $_.Algorithm = $SchedulerAlgorithm
+                        }
+                        if ($_.ExcludeAlgorithm.Count) {
+                            $SchedulerExcludeAlgorithm = $_.ExcludeAlgorithm
+                            $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $SchedulerExcludeAlgorithm} | Foreach-Object {
+                                $SchedulerExcludeAlgorithm = @($SchedulerExcludeAlgorithm + $_.Value | Select-Object -Unique)
+                            }
+                            $_.ExcludeAlgorithm = $SchedulerExcludeAlgorithm
+                        }
+                    }
+
                     $PowerPrice = if ($_.PowerPrice -eq "") {Get-PowerPrice} else {$_.PowerPrice}
                     try {$PowerPrice = [Double]$PowerPrice} catch {if ($Error.Count){$Error.RemoveAt(0)};$PowerPrice = Get-PowerPrice}
                     $_.PowerPrice = $PowerPrice
@@ -1157,6 +1193,19 @@ function Invoke-Core {
                     $Session.Config.Devices.$p | Add-Member PowerAdjust ([double]($Session.Config.Devices.$p.PowerAdjust -replace "[^0-9`.]+")) -Force
                     if ($p -eq "CPU" -and -not $Session.Config.Devices.$p.Worker) {
                         $Session.Config.Devices.$p | Add-Member Worker "$($Session.Config.WorkerName)cpu" -Force
+                    }
+
+                    if ($Session.Config.EnableAlgorithmVariants) {
+                        if ($Session.Config.Devices.$p.Algorithm.Count) {
+                            $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Devices.$p.Algorithm} | Foreach-Object {
+                                $Session.Config.Devices.$p.Algorithm = @($Session.Config.Devices.$p.Algorithm + $_.Value | Select-Object -Unique)
+                            }
+                        }
+                        if ($Session.Config.Devices.$p.ExcludeAlgorithm.Count) {
+                            $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Devices.$p.ExcludeAlgorithm} | Foreach-Object {
+                                $Session.Config.Devices.$p.ExcludeAlgorithm = @($Session.Config.Devices.$p.ExcludeAlgorithm + $_.Value | Select-Object -Unique)
+                            }
+                        }
                     }
                 }
             }
@@ -1328,6 +1377,19 @@ function Invoke-Core {
                     $Session.Config.Pools.$p."$($_.Name)" = $_.Value
                 } else {
                     $Session.Config.Pools.$p | Add-Member "$($_.Name)" $_.Value -Force
+                }
+            }
+
+            if ($Session.Config.EnableAlgorithmVariants) {
+                if ($Session.Config.Pools.$p.Algorithm.Count) {
+                    $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Pools.$p.Algorithm} | Foreach-Object {
+                        $Session.Config.Pools.$p.Algorithm = @($Session.Config.Pools.$p.Algorithm + $_.Value | Select-Object -Unique)
+                    }
+                }
+                if ($Session.Config.Pools.$p.ExcludeAlgorithm.Count) {
+                    $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Pools.$p.ExcludeAlgorithm} | Foreach-Object {
+                        $Session.Config.Pools.$p.ExcludeAlgorithm = @($Session.Config.Pools.$p.ExcludeAlgorithm + $_.Value | Select-Object -Unique)
+                    }
                 }
             }
         }
@@ -1504,6 +1566,19 @@ function Invoke-Core {
                 $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
                 $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]100}} else {[Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)}) -Force
                 $Session.Config.Pools.$p | Add-Member SSL ([int]$Session.Config.Pools.$p.SSL) -Force
+
+                if ($Session.Config.EnableAlgorithmVariants) {
+                    if ($Session.Config.Pools.$p.Algorithm.Count) {
+                        $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Pools.$p.Algorithm} | Foreach-Object {
+                            $Session.Config.Pools.$p.Algorithm = @($Session.Config.Pools.$p.Algorithm + $_.Value | Select-Object -Unique)
+                        }
+                    }
+                    if ($Session.Config.Pools.$p.ExcludeAlgorithm.Count) {
+                        $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Pools.$p.ExcludeAlgorithm} | Foreach-Object {
+                            $Session.Config.Pools.$p.ExcludeAlgorithm = @($Session.Config.Pools.$p.ExcludeAlgorithm + $_.Value | Select-Object -Unique)
+                        }
+                    }
+                }
             }
             if ($DonationData.ExcludeAlgorithm) {
                 $Session.Config | Add-Member ExcludeAlgorithm @($Session.Config.ExcludeAlgorithm + (Compare-Object $DonationData.ExcludeAlgorithm $Session.Config.Algorithm | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) | Select-Object -Unique) -Force
@@ -1513,6 +1588,20 @@ function Invoke-Core {
             }
             $Session.Config | Add-Member DisableExtendInterval $true -Force
             $Session.Config | Add-Member Userpools @() -Force
+
+            if ($Session.Config.EnableAlgorithmVariants) {
+                if ($Session.Config.Algorithm -and $Session.Config.Algorithm.Count) {
+                    $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.Algorithm} | Foreach-Object {
+                        $Session.Config.Algorithm = @($Session.Config.Algorithm + $_.Value | Select-Object -Unique)
+                    }
+                }
+                if ($Session.Config.ExcludeAlgorithm -and $Session.Config.ExcludeAlgorithm.Count) {
+                    $Global:AlgoVariants.PSObject.Properties | Where-Object {$_.Name -in $Session.Config.ExcludeAlgorithm} | Foreach-Object {
+                        $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm + $_.Value | Select-Object -Unique)
+                    }
+                }
+            }
+
             $Global:AllPools = $null
         }
     } else {
