@@ -892,6 +892,7 @@ Param(
             $PoolsData = Get-ContentByStreamReader ".\Data\mrrpoolsall.json" | ConvertFrom-Json -ErrorAction Stop
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
     }
+    $PoolsData | Foreach-Object {$_.Algorithm = Get-Algorithm $_.Algorithm}
     $PoolsData
 }
 
