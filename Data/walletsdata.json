@@ -123,6 +123,15 @@
         "divisor":  1
     },
     {
+        "symbol":  "KAS",
+        "match":  "^kaspa:",
+        "rpc":  "https://api.kaspa.org/addresses/{w}/balance",
+        "address":  "address",
+        "balance":  "balance",
+        "received":  "",
+        "divisor":  100000000
+    },
+    {
         "symbol":  "KMD",
         "match":  "^R",
         "rpc":  "https://komodoblockexplorer.com/api/v2/address/{w}?details=basic",
