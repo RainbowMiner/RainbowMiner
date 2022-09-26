@@ -4415,6 +4415,9 @@ function Get-Algorithm {
         if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {
             $Algorithm = $Global:GlobalAlgorithms[$Algorithm]
             if ($CoinSymbol -ne "" -and $Algorithm -eq "Ethash" -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 10) -le 5) {
+                if ($IsWindows -and $Session.IsWin10) {
+                    $DAGSize /= 0.865
+                }
                 if ($DAGSize -le 2) {$Algorithm = "$($Algorithm)2g"}
                 elseif ($DAGSize -le 3) {$Algorithm = "$($Algorithm)3g"}
                 elseif ($DAGSize -le 4) {$Algorithm = "$($Algorithm)4g"}
