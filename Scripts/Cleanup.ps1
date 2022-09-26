@@ -1587,25 +1587,12 @@ try {
     }
 
     if ($Version -le (Get-Version "4.8.6.3")) {
-        $AddAlgorithm += @("Ethash2g","Ethash3g","Ethash4g","Ethash5g")
 
         $NewEthashVariants = @("Ethash2g","Ethash3g","Ethash4g","Ethash5g")
 
-        $ConfigActualUpdate = @()
-        $AlgorithmsConfigActualUpdate = @()
-        $DevicesConfigActualUpdate = @()
         $MinersConfigActualUpdate = @()
         $PoolsConfigActualUpdate = @()
 
-        if (Test-Path $ConfigFile) {
-            $ConfigActualUpdate += $ConfigFile
-        }
-        if (Test-Path $AlgorithmsConfigFile) {
-            $AlgorithmsConfigActualUpdate += $AlgorithmsConfigFile
-        }
-        if (Test-Path $DevicesConfigFile) {
-            $DevicesConfigActualUpdate += $DevicesConfigFile
-        }
         if (Test-Path $PoolsConfigFile) {
             $PoolsConfigActualUpdate += $PoolsConfigFile
         }
@@ -1614,14 +1601,6 @@ try {
         }
 
         Get-ChildItem ".\Config" -Directory | Where-Object {$_.Name -ne "Backup"} | Foreach-Object {
-            $ConfigActualPath = Join-Path $($_.FullName) "config.txt"
-            if (Test-Path $ConfigActualPath) {
-                $ConfigActualUpdate += $ConfigActualPath
-            }
-            $AlgorithmsConfigActualPath = Join-Path $($_.FullName) "algorithms.config.txt"
-            if (Test-Path $AlgorithmsConfigActualPath) {
-                $AlgorithmsConfigActualUpdate += $AlgorithmsConfigActualPath
-            }
             $PoolsConfigActualPath = Join-Path $($_.FullName) "pools.config.txt"
             if (Test-Path $PoolsConfigActualPath) {
                 $PoolsConfigActualUpdate += $PoolsConfigActualPath
@@ -1630,117 +1609,6 @@ try {
             if (Test-Path $MinersConfigActualPath) {
                 $MinersConfigActualUpdate += $MinersConfigActualPath
             }
-        }
-
-        $ConfigActualUpdate | Foreach-Object {
-            $ConfigActualPath = $_
-            try {
-                $ConfigActual  = Get-Content $ConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
-
-                $Changes = 0
-
-                if ($ConfigActual.Algorithm.Trim() -and $ConfigActual.Algorithm -ne "`$Algorithm") {
-                    $Algorithms = @([regex]::split($ConfigActual.Algorithm.Trim(),"\s*[,;]+\s*"))
-                    if ("Ethash" -in $Algorithms) {
-                        foreach($NewVariant in $NewEthashVariants) {
-                            if ($NewVariant -notin $Algorithms) {
-                                $Algorithms += $NewVariant
-                                $Changes++
-                            }
-                        }
-                        $ConfigActual.Algorithm = $Algorithms -join ","
-                    }
-                }
-                if ($ConfigActual.ExcludeAlgorithm.Trim() -and $ConfigActual.ExcludeAlgorithm -ne "`$Algorithm") {
-                    $Algorithms = @([regex]::split($ConfigActual.ExcludeAlgorithm.Trim(),"\s*[,;]+\s*"))
-                    if ("Ethash" -in $Algorithms) {
-                        foreach($NewVariant in $NewEthashVariants) {
-                            if ($NewVariant -notin $Algorithms) {
-                                $Algorithms += $NewVariant
-                                $Changes++
-                            }
-                        }
-                        $ConfigActual.ExcludeAlgorithm = $Algorithms -join ","
-                    }
-                }
-                if ($Changes) {
-                    $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigActualPath -Encoding UTF8
-                    $ChangesTotal += $Changes
-                }
-            } catch { }
-        }
-
-        $AlgorithmsConfigActualUpdate | Foreach-Object {
-            $AlgorithmsConfigActualPath = $_
-
-            try {
-                $AlgorithmsActual  = Get-Content $AlgorithmsConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
-
-                $Changes = 0
-
-                if ([bool]$AlgorithmsActual.PSObject.Properties["Ethash"]) {
-                    foreach ($NewVariant in $NewEthashVariants) {
-                        $NewVariantData = $AlgorithmsActual.Ethash | ConvertTo-Json -Depth 10 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-                        $AlgorithmsActual | Add-Member $NewVariant $NewVariantData -Force
-                        $Changes++
-                    }
-                }
-
-                if ($Changes) {
-                    $AlgorithmsActualSort = [PSCustomObject]@{}
-                    $AlgorithmsActual.PSObject.Properties | Sort-Object Name | Foreach-Object {
-                        $AlgorithmsActualSort | Add-Member $_.Name $_.Value -Force
-                    }
-                    $AlgorithmsActualSort | ConvertTo-Json -Depth 10 | Set-Content $AlgorithmsConfigActualPath -Encoding UTF8
-
-                    $ChangesTotal += $Changes
-                }
-            } catch { }
-        }
-
-        $DevicesConfigActualUpdate | Foreach-Object {
-            $DevicesConfigActualPath = $_
-
-            try {
-                $DevicesActual  = Get-Content $DevicesConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
-
-                $Changes = 0
-
-                $DevicesActual.PSObject.Properties.Value | Foreach-Object {
-
-                    if ($_.Algorithm.Trim()) {
-                        $Algorithms = @([regex]::split($_.Algorithm.Trim(),"\s*[,;]+\s*"))
-                        if ("Ethash" -in $Algorithms) {
-                            foreach($NewVariant in $NewEthashVariants) {
-                                if ($NewVariant -notin $Algorithms) {
-                                    $Algorithms += $NewVariant
-                                    $Changes++
-                                }
-                            }
-                            $_.Algorithm = $Algorithms -join ","
-                        }
-                    }
-                    if ($_.ExcludeAlgorithm.Trim()) {
-                        $Algorithms = @([regex]::split($_.ExcludeAlgorithm.Trim(),"\s*[,;]+\s*"))
-                        if ("Ethash" -in $Algorithms) {
-                            foreach($NewVariant in $NewEthashVariants) {
-                                if ($NewVariant -notin $Algorithms) {
-                                    $Algorithms += $NewVariant
-                                    $Changes++
-                                }
-                            }
-                            $_.ExcludeAlgorithm = $Algorithms -join ","
-                        }
-                    }
-
-                }
-
-
-                if ($Changes) {
-                    $DevicesActual | ConvertTo-Json -Depth 10 | Set-Content $DevicesConfigActualPath -Encoding UTF8
-                    $ChangesTotal += $Changes
-                }
-            } catch { }
         }
 
         $PoolsConfigActualUpdate | Foreach-Object {
