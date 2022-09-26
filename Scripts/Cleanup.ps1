@@ -1836,7 +1836,8 @@ try {
     }
 
     if ($Version -le (Get-Version "4.8.6.4")) {
-        Get-ChildItem ".\Stats\Miners" -Filter "*_Kaspa_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Kaspa","kHeavyHash") -Force -ErrorAction Ignore}
+        Get-ChildItem ".\Stats\Miners" -Filter "*_Kaspa_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "_Kaspa_","_kHeavyHash_") -Force -ErrorAction Ignore}
+        Get-ChildItem ".\Stats\Miners" -Filter "*-Kaspa-*HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "-Kaspa-","-kHeavyHash-") -Force -ErrorAction Ignore}
     }
 
 
