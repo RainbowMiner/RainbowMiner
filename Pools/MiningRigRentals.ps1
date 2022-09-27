@@ -732,8 +732,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $RigMinProfit = 0.00001
     $RigServer = $null
     $RigCurrentRentals = @{}
+    $UniqueRigs_Request = @()
 
-    $UniqueRigs_Request = $AllRigs_Request.Where({(([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1})
+    if ($AllRigs_Request) {
+        $UniqueRigs_Request = $AllRigs_Request.Where({(([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1})
+    }
 
     if ($EnableRecoveryMode) {
         Write-Log -Level Warn "$($Name): Recovery mode is enabled! Please disable it after all your rigs have been recovered."
