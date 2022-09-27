@@ -82,7 +82,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
-        if (-not $Device) {return}
+        if (-not $Device -or ($Miner_Vendor -eq "NVIDIA" -and $Miner_Model -match "-" -and ($Device | Where-Object {$_.IsLHR} | Measure-Object).Count -gt 0)) {return}
 
         $Device_BusId = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".ForEach({$_.BusId})
 
