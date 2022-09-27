@@ -15,14 +15,17 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Regions = @("us","br","eu","asia")
+$Pool_Regions = @("us","br","eu","asia","hk","au")
 
 [hashtable]$Pool_RegionsTable = @{}
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "etc.crazypool.org"; symbol = "ETC"; port = @(7000,7777); fee = 1}
-    [PSCustomObject]@{rpc = "ubq.crazypool.org"; symbol = "UBQ"; port = @(3335); fee = 1}
+    [PSCustomObject]@{rpc = "clo.crazypool.org";  symbol = "CLO";  port = @(4444,8888); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "etc.crazypool.org";  symbol = "ETC";  port = @(7000,7777); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "ethf.crazypool.org"; symbol = "ETF";  port = @(8008,9009); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "ubq.crazypool.org";  symbol = "UBQ";  port = @(3335);      fee = 1; region = $Pool_Regions.Where({$_ -ne "au"})}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -67,7 +70,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_Region in $_.region) {
         $Pool_Ssl = $false
         foreach($Pool_Port in $Pool_Ports) {
             [PSCustomObject]@{
