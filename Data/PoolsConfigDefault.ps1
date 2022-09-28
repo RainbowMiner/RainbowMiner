@@ -60,9 +60,12 @@
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETC","RVN","ERG")
         }
+        "Ethwmine" = [PSCustomObject]@{
+            Currencies=@("ETHW")
+        }
         "Ezil" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{EnableLolminerDual="1";EnableNanominerDual="1";EnableTrexDual="1"}
-            SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, Lolminer will dual mine ZIL on Ezil for various algorithms";EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms";EnableTrexDual="If you set this to 1, Trex will dual mine ZIL on Ezil for Ethash"}
+            Fields=[PSCustomObject]@{EnableLolminerDual="1";EnableNanominerDual="1";EnableTrexDual="1";EnableSrbminerMultiDual="1"}
+            SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, Lolminer will dual mine ZIL on Ezil for various algorithms";EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms";EnableTrexDual="If you set this to 1, Trex will dual mine ZIL on Ezil for Ethash";EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Ezil for various algorithms"}
             Currencies=@("ETC","ZIL")
         }
         "F2pool" = [PSCustomObject]@{
@@ -212,7 +215,7 @@
                         ExcludeRentalId=""
                         EnableAutoCreate="0"
                         AutoCreateMinProfitPercent="50"
-                        AutoCreateMinCPUProfitBTC="0.00001"
+                        AutoCreateMinCPUProfitBTC="0.000001"
                         AutoCreateMaxMinHours="24"
                         AutoUpdateMinPriceChangePercent="3"
                         AutoCreateAlgorithm=""
@@ -240,7 +243,7 @@
                         PriceRiseExtensionPercent="0"
                         PowerDrawFactor="1.0"
                         MinHours="3"
-                        MaxHours="48"
+                        MaxHours="96"
                         AllowExtensions="1"
                         AllowRentalDuringPause="0"
                         PriceCurrencies="BTC"
@@ -322,6 +325,9 @@
         }
         "MintPond" = [PSCustomObject]@{
             Currencies=@("FIRO","RVN")
+        }
+        "Molepool" = [PSCustomObject]@{
+            Currencies=@("ETHW")
         }
         "MoneroOcean" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}

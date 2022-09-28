@@ -37,7 +37,7 @@ param(
     [Bool]$EnableRecoveryMode = $false,
     [String]$AutoCreateAlgorithm = "",
     [String]$AutoCreateMinProfitPercent = "50",
-    [String]$AutoCreateMinCPUProfitBTC = "0.00001",
+    [String]$AutoCreateMinCPUProfitBTC = "0.000001",
     [String]$AutoCreateMaxMinHours = "24",
     [String]$AutoExtendTargetPercent = "100",
     [String]$AutoExtendMaximumPercent = "30",
@@ -729,7 +729,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $RigsToUpdate = @()
     $RigGroupsAdd = @()
     $RigGroupsRemove = @()
-    $RigMinProfit = 0.00001
+    $RigMinProfit = 0.000001
     $RigServer = $null
     $RigCurrentRentals = @{}
     $UniqueRigs_Request = @()
