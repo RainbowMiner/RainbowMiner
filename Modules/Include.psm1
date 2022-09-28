@@ -6272,12 +6272,18 @@ function Get-YiiMPValue {
         [Parameter(Mandatory = $False)]
         [String]$DataWindow = '',
         [Parameter(Mandatory = $False)]
+        [String]$ActualLast24h = 'actual_last24h',
+        [Parameter(Mandatory = $False)]
+        [String]$EstimateCurrent = 'estimate_current',
+        [Parameter(Mandatory = $False)]
+        [String]$EstimateLast24h = 'estimate_last24h',
+        [Parameter(Mandatory = $False)]
         [Switch]$CheckDataWindow = $false,
         [Parameter(Mandatory = $False)]
         [Double]$ActualDivisor = 1000
-    )    
+    )
     [Double]$Value = 0
-    [System.Collections.Generic.List[string]]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
+    [System.Collections.Generic.List[string]]$allfields = @($EstimateCurrent,$EstimateLast24h,$ActualLast24h)
     [hashtable]$values = @{}
     [bool]$hasdetails=$false
     [bool]$containszero = $false
@@ -6287,7 +6293,7 @@ function Get-YiiMPValue {
             if ($values[$field] -eq [double]0) {$containszero=$true}
         }
     }
-    if (-not $hasdetails -and $values.ContainsKey("actual_last24h") -and $ActualDivisor) {$values["actual_last24h"]/=$ActualDivisor}
+    if (-not $hasdetails -and $values.ContainsKey($ActualLast24h) -and $ActualDivisor) {$values[$ActualLast24h]/=$ActualDivisor}
     if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
 
     if ($values.count -eq 3 -and -not $containszero) {
@@ -6310,9 +6316,9 @@ function Get-YiiMPValue {
     if ($Value -eq 0) {
         if ($DataWindow -match '^(.+)-(.+)$') {
             Switch ($Matches[2]) {
-                "2"  {[System.Collections.Generic.List[string]]$fields = @("actual_last24h","estimate_current");Break}
-                "2e" {[System.Collections.Generic.List[string]]$fields = @("estimate_last24h","estimate_current");Break}
-                "2h" {[System.Collections.Generic.List[string]]$fields = @("actual_last24h","estimate_last24h");Break}
+                "2"  {[System.Collections.Generic.List[string]]$fields = @($ActualLast24h,$EstimateCurrent);Break}
+                "2e" {[System.Collections.Generic.List[string]]$fields = @($EstimateLast24h,$EstimateCurrent);Break}
+                "2h" {[System.Collections.Generic.List[string]]$fields = @($ActualLast24h,$EstimateLast24h);Break}
                 "3"  {[System.Collections.Generic.List[string]]$fields = $allfields;Break}
             }
             Switch ($Matches[1]) {
