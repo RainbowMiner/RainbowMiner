@@ -18,6 +18,15 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Fee = 0.5
 $Pool_Default_Region = Get-Region "asia"
 
+$Pools_Data = @(
+    [PSCustomObject]@{coin="BCH"; port=8888;stratum="sha256"}
+    [PSCustomObject]@{coin="BTC"; port=8888;stratum="sha256"}
+    [PSCustomObject]@{coin="LTC"; port=3333;stratum="ltc"}
+    [PSCustomObject]@{coin="ETC"; port=1800;stratum="etc"}
+    [PSCustomObject]@{coin="ETHW";port=1800;stratum="ethw"}
+    [PSCustomObject]@{coin="ZEC"; port=5300;stratum="zec"}
+)
+
 $Pools_Request = [PSCustomObject]@{}
 try {
     $Pools_Request = Invoke-RestMethodAsync "https://pool.binance.com/mining-api/v1/public/pool/index" -tag $Name -timeout 15 -cycletime 120
@@ -29,7 +38,6 @@ catch {
 }
 
 $Pools_Request.data.algoList | ForEach-Object {
-    $Pool_Algorithm = $_.algoName.ToLower()
     $Pool_HashRate  = $_.poolHash
     $Pool_Workers   = $_.effectiveCount
     $Pool_Fee       = [decimal]$_.rate * 100
@@ -39,6 +47,14 @@ $Pools_Request.data.algoList | ForEach-Object {
         $Pool_Currency = $_.symbol
         $Pool_Coin  = Get-Coin $Pool_Currency
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+
+        if ($Pool_Data = $Pools_Data | Where-Object {$_.coin -eq $Pool_Currency}) {
+            $Pool_Host = $Pool_Data.stratum
+            $Pool_Port = $Pool_Data.port
+        } else {
+            $Pool_Host = $Pool_Currency.tolower()
+            $Pool_Port = 8888
+        }
         
         if (-not $InfoOnly) {
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_HashRate -Quiet
@@ -55,8 +71,8 @@ $Pools_Request.data.algoList | ForEach-Object {
             StablePrice   = 0
             MarginOfError = 0
             Protocol      = "stratum+tcp"
-            Host          = "$($Pool_Algorithm).poolbinance.com"
-            Port          = 8888
+            Host          = "$($Pool_Host).poolbinance.com"
+            Port          = $Pool_Port
             User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_Default_Region
