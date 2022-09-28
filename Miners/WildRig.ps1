@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "blake2b-glt";               Vendor = @("AMD","NVIDIA"); Params = ""; CoinSymbols = @("GLT")} #Blake2b-GLT
     [PSCustomObject]@{MainAlgorithm = "bmw512";                    Vendor = @("AMD","NVIDIA"); Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD");          Params = ""} #C11
-    [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD","NVIDIA"); Params = ""} #CurveHash
+    [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #CurveHash
     [PSCustomObject]@{MainAlgorithm = "dedal";                     Vendor = @("AMD");          Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";                    Vendor = @("AMD");          Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "firopow"; DAG = $true;      Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #FiroPow
