@@ -729,7 +729,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $RigsToUpdate = @()
     $RigGroupsAdd = @()
     $RigGroupsRemove = @()
-    $RigMinProfit = 0.000001
+    $RigMinProfit = 0.00001
     $RigServer = $null
     $RigCurrentRentals = @{}
     $UniqueRigs_Request = @()
