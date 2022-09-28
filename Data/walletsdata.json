@@ -49,15 +49,6 @@
         "divisor":  100000000
     },
     {
-        "symbol":  "CHOX",
-        "match":  "^5",
-        "rpc":  "https://explorer.chainox.net/ext/getbalance/{w}",
-        "address":  "",
-        "balance":  "#",
-        "received":  "",
-        "divisor":  1
-    },
-    {
         "symbol":  "CRO",
         "match":  "^cro",
         "rpc":  "https://crypto.org/explorer/api/v1/accounts/{w}",
@@ -92,17 +83,6 @@
         "balance":  "balance",
         "received":  "total_received",
         "divisor":  100000000
-    },
-    {
-        "symbol":  "DOT",
-        "match":  "^1",
-        "rpc":  "https://explorer-32.polkascan.io/api/v1/polkadot/account/{w}",
-        "address":  "data.attributes.address",
-        "balance":  "data.attributes.balance_total",
-        "received":  "",
-        "divisor":  10000000000,
-        "verify":  "data.type",
-        "verify_value":  "account"
     },
     {
         "symbol":  "ETH",
