@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "1.0.8"
+$Version = "1.0.9"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.8-srbminermulti/SRBMiner-Multi-1-0-8-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.9-srbminermulti/SRBMiner-Multi-1-0-9-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.8-srbminermulti/SRBMiner-Multi-1-0-8-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.9-srbminermulti/SRBMiner-Multi-1-0-9-win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
@@ -105,7 +105,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow_veil"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowVEIL/VEIL
     [PSCustomObject]@{MainAlgorithm = "progpow_veriblock"; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #vProgPow/VBLK
     [PSCustomObject]@{MainAlgorithm = "progpow_zano"     ; DAG = $true; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); ExcludePoolName="Nicehash"} #ProgPowZANO/ZANO
-    [PSCustomObject]@{MainAlgorithm = "pufferfish2bmb"   ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU"); Compute=@("RDNA1","RDNA2")} #Pufferfishbmb/BMB
+    [PSCustomObject]@{MainAlgorithm = "pufferfish2bmb"   ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU")} #Pufferfishbmb/BMB
     [PSCustomObject]@{MainAlgorithm = "sha3d"            ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #SHA3d/KCN,YCN
     [PSCustomObject]@{MainAlgorithm = "sha512_256d_radiant";            Params = ""; Fee = 1.00;               Vendor = @("AMD","CPU")} #SHA512256d/RAD
     [PSCustomObject]@{MainAlgorithm = "ubqhash"          ;              Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD")} #ubqhash
@@ -316,6 +316,35 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                                 }
                             }
                         }
+
+                    #} elseif ($Sesson.Config.Pools.Ezil.EnableSrbminerMultiDual -and $Pools.ZilliqaETC.Wallet) {
+				    #    [PSCustomObject]@{
+					#        Name           = $Miner_Name
+					#        DeviceName     = $Miner_Device.Name
+					#        DeviceModel    = $Miner_Model
+					#        Path           = $Path
+					#        Arguments      = "--a0-is-zil --algorithm etchash --algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm}) --api-enable --api-port `$mport --api-rig-name $($Session.Config.Pools.$($Pools.$MainAlgorithm_Norm.Name).Worker) $(if ($Miner_Protocol) {"$($Miner_Protocol) "})$(if ($Miner_Vendor -eq "CPU") {"--disable-gpu$DeviceParams"} else {"--gpu-id $DeviceIDsAll --gpu-intensity $DeviceIntensity --disable-cpu $WatchdogParams"}) --pool stratum+tcp$(if ($Pools.ZilliqaETC.SSL) {"s"})://$($Pools.ZilliqaETC.Host):$($Pools.ZilliqaETC.Port) --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --wallet 0x7f3E62e5bb0601bA52f0813Cb818279f40aB14BC.$($Pools.ZilliqaETC.Wallet) --wallet $($Pools.$MainAlgorithm_Norm.User) --worker $($Pools.ZilliqaETC.Worker)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) --password $($Pools.ZilliqaETC.Pass)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --password $($Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1")"}) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"}) --keepalive --retry-time 10 --disable-startup-monitor $($_.Params)" # --disable-worker-watchdog
+					#        HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_HR}
+					#        API            = "SrbMinerMulti"
+					#        Port           = $Miner_Port
+					#        Uri            = $Uri
+                    #        FaultTolerance = $_.FaultTolerance
+					#        ExtendInterval = if ($_.ExtendInterval) {$_.ExtendInterval} elseif ($Miner_Vendor -eq "CPU") {2} else {$null}
+                    #        MaxRejectedShareRatio = if ($_.MaxRejectedShareRatio) {$_.MaxRejectedShareRatio} else {$null}
+                    #        Penalty        = 0
+					#        DevFee         = $_.Fee
+					#        ManualUri      = $ManualUri
+					#        EnvVars        = if ($Miner_Vendor -eq "AMD" -and $IsLinux) {@("GPU_MAX_WORKGROUP_SIZE=1024")} else {$null}
+                    #        Version        = $Version
+                    #        PowerDraw      = 0
+                    #        BaseName       = $Name
+                    #        BaseAlgorithm  = $MainAlgorithm_Norm_0
+                    #        Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
+                    #        LogFile        = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
+                    #        SetLDLIBRARYPATH = $false
+                    #        ListDevices    = "--list-devices"
+                    #        ExcludePoolName = $_.ExcludePoolName
+				    #    }
 
                     } else {
 				        [PSCustomObject]@{
