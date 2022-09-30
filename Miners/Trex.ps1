@@ -10,14 +10,14 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Version = "0.26.5"
+$Version = "0.26.6"
 $DeviceCapability = "5.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.26.5-trex/t-rex-0.26.5-linux.tar.gz"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.26.6-trex/t-rex-0.26.6-linux.tar.gz"
             Cuda   = "9.2"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.26.5-trex/t-rex-0.26.5-win.zip"
+            Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.26.6-trex/t-rex-0.26.6-win.zip"
             Cuda   = "9.2"
         }
     )
@@ -37,6 +37,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DevFee = 2.0} #Autolykos2 (new with 0.21.0)
     [PSCustomObject]@{MainAlgorithm = "blake3"; Params = ""; MinMemGB = 2; ExtendInterval = 2} #Blake3/ALPH (new with 0.25.1)
     [PSCustomObject]@{MainAlgorithm = "etchash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3} #Etchash (new with 0.18.8)
+    [PSCustomObject]@{MainAlgorithm = "etchash"; SecondAlgorithm = "blake3"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 2; ExtendInterval = 3; DualAll = $true} #Etchash+Blake3/ALPH (new with 0.26.6)
     [PSCustomObject]@{MainAlgorithm = "ethash"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DualZIL = $true} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
     [PSCustomObject]@{MainAlgorithm = "ethash2g"; DAG = $true; Params = ""; MinMemGB = 1; ExtendInterval = 3; DualZIL = $true; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
     [PSCustomObject]@{MainAlgorithm = "ethash3g"; DAG = $true; Params = ""; MinMemGB = 2; ExtendInterval = 3; DualZIL = $true; Algorithm = "ethash"} #Ethash (new with v0.17.2, broken in v0.18.3, fixed with v0.18.5)
