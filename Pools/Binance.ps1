@@ -52,7 +52,7 @@ $Pools_Request.data.algoList | ForEach-Object {
             $Pool_Host = $Pool_Data.stratum
             $Pool_Port = $Pool_Data.port
         } else {
-            $Pool_Host = $Pool_Currency.tolower()
+            $Pool_Host = $Pool_Currency.ToLower()
             $Pool_Port = 8888
         }
         
