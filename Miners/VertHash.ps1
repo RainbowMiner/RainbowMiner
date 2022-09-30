@@ -110,7 +110,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					    DeviceName       = $Miner_Device.Name
 					    DeviceModel      = $Miner_Model
 					    Path             = $Path
-					    Arguments        = "$($Miner_Deviceparams) $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --verthash-data '$($DatFile)' $($_.Params)"
+					    Arguments        = "$($Miner_Deviceparams) $($DeviceIDsAll) -a $($_.MainAlgorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --verthash-data '$($DatFile)' $($_.Params)"
 					    HashRates        = [PSCustomObject]@{$Algorithm_Norm   = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week }
 					    API              = "VerthashWrapper"
 					    Port             = $Miner_Port
