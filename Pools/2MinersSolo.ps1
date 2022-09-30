@@ -143,8 +143,12 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
     if ($ok) {
         [System.Collections.Generic.List[string]]$Pool_Hosts = @()
         $Pool_Wallet = Get-WalletWithPaymentId $Pool_Wallet -pidchar '.'
-        $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)"} | Select-Object host,port | Sort-Object -Descending:$($Pool_Currency -eq "FIRO") {[int]$_.port} | Foreach-Object {
-            $Pool_SSL_0 = $Pool_SSL -or ([int]$_.port -ge 10000)
+        $Pool_HostStatus_Select = $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)"} | Select-Object host,port | Sort-Object -Descending:$($Pool_Currency -eq "FIRO") {[int]$_.port}
+        $Pool_HostStatus_Select | Foreach-Object {
+            $Pool_Host_0   = "$($_.host)"
+            $Pool_Port     = [int]$_.port
+            $Pool_SSL_0    = $Pool_SSL -or ($Pool_Port -ge 10000)
+            $Pool_Protocol = if ($Pool_SSL_0) {"stratum+ssl"} else {"stratum+tcp"}
             if ($Pool_Hosts -notcontains "$($_.host)$($Pool_SSL_0)") {
                 $Pool_Hosts += "$($_.host)$($Pool_SSL_0)"
                 [PSCustomObject]@{
@@ -156,15 +160,24 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.$StatAverageStable
                     MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = if ($Pool_SSL_0) {"stratum+ssl"} else {"stratum+tcp"}
-                    Host          = "$($_.host)"
-                    Port          = [int]$_.port
+                    Protocol      = $Pool_Protocol
+                    Host          = $Pool_Host_0
+                    Port          = $Pool_Port
                     User          = "$($Pool_Wallet).{workername:$Worker}"
                     Pass          = "x"
                     Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
                     SSL           = $Pool_SSL_0
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
+                    Failover      = @($Pool_HostStatus_Select | Where-Object {$_.host -eq $Pool_Host_0 -and [int]$_.port -ne $Pool_Port -and ((-not $Pool_SSL_0 -and [int]$_.port -lt 10000) -or ($Pool_SSL_0 -and [int]$_.port -ge 10000))} | Foreach-Object {
+                                        [PSCustomObject]@{
+                                            Protocol = $Pool_Protocol
+                                            Host     = "$($_.host)"
+                                            Port     = $_.port
+                                            User     = "$($Pool_Wallet).{workername:$Worker}"
+                                            Pass     = "x"
+                                        }
+                                    } | Select-Object)
                     DataWindow    = $DataWindow
                     Workers       = $null
                     Hashrate      = $null
