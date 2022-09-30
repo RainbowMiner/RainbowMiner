@@ -218,13 +218,18 @@ if ($AllRigs_Request) {
 
         $AllowRentalDuringPause_Value  = if ($MRRConfig.$Worker1.AllowRentalDuringPause -ne $null -and $MRRConfig.$Worker1.AllowRentalDuringPause -ne "") {Get-Yes $MRRConfig.$Worker1.AllowRentalDuringPause} else {$AllowRentalDuringPause}
 
-        if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
+        $RigInfo_CacheTime = 86400
+
+        $RentedRigsCount = ($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count
+
+        if ($RentedRigsCount) {
             if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and -not $_.status.rented -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) {
                 Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" > $null
                 $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}
                 $Disable_Rigs | Foreach-Object {Set-MiningRigRentalStatus $_ -Stop}
             }
             $Session.MRRRentalTimestamp[$Worker1] = (Get-Date).ToUniversalTime()
+            $RigInfo_CacheTime = 2 * $Session.Config.Interval
         } else {
             $Valid_Rigs = @()
 
@@ -278,7 +283,7 @@ if ($AllRigs_Request) {
 
         if (-not ($Rigs_Ids = $Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object)) {continue}
 
-        $RigInfo_Request = Get-MiningRigInfo -id $Rigs_Ids -key $API_Key -secret $API_Secret
+        $RigInfo_Request = Get-MiningRigInfo -id $Rigs_Ids -key $API_Key -secret $API_Secret -cachetime $RigInfo_CacheTime
         if (-not $RigInfo_Request) {
             Write-Log -Level Warn "Pool API ($Name) rig $Worker1 info request has failed. "
             return
