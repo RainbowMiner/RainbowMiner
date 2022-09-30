@@ -4415,9 +4415,6 @@ function Get-Algorithm {
         if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {
             $Algorithm = $Global:GlobalAlgorithms[$Algorithm]
             if ($CoinSymbol -ne "" -and $Algorithm -eq "Ethash" -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 10) -le 5) {
-                if ($IsWindows -and $Session.IsWin10) {
-                    $DAGSize /= 0.865
-                }
                 if ($DAGSize -le 2) {$Algorithm = "$($Algorithm)2g"}
                 elseif ($DAGSize -le 3) {$Algorithm = "$($Algorithm)3g"}
                 elseif ($DAGSize -le 4) {$Algorithm = "$($Algorithm)4g"}
@@ -4706,10 +4703,10 @@ function Test-VRAM {
         [Parameter(Mandatory = $false)]
         $MinMemGB = 0.0
     )
-    if ($IsWindows -and $Session.IsWin10) {
+    if ($IsWindows -and $Session.IsWin10 -and $Device.Vendor -eq "NVIDIA") {
         $Device.OpenCL.GlobalMemsize*0.865 -ge ($MinMemGB * 1Gb)
     } else {
-        $Device.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb)
+        $Device.OpenCL.GlobalMemsize -ge (($MinMemGB + 0.25) * 1Gb)
     }
 }
 
