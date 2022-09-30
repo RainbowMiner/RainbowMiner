@@ -170,15 +170,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                     SSL           = $Pool_SSL_0
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
-                    Failover      = @($Pool_HostStatus_Select | Where-Object {$_.host -eq $Pool_Host_0 -and [int]$_.port -ne $Pool_Port -and ((-not $Pool_SSL_0 -and [int]$_.port -lt 10000) -or ($Pool_SSL_0 -and [int]$_.port -ge 10000))} | Foreach-Object {
-                                        [PSCustomObject]@{
-                                            Protocol = $Pool_Protocol
-                                            Host     = "$($_.host)"
-                                            Port     = $_.port
-                                            User     = "$($Pool_Wallet).{workername:$Worker}"
-                                            Pass     = "x"
-                                        }
-                                    } | Select-Object)
                     DataWindow    = $DataWindow
                     Workers       = $Pool_Request.workersTotal
                     Hashrate      = $Stat.HashRate_Live
