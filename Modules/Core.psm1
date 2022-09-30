@@ -537,19 +537,21 @@ function Start-Core {
     #Load databases, that only need updates once in a while
     Get-WorldCurrencies -Silent -EnableRemoteUpdate
 
-    #Check for unclean shutdown
-    try {
-        Write-Host "Checking last shutdown .. " -NoNewline
-        if (Test-Path ".\Data\rbm.pid") {
-            Write-Host "crashed" -ForegroundColor Red
-            $Session.ReportUnclean = $true
-        } else {
-            Write-Host "ok" -ForegroundColor Green
-        }
+    if (-not $Session.SetupOnly) {
+        #Check for unclean shutdown
+        try {
+            Write-Host "Checking last shutdown .. " -NoNewline
+            if (Test-Path ".\Data\rbm.pid") {
+                Write-Host "crashed" -ForegroundColor Red
+                $Session.ReportUnclean = $true
+            } else {
+                Write-Host "ok" -ForegroundColor Green
+            }
 
-        $PID | Out-File ".\Data\rbm.pid"
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+            $PID | Out-File ".\Data\rbm.pid"
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
     }
 
     $true
@@ -4028,7 +4030,7 @@ function Stop-Core {
         }
     }
 
-    if (Test-Path ".\Data\rbm.pid") {Remove-Item ".\Data\rbm.pid" -Force -ErrorAction Ignore}
+    if (-not $Session.SetupOnly -and (Test-Path ".\Data\rbm.pid")) {Remove-Item ".\Data\rbm.pid" -Force -ErrorAction Ignore}
 
     Stop-Autoexec
     [console]::TreatControlCAsInput = $false
