@@ -27,6 +27,7 @@ param(
     [Bool]$EnableAutoPrice = $false,
     [Bool]$EnableAutoBenchmark = $false,
     [Bool]$EnableMinimumPrice = $false,
+    [Bool]$EnableAutoAdjustMinHours = $false,
     [Bool]$EnableUpdateTitle = $false,
     [Bool]$EnableUpdateDescription = $false,
     [Bool]$EnableUpdatePriceModifier = $false,
@@ -57,6 +58,7 @@ param(
     [String]$PriceCurrencies = "BTC",
     [String]$MinHours = "3",
     [String]$MaxHours = "168",
+    [String]$MaxMinHours = "12",
     [String]$ProfitAverageTime = "Day",
     [String]$PauseBetweenRentals = "0",
     [String]$Title = "",
@@ -762,7 +764,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         if ($MRRConfig.$RigName -eq $null) {$MRRConfig | Add-Member $RigName ([PSCustomObject]@{}) -Force}
             
-        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice","EnableUpdateTitle","EnableUpdateDescription","EnableUpdatePriceModifier","EnablePowerDrawAddOnly","AllowExtensions","AllowRentalDuringPause")) {
+        foreach ($fld in @("EnableAutoCreate","EnableAutoUpdate","EnableAutoPrice","EnableMinimumPrice","EnableAutoAdjustMinHours","EnableUpdateTitle","EnableUpdateDescription","EnableUpdatePriceModifier","EnablePowerDrawAddOnly","AllowExtensions","AllowRentalDuringPause")) {
             #boolean
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {Get-Yes $MRRConfig.$RigName.$fld} else {Get-Variable $fld -ValueOnly -ErrorAction Ignore}
@@ -775,7 +777,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
         $AutoCreateMinProfitBTC = "-1"
 
-        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoBonusExtendTimes","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceRiseExtensionPercent","PowerDrawFactor","MinHours","MaxHours")) {
+        foreach ($fld in @("AutoCreateMinProfitPercent","AutoCreateMinProfitBTC","AutoCreateMinCPUProfitBTC","AutoCreateMaxMinHours","AutoExtendTargetPercent","AutoExtendMaximumPercent","AutoBonusExtendForHours","AutoBonusExtendByHours","AutoBonusExtendTimes","AutoUpdateMinPriceChangePercent","AutoPriceModifierPercent","PriceBTC","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceRiseExtensionPercent","PowerDrawFactor","MinHours","MaxHours","MaxMinHours")) {
             #double
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
@@ -818,6 +820,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         if ($MRRConfig.$RigName.AutoBonusExtendTimes -le 0) {$MRRConfig.$RigName.AutoBonusExtendTimes = 1000}
         if ($MRRConfig.$RigName.MinHours -lt 3) {$MRRConfig.$RigName.MinHours = 3}
         if ($MRRConfig.$RigName.MaxHours -lt $MRRConfig.$RigName.MinHours) {$MRRConfig.$RigName.MaxHours = $MRRConfig.$RigName.MinHours}
+        if ($MRRConfig.$RigName.MaxMinHours -lt 3) {$MRRConfig.$RigName.MaxMinHours = 3}
         if ($MRRConfig.$RigName.AutoCreateMaxMinHours -lt 3) {$MRRConfig.$RigName.AutoCreateMaxMinHours = 3}
         if ($MRRConfig.$RigName.ProfitAverageTime -notin @("Minute","Minute_5","Minute_10","Hour","Day","ThreeDay","Week")) {$MRRConfig.$RigName.ProfitAverageTime = "Day"}
         $MRRConfig.$RigName.PriceFactorDecayTime = [Math]::Max((ConvertFrom-Time "$($MRRConfig.$RigName.PriceFactorDecayTime)"),$UpdateInterval_Seconds) / 3600
@@ -1128,13 +1131,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                         $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
 
-                                        $RigMinHours = if ($RigMinPrice -eq 0 -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -gt $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply))}
+                                        $RigMinHours = if ($RigMinPrice -eq 0 -or -not $MRRConfig.$RigName.EnableAutoAdjustMinHours -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -ge $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Min($MRRConfig.$RigName.MaxMinHours,[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply)))}
+                                        $RigMaxHours = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
 
                                         #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
 
-                                        if ($IsHandleRig -or $RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) {
+                                        if ($IsHandleRig -or (($RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) -and ($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24 -ge $RigMinProfit))) {
 
-                                            $RigMaxHours             = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
                                             $Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Algorithm_Norm
                                             $RigSubst["Algorithm"]   = $Algorithm_Norm_Mapped
                                             $RigSubst["AlgorithmEx"] = if ($_.display -match "\(([^\)]+)\)$") {"$($Algorithm_Norm_Mapped)$(if (Get-Coin $Matches[1]) {"/$($Matches[1].ToUpper())"} elseif ($Matches[1] -ne $Algorithm_Norm_Mapped) {"/$($Matches[1])"})"} else {$Algorithm_Norm_Mapped}
@@ -1305,8 +1308,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     if ( (-not $RigMinPriceCurrent) -or
                                                          ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
                                                          ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
-                                                         ($_.ndevices -ne $CreateRig.ndevices) -or 
-                                                         ($CreateRig.device_ram -and ($_.device_ram -ne $CreateRig.device_ram)) -or
+                                                         ([int]$_.minhours -ne $CreateRig.minhours) -or
+                                                         ([int]$_.maxhours -ne $CreateRig.maxhours) -or
+                                                         ([int]$_.ndevices -ne $CreateRig.ndevices) -or 
+                                                         ($CreateRig.device_ram -and ([decimal]$_.device_ram -ne $CreateRig.device_ram)) -or
                                                          ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
                                                          ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
                                                          ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
