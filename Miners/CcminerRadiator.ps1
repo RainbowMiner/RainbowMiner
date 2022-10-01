@@ -7,8 +7,8 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$ManualUri = "https://github.com/KlausT/ccminer/releases"
-$Port = "140{0:d2}"
+$ManualUri = "https://github.com/xiaolin1579/radiator/releases"
+$Port = "108{0:d2}"
 $DevFee = 0.0
 $Version = "1.0.0"
 

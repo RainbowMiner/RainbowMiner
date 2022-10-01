@@ -6,7 +6,7 @@
 105	CcminerCryptonight
 106	CcminerLyra2v3
 107	CcminerHeavyHash
-108	CcminerSib
+108	CcminerRadiator
 109	CcminerSkunk
 110	CcminerSpModBitcore
 111	CcminerSpModPhi
