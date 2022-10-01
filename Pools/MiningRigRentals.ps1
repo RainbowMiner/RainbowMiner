@@ -212,6 +212,21 @@ if ($AllRigs_Request) {
         if (-not $Session.MRRRentalTimestamp.ContainsKey($Worker1)) {$Session.MRRRentalTimestamp[$Worker1] = (Get-Date).ToUniversalTime().AddDays(-7)}
     }
 
+    $Rental_Options_Current = Get-ChildItem ".\Config" -Filter "mrr-*.config.txt" -File | Where-Object {$_.Name -match "^mrr-\d+"} | Foreach-Object {
+        $Rental_Options_Data = try {
+            Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            Write-Log -Level Warn "$($Name): Error in config file $($_.Name)"
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+        [PSCustomObject]@{
+            rental_id = [int]($_.Name -replace "[^\d]")
+            fullname  = $_.FullName
+            data      = $Rental_Options_Data
+            ok        = $false
+        }
+    }
+
     foreach ($Worker1 in $Workers) {
 
         if (-not ($Rigs_Request = $AllRigs_Request | Where-Object description -match "\[$($Worker1)\]")) {continue}
@@ -295,6 +310,8 @@ if ($AllRigs_Request) {
             $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
             $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
 
+            $Rental_Options = $null
+
             $Optimal_Difficulty = [PSCustomObject]@{
                 min = $_.optimal_diff.min -as [double]
                 max = $_.optimal_diff.max -as [double]
@@ -335,6 +352,20 @@ if ($AllRigs_Request) {
 
                     $Rental_CheckForAutoExtend = ([double]$_.status.hours -lt 0.25) -and -not $Pool_RigStatus.extended
                     $Rental_CheckForExtensionMessage = $AllowExtensions -and $($ExtensionMessageTime_Hours -gt 0) -and ($ExtensionMessage.Length -gt 3) -and ([double]$_.status.hours -lt $ExtensionMessageTime_Hours) -and -not $Pool_RigStatus.extensionmessagesent
+
+                    $Rental_Id = [int]$_.rental_id
+                    
+                    $Rental_Options = $Rental_Options_Current | Where-Object {$_.rental_id -eq $Rental_Id} | Foreach-Object {$_.ok = $true;$_.data}
+
+                    if (-not $Rental_Options) {
+                        $Rental_Options = [PSCustomObject]@{UseHost=""}
+                        try {
+                            $Rental_Options | ConvertTo-Json -Depth 10 | Set-Content ".\Config\mrr-$($Rental_Id).config.txt"
+                         } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            $Rental_Options = $null
+                        }
+                    }
 
                     try {
 
@@ -592,7 +623,7 @@ if ($AllRigs_Request) {
                             Write-Log -Level Warn "$($Name): cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1) that ended $($Rental_Result.end)."
                         }
                     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-
+    
                     $Pool_RigStatus = $null
                 }
 
@@ -601,7 +632,9 @@ if ($AllRigs_Request) {
                     $Miner_Server = $Pool_Rig.server
                     $Miner_Port   = $Pool_Rig.port
 
-                    if ($UseHost -and $Pool_RigEnable -and ($Host_Rig = $Pool_AllHosts | Where-Object name -like "$UseHost*" | Select-Object -First 1)) {
+                    $Miner_UseHost = if ($Rental_Options.UseHost) {$Rental_Options.UseHost} else {$UseHost}
+
+                    if ($Miner_UseHost -and $Pool_RigEnable -and ($Host_Rig = $Pool_AllHosts | Where-Object name -like "$($Miner_UseHost)*" | Select-Object -First 1)) {
                         $Miner_Server = $Host_Rig.name
                         $Miner_Port   = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {$Host_Rig.ethereum_port} else {$Host_Rig.port}
                     }
@@ -616,10 +649,10 @@ if ($AllRigs_Request) {
                     # hardcoded fixes due to MRR stratum or API failures
                     #
 
-                    #if ($Pool_Algorithm_Norm -eq "Kawpow") {
-                    #    $Miner_Server = ($Pool_Failover | Select-Object -First 1).name
+                    #if ($Pool_Algorithm_Norm -eq "Equihash21x9") {
+                    #    $Miner_Server = ($Pool_Failover | Where-Object {$_.name -match "eu-ru01"} | Select-Object -First 1).name
                     #    $Miner_Port   = 3333
-                    #    $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
+                    #    $Pool_Failover = $Pool_Failover | Where-Object {$_.name -notmatch "eu-ru01"}
                     #}
 
                     #if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
@@ -695,6 +728,17 @@ if ($AllRigs_Request) {
                 }
             }
         }
+    }
+
+    if ($Rental_Options_Current) {
+        $Rental_Options_Current | Where-Object {-not $_.ok -and (Test-Path $_.fullname)} | Foreach-Object {
+            try {
+                Remove-Item $_.fullname -Force -ErrorAction Ignore
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
+        $Rental_Options_Current = $null
     }
 
     if ($MRR_Pings) {
@@ -1139,7 +1183,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         $RigMinHours = if ($RigMinPrice -eq 0 -or -not $MRRConfig.$RigName.EnableAutoAdjustMinHours -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -ge $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Min($MRRConfig.$RigName.MaxMinHours,[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply)))}
                                         $RigMaxHours = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
 
-                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"
+                                        #Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours), MaxHours=$($RigMaxHours), MaxProfit=$($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24), Create=$((($RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) -and ($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24 -ge $RigMinProfit)))"
 
                                         if ($IsHandleRig -or (($RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) -and ($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24 -ge $RigMinProfit))) {
 
