@@ -53,7 +53,7 @@ $Pool_Currencies = @("BTC","LTC","DASH","DGB","KMD","RVN","DOGE") + @($PoolCoins
 
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
-$PoolCoins_Request.PSObject.Properties.Name | ForEach-Object {
+$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$_.algo} | ForEach-Object {
     $Pool_CoinSymbol = $_
     $Pool_CoinName   = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_Algorithm  = $PoolCoins_Request.$Pool_CoinSymbol.algo
