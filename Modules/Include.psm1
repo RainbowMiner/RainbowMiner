@@ -36,9 +36,27 @@ function Initialize-Session {
 function Get-Version {
     [CmdletBinding()]
     param($Version)
-    # System.Version objects can be compared with -gt and -lt properly
-    # This strips out anything that doens't belong in a version, eg. v at the beginning, or -preview1 at the end, and returns a version object
     [System.Version]($Version -Split '-' -Replace "[^0-9.]")[0]
+}
+
+function Get-MinerVersion {
+    [CmdletBinding()]
+    param($Version)
+    try {
+        if ($Version -match "/v([0-9a-z.]+)-") {$Version = $Matches[1]}
+        $Version = $Version -replace "[^0-9a-z.]" -replace "^[^0-9]+" -replace "(\d)[a-z]*[vr](\d)","`$1.`$2" -replace "^([0-9]+)$","`$1.0"
+        if ($Version -notmatch "^[0-9.]+$") {
+            if ($Session.IsCore) {
+                $Version = $Version -replace "([a-z])([0-9]|$)",{".$([byte][char]$_.Groups[1].Value.ToLower() - [byte][char]'a')$(if ($_.Groups[2].Value) {".$($_.Groups[2].Value)"})"}
+            } else {
+                $Version = [regex]::Replace($Version,"([a-z])([0-9]|$)",{param($match) ".$([byte][char]$match.Groups[1].Value.ToLower() - [byte][char]'a')$(if ($match.Groups[2].Value) {".$($match.Groups[2].Value)"})"})
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $Version = "1.0"
+    }
+    [System.Version]$Version
 }
 
 function Compare-Version {
@@ -4676,6 +4694,28 @@ function Get-NimqHashrates {
 
     }
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
+}
+
+function Get-MinerUpdateDB {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Force = $false
+    )
+    if ((Test-Path "Data\minerupdatedb.json") -and ($Force -or -not (Test-Path Variable:Global:GlobalMinerUpdateDB) -or (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc -gt $Global:GlobalMinerUpdateDBTimeStamp)) {
+        $Global:GlobalMinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore 
+        $Global:GlobalMinerUpdateDB | Foreach-Object {
+            $_.FromVersion = Get-MinerVersion $_.FromVersion
+            $_.ToVersion   = Get-MinerVersion $_.ToVersion
+            $_.Algorithm   = $_.Algorithm.Foreach({Get-Algorithm $_})
+        }
+        $Global:GlobalMinerUpdateDBTimeStamp = (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc
+    }
+    if (-not $Silent) {
+        $Global:GlobalMinerUpdateDB
+    }
 }
 
 function Get-WalletsData {
