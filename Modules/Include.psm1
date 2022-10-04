@@ -867,6 +867,8 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
+        [String]$Version = "",
+        [Parameter(Mandatory = $false)]
         [String]$LogFile = "",
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false,
@@ -929,6 +931,7 @@ function Set-Stat {
                         Diff_Average       = [Double]$Stat.Diff_Average
                         Ratio_Live         = [Double]$Stat.Ratio_Live
                         Benchmarked        = $Benchmarked
+                        Version            = $Version
                         LogFile            = $LogFile
                         IsFL               = [Bool]$Stat.IsFL
                         #Ratio_Average      = [Double]$Stat.Ratio_Average
@@ -1085,6 +1088,7 @@ function Set-Stat {
                             Diff_Average       = $Stat.Diff_Average + $Span_Hour * ($Difficulty - $Stat.Diff_Average)
                             Ratio_Live         = $Ratio
                             Benchmarked        = $Benchmarked
+                            Version            = $Version
                             LogFile            = $LogFile
                             IsFL               = $false
                             #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
@@ -1192,6 +1196,7 @@ function Set-Stat {
                     Diff_Average       = $Difficulty
                     Ratio_Live         = $Ratio
                     Benchmarked        = $StartTime
+                    Version            = $Version
                     LogFile            = $LogFile
                     IsFL               = $IsFastlaneValue
                     #Ratio_Average      = $Ratio
@@ -1300,6 +1305,7 @@ function Set-Stat {
                     Diff_Average       = [Double]$Stat.Diff_Average
                     Ratio_Live         = [Double]$Stat.Ratio_Live
                     Benchmarked        = [DateTime]$Stat.Benchmarked
+                    Version            = [String]$Stat.Version
                     LogFile            = [String]$Stat.LogFile
                     IsFL               = [Bool]$Stat.IsFL
                     #Ratio_Average      = [Double]$Stat.Ratio_Average

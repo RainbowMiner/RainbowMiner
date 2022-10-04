@@ -2394,7 +2394,7 @@ function Invoke-Core {
                         $_.HashRates."$($_.HashRates.PSObject.Properties.Name)" = $Miner_HR
                         $_.PowerDraw             = ($DeviceName | Foreach-Object {$Response.data."$($Miner_Models[$_])".$Miner_Name.$Miner_Algo.pd} | Measure-Object -Sum).Sum
                         if ($_.HashRates.PSObject.Properties.Name -eq $Miner_Algo) {
-                            Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 10) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -IsFastlaneValue -Quiet > $null
+                            Set-Stat -Name "$($_.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 10) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -Version $_.Version -IsFastlaneValue -Quiet > $null
                         }
                     }
                     if ($Miner_HR -gt 0) {$Fastlane_Success++} else {$Fastlane_Failed++}
@@ -2429,6 +2429,7 @@ function Invoke-Core {
     $MinerPowerPrice        = (100+$Session.Config.PowerOffsetPercent)*24/100000 * $Session.CurrentPowerPriceBTC
 
     [hashtable]$AllMiners_VersionCheck = @{}
+    [hashtable]$AllMiners_VersionDate  = @{}
     [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
     $AllMiners.ForEach({
         $Miner = $_
@@ -2571,40 +2572,26 @@ function Invoke-Core {
         if ($Miner.PrerequisitePath) {$Miner.PrerequisitePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.PrerequisitePath)}
 
         if (-not $AllMiners_VersionCheck.ContainsKey($Miner.BaseName)) {
-            $Miner_VersionCheck = $null
-            $Miner_VersionDate  = $null
             $Miner_UriJson = Join-Path (Get-MinerInstPath $Miner.Path) "_uri.json"
             $Miner_Uri = ""
-
-            if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-ContentByStreamReader $Miner_UriJson | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI; $Miner_VersionDate = (Get-ChildItem $Miner_UriJson).LastWriteTimeUtc}
-
+            if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-ContentByStreamReader $Miner_UriJson | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI; $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTimeUtc}
             $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI
-
-            if (-not $AllMiners_VersionCheck[$Miner.BaseName] -and $Miner_Uri) {
-                $Miner_FromVersion = Get-MinerVersion $Miner_Uri
-                $Miner_ToVersion   = Get-MinerVersion $Miner.Version
-                $Miner_VersionCheck = $Global:GlobalMinerUpdateDB | Where-Object {$_.MinerName -eq $Miner.BaseName -and $_.FromVersion -ge $Miner_FromVersion -and $_.ToVersion -le $Miner_ToVersion}
-                if ($Miner_VersionCheck -and -not ($Miner_VersionCheck | Where-Object {$_.ToVersion -eq $Miner_ToVersion})) {$Miner_VersionCheck = $null}
-            }
         }
 
         $NeedsReset = $false
-        if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $Miner_VersionDate -ne $null) {
-            $Miner_BaseAlgorithm = $Miner.BaseAlgorithm -replace '-.*$'
-            if (-not $Miner_VersionCheck -or $Miner_VersionCheck.Algorithm -contains $Miner_BaseAlgorithm) {
-                $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm)_HashRate"
-                if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and $Global:StatsCache[$Miner_StatKey].Updated -lt $Miner_VersionDate) {
-                    Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner_BaseAlgorithm)_HashRate.txt" | Remove-Item -ErrorAction Ignore
-                    $Global:StatsCache.Remove($Miner_StatKey)
-                    if ($Miner.BaseAlgorithm -ne $Miner_BaseAlgorithm) {
-                        $Miner_StatKey = "$($Miner.Name)_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate"
-                        if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
-                            $Global:StatsCache.Remove($Miner_StatKey)
-                        }
-                        Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate.txt" | Remove-Item -ErrorAction Ignore
+        if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null) {
+            $Miner_StatKey = "$($Miner.Name)_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate"
+            if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and $Global:StatsCache[$Miner_StatKey].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {
+                Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate.txt" | Remove-Item -ErrorAction Ignore
+                $Global:StatsCache.Remove($Miner_StatKey)
+                if ($Miner.BaseAlgorithm -match '-') {
+                    $Miner_StatKey = "$($Miner.Name)_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate"
+                    if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
+                        $Global:StatsCache.Remove($Miner_StatKey)
                     }
-                    $NeedsReset = $true
+                    Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate.txt" | Remove-Item -ErrorAction Ignore
                 }
+                $NeedsReset = $true
             }
         }
 
@@ -2708,6 +2695,7 @@ function Invoke-Core {
     $Miners_Downloading    = $Miners_DownloadList.Count
     $Miners_DownloadingPrq = $Miners_DownloadListPrq.Count
     if ($AllMiners_VersionCheck -ne $null) {Remove-Variable "AllMiners_VersionCheck"}
+    if ($AllMiners_VersionDate -ne $null) {Remove-Variable "AllMiners_VersionDate"}
     if ($Miners_DownloadList -ne $null) {Remove-Variable "Miners_DownloadList"}
     if ($Disabled -ne $null) {Remove-Variable "Disabled"}
     #$Global:StatsCache = $null
@@ -4289,7 +4277,7 @@ function Set-MinerStats {
 
                 $Stat = $null
                 if ($Miner_Speed -or -not $Miner_Benchmarking -or $Miner.CrashCount -ge $Session.Config.MaxCrashesDuringBenchmark) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Ratio $Miner.RejectedShareRatio[$Miner_Index] -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] -StartTime $Miner.StartTime -LogFile "$(Split-Path -Leaf $Miner.LogFile)" -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Ratio $Miner.RejectedShareRatio[$Miner_Index] -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel] -StartTime $Miner.StartTime -Version $Miner.Version -LogFile "$(Split-Path -Leaf $Miner.LogFile)" -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
                     $Statset++
                 }
 
