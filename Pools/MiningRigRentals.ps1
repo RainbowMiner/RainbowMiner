@@ -635,31 +635,16 @@ if ($AllRigs_Request) {
                     $Miner_UseHost = if ($Rental_Options.UseHost) {$Rental_Options.UseHost} else {$UseHost}
 
                     if ($Miner_UseHost -and $Pool_RigEnable -and ($Host_Rig = $Pool_AllHosts | Where-Object name -like "$($Miner_UseHost)*" | Select-Object -First 1)) {
-                        $Miner_Server = $Host_Rig.name
-                        $Miner_Port   = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {$Host_Rig.ethereum_port} else {$Host_Rig.port}
+                        if ($Host_Rig.name -ne $Miner_Server) {
+                            $Miner_Server = $Host_Rig.name
+                            if ($Miner_Port -notmatch "^33\d\d") {$Miner_Port = 3333}
+                        }
                     }
 
                     $Pool_FailOver = if ($Pool_AltRegions = Get-Region2 $Pool_RegionsTable."$($_.region)") {$Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server} | Sort-Object -Descending {$ix = $Pool_AltRegions.IndexOf($Pool_RegionsTable."$($_.region)");[int]($ix -ge 0)*(100-$ix)},{$_.region -match "^$($Miner_Server.SubString(0,2))"},{100-$_.id} | Select-Object -First 2}
                     if (-not $Pool_Failover) {$Pool_FailOver = @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $_.region -match "^eu"} | Select-Object -First 1)}
                     $Pool_FailOver += $Pool_AllHosts | Where-Object {$_.name -ne $Miner_Server -and $Pool_FailOver -notcontains $_} | Select-Object -First 1
-                
-                    #BEGIN temporary fixes
 
-                    #
-                    # hardcoded fixes due to MRR stratum or API failures
-                    #
-
-                    #if ($Pool_Algorithm_Norm -eq "Equihash21x9") {
-                    #    $Miner_Server = ($Pool_Failover | Where-Object {$_.name -match "eu-ru01"} | Select-Object -First 1).name
-                    #    $Miner_Port   = 3333
-                    #    $Pool_Failover = $Pool_Failover | Where-Object {$_.name -notmatch "eu-ru01"}
-                    #}
-
-                    #if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
-                    #if ($Pool_Algorithm_Norm -eq "KawPow") {$Miner_Port = 3333}
-
-                    #END temporary fixes
-                    
                     $Rigs_UserSep   = if (@("ProgPowVeil","ProgPowZ","Ubqhash") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
 
                     foreach ($Pool_SSL in @($false,$true)) {
@@ -831,7 +816,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             try {
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {$MRRConfig.$RigName.$fld} else {Get-Variable -Name $fld -ValueOnly -ErrorAction Ignore}
                 $val = "$($val)" -replace ",","." -replace "[^0-9\.\-]+"
-                $MRRConfig.$RigName | Add-Member $fld ([Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {$val[0] + "$($val.Substring(1) -replace "[^0-9\.]")"})) -Force
+                $MRRConfig.$RigName | Add-Member $fld ([Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {"$($val[0])$($val.Substring(1) -replace "[^0-9\.]")"})) -Force
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Error in parameter `"$fld`" in pools.config.txt or mrr.config.txt"
