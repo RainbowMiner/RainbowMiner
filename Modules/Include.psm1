@@ -44,12 +44,12 @@ function Get-MinerVersion {
     param($Version)
     try {
         if ($Version -match "/v([0-9a-z.]+)-") {$Version = $Matches[1]}
-        $Version = $Version -replace "[^0-9a-z.]" -replace "^[^0-9]+" -replace "(\d)[a-z]*[vr](\d)","`$1.`$2" -replace "^([0-9]+)$","`$1.0"
+        $Version = $Version -replace "[^0-9a-z.]" -replace "^[^0-9]+" -replace "(\d)[a-z]*v(\d)","`$1.`$2" -replace "(\d)[a-z]*r(\d)","`$1.`$2" -replace "^([0-9]+)$","`$1.0"
         if ($Version -notmatch "^[0-9.]+$") {
             if ($Session.IsCore) {
-                $Version = $Version -replace "([a-z])([0-9]|$)",{".$([byte][char]$_.Groups[1].Value.ToLower() - [byte][char]'a')$(if ($_.Groups[2].Value) {".$($_.Groups[2].Value)"})"}
+                $Version = $Version -replace "([a-z])([0-9]|$)",{".$([byte][char]($_.Groups[1].Value.ToLower()) - [byte][char]'a')$(if ($_.Groups[2].Value) {".$($_.Groups[2].Value)"})"}
             } else {
-                $Version = [regex]::Replace($Version,"([a-z])([0-9]|$)",{param($match) ".$([byte][char]$match.Groups[1].Value.ToLower() - [byte][char]'a')$(if ($match.Groups[2].Value) {".$($match.Groups[2].Value)"})"})
+                $Version = [regex]::Replace($Version,"([a-z])([0-9]|$)",{param($match) ".$([byte][char]($match[1].ToLower()) - [byte][char]'a')$(if ($match[2]) {".$($match[2])"})"})
             }
         }
     } catch {
