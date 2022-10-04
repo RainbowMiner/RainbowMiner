@@ -6086,7 +6086,7 @@ function Get-ConfigContent {
             }
             $Result = Get-ContentByStreamReader $PathToFile
             if ($Parameters.Count) {
-                $Parameters.Keys | Foreach-Object {$Result = $Result -replace "\`$$($_)","$($Parameters.$_)"}
+                $Parameters.Keys | Sort-Object -Descending {$_.Length} | Foreach-Object {$Result = $Result -replace "\`$$($_)","$($Parameters.$_)"}
                 if (-not $ConserveUnkownParameters) {
                     $Result = $Result -replace "\`$[A-Z0-9_]+"
                 }
