@@ -2432,6 +2432,7 @@ function Invoke-Core {
 
     [hashtable]$AllMiners_VersionCheck = @{}
     [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
+
     $AllMiners.ForEach({
         $Miner = $_
 
