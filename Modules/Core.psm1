@@ -2615,8 +2615,6 @@ function Invoke-Core {
 
             if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and (($Global:StatsCache[$Miner_StatKey].Version -ne $null -and $Global:StatsCache[$Miner_StatKey].Version -ne $AllMiners_VersionCheck[$Miner.BaseName].Version) -or ($Global:StatsCache[$Miner_StatKey].Version -eq $null -and $Global:StatsCache[$Miner_StatKey].Updated -lt $AllMiners_VersionCheck[$Miner.BaseName].Date))) {
             
-                $Miner_SecdAlgorithm = $Miner.BaseAlgorithm -replace '^.*-'
-
                 if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos -or (Compare-Object $AllMiners_VersionCheck[$Miner.BaseName].Algos $Miner_BaseAlgorithm -IncludeEqual -ExcludeDifferent)) {
 
                     $Global:StatsCache.Remove($Miner_StatKey)
