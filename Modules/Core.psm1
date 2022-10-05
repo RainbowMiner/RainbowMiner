@@ -642,11 +642,13 @@ function Invoke-Core {
         Get-CoinsDB -Silent
         Get-EquihashCoins -Silent
         Get-EthDAGSizes -Silent -EnableRemoteUpdate:($Session.RoundCounter -gt 0)
-        Get-MinerUpdateDB -Silent
         Get-NimqHashrates -Silent
         Get-Regions -Silent
         Get-Regions2 -Silent
     }
+
+    #Update databases every round
+    Get-MinerUpdateDB -Silent
 
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
 
