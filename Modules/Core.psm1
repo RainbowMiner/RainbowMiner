@@ -2609,25 +2609,26 @@ function Invoke-Core {
         $NeedsReset = $false
         if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $AllMiners_VersionCheck[$Miner.BaseName].Date -ne $null) {
 
-            $Miner_BaseAlgorithm = $Miner.BaseAlgorithm -replace '-.*$'
+            $Miner_BaseAlgorithm = $Miner.BaseAlgorithm -split '-'
 
-            $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm)_HashRate"
+            $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm[0])_HashRate"
 
             if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and (($Global:StatsCache[$Miner_StatKey].Version -ne $null -and $Global:StatsCache[$Miner_StatKey].Version -ne $AllMiners_VersionCheck[$Miner.BaseName].Version) -or ($Global:StatsCache[$Miner_StatKey].Version -eq $null -and $Global:StatsCache[$Miner_StatKey].Updated -lt $AllMiners_VersionCheck[$Miner.BaseName].Date))) {
             
-                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos -or $AllMiners_VersionCheck[$Miner.BaseName].Algos -contains $Miner_BaseAlgorithm) {
+                $Miner_SecdAlgorithm = $Miner.BaseAlgorithm -replace '^.*-'
+
+                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos -or (Compare-Object $AllMiners_VersionCheck[$Miner.BaseName].Algos $Miner_BaseAlgorithm -IncludeEqual -ExcludeDifferent)) {
 
                     $Global:StatsCache.Remove($Miner_StatKey)
 
-                    Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner_BaseAlgorithm)_HashRate.txt" | Remove-Item -ErrorAction Ignore
+                    Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner_BaseAlgorithm[0])_HashRate.txt" | Remove-Item -ErrorAction Ignore
 
-                    if ($Miner.BaseAlgorithm -ne $Miner_BaseAlgorithm) {
-                        $Miner_BaseAlgorithm = $Miner.BaseAlgorithm -replace '^.*-'
-                        $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm)_HashRate"
+                    if ($Miner_BaseAlgorithm.Count -gt 1) {
+                        $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm[1])_HashRate"
                         if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
                             $Global:StatsCache.Remove($Miner_StatKey)
                         }
-                        Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner_BaseAlgorithm)_HashRate.txt" | Remove-Item -ErrorAction Ignore
+                        Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner_BaseAlgorithm[1])_HashRate.txt" | Remove-Item -ErrorAction Ignore
                     }
                     $NeedsReset = $true
 
@@ -2641,20 +2642,24 @@ function Invoke-Core {
                         $Global:StatsCache[$Miner_StatKey] | Add-Member Version $Miner_Version -Force
                     }
 
-                    $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Miner_StatKey).txt"
+                    try {
+                        $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Miner_StatKey).txt"
 
-                    if ($Miner.BaseAlgorithm -ne $Miner_BaseAlgorithm) {
-                        $Miner_BaseAlgorithm = $Miner.BaseAlgorithm -replace '^.*-'
-                        $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm)_HashRate"
-                        if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
-                            if ([bool]$Global:StatsCache[$Miner_StatKey].PSObject.Properties["Version"]) {                            
-                                $Global:StatsCache[$Miner_StatKey].Version = $Miner_Version
-                            } else {
-                                $Global:StatsCache[$Miner_StatKey] | Add-Member Version $Miner_Version -Force
+                        if ($Miner_BaseAlgorithm.Count -gt 1) {
+                            $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm[1])_HashRate"
+                            if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
+                                if ([bool]$Global:StatsCache[$Miner_StatKey].PSObject.Properties["Version"]) {                            
+                                    $Global:StatsCache[$Miner_StatKey].Version = $Miner_Version
+                                } else {
+                                    $Global:StatsCache[$Miner_StatKey] | Add-Member Version $Miner_Version -Force
+                                }
+    
+                                $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Miner_StatKey).txt"
                             }
-
-                            $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Miner_StatKey).txt"
                         }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Info "Problem updating version number in $($Miner_StatKey).txt"
                     }
                 }
             }
