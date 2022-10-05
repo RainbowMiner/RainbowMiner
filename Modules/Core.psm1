@@ -2641,7 +2641,7 @@ function Invoke-Core {
                     }
 
                     try {
-                        $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Miner_StatKey).txt"
+                        $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
 
                         if ($Miner_BaseAlgorithm.Count -gt 1) {
                             $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm[1])_HashRate"
@@ -2652,7 +2652,7 @@ function Invoke-Core {
                                     $Global:StatsCache[$Miner_StatKey] | Add-Member Version $Miner_Version -Force
                                 }
     
-                                $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Miner_StatKey).txt"
+                                $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
                             }
                         }
                     } catch {
