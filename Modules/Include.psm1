@@ -56,6 +56,11 @@ function Get-MinerVersion {
         if ($Error.Count){$Error.RemoveAt(0)}
         $Version = "1.0"
     }
+    if ("$($Version -replace "[^\.]")".Length -gt 4) {
+        $VersionArray = $Version -split "\."
+        $Version = "$(($VersionArray | Select-Object -First 3) -join ".").$(($VersionArray | Select-Object -Skip 3 | Measure-Object -Sum).Sum)"
+
+    }
     [System.Version]$Version
 }
 
