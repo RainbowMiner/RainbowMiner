@@ -2644,7 +2644,9 @@ function Invoke-Core {
                     }
 
                     try {
-                        $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
+                        $Miner_Stat = $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore
+                        $Miner_Stat.Duration = [string]$Miner_Stat.Duration
+                        $Miner_Stat | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
 
                         if ($Miner_BaseAlgorithm.Count -gt 1) {
                             $Miner_StatKey = "$($Miner.Name)_$($Miner_BaseAlgorithm[1])_HashRate"
@@ -2654,10 +2656,13 @@ function Invoke-Core {
                                 } else {
                                     $Global:StatsCache[$Miner_StatKey] | Add-Member Version $Miner_Version -Force
                                 }
-    
-                                $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
+
+                                $Miner_Stat = $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore
+                                $Miner_Stat.Duration = [string]$Miner_Stat.Duration
+                                $Miner_Stat | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
                             }
                         }
+                        $Miner_Stat = $null
                     } catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
                         Write-Log -Level Info "Problem updating version number in $($Miner_StatKey).txt"
