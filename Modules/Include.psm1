@@ -49,7 +49,7 @@ function Get-MinerVersion {
             if ($Session.IsCore) {
                 $Version = $Version -replace "([a-z])([0-9]|$)",{".$([byte][char]($_.Groups[1].Value.ToLower()) - [byte][char]'a')$(if ($_.Groups[2].Value) {".$($_.Groups[2].Value)"})"}
             } else {
-                $Version = [regex]::Replace($Version,"([a-z])([0-9]|$)",{param($match) ".$([byte][char]($match[1].ToLower()) - [byte][char]'a')$(if ($match[2]) {".$($match[2])"})"})
+                $Version = [regex]::Replace($Version,"([a-z])([0-9]|$)",{param($match) ".$([byte][char]($match.Groups[1].Value.ToLower()) - [byte][char]'a')$(if ($match.Groups[2].Value) {".$($match.Groups[2].Value)"})"})
             }
         }
     } catch {
