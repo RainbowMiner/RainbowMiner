@@ -1709,6 +1709,21 @@ try {
     }
 
 
+    if ($Version -le (Get-Version "4.8.6.8")) {
+        Get-ChildItem ".\Stats\Miners" -Filter "*_HashRate.txt" -File | Where-Object {$_.Name -match "Gminer|Teamred|Lolminer|Nanominer|SrbminerMulti"} | Foreach-Object {
+            $StatFN = $_.FullName
+            try {
+                $Stat = Get-Content $StatFN -Raw | ConvertFrom-Json -ErrorAction Ignore
+                if ($Stat.Duration.TotalSeconds) {
+                    $Stat.Duration = "{0:d2}:{1:d2}:{2:d2}.{3}" -f $Stat.Duration.Hours, $Stat.Duration.Minutes, $Stat.Duration.Seconds, $Stat.Duration.Milliseconds
+                    $Stat | ConvertTo-Json -Depth 10 | Set-Content $StatFN
+                    $ChangesTotal++
+                }
+            } catch { }
+        }
+    }
+
+
     ###
     ### END OF VERSION CHECKS
     ###
