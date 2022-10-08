@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.32.5"
+$Version = "0.33.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.32.5-wildrigmulti/wildrig-multi-linux-0.32.5.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33.1-wildrigmulti/wildrig-multi-linux-0.33.1.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.32.5-wildrigmulti/wildrig-multi-windows-0.32.5.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33.1-wildrigmulti/wildrig-multi-windows-0.33.1.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -65,6 +65,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowVeil
     [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Fairpool"} #ProgPowZ
+    [PSCustomObject]@{MainAlgorithm = "pufferfish2";               Vendor = @("AMD","NVIDIA"); Params = ""} #Pufferfish2/BMB
     #[PSCustomObject]@{MainAlgorithm = "rainforest";                Vendor = @("AMD","NVIDIA"); Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";                   Vendor = @("AMD");          Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                Vendor = @("AMD","NVIDIA"); Params = ""} #SHA512256d
