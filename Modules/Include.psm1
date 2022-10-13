@@ -158,11 +158,18 @@ function Get-NvidiaArchitecture {
         if ($Script:NvidiaArchDB -eq $null) {$Script:NvidiaArchDB = Get-ContentByStreamReader ".\Data\nvidiaarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
 
         foreach($Arch in $Script:NvidiaArchDB.PSObject.Properties) {
-            $Model_Match = $Arch.Value.Model -join "|"
-            if ($ComputeCapability -in $Arch.Value.Compute -or $Model -match $Model_Match) {
+            if ($ComputeCapability -in $Arch.Value.Compute) {
                 return $Arch.Name
             }
         }
+
+        foreach($Arch in $Script:NvidiaArchDB.PSObject.Properties) {
+            $Model_Match = $Arch.Value.Model -join "|"
+            if ($Model -match $Model_Match) {
+                return $Arch.Name
+            }
+        }
+
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "No architecture found for Nvidia $($Model)/$($ComputeCapability)"
