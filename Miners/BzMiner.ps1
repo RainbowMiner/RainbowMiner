@@ -11,14 +11,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "12.0.1"
+$Version = "12.0.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0.1-bzminer/bzminer_v12.0.1_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0.2-bzminer/bzminer_v12.0.2_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0.1-bzminer/bzminer_v12.0.1_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0.2-bzminer/bzminer_v12.0.2_windows.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
