@@ -153,10 +153,20 @@ function Get-NvidiaArchitecture {
     [CmdLetBinding()]
     param([string]$Model,[string]$ComputeCapability = "")
     $ComputeCapability = $ComputeCapability -replace "[^\d\.]"
-    if     ($ComputeCapability -in @("8.0","8.6") -or $Model -match "^RTX30\d{2}" -or $Model -match "^RTXA\d{4}"  -or $Model -match "^AM") {"Ampere"}
-    elseif ($ComputeCapability -in @("7.5")       -or $Model -match "^RTX20\d{2}" -or $Model -match "^GTX16\d{2}" -or $Model -match "^TU") {"Turing"}
-    elseif ($ComputeCapability -in @("6.0","6.1") -or $Model -match "^GTX10\d{2}" -or $Model -match "^GTXTitanX"  -or $Model -match "^GP" -or $Model -match "^P" -or $Model -match "^GT1030") {"Pascal"}
-    else   {"Other"}
+
+    try {
+        if ($Script:NvidiaArchDB -eq $null) {$Script:NvidiaArchDB = Get-ContentByStreamReader ".\Data\nvidiaarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
+
+        foreach($Arch in $Script:NvidiaArchDB.PSObject.Properties) {
+            if ($ComputeCapability -in $Arch.Value.Compute -or $Model -match $Arch.Value.Model) {
+                return $Arch.Name
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "No architecture found for Nvidia $($Model)/$($ComputeCapability)"
+    }
+    "Other"
 }
 
 function Get-AMDComputeCapability {
