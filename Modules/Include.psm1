@@ -158,7 +158,8 @@ function Get-NvidiaArchitecture {
         if ($Script:NvidiaArchDB -eq $null) {$Script:NvidiaArchDB = Get-ContentByStreamReader ".\Data\nvidiaarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
 
         foreach($Arch in $Script:NvidiaArchDB.PSObject.Properties) {
-            if ($ComputeCapability -in $Arch.Value.Compute -or $Model -match $Arch.Value.Model) {
+            $Model_Match = $Arch.Value.Model -join "|"
+            if ($ComputeCapability -in $Arch.Value.Compute -or $Model -match $Model_Match) {
                 return $Arch.Name
             }
         }
