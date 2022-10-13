@@ -107,7 +107,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $MainAlgorithm          = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
             $MainAlgorithm_Norm_0   = Get-Algorithm $MainAlgorithm
-            $SecondAlgorithm        = if ($_.Algorithm2) {$_.Algorithm2} else {$_.SecondAlgorithm}
+            $SecondAlgorithm        = if ($_.Algorithm2) {$_.Algorithm2} else {$_.SecondaryAlgorithm}
             $SecondAlgorithm_Norm_0 = if ($SecondaryAlgorithm) {Get-Algorithm $SecondaryAlgorithm} else {$null}
 
             $HasEthproxy = $MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy
