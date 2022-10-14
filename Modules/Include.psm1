@@ -36,7 +36,9 @@ function Initialize-Session {
 function Get-Version {
     [CmdletBinding()]
     param($Version)
-    [System.Version]($Version -Split '-' -Replace "[^0-9.]")[0]
+    $ParsedVersion = $null
+    [System.Version]::TryParse(($Version -replace '-.+' -replace "[^0-9.]" -replace "^(\d+\.\d+\.\d+\.\d+)\..+","`$1"), [ref]$ParsedVersion) > $null
+    $ParsedVersion
 }
 
 function Get-MinerVersion {
@@ -4739,6 +4741,11 @@ function Get-MinerUpdateDB {
             $_.FromVersion = Get-MinerVersion $_.FromVersion
             $_.ToVersion   = Get-MinerVersion $_.ToVersion
             $_.Algorithm   = $_.Algorithm.Foreach({Get-Algorithm $_})
+            if ($_.Driver) {
+                $_.Driver | Foreach-Object {
+                    $_.Algorithm   = $_.Algorithm.Foreach({Get-Algorithm $_})
+                }
+            }
         }
         $Global:GlobalMinerUpdateDBTimeStamp = (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc
     }

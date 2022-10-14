@@ -2598,8 +2598,24 @@ function Invoke-Core {
 
                         $Miner_VersionCheck = $Global:GlobalMinerUpdateDB | Where-Object {$_.MinerName -eq $Miner.BaseName -and $_.FromVersion -ge $Miner_FromVersion -and $_.ToVersion -le $Miner_Version}
 
-                        if ($Miner_VersionCheck -and ($Miner_VersionCheck | Where-Object {$_.ToVersion -eq $Miner_Version} | Measure-Object).Count -and $Miner_VersionCheck.Algorithm -notcontains '*') {
-                            $AllMiners_VersionCheck[$Miner.BaseName].Algos = $Miner_VersionCheck.Algorithm
+                        if ($Miner_VersionCheck -and ($Miner_VersionCheck | Where-Object {$_.ToVersion -eq $Miner_Version} | Measure-Object).Count) {
+
+                            $Miner_CheckAlgo = $Miner_VersionCheck.Algorithm
+
+                            if ($Miner_VersionCheck.Driver) {
+                                $Miner_VersionCheck.Driver | Foreach-Object {
+                                    $Driver_Vendor      = $_.Vendor
+                                    $Driver_FromVersion = if ($_.FromVersion) {Get-Version $_.FromVersion}
+                                    $Driver_ToVersion   = if ($_.ToVersion) {Get-Version $_.ToVersion}
+                                    if (($Global:DeviceCache.Devices.Where({$_.Vendor -eq $Driver_Vendor -and $_.Type -eq "Gpu" -and $_.Name -in $Miner.DeviceName -and (-not $Driver_FromVersion -or $Driver_FromVersion -le (Get-Version $_.OpenCL.DriverVersion)) -and (-not $Driver_ToVersion -or $Driver_ToVersion -ge (Get-Version $_.OpenCL.DriverVersion))}) | Measure-Object).Count) {
+                                        $Miner_CheckAlgo = $_.Algorithm
+                                    }
+                                }
+                            }
+
+                            if ($Miner_CheckAlgo -notcontains '*') {
+                                $AllMiners_VersionCheck[$Miner.BaseName].Algos = $Miner_CheckAlgo
+                            }
                         }
                     }
                 }
