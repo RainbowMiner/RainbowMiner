@@ -39,9 +39,11 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{algo = "autolykos";  port = @(3333,4444); ethproxy = $null;          rpc = "autolykos";  divisor = 1e6; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "etchash";    port = @(3333);      ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; region = @("us","eu","asia")}
-    [PSCustomObject]@{algo = "randomx";    port = @(3333,443);  ethproxy = $null;          rpc = "rx";         divisor = 1;   region = @("us","eu","asia")}
-    [PSCustomObject]@{algo = "kawpow";     port = @(3333);      ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; region = @("us","eu","asia")}
+    [PSCustomObject]@{algo = "beamhash";   port = @(3333,4444); ethproxy = $null;          rpc = "beamhash";  divisor = 1e6; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "etchash";    port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "ethash";     port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "randomx";    port = @(3333,4444); ethproxy = $null;          rpc = "rx";         divisor = 1;   region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "kawpow";     port = @(3333,4444); ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; region = @("us","ca","eu","asia")}
 )
 
 $Pool_Referrals = [PSCustomObject]@{
@@ -49,9 +51,9 @@ $Pool_Referrals = [PSCustomObject]@{
     AAVE = "41qp-kz9q"
     ADA = "6va0-s40b"
     ALGO = "mnh2-9i5u"
-    APE = "tho7-kex8"
-    ATOM = "rkzy-ct1s"
-    AVAX = "daax-rm2h"
+    APE = "bry3-8ow2"
+    ATOM = "ic6q-07z3"
+    AVAX = "rtuz-cc6k"
     BAND = "d04a-ce0q"
     BAT = "9gwg-r21y"
     BCH = "d5n0-12uj"
@@ -64,20 +66,20 @@ $Pool_Referrals = [PSCustomObject]@{
     DASH = "ux3r-os4a"
     DGB = "ysw1-6l8f"
     DOGE = "5oln-msuu"
-    ELON = "re67-y6da"
+    ELON = "0bsz-wk6u"
     ENJ = "f2j8-u7yh"
     EOS = "vxnn-bcmf"
     ETC = "rd39-9u37"
     ETH = "61lr-wpcz"
-    FTM = "gqgp-02zh"
+    FTM = "zzsh-8z4l"
     FUN = "nh4x-spqg"
-    GALA = "48ne-szrx"
+    GALA = "us8m-9k78"
     GAS = "7sae-7dyj"
     HOT = "et4j-moy3"
     ICX = "cnsz-7dbi"
     KNC = "isfr-bpog"
     LINK = "8tm5-1sts"
-    LSK = "6nli-2hpf"
+    LSK = "r2hf-guhj"
     LTC = "siif-qx8i"
     MANA = "awsm-eqwi"
     MATIC = "kn0o-dzfz"
@@ -89,6 +91,7 @@ $Pool_Referrals = [PSCustomObject]@{
     RSR = "s9v8-1yff"
     RVN = "7mkm-dj0t"
     SC = "whhb-qst0"
+    SFM = "x0vh-7tsr"
     SHIB = "dqak-tlkv"
     SOL = "44vx-wkp4"
     SUSHI = "vzm5-yhp6"
