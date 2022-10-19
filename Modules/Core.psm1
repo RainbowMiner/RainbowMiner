@@ -2607,7 +2607,8 @@ function Invoke-Core {
                                         $Driver_Vendor      = $_.Vendor
                                         $Driver_FromVersion = if ($_.FromVersion) {Get-Version $_.FromVersion}
                                         $Driver_ToVersion   = if ($_.ToVersion) {Get-Version $_.ToVersion}
-                                        if (($Global:DeviceCache.Devices.Where({$_.Vendor -eq $Driver_Vendor -and $_.Type -eq "Gpu" -and $_.Name -in $Miner.DeviceName -and (-not $Driver_FromVersion -or $Driver_FromVersion -le (Get-Version $_.OpenCL.DriverVersion)) -and (-not $Driver_ToVersion -or $Driver_ToVersion -ge (Get-Version $_.OpenCL.DriverVersion))}) | Measure-Object).Count) {
+                                        $Driver_Arch        = $_.Arch
+                                        if (($Global:DeviceCache.Devices.Where({$_.Vendor -eq $Driver_Vendor -and $_.Type -eq "Gpu" -and $_.Name -in $Miner.DeviceName -and (-not $Driver_Arch -or $_.OpenCL.Architecture -in $Driver_Arch) -and (-not $Driver_FromVersion -or $Driver_FromVersion -le (Get-Version $_.OpenCL.DriverVersion)) -and (-not $Driver_ToVersion -or $Driver_ToVersion -ge (Get-Version $_.OpenCL.DriverVersion))}) | Measure-Object).Count) {
                                             $Miner_CheckAlgo = $_.Algorithm
                                         }
                                     }
