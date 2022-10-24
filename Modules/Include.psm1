@@ -4541,6 +4541,21 @@ function Get-AlgorithmMap {
     }
 }
 
+function Get-AlgoVariants {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalAlgoVariants) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc -gt $Global:GlobalAlgoVariantsTimeStamp) {
+        $Global:GlobalAlgoVariants = Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalAlgoVariantsTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc
+    }
+    if (-not $Silent) {
+        $Global:GlobalAlgoVariants
+    }
+}
+
 function Get-EquihashCoinPers {
     [CmdletBinding()]
     param(
@@ -4738,14 +4753,15 @@ function Get-MinerUpdateDB {
         [Switch]$Force = $false
     )
     if ((Test-Path "Data\minerupdatedb.json") -and ($Force -or -not (Test-Path Variable:Global:GlobalMinerUpdateDB) -or (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc -gt $Global:GlobalMinerUpdateDBTimeStamp)) {
-        $Global:GlobalMinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore 
+        $AlgoVariants = Get-AlgoVariants
+        $Global:GlobalMinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore
         $Global:GlobalMinerUpdateDB | Foreach-Object {
             $_.FromVersion = Get-MinerVersion $_.FromVersion
             $_.ToVersion   = Get-MinerVersion $_.ToVersion
-            $_.Algorithm   = $_.Algorithm.Foreach({Get-Algorithm $_})
+            $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
             if ($_.Driver) {
                 $_.Driver | Foreach-Object {
-                    $_.Algorithm   = $_.Algorithm.Foreach({Get-Algorithm $_})
+                    $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
                 }
             }
         }
