@@ -3277,6 +3277,8 @@ function Get-Device {
 
         $KnownVendors = @("AMD","INTEL","NVIDIA")
 
+        $DriverVersion_LHR_Removed = Get-Version "522.25"
+
         foreach ($GPUVendor in $KnownVendors) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
 
         $OldLD = $null
@@ -3579,7 +3581,7 @@ function Get-Device {
                                 }
                             }
 
-                            if ($Vendor_Name -eq "NVIDIA") {
+                            if ($Vendor_Name -eq "NVIDIA" -and (-not $Device.OpenCL.DriverVersion -or (Get-Version $Device.OpenCL.DriverVersion) -lt $DriverVersion_LHR_Removed)) {
                                 $Device.IsLHR = $Model -match "^RTX30[1-8]0" -and $Device.SubId -notin @("2204","2206","2484","2486")
                             }
 
