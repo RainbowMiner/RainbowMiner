@@ -10,13 +10,13 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "1.8z3"
+$Version = "1.9z4"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8z3-miniz/miniZ_v1.8z3_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9z4-miniz/miniZ_v1.9z4_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -24,7 +24,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8z3-miniz/miniZ_v1.8z3_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9z4-miniz/miniZ_v1.9z4_win-x64.7z"
             Cuda = "8.0"
         }
     )
@@ -47,11 +47,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";              MinMemGB = 2; Params = "--par=125,4";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("CGN4","RDNA2")} #Equihash 125,4,0 (ZelCash)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";              MinMemGB = 3; Params = "--par=150,5";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("CGN4","RDNA2")} #Equihash 150,5,0 (GRIMM)
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";               MinMemGB = 2; Params = "--par=210,9";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("CGN4","RDNA2")} #Equihash 210,9 (AION)
-    [PSCustomObject]@{MainAlgorithm = "KawPoW";        DAG = $true; MinMemGB = 2; Params = "--par=kawpow --pers=rAVENCOINKAWPOW"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #KawPow (RVN)
+    [PSCustomObject]@{MainAlgorithm = "KawPoW";        DAG = $true; MinMemGB = 2; Params = "--par=kawpow"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #KawPow (RVN)
     [PSCustomObject]@{MainAlgorithm = "Octopus";       DAG = $true; MinMemGB = 2; Params = "--par=octopus";  Vendor = @("NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = $DevFee;                     Compute = @()} #Octopus (CFX)
     [PSCustomObject]@{MainAlgorithm = "ProgPowSero";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=sero"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;       Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowSero (SERO)
     [PSCustomObject]@{MainAlgorithm = "ProgPowVeil";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=veil"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;       Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowVeil (VEIL)
     [PSCustomObject]@{MainAlgorithm = "ProgPowZ";      DAG = $true; MinMemGB = 2; Params = "--par=ProgPowZ --pers=zano"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;      Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowZano (ZANO)
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";       DAG = $true; MinMemGB = 2; Params = "--par=ubqhash";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 0.75;                  Compute = @("RDNA2")} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "vProgPow";      DAG = $true; MinMemGB = 2; Params = "--par=vProgPow --pers=VeriBlock"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #vProgPow (VBK)
 
     #[PSCustomObject]@{MainAlgorithm = "FiroPow";       DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=firo";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00} #FiroPow (FIRO)
