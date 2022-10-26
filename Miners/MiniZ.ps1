@@ -108,7 +108,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+                        $DeviceIDsAll = if ($Miner_Vendor -eq "NVIDIA") {$Miner_Device.Type_Vendor_Index -join ' '} else {$Miner_Device.BusId_Type_Vendor_Index -join ' '}
                         $First = $false
                     }
                     $PersCoin = Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"
