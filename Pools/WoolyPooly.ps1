@@ -52,7 +52,9 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "FLUX"; port = 3092; host = "zel"; rpc = "zel-1"}
     [PSCustomObject]@{symbol = "GRIN-PRI";  port = 12000; host = "grin"; rpc = "grin-1"}
     [PSCustomObject]@{symbol = "KAS"; port = 3112; host = "kas"; rpc = "kas-1"}
+    [PSCustomObject]@{symbol = "MEWC"; port = 3116; host = "mewc"; rpc = "mewc-1"}
     [PSCustomObject]@{symbol = "MWC-PRI"; port = 11000; host = "mwc"; rpc = "mwc-1"}
+    [PSCustomObject]@{symbol = "POM"; port = 3118; host = "pom"; rpc = "pom-1"}
     [PSCustomObject]@{symbol = "RTM"; port = 3110; host = "rtm"; rpc = "rtm-1"}
     [PSCustomObject]@{symbol = "RVN";  port = 55555; host = "rvn"; rpc = "raven-1"}
     [PSCustomObject]@{symbol = "VEIL"; port = 3098; host = "veil"; rpc = "veil-1"}
