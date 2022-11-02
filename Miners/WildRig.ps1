@@ -11,7 +11,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.33.3"
+$Version = "0.33.5"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
@@ -35,6 +35,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "c11";                       Vendor = @("AMD");          Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "curvehash";                 Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #CurveHash
     [PSCustomObject]@{MainAlgorithm = "dedal";                     Vendor = @("AMD");          Params = ""} #Dedal
+    [PSCustomObject]@{MainAlgorithm = "evrprogpow"; DAG = $true;   Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #EvrProgPow / Evrmore Coin
     [PSCustomObject]@{MainAlgorithm = "exosis";                    Vendor = @("AMD");          Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "firopow"; DAG = $true;      Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #FiroPow
     [PSCustomObject]@{MainAlgorithm = "geek";                      Vendor = @("AMD");          Params = ""} #Geek
