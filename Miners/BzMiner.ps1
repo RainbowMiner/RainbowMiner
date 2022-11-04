@@ -11,14 +11,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "12.0.2"
+$Version = "12.1.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0.2-bzminer/bzminer_v12.0.2_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.1.0-bzminer/bzminer_v12.1.0_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0.2-bzminer/bzminer_v12.0.2_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.1.0-bzminer/bzminer_v12.1.0_windows.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
@@ -76,7 +76,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("AMD","NVIDIA")
+        Type      = @("AMD","INTEL","NVIDIA")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
@@ -93,7 +93,7 @@ $CommonParams =  "-c config_`$mport.txt --http_enabled 1 --http_address localhos
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
+foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
