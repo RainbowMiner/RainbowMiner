@@ -2574,8 +2574,9 @@ function Invoke-Core {
             $AllMiners_VersionCheck[$Miner.BaseName] = [PSCustomObject]@{
                 Ok      = $false
                 Version = "$($Miner_Version)"
-                Algos   = $null
+                Algos   = @{}
                 Date    = $null
+                MVC     = $null
             }
 
             $Miner_UriJson = Join-Path (Get-MinerInstPath $Miner.Path) "_uri.json"
@@ -2593,32 +2594,35 @@ function Invoke-Core {
                         $Miner_VersionCheck = $Global:GlobalMinerUpdateDB | Where-Object {$_.MinerName -eq $Miner.BaseName -and $_.FromVersion -ge $Miner_FromVersion -and $_.ToVersion -le $Miner_Version}
 
                         if ($Miner_VersionCheck -and ($Miner_VersionCheck | Where-Object {$_.ToVersion -eq $Miner_Version} | Measure-Object).Count) {
-
-                            $Miner_CheckAlgos = @($Miner_VersionCheck | Foreach-Object {
-                                $Miner_CheckAlgo = $_.Algorithm
-                                if ($_.Driver) {
-                                    $_.Driver | Foreach-Object {
-                                        $Driver_Vendor      = $_.Vendor
-                                        $Driver_FromVersion = if ($_.FromVersion) {Get-Version $_.FromVersion}
-                                        $Driver_ToVersion   = if ($_.ToVersion) {Get-Version $_.ToVersion}
-                                        $Driver_Arch        = $_.Arch
-                                        if (($Global:DeviceCache.Devices.Where({$_.Vendor -eq $Driver_Vendor -and $_.Type -eq "Gpu" -and $_.Name -in $Miner.DeviceName -and (-not $Driver_Arch -or $_.OpenCL.Architecture -in $Driver_Arch) -and (-not $Driver_FromVersion -or $Driver_FromVersion -le (Get-Version $_.OpenCL.DriverVersion)) -and (-not $Driver_ToVersion -or $Driver_ToVersion -ge (Get-Version $_.OpenCL.DriverVersion))}) | Measure-Object).Count) {
-                                            $Miner_CheckAlgo = $_.Algorithm
-                                        }
-                                    }
-                                }
-                                $Miner_CheckAlgo
-                            } | Select-Object -Unique)
-                                
-                            if ($Miner_CheckAlgos -notcontains '*') {
-                                $AllMiners_VersionCheck[$Miner.BaseName].Algos = $Miner_CheckAlgos
-                            }
+                            $AllMiners_VersionCheck[$Miner.BaseName].MVC = $Miner_VersionCheck                            
                         }
                     }
                 }
                 
                 $AllMiners_VersionCheck[$Miner.BaseName].Date  = (Get-ChildItem $Miner_UriJson).LastWriteTimeUtc
             }
+
+        }
+        
+        if ($AllMiners_VersionCheck[$Miner.BaseName].MVC -and -not $AllMiners_VersionCheck[$Miner.BaseName].Algos.ContainsKey($Miner.DeviceModel)) {
+
+            $Miner_CheckAlgos = @($AllMiners_VersionCheck[$Miner.BaseName].MVC | Foreach-Object {
+                $Miner_CheckAlgo = $_.Algorithm
+                if ($_.Driver) {
+                    $_.Driver | Foreach-Object {
+                        $Driver_Vendor      = $_.Vendor
+                        $Driver_FromVersion = if ($_.FromVersion) {Get-Version $_.FromVersion}
+                        $Driver_ToVersion   = if ($_.ToVersion) {Get-Version $_.ToVersion}
+                        $Driver_Arch        = $_.Arch
+                        if (($Global:DeviceCache.Devices.Where({$_.Vendor -eq $Driver_Vendor -and $_.Type -eq "Gpu" -and $_.Name -in $Miner.DeviceName -and (-not $Driver_Arch -or $_.OpenCL.Architecture -in $Driver_Arch) -and (-not $Driver_FromVersion -or $Driver_FromVersion -le (Get-Version $_.OpenCL.DriverVersion)) -and (-not $Driver_ToVersion -or $Driver_ToVersion -ge (Get-Version $_.OpenCL.DriverVersion))}) | Measure-Object).Count) {
+                            $Miner_CheckAlgo = $_.Algorithm
+                        }
+                    }
+                }
+                $Miner_CheckAlgo
+            } | Select-Object -Unique)
+                                
+            $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] = if ($Miner_CheckAlgos -notcontains '*') {$Miner_CheckAlgos} else {$null}
 
         }
 
@@ -2631,7 +2635,7 @@ function Invoke-Core {
 
             if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and (($Global:StatsCache[$Miner_StatKey].Version -ne $null -and $Global:StatsCache[$Miner_StatKey].Version -ne $AllMiners_VersionCheck[$Miner.BaseName].Version) -or ($Global:StatsCache[$Miner_StatKey].Version -eq $null -and $Global:StatsCache[$Miner_StatKey].Updated -lt $AllMiners_VersionCheck[$Miner.BaseName].Date))) {
             
-                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos -or (Compare-Object $AllMiners_VersionCheck[$Miner.BaseName].Algos $Miner_BaseAlgorithm -IncludeEqual -ExcludeDifferent)) {
+                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] -or (Compare-Object $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] $Miner_BaseAlgorithm -IncludeEqual -ExcludeDifferent)) {
 
                     $Global:StatsCache.Remove($Miner_StatKey)
 
@@ -2659,6 +2663,7 @@ function Invoke-Core {
                     try {
                         $Miner_Stat = $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore
                         $Miner_Stat.Duration = [string]$Miner_Stat.Duration
+                        $Miner_Stat.IsFL     = [bool]$Miner_Stat.IsFL
                         $Miner_Stat | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
 
                         if ($Miner_BaseAlgorithm.Count -gt 1) {
@@ -2672,6 +2677,7 @@ function Invoke-Core {
 
                                 $Miner_Stat = $Global:StatsCache[$Miner_StatKey] | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore
                                 $Miner_Stat.Duration = [string]$Miner_Stat.Duration
+                                $Miner_Stat.IsFL     = [bool]$Miner_Stat.IsFL
                                 $Miner_Stat | ConvertTo-Json -Depth 10 | Set-Content ".\Stats\Miners\$($Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])-$($Miner_StatKey).txt"
                             }
                         }
