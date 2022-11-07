@@ -60,7 +60,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Write-Log -Level Info "Pool blocks API ($Name) for $Pool_Currency has failed. "
         }
 
-        if (-not $Global.Rates[$Pool_Currency] -and $Pool_Request.price.btc) {$Global.Rates[$Pool_Currency] = 1/$Pool_Request.price.btc}
+        if (-not $Global:Rates[$Pool_Currency] -and $Pool_Request.price.btc) {$Global:Rates[$Pool_Currency] = 1/$Pool_Request.price.btc}
 
         $timestamp       = Get-UnixTimestamp
         $timestamp24h    = $timestamp - 86400
