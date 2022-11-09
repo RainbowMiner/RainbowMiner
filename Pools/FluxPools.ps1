@@ -20,7 +20,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "FLUX"; port = @(7011); fee = 1.0; rpc = "flux";  stratum = "flux.fluxpools.net"; regions = @("eu","us"); altsymbol = "ZEL"}
+    [PSCustomObject]@{symbol = "FLUX"; port = @(7001); fee = 1.0; rpc = "flux";  stratum = "flux.fluxpools.net"; regions = @("eu","us"); altsymbol = "ZEL"}
 )
 
 $Pools_Requests = [hashtable]@{}
