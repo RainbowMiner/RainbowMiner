@@ -39,11 +39,13 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{algo = "autolykos";  port = @(3333,4444); ethproxy = $null;          rpc = "autolykos";  divisor = 1e6; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "beamhash";   port = @(3333,4444); ethproxy = $null;          rpc = "beamhash";  divisor = 1e6; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "beamhash";   port = @(3333,4444); ethproxy = $null;          rpc = "beamhash";   divisor = 1;   region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "etchash";    port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ethash";     port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "firopow";    port = @(3333,4444); ethproxy = $null;          rpc = "firopow";    divisor = 1e6; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "randomx";    port = @(3333,4444); ethproxy = $null;          rpc = "rx";         divisor = 1;   region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kawpow";     port = @(3333,4444); ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "zelhash";    port = @(3333,4444); ethproxy = $null;          rpc = "zelhash";    divisor = 1;   region = @("us","ca","eu","asia")}
 )
 
 $Pool_Referrals = [PSCustomObject]@{
@@ -59,7 +61,6 @@ $Pool_Referrals = [PSCustomObject]@{
     BCH = "d5n0-12uj"
     BNB = "09eg-lit0"
     BTC = "9fh9-4fa8"
-    BTG = "ad7b-d4tl"
     CAKE = "jvjw-oe6g"
     CHZ = "s205-1crw"
     CRO = "e5vr-nl66"
