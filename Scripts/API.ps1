@@ -119,7 +119,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/console" {
             $CountLines = 0
-            $ConsoleTimestamp = [int]$(if (Test-Path ".\Logs\console.txt") {Get-UnixTimestamp (Get-Item ".\Logs\console.txt" -ErrorAction Ignore).LastWriteTime} else {0})
+            $ConsoleTimestamp = [int]$(if (Test-Path ".\Logs\console.txt") {Get-UTCToUnix (Get-Item ".\Logs\console.txt" -ErrorAction Ignore).LastWriteTime} else {0})
             
             $CurrentConsole = if (-not $Parameters.ts -or ($ConsoleTimestamp -ne $Parameters.ts)) {[String]::Join("`n",@(Get-ContentByStreamReader -FilePath ".\Logs\console.txt" -ExpandLines | Where-Object {
                 if ($_ -match "^\*+$") {$CountLines++}
@@ -1401,7 +1401,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                     $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
                     if ($PathToFile = Get-ConfigPath -ConfigName $GetConfigA[0] -WorkerName $Parameters.workername -GroupName $Parameters.groupname) {
-                        $ConfigLwt = Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTimeUtc
+                        $ConfigLwt = Get-UTCToUnix (Get-ChildItem $PathToFile).LastWriteTimeUtc
                         $GetConfigNew = ($GetConfigA.Count -lt 2) -or ([int]$GetConfigA[1] -lt $ConfigLwt)
                         $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
                                                     isnew = $GetConfigNew

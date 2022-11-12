@@ -7539,11 +7539,40 @@ function Get-UnixTimestamp {
 [cmdletbinding()]
 param(
     [Parameter(Mandatory = $False)]
+    $DateTime = $null, # keep for backwards compatibility
+    [Parameter(Mandatory = $False)]
+    [Switch]$Milliseconds = $false
+)
+    if ($DateTime -ne $null) {
+        Get-UTCToUnix $DateTime -Milliseconds:$Milliseconds
+    } else {
+        try {
+            if ($Milliseconds) {
+                [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - 1000*[int]$Session.TimeDiff
+            } else {
+                [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - [int]$Session.TimeDiff
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            [Math]::Floor((([DateTime]::UtcNow - (Get-Date -Year 1970 -Month 1 -Day 1 -hour 0 -Minute 0 -Second 0 -Millisecond 0)).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
+        }
+    }
+}
+
+function Get-UTCToUnix {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False)]
     [DateTime]$DateTime = [DateTime]::UtcNow,
     [Parameter(Mandatory = $False)]
     [Switch]$Milliseconds = $false
 )
-    [Math]::Floor(($DateTime - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc'))."$(if ($Milliseconds) {"TotalMilliseconds"} else {"TotalSeconds"})" - $(if ($Milliseconds) {1000} else {1})*[int]$Session.TimeDiff)
+    try {
+        [Math]::Floor((($DateTime - ([datetimeoffset]::FromUnixTimeSeconds(0)).UtcDateTime).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        [Math]::Floor((($DateTime - (Get-Date -Year 1970 -Month 1 -Day 1 -hour 0 -Minute 0 -Second 0 -Millisecond 0)).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
+    }
 }
 
 function Get-UnixToUTC {
@@ -7552,7 +7581,12 @@ param(
     [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
     [Int64]$UnixTimestamp = 0
 )
-    [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + ([TimeSpan]::FromSeconds($UnixTimestamp))
+    try {
+        ([datetimeoffset]::FromUnixTimeSeconds($UnixTimestamp)).UtcDateTime
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        (Get-Date -Year 1970 -Month 1 -Day 1 -hour 0 -Minute 0 -Second 0 -Millisecond 0) + ([TimeSpan]::FromSeconds($UnixTimestamp))
+    }
 }
 
 function Get-Zip {
