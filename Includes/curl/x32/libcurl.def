@@ -87,3 +87,6 @@ EXPORTS
     curl_url_strerror @86
     curl_version @87
     curl_version_info @88
+    curl_ws_meta @89
+    curl_ws_recv @90
+    curl_ws_send @91
