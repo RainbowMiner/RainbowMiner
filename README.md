@@ -52,7 +52,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 ### Windows 7/8.1/10 pre-requisites
 
-1. Install PowerShell 7: [Download Installer for version 7.2.7](https://github.com/PowerShell/PowerShell/releases/download/v7.2.7/PowerShell-7.2.7-win-x64.msi)
+1. Install PowerShell 7: [Download Installer for version 7.3.0](https://github.com/PowerShell/PowerShell/releases/download/v7.3.0/PowerShell-7.3.0-win-x64.msi)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
     - **Nvidia official downloads**:
@@ -156,19 +156,19 @@ At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v7.2.7 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v7.3.0 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 
     # if not already done, download the package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.7/powershell-lts_7.2.7-1.deb_amd64.deb
-    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.7/powershell_7.2.7-1.deb_amd64.deb
+    wget https://github.com/PowerShell/PowerShell/releases/download/v7.3.0/powershell-lts_7.3.0-1.deb_amd64.deb
+    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.3.0/powershell_7.3.0-1.deb_amd64.deb
 
     # install powershell package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    dpkg -i powershell-lts_7.2.7-1.deb_amd64.deb
-    #dpkg -i powershell_7.2.7-1.deb_amd64.deb
+    dpkg -i powershell-lts_7.3.0-1.deb_amd64.deb
+    #dpkg -i powershell_7.3.0-1.deb_amd64.deb
 
     # install powershell dependencies
     apt install -f
