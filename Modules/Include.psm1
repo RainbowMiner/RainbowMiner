@@ -25,6 +25,7 @@ function Initialize-Session {
         $Session.MachineName        = [System.Environment]::MachineName
         $Session.MyIP               = Get-MyIP
         $Session.MainPath           = "$PWD"
+        $Session.UnixEpoch          = Get-Date -Year 1970 -Month 1 -Day 1 -hour 0 -Minute 0 -Second 0 -Millisecond 0
 
         Set-Variable RegexAlgoHasEthproxy -Option Constant -Scope Global -Value "^Etc?hash|ProgPow|UbqHash"
         Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|^FiroPow|UbqHash|Octopus"
@@ -1841,7 +1842,7 @@ function Get-BalancesPayouts {
             $Amount = if ($AmountField) {$_.$AmountField} elseif ($_.amount -ne $null) {$_.amount} elseif ($_.value -ne $null) {$_.value} else {$null}
             if ($Amount -ne $null) {
                 [PSCustomObject]@{
-                    Date     = $(if ($DateTime -is [DateTime]) {$DateTime.ToUniversalTime()} elseif ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
+                    Date     = $(if ($DateTime -is [DateTime]) {$DateTime.ToUniversalTime()} elseif ($DateTime -match "^\d+$") {Get-UnixToUTC $DateTime} else {(Get-Date $DateTime).ToUniversalTime()})
                     Amount   = [Double]$Amount / $Divisor
                     Txid     = "$(if ($TxField) {$_.$TxField} elseif ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash} elseif ($_.transactionId) {$_.transactionId} elseif ($_.hash) {$_.hash})".Trim()
                 }
@@ -7554,7 +7555,7 @@ param(
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            [Math]::Floor((([DateTime]::UtcNow - (Get-Date -Year 1970 -Month 1 -Day 1 -hour 0 -Minute 0 -Second 0 -Millisecond 0)).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
+            [Math]::Floor((([DateTime]::UtcNow - $Session.UnixEpoch).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
         }
     }
 }
@@ -7567,12 +7568,7 @@ param(
     [Parameter(Mandatory = $False)]
     [Switch]$Milliseconds = $false
 )
-    try {
-        [Math]::Floor((($DateTime - ([datetimeoffset]::FromUnixTimeSeconds(0)).UtcDateTime).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        [Math]::Floor((($DateTime - (Get-Date -Year 1970 -Month 1 -Day 1 -hour 0 -Minute 0 -Second 0 -Millisecond 0)).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
-    }
+    [Math]::Floor((($DateTime - $Session.UnixEpoch).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
 }
 
 function Get-UnixToUTC {
@@ -7585,7 +7581,7 @@ param(
         ([datetimeoffset]::FromUnixTimeSeconds($UnixTimestamp)).UtcDateTime
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        (Get-Date -Year 1970 -Month 1 -Day 1 -hour 0 -Minute 0 -Second 0 -Millisecond 0) + ([TimeSpan]::FromSeconds($UnixTimestamp))
+        $Session.UnixEpoch + ([TimeSpan]::FromSeconds($UnixTimestamp))
     }
 }
 

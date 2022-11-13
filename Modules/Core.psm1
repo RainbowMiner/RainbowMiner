@@ -4677,7 +4677,8 @@ function Invoke-ReportMinerStatus {
                     $Profit       = 0.0
                     $Earnings_Avg = 0.0
                     $Earnings_1d  = 0.0
-                    $OtherWorkers | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
+                    $LastSeen_Min = (Get-UnixTimestamp) - 300
+                    $OtherWorkers | Where-Object {$LastSeen_Min -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
                     $API.RemoteMiners = $OtherWorkers
                     $API.RemoteMinersProfit = $Profit
                     $API.RemoteMinersEarnings_Avg = $Earnings_Avg
