@@ -11,22 +11,23 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "3.11"
+$Version = "3.13"
 $DeviceCapability = "5.0"
 $EnableContest = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.11-gminer/gminer_3_11_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.13-gminer/gminer_3_13_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.11-gminer/gminer_3_11_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.13-gminer/gminer_3_13_windows64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2";  Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 2.0} #Autolykos2/ERG
+    [PSCustomObject]@{MainAlgorithm = "BeamHash3";                    MinMemGb = 1;                     Params = "--algo beamhash";    Vendor = @("NVIDIA");       ExtendInterval = 2} #BeamHash3
     [PSCustomObject]@{MainAlgorithm = "Cortex";                       MinMemGb = 8;                     Params = "--algo cortex";      Vendor = @("NVIDIA");       ExtendInterval = 2; NoCPUMining = $false; Fee = 5.0} #Cortex
     [PSCustomObject]@{MainAlgorithm = "CuckooCycle";                  MinMemGb = 3;                     Params = "--algo aeternity";   Vendor = @("NVIDIA");       ExtendInterval = 2; Fee = 2.0; NoCPUMining = $false} #Cortex
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";                 MinMemGb = 2;                     Params = "--algo 144_5";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; AutoPers = $true} #Equihash 144,5
