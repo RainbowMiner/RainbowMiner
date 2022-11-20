@@ -4548,9 +4548,9 @@ function Get-AlgoVariants {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalAlgoVariants) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc -gt $Global:GlobalAlgoVariantsTimeStamp) {
-        $Global:GlobalAlgoVariants = Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:GlobalAlgoVariantsTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc
+    if (-not (Test-Path Variable:Global:GlobalAlgoVariants) -or (Get-ChildItem "Data\algovariantsdb.json").LastWriteTimeUtc -gt $Global:GlobalAlgoVariantsTimeStamp) {
+        $Global:GlobalAlgoVariants = Get-ContentByStreamReader "Data\algovariantsdb.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalAlgoVariantsTimeStamp = (Get-ChildItem "Data\algovariantsdb.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
         $Global:GlobalAlgoVariants
@@ -7547,15 +7547,10 @@ param(
     if ($DateTime -ne $null) {
         Get-UTCToUnix $DateTime -Milliseconds:$Milliseconds
     } else {
-        try {
-            if ($Milliseconds) {
-                [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - 1000*[int]$Session.TimeDiff
-            } else {
-                [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - [int]$Session.TimeDiff
-            }
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            [Math]::Floor((([DateTime]::UtcNow - $Session.UnixEpoch).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
+        if ($Milliseconds) {
+            [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - 1000*[int]$Session.TimeDiff
+        } else {
+            [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - [int]$Session.TimeDiff
         }
     }
 }
@@ -7577,12 +7572,7 @@ param(
     [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
     [Int64]$UnixTimestamp = 0
 )
-    try {
-        ([datetimeoffset]::FromUnixTimeSeconds($UnixTimestamp)).UtcDateTime
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        $Session.UnixEpoch + ([TimeSpan]::FromSeconds($UnixTimestamp))
-    }
+    ([datetimeoffset]::FromUnixTimeSeconds($UnixTimestamp)).UtcDateTime
 }
 
 function Get-Zip {
