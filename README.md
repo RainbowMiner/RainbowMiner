@@ -50,6 +50,8 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 ## REQUIRED PRE-REQUISITES
 
+**Important note: do NOT use the newer Powershell Core v7.3.0. It comes with a severe memory leak. Until this problem is solved, I strongly recommend you stick with Powershell Core v7.2.7**
+
 ### Windows 7/8.1/10 pre-requisites
 
 1. Install PowerShell 7: [Download Installer for version 7.2.7](https://github.com/PowerShell/PowerShell/releases/download/v7.2.7/PowerShell-7.2.7-win-x64.msi)
