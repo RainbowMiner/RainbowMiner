@@ -23,7 +23,7 @@ if ($IsLinux) {
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
-$ExcludePoolName = "prohashing"
+$ExcludePoolName = "prohashing|miningrigrentals"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alph";                         MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Blake3/Alephium
