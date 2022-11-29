@@ -138,7 +138,7 @@
             Currencies=@("ETC")
         }
         "Icemining" = [PSCustomObject]@{
-            Currencies=@("EPIC","NIM")
+            Currencies=@("NIM")
         }
         "KuCoin" = [PSCustomObject]@{
             Currencies=@()
