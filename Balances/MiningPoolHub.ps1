@@ -91,7 +91,7 @@ foreach ($PoolConfig in $PoolConfigs) {
 
         $PoolCoins | Where-Object {$Currency = $_;$Pool_Data = $Pool_Request.return | Where-Object {$_.symbol -eq $Currency};$Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency) -and (-not $PoolCoins.Count -or $PoolCoins -contains $Currency)} | Foreach-Object {
             try {
-                $Request = Invoke-RestMethodAsync "https://$($Pool_Data.coin_name).miningpoolhub.com/index.php?page=api&action=getuserbalance&api_key=$($PoolConfig.API_Key)&id=$($PoolConfig.API_ID)" -cycletime ($Config.BalanceUpdateMinutes*60)
+                $Request = Invoke-RestMethodAsync "http://$($Pool_Data.coin_name).miningpoolhub.com/index.php?page=api&action=getuserbalance&api_key=$($PoolConfig.API_Key)&id=$($PoolConfig.API_ID)" -cycletime ($Config.BalanceUpdateMinutes*60)
             }
             catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -103,9 +103,9 @@ foreach ($PoolConfig in $PoolConfigs) {
                 Caption     = "$($Name) ($($Currency))"
 		        BaseName    = $Name
                 Currency    = $Currency
-                Balance     = [Decimal]$_.confirmed
-                Pending     = [Decimal]$_.unconfirmed
-                Total       = [Decimal]$_.confirmed + [Decimal]$_.unconfirmed
+                Balance     = [Decimal]$Request.getuserbalance.data.confirmed
+                Pending     = [Decimal]$Request.getuserbalance.data.unconfirmed
+                Total       = [Decimal]$Request.getuserbalance.data.confirmed + [Decimal]$Request.getuserbalance.data.unconfirmed
                 Paid        = [Decimal]0
 		        Payouts     = @()
                 Lastupdated = (Get-Date).ToUniversalTime()
