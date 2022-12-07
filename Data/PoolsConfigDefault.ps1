@@ -188,14 +188,14 @@
             Currencies=@("GLT")
         }
         "MiningPoolHub" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=12}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
+            Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";BalanceCoinSymbol="";Penalty=12}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency";BalanceCoinSymbol="Add all coin symbols, that the balance module should load and list"}
             Currencies=@()
             Autoexchange=$true
         }
         "MiningPoolHubCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC"}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
+            Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";BalanceCoinSymbol=""}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency";BalanceCoinSymbol="Add all coin symbols, that the balance module should load and list"}
             Currencies=@()
         }
         "MiningPoolOvh" = [PSCustomObject]@{
