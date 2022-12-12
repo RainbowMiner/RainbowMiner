@@ -24,6 +24,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin="LTC"; port=3333;stratum="ltc"}
     [PSCustomObject]@{coin="ETC"; port=1800;stratum="etc"}
     [PSCustomObject]@{coin="ETHW";port=1800;stratum="ethw"}
+    [PSCustomObject]@{coin="RVN"; port=9000;stratum="rvn"}
     [PSCustomObject]@{coin="ZEC"; port=5300;stratum="zec"}
 )
 
