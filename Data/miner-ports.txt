@@ -77,7 +77,7 @@
 301	Ethminer
 302	EnemyZealot
 303	Xmrig
-304	
+304	EvrProgPowMiner
 305	Dstm
 306	Cast
 307	Bminer
@@ -152,7 +152,7 @@
 405	SgminerXevan
 406	Nsgminer
 407	WildRig
-408	ZjazzAmd
+408	WildrigBeta
 409	ProgPOWAmd
 410	SgminerDyn
 411	SgminerMTP
