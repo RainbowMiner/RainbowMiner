@@ -1349,6 +1349,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                          ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
                                                          ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
                                                          ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
+                                                         ($_.price.LTC.enabled -ne $CreateRig.price.ltc.enabled) -or
+                                                         ($_.price.ETH.enabled -ne $CreateRig.price.eth.enabled) -or
+                                                         ($_.price.DASH.enabled -ne $CreateRig.price.dash.enabled) -or
+                                                         ($_.price.BCH.enabled -ne $CreateRig.price.bch.enabled) -or
                                                          ($RigServer -and ($_.region -ne $RigServer.region)) -or
                                                          ($_.extensions -ne $CreateRig.extensions)
                                                     ) {
