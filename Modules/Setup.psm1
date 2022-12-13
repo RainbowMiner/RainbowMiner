@@ -2673,7 +2673,7 @@ function Start-Setup {
                                         $PoolConfig.PriceBTC = "$($PoolConfig.PriceBTC)"
                                     }
                                     "pricecurrencies" {
-                                        $PoolConfig.PriceCurrencies = Read-HostArray -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceCurrencies -Default $PoolConfig.PriceCurrencies -Characters "A-Z" -Valid @("BCH","BTC","DASH","ETH","LTC") -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.PriceCurrencies = Read-HostArray -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceCurrencies -Default $PoolConfig.PriceCurrencies -Characters "A-Z" -Valid @("BCH","BTC","ETH","LTC") -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         if ($PoolConfig.PriceCurrencies -inotcontains "BTC") {$PoolConfig.PriceCurrencies += "BTC"}
                                         $PoolConfig.PriceCurrencies = $PoolConfig.PriceCurrencies -join ","
                                     }
