@@ -25,7 +25,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 5.0} #NexaPow/NEXA
-    [PSCustomObject]@{MainAlgorithm = "skydoge";                   Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 5.0} #SkyDoge/SKY
+    [PSCustomObject]@{MainAlgorithm = "skydoge";                   Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 1.0} #SkyDoge/SKY
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
