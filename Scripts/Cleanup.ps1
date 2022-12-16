@@ -1743,6 +1743,9 @@ try {
         Get-ChildItem ".\Stats\Miners" -Filter "NVIDIA-BzMiner-*_HashRate.txt" -File | Where-Object {$_.Name -match $RTX40Devices} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
     }
 
+    if ($Version -le (Get-Version "4.8.7.7")) {
+        $AddAlgorithm += @("NexaPow","SkyDoge")
+    }
 
     ###
     ### END OF VERSION CHECKS
