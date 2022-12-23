@@ -905,7 +905,7 @@ class BMiner : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -964,7 +964,7 @@ class BzMiner : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1025,7 +1025,7 @@ class Cast : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1064,7 +1064,7 @@ class Ccminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = "summary"
@@ -1109,7 +1109,7 @@ class Claymore : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server   = "localhost"
+        $Server   = "127.0.0.1" #"localhost"
         $Timeout  = 10 #seconds
 
         $Request  = '{"id":1,"jsonrpc":"2.0","method":"miner_getstat1"}'
@@ -1214,7 +1214,7 @@ class Dstm : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = @{id = 1; method = "getstat"} | ConvertTo-Json -Depth 10 -Compress
@@ -1255,7 +1255,7 @@ class Eminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1294,7 +1294,7 @@ class EnemyZ : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1344,7 +1344,7 @@ class Ethminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server   = "localhost"
+        $Server   = "127.0.0.1" #"localhost"
         $Timeout  = 10 #seconds
 
         $Request  = '{"id":1,"jsonrpc":"2.0","method":"miner_getstatdetail"}'
@@ -1529,7 +1529,7 @@ class Fireice : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1575,7 +1575,7 @@ class Gminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1678,7 +1678,7 @@ class GrinPro : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1746,7 +1746,7 @@ class Jceminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -1793,7 +1793,7 @@ class Lol : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Response = ""
@@ -1838,7 +1838,7 @@ class Luk : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Response = $Data = ""
@@ -1878,7 +1878,7 @@ class MiniZ : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = '{ "id":"0", "method":"getstat" }'
@@ -1972,7 +1972,7 @@ class Nanominer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = @{id = 1; jsonrpc = "2.0"; method = "miner_getstat1"} | ConvertTo-Json -Depth 10 -Compress
@@ -2016,7 +2016,7 @@ class NBminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -2080,7 +2080,7 @@ class Nheq : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = "status"
@@ -2120,7 +2120,7 @@ class NoncerPro : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Response = ""
@@ -2157,7 +2157,7 @@ class Nqminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Response = ""
@@ -2194,7 +2194,7 @@ class Prospector : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -2233,7 +2233,7 @@ class RH : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = " "
@@ -2424,7 +2424,7 @@ class SrbMiner : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -2464,7 +2464,7 @@ class SrbMinerMulti : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
         $DualMining = $this.Algorithm.Count -eq 2
 
@@ -2715,7 +2715,7 @@ class Trex : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -2839,7 +2839,7 @@ class Xgminer : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $DualMining = $this.Algorithm.Count -eq 2
@@ -3022,7 +3022,7 @@ class Xmrig : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -3171,7 +3171,7 @@ class Xmrig3 : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -3343,7 +3343,7 @@ class Xmrig6 : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
