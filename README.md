@@ -67,6 +67,94 @@ Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not r
 
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
 
+### Ubuntu 22.04 AMD Pre-requisites
+This has been a pain for a while, so with a stable version now actually available I thought I'd write up how to do it - it almost works out of the box, with only one silly work around needed.
+
+Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) seems like the choice to be on.
+
+For the AMD drivers this worked finally for me. (I have RX 6700XT, RX 5700XT and RX5700). To install do:
+
+sudo apt-get update
+sudo apt install linux-headers-$(uname -r)
+wget https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/jammy/amdgpu-install_5.4.50401-1_all.deb
+sudo apt-get install ./amdgpu-install_5.4.50401-1_all.deb
+sudo ln -s /usr/src/amdgpu-5.18.13-1520974.22.04 /usr/src/amdgpu-5.18.2.22.40-1483871.22.04  # The AMD packages are still slightly broken
+sudo amdgpu-install --no-32 --usecase=rocm,opencl
+You'll want to reboot at this point. No, seriously, just do it.
+
+This results in driver versions of
+
+[ 3.998083] [drm] amdgpu kernel modesetting enabled.
+[ 3.998090] [drm] amdgpu version: 5.18.13
+[ 3.998092] [drm] OS DRM version: 5.15.0
+You could also just install the runtime, and use the amdgpu module that comes with your Ubuntu kernel, in which case its:
+
+sudo apt-get update
+sudo apt install linux-headers-$(uname -r)
+wget https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/jammy/amdgpu-install_5.4.50401-1_all.deb
+sudo apt-get install ./amdgpu-install_5.4.50401-1_all.deb
+sudo amdgpu-install --no-32 --usecase=rocm,opencl --no-dkms
+I use the first method, I have no idea which results in better mining performance - but I figure AMD must do some testing, even if their installers are a little flakey :). This is against 5.15.0-56-generic as the kernel.
+
+Finally you can go back to square 1 with
+
+sudo amdgpu-uninstall
+sudo apt remove amdgpu-install
+
+.. and of course reboot.
+
+The utilities are, somewhat un-helpfully, installed to /opt/rocm/bin so you'll want to add that to your PATH. One way to do that is to edit /etc/environment so it looks like this:
+
+PATH="/opt/rocm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+
+You can change your current session with:
+export PATH=/opt/rocm/bin:$PATH
+
+Finally you can test it is all working with the rocm-smi command, hopefully you'll get something like this:
+
+root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# rocm-smi
+
+ROCm System Management Interface
+Concise Info
+GPU Temp (DieEdge) AvgPwr SCLK MCLK Fan Perf PwrCap VRAM% GPU%
+0 29.0c 11.0W 500Mhz 96Mhz 0% auto 186.0W 0% 6%
+1 30.0c 41.0W 800Mhz 100Mhz 0% auto 160.0W 0% 13%
+2 33.0c 95.0W 1440Mhz 100Mhz 0% auto 190.0W 0% 42%
+
+End of ROCm SMI Log
+If you really want to validate all is well, then check out the RainbowMiner supplied version of TRM:
+
+root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# ./teamredminer --list_devices
+Team Red Miner version 0.10.6
+[2022-12-23 20:18:21] Auto-detected AMD OpenCL platform 0
+[2022-12-23 20:18:21] Detected 3 GPU devices, listed in pcie bus id order:
+[2022-12-23 20:18:21] Miner Platform OpenCL BusId Name Model Nr CUs
+[2022-12-23 20:18:21] ----- -------- ------ -------- ------------- ------------------------- ------
+[2022-12-23 20:18:21] 0 0 0 27:00.0 gfx1031 AMD Radeon RX 6700 XT 20
+[2022-12-23 20:18:21] 1 0 1 2c:00.0 gfx1010 AMD Radeon RX 5700 18
+[2022-12-23 20:18:21] 2 0 2 2f:00.0 gfx1010 AMD Radeon RX 5700 XT 20
+[2022-12-23 20:18:21] Detected 0 FPGA devices
+[2022-12-23 20:18:21] Miner Board Part BusId DNA Serial
+[2022-12-23 20:18:21] ----- --------- ------ --------- ------------------------ ------------
+[2022-12-23 20:18:21] Successful clean shutdown.
+Finally, let's make sure we don't have any library clashes:
+
+root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# export LD_LIBRARY_PATH=./:/opt/rainbowminer/lib
+root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# ./teamredminer --list_devices
+Team Red Miner version 0.10.6
+[2022-12-23 20:18:21] Auto-detected AMD OpenCL platform 0
+[2022-12-23 20:18:21] Detected 3 GPU devices, listed in pcie bus id order:
+[2022-12-23 20:18:21] Miner Platform OpenCL BusId Name Model Nr CUs
+[2022-12-23 20:18:21] ----- -------- ------ -------- ------------- ------------------------- ------
+[2022-12-23 20:18:21] 0 0 0 27:00.0 gfx1031 AMD Radeon RX 6700 XT 20
+[2022-12-23 20:18:21] 1 0 1 2c:00.0 gfx1010 AMD Radeon RX 5700 18
+[2022-12-23 20:18:21] 2 0 2 2f:00.0 gfx1010 AMD Radeon RX 5700 XT 20
+[2022-12-23 20:18:21] Detected 0 FPGA devices
+[2022-12-23 20:18:21] Miner Board Part BusId DNA Serial
+[2022-12-23 20:18:21] ----- --------- ------ --------- ------------------------ ------------
+[2022-12-23 20:18:21] Successful clean shutdown.
+root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# unset LD_LIBRARY_PATH
+Happy AMD mining. Nothing here stops you also installing the Nvidia drivers, but mixed rigs can present there own challenges further down the road.
 
 ### Ubuntu 18.x Pre-requisites
 
@@ -614,7 +702,7 @@ Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### 1. setup overclocking profiles
 
-Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (Â°C), MemoryClockBoost (MHz), CoreClockBoost (MHz), LockMemoryClock (MHz), LockCoreClock (MHz) and LockVoltagePoint (ÂµV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
@@ -1639,10 +1727,10 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
     }
 
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
-- ThermalLimit: in °C, set to 0, if you do not want this to be changed
+- ThermalLimit: in Â°C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
-- LockVoltagePoint: in µV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+- LockVoltagePoint: in ÂµV, set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 - LockMemoryClock: in MHz, set to "*", if you do not want this to be changed or "0", if MemoryClock should be unlocked
 - LockCoreClock: in MHz, set to "*", if you do not want this to be changed or "0", if CoreClock should be unlocked
 - PreCmd/PreCmdArguments: define a command to be executed before the miner starts. PreCmd is the path to the binary, PreCmdArguments are optional arguments for that command.
