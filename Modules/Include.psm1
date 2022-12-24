@@ -2307,8 +2307,13 @@ function Start-SubProcessInScreen {
     }
 
     if ($SetLDLIBRARYPATH) {
-        $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+	  if(Test-Path "/opt/rocm/lib") {
+           $Stuff.Add("export LD_LIBRARY_PATH=./:/opt/rocm/lib:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+	  } else {
+           $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+	  }
     }
+
 
     [System.Collections.Generic.List[string]]$Test  = @()
     $Stuff | Foreach-Object {$Test.Add($_) > $null}
