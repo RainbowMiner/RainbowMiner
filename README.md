@@ -74,87 +74,94 @@ Using older, or non-LTS versions of Ubuntu is always going to present a challeng
 
 For the AMD drivers this worked finally for me. (I have RX 6700XT, RX 5700XT and RX5700). To install do:
 
-sudo apt-get update
-sudo apt install linux-headers-$(uname -r)
-wget https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/jammy/amdgpu-install_5.4.50401-1_all.deb
-sudo apt-get install ./amdgpu-install_5.4.50401-1_all.deb
-sudo ln -s /usr/src/amdgpu-5.18.13-1520974.22.04 /usr/src/amdgpu-5.18.2.22.40-1483871.22.04  # The AMD packages are still slightly broken
-sudo amdgpu-install --no-32 --usecase=rocm,opencl
+    sudo apt-get update
+    sudo apt install linux-headers-$(uname -r)
+    wget https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/jammy/amdgpu-install_5.4.50401-1_all.deb
+    sudo apt-get install ./amdgpu-install_5.4.50401-1_all.deb
+    sudo ln -s /usr/src/amdgpu-5.18.13-1520974.22.04 /usr/src/amdgpu-5.18.2.22.40-1483871.22.04  # The AMD packages are still slightly broken
+    sudo amdgpu-install --no-32 --usecase=rocm,opencl
+
 You'll want to reboot at this point. No, seriously, just do it.
 
 This results in driver versions of
 
-[ 3.998083] [drm] amdgpu kernel modesetting enabled.
-[ 3.998090] [drm] amdgpu version: 5.18.13
-[ 3.998092] [drm] OS DRM version: 5.15.0
+    [ 3.998083] [drm] amdgpu kernel modesetting enabled.
+    [ 3.998090] [drm] amdgpu version: 5.18.13
+    [ 3.998092] [drm] OS DRM version: 5.15.0
 You could also just install the runtime, and use the amdgpu module that comes with your Ubuntu kernel, in which case its:
 
-sudo apt-get update
-sudo apt install linux-headers-$(uname -r)
-wget https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/jammy/amdgpu-install_5.4.50401-1_all.deb
-sudo apt-get install ./amdgpu-install_5.4.50401-1_all.deb
-sudo amdgpu-install --no-32 --usecase=rocm,opencl --no-dkms
-I use the first method, I have no idea which results in better mining performance - but I figure AMD must do some testing, even if their installers are a little flakey :). This is against 5.15.0-56-generic as the kernel.
+    sudo apt-get update
+    sudo apt install linux-headers-$(uname -r)
+    wget https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/jammy/amdgpu-install_5.4.50401-1_all.deb
+    sudo apt-get install ./amdgpu-install_5.4.50401-1_all.deb
+    sudo amdgpu-install --no-32 --usecase=rocm,opencl --no-dkms
+Testing has not been performed to determine which of these approaches results in the best mining performance.
 
 Finally you can go back to square 1 with
 
-sudo amdgpu-uninstall
-sudo apt remove amdgpu-install
+    sudo amdgpu-uninstall
+    sudo apt remove amdgpu-install
 
 .. and of course reboot.
 
 The utilities are, somewhat un-helpfully, installed to /opt/rocm/bin so you'll want to add that to your PATH. One way to do that is to edit /etc/environment so it looks like this:
 
-PATH="/opt/rocm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+    PATH="/opt/rocm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
 
 You can change your current session with:
-export PATH=/opt/rocm/bin:$PATH
+    export PATH=/opt/rocm/bin:$PATH
 
 Finally you can test it is all working with the rocm-smi command, hopefully you'll get something like this:
 
-root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# rocm-smi
+    root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# rocm-smi
 
-ROCm System Management Interface
-Concise Info
-GPU Temp (DieEdge) AvgPwr SCLK MCLK Fan Perf PwrCap VRAM% GPU%
-0 29.0c 11.0W 500Mhz 96Mhz 0% auto 186.0W 0% 6%
-1 30.0c 41.0W 800Mhz 100Mhz 0% auto 160.0W 0% 13%
-2 33.0c 95.0W 1440Mhz 100Mhz 0% auto 190.0W 0% 42%
+    ROCm System Management Interface
+    Concise Info
+    GPU Temp (DieEdge) AvgPwr SCLK MCLK Fan Perf PwrCap VRAM% GPU%
+    0 29.0c 11.0W 500Mhz 96Mhz 0% auto 186.0W 0% 6%
+    1 30.0c 41.0W 800Mhz 100Mhz 0% auto 160.0W 0% 13%
+    2 33.0c 95.0W 1440Mhz 100Mhz 0% auto 190.0W 0% 42%
 
-End of ROCm SMI Log
+    End of ROCm SMI Log
 If you really want to validate all is well, then check out the RainbowMiner supplied version of TRM:
 
-root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# ./teamredminer --list_devices
-Team Red Miner version 0.10.6
-[2022-12-23 20:18:21] Auto-detected AMD OpenCL platform 0
-[2022-12-23 20:18:21] Detected 3 GPU devices, listed in pcie bus id order:
-[2022-12-23 20:18:21] Miner Platform OpenCL BusId Name Model Nr CUs
-[2022-12-23 20:18:21] ----- -------- ------ -------- ------------- ------------------------- ------
-[2022-12-23 20:18:21] 0 0 0 27:00.0 gfx1031 AMD Radeon RX 6700 XT 20
-[2022-12-23 20:18:21] 1 0 1 2c:00.0 gfx1010 AMD Radeon RX 5700 18
-[2022-12-23 20:18:21] 2 0 2 2f:00.0 gfx1010 AMD Radeon RX 5700 XT 20
-[2022-12-23 20:18:21] Detected 0 FPGA devices
-[2022-12-23 20:18:21] Miner Board Part BusId DNA Serial
-[2022-12-23 20:18:21] ----- --------- ------ --------- ------------------------ ------------
-[2022-12-23 20:18:21] Successful clean shutdown.
+    root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# ./teamredminer --list_devices
+    Team Red Miner version 0.10.6
+    [2022-12-23 20:18:21] Auto-detected AMD OpenCL platform 0
+    [2022-12-23 20:18:21] Detected 3 GPU devices, listed in pcie bus id order:
+    [2022-12-23 20:18:21] Miner Platform OpenCL BusId Name Model Nr CUs
+    [2022-12-23 20:18:21] ----- -------- ------ -------- ------------- ------------------------- ------
+    [2022-12-23 20:18:21] 0 0 0 27:00.0 gfx1031 AMD Radeon RX 6700 XT 20
+    [2022-12-23 20:18:21] 1 0 1 2c:00.0 gfx1010 AMD Radeon RX 5700 18
+    [2022-12-23 20:18:21] 2 0 2 2f:00.0 gfx1010 AMD Radeon RX 5700 XT 20
+    [2022-12-23 20:18:21] Detected 0 FPGA devices
+    [2022-12-23 20:18:21] Miner Board Part BusId DNA Serial
+    [2022-12-23 20:18:21] ----- --------- ------ --------- ------------------------ ------------
+    [2022-12-23 20:18:21] Successful clean shutdown.
 Finally, let's make sure we don't have any library clashes:
 
-root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# export LD_LIBRARY_PATH=./:/opt/rainbowminer/lib
-root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# ./teamredminer --list_devices
-Team Red Miner version 0.10.6
-[2022-12-23 20:18:21] Auto-detected AMD OpenCL platform 0
-[2022-12-23 20:18:21] Detected 3 GPU devices, listed in pcie bus id order:
-[2022-12-23 20:18:21] Miner Platform OpenCL BusId Name Model Nr CUs
-[2022-12-23 20:18:21] ----- -------- ------ -------- ------------- ------------------------- ------
-[2022-12-23 20:18:21] 0 0 0 27:00.0 gfx1031 AMD Radeon RX 6700 XT 20
-[2022-12-23 20:18:21] 1 0 1 2c:00.0 gfx1010 AMD Radeon RX 5700 18
-[2022-12-23 20:18:21] 2 0 2 2f:00.0 gfx1010 AMD Radeon RX 5700 XT 20
-[2022-12-23 20:18:21] Detected 0 FPGA devices
-[2022-12-23 20:18:21] Miner Board Part BusId DNA Serial
-[2022-12-23 20:18:21] ----- --------- ------ --------- ------------------------ ------------
-[2022-12-23 20:18:21] Successful clean shutdown.
-root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# unset LD_LIBRARY_PATH
-Happy AMD mining. Nothing here stops you also installing the Nvidia drivers, but mixed rigs can present there own challenges further down the road.
+    root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# export LD_LIBRARY_PATH=./:/opt/rainbowminer/lib
+    root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# ./teamredminer --list_devices
+    Team Red Miner version 0.10.6
+    [2022-12-23 20:18:21] Auto-detected AMD OpenCL platform 0
+    [2022-12-23 20:18:21] Detected 3 GPU devices, listed in pcie bus id order:
+    [2022-12-23 20:18:21] Miner Platform OpenCL BusId Name Model Nr CUs
+    [2022-12-23 20:18:21] ----- -------- ------ -------- ------------- ------------------------- ------
+    [2022-12-23 20:18:21] 0 0 0 27:00.0 gfx1031 AMD Radeon RX 6700 XT 20
+    [2022-12-23 20:18:21] 1 0 1 2c:00.0 gfx1010 AMD Radeon RX 5700 18
+    [2022-12-23 20:18:21] 2 0 2 2f:00.0 gfx1010 AMD Radeon RX 5700 XT 20
+    [2022-12-23 20:18:21] Detected 0 FPGA devices
+    [2022-12-23 20:18:21] Miner Board Part BusId DNA Serial
+    [2022-12-23 20:18:21] ----- --------- ------ --------- ------------------------ ------------
+    [2022-12-23 20:18:21] Successful clean shutdown.
+    root@ubuntu2:/home/pi/RainbowMiner/Bin/AMD-Teamred# unset LD_LIBRARY_PATH
+Happy AMD mining. Nothing here stops you also installing the Nvidia drivers, it's a little simpler on a modern Ubuntu:
+
+    sudo apt install nvidia-driver-520 nvidia-dkms-520 nvidia-utils-520 nvidia-settings xserver-xorg-video-nvidia-520  libnvidia-ml1
+
+but mixed rigs can present there own challenges further down the road.
+
+You may also want to tweak huge pages as noted in the Ubuntu 18.x notes below
 
 ### Ubuntu 18.x Pre-requisites
 
