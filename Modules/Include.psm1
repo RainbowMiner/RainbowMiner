@@ -2308,7 +2308,7 @@ function Start-SubProcessInScreen {
 
     if ($SetLDLIBRARYPATH) {
 	  if(Test-Path "/opt/rocm/lib") {
-           $Stuff.Add("export LD_LIBRARY_PATH=./:/opt/rocm/lib:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+           $Stuff.Add("export LD_LIBRARY_PATH=./:/opt/rocm/lib")})") > $null
 	  } else {
            $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
 	  }
