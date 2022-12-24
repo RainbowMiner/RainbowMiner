@@ -68,11 +68,11 @@ Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not r
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
 
 ### Ubuntu 22.04 AMD Pre-requisites
-This has been a pain for a while, so with a stable version now actually available I thought I'd write up how to do it - it almost works out of the box, with only one silly work around needed.
+AMD drivers on recent versions of Ubuntu have been flakley, and challenging to install. As of December 22 there is a nearly out of the box solution that works. Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) is going to be a popular distro choice for rigs.
 
-Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) seems like the choice to be on.
+This has only been confirmed as working with RX 6700XT, RX 5700XT and RX5700.
 
-For the AMD drivers this worked finally for me. (I have RX 6700XT, RX 5700XT and RX5700). To install do:
+To install the AMD drivers do:
 
     sudo apt-get update
     sudo apt install linux-headers-$(uname -r)
@@ -88,14 +88,14 @@ This results in driver versions of
     [ 3.998083] [drm] amdgpu kernel modesetting enabled.
     [ 3.998090] [drm] amdgpu version: 5.18.13
     [ 3.998092] [drm] OS DRM version: 5.15.0
-You could also just install the runtime, and use the amdgpu module that comes with your Ubuntu kernel, in which case its:
+You could also - instead - just install the runtime, and use the amdgpu module that comes with your Ubuntu kernel, in which case its:
 
     sudo apt-get update
     sudo apt install linux-headers-$(uname -r)
     wget https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/jammy/amdgpu-install_5.4.50401-1_all.deb
     sudo apt-get install ./amdgpu-install_5.4.50401-1_all.deb
     sudo amdgpu-install --no-32 --usecase=rocm,opencl --no-dkms
-Testing has not been performed to determine which of these approaches results in the best mining performance.
+Testing has not been performed to determine which of these approaches results in the best mining performance. 
 
 Finally you can go back to square 1 with
 
