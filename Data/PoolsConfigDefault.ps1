@@ -74,8 +74,8 @@
             Currencies=@("ETC","RVN","ERG","BEAM")
         }
         "FlexPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{EnableBzminerDual="1"}
-            SetupFields=[PSCustomObject]@{EnableBzminerDual="If you set this to 1, Bzminer will dual/triple mine ZIL on Flexpool for various algorithms"}
+            Fields=[PSCustomObject]@{EnableBzminerDual="1";EnableGminerDual="1"}
+            SetupFields=[PSCustomObject]@{EnableBzminerDual="If you set this to 1, Bzminer will dual/triple mine ZIL on Flexpool for various algorithms";EnableGminerDual="If you set this to 1, Gminer will dual/triple mine ZIL on Flexpool for various algorithms"}
             Currencies=@("ETC","ZIL")
         }
         "FlockPool" = [PSCustomObject]@{
