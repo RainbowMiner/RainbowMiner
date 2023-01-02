@@ -143,7 +143,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         }
                     }
 
-
                     if ($SecondAlgorithm_Norm_0) {
 
                         $Miner_Intensity = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)".Intensity
