@@ -89,7 +89,7 @@ foreach ($PoolConfig in $PoolConfigs) {
     # Workaround for empty coin parameter, error in MPH API
     if ($CoinsEmpty) {
 
-        $PoolCoins | Where-Object {$Currency = $_;$Pool_Data = $Pool_Request.return | Where-Object {$_.symbol -eq $Currency};$Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency) -and (-not $PoolCoins.Count -or $PoolCoins -contains $Currency)} | Foreach-Object {
+        $PoolCoins | Where-Object {$Currency = $_;$Pool_Data = $Pool_Request.return | Where-Object {$_.symbol -eq $Currency} | Select-Object -First 1;$Pool_Data -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency) -and (-not $PoolCoins.Count -or $PoolCoins -contains $Currency)} | Foreach-Object {
             try {
                 $Request = Invoke-RestMethodAsync "http://$($Pool_Data.coin_name).miningpoolhub.com/index.php?page=api&action=getuserbalance&api_key=$($PoolConfig.API_Key)&id=$($PoolConfig.API_ID)" -cycletime ($Config.BalanceUpdateMinutes*60)
             }
