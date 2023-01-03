@@ -237,10 +237,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                     $DeviceParams = " --disable-gpu$(if ($CPUThreads){" --cpu-threads $CPUThreads"})$(if ($CPUAffinity -and ($CPUThreads -le 64)){" --cpu-affinity $CPUAffinity"})"
                 }
                 "AMD" {
-                    $DeviceParams = " --disable-cpu --disable-gpu-nvidia"
+                    $DeviceParams = " --disable-cpu --disable-gpu-nvidia "
                 }
                 "NVIDIA" {
-                    $DeviceParams = " --disable-cpu --disable-gpu-amd"
+                    $DeviceParams = " --disable-cpu --disable-gpu-amd "
                 }
             }
 
