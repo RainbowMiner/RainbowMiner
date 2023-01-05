@@ -163,5 +163,6 @@
 416	KawPOWAmd
 417	NoncerProAMD
 418	FiroPOWAmd
+419	WildRig0340
 
 4068    CcminerSpModTribus
