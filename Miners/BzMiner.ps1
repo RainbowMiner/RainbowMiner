@@ -94,13 +94,14 @@ $CommonParams =  "-c config_`$mport.txt --http_enabled 1 --http_address localhos
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
+
+    $Device_BusId = @($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq $Miner_Vendor} | Select-Object -ExpandProperty BusId -Unique)
+
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
         if (-not $Device -or ($Miner_Vendor -eq "NVIDIA" -and $Miner_Model -match "-" -and ($Device | Where-Object {$_.IsLHR} | Measure-Object).Count -gt 0)) {return}
-
-        $Device_BusId = @($Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Select-Object -ExpandProperty BusId -Unique)
 
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or [version]$_.Version -le [version]$Version)}).ForEach({
             $First = $true
