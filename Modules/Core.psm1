@@ -3172,8 +3172,8 @@ function Invoke-Core {
         if ($Session.Config.UsePowerPrice -and $MinersNeedingBenchmarkCount -eq 0) {
             #Remove no longer profitable miners
             if ($Session.Config.CheckProfitability) {
-                $BestMiners = @($BestMiners | Where-Object {$_.Profit -gt 0 -or $_.IsExclusiveMiner -or $_.IsLocked})
-                if ($BestMiners2) {$BestMiners2 = @($BestMiners2 | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner -or $_.IsLocked})}
+                $BestMiners = @($BestMiners | Where-Object {$_.Profit -gt $Session.Config.ProfitabilityLevel -or $_.IsExclusiveMiner -or $_.IsLocked})
+                if ($BestMiners2) {$BestMiners2 = @($BestMiners2 | Where {$_.Profit -gt $Session.Config.ProfitabilityLevel -or $_.IsExclusiveMiner -or $_.IsLocked})}
             }
             $Check_Profitability = $true
         }
