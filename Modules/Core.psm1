@@ -3561,7 +3561,7 @@ function Invoke-Core {
         @{Label = "Started"; Expression = {Switch ($_.Activated) {0 {"Never";Break} 1 {"Once";Break} Default {"$_ Times"}}}},      
         @{Label = "Miner"; Expression = {"$($_.Name -replace '\-.*$')$(if ($_.IsFocusWalletMiner -or $_.IsExclusiveMiner) {"(!)"} elseif ($_.PostBlockMining -gt 0) {"($($_.PostBlockMining)s)"} elseif ($Session.Config.MinimumMiningIntervals -gt 1 -and $MinersNeedingBenchmarkCount -eq 0 -and ($_.IsRunningFirstRounds -or ($_.Rounds -eq 0 -and $_.Status -eq [MinerStatus]::Running))) {"($($_.Rounds+1)/$($Session.Config.MinimumMiningIntervals))"})"}},
         @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.BaseAlgorithm}},
-        @{Label = "Coin"; Expression = {for ($i=0; $i -lt $_.CoinSymbol.Count; $i++) {if ($_.CoinName[$i] -match "^\d+") {$_.CoinName} elseif ($_.CoinSymbol[$i]) {$_.CoinSymbol[$i]} else {"-"}}}},
+        @{Label = "Coin"; Expression = {for ($i=0; $i -lt $_.CoinSymbol.Count; $i++) {if ($_.CoinName[$i] -match "^\d+") {$_.CoinName[$i]} elseif ($_.CoinSymbol[$i]) {$_.CoinSymbol[$i]} else {"-"}}}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Global:DeviceCache.Devices -Name @($_.DeviceName) -Short) -join ','}},
         @{Label = "Pool"; Expression = {$_.Pool}},
         @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
