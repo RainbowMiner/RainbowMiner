@@ -15,7 +15,7 @@ if ($IsLinux) {
             Cuda = "10.1"
         }
     )
-    $Version = "8.25-yescrypt"
+    $Version = "8.25-yescryptv3"
     $ManualUri = "https://github.com/KlausT/ccminer/releases"
 } else {
     $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
