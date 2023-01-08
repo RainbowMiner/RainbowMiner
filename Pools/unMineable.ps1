@@ -164,7 +164,7 @@ $Pools_Data | ForEach-Object {
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = $Pool_Protocol
                         Host          = "$($_.rpc)$(if ($_.region.Count -gt 1) {"-$($Pool_Region)"}).unmineable.com"
-                        Port          = $_.port
+                        Port          = $Pool_Port
                         User          = $Pool_Wallet
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
