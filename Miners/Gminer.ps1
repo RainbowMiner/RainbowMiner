@@ -170,6 +170,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                         Benchmarked    = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
                                         LogFile        = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                                         ExcludePoolName= $_.ExcludePoolName
+                                        DualZIL        = $ZilParams -ne ""
 				                    }
                                 }
                             }
@@ -198,6 +199,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
                             LogFile        = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                             ExcludePoolName= $_.ExcludePoolName
+                            DualZIL        = $ZilParams -ne ""
 				        }
                     }
 			    }

@@ -184,6 +184,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
                         #ListDevices    = "-d"
                         ExcludePoolName = $_.ExcludePoolName
+                        DualZIL        = $ZilWallet -ne "" -and $ZilPool -ne ""
 				    }
 			    }
 		    }

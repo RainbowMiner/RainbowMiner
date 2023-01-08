@@ -252,6 +252,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                         Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
                         LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
                         ExcludePoolName = $_.ExcludePoolName
+                        DualZIL        = $ZilUser -ne "" -and $ZilPool -ne ""
 				    }
                 }
 		    }
