@@ -441,6 +441,12 @@
             Currencies=@("ETC")
             Autoexchange=$true
         }
+        "Vipor" = [PSCustomObject]@{
+            Currencies=@("RXD")
+        }
+        "ViporSolo" = [PSCustomObject]@{
+            Currencies=@("RXD")
+        }
         "WoolyPooly" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=30}
             Currencies=@("CFX","ETC","RVN","ERG","VEIL")
