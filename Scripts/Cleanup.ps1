@@ -1747,6 +1747,13 @@ try {
         $AddAlgorithm += @("NexaPow","SkyDoge")
     }
 
+    if ($Version -le (Get-Version "4.8.7.8")) {
+        Get-ChildItem ".\IncludesLinux\lib\libstdc++.so.6.0.25" -File -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+        if ($Global:IsLinux) {
+            Get-ChildItem "/opt/rainbowminer/lib/libstdc++.so.6.0.25" -File -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+        }
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
