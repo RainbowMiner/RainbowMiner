@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.36.1b"
+$Version = "0.36.2b"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.1b-wildrigmulti/wildrig-multi-linux-0.36.1b.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.2b-wildrigmulti/wildrig-multi-linux-0.36.2b.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.1b-wildrigmulti/wildrig-multi-windows-0.36.1b.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.2b-wildrigmulti/wildrig-multi-windows-0.36.2b.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
