@@ -1129,7 +1129,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Miners_List[$Miners_Key] = $true
                     $Miner_Path = Get-ChildItem "Stats\Miners\*-$($Miners_Key)_HashRate.txt" -ErrorAction Ignore
                     $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
-                    $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTimeUtc -lt $JsonUri_Dates[$_.BaseName]
+                    $Miner_NeedsBenchmark = $false #$Miner_Path -and $Miner_Path.LastWriteTimeUtc -lt $JsonUri_Dates[$_.BaseName]
                     $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -and $_.DeviceModel -match "-") {$API.DevicesToVendors."$($_.DeviceModel)"} else {$_.DeviceModel}
                     if ($Miner_DeviceModel -notmatch "-" -or $Miner_Path) {
                         $Out.Add([PSCustomObject]@{
