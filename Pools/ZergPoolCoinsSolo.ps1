@@ -43,8 +43,7 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Fee = if ($Session.Config.ReduceZergPoolFee) {0.3} else {0.5}
-$Pool_AddRefcode = "$(if ($Session.Config.ReduceZergPoolFee -and -not $Session.IsDonationRun) {",refcode=78f6ec9427d56069f93709d7805a6a56"})"
+$Pool_Fee = 0.5
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
@@ -134,7 +133,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                     Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$($Pool_Algorithm).$($Pool_Region).mine.zergpool.com"}
                     Port          = $Pool_Port_SSL
                     User          = $Wallets.$Pool_ExCurrency
-                    Pass          = "ID={workername:$Worker},c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency,m=solo{diff:,sd=`$difficulty}$Pool_Params$Pool_AddRefcode"
+                    Pass          = "ID={workername:$Worker},c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency,m=solo{diff:,sd=`$difficulty}$Pool_Params"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
                     SSLSelfSigned = $Pool_SSL
