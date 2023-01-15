@@ -18,7 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://master.vipor.net/api/pools" -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "https://master.vipor.net/api/pools" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
