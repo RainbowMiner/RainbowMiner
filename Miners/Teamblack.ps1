@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "1.79"
+$Version = "1.80"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -18,11 +18,11 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.79-teamblack/TeamBlackMiner_1_79_Ubuntu_18_04_Cuda_12.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.80-teamblack/TeamBlackMiner_1_80_Ubuntu_18_04_Cuda_12.tar.xz"
             Cuda = "12.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.79-teamblack/TeamBlackMiner_1_79_Ubuntu_18_04_Cuda_11_6.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.80-teamblack/TeamBlackMiner_1_80_Ubuntu_18_04_Cuda_11_6.tar.xz"
             Cuda = "11.6"
         }
     )
@@ -33,11 +33,11 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.79-teamblack/TeamBlackMiner_1_79_cuda_12.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.80-teamblack/TeamBlackMiner_1_80_cuda_12.7z"
             Cuda = "12.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.79-teamblack/TeamBlackMiner_1_79_cuda_11_6.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.80-teamblack/TeamBlackMiner_1_80_cuda_11_6.7z"
             Cuda = "11.6"
         }
     )
@@ -54,7 +54,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash4g";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethash5g";   DAG = $true; Params = ""; MinMemGb = 4;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = "$($ExcludePools)$(if ($Version -eq "1.68") {"|ProHashing"})"} #Ethash for low memory DAG
-    [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #EtcHash
+    [PSCustomObject]@{MainAlgorithm = "etchash";    DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools; DualZIL = $true} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "ethashnh";   DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5} #Ethash Nicehash type
     [PSCustomObject]@{MainAlgorithm = "kawpow";     DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #EtcHash
     [PSCustomObject]@{MainAlgorithm = "verthash";                Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 1; ExcludePoolName = "MiningDutch|MoneroOcean|Nicehash|PoolSexy|SuprNova"} #Verthash/VTC
