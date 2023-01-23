@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.36.3b"
+$Version = "0.36.5b"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.3b-wildrigmulti/wildrig-multi-linux-0.36.3b.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.5b-wildrigmulti/wildrig-multi-linux-0.36.5b.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.3b-wildrigmulti/wildrig-multi-windows-0.36.3b.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.5b-wildrigmulti/wildrig-multi-windows-0.36.5b.7z"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
@@ -53,7 +53,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "megabtx";                   Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "mike";                      Vendor = @("AMD","NVIDIA"); Params = ""; FaultTolerance = 8; ExtendInterval = 3} #Mike
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 5.0} #, new in v0.26.0
-    [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 5.0} #NexaPow/NEXA
+    [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 2.0} #NexaPow/NEXA
     [PSCustomObject]@{MainAlgorithm = "phi";                       Vendor = @("AMD");          Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi5";                      Vendor = @("AMD","NVIDIA"); Params = ""} #PHI5
     [PSCustomObject]@{MainAlgorithm = "progpow-ethercore"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowEthercore
@@ -135,8 +135,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ','
-                        $Miner_Pool_User = $Pools.$Algorithm_Norm.User
-                        if ($Algorithm_Norm -eq "NexaPow") {$Miner_Pool_User = $Miner_Pool_User -replace "^nexa:"}
                         $First = $false
                     }
 
@@ -147,7 +145,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--api-port `$mport -a $($Algorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 5 --max-rejects 10 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams) --opencl-threads auto --opencl-launch auto --gpu-temp-limit=95 $($Params)"
+					    Arguments      = "--api-port `$mport -a $($Algorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User -replace "^nexa:")$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 5 --max-rejects 10 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams) --opencl-threads auto --opencl-launch auto --gpu-temp-limit=95 $($Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					    API            = "XMRig"
 					    Port           = $Miner_Port
