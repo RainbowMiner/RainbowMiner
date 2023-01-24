@@ -2315,6 +2315,66 @@ class RHWrapper : Miner {
     }
 }
 
+class Rigel : Miner {
+
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "127.0.0.1" #"localhost"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate = [PSCustomObject]@{}
+
+        try {
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ForceHttpClient
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
+            return
+        }
+
+        #$Version = if ($Data.miner -match "(\d\.[\d\.]+)") {$Matches[1]} else {$null}
+
+        $HashRate_Name = [String]$this.Algorithm[0]
+        $HashRate_Ix   = $HashRate_Name -replace "^Ethash.+$","Ethash"
+        $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix
+
+        $PowerDraw      = [Double]($Data.devices.monitoring_info.power_usage | Measure-Object -Sum).Sum
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.accepted
+            $Rejected_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.rejected
+            $Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix.invalid
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+
+            if ($this.Algorithm[1]) {
+                $HashRate_Name = [String]$this.Algorithm[1]
+                $HashRate_Ix   = $HashRate_Name -replace "^Ethash.+$","Ethash"
+                $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix
+
+                if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                    $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+                    $Accepted_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.accepted
+                    $Rejected_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.rejected
+                    $Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix.invalid
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
+                }
+            }
+        }
+
+        $this.AddMinerData("",$HashRate,$null,$PowerDraw)
+
+        $this.CleanupMinerData()
+    }
+}
+
 class SixMinerWrapper : Miner {
 
     [Void]UpdateMinerData () {
