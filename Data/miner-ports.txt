@@ -97,7 +97,7 @@
 321	JceminerAmd
 322	Ethminer16
 323	UbqMiner
-324	ZjazzNvidia
+324	Rigel
 325	FireIce247
 326	TrexGTX
 327	TrexGTX19
