@@ -117,7 +117,7 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
             StablePrice   = $Stat.$StatAverageStable
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
-            Host          = "$(if ($Pool_Region -eq "eu") {"eu."})$Pool_Host"
+            Host          = "$Pool_Region.$Pool_Host"
             Port          = $Pool_Port
             User          = $User
             Pass          = "a=$($_),n={workername:$Worker}{diff:,d=`$difficulty}$($Pool_MemorySize)$($Pool_APIKey)$($Pool_Params)"
@@ -131,7 +131,7 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
             Workers       = $Pool_Workers
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
-			ErrorRatio    = $Stat.ErrorRatio
+	    ErrorRatio    = $Stat.ErrorRatio
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1
