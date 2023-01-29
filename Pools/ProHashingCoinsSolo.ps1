@@ -52,7 +52,7 @@ if ($PoolCoins_Request.code -ne 200) {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Host = "prohashing.com"
+$Pool_Host = "mining.prohashing.com"
 
 $Pool_Regions = @("us","eu")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
@@ -104,7 +104,7 @@ $PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $
             StablePrice   = 0
             MarginOfError = 0
             Protocol      = "stratum+tcp"
-            Host          = "$(if ($Pool_Region -eq "eu") {"eu."})$Pool_Host"
+            Host          = "$($Pool_Region).$($Pool_Host)"
             Port          = $Pool_Port
             User          = $Pool_User
             Pass          = "a=$($Pool_Algorithm),c=$($Pool_CoinName.ToLower()),n={workername:$Worker}$(if ($Pool_PPMode -ne "pps") {",m=$($Pool_PPMode)"}){diff:,d=`$difficulty}$Pool_Params"
