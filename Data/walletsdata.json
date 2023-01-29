@@ -49,6 +49,15 @@
         "divisor":  100000000
     },
     {
+        "symbol":  "BTX",
+        "match":  "^[s2]",
+        "rpc":  "https://chainz.cryptoid.info/btx/api.dws?q=getbalance\u0026a={w}",
+        "address":  "",
+        "balance":  "#",
+        "received":  "",
+        "divisor":  1
+    },
+    {
         "symbol":  "CRO",
         "match":  "^cro",
         "rpc":  "https://crypto.org/explorer/api/v1/accounts/{w}",
