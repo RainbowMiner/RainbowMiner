@@ -10,15 +10,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.0.2"
+$Version = "2.1.0"
 $Cuda = "11.8"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0.2-srbminermulti/SRBMiner-Multi-2-0-2-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.0-srbminermulti/SRBMiner-Multi-2-1-0-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0.2-srbminermulti/SRBMiner-Multi-2-0-2-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.0-srbminermulti/SRBMiner-Multi-2-1-0-win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA nor CPU present in system
@@ -194,7 +194,7 @@ if ($InfoOnly) {
 }
 
 $ValidCompute_AMD    = @("RDNA3","RDNA2","RDNA1","CGN51","CGN50","CGN4")
-$ValidCompute_NVIDIA = @("Pascal","Turing","Ampere","Ada")
+$ValidCompute_NVIDIA = @("Pascal","Turing","Ampere","Ada","Hopper")
 
 if (-not (Test-Path "$(Join-Path $Session.MainPath "Bin\ANY-SRBMinerMulti\Cache\verthash.dat")")) {
     $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}
@@ -268,7 +268,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                     $Miner_Protocol = Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                         "ethproxy"         {" --esm 0"}
                         "minerproxy"       {" --esm 1"}
-						"ethstratumnh"     {""}
+						"ethstratumnh"     {" --esm 2"}
 						default            {""}
 					}
 
