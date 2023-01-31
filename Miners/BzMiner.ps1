@@ -11,14 +11,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "13.0.1"
+$Version = "13.0.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v13.0.1-bzminer/bzminer_v13.0.1_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v13.0.3-bzminer/bzminer_v13.0.3_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v13.0.1-bzminer/bzminer_v13.0.1_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v13.0.3-bzminer/bzminer_v13.0.3_windows.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
@@ -64,7 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "radiant"; CoinSymbol = @("ETHW"); Algorithm = "Ethash"; Algorithm2 = "SHA512256d"} #Ethash+SHA512256d/ETHW
     [PSCustomObject]@{MainAlgorithm = "ixi";                          MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Argon2Ixi/Ixian
     [PSCustomObject]@{MainAlgorithm = "kaspa";                        MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #kHeavyHash
-    [PSCustomObject]@{MainAlgorithm = "nexa";                         MinMemGb = 2;                     Params = "";     Vendor = @("NVIDIA"); ExtendInterval = 2; Fee = 3.0; Algorithm = "NexaPoW"} #NexaPow/NEXA
+    [PSCustomObject]@{MainAlgorithm = "nexa";                         MinMemGb = 2;                     Params = "";     Vendor = @("NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "NexaPoW"} #NexaPow/NEXA
     [PSCustomObject]@{MainAlgorithm = "radiant";                      MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "SHA512256d"} #SHA512256d/RAD
     #[PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; ExcludeCoinSymbol = @("MEWC","NEOX")} #KawPow
     #[PSCustomObject]@{MainAlgorithm = "neox";            DAG = $true; MinMemGb = 1;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; CoinSymbol = @("NEOX"); Algorithm = "KawPow"} #NEOXA/KawPow
