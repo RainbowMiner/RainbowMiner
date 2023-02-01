@@ -11,15 +11,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2023.1.1"
+$Version = "2023.1.4"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.1-ttminer/TT-Miner-2023.1.1.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.4-ttminer/TT-Miner-2023.1.4.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.1-ttminer/TT-Miner-2023.1.1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.4-ttminer/TT-Miner-2023.1.4.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
@@ -33,8 +33,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Etchash"       ; DAG = $true; MinMemGB = 3;   Params = "-a ETCHASH";       ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Etchash 
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory" ; DAG = $true; MinMemGB = 2;   Params = "-a ETHASH";      ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EvrProgPow"    ; DAG = $true; MinMemGB = 3;   Params = "-a EvrProgPow";    ExtendInterval = 2} #EvrProgPow
-    [PSCustomObject]@{MainAlgorithm = "FiroPow"       ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPow";       ExtendInterval = 2} #FiroPow
-    [PSCustomObject]@{MainAlgorithm = "Take2"         ;              MinMemGB = 1;   Params = "-a Ghostrider";    ExtendInterval = 2; DevFee = 2.0} #Ghostrider
+    [PSCustomObject]@{MainAlgorithm = "FiroPow"       ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPow";       ExtendInterval = 2; ExcludeCoins = @("SCC")} #FiroPow
+    [PSCustomObject]@{MainAlgorithm = "FiroPow"       ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPowSCC";    ExtendInterval = 2; Coins = @("SCC")} #FiroPowSCC
+    [PSCustomObject]@{MainAlgorithm = "Take2"         ;              MinMemGB = 1;   Params = "-a Ghostrider";    ExtendInterval = 2; DevFee = 1.0} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "KawPow"        ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        ExtendInterval = 2} #KAWPOW (RVN,ZELS)
     [PSCustomObject]@{MainAlgorithm = "Mike"          ;              MinMemGB = 1;   Params = "-a Mike";          ExtendInterval = 2; DevFee = 2.0} #Mike
     [PSCustomObject]@{MainAlgorithm = "ProgPoWEPIC"   ; DAG = $true; MinMemGB = 3;   Params = "-coin EPIC";       ExtendInterval = 2; DevFee = 2.0} #ProgPoW (only EPIC left)
@@ -47,7 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "vProgPoW"      ; DAG = $true; MinMemGB = 3;   Params = "-a vProgPow";      ExtendInterval = 2} #ProgPoWSero (VBK)
 )
 
-$CoinSymbols = @("ETC","CLO","EXP","ETP","UBQ","SERO","EPIC","ZANO","EVOX","VBK","VEIL","FIRO","EVR","RVN","NEOX","ARL","KAW","PRCO","SATO","HVQ","TTM","MEOW","REDE","VTE","LAB","RTM","BTRM","BUT","YERB","JGC","FITA","BBC","NAPI","THOON","GSPC","LTRM","VKAX","MIKE")
+$CoinSymbols = @("ETC","CLO","EXP","ETP","UBQ","SERO","EPIC","ZANO","EVOX","VBK","VEIL","FIRO","EVR","RVN","NEOX","ARL","KAW","PRCO","SATO","HVQ","TTM","MEOW","REDE","VTE","LAB","RTM","BTRM","BUT","YERB","JGC","FITA","BBC","NAPI","THOON","GSPC","LTRM","VKAX","MIKE","SCC")
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -81,7 +82,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			if ($Pools.$Algorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
+			if ($Pools.$Algorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoins -or $_.ExcludeCoins -inotcontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
