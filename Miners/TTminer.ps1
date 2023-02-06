@@ -11,15 +11,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2023.1.4"
+$Version = "2023.1.5"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.4-ttminer/TT-Miner-2023.1.4.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.5-ttminer/TT-Miner-2023.1.5.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.4-ttminer/TT-Miner-2023.1.4.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.1.5-ttminer/TT-Miner-2023.1.5.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
