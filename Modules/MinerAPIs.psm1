@@ -1250,6 +1250,51 @@ class Dstm : Miner {
     }
 }
 
+class DynexsolveWrapper : Miner {
+
+    [Void]UpdateMinerData () {
+        $MJob = if ($Global:IsLinux) {$this.WrapperJob} else {$this.Job.XJob}
+        if ($MJob.HasMoreData) {
+            $HashRate_Name = $this.Algorithm[0]
+
+            $MJob | Receive-Job | ForEach-Object {
+                $Line = $_ -replace "`n|`r", ""
+                $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
+                if ($Line_Simple -match "\[GPU \*\].+ HR = ([\d\s\./hkMGTPs]+?) \|") {
+                    $Words = "$($Matches[1])".Trim() -split "\s+"
+
+                    $HashRate = [PSCustomObject]@{}
+
+                    $HashRate_Value = [Double]"$($Words[0] -replace "[^\d\.]+")"
+
+                    switch -Regex ($Words[1]) {
+                        "k" {$HashRate_Value *= 1E+3}
+                        "M" {$HashRate_Value *= 1E+6}
+                        "G" {$HashRate_Value *= 1E+9}
+                        "T" {$HashRate_Value *= 1E+12}
+                        "P" {$HashRate_Value *= 1E+15}
+                    }
+
+                    if ($HashRate_Value -gt 0) {
+                        $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                    }
+
+                    $this.AddMinerData($Line_Simple,$HashRate)
+                } elseif ($Line_Simple -match "POOL.+?\((\d+)/(\d+)[/)]") {                
+                    $Accepted_Shares = [Int64]$Matches[1]
+                    $Rejected_Shares    = [Int64]$Matches[2]
+                    $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+                } elseif ($Line_Simple -match "GPU\s+(\d+):\s+has\s+timed\sout") {
+                    #GPU has crashed, restart miner
+                    Write-Log -Level Warn "$($this.Name): GPU $($Matches[1]) has timed out - restarting miner"
+                    $this.Restart = $true
+                }
+            }
+        }
+        $MJob = $null
+        $this.CleanupMinerData()
+    }
+}
 
 class Eminer : Miner {
     [Void]UpdateMinerData () {
