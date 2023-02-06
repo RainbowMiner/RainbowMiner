@@ -5542,6 +5542,7 @@ function Set-CombosConfigDefault {
                                         "Turing" {"RTX2";Break}
                                         "Ampere" {"RTX3";Break}
                                         "Ada"    {"RTX4";Break}
+                                        "Hopper" {"H100";Break}
                                         default  {$Model}
                                     })$(if ($Mem -lt 6) {"$($Mem)GB"})"}
                             }
