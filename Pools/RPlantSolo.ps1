@@ -32,7 +32,7 @@ catch {
 $Pool_Regions = @("ru","eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.symbol
     
     $Pool_Coin           = Get-Coin $Pool_Currency -Algorithm $_.algo
@@ -45,15 +45,15 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symb
         $Pool_CoinName       = (Get-Culture).TextInfo.ToTitleCase($_.info.coin)
     }
 
-    $Pool_Fee            = if ($PoolCurrencies_Request.$Pool_Currency.fee -ne $null) {[double]$PoolCurrencies_Request.$Pool_Currency.fee_solo} else {1.0}
+    $Pool_Fee            = if ($PoolCurrencies_Request.$Pool_Currency.fee_solo -ne $null) {[double]$PoolCurrencies_Request.$Pool_Currency.fee_solo} else {1.0}
     $Pool_User           = $Wallets.$Pool_Currency
     $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Stratum        = if ($_.info.links.stratums) {"randomx"} else {"stratum-%region%"}
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hr) -BlockRate ([double]$_.b24) -Quiet
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        $difficulty = $_.d / [Math]::Pow(2,32)
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty $difficulty -Quiet
     }
 
     $Pool_Ports = $_.info.ports.PSObject.Properties | Group-Object {$_.Value.tls}
@@ -75,15 +75,17 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symb
                         Host          = "$($Pool_Stratum -replace "%region%",$Pool_Region).rplant.xyz"
                         Port          = $Pool_Port
                         User          = "$($Pool_User).{workername:$Worker}"
-                        Pass          = "x"
+                        Pass          = "m=solo"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $SSL
                         Updated       = (Get-Date).ToUniversalTime()
                         PoolFee       = $Pool_Fee
-                        Workers       = [int]$_.wc
-                        Hashrate      = $Stat.HashRate_Live
-                        TSL           = [int]$PoolsCurrencies_Request.$Pool_Currency.timesincelast
-                        BLK           = $Stat.BlockRate_Average
+                        Workers       = $null
+                        Hashrate      = $null
+                        TSL           = $null
+                        BLK           = $null
+                        Difficulty    = $Stat.Diff_Average
+                        SoloMining    = $true
                         EthMode       = $Pool_EthProxy
                         Name          = $Name
                         Penalty       = 0

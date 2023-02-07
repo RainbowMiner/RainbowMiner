@@ -409,7 +409,10 @@
             Currencies=@("GRIMM")
         }
         "RPlant" = [PSCustomObject]@{
-            Currencies=@("BTX","CURVE","MGPC")
+            Currencies=@("BTX","NEXA","VKAX")
+        }
+        "RPlantSolo" = [PSCustomObject]@{
+            Currencies=@("BTX","NEXA","VKAX")
         }
         "SeroPool" = [PSCustomObject]@{
             Currencies=@("SERO")
