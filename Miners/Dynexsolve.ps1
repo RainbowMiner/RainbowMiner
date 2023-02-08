@@ -61,59 +61,65 @@ for($i=0;$i -lt $UriCuda.Count -and -not $Cuda;$i++) {
     }
 }
 
-if (-not $Cuda) {return}
-
 $Device_Ids = @($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"} | Select-Object -ExpandProperty Type_Vendor_Index -Unique)
 
-$Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $First = $true
-    $Miner_Model = $_.Model
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+foreach ($Miner_Vendor in @("NVIDIA")) {
 
-    $Device_Params = if (($Device_Ids | Measure-Object).Count -eq 1) {
-        "-no-cpu"
-    } else {
-        $DisableDevices = @(Compare-Object $Device_Ids @($Miner_Device | Select-Object -ExpandProperty Type_Vendor_Index -Unique) | Where-Object {$_.SideIndicator -eq "<="} | Foreach-Object {$_.InputObject}) -join ','
-        "-no-cpu -multi-gpu -disable-gpu $($DisableDevices)"
+    $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+        $First = $true
+        $Miner_Model = $_.Model
+        $Miner_Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+
+        $Device_Params = if ($Miner_Vendor -eq "CPU") {
+            $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$MainAlgorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$MainAlgorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+            "-no-gpu -cpu-chips $($CPUThreads)"
+        } elseif (($Device_Ids | Measure-Object).Count -eq 1) {
+            "-no-cpu"
+        } else {
+            $DisableDevices = @(Compare-Object $Device_Ids @($Miner_Device | Select-Object -ExpandProperty Type_Vendor_Index -Unique) | Where-Object {$_.SideIndicator -eq "<="} | Foreach-Object {$_.InputObject}) -join ','
+            "-no-cpu -multi-gpu -disable-gpu $($DisableDevices)"
+        }
+
+        $Device_Type = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
+
+        $Commands.ForEach({
+
+            $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+
+		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
+                    if ($First) {
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $First = $false
+                    }
+				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.$Device_Type) {$Pools.$Algorithm_Norm.Ports.$Device_Type} else {$Pools.$Algorithm_Norm.Port}
+				    [PSCustomObject]@{
+					    Name           = $Miner_Name
+					    DeviceName     = $Miner_Device.Name
+					    DeviceModel    = $Miner_Model
+					    Path           = $Path
+					    Arguments      = "-mining-address $($Pools.$Algorithm_Norm.User) $($Device_Params) -stratum-url $($Pools.$Algorithm_Norm.Host) -stratum-port $($Pool_Port) -stratum-password $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
+					    API            = "DynexsolveWrapper"
+					    Port           = $Miner_Port
+					    URI            = $Uri
+                        FaultTolerance = $_.FaultTolerance
+					    ExtendInterval = $_.ExtendInterval
+                        Penalty        = 0
+                        DevFee         = 0.0
+					    ManualUri      = $ManualUri
+					    MiningPriority = 2
+                        Version        = $Version
+                        PowerDraw      = 0
+                        BaseName       = $Name
+                        BaseAlgorithm  = $Algorithm_Norm_0
+                        Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
+                        LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
+                        ListDevices    = "-devices"
+				    }
+			    }
+		    }
+        })
     }
-
-    $Commands.ForEach({
-
-        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-
-		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
-                if ($First) {
-                    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $First = $false
-                }
-				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-				[PSCustomObject]@{
-					Name           = $Miner_Name
-					DeviceName     = $Miner_Device.Name
-					DeviceModel    = $Miner_Model
-					Path           = $Path
-					Arguments      = "-mining-address $($Pools.$Algorithm_Norm.User) $($Device_Params) -stratum-url $($Pools.$Algorithm_Norm.Host) -stratum-port $($Pool_Port) -stratum-password $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
-					API            = "DynexsolveWrapper"
-					Port           = $Miner_Port
-					URI            = $Uri
-                    FaultTolerance = $_.FaultTolerance
-					ExtendInterval = $_.ExtendInterval
-                    Penalty        = 0
-                    DevFee         = 0.0
-					ManualUri      = $ManualUri
-					MiningPriority = 2
-                    Version        = $Version
-                    PowerDraw      = 0
-                    BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm_0
-                    Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Benchmarked
-                    LogFile        = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".LogFile
-                    ListDevices    = "-devices"
-				}
-			}
-		}
-    })
 }
