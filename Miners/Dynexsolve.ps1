@@ -34,7 +34,7 @@ if ($IsLinux) {
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "dynexsolve"; Params = ""; ExtendInterval = 2} #DynexSolve/DNX
+    [PSCustomObject]@{MainAlgorithm = "dynexsolve"; Params = ""; ExtendInterval = 2; NoCPUMining = $true} #DynexSolve/DNX
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -111,6 +111,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 					    ManualUri      = $ManualUri
 					    MiningPriority = 2
                         Version        = $Version
+                        NoCPUMining    = $_.NoCPUMining
                         PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = $Algorithm_Norm_0
