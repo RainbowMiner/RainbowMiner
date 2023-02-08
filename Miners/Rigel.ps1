@@ -10,13 +10,13 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.3.5"
+$Version = "1.3.6"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.5-rigel/rigel-1.3.5-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6-rigel/rigel-1.3.6-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -24,7 +24,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.5-rigel/rigel-1.3.5-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6-rigel/rigel-1.3.6-win.zip"
             Cuda = "8.0"
         }
     )
