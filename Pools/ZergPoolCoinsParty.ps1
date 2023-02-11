@@ -82,7 +82,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
         $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     }
 
-    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethproxy"} else {"stratum"}} else {$null}
+    $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratum2"} else {"stratum"}} else {$null}
 
     $Divisor = 1e9 * [Double]$PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor
     if ($Divisor -le 0) {
