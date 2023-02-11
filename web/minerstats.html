@@ -220,7 +220,7 @@
             }
             item.tStatus = 'Ok';
             if (item.Benchmarking) item.tStatus = 'Benchmarking';
-            else if (item.NeedsBenchmark) item.tStatus = 'Needs Benchmark'
+            else if (item.NeedsBenchmark) item.tStatus = 'Out-dated Benchmark'
             else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'
 
             item.tBenchmarked = (item.tStatus == 'Benchmarking' || !item.Benchmarked)? '-' : item.Benchmarked;
