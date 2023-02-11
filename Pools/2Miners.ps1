@@ -43,26 +43,26 @@ catch {
 #$Pool_HostStatus | where-object {$_.host -notmatch "^solo" -and $_.host -match "^([a-z]+)\."} | Foreach-Object {$Matches[1]} | select-object -unique | sort-object
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";  port = 5252; fee = 1.0; divisor = 1e8; ssl = $true}
-    [PSCustomObject]@{rpc = "btg";   symbol = "BTG";   port = 4040; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "ckb";   symbol = "CKB";   port = 6464; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "ctxc";  symbol = "CTXC";  port = 2222; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "erg";   symbol = "ERG";   port = 8888; fee = 1.0; divisor = 1e9}
-    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "ethw";  symbol = "ETHW";  port = 2020; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN-PRI";port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "mwc";   symbol = "MWC-PRI"; port = 1111; fee = 1.0; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "neox";  symbol = "NEOX";  port = 4040; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
-    [PSCustomObject]@{rpc = "firo";  symbol = "FIRO";  port = 8080; fee = 1.0; divisor = 1e8; altsymbol = "XZC"}
-    [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "flux";  symbol = "FLUX";  port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
-    [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "ae";   symbol = "AE";       port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "beam"; symbol = "BEAM";     port = 5252; fee = 1.0; divisor = 1e8; ssl = $true}
+    [PSCustomObject]@{rpc = "btg";  symbol = "BTG";      port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "ckb";  symbol = "CKB";      port = 6464; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "clo";  symbol = "CLO";      port = 3030; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "ctxc"; symbol = "CTXC";     port = 2222; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "erg";  symbol = "ERG";      port = 8888; fee = 1.0; divisor = 1e9}
+    [PSCustomObject]@{rpc = "etc";  symbol = "ETC";      port = 1010; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "ethw"; symbol = "ETHW";     port = 2020; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etp";  symbol = "ETP";      port = 9292; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "exp";  symbol = "EXP";      port = 3030; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "grin"; symbol = "GRIN-PRI"; port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "mwc";  symbol = "MWC-PRI";  port = 1111; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "neox"; symbol = "NEOX";     port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "rvn";  symbol = "RVN";      port = 6060; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "xmr";  symbol = "XMR";      port = 2222; fee = 1.0; divisor = 1e12}
+    [PSCustomObject]@{rpc = "firo"; symbol = "FIRO";     port = 8080; fee = 1.0; divisor = 1e8; altsymbol = "XZC"}
+    [PSCustomObject]@{rpc = "zec";  symbol = "ZEC";      port = 1010; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "flux"; symbol = "FLUX";     port = 9090; fee = 1.0; divisor = 1e8; altsymbol = "ZEL"}
+    [PSCustomObject]@{rpc = "zen";  symbol = "ZEN";      port = 3030; fee = 1.0; divisor = 1e8}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.$Pool_Currency -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
@@ -126,16 +126,16 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
         $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
         if ($_.cycles) {
-            $addName         = $Pool_Algorithm_Norm -replace "[^\d]"
-            $PBR  = (86400 / $_.cycles) * ($(if ($_.symbol -match "-PRI$") {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
-            $btcRewardLive   = $PBR * $reward * $btcPrice
-            $Divisor         = 1
-            $Hashrate        = $Pool_Request.hashrates.$addName
+            $addName       = $Pool_Algorithm_Norm -replace "[^\d]"
+            $PBR           = (86400 / $_.cycles) * ($(if ($_.symbol -match "-PRI$") {$Pool_Request.nodes."primaryWeight$($addName)"} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
+            $btcRewardLive = $PBR * $reward * $btcPrice
+            $Divisor       = 1
+            $Hashrate      = $Pool_Request.hashrates.$addName
         } else {
-            $btcRewardLive   = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
-            $addName         = ""
-            $Divisor         = 1
-            $Hashrate        = $Pool_Request.hashrate
+            $btcRewardLive = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
+            $addName       = ""
+            $Divisor       = 1
+            $Hashrate      = $Pool_Request.hashrate
         }
         $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
@@ -153,40 +153,40 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
             if (-not $Pool_Hosts.Contains("$($_.host)$($Pool_SSL_0)")) {
                 $Pool_Hosts.Add("$($_.host)$($Pool_SSL_0)")
                 [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-                    Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin.Name
-                    CoinSymbol    = $Pool_Currency
-                    Currency      = $Pool_Currency
-                    Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.$StatAverageStable
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = $Pool_Protocol
-                    Host          = $Pool_Host_0
-                    Port          = $Pool_Port
-                    User          = "$($Pool_Wallet).{workername:$Worker}"
-                    Pass          = "x"
-                    Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
-                    SSL           = $Pool_SSL_0
-                    Updated       = $Stat.Updated
-                    PoolFee       = $Pool_Fee
-                    DataWindow    = $DataWindow
-                    Workers       = $Pool_Request.workersTotal
-                    Hashrate      = $Stat.HashRate_Live
-                    TSL           = $Pool_TSL
-                    BLK           = $Stat.BlockRate_Average
-                    EthMode       = $Pool_EthProxy
-                    Name          = $Name
-                    Penalty       = 0
-                    PenaltyFactor = 1
-                    Disabled      = $false
+                    Algorithm          = $Pool_Algorithm_Norm
+                    Algorithm0         = $Pool_Algorithm_Norm
+                    CoinName           = $Pool_Coin.Name
+                    CoinSymbol         = $Pool_Currency
+                    Currency           = $Pool_Currency
+                    Price              = $Stat.$StatAverage #instead of .Live
+                    StablePrice        = $Stat.$StatAverageStable
+                    MarginOfError      = $Stat.Week_Fluctuation
+                    Protocol           = $Pool_Protocol
+                    Host               = $Pool_Host_0
+                    Port               = $Pool_Port
+                    User               = "$($Pool_Wallet).{workername:$Worker}"
+                    Pass               = "x"
+                    Region             = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
+                    SSL                = $Pool_SSL_0
+                    Updated            = $Stat.Updated
+                    PoolFee            = $Pool_Fee
+                    DataWindow         = $DataWindow
+                    Workers            = $Pool_Request.workersTotal
+                    Hashrate           = $Stat.HashRate_Live
+                    TSL                = $Pool_TSL
+                    BLK                = $Stat.BlockRate_Average
+                    EthMode            = $Pool_EthProxy
+                    Name               = $Name
+                    Penalty            = 0
+                    PenaltyFactor      = 1
+                    Disabled           = $false
                     HasMinerExclusions = $false
-                    Price_0       = 0.0
-                    Price_Bias    = 0.0
-                    Price_Unbias  = 0.0
-                    Wallet        = $Pool_Wallet
-                    Worker        = "{workername:$Worker}"
-                    Email         = $Email
+                    Price_0            = 0.0
+                    Price_Bias         = 0.0
+                    Price_Unbias       = 0.0
+                    Wallet             = $Pool_Wallet
+                    Worker             = "{workername:$Worker}"
+                    Email              = $Email
                 }
             }
         }

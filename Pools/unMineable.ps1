@@ -158,39 +158,39 @@ $Pools_Data | ForEach-Object {
             foreach($Pool_Port in $_.port) {
                 $Pool_Protocol = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 foreach($Pool_Region in $_.region) {
-                    [PSCustomObject]@{
-                        Algorithm     = $Pool_Algorithm_Norm
-                        Algorithm0    = $Pool_Algorithm_Norm
-                        CoinName      = $Pool_CurrencyData.name
-                        CoinSymbol    = $Pool_Currency
-                        Currency      = $Pool_Currency
-                        Price         = $Stat.$StatAverage #instead of .Live
-                        StablePrice   = $Stat.$StatAverageStable
-                        MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = $Pool_Protocol
-                        Host          = "$($_.rpc)$(if ($_.region.Count -gt 1) {"-$($Pool_Region)"}).unmineable.com"
-                        Port          = $Pool_Port
-                        User          = $Pool_Wallet
-                        Pass          = "x"
-                        Region        = $Pool_RegionsTable.$Pool_Region
-                        SSL           = $Pool_SSL
-                        Updated       = $Stat.Updated
-                        PoolFee       = if ($Pool_Referal) {0.75} else {1.0}
-                        PaysLive      = $true
-                        DataWindow    = $DataWindow
-				        ErrorRatio    = $Stat.ErrorRatio
-                        EthMode       = $Pool_EthProxy
-                        Name          = $Name
-                        Penalty       = 0
-                        PenaltyFactor = 1
-                        Disabled      = $false
+                    [PSCustomObject]@{     
+                        Algorithm          = $Pool_Algorithm_Norm
+                        Algorithm0         = $Pool_Algorithm_Norm
+                        CoinName           = $Pool_CurrencyData.name
+                        CoinSymbol         = $Pool_Currency
+                        Currency           = $Pool_Currency
+                        Price              = $Stat.$StatAverage #instead of .Live
+                        StablePrice        = $Stat.$StatAverageStable
+                        MarginOfError      = $Stat.Week_Fluctuation
+                        Protocol           = $Pool_Protocol
+                        Host               = "$($_.rpc)$(if ($_.region.Count -gt 1) {"-$($Pool_Region)"}).unmineable.com"
+                        Port               = $Pool_Port
+                        User               = $Pool_Wallet
+                        Pass               = "x"
+                        Region             = $Pool_RegionsTable.$Pool_Region
+                        SSL                = $Pool_SSL
+                        Updated            = $Stat.Updated
+                        PoolFee            = if ($Pool_Referal) {0.75} else {1.0}
+                        PaysLive           = $true
+                        DataWindow         = $DataWindow
+                        ErrorRatio         = $Stat.ErrorRatio
+                        EthMode            = $Pool_EthProxy
+                        Name               = $Name
+                        Penalty            = 0
+                        PenaltyFactor      = 1
+                        Disabled           = $false
                         HasMinerExclusions = $false
-                        Price_0       = 0.0
-                        Price_Bias    = 0.0
-                        Price_Unbias  = 0.0
-                        Wallet        = $Pool_Wallet
-                        Worker        = "{workername:$Worker}"
-                        Email         = $Email
+                        Price_0            = 0.0
+                        Price_Bias         = 0.0
+                        Price_Unbias       = 0.0
+                        Wallet             = $Pool_Wallet
+                        Worker             = "{workername:$Worker}"
+                        Email              = $Email
                     }
                 }
                 $Pool_SSL = $true

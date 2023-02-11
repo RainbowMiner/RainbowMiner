@@ -23,11 +23,11 @@ $Pools_Data = @(
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Coin      = Get-Coin $_.symbol
-    $Pool_Currency  = $_.symbol
-    $Pool_Fee       = $_.fee
-    $Pool_Port      = $_.port
-    $Pool_Regions   = $_.region
+    $Pool_Coin     = Get-Coin $_.symbol
+    $Pool_Currency = $_.symbol
+    $Pool_Fee      = $_.fee
+    $Pool_Port     = $_.port
+    $Pool_Regions  = $_.region
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
     $Pool_Request = [PSCustomObject]@{}
@@ -91,40 +91,40 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if ($ok -or $InfoOnly) {
         foreach ($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-				Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.$StatAverageStable
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = "handshake$(if ($Pool_Region -ne "hk") {"-$Pool_Region"}).6block.com"
-                Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable[$Pool_Region]
-                SSL           = $false
-                WTM           = $true
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_Fee
-                Workers       = [int]$Pool_Request.activeMiners
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-				Disabled      = $false
-				HasMinerExclusions = $false
-                Price_0       = 0.0
-				Price_Bias    = 0.0
-				Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-                Failover      = @(
+                Algorithm          = $Pool_Algorithm_Norm
+                Algorithm0         = $Pool_Algorithm_Norm
+                CoinName           = $Pool_Coin.Name
+                CoinSymbol         = $Pool_Currency
+                Currency           = $Pool_Currency
+                Price              = $Stat.$StatAverage #instead of .Live
+                StablePrice        = $Stat.$StatAverageStable
+                MarginOfError      = $Stat.Week_Fluctuation
+                Protocol           = "stratum+tcp"
+                Host               = "handshake$(if ($Pool_Region -ne "hk") {"-$Pool_Region"}).6block.com"
+                Port               = $Pool_Port
+                User               = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                Pass               = "x"
+                Region             = $Pool_RegionsTable[$Pool_Region]
+                SSL                = $false
+                WTM                = $true
+                Updated            = $Stat.Updated
+                PoolFee            = $Pool_Fee
+                Workers            = [int]$Pool_Request.activeMiners
+                Hashrate           = $Stat.HashRate_Live
+                TSL                = $Pool_TSL
+                BLK                = $Stat.BlockRate_Average
+                Name               = $Name
+                Penalty            = 0
+                PenaltyFactor      = 1
+                Disabled           = $false
+                HasMinerExclusions = $false
+                Price_0            = 0.0
+                Price_Bias         = 0.0
+                Price_Unbias       = 0.0
+                Wallet             = $Wallets.$Pool_Currency
+                Worker             = "{workername:$Worker}"
+                Email              = $Email
+                Failover           = @(
                     [PSCustomObject]@{
                         Protocol = "stratum+tcp"
                         Host     = "handshake$(if ($Pool_Region -ne "hk") {"-$Pool_Region"}).6block.com"
