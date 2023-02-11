@@ -51,9 +51,11 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $
 
     $Pool_Stratum        = if ($_.info.links.stratums) {"randomx"} else {"stratum-%region%"}
 
+    $Pool_Profit         = 0
+
     if (-not $InfoOnly) {
-        $difficulty = $_.d / [Math]::Pow(2,32)
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty $difficulty -Quiet
+        $Pool_Profit = if ($_.marketStats.btc -and $_.d) {86400 / [Math]::Pow(2,32) / $_.d * $_.r * $_.marketStats.btc} else {0}
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.d -Quiet
     }
 
     $Pool_Ports = $_.info.ports.PSObject.Properties | Group-Object {$_.Value.tls}
@@ -68,9 +70,9 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $
                         CoinName      = $Pool_CoinName
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
-                        Price         = 0
-                        StablePrice   = 0
-                        MarginOfError = 0
+                        Price         = if ($Pool_Profit) {$Stat.$StatAverage} else {0}
+                        StablePrice   = if ($Pool_Profit) {$Stat.$StatAverageStable} else {0}
+                        MarginOfError = if ($Pool_Profit) {$Stat.Week_Fluctuation} else {0}
                         Protocol      = "stratum+$(if ($SSL) {"ssl"} else {"tcp"})"
                         Host          = "$($Pool_Stratum -replace "%region%",$Pool_Region).rplant.xyz"
                         Port          = $Pool_Port
@@ -98,7 +100,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $
                         Wallet        = $Pool_User
                         Worker        = "{workername:$Worker}"
                         Email         = $Email
-                        WTM           = $true
+                        WTM           = $Pool_Profit -eq 0
                     }
                 }
             }
