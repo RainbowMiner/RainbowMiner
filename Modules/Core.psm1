@@ -2583,7 +2583,7 @@ function Invoke-Core {
                 if ($Miner_Uri) {
                     if ($Miner_Uri -eq $Miner.URI) {
                         $AllMiners_VersionCheck[$Miner.BaseName].Ok = $true
-                    } else {
+                    } elseif ($Session.Config.AutoBenchmarkMode -ne "all") { # -eq "updated"
                         $Miner_FromVersion = Get-MinerVersion $Miner_Uri
 
                         $Miner_VersionCheck = $Global:GlobalMinerUpdateDB | Where-Object {$_.MinerName -eq $Miner.BaseName -and $_.FromVersion -ge $Miner_FromVersion -and $_.ToVersion -le $Miner_Version}
