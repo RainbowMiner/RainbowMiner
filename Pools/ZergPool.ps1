@@ -123,42 +123,42 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
             foreach($Pool_Currency in $Pool_Currencies) {
                 $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
                 [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-                    Algorithm0    = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_CoinName
-                    CoinSymbol    = $Pool_CoinSymbol
-                    Currency      = $Pool_Currency
-                    Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.$StatAverageStable
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = $Pool_Protocol
-                    Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$($Pool_Algorithm).$($Pool_Region).mine.zergpool.com"}
-                    Port          = $Pool_Port_SSL
-                    User          = $Wallets.$Pool_Currency
-                    Pass          = "ID={workername:$Worker},c=$(if ($Pool_Currency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_Currency}){diff:,sd=`$difficulty}$Pool_Params"
-                    Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $Pool_SSL
-                    SSLSelfSigned = $Pool_SSL
-                    Updated       = $Stat.Updated
-                    PoolFee       = $Pool_PoolFee
-                    DataWindow    = $DataWindow
-                    Workers       = $Pool_Request.$_.workers_shared
-                    Hashrate      = $Stat.HashRate_Live
-                    BLK           = $Stat.BlockRate_Average
-                    TSL           = $Pool_TSL
-                    EthMode       = $Pool_EthProxy
-				    ErrorRatio    = $Stat.ErrorRatio
-                    Name          = $Name
-                    Penalty       = 0
-                    PenaltyFactor = 1
-                    Disabled      = $false
+                    Algorithm          = $Pool_Algorithm_Norm
+                    Algorithm0         = $Pool_Algorithm_Norm
+                    CoinName           = $Pool_CoinName
+                    CoinSymbol         = $Pool_CoinSymbol
+                    Currency           = $Pool_Currency
+                    Price              = $Stat.$StatAverage #instead of .Live
+                    StablePrice        = $Stat.$StatAverageStable
+                    MarginOfError      = $Stat.Week_Fluctuation
+                    Protocol           = $Pool_Protocol
+                    Host               = if ($Pool_Region -eq "us") {$Pool_Host} else {"$($Pool_Algorithm).$($Pool_Region).mine.zergpool.com"}
+                    Port               = $Pool_Port_SSL
+                    User               = $Wallets.$Pool_Currency
+                    Pass               = "ID={workername:$Worker},c=$(if ($Pool_Currency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_Currency}){diff:,sd=`$difficulty}$Pool_Params"
+                    Region             = $Pool_RegionsTable.$Pool_Region
+                    SSL                = $Pool_SSL
+                    SSLSelfSigned      = $Pool_SSL
+                    Updated            = $Stat.Updated
+                    PoolFee            = $Pool_PoolFee
+                    DataWindow         = $DataWindow
+                    Workers            = $Pool_Request.$_.workers_shared
+                    Hashrate           = $Stat.HashRate_Live
+                    BLK                = $Stat.BlockRate_Average
+                    TSL                = $Pool_TSL
+                    EthMode            = $Pool_EthProxy
+                    ErrorRatio         = $Stat.ErrorRatio
+                    Name               = $Name
+                    Penalty            = 0
+                    PenaltyFactor      = 1
+                    Disabled           = $false
                     HasMinerExclusions = $false
-                    Price_0       = 0.0
-                    Price_Bias    = 0.0
-                    Price_Unbias  = 0.0
-                    Wallet        = $Wallets.$Pool_Currency
-                    Worker        = "{workername:$Worker}"
-                    Email         = $Email
+                    Price_0            = 0.0
+                    Price_Bias         = 0.0
+                    Price_Unbias       = 0.0
+                    Wallet             = $Wallets.$Pool_Currency
+                    Worker             = "{workername:$Worker}"
+                    Email              = $Email
                 }
             }
         }
