@@ -7,6 +7,7 @@ param(
     [String]$Worker,
     [alias("UserName")]
     [String]$User,
+    [String]$API_Key,
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
@@ -23,7 +24,11 @@ $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ARRR";    port = 700; fee = 3.0; rpc = "arrr"}
+    [PSCustomObject]@{symbol = "ARRR";    port = 700; fee = 5.0; rpc = "arrr"}
+    [PSCustomObject]@{symbol = "DASH";    port = 700; fee = 3.0; rpc = "dash"}
+    [PSCustomObject]@{symbol = "SC";      port = 700; fee = 3.0; rpc = "sc"}
+    [PSCustomObject]@{symbol = "ZEC";     port = 700; fee = 3.0; rpc = "zec"}
+    [PSCustomObject]@{symbol = "ZEN";     port = 700; fee = 3.0; rpc = "zen"}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User -or $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
@@ -34,14 +39,13 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
-    $Pool_Request        = [PSCustomObject]@{}
+    $Pool_Hashrate_Request = [PSCustomObject]@{}
     $Pool_Request_Blocks = [PSCustomObject]@{}
 
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://mining.luxor.tech/api/$($Pool_Currency)/stats" -tag $Name -timeout 15 -cycletime 120
-            $Pool_Request_Blocks = Invoke-RestMethodAsync "https://mining.luxor.tech/api/$($Pool_Currency)/blocks" -tag $Name -timeout 15 -cycletime 120
+            $Pool_Hashrate_Request = Invoke-RestMethodAsync "https://api.beta.luxor.tech/graphql" -tag $Name -timeout 15 -cycletime 120 -headers @{'x-lux-api-key'=$API_Key} -body @{query = "query getPoolHashrate { getPoolHashrate(mpn: $($Pool_Currency), orgSlug: `"luxor`") }"}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -52,14 +56,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
     }
 
     if ($ok -and -not $InfoOnly) {
-        $timestamp      = Get-UnixTimestamp
-        $timestamp24h   = $timestamp - 24*3600
-        $blocks_measure = $Pool_Request_Blocks | Where-Object {$_.timestamp -gt $timestamp24h} | Select-Object -ExpandProperty timestamp | Measure-Object -Minimum -Maximum
-        $Pool_BLK       = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
-        $Pool_TSL       = [int]($timestamp) - [int]($Pool_Request_Blocks | Select-Object -ExpandProperty timestamp -First 1)
-        if ($Pool_TSL -lt 0) {$Pool_TSL = 0}
-
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Hashrate_Request.data.getPoolHashrate -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
@@ -76,10 +73,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+tcp"
-                Host          = "$($Pool_RpcPath).luxor.tech"
+                Host          = "$($Pool_RpcPath).global.luxor.tech"
                 Port          = $Pool_Port
                 User          = "$($Pool_Wallet).{workername:$Worker}"
-                Pass          = "x"
+                Pass          = "123"
                 Region        = $Pool_RegionsTable[$Pool_Region]
                 SSL           = $false
                 Updated       = $Stat.Updated

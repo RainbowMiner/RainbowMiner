@@ -153,9 +153,9 @@
             Currencies=@("VRSC")
         }
         "Luxor" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User=""}
-            SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable automatic Catalyst mining"}
-            Currencies=@("ARRR")
+            Fields=[PSCustomObject]@{User="";API_Key=""}
+            SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable automatic Catalyst mining";API_Key="Enter your Luxor API key (Profile Settings > Api Keys > Generate New Key)"}
+            Currencies=@("ARRR","DASH","ZEC","ZEN")
         }
         "Minafacil" = [PSCustomObject]@{
             Currencies=@("RTM")
