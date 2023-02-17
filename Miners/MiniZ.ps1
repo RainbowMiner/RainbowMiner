@@ -10,13 +10,13 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "2.0c"
+$Version = "2.0c3"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c-miniz/miniZ_v2.0c_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c3-miniz/miniZ_v2.0c3_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -24,7 +24,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c-miniz/miniZ_v2.0c_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c3-miniz/miniZ_v2.0c3_win-x64.7z"
             Cuda = "8.0"
         }
     )
@@ -121,7 +121,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$Algorithm_Norm.User)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker=$($Pools.$Algorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) --nohttpheaders $($_.Params)"
+					    Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$Algorithm_Norm.User)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker=$($Pools.$Algorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) --nohttpheaders --url=zmp://zil15fvzdfzat5x6ndwt4sdm30860l4kd2lzgtymt5.rbm@zil.flexpool.io:4444 $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					    API            = "MiniZ"
 					    Port           = $Miner_Port
