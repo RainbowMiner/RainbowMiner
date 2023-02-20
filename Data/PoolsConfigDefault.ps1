@@ -54,6 +54,9 @@
         "Crazypool" = [PSCustomObject]@{
             Currencies=@("ETC","UBQ")
         }
+        "Ekapool" = [PSCustomObject]@{
+            Currencies=@("AVS","FLR")
+        }
         "EthashPool" = [PSCustomObject]@{
             Currencies=@("ETC","ETP")
         }
