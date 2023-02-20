@@ -33,7 +33,7 @@ if (($Pool_Request.pools | Measure-Object).Count -le 1) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us","eu","ap","sg")
+$Pool_Regions = @("us","eu","ap","sg","ru","cn","sa","fr","ca","usw")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentProcessing.payoutScheme -eq "PPLNS" -and ($Wallets.$Pool_Currency -or $InfoOnly)} | Foreach-Object {
