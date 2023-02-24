@@ -20,7 +20,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.zergpool.com:8443/api/status" -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://zergpool.com/api/status" -retry 3 -retrywait 1000 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -34,7 +34,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://api.zergpool.com:8443/api/currencies" -delay 1000 -tag $Name -cycletime 120 -timeout 20
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://zergpool.com/api/currencies" -delay 1000 -tag $Name -cycletime 120 -timeout 20
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
