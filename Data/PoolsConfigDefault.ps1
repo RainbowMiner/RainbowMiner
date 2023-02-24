@@ -135,7 +135,7 @@
             Currencies=@("ETC","RVN")
         }
         "HeroMiners" = [PSCustomObject]@{
-            Currencies=@("ETC","RVN","ERG","XWP")
+            Currencies=@("ETC","RVN","ERG")
         }
         "Hiveon" = [PSCustomObject]@{
             Currencies=@("ETC")
@@ -455,10 +455,10 @@
         }
         "WoolyPooly" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=30}
-            Currencies=@("CFX","ETC","RVN","ERG","VEIL")
+            Currencies=@("CFX","ETC","RVN","ERG","NEXA")
         }
         "WoolyPoolySolo" = [PSCustomObject]@{
-            Currencies=@("CFX","ETC","RVN","ERG","VEIL")
+            Currencies=@("CFX","ETC","RVN","ERG","NEXA")
         }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
