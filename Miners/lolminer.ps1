@@ -11,14 +11,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.67"
+$Version = "1.68"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.67-lolminer/lolMiner_v1.67_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.68-lolminer/lolMiner_v1.68_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.67-lolminer/lolMiner_v1.67_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.68-lolminer/lolMiner_v1.68_Win64.zip"
 }
 
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.INTEL -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
