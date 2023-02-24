@@ -23,9 +23,10 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pools_Data = @(
     [PSCustomObject]@{rpc = "clo.crazypool.org";  symbol = "CLO";  port = @(4444,8888); fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "etc.crazypool.org";  symbol = "ETC";  port = @(7000,7777); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "ethf.crazypool.org"; symbol = "ETF";  port = @(8008,9009); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "ethf.crazypool.org"; symbol = "ETHF"; port = @(8008,9009); fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "ubq.crazypool.org";  symbol = "UBQ";  port = @(3335);      fee = 1; region = $Pool_Regions.Where({$_ -ne "au"})}
+    [PSCustomObject]@{rpc = "pom.crazypool.org";  symbol = "POM";  port = @(7070);      fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "ubq.crazypool.org";  symbol = "UBQ";  port = @(3335);      fee = 1; region = $Pool_Regions}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
