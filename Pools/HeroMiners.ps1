@@ -34,6 +34,8 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "GRIN-PRI";port = 1125; fee = 0.9; rpc = "grin"; region = $Pool_AllRegions; cycles = 32}
     [PSCustomObject]@{symbol = "XHV";   port = 1110; fee = 0.9; rpc = "haven"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "KAS";   port = 1206; fee = 0.9; rpc = "kaspa"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "XLA";   port = 1190; fee = 0.9; rpc = "scala"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "TRTL";  port = 1160; fee = 0.9; rpc = "turtlecoin"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "MWC-PRI";port = 1128; fee = 0.9; rpc = "mwc"; region = $Pool_AllRegions; cycles = 31}
     [PSCustomObject]@{symbol = "NEOX";  port = 1202; fee = 0.9; rpc = "neoxa"; region = $Pool_AllRegions}
@@ -43,10 +45,8 @@ $Pools_Data = @(
     #[PSCustomObject]@{symbol = "AEON";  port = 1145; fee = 0.9; rpc = "aeon"; region = @("de","fi","hk")}
     #[PSCustomObject]@{symbol = "ARQ";   port = 1143; fee = 0.9; rpc = "arqma"; region = $Pool_AllRegions}
     #[PSCustomObject]@{symbol = "TUBE";  port = 1120; fee = 0.9; rpc = "bittube"; region = $Pool_AllRegions; cycles = 40}
-    #[PSCustomObject]@{symbol = "KVA";   port = 1163; fee = 0.9; rpc = "kevacoin"; region = @("de","fi","ca","hk","sg")}
-    #[PSCustomObject]@{symbol = "XLA";   port = 1190; fee = 0.9; rpc = "scala"; region = $Pool_AllRegions}
+    #[PSCustomObject]@{symbol = "KVA";   port = 1163; fee = 0.9; rpc = "kevacoin"; region = @("de","fi","ca","hk","sg")}    
     #[PSCustomObject]@{symbol = "XWP";   port = 1123; fee = 0.9; rpc = "swap"; region = $Pool_AllRegions; cycles = 32}
-    #[PSCustomObject]@{symbol = "TRTL";  port = 1160; fee = 0.9; rpc = "turtlecoin"; region = $Pool_AllRegions}
     #[PSCustomObject]@{symbol = "UPX";   port = 1177; fee = 0.9; rpc = "uplexa"; region = $Pool_AllRegions}
     #[PSCustomObject]@{symbol = "DERO";  port = 1117; fee = 0.9; rpc = "dero"; region = $Pool_AllRegions}
     #[PSCustomObject]@{symbol = "EXP";   port = 10181; fee = 0.9; rpc = "expanse"; region = $Pool_AllRegions}
