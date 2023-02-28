@@ -189,15 +189,6 @@
         "divisor":  1
     },
     {
-        "symbol":  "SIN",
-        "match":  "^S",
-        "rpc":  "https://explorer.sinovate.io/ext/getbalance/{w}",
-        "address":  "",
-        "balance":  "#",
-        "received":  "",
-        "divisor":  1
-    },
-    {
         "symbol":  "TON",
         "match":  "^E[Qf]",
         "rpc":  "https://api.ton.sh/getAddressInformation?address={w}",
