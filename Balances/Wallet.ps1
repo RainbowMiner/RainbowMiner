@@ -153,7 +153,7 @@ if ($Config.Pools.Binance.EnableShowWallets -and $Config.Pools.Binance.API_Key -
             $Title = " Binance"
             if ($_.asset -match "^LD([A-Z0-9][A-Z0-9]+)$") {
                 $Asset = $Matches[1]
-                $Title = "$($Title)/S"
+                $Title = "$($Title)/Earn"
             }
 
             [PSCustomObject]@{
