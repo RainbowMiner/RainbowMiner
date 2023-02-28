@@ -144,29 +144,34 @@ foreach ($Wallet_Data in $Wallets_Data) {
 #
 
 if ($Config.Pools.Binance.EnableShowWallets -and $Config.Pools.Binance.API_Key -and $Config.Pools.Binance.API_Secret) {
-    $Request = @()
     try {
         $Request = (Invoke-BinanceRequest "/api/v3/account" $Config.Pools.Binance.API_Key $Config.Pools.Binance.API_Secret).balances | Where-Object {[decimal]$_.free -gt 0 -or [decimal]$_.locked -gt 0}
+        $Request | Foreach-Object {
+            $Total_Free   = [decimal]$_.free
+            $Total_Locked = [decimal]$_.locked
+            $Asset = $_.asset
+            $Title = " Binance"
+            if ($_.asset -match "^LD([A-Z0-9][A-Z0-9]+)$") {
+                $Asset = $Matches[1]
+                $Title = "$($Title)/S"
+            }
+
+            [PSCustomObject]@{
+                    Caption     = "$Name $($_.asset) (Binance)"
+		            BaseName    = $Name
+                    Info        = $Title
+                    Currency    = $Asset
+                    Balance     = $Total_Free
+                    Pending     = $Total_Locked
+                    Total       = $Total_Free + $Total_Locked
+                    Payouts     = @()
+                    LastUpdated = (Get-Date).ToUniversalTime()
+            }
+        }
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Verbose "Binance Wallet API has failed ($Name) "
-    }
-
-    $Request | Foreach-Object {
-        $Total_Free   = [decimal]$_.free
-        $Total_Locked = [decimal]$_.locked
-        [PSCustomObject]@{
-                Caption     = "$Name $($_.asset) (Binance)"
-		        BaseName    = $Name
-                Info        = " Binance"
-                Currency    = $_.asset
-                Balance     = $Total_Free
-                Pending     = $Total_Locked
-                Total       = $Total_Free + $Total_Locked
-                Payouts     = @()
-                LastUpdated = (Get-Date).ToUniversalTime()
-        }
     }
 }
 
