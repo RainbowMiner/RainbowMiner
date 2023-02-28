@@ -2384,31 +2384,47 @@ class Rigel : Miner {
 
         #$Version = if ($Data.miner -match "(\d\.[\d\.]+)") {$Matches[1]} else {$null}
 
-        $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Ix   = $HashRate_Name -replace "^Ethash.+$","Ethash"
-        $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix
+        $HashRate_Name0 = [String]$this.Algorithm[0]
+        $HashRate_Ix0   = [String]$this.BaseAlgorithm[0] -replace "^Ethash.+$","Ethash"
+
+        $Algos          = $Data.algorithm -split '\+'
+
+        if ($this.Algorithm.Count -gt 1) {
+            $HashRate_Name1 = [String]$this.Algorithm[1]
+            $HashRate_Ix1   = [String]$this.BaseAlgorithm[0] -replace "^Ethash.+$","Ethash"
+        } else {
+            $HashRate_Name1 = ''
+            $HashRate_Ix1   = ''
+        }
+        
+        $Algos | Foreach-Object {
+            $Algo_Norm = Get-Algorithm $_
+            if ($HashRate_Ix0 -eq $Algo_Norm)     {$HashRate_Ix0 = $_}
+            elseif ($HashRate_Ix1 -eq $Algo_Norm) {$HashRate_Ix1 = $_}
+
+        }
+
+        $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix0
 
         $PowerDraw      = [Double]($Data.devices.monitoring_info.power_usage | Measure-Object -Sum).Sum
 
-        if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+        if ($HashRate_Name0 -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name0 = $HashRate_Value}
 
-            $Accepted_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.accepted
-            $Rejected_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.rejected
-            $Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix.invalid
+            $Accepted_Shares = [Int64]$Data.solution_stat.$HashRate_Ix0.accepted
+            $Rejected_Shares = [Int64]$Data.solution_stat.$HashRate_Ix0.rejected
+            $Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix0.invalid
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
 
-            if ($this.Algorithm[1]) {
-                $HashRate_Name = [String]$this.Algorithm[1]
-                $HashRate_Ix   = $HashRate_Name -replace "^Ethash.+$","Ethash"
-                $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix
+            if ($HashRate_Ix1) {
+                $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix1
 
-                if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                    $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                if ($HashRate_Name1 -and $HashRate_Value -gt 0) {
+                    $HashRate | Add-Member @{$HashRate_Name1 = $HashRate_Value}
 
-                    $Accepted_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.accepted
-                    $Rejected_Shares = [Int64]$Data.solution_stat.$HashRate_Ix.rejected
-                    $Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix.invalid
+                    $Accepted_Shares = [Int64]$Data.solution_stat.$HashRate_Ix1.accepted
+                    $Rejected_Shares = [Int64]$Data.solution_stat.$HashRate_Ix1.rejected
+                    $Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix1.invalid
                     $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
                 }
             }
