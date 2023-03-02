@@ -7164,7 +7164,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$Jobkey = $null,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body,
+        $body,
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
@@ -7197,7 +7197,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$noquickstart,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body,
+        $body,
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
@@ -7208,9 +7208,15 @@ function Get-HashtableAsJson {
 [cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $False)]
-    [hashtable]$hashtable = @{}
+    $hashtable
 )
-    "{$(@($hashtable.Keys | Sort-Object | Foreach-Object {"$($_):$(if ($hashtable.$_ -is [hashtable]) {Get-HashtableAsJson $hashtable.$_} else {ConvertTo-Json $hashtable.$_ -Depth 10})"}) -join ",")}"
+    if ($hashtable -is [string]) {$hashtable}
+    else {
+        if ($hashtable -eq $null) {"{}"}
+        else {
+            "{$(@($hashtable.Keys | Sort-Object | Foreach-Object {"$($_):$(if ($hashtable.$_ -is [hashtable]) {Get-HashtableAsJson $hashtable.$_} else {ConvertTo-Json $hashtable.$_ -Depth 10})"}) -join ",")}"
+        }
+    }
 }
 
 function Invoke-GetUrlAsync {
@@ -7245,7 +7251,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [bool]$noquickstart = $false,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body,
+        $body,
     [Parameter(Mandatory = $False)]
         [hashtable]$headers
 )
