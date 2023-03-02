@@ -279,5 +279,15 @@
         "balance":  "balance",
         "received":  "totalRecv",
         "divisor":  1
+    },
+    {
+        "symbol":  "ZIL",
+        "match":  "^zil",
+        "rpc":  "https://api.zilliqa.com/",
+        "address":  "",
+        "balance":  "result.balance",
+        "received":  "",
+        "divisor":  1000000000000,
+        "payload":  "{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"GetBalance\",\"params\":[\"{w}\"]}"
     }
 ]
