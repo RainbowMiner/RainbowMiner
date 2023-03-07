@@ -1260,7 +1260,7 @@ class DynexsolveWrapper : Miner {
             $MJob | Receive-Job | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
-                if ($Line_Simple -match "\[GPU \*\].+ HR = ([\d\s\./hkMGTPs]+?) \|") {
+                if ($Line_Simple -match "\[GPU \*\].+ HASHRATE ([\d\s\./hkMGTPs]+?) \|") {
                     $Words = "$($Matches[1])".Trim() -split "\s+"
 
                     $HashRate = [PSCustomObject]@{}
