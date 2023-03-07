@@ -55,7 +55,7 @@
             Currencies=@("ETC","UBQ")
         }
         "Ekapool" = [PSCustomObject]@{
-            Currencies=@("AVS","FLR")
+            Currencies=@("AVS","FLR","DNX","ZANO")
         }
         "EthashPool" = [PSCustomObject]@{
             Currencies=@("ETC","ETP")

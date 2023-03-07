@@ -6768,7 +6768,7 @@ Param(
     }
 
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
-    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -replace "{unixtimestamp}",(Get-UnixTimestamp) -replace "{iso8601timestamp}",((Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK"))
+    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -replace "{unixtimestamp}",(Get-UnixTimestamp) -replace "{unixtimestamp_ms}",(Get-UnixTimestamp -Milliseconds) -replace "{iso8601timestamp}",((Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK"))
 
     $headers_local = @{}
     if ($headers) {$headers.Keys | Foreach-Object {$headers_local[$_] = $headers[$_]}}
