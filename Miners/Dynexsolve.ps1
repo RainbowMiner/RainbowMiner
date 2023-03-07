@@ -22,7 +22,7 @@ if ($IsLinux) {
         }
     )
 } else {
-    $Path = ".\Bin\NVIDIA-Dynexsolve\DynexSolveVS.exe"
+    $Path = ".\Bin\NVIDIA-Dynexsolve\DynexSolveVS.225.exe"
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.5-dynexsolve/dynexsolve_windows2.2.5.7z"
