@@ -74,7 +74,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
             "-no-cpu -cpu-chips 0"
         } else {
             $DisableDevices = @(Compare-Object $Device_Ids @($Miner_Device | Select-Object -ExpandProperty Type_Vendor_Index -Unique) | Where-Object {$_.SideIndicator -eq "<="} | Foreach-Object {$_.InputObject}) -join ','
-            "-no-cpu -multi-gpu -disable-gpu $($DisableDevices) -cpu-chips 0"
+            "-no-cpu -multi-gpu -disable-gpu $($DisableDevices) -cpu-chips 0$(if ($Miner_Device.Count -gt 1) {" -sync"})"
         }
 
         $Device_Type = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
