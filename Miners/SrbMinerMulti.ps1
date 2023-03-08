@@ -273,6 +273,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                     $Miner_Protocol = Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                         "ethproxy"         {" --esm 0"}
                         "minerproxy"       {" --esm 1"}
+                        "ethstratum"       {" --esm 2"}
+                        "ethstratum1"      {" --esm 2"}
 						"ethstratumnh"     {" --esm 2"}
 						default            {""}
 					}
@@ -281,9 +283,12 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
                     if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.CrazyPool.EnableSrbMinerMultiDual -and $Pools.ZilliqaCP) {
                         if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+                            
                             $ZilMiner_Protocol = Switch ($Pools.ZilliqaCP.EthMode) {
                                 "ethproxy"         {" --zil-esm 0"}
                                 "minerproxy"       {" --zil-esm 1"}
+						        "ethstratum"       {" --zil-esm 2"}
+						        "ethstratum1"      {" --zil-esm 2"}
 						        "ethstratumnh"     {" --zil-esm 2"}
 						        default            {""}
 					        }
