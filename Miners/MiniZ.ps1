@@ -116,12 +116,21 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $Stratum = @()
                     if ($Pools.$Algorithm_Norm.SSL) {$Stratum += "ssl"}
                     if ($Pools.$Algorithm_Norm.Host -match "miningrigrentals" -and $Algorithm_Norm_0 -match "^etc?hash") {$Stratum += "stratum2"}
+
+                    $ZilParams    = ""
+
+                    if ($Session.Config.Pools.CrazyPool.EnableMiniZDual -and $Pools.ZilliqaCP) {
+                        if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+                            $ZilParams = " --url=$($Pools.ZilliqaCP.User)@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port)" 
+                        }
+                    }  
+
 				    [PSCustomObject]@{
 					    Name           = $Miner_Name
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$Algorithm_Norm.User)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker=$($Pools.$Algorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) --nohttpheaders $($_.Params)"
+					    Arguments      = "--$($Miner_Vendor.ToLower()) --telemetry=`$mport -cd $($DeviceIDsAll) --url=$(if ($Stratum) {"$($Stratum -join '+')://"})$($Pools.$Algorithm_Norm.User)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker=$($Pools.$Algorithm_Norm.Worker)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers=$($PersCoin)"}) --gpu-line --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Host -notmatch "xxxMiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) --nohttpheaders$($ZilParams) $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					    API            = "MiniZ"
 					    Port           = $Miner_Port
