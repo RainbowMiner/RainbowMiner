@@ -82,8 +82,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     CoinName      = $Pool_Coin.Name
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
-                    Price         = 0
-                    StablePrice   = 0
+                    Price         = if ($Pool_Currency -eq "ZIL") {1e-15} else {0}
+                    StablePrice   = if ($Pool_Currency -eq "ZIL") {1e-15} else {0}
                     MarginOfError = 0
                     Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
                     Host          = "$($Pool_Region).crazypool.org"
@@ -99,7 +99,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Hashrate      = $Stat.HashRate_Live
                     TSL           = $Pool_TSL
                     BLK           = $Stat.BlockRate_Average
-                    WTM           = $true
+                    WTM           = $Pool_Currency -ne "ZIL"
                     EthMode       = $Pool_EthProxy
                     Name          = $Name
                     Penalty       = 0
