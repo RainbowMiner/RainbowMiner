@@ -27,6 +27,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555); fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "pom.crazypool.org";  symbol = "POM";  port = @(7070);      fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "ubq.crazypool.org";  symbol = "UBQ";  port = @(3335);      fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "zil.crazypool.org";  symbol = "ZIL";  port = @(5005);      fee = 10; region = $Pool_Regions}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -72,46 +73,48 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     foreach($Pool_Region in $_.region) {
-        $Pool_Ssl = $false
-        foreach($Pool_Port in $Pool_Ports) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
-                Host          = "$($Pool_Region).crazypool.org"
-                Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $Pool_Ssl
-                Updated       = (Get-Date).ToUniversalTime()
-                PoolFee       = $_.fee
-                DataWindow    = $DataWindow
-                Workers       = $Pool_Request.minersTotal
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
-                WTM           = $true
-                EthMode       = $Pool_EthProxy
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_0       = 0.0
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Wallets.$Pool_Currency
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
+        if ($Pool_Currency -ne "ZIL" -or $EnableMiniZDual -or $EnableSrbminerMultiDual) {
+            $Pool_Ssl = $false
+            foreach($Pool_Port in $Pool_Ports) {
+                [PSCustomObject]@{
+                    Algorithm     = "$(if ($Pool_Currency -eq "ZIL") {"ZilliqaCP"} else {$Pool_Algorithm_Norm})"
+                    Algorithm0    = "$(if ($Pool_Currency -eq "ZIL") {"ZilliqaCP"} else {$Pool_Algorithm_Norm})"
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = 0
+                    StablePrice   = 0
+                    MarginOfError = 0
+                    Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
+                    Host          = "$($Pool_Region).crazypool.org"
+                    Port          = $Pool_Port
+                    User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_Ssl
+                    Updated       = (Get-Date).ToUniversalTime()
+                    PoolFee       = $_.fee
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_Request.minersTotal
+                    Hashrate      = $Stat.HashRate_Live
+                    TSL           = $Pool_TSL
+                    BLK           = $Stat.BlockRate_Average
+                    WTM           = $true
+                    EthMode       = $Pool_EthProxy
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Disabled      = $false
+                    HasMinerExclusions = $false
+                    Price_0       = 0.0
+                    Price_Bias    = 0.0
+                    Price_Unbias  = 0.0
+                    Wallet        = $Wallets.$Pool_Currency
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
+                }
+                $Pool_Ssl = $true
             }
-            $Pool_Ssl = $true
         }
     }
 }

@@ -52,6 +52,8 @@
             Currencies=@("CPU","MBC")
         }
         "Crazypool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{EnableMiniZDual="1";EnableSrbminerMultiDual="1"}
+            SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, MiniZ will dual mine ZIL on CrazyPool for various algorithms";EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Crazypool for various algorithms"}
             Currencies=@("ETC","UBQ")
         }
         "Ekapool" = [PSCustomObject]@{
@@ -67,7 +69,7 @@
             Currencies=@("ETHW")
         }
         "Ezil" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{EnableLolminerDual="1";EnableNanominerDual="1";EnableTrexDual="1";EnableSrbminerMultiDual="1"}
+            Fields=[PSCustomObject]@{EnableLolminerDual="1";EnableNanominerDual="1";EnableTrexDual="1";EnableSrbminerMultiDual="0"}
             SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, Lolminer will dual mine ZIL on Ezil for various algorithms";EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms";EnableTrexDual="If you set this to 1, Trex will dual mine ZIL on Ezil for Ethash";EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Ezil for various algorithms"}
             Currencies=@("ETC","ZIL")
         }
