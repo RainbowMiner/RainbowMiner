@@ -224,6 +224,7 @@ $OtherCoins | Where-Object {$Pool_Currency = $_.coin;($Wallets.$Pool_Currency -a
                     Wallet        = $Wallets.$Pool_Currency
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
+                    Mallob        = if ($Pool_Currency -eq "DNX") {"https://dnx.$($Pool_Region).ekapool.com"} else {$null}
                 }
             }
             $Pool_SSL = $true
