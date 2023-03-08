@@ -114,6 +114,8 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
                     $Miner_Protocol = Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                         "ethproxy"         {"ethproxy+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                        "ethstratum"       {"ethstratum+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                        "ethstratum1"      {"ethstratum+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 						"ethstratumnh"     {"ethstratum+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 						default            {"stratum+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
 					}
