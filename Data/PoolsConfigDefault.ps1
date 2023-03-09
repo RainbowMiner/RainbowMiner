@@ -54,7 +54,7 @@
         "Crazypool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{EnableMiniZDual="1";EnableSrbminerMultiDual="1"}
             SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, MiniZ will dual mine ZIL on CrazyPool for various algorithms";EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Crazypool for various algorithms"}
-            Currencies=@("ETC","UBQ")
+            Currencies=@("ETC","UBQ","ZIL")
         }
         "Ekapool" = [PSCustomObject]@{
             Currencies=@("AVS","FLR","DNX","ZANO")
