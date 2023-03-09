@@ -31,6 +31,11 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ZEN";     port = 700; fee = 3.0; rpc = "zen"}
 )
 
+if (-not $InfoOnly -and -not $API_Key) {
+    Write-Log -Level Warn "$($Name): Please set an API_Key in pools.config.txt (on luxor.tech, sign in, then click `"API Keys`" and create)"
+    return
+}
+
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User -or $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
     $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Fee       = $_.fee
