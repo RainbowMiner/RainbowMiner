@@ -1756,7 +1756,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.8.8.2")) {
-        $RemoveMinerStats += @("*-SrbMinerMulti-*_DynexSolve_*_HashRate.txt")
+        $RemoveMinerStats += @("*-SrbMinerMulti-*_DynexSolve_HashRate.txt")
     }
 
     ###
