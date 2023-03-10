@@ -21,7 +21,7 @@
         "symbol":  "BCH",
         "match":  "^1",
         "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
-        "address":  "data.{w}.address.legacy",
+        "address":  "data.{w}.address.formats.legacy",
         "balance":  "data.{w}.address.balance",
         "received":  "data.{w}.address.received",
         "divisor":  100000000,
@@ -32,7 +32,7 @@
         "symbol":  "BCH",
         "match":  "^q",
         "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
-        "address":  "data.{w}.address.cashaddr",
+        "address":  "data.{w}.address.formats.cashaddr",
         "balance":  "data.{w}.address.balance",
         "received":  "data.{w}.address.received",
         "divisor":  100000000,
@@ -143,13 +143,11 @@
     {
         "symbol":  "LTC",
         "match":  "^[LM3]",
-        "rpc":  "https://sochain.com/api/v2/get_address_balance/ltc/{w}",
-        "address":  "data.address",
-        "balance":  "data.confirmed_balance",
-        "received":  "",
-        "divisor":  1,
-        "verify":  "status",
-        "verify_value":  "success"
+        "rpc":  "https://api.blockcypher.com/v1/ltc/main/addrs/{w}",
+        "address":  "address",
+        "balance":  "balance",
+        "received":  "total_received",
+        "divisor":  100000000
     },
     {
         "symbol":  "OBTC",
