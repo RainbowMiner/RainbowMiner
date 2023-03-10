@@ -11,7 +11,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
 $Version = "2.2.0"
-$Cuda = "11.8"
+$Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
@@ -215,7 +215,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and (($Miner_Vendor -eq "CPU") -or ($Miner_Vendor -eq "AMD" -and $_.OpenCL.DeviceCapability -in $ValidCompute_AMD) -or ($Miner_Vendor -eq "NVIDIA") -or ($Miner_Vendor -eq "INTEL"))})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and (($Miner_Vendor -in @("CPU","INTEL","NVIDIA")) -or ($Miner_Vendor -eq "AMD" -and $_.OpenCL.DeviceCapability -in $ValidCompute_AMD))})
 
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and $Device.Count}).ForEach({
             $First = $true
@@ -254,7 +254,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
         
-            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or ($_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb) -and (-not $Compute -or $_.OpenCL.DeviceCapability -in $Compute))}
+            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or ((-not $MinMemGB -or (Test-VRAM $_ $MinMemGB)) -and (-not $Compute -or $_.OpenCL.DeviceCapability -in $Compute))}
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
             $All_SecondAlgorithms = if ($SecondAlgorithm_Norm_0) {if ($Miner_Vendor -eq "CPU") {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)")} else {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")}} else {$null}
@@ -369,7 +369,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path
-					        Arguments      = "--algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm}) --api-enable --api-port `$mport --api-rig-name $($Session.Config.Pools.$($Pools.$MainAlgorithm_Norm.Name).Worker)$Miner_Protocol $(if ($Miner_Vendor -ne "CPU") {"--gpu-id $DeviceIDsAll --gpu-intensity $DeviceIntensity$WatchdogParams"})$DeviceParams --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --wallet $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --password $($Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1")"}) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"})$($MallobParam)$($ZilParams) --keepalive --retry-time 10 --disable-startup-monitor $($_.Params)" # --disable-worker-watchdog
+					        Arguments      = "--algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm}) --api-enable --api-port `$mport --api-rig-name $($Session.Config.Pools.$($Pools.$MainAlgorithm_Norm.Name).Worker)$Miner_Protocol $(if ($Miner_Vendor -ne "CPU") {"--gpu-id $DeviceIDsAll$(if ($MainAlgorithm -ne "dynex") {" --gpu-intensity $DeviceIntensity"})$WatchdogParams"})$DeviceParams --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --wallet $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --password $($Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1")"}) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"})$($MallobParam)$($ZilParams) --keepalive --retry-time 10 --disable-startup-monitor $($_.Params)" # --disable-worker-watchdog
 					        HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_HR}
 					        API            = "SrbMinerMulti"
 					        Port           = $Miner_Port
