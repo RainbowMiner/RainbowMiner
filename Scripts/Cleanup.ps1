@@ -1595,6 +1595,7 @@ try {
             $AddAlgorithm += @("Pufferfish2","SHA512256d")
         }
 
+
         ###
         ### END SKIP
         ###
@@ -1752,6 +1753,10 @@ try {
         if ($Global:IsLinux) {
             Get-ChildItem "/opt/rainbowminer/lib/libstdc++.so.6.0.25" -File -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
         }
+    }
+
+    if ($Version -le (Get-Version "4.8.8.2")) {
+        $RemoveMinerStats += @("*-SrbMinerMulti-*_DynexSolve_*_HashRate.txt")
     }
 
     ###
