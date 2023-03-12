@@ -90,7 +90,7 @@ if ($InfoOnly) {
 }
 
 
-$CommonParams =  "-c config_`$mport.txt --http_enabled 1 --http_address localhost --http_port `$mport --no_watchdog --community_fund 0 --hide_disabled_devices --cpu_validate 0 --nc 1 -o bzminer_`$mport.log --clear_log_file 1"
+$CommonParams =  "-c config_`$mport.txt --http_enabled 1 --http_address localhost --http_port `$mport --no_watchdog --community_fund 0 --hide_disabled_devices --cpu_validate 0 --nc 1 -o bzminer_`$mport.log --clear_log_file 1 --oc_enable 0"
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
@@ -142,7 +142,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($Session.Config.Pools.FlexPool.EnableBzminerDual -and $Pools.ZilliqaFP) {
                         if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
                             $ZilCount  = if ($SecondAlgorithm_Norm_0) {3} else {2}
-                            $ZilParams = "--a$($ZilCount) zil --w$($ZilCount) $($Pools.ZilliqaFP.User) --p$($ZilCount) $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) "
+                            $ZilParams = "--a$($ZilCount) zil --w$($ZilCount) $($Pools.ZilliqaFP.User) --p$($ZilCount) $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --oc_enable$($ZilCount) 0 "
                         }
                     }
 
@@ -179,7 +179,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                         DeviceName      = $Miner_Device.Name
                                         DeviceModel     = $Miner_Model
                                         Path            = $Path
-                                        Arguments       = "-a $($_.MainAlgorithm -replace "^(Etc?hash).+","`$1") --a2 $($_.SecondaryAlgorithm) --$($Miner_Vendor.ToLower()) 1$(if ($DisableDevices) {" --disable $($DisableDevices)"}) -p $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port -and $Pools.$MainAlgorithm_Norm.Host -notmatch "/") {":$($Pool_Port)"}) -w $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pool_password $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker) {" -r $($Pools.$MainAlgorithm_Norm.Worker)"}) --p2 $($SecondPool_Protocol)://$($Pools.$SecondAlgorithm_Norm.Host)$(if ($SecondPool_Port -and $Pools.$SecondAlgorithm_Norm.Host -notmatch "/") {":$($SecondPool_Port)"}) --w2 $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --pool_password2 $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --r2 $($Pools.$SecondAlgorithm_Norm.Worker)"}) $($ZilParams)$($CommonParams) $($_.Params)"
+                                        Arguments       = "-a $($_.MainAlgorithm -replace "^(Etc?hash).+","`$1") --a2 $($_.SecondaryAlgorithm) --$($Miner_Vendor.ToLower()) 1$(if ($DisableDevices) {" --disable $($DisableDevices)"}) -p $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port -and $Pools.$MainAlgorithm_Norm.Host -notmatch "/") {":$($Pool_Port)"}) -w $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pool_password $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker) {" -r $($Pools.$MainAlgorithm_Norm.Worker)"}) --p2 $($SecondPool_Protocol)://$($Pools.$SecondAlgorithm_Norm.Host)$(if ($SecondPool_Port -and $Pools.$SecondAlgorithm_Norm.Host -notmatch "/") {":$($SecondPool_Port)"}) --w2 $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --pool_password2 $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --r2 $($Pools.$SecondAlgorithm_Norm.Worker)"}) $($ZilParams)$($CommonParams) --oc_enable2 0 $($_.Params)"
                                         HashRates       = [PSCustomObject]@{
                                                              $MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                              $SecondAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
