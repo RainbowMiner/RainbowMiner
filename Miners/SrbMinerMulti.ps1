@@ -275,6 +275,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         "minerproxy"       {" --esm 1"}
                         "ethstratum"       {" --esm 2"}
                         "ethstratum1"      {" --esm 2"}
+                        "ethstratum2"      {" --esm 2"}
 						"ethstratumnh"     {" --esm 2"}
 						default            {""}
 					}
@@ -289,6 +290,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                                 "minerproxy"       {" --zil-esm 1"}
 						        "ethstratum"       {" --zil-esm 2"}
 						        "ethstratum1"      {" --zil-esm 2"}
+                                "ethstratum2"      {" --zil-esm 2"}
 						        "ethstratumnh"     {" --zil-esm 2"}
 						        default            {""}
 					        }
