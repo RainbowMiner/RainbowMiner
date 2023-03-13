@@ -103,6 +103,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     $Pool_Protocol = Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                             "ethproxy" {$Pools.$MainAlgorithm_Norm.Protocol -replace "stratum","ethproxy"}
+                            "ethstratum2" {$Pools.$MainAlgorithm_Norm.Protocol -replace "stratum","nicehash"}
                             "ethstratumnh" {$Pools.$MainAlgorithm_Norm.Protocol -replace "stratum","nicehash"}
                             default {$Pools.$MainAlgorithm_Norm.Protocol}
                     }
