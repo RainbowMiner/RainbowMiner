@@ -92,9 +92,9 @@ if ($InfoOnly) {
 }
 
 $CUDAArch_Types = [PSCustomObject]@{
-    "A" = @("Ampere")
-    "T" = @("Turing","Ampere")
-    "P" = @("Pascal","Turing","Ampere")
+    "A" = @("Ampere","Ada")
+    "T" = @("Turing","Ampere","Ada")
+    "P" = @("Pascal","Turing","Ampere","Ada")
 }
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
