@@ -54,6 +54,7 @@ $Pool_Referrals = [PSCustomObject]@{
     ADA = "6va0-s40b"
     ALGO = "vrl4-jzoe"
     APE = "bry3-8ow2"
+    APT = "etax-oojs"
     ATOM = "ic6q-07z3"
     AVAX = "rtuz-cc6k"
     BAND = "d04a-ce0q"
@@ -86,7 +87,7 @@ $Pool_Referrals = [PSCustomObject]@{
     LINK = "8tm5-1sts"
     LSK = "r2hf-guhj"
     LTC = "njan-ebtu"
-    LUNC = "axx7-g8sv"
+    LUNC = "8f5h-lzcv"
     MANA = "awsm-eqwi"
     MATIC = "kn0o-dzfz"
     MTL = "3lyx-b4oo"
@@ -115,7 +116,7 @@ $Pool_Referrals = [PSCustomObject]@{
     XVG = "i3c5-1h08"
     YFI = "gsx6-01j1"
     ZEC = "tp3d-km6s"
-    ZIL = "wed0-k1fj"
+    ZIL = "bswr-it0m"
     ZRX = "ar8a-rfqo"
 }
 
