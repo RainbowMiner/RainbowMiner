@@ -33,7 +33,6 @@ $Pools_Data = @(
 
 if (-not $InfoOnly -and -not $API_Key) {
     Write-Log -Level Warn "$($Name): Please set an API_Key in pools.config.txt (on luxor.tech, sign in, then click `"API Keys`" and create)"
-    return
 }
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User -or $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
@@ -47,62 +46,60 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
     $Pool_Hashrate_Request = [PSCustomObject]@{}
     $Pool_Request_Blocks = [PSCustomObject]@{}
 
-    $ok = $true
     if (-not $InfoOnly) {
-        try {
-            $Pool_Hashrate_Request = Invoke-RestMethodAsync "https://api.beta.luxor.tech/graphql" -tag $Name -timeout 15 -cycletime 120 -headers @{'x-lux-api-key'=$API_Key} -body @{query = "query getPoolHashrate { getPoolHashrate(mpn: $($Pool_Currency), orgSlug: `"luxor`") }"}
+        $Pool_Hashrate = $null
+        if ($API_Key) {
+            try {
+                $Pool_Hashrate_Request = Invoke-RestMethodAsync "https://api.beta.luxor.tech/graphql" -tag $Name -timeout 15 -cycletime 120 -headers @{'x-lux-api-key'=$API_Key} -body @{query = "query getPoolHashrate { getPoolHashrate(mpn: $($Pool_Currency), orgSlug: `"luxor`") }"}
+                $Pool_Hashrate = $Pool_Hashrate_Request.data.getPoolHashrate
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Info "Pool API ($Name) for $Pool_Currency has failed. "
+            }
         }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
-            $ok = $false
-        }
-        if ($Pool_Request.fee -ne $null) {$Pool_Fee = $Pool_Request.fee}
-    }
 
-    if ($ok -and -not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Hashrate_Request.data.getPoolHashrate -ChangeDetection $false -Quiet
-        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Hashrate -ChangeDetection $false -Quiet
+        if ($Pool_Hashrate -ne $null -and -not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    if ($ok -or $InfoOnly) {
-        $Pool_Wallet = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$User}
-        foreach ($Pool_Region in $Pool_Regions) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+tcp"
-                Host          = "$($Pool_RpcPath).global.luxor.tech"
-                Port          = $Pool_Port
-                User          = "$($Pool_Wallet).{workername:$Worker}"
-                Pass          = "123"
-                Region        = $Pool_RegionsTable[$Pool_Region]
-                SSL           = $false
-                Updated       = $Stat.Updated
-                WTM           = $true
-                PoolFee       = $Pool_Fee
-                Workers       = $Pool_Request.totalMiners
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_0       = 0.0
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Pool_Wallet
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
+    $Pool_Wallet = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$User}
+
+    foreach ($Pool_Region in $Pool_Regions) {
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+            Algorithm0    = $Pool_Algorithm_Norm
+            CoinName      = $Pool_Coin.Name
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
+            Protocol      = "stratum+tcp"
+            Host          = "$($Pool_RpcPath).global.luxor.tech"
+            Port          = $Pool_Port
+            User          = "$($Pool_Wallet).{workername:$Worker}"
+            Pass          = "123"
+            Region        = $Pool_RegionsTable[$Pool_Region]
+            SSL           = $false
+            Updated       = $Stat.Updated
+            WTM           = $true
+            PoolFee       = $Pool_Fee
+            Workers       = $Pool_Request.totalMiners
+            Hashrate      = $Pool_Hashrate
+            TSL           = $null
+            BLK           = $null
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Disabled      = $false
+            HasMinerExclusions = $false
+            Price_0       = 0.0
+            Price_Bias    = 0.0
+            Price_Unbias  = 0.0
+            Wallet        = $Pool_Wallet
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
     }
 }
