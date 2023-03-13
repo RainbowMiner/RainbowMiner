@@ -10,13 +10,13 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "2.0c3"
+$Version = "2.0c4"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c3-miniz/miniZ_v2.0c3_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c4-miniz/miniZ_v2.0c4_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -24,7 +24,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c3-miniz/miniZ_v2.0c3_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c4-miniz/miniZ_v2.0c4_win-x64.7z"
             Cuda = "8.0"
         }
     )
@@ -119,7 +119,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     $ZilParams    = ""
 
-                    if ($Session.Config.Pools.CrazyPool.EnableMiniZDual -and $Pools.ZilliqaCP) {
+                    if ($Session.Config.Pools.FlexPool.EnableMiniZDual -and $Pools.ZilliqaFP) {
+                        if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+                            $ZilParams = " --url=$($Pools.ZilliqaFP.Protocol)://$($ZilWallet)@$($Pools.ZilliqaFP.Host):$($Pools.ZilliqaFP.Port) --worker=$($Pools.ZilliqaFP.Worker)$(if ($Pools.ZilliqaFP.Pass) {" -p $($Pools.ZilliqaFP.Pass)"})" 
+                        }
+                    } elseif ($Session.Config.Pools.CrazyPool.EnableMiniZDual -and $Pools.ZilliqaCP) {
                         if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
                             $ZilParams = " --url=$($ZilWallet)@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --worker=$($Pools.ZilliqaCP.Worker)$(if ($Pools.ZilliqaCP.Pass) {" -p $($Pools.ZilliqaCP.Pass)"})" 
                         }
