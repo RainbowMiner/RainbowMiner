@@ -2285,25 +2285,40 @@ function Invoke-Core {
     if ($MinersNeedSdk -ne $null) {Remove-Variable "MinersNeedSdk"}
 
     if ($Session.Config.MiningMode -eq "combo") {
-        if ($AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'})) {
-            #Benchmarking is still ongoing - remove device combos from miners and make sure no combo stat is left over
-            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'}).ForEach({
-                $Miner = $_
-                $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
-                $AllMiners.Where({$_.BaseName -eq $Miner.BaseName -and $_.HashRates.PSObject.Properties.Value -notcontains $null -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0}).ForEach({
-                    $Name = $_.Name
-                    $ComboAlgos | Foreach-Object {
-                        $Miner_StatKey = "$($Name)_$($_)_HashRate"
-                        Get-ChildItem ".\Stats\Miners\*-$($Miner_StatKey).txt" | Remove-Item -ErrorAction Ignore
-                        if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
-                            $Global:StatsCache.Remove($Miner_StatKey)
-                        }
+
+        $Remove_Combos = $false
+
+        # Check if benchmarking is still ongoing on non-combo miners
+
+        $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'}).ForEach({
+
+            # Benchmarking still ongoing (1/2) - make sure no combo stat is left over
+
+            $Miner = $_
+            $ComboAlgos = $Miner.BaseAlgorithm -split '-'
+            $AllMiners.Where({$_.BaseName -eq $Miner.BaseName -and $_.BaseAlgorithm -eq $Miner.BaseAlgorithm -and $_.DeviceModel -match '-' -and $_.HashRates.PSObject.Properties.Value -notcontains $null -and @($_.DeviceModel -split '-') -contains $Miner.DeviceModel}).ForEach({
+                $Name = $_.Name
+                $ComboAlgos | Foreach-Object {
+                    $Miner_StatKey = "$($Name)_$($_)_HashRate"
+                    Get-ChildItem ".\Stats\Miners\*-$($Miner_StatKey).txt" | Remove-Item -ErrorAction Ignore
+                    if ($Global:StatsCache.ContainsKey($Miner_StatKey)) {
+                        $Global:StatsCache.Remove($Miner_StatKey)
                     }
-                })
+                }
             })
+
+            $Remove_Combos = $true
+        })
+
+        if ($Remove_Combos) {
+
+            # Benchmarking is still ongoing (2/2) - remove device combos
+
             $AllMiners = $AllMiners.Where({$_.DeviceModel -notmatch '-'})
         } else {
-            #Remove device combos, where the parameter-preset is different and there does not exist an own definition
+
+            # Remove device combos, where the parameter-preset is different and there does not exist an own definition
+
             $AllMiners = $AllMiners.Where({
                 $_.DeviceModel -notmatch '-' -or 
                 (Get-Member -InputObject $Session.Config.Miners -Name $(@($_.BaseName | Select-Object) + @($_.DeviceModel | Select-Object) + @($_.BaseAlgorithm | Select-Object) -join '-') -MemberType NoteProperty) -or 
@@ -2313,26 +2328,39 @@ function Invoke-Core {
                 } | Select-Object -Unique | Measure-Object).Count -le 1)
             })
 
-            #Gather mining statistics for fresh combos
-            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -match '-'}).ForEach({
-                $Miner = $_
-                $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
-                $AllMiners | 
-                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -notmatch '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($Miner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
-                    Select-Object -ExpandProperty HashRates |
-                    Measure-Object -Sum @($ComboAlgos) |
-                    Foreach-Object {$Miner.HashRates."$($_.Property)" = $_.Sum * 1.02} 
-                    #we exagerate a bit to prefer combos over single miners for startup. If the combo runs less good, later, it will fall back by itself
+            # Gather mining statistics for fresh combos
 
-                $Miner.PowerDraw = ($AllMiners | 
-                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -notmatch '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($Miner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
-                    Select-Object -ExpandProperty PowerDraw |
-                    Measure-Object -Sum).Sum
+            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -match '-'}).ForEach({
+
+                $Miner = $_
+
+                $Miner.PowerDraw = 0
+
+                $Miner.DeviceModel -split '-' | Foreach-Object {
+
+                    $ComboDevice = $_
+
+                    $AllMiners.Where({$_.BaseName -eq $Miner.BaseName -and $_.BaseAlgorithm -eq $Miner.BaseAlgorithm -and $_.DeviceModel -eq $ComboDevice},'First').ForEach({
+                        $ComboHash = [PSCustomObject]@{}
+                        $_.Hashrates.PSObject.Properties | Foreach-Object {
+                            $ComboHash | Add-Member "$($_.Name -replace "-.+$")" $_.Value
+                        }
+                        $Miner.PowerDraw += $_.PowerDraw
+                        $ComboHash
+                    })
+
+                } | Measure-Object -Sum @($Miner.BaseAlgorithm -split '-') | Foreach-Object {
+                    $ComboValue = $_
+                    $Miner.HashRates.PSObject.Properties.Name | Where-Object {$_ -eq $ComboValue.Property -or $_ -match "^$($ComboValue.Property)-"} | Foreach-Object {
+                        $Miner.HashRates.$_ = $ComboValue.Sum * 1.02
+                        # we exagerate a bit to prefer combos over single miners for startup. If the combo runs less good, later, it will fall back by itself
+                    }
+                }
             })
         }
     }
 
-    if ($ComboAlgos -ne $null) {Remove-Variable "ComboAlgos"}
+    if ($ComboValue -ne $null) {Remove-Variable "ComboValue"}
 
     #Handle fastlane benchmarks
     if (-not ($Session.RoundCounter % 50) -and $Session.Config.EnableFastlaneBenchmark) {
