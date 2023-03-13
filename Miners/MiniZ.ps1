@@ -121,7 +121,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     if ($Session.Config.Pools.FlexPool.EnableMiniZDual -and $Pools.ZilliqaFP) {
                         if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                            $ZilParams = " --url=$($Pools.ZilliqaFP.Protocol)://$($ZilWallet)@$($Pools.ZilliqaFP.Host):$($Pools.ZilliqaFP.Port) --worker=$($Pools.ZilliqaFP.Worker)$(if ($Pools.ZilliqaFP.Pass) {" -p $($Pools.ZilliqaFP.Pass)"})" 
+                            $ZilParams = " --url=$($Pools.ZilliqaFP.Protocol)://$($ZilWallet)@$($Pools.ZilliqaFP.Host) --worker=$($Pools.ZilliqaFP.Worker)$(if ($Pools.ZilliqaFP.Pass) {" -p $($Pools.ZilliqaFP.Pass)"})" 
                         }
                     } elseif ($Session.Config.Pools.CrazyPool.EnableMiniZDual -and $Pools.ZilliqaCP) {
                         if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
