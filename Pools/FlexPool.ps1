@@ -199,7 +199,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$InfoOnly -or $Wallets.$P
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
                 }
-            } elseif ($EnableBzminerDual -or $EnableGminerDual -or $EnableTeamblackDual -or $EnableRigelDual) {
+            } elseif ($EnableBzminerDual -or $EnableGminerDual -or $EnableTeamblackDual -or $EnableRigelDual -or $EnableMiniZDual) {
                 [PSCustomObject]@{
                     Algorithm     = "ZilliqaFP"
                     Algorithm0    = "ZilliqaFP"
