@@ -4,7 +4,7 @@ param(
     $Config
 )
 
-if (-not $Config.Pools.$Name.API_Key -or -not $Config.Pools.$Name.Username) {
+if (-not $Config.Pools.$Name.API_Key -or -not $Config.Pools.$Name.User) {
     Write-Log -Level Verbose "$($Name): Please set your username and an API_Key in pools.config.txt (on luxor.tech, sign in, then click `"API Keys`" and create)"
     return
 }
