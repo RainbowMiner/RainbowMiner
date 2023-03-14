@@ -2227,7 +2227,6 @@ function Invoke-Core {
             Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Global:DeviceCache.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
             Where-Object {$Miner_DontCheckForUnprofitableCpuAlgos -or ($_.DeviceModel -ne "CPU") -or ($_.BaseAlgorithm -notin $UnprofitableCpuAlgos)} |
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
-            Where-Object {$Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1 -or $_.HashRates.PSObject.Properties.Value -contains $null -or $_.HashRates.PSObject.Properties.Value -notcontains 0} | #filter dual algo miners, that have no hashrate but are benchmarked
             Where-Object {(Compare-Object $Global:DeviceCache.DevicesNames @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |
             Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
             Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)".Disable} |
@@ -2287,8 +2286,6 @@ function Invoke-Core {
     if ($Session.Config.MiningMode -eq "combo") {
 
         $Remove_Combos = $false
-
-        $AllMiners | ConvertTo-Json -Depth 10 | Out-File ".\allminers-before-combo.json"
 
         # Check if benchmarking is still ongoing on non-combo miners
 
@@ -2722,6 +2719,7 @@ function Invoke-Core {
         }
 
         $NoResult = $false
+        $BadDualMiner = $false
         $i = 0
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object {
             $Miner.DevFee.$_ = ([Double]$(if (-not $Session.Config.IgnoreFees) {$Miner.DevFee.$_} else {0}))
@@ -2746,6 +2744,9 @@ function Invoke-Core {
                 $Miner_Profits[$_]        = ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
                 $Miner_Profits_Bias[$_]   = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
                 $Miner_Profits_Unbias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
+
+                if ($i -and $Miner.HashRates.$_ -le 0) {$BadDualMiner = $true}
+
                 $i++
             }
         }
@@ -2755,6 +2756,11 @@ function Invoke-Core {
             $Miner.Profit_Bias   = $null
             $Miner.Profit_Unbias = $null
             $Miner.Profit_Cost   = $null
+        } elseif ($BadDualMiner) {
+            $Miner.Profit        = 0
+            $Miner.Profit_Bias   = 0
+            $Miner.Profit_Unbias = 0
+            $Miner.Profit_Cost   = 0
         } else {
             $Miner.Profit        = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
