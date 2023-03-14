@@ -6,6 +6,7 @@
     "aspac":  "SoutheastAsia",
     "aswest":  "WesternAsia",
     "au":  "Australia",
+    "southafrica": "SouthAfrica",
     "br":  "SouthAmerica",
     "ca":  "Canada",
     "ceu":  "CentralEurope",
@@ -52,5 +53,6 @@
     "ustx": "Texas",
     "usw": "USWest",
     "uswest": "USWest",
-    "wa":  "WesternAsia"
+    "wa":  "WesternAsia",
+    "za": "SouthAfrica",
 }
