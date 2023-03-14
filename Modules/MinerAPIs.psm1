@@ -2746,7 +2746,7 @@ class TBMiner : Miner {
         $Difficulty = $null
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/threads" -Timeout $Timeout -ForceHttpClient
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2755,26 +2755,20 @@ class TBMiner : Miner {
         }
 
         $HashRate_Name  = [String]$this.Algorithm[0]
-        $HashRate_Value = [Double]($Data.PSObject.Properties.Value.hashrate | Measure-Object -Sum).Sum
-        $PowerDraw      = [Double]($Data.PSObject.Properties.Value.watt | Measure-Object -Sum).Sum
+        $HashRate_Value = [Double]($Data.devices.PSObject.Properties.Value.hashrate | Measure-Object -Sum).Sum
+        $PowerDraw      = [Double]($Data.devices.PSObject.Properties.Value.watt | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
 
-            try {
-                $DataPool = Invoke-GetUrl "http://$($Server):$($this.Port)/pool" -Timeout $Timeout -ForceHttpClient
-                $Difficulty_Value = [Double]$DataPool.diff
-                if ($Difficulty_Value -gt 0) {
-                    $Difficulty = [PSCustomObject]@{$HashRate_Name = $Difficulty_Value}
-                }
-            }
-            catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+            $Difficulty_Value = [Double]($Data.pool.PSObject.Properties.Value | Select-Object -First 1).diff
+            if ($Difficulty_Value -gt 0) {
+                $Difficulty = [PSCustomObject]@{$HashRate_Name = $Difficulty_Value}
             }
 
-            $Accepted_Shares  = [Int64]($Data.PSObject.Properties.Value.accepted | Measure-Object -Sum).Sum
-            $Rejected_Shares  = [Int64]($Data.PSObject.Properties.Value.rejected | Measure-Object -Sum).Sum
-            $Stale_Shares     = [Int64]($Data.PSObject.Properties.Value.stale | Measure-Object -Sum).Sum
+            $Accepted_Shares  = [Int64]($Data.devices.PSObject.Properties.Value.accepted | Measure-Object -Sum).Sum
+            $Rejected_Shares  = [Int64]($Data.devices.PSObject.Properties.Value.rejected | Measure-Object -Sum).Sum
+            $Stale_Shares     = [Int64]($Data.devices.PSObject.Properties.Value.stale | Measure-Object -Sum).Sum
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
         }
 
