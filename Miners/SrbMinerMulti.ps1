@@ -313,7 +313,13 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
                         $Miner_Intensity = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)".Intensity
 
-                        if (-not $Miner_Intensity) {$Miner_Intensity = @(1,5,10)}
+                        if (-not $Miner_Intensity) {
+                            if ($Miner_Vendor -eq "NVIDIA") {
+                                $Miner_Intensity = @(3)
+                            } else {
+                                $Miner_Intensity = @(1,5,10)
+                            }
+                        }
 
                         foreach($Intensity in @($Miner_Intensity)) {
 
