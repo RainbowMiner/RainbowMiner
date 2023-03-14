@@ -2288,6 +2288,8 @@ function Invoke-Core {
 
         $Remove_Combos = $false
 
+        $AllMiners | ConvertTo-Json -Depth 10 | Out-File ".\allminers-before-combo.json"
+
         # Check if benchmarking is still ongoing on non-combo miners
 
         $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'}).ForEach({
@@ -2315,17 +2317,18 @@ function Invoke-Core {
             # Benchmarking is still ongoing (2/2) - remove device combos
 
             $AllMiners = $AllMiners.Where({$_.DeviceModel -notmatch '-'})
+
         } else {
 
             # Remove device combos, where the parameter-preset is different and there does not exist an own definition
 
             $AllMiners = $AllMiners.Where({
                 $_.DeviceModel -notmatch '-' -or 
-                (Get-Member -InputObject $Session.Config.Miners -Name $(@($_.BaseName | Select-Object) + @($_.DeviceModel | Select-Object) + @($_.BaseAlgorithm | Select-Object) -join '-') -MemberType NoteProperty) -or 
-                $($Miner = $_; (@($Miner.DeviceModel -split '-') | Foreach-Object {
-                    $Miner_ConfigName = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
-                    if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_ConfigName -MemberType NoteProperty){$Session.Config.Miners.$Miner_ConfigName.Params}
-                } | Select-Object -Unique | Measure-Object).Count -le 1)
+                ($null -ne $Session.Config.Miners.PSObject.Properties["$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)"]) -or 
+                $($Miner = $_; $Miner.DeviceModel -split '-' | Foreach-Object {
+                    $Miner_ConfigName = "$($Miner.BaseName)-$($_)-$($Miner.BaseAlgorithm)"
+                    if ($null -ne $Session.Config.Miners.PSObject.Properties[$Miner_ConfigName]){$Session.Config.Miners.$Miner_ConfigName.Params}
+                } | Select-Object -Unique | Measure-Object).Count -le 1
             })
 
             # Gather mining statistics for fresh combos
@@ -2358,6 +2361,11 @@ function Invoke-Core {
                 }
             })
         }
+
+        # avoid benchmarks of combo miners
+
+        $AllMiners = $AllMiners.Where({$_.DeviceModel -notmatch '-' -or $_.HashRates.PSObject.Properties.Value -notcontains $null})
+
     }
 
     if ($ComboValue -ne $null) {Remove-Variable "ComboValue"}
