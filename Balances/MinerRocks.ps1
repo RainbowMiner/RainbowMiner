@@ -8,24 +8,18 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     #ASIC
-    [PSCustomObject]@{symbol = "AEON";  port = 30112; fee = 0.9; rpc = "aeon"; regions = @("eu")}
-    #[PSCustomObject]@{symbol = "KRB";  port = 30192; fee = 0.9; rpc = "krb"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "QWC";   port = 30052; fee = 0.9; rpc = "qwertycoin";   regions = @("eu")}
+    [PSCustomObject]@{symbol = "AEON";  port = 30112; fee = 0.9; rpc = "aeon"; regions = @("fr")}
+    [PSCustomObject]@{symbol = "QWC";   port = 30052; fee = 0.9; rpc = "qwertycoin";   regions = @("fr")}
 
     #Other
-    [PSCustomObject]@{symbol = "TUBE";  port = 30212; fee = 0.9; rpc = "bittubecash"; regions = @("eu")}
-    #[PSCustomObject]@{symbol = "BBR";   port = 5555;  fee = 0.9; rpc = "boolberry"; regions = @("eu"); scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
-    [PSCustomObject]@{symbol = "CCX";   port = 10126; fee = 0.9; rpc = "conceal"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "DERO";  port = 30182; fee = 0.9; rpc = "dero";   regions = @("eu","sg")}
-    [PSCustomObject]@{symbol = "XHV";   port = 4005;  fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
-    #[PSCustomObject]@{symbol = "LOKI";  port = 30122; fee = 0.9; rpc = "loki"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "MSR";   port = 30162; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
-    [PSCustomObject]@{symbol = "RYO";   port = 30172; fee = 1.2; rpc = "ryo"; regions = @("eu")}
-    #[PSCustomObject]@{symbol = "XLA";   port = 30092; fee = 0.9; rpc = "stellite"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "SUMO";  port = 30152; fee = 0.9; rpc = "sumokoin"; regions = @("eu")}
-    #[PSCustomObject]@{symbol = "TRTL";  port = 30132; fee = 0.9; rpc = "turtle"; regions = @("eu")}
-    [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"; regions = @("eu")}
-    #[PSCustomObject]@{symbol = "XCASH"; port = 30062;  fee = 0.9; rpc = "xcash"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "TUBE";  port = 30212; fee = 0.9; rpc = "bittubecash"; regions = @("fr")}
+    [PSCustomObject]@{symbol = "CCX";   port = 30041; fee = 0.9; rpc = "conceal"; regions = @("fr")}
+    [PSCustomObject]@{symbol = "DERO";  port = 30182; fee = 0.9; rpc = "dero";   regions =@("fr","ca","sg"); solo = $true}
+    [PSCustomObject]@{symbol = "XHV";   port = 30031; fee = 0.9; rpc = "haven"; regions = @("fr","ca","us-w","br","sg","za")}
+    [PSCustomObject]@{symbol = "MSR";   port = 30162; fee = 0.9; rpc = "masari";   regions = @("fr")}
+    [PSCustomObject]@{symbol = "RYO";   port = 30172; fee = 1.2; rpc = "ryo"; regions = @("fr","ca","us-w","br","sg","za")}
+    [PSCustomObject]@{symbol = "SUMO";  port = 30152; fee = 0.9; rpc = "sumokoin"; regions = @("fr")}
+    [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"; regions = @("fr")}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {
