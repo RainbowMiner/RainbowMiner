@@ -2391,7 +2391,7 @@ class Rigel : Miner {
 
         if ($this.Algorithm.Count -gt 1) {
             $HashRate_Name1 = [String]$this.Algorithm[1]
-            $HashRate_Ix1   = [String]$this.BaseAlgorithm[0] -replace "^Ethash.+$","Ethash"
+            $HashRate_Ix1   = [String]$this.BaseAlgorithm[1] -replace "^Ethash.+$","Ethash"
         } else {
             $HashRate_Name1 = ''
             $HashRate_Ix1   = ''
