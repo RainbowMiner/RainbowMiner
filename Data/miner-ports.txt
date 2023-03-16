@@ -124,7 +124,7 @@
 348	NinjaRig
 349	SrbMinerMulti
 350	SrbMinerMulti094
-351	
+351	EwbfZcash
 352	DynexSolve
 353	
 354	Gminer258
