@@ -327,7 +327,9 @@ namespace OpenCl
                 if (Vendor.IndexOf("Advanced Micro Devices", StringComparison.OrdinalIgnoreCase) >= 0) {
                     try {
                         string Name_AMD = Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_BOARD_NAME_AMD);
-                        return Name_AMD;
+                        if (!String.IsNullOrEmpty(Name_AMD)) {
+                            return Name_AMD;
+                        }
                     }
                     catch (OpenClException) {
                     }
