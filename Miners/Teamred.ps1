@@ -118,8 +118,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $Miner_ExcludeCompute = $_.ExcludeCompute
         $Miner_Compute = $_.Compute
 
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $Miner_ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $Miner_ExcludeCompute) -and (-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute)}
-        $Miner_Device_Dual = if ($SecondAlgorithm_Norm_0) {$Miner_Device | Where-Object {-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute}}
+        $Miner_Device = $Device.Where({(Test-VRAM $_ $MinMemGB) -and (-not $Miner_ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $Miner_ExcludeCompute) -and (-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute)})
+        $Miner_Device_Dual = if ($SecondAlgorithm_Norm_0) {$Miner_Device.Where({-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute})}
 
         if ($SecondAlgorithm_Norm_0 -and $Miner_Compute -and (-not ($Miner_Device_Dual | Measure-Object).Count)) {
             $Miner_Device = $null

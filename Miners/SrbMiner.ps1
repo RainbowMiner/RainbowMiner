@@ -116,7 +116,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $MinMemGb = $_.MinMemGb
         $Params = $_.Params
         
-        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
+        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {

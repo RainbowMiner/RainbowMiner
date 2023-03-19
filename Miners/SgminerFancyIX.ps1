@@ -79,7 +79,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL")) {
 
             $Algorithm_Norm_0 = Get-Algorithm $MainAlgorithm
 
-            $Miner_Device = $Device | Where-Object {($_.Model -ne "gfx1010" -and $_.Model -notmatch "^RX[56]\d00" -and $MainAlgorithm -eq $_.MainAlgorithm) -or (($_.Model -eq "gfx1010" -or $_.Model -match "^RX[56]\d00") -and $MainAlgorithm -ne $_.MainAlgorithm)}
+            $Miner_Device = $Device.Where({($_.Model -ne "gfx1010" -and $_.Model -notmatch "^RX[56]\d00" -and $MainAlgorithm -eq $_.MainAlgorithm) -or (($_.Model -eq "gfx1010" -or $_.Model -match "^RX[56]\d00") -and $MainAlgorithm -ne $_.MainAlgorithm)})
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {

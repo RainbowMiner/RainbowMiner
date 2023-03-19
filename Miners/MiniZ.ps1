@@ -112,7 +112,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $ExcludeCompute = if ($Miner_Vendor -eq "AMD") {$_.ExcludeCompute}
             $Compute = if ($Miner_Vendor -eq "AMD") {$_.Compute}
             
-            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $ExcludeCompute) -and (-not $Compute -or $_.OpenCL.DeviceCapability -in $Compute)}
+            $Miner_Device = $Device.Where({(Test-VRAM $_ $MinMemGB) -and (-not $ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $ExcludeCompute) -and (-not $Compute -or $_.OpenCL.DeviceCapability -in $Compute)})
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {

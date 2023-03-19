@@ -101,7 +101,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
             
-            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
             $LHRCUDA = if (($Miner_Device | Where-Object {$_.IsLHR -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR -ne $null} | Measure-Object).Count -gt 0) {
                 ($Miner_Device | Foreach-Object {"$(if (($_.IsLHR -and $Session.Config.Devices."$($_.Model_Base)".EnableLHR -eq $null) -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR) {1} else {0})"}) -join ','

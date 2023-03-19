@@ -132,7 +132,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
             }
         }
 
-        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
         $IsLHR = $true
         foreach($d in $Miner_Device) {

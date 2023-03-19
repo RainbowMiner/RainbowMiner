@@ -51,7 +51,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
         $Commands.ForEach({
             $First = $true
-            $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
+            $Miner_Device = $Device.Where({$_.Model -eq "CPU" -or (Test-VRAM $_ $MinMemGb)})
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 

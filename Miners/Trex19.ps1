@@ -135,7 +135,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         $Miner_IsGtx = $_.IsGtx
 
-        $Miner_Device = $Device | Where-Object {($IsGtx -or -not $Miner_IsGtx -or $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")) -and (Test-VRAM $_ $MinMemGB)}
+        $Miner_Device = $Device.Where({($IsGtx -or -not $Miner_IsGtx -or $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")) -and (Test-VRAM $_ $MinMemGB)})
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {

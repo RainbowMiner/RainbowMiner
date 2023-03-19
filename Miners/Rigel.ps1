@@ -110,7 +110,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
             
-            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
+            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
             $ZilParams = ""
 

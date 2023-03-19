@@ -63,7 +63,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $MinMemGb = $_.MinMemGb
         $Params = $_.Params
 
-        $Miner_Device = $Devices | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb) -and $_.OpenCL.Name -match "^(Ellesmere|Polaris|Vega|gfx900)"}
+        $Miner_Device = $Devices.Where({$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb) -and $_.OpenCL.Name -match "^(Ellesmere|Polaris|Vega|gfx900)"})
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {

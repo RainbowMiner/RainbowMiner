@@ -90,7 +90,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         $MinMemGB = Get-EthDAGSize -CoinSymbol $CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
 
-        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {

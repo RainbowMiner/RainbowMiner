@@ -74,7 +74,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
-            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
             $Params = "$($WatchdogParams)$(if ($Pools.$Algorithm_Norm_0.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm_0.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm_0.CoinSymbol.ToLower()).bin "})$($_.Params)"
 

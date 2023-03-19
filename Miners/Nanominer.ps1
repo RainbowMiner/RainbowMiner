@@ -111,7 +111,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 $MinMemGB = $_.MinMemGB
             }
 
-            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (($Algorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and ($Miner_Vendor -ne "NVIDIA" -or $Cuda -match "^11" -or $_.Model -notmatch "^RTX30") -and (Test-VRAM $_ $MinMemGb))}
+            $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (($Algorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and ($Miner_Vendor -ne "NVIDIA" -or $Cuda -match "^11" -or $_.Model -notmatch "^RTX30") -and (Test-VRAM $_ $MinMemGb))})
 
             $All_Algorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 

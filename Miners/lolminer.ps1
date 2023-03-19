@@ -121,11 +121,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 $MinMemGB = $_.MinMemGb
             }
 
-            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB)}
+            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
             if ($_.CUDAArch -ne $null -and $_.Vendor -eq "NVIDIA") {
                 $CUDAArch = $CUDAArch_Types."$($_.CUDAArch)"
-                if (-not ($Miner_Device | Where-Object {$_.OpenCL.Architecture -in $CUDAArch} | Measure-Object).Count) {
+                if (-not $Miner_Device.Where({$_.OpenCL.Architecture -in $CUDAArch})) {
                     #no mining, if not at least one GPU is available
                     $Miner_Device = $null
                 }

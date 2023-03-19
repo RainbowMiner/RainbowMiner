@@ -79,7 +79,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $MinMemGB = $_.MinMemGB
-        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
+        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($IsWindows -or ($Miner_Device | Measure-Object).Count -eq 1) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {

@@ -115,7 +115,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
     $Commands.Where({$_.Legacy -or $Miners_IsMaxCUDAVersion}).ForEach({
         $First = $true
         $MinMemGb = $_.MinMemGb
-        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGb) -and ($_.OpenCL.Architecture -in @("Other","Pascal","Turing"))}
+        $Miner_Device = $Device.Where({(Test-VRAM $_ $MinMemGb) -and ($_.OpenCL.Architecture -in @("Other","Pascal","Turing"))})
 
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm

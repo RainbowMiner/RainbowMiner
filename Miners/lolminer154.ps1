@@ -73,7 +73,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 $MinMemGB = $_.MinMemGb
             }
 
-            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB)}
+            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
             if ($_.OpenCLArch -ne $null -and $_.Vendor -eq "NVIDIA") {
                 $OpenCLArch = $OpenCLArch_Types."$($_.OpenCLArch)"
