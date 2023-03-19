@@ -2223,12 +2223,12 @@ function Invoke-Core {
 
     $AllMiner_Warnings = @()
     $AllMiners = @(if (($NewPools | Measure-Object).Count -gt 0 -and (Test-Path "Miners")) {
-        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} | 
+
+        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} |
             Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Global:DeviceCache.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
             Where-Object {$Miner_DontCheckForUnprofitableCpuAlgos -or ($_.DeviceModel -ne "CPU") -or ($_.BaseAlgorithm -notin $UnprofitableCpuAlgos)} |
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object $Global:DeviceCache.DevicesNames @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |
-            Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
             Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)".Disable} |
             Where-Object {$Miner_Name = $_.BaseName
                             ($_.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
@@ -2272,6 +2272,7 @@ function Invoke-Core {
                 }
                 $MinerOk
             }
+
     })
 
     #Check if .NET Core Runtime is installed
@@ -2284,6 +2285,8 @@ function Invoke-Core {
     if ($MinersNeedSdk -ne $null) {Remove-Variable "MinersNeedSdk"}
 
     if ($Session.Config.MiningMode -eq "combo") {
+
+        Write-Log -Level Info "Start add missing combos"
 
         $Remove_Combos = $false
 
@@ -2356,12 +2359,18 @@ function Invoke-Core {
                         # we exagerate a bit to prefer combos over single miners for startup. If the combo runs less good, later, it will fall back by itself
                     }
                 }
+
+                #if ($Miner.HashRates.PSObject.Properties.Value -notcontains $null) {
+                #    Set-Stat -Name "$($Miner.Name)_$($Miner_Algo)_HashRate" -Value $Miner_HR -Duration (New-TimeSpan -Seconds 10) -FaultDetection $false -PowerDraw $_.PowerDraw -Sub $Global:DeviceCache.DevicesToVendors[$_.DeviceModel] -Version "$(Get-MinerVersion $_.Version)" -IsFastlaneValue -Quiet > $null
+                #}
             })
         }
 
         # avoid benchmarks of combo miners
 
         $AllMiners = $AllMiners.Where({$_.DeviceModel -notmatch '-' -or $_.HashRates.PSObject.Properties.Value -notcontains $null})
+
+        Write-Log -Level Info "End add missing combos"
 
     }
 
