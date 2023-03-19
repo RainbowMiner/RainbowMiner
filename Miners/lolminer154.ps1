@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "318{0:d2}"
@@ -20,8 +21,6 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner154\lolMiner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.54-lolminer/lolMiner_v1.54_Win64.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Autolykos2";                   MinMemGb = 2;   Params = "--algo AUTOLYKOS2"; Pers=$false; Fee=1.5; ExtendInterval = 3; Vendor = @("AMD","NVIDIA")} #Autolykos2/ERGO

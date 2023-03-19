@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-Lyra2z330\ccminer.exe"
 $UriCuda = @(
@@ -19,8 +20,6 @@ $ManualUri = "https://github.com/Minerx117/ccminer8.21r9-lyra2z330/releases"
 $Port = "138{0:d2}"
 $DevFee = 0.0
 $Version = "8.21r9"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-i 12.5"; ExtendInterval = 2; FaultTolerance = 0.3} #Lyra2z330

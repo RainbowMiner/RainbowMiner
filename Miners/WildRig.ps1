@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -20,8 +21,6 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.5b-wildrigmulti/wildrig-multi-windows-0.36.5b.7z"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo";                     Vendor = @("AMD");          Params = ""} #Aergo

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $ManualUri = "https://github.com/ocminer/suprminer-releases"
 $Port = "107{0:d2}"
@@ -37,8 +38,6 @@ if ($IsLinux) {
         }
     )
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "heavyhash"; MinMemGB = 2; Params = "-a obtc"; ExtendInterval = 2} #HeavyHash/OBTC

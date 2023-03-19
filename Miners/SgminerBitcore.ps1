@@ -6,14 +6,13 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Path = ".\Bin\AMD-Bitcore\sgminer-x64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.9-sgminerbitcore/sgminer-bitcore-5.6.1.9.zip"
 $Port = "401{0:d2}"
 $DevFee = 1.0
 $Version = "5.6.1.9"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel10"; Params = "--intensity 19"} #Bitcore

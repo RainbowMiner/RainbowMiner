@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-EWBFZcash\miner"
@@ -19,8 +20,6 @@ $Port = "351{0:d2}"
 $DevFee = 0.0
 $Cuda = "8.0"
 $Version = "0.3.4b"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash";  MinMemGB = 2; Params = ""; ExcludePoolName = "Nicehash"}  #Equihash

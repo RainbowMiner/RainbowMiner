@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Port = "340{0:d2}"
 $ManualURI = "https://github.com/hyle-team/zano/releases"
@@ -19,8 +20,6 @@ $UriCuda = @(
         Cuda = "10.1"
     }
 )
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOW

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-Lyra2RE3\ccminer.exe"
 $ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
@@ -19,8 +20,6 @@ $UriCuda = @(
         Cuda = "10.0"
     }        
 )
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "-N 1"} #Lyra2RE3

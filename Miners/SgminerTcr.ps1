@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsLinux -and -not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-SgminerTCR\sgminer"
@@ -19,8 +20,6 @@ if ($IsLinux) {
 $ManualUri = "https://github.com/tecracoin/sgminer/releases"
 $Port = "414{0:d2}"
 $DevFee = 0.0
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; Params = "--kernel mtp --worksize 64 -I 20"; ParamsVega = "--kernel mtp_vega --worksize 256 -I 23"}

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-ProgPOW\progpowminer_opencl_only"
@@ -18,8 +19,6 @@ $Port = "409{0:d2}"
 $ManualURI = "https://github.com/BitcoinInterestOfficial/BitcoinInterest/releases"
 $DevFee = 0.0
 $Version = "0.16"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOW

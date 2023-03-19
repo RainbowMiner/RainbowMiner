@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-Alexis78\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.1-ccmineralexis/ccminerAlexis78cuda75x64.7z"
@@ -13,8 +14,6 @@ $Port = "102{0:d2}"
 $DevFee = 0.0
 $Cuda = "7.5"
 $Version = "1.5.1"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018

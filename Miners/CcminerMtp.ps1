@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $ManualUri = "https://github.com/tecracoin/ccminer/releases"
 $Port = "126{0:d2}"
@@ -32,8 +33,6 @@ if ($IsLinux) {
     )
     $UseCPUAffinity = $false
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp-classic"; MinMemGB = 5; Params = ""; ExtendInterval = 2; ExcludePoolName = "(MiningRigRentals|NiceHash)"} #MTP

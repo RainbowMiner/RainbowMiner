@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig"
@@ -20,8 +21,6 @@ $ManualUri = "https://github.com/turtlecoin/ninjarig/releases"
 $Port = "348{0:d2}"
 $DevFee = 1.0
 $Cuda = "10.1"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "chukwa"; MinMemGb = 1; ExtendInterval = 2} #Argon2/Chukwa

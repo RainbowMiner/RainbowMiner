@@ -5,6 +5,9 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsLinux -and -not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
+
 $Port = "144{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.0"
@@ -17,8 +20,6 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerZP\ccminer.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.23-zp/ZenProtocol-ccminer-8.23-Winx64.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "zenprotocol"; Params = "-N 1"} #ZenProtocol/SHA3

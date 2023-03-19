@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-EWBF\miner"
@@ -19,8 +20,6 @@ $Port = "311{0:d2}"
 $DevFee = 0.0
 $Cuda = "8.0"
 $Version = "0.6"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2.5; Params = "--algo 96_5"; ExcludePoolName = "Nicehash"}  #Equihash 96,5

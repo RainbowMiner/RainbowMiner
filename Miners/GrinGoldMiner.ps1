@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-GrinGold\bin\GrinGoldMinerAPI"
@@ -21,8 +22,6 @@ $Port = "345{0:d2}"
 $DevFee = 2.0
 $Cuda = "10.0"
 $Version = "3.0"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cuckarood29";  MinMemGb = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = $Vendors; NoCPUMining = $true} #GRIN/Cuckaroo29

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -or $Session.IsVM) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-CryptoDredge16\CryptoDredge.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
@@ -25,8 +26,6 @@ $UriCuda = @(
         Cuda = "9.2"
     }
 )
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium";      MinMemGb = 1; Params = ""} #Allium

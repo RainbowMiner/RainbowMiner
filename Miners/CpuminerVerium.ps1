@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Verium\cpuminer"
@@ -18,8 +19,6 @@ $ManualUri = "https://github.com/fireworm71/veriumMiner/releases"
 $Port = "244{0:d2}"
 $DevFee = 0.0
 $Version = "1.4"
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "scryptn2"; Params = "$(if ($Global:GlobalCPUInfo.IsRyzen) {"--ryzen"})"} #Scryptn2/Verium

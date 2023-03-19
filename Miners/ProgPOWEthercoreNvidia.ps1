@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Port = "357{0:d2}"
 $ManualURI = "https://github.com/ethercore/ethcoreminer/releases"
@@ -45,8 +46,6 @@ if ($IsLinux) {
         }
     )
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpowethercore"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOWEthercore

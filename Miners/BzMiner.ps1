@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 # this miner module is currently disabled.
 return
@@ -23,8 +24,6 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v13.4.0-bzminer/bzminer_v13.4.0_windows.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $ExcludePoolName = "prohashing|miningrigrentals"
 

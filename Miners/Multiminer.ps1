@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Path = ".\Bin\GPU-Multiminer\multiminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-multiminerrbm/multiminer-rbm-v1.2.0a-win64.7z"
@@ -14,8 +15,6 @@ $Port = "339{0:d2}"
 $DevFee = 0.0
 $Cuda = "10.2"
 $Version = "1.2.0a"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2ad";    MinMemGb = 2;  Params = ""; Blocksize = 8192;  ExtendInterval = 3; Vendor = ("AMD","NVIDIA")} #Argon2ad

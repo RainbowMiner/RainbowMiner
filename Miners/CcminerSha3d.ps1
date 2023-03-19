@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsLinux -and -not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $ManualUri = "https://github.com/brian112358/ccminer-bsha3/releases"
 $Port = "143{0:d2}"
@@ -20,8 +21,6 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerSha3d\ccminer.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ccminersha3d/ccminersha3d-v1.0.1-win.7z"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sha3d"; Params = "-a keccak -i 27"; ExtendInterval = 2} #SHA3d

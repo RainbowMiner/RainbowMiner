@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsLinux -and -not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-YesCryptR8\ccminer"
@@ -31,8 +32,6 @@ if ($IsLinux) {
 
 $Port = "137{0:d2}"
 $DevFee = 0.0
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = "-a yescryptr16"; ExtendInterval = 2; FaultTolerance = 0.3} #YescryptR16

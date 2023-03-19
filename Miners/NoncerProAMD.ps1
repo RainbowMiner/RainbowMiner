@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-NoncerPro\noncerpro"
@@ -19,7 +20,6 @@ $Port = "417{0:d2}"
 $DevFee = 2.0
 $Version = "3.0.2"
 
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; Params = ""; ExtendInterval = 3} #Argon2d-nim

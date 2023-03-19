@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Port = "355{0:d2}"
 $ManualURI = "https://github.com/sero-cash/serominer/releases"
@@ -19,8 +20,6 @@ $UriCuda = @(
         Cuda = "9.2"
     }
 )
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpowsero"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOWSero

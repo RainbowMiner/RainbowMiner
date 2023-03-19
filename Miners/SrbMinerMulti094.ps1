@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "350{0:d2}"
@@ -19,8 +20,6 @@ if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti094\SRBMiner-MULTI.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.4-srbminermulti/SRBMiner-Multi-0-9-4-win64.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "0x10"             ;              Params = ""; Fee = 0.85;               Vendor = @("AMD")} #Chainox/CHOX

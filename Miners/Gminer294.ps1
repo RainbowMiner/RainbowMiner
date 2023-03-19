@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "369{0:d2}"
@@ -22,8 +23,6 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer294\miner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.94-gminer/gminer_2_94_windows64.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Aeternity";                    MinMemGb = 4;                     Params = "--algo aeternity";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #Cuckoo29/Aeternity

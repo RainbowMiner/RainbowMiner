@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $ManualUri = "https://github.com/WyvernTKC/cpuminer-gr-avx2/releases"
 $Port = "211{0:d2}"
@@ -19,8 +20,6 @@ if ($IsLinux) {
     $Path = ".\Bin\CPU-Wyvern\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if ($f.iszen3) {"zen3"}elseif($f.iszen2){"zen2"}elseif($f.iszenplus -or $f.iszen){"zen"}elseif($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512 -and $f.sha){'avx512-sha'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.4.1-wyvern/cpuminer-gr-1.2.4.1-x86_64_windows.7z"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "gr"; Params = ""; FaultTolerance = 10; ExtendInterval = 3; ExcludePoolName = "C3pool|MoneroOcean"} #RTM/Take2

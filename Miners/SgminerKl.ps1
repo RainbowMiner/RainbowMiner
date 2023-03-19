@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Path = ".\Bin\AMD-SgminerKl\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.9-sgminerkl/sgminer-kl-1.0.9-windows.zip"
@@ -13,8 +14,6 @@ $ManualUri = "https://github.com/KL0nLutiy/sgminer-kl/releases"
 $Port = "402{0:d2}"
 $DevFee = 1.0
 $Version = "1.0.9"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-X 256 -g 2"} #Aergo

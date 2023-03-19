@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $ManualUri = "https://github.com/scala-network/XLArig/releases"
 $Port = "241{0:d2}"
@@ -20,8 +21,6 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.3-xlarig/XLArig-v5.2.3-win64.zip"
     $DevFee = 0.0
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "panthera"; Params = ""; ExtendInterval = 2}

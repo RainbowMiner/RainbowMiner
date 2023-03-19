@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-ProgPOWEthercore\ethcoreminer"
@@ -18,8 +19,6 @@ $Port = "415{0:d2}"
 $ManualURI = "https://github.com/ethercore/ethcoreminer/releases"
 $DevFee = 0.0
 $Version = "1.0.0"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpowethercore"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOW

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\AMD-ProgPOWZ\progminer-zano-opencl.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.2-progminerzano/progminer-zano-win-1.1.2.7z"
@@ -13,8 +14,6 @@ $Port = "413{0:d2}"
 $ManualURI = "https://github.com/hyle-team/zano/releases"
 $DevFee = 0.0
 $Version = "1.1.2"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpowz"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOWZ

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Path = ".\Bin\AMD-SgminerMTP\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.3-sgminermtp/sgminermtp-0.1.3.zip"
@@ -13,8 +14,6 @@ $ManualUri = "https://github.com/zcoinofficial/sgminer/releases"
 $Port = "411{0:d2}"
 $DevFee = 0.0
 $Version = "0.1.3"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp"; Params = "--kernel mtp --worksize 64 -I 20"; ParamsVega = "--kernel mtp_vega --worksize 256 -I 23"}

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Path = ".\Bin\CPU-ArcticHash\cpuminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.7.1-cpuminerarctichash/cpuminer-arctichash-v1.3.7.1.7z"
@@ -13,8 +14,6 @@ $ManualUri = ""
 $Port = "245{0:d2}"
 $DevFee = 0.0
 $Version = "1.3.7.1"
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "arctichash"; Params = ""} #Arctichash

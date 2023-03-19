@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Nqminer\nq-miner"
@@ -19,8 +20,6 @@ $Port = "361{0:d2}"
 $DevFee = 0.0
 $Cuda = "10.0"
 $Version = "0.99.7"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-nim"; Params = ""; ExtendInterval = 3} #Argon2d-nim

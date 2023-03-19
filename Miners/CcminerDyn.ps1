@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-CcminerDyn\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-ccminerdyn/ccminerdyn-1.0.2.7z"
@@ -14,8 +15,6 @@ $Port = "128{0:d2}"
 $DevFee = 0.0
 $Cuda = "10.0"
 $Version = "1.0.2"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; Params = "-a argon2d"; ExtendInterval = 2} #Argon2d-dyn

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega"
@@ -18,8 +19,6 @@ if ($IsLinux) {
 }
 $Port = "306{0:d2}"
 $DevFee = 1.0
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(    
     [PSCustomObject]@{MainAlgorithm = "cryptonightfast"; Params = "--algo=8"}

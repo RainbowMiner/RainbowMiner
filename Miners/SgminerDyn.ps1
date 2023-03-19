@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Path = ".\Bin\AMD-SgminerDyn\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-sgminerdyn/sgminer-dyn-1.0.0-windows-x64.zip"
@@ -13,8 +14,6 @@ $ManualUri = "https://github.com/duality-solutions/Dynamic-GPU-Miner-AMD/release
 $Port = "410{0:d2}"
 $DevFee = 0.0
 $Version = "1.0.0"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; Params = "-k argon2d"}

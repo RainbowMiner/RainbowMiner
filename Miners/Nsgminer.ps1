@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsLinux -and -not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Nsgminer\nsgminer"
@@ -18,8 +19,6 @@ $ManualUri = "https://github.com/ghostlander/nsgminer/releases"
 $Port = "406{0:d2}"
 $DevFee = 0.0
 $Version = "0.9.4"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; ParamsVega = ""}

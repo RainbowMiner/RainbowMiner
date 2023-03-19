@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Path = ".\Bin\CPU-Easy\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'aes-avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.7.0-cpuminereasy/cpuminer-easy-binarium-win_x64.zip"
@@ -13,8 +14,6 @@ $ManualUri = "https://github.com/bubasik/cpuminer-easy-binarium/releases"
 $Port = "231{0:d2}"
 $DevFee = 0.0
 $Version = "3.7.0"
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Binarium_hash_v1"; Params = ""} #Binarium-V1

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "354{0:d2}"
@@ -21,8 +22,6 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer258\miner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.58-gminer/gminer_2_58_windows64.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";                  MinMemGb = 4;                     Params = "--algo cuckaroo29b"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NoCPUMining = $true;  Fee = 4.0} #Cuckaroo29b/TUBE (from July 29th 2020)

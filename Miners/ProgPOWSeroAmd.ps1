@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\AMD-ProgPOWSero\serominer-opencl.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.0-progpowsero/serominer-v0.3.0-windows-amd64.7z"
@@ -13,8 +14,6 @@ $Port = "414{0:d2}"
 $ManualURI = "https://github.com/sero-cash/serominer/releases"
 $DevFee = 0.0
 $Version = "0.3.0"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpowsero"; Params = ""; ExtendInterval = 2; MinMemGB = 3} #ProgPOWSero

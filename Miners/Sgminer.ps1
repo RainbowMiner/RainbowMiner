@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Path = ".\Bin\AMD-NiceHash\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1-sgminer/sgminer-5.6.1-nicehash-51-windows-amd64.zip"
@@ -13,8 +14,6 @@ $ManualUri = "https://github.com/nicehash/sgminer/releases"
 $Port = "400{0:d2}"
 $DevFee = 1.0
 $Version = "5.6.1"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "groestlcoin"; Params = "--gpu-threads 2 --worksize 128 --intensity d"} #Groestl

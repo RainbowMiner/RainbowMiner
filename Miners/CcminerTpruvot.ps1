@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-TPruvot\ccminer-x64.exe"
 $ManualUri = "https://github.com/tpruvot/ccminer/releases"
@@ -19,8 +20,6 @@ $UriCuda = @(
         Cuda = "10.1"
     }
 )
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018

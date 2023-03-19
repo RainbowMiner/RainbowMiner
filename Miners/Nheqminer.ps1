@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Nheqminer\nheqminer"
@@ -18,8 +19,6 @@ $ManualUri = "https://github.com/VerusCoin/nheqminer/releases"
 $Port = "236{0:d2}"
 $DevFee = 0.0
 $Version = "0.8.2"
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "verus"; Params = ""; ExtendInterval = 2} #VerusHash

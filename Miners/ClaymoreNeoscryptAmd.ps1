@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Path = ".\Bin\NeoScrypt-Claymore\NeoScryptMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-claymoreneoscrypt/claymore_neoscrypt_1.2.zip"
@@ -13,8 +14,6 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=3012600.0"
 $Port = "202{0:d2}"
 $DevFee = 2.0
 $Version = "1.2"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""}

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Path = ".\Bin\AMD-Lyra2z\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3-sgminerlyra2z/kernel.rar"
@@ -13,8 +14,6 @@ $ManualUri = "https://github.com/djm34/sgminer-msvc2015/releases"
 $Port = "403{0:d2}"
 $DevFee = 1.0
 $Version = "0.3"
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "--worksize 32 --intensity 18"}

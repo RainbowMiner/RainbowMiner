@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-CcminerVerus\ccminer"
@@ -18,8 +19,6 @@ $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "235{0:d2}"
 $DevFee = 0.0
 $Version = "3.7"
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "verus"; Params = ""} #VerusHash

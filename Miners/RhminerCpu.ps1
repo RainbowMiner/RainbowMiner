@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-RHminer\rhminer"
@@ -18,8 +19,6 @@ $ManualUri = "https://github.com/polyminer1/rhminer/releases"
 $Port = "131{0:d2}"
 $DevFee = 1.0
 $Version = "2.3"
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "randomhash2"; Params = ""; ExtendInterval = 2} #RandomHash/PASCcoin

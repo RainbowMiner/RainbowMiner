@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $ManualUri = "https://github.com/Raptor3um/cpuminer-opt/releases"
 $Port = "212{0:d2}"
@@ -19,8 +20,6 @@ if ($IsLinux) {
     $Path = ".\Bin\CPU-Take2\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'zen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0-take2/cpuminer-take2-windows.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "take2"; Params = ""; FaultTolerance = 10; ExtendInterval = 3; ExcludePoolName = "C3pool|MoneroOcean"} #RTM/Take2

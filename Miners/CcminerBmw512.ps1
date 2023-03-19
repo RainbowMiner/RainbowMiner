@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-CcminerBMW512\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.5-ccminerbmw512/ccminerbmw512x86.7z"
@@ -14,8 +15,6 @@ $Port = "133{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.1"
 $Version = "2.2.5"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = "-a bmw512"; ExtendInterval = 2} #BMW512

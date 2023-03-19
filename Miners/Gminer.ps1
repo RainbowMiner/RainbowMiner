@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
@@ -22,8 +23,6 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.28-gminer/gminer_3_28_windows64.zip"
 }
-
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2";  Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 2.0} #Autolykos2/ERG

@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows) {return}
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Path = ".\Bin\NVIDIA-CcminerXaya\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.2-ccminerxaya/neoscryptxayaV02.7z"
@@ -14,8 +15,6 @@ $ManualUri = "https://github.com/xaya/ccminer/releases"
 $Port = "145{0:d2}"
 $DevFee = 0.0
 $Version = "0.1"
-
-if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaya"; Params = ""; ExtendInterval=2} #NeoscryptXaya/CHI
