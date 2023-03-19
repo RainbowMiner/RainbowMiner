@@ -217,6 +217,26 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and (($Miner_Vendor -in @("CPU","INTEL","NVIDIA")) -or ($Miner_Vendor -eq "AMD" -and $_.OpenCL.DeviceCapability -in $ValidCompute_AMD))})
 
+        $ZilParams    = ""
+
+        if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.CrazyPool.EnableSrbMinerMultiDual -and $Pools.ZilliqaCP) {
+            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+                            
+                $ZilMiner_Protocol = Switch ($Pools.ZilliqaCP.EthMode) {
+                    "ethproxy"         {" --zil-esm 0"}
+                    "minerproxy"       {" --zil-esm 1"}
+					"ethstratum"       {" --zil-esm 2"}
+					"ethstratum1"      {" --zil-esm 2"}
+                    "ethstratum2"      {" --zil-esm 2"}
+					"ethstratumnh"     {" --zil-esm 2"}
+					default            {""}
+				}
+                $ZilParams = " --zil-enable --zil-pool $($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --zil-wallet $($Pools.ZilliqaCP.User)$($ZilMiner_Protocol)"
+            }
+        }       
+
+        $Pool_Port_Index = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
+
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and $Device.Count}).ForEach({
             $First = $true
 
@@ -258,26 +278,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
             $All_SecondAlgorithms = if ($SecondAlgorithm_Norm_0) {if ($Miner_Vendor -eq "CPU") {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)")} else {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")}} else {$null}
-
-            $ZilParams    = ""
-
-            if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.CrazyPool.EnableSrbMinerMultiDual -and $Pools.ZilliqaCP) {
-                if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                            
-                    $ZilMiner_Protocol = Switch ($Pools.ZilliqaCP.EthMode) {
-                        "ethproxy"         {" --zil-esm 0"}
-                        "minerproxy"       {" --zil-esm 1"}
-						"ethstratum"       {" --zil-esm 2"}
-						"ethstratum1"      {" --zil-esm 2"}
-                        "ethstratum2"      {" --zil-esm 2"}
-						"ethstratumnh"     {" --zil-esm 2"}
-						default            {""}
-					}
-                    $ZilParams = " --zil-enable --zil-pool $($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --zil-wallet $($Pools.ZilliqaCP.User)$($ZilMiner_Protocol)"
-                }
-            }       
-
-            $Pool_Port_Index = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 
 		    foreach($MainAlgorithm_Norm in $All_MainAlgorithms) {
 			    if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.CoinSymbols -or $Pools.$MainAlgorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.PoolsConfigDefault."$($Pools.$MainAlgorithm_Norm_0.Name)".Yiimp)) {

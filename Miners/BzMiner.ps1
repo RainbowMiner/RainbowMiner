@@ -107,6 +107,16 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         if (-not $Device -or ($Miner_Vendor -eq "NVIDIA" -and $Miner_Model -match "-" -and ($Device | Where-Object {$_.IsLHR} | Measure-Object).Count -gt 0)) {return}
 
+        $ZilParams2 = ""
+        $ZilParams3 = ""
+
+        if ($Session.Config.Pools.FlexPool.EnableBzminerDual -and $Pools.ZilliqaFP) {
+            if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+                $ZilParams2 = "--a2 zil --w2 $($Pools.ZilliqaFP.User) --p2 $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --oc_enable2 0 "
+                $ZilParams2 = "--a3 zil --w3 $($Pools.ZilliqaFP.User) --p3 $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --oc_enable3 0 "
+            }
+        }
+
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or [version]$_.Version -le [version]$Version)}).ForEach({
             $First = $true
 
@@ -125,11 +135,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $ZilParams = ""
 
-            if ($Session.Config.Pools.FlexPool.EnableBzminerDual -and $Pools.ZilliqaFP) {
-                if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                    $ZilCount  = if ($SecondAlgorithm_Norm_0) {3} else {2}
-                    $ZilParams = "--a$($ZilCount) zil --w$($ZilCount) $($Pools.ZilliqaFP.User) --p$($ZilCount) $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --oc_enable$($ZilCount) 0 "
-                }
+            if ($ZilParams2 -ne "") {
+                $ZilParams = if ($SecondAlgorithm_Norm_0) {$ZilParams3} else {$ZilParams2}
             }
 
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {

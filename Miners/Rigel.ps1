@@ -89,6 +89,18 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
         $Miner_Model = $_.Model
         $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
 
+        $ZilAlgorithm = ""
+        $ZilParams2   = ""
+        $ZilParams3   = ""
+
+        if ($Session.Config.Pools.FlexPool.EnableRigelDual -and $Pools.ZilliqaFP) {
+            if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+                $ZilAlgorithm = "+zil"
+                $ZilParams2   = " -o [2]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [2]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [2]$($Pools.ZilliqaFP.Worker)"})"
+                $ZilParams3   = " -o [3]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [3]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [3]$($Pools.ZilliqaFP.Worker)"})"
+            }
+        }
+
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
             $First = $true
 
@@ -101,16 +113,11 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
             
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
-            $ZilAlgorithm = ""
-            $ZilParams    = ""
+            $ZilParams = ""
 
-            if ($Session.Config.Pools.FlexPool.EnableRigelDual -and $Pools.ZilliqaFP) {
-                if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                    $ZilAlgorithm = "+zil"
-                    $o3_count = if ($SecondAlgorithm_Norm_0) {"[3]"} else {"[2]"}
-                    $ZilParams = " -o $($o3_count)$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u $($o3_count)$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w $($o3_count)$($Pools.ZilliqaFP.Worker)"})"
-                }
-            }                    
+            if ($ZilParams2 -ne "") {
+                $ZilParams = if ($SecondAlgorithm_Norm_0) {$ZilParams3} else {$ZilParams2}
+            }
 
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
                 if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
