@@ -4468,7 +4468,7 @@ function Get-Algorithm {
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
         if (-not (Test-Path Variable:Global:GlobalAlgorithms)) {Get-Algorithms -Silent}
-        $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
+        $Algorithm = $Algorithm -replace "[^a-z0-9]+"
         if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {
             $Algorithm = $Global:GlobalAlgorithms[$Algorithm]
             if ($CoinSymbol -ne "" -and $Algorithm -eq "Ethash" -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 10) -le 5) {
@@ -4477,6 +4477,8 @@ function Get-Algorithm {
                 elseif ($DAGSize -le 4) {$Algorithm = "$($Algorithm)4g"}
                 elseif ($DAGSize -le 5) {$Algorithm = "$($Algorithm)5g"}
             }
+        } else {
+            $Algorithm = (Get-Culture).TextInfo.ToTitleCase($Algorithm)
         }
         $Algorithm
     }
