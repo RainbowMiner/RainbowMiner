@@ -123,6 +123,15 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $DisableDevices = @(Compare-Object $Device_BusId @($Miner_Device | Select-Object -ExpandProperty BusId -Unique) | Where-Object {$_.SideIndicator -eq "<="} | Foreach-Object {($_.InputObject -split ':' | Foreach-Object {[uint32]"0x$_"}) -join ':'}) -join ' '
 
+            $ZilParams = ""
+
+            if ($Session.Config.Pools.FlexPool.EnableBzminerDual -and $Pools.ZilliqaFP) {
+                if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+                    $ZilCount  = if ($SecondAlgorithm_Norm_0) {3} else {2}
+                    $ZilParams = "--a$($ZilCount) zil --w$($ZilCount) $($Pools.ZilliqaFP.User) --p$($ZilCount) $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --oc_enable$($ZilCount) 0 "
+                }
+            }
+
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
                 if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $ExcludePoolName) -and (-not $_.CoinSymbol -or $_.CoinSymbol -icontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol -or $_.ExcludeCoinSymbol -inotcontains $Pools.$MainAlgorithm_Norm.CoinSymbol)) {
                     if ($First) {
@@ -139,15 +148,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                         "ethstratum2"   {"ethstratum2+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
                                         default         {$Pools.$MainAlgorithm_Norm.Protocol}
                                      }
-
-                    $ZilParams = ""
-
-                    if ($Session.Config.Pools.FlexPool.EnableBzminerDual -and $Pools.ZilliqaFP) {
-                        if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                            $ZilCount  = if ($SecondAlgorithm_Norm_0) {3} else {2}
-                            $ZilParams = "--a$($ZilCount) zil --w$($ZilCount) $($Pools.ZilliqaFP.User) --p$($ZilCount) $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --oc_enable$($ZilCount) 0 "
-                        }
-                    }
 
                     if ($SecondAlgorithm_Norm_0) {
 

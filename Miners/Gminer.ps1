@@ -102,6 +102,14 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
+            $ZilParams = ""
+
+            if ($Session.Config.Pools.FlexPool.EnableGminerDual -and $Pools.ZilliqaFP) {
+                if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+                    $ZilParams = " --zilserver $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --ziluser $($Pools.ZilliqaFP.User)"
+                }
+            }
+
 		    foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
 			    if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbol -or $_.CoinSymbol -icontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol -or $_.ExcludeCoinSymbol -inotcontains $Pools.$MainAlgorithm_Norm.CoinSymbol)) {
                     if ($First) {
@@ -113,14 +121,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     $PersCoin = if ($MainAlgorithm_Norm -match "^Equihash") {Get-EquihashCoinPers $Pools.$MainAlgorithm_Norm.CoinSymbol -Default "auto"}
 				    $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
-
-                    $ZilParams = ""
-
-                    if ($Session.Config.Pools.FlexPool.EnableGminerDual -and $Pools.ZilliqaFP) {
-                        if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                            $ZilParams = " --zilserver $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --ziluser $($Pools.ZilliqaFP.User)"
-                        }
-                    }
 
                     if ($SecondAlgorithm_Norm_0) {
 

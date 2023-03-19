@@ -101,6 +101,17 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
             
             $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGb}
 
+            $ZilAlgorithm = ""
+            $ZilParams    = ""
+
+            if ($Session.Config.Pools.FlexPool.EnableRigelDual -and $Pools.ZilliqaFP) {
+                if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+                    $ZilAlgorithm = "+zil"
+                    $o3_count = if ($SecondAlgorithm_Norm_0) {"[3]"} else {"[2]"}
+                    $ZilParams = " -o $($o3_count)$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u $($o3_count)$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w $($o3_count)$($Pools.ZilliqaFP.Worker)"})"
+                }
+            }                    
+
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
                 if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
@@ -120,17 +131,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                         "ethstratumnh" {"ethstratum+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
                         default        {"stratum+$(if ($Pools.$MainAlgorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
                     }
-
-                    $ZilAlgorithm = ""
-                    $ZilParams    = ""
-
-                    if ($Session.Config.Pools.FlexPool.EnableRigelDual -and $Pools.ZilliqaFP) {
-                        if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                            $ZilAlgorithm = "+zil"
-                            $o3_count = if ($SecondAlgorithm_Norm_0) {"[3]"} else {"[2]"}
-                            $ZilParams = " -o $($o3_count)$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u $($o3_count)$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w $($o3_count)$($Pools.ZilliqaFP.Worker)"})"
-                        }
-                    }                    
 
                     if ($SecondAlgorithm_Norm_0) {
 

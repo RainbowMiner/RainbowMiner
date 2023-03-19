@@ -103,6 +103,18 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             
             $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $ExcludeCompute) -and (-not $Compute -or $_.OpenCL.DeviceCapability -in $Compute)}
 
+            $ZilParams    = ""
+
+            if ($Session.Config.Pools.FlexPool.EnableMiniZDual -and $Pools.ZilliqaFP) {
+                if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+                    $ZilParams = " --url=$($Pools.ZilliqaFP.Protocol)://$($ZilWallet)@$($Pools.ZilliqaFP.Host) --worker=$($Pools.ZilliqaFP.Worker)$(if ($Pools.ZilliqaFP.Pass) {" -p $($Pools.ZilliqaFP.Pass)"})" 
+                }
+            } elseif ($Session.Config.Pools.CrazyPool.EnableMiniZDual -and $Pools.ZilliqaCP) {
+                if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+                    $ZilParams = " --url=$($ZilWallet)@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --worker=$($Pools.ZilliqaCP.Worker)$(if ($Pools.ZilliqaCP.Pass) {" -p $($Pools.ZilliqaCP.Pass)"})" 
+                }
+            }  
+
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
@@ -116,18 +128,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $Stratum = @()
                     if ($Pools.$Algorithm_Norm.SSL) {$Stratum += "ssl"}
                     if ($Pools.$Algorithm_Norm.Host -match "miningrigrentals" -and $Algorithm_Norm_0 -match "^etc?hash") {$Stratum += "stratum2"}
-
-                    $ZilParams    = ""
-
-                    if ($Session.Config.Pools.FlexPool.EnableMiniZDual -and $Pools.ZilliqaFP) {
-                        if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                            $ZilParams = " --url=$($Pools.ZilliqaFP.Protocol)://$($ZilWallet)@$($Pools.ZilliqaFP.Host) --worker=$($Pools.ZilliqaFP.Worker)$(if ($Pools.ZilliqaFP.Pass) {" -p $($Pools.ZilliqaFP.Pass)"})" 
-                        }
-                    } elseif ($Session.Config.Pools.CrazyPool.EnableMiniZDual -and $Pools.ZilliqaCP) {
-                        if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                            $ZilParams = " --url=$($ZilWallet)@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --worker=$($Pools.ZilliqaCP.Worker)$(if ($Pools.ZilliqaCP.Pass) {" -p $($Pools.ZilliqaCP.Pass)"})" 
-                        }
-                    }  
 
 				    [PSCustomObject]@{
 					    Name           = $Miner_Name

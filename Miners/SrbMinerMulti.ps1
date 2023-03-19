@@ -259,6 +259,26 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
             $All_SecondAlgorithms = if ($SecondAlgorithm_Norm_0) {if ($Miner_Vendor -eq "CPU") {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)")} else {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")}} else {$null}
 
+            $ZilParams    = ""
+
+            if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.CrazyPool.EnableSrbMinerMultiDual -and $Pools.ZilliqaCP) {
+                if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+                            
+                    $ZilMiner_Protocol = Switch ($Pools.ZilliqaCP.EthMode) {
+                        "ethproxy"         {" --zil-esm 0"}
+                        "minerproxy"       {" --zil-esm 1"}
+						"ethstratum"       {" --zil-esm 2"}
+						"ethstratum1"      {" --zil-esm 2"}
+                        "ethstratum2"      {" --zil-esm 2"}
+						"ethstratumnh"     {" --zil-esm 2"}
+						default            {""}
+					}
+                    $ZilParams = " --zil-enable --zil-pool $($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --zil-wallet $($Pools.ZilliqaCP.User)$($ZilMiner_Protocol)"
+                }
+            }       
+
+            $Pool_Port_Index = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
+
 		    foreach($MainAlgorithm_Norm in $All_MainAlgorithms) {
 			    if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.CoinSymbols -or $Pools.$MainAlgorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.PoolsConfigDefault."$($Pools.$MainAlgorithm_Norm_0.Name)".Yiimp)) {
                     if ($First) {
@@ -267,6 +287,10 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join '!'
                         $DeviceIntensity = ($Miner_Device | % {"0"}) -join '!'
                         $MallobParam = "$(if ($Pools.$MainAlgorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$MainAlgorithm_Norm.Mallob)"})"
+                        $Miner_HR = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
+                        if ($_.MaxRejectedShareRatio) {
+                            $Miner_HR *= 1-$Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Ratio_Live
+                        }
                         $First = $false
                     }
 
@@ -280,34 +304,11 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 						default            {""}
 					}
 
-                    $ZilParams    = ""
-
-                    if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.CrazyPool.EnableSrbMinerMultiDual -and $Pools.ZilliqaCP) {
-                        if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                            
-                            $ZilMiner_Protocol = Switch ($Pools.ZilliqaCP.EthMode) {
-                                "ethproxy"         {" --zil-esm 0"}
-                                "minerproxy"       {" --zil-esm 1"}
-						        "ethstratum"       {" --zil-esm 2"}
-						        "ethstratum1"      {" --zil-esm 2"}
-                                "ethstratum2"      {" --zil-esm 2"}
-						        "ethstratumnh"     {" --zil-esm 2"}
-						        default            {""}
-					        }
-                            $ZilParams = " --zil-enable --zil-pool $($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --zil-wallet $($Pools.ZilliqaCP.User)$($ZilMiner_Protocol)"
-                        }
-                    }       
-
-                    $Pool_Port_Index = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 				    $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.$Pool_Port_Index) {$Pools.$MainAlgorithm_Norm.Ports.$Pool_Port_Index} else {$Pools.$MainAlgorithm_Norm.Port}
 
                     #--disable-extranonce-subscribe
                     #--extended-log --log-file Logs\$($_.MainAlgorithm)-$((get-date).toString("yyyyMMdd-HHmmss")).txt
 
-                    $Miner_HR = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
-                    if ($_.MaxRejectedShareRatio) {
-                        $Miner_HR *= 1-$Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Ratio_Live
-                    }
 
                     if ($All_SecondAlgorithms) {
 
