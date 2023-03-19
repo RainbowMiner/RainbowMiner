@@ -2212,7 +2212,7 @@ function Invoke-Core {
     $API.Pools = @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK})
  
     #Load information about the miners
-    Write-Log "Getting miner information. "
+    Write-Log -Level Info "Getting miner information. "
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Loading miner modules .."}
 
@@ -2228,14 +2228,14 @@ function Invoke-Core {
             Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Global:DeviceCache.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
             Where-Object {$Miner_DontCheckForUnprofitableCpuAlgos -or ($_.DeviceModel -ne "CPU") -or ($_.BaseAlgorithm -notin $UnprofitableCpuAlgos)} |
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
-            Where-Object {(Compare-Object $Global:DeviceCache.DevicesNames @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |
+            Where-Object {-not (Compare-Object $Global:DeviceCache.DevicesNames @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>")} |
             Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)".Disable} |
             Where-Object {$Miner_Name = $_.BaseName
-                            ($_.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
+                            -not ($_.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
                                 $Pool_Name = $Pools.$_.Name
                                 ($Session.Config.Pools.$Pool_Name.MinerName.Count -and $Session.Config.Pools.$Pool_Name.MinerName -inotcontains $Miner_Name) -or
                                 ($Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -icontains $Miner_Name)
-                            } | Measure-Object).Count -eq 0
+                            })
             } |
             Where-Object {
                 $MinerOk = $true
@@ -2274,6 +2274,8 @@ function Invoke-Core {
             }
 
     })
+
+    Write-Log -Level Info "End getting miner information. "
 
     #Check if .NET Core Runtime is installed
     $MinersNeedSdk = $AllMiners.Where({$_.DotNetRuntime -and (Compare-Version $_.DotNetRuntime $Session.Config.DotNETRuntimeVersion) -gt 0})
