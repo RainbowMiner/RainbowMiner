@@ -2228,7 +2228,7 @@ function Invoke-Core {
             Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Global:DeviceCache.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
             Where-Object {$Miner_DontCheckForUnprofitableCpuAlgos -or ($_.DeviceModel -ne "CPU") -or ($_.BaseAlgorithm -notin $UnprofitableCpuAlgos)} |
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
-            Where-Object {-not (Compare-Object $Global:DeviceCache.DevicesNames @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>")} |
+            Where-Object {-not (Compare-Object $Global:DeviceCache.DevicesNames $_.DeviceName | Where-Object SideIndicator -EQ "=>")} |
             Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)".Disable} |
             Where-Object {$Miner_Name = $_.BaseName
                             -not ($_.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
@@ -2275,8 +2275,6 @@ function Invoke-Core {
 
     })
 
-    Write-Log -Level Info "End getting miner information. "
-
     #Check if .NET Core Runtime is installed
     $MinersNeedSdk = $AllMiners.Where({$_.DotNetRuntime -and (Compare-Version $_.DotNetRuntime $Session.Config.DotNETRuntimeVersion) -gt 0})
     if ($MinersNeedSdk.Count) {
@@ -2294,7 +2292,7 @@ function Invoke-Core {
 
         # Check if benchmarking is still ongoing on non-combo miners
 
-        $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'}).ForEach({
+        $AllMiners.Where({$_.DeviceModel -ne "CPU" -and $_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'}).ForEach({
 
             # Benchmarking still ongoing (1/2) - make sure no combo stat is left over
 
@@ -2318,13 +2316,14 @@ function Invoke-Core {
 
             # Benchmarking is still ongoing (2/2) - remove device combos
 
-            $AllMiners = $AllMiners.Where({$_.DeviceModel -notmatch '-'})
+            $AllMiners = $AllMiners.Where({$_.DeviceModel -eq "CPU" -or $_.DeviceModel -notmatch '-'})
 
         } else {
 
             # Remove device combos, where the parameter-preset is different and there does not exist an own definition
 
             $AllMiners = $AllMiners.Where({
+                $_.DeviceModel -eq "CPU" -or
                 $_.DeviceModel -notmatch '-' -or 
                 ($null -ne $Session.Config.Miners.PSObject.Properties["$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)"]) -or 
                 $($Miner = $_; $Miner.DeviceModel -split '-' | Foreach-Object {
@@ -2335,7 +2334,7 @@ function Invoke-Core {
 
             # Gather mining statistics for fresh combos
 
-            $AllMiners.Where({$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -match '-'}).ForEach({
+            $AllMiners.Where({$_.DeviceModel -ne "CPU" -and $_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -match '-'}).ForEach({
 
                 $Miner = $_
 
@@ -2370,7 +2369,7 @@ function Invoke-Core {
 
         # avoid benchmarks of combo miners
 
-        $AllMiners = $AllMiners.Where({$_.DeviceModel -notmatch '-' -or $_.HashRates.PSObject.Properties.Value -notcontains $null})
+        $AllMiners = $AllMiners.Where({$_.DeviceModel -eq "CPU" -or $_.DeviceModel -notmatch '-' -or $_.HashRates.PSObject.Properties.Value -notcontains $null})
 
         Write-Log -Level Info "End add missing combos"
 
