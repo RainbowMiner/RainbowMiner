@@ -3707,51 +3707,90 @@ function Get-Device {
                 $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
                 if ($IsWindows) {
-                    $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
-                    $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
-                    $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
-                    $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
-                    $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
-                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
-                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
-                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
-                    $Global:GlobalCPUInfo | Add-Member Family        0
-                    $Global:GlobalCPUInfo | Add-Member Model         0
-                    $Global:GlobalCPUInfo | Add-Member Stepping      0
-                    $Global:GlobalCPUInfo | Add-Member Features      @{}
-
                     try {
-                        $lscpu = Get-CpuInfo
-                        $Global:GlobalCPUInfo.Family   = $lscpu.family
-                        $Global:GlobalCPUInfo.Model    = $lscpu.model
-                        $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
-                        $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                    }
+                        $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
+                        $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
+                        $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
+                        $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
+                        $Global:GlobalCPUInfo | Add-Member Family        0
+                        $Global:GlobalCPUInfo | Add-Member Model         0
+                        $Global:GlobalCPUInfo | Add-Member Stepping      0
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
 
-
-                    if (-not $Global:GlobalCPUInfo.Features.Count) {
                         try {
-                            $lscpu = Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop
+                            $lscpu = Get-CpuInfo
                             $Global:GlobalCPUInfo.Family   = $lscpu.family
                             $Global:GlobalCPUInfo.Model    = $lscpu.model
                             $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
-                            $lscpu.flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                            $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                         } catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                         }
 
+
                         if (-not $Global:GlobalCPUInfo.Features.Count) {
-                            $chkcpu = @{}
-                            try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                            $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                            try {
+                                $lscpu = Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop
+                                $Global:GlobalCPUInfo.Family   = $lscpu.family
+                                $Global:GlobalCPUInfo.Model    = $lscpu.model
+                                $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
+                                $lscpu.flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                            } catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                            }
+
+                            if (-not $Global:GlobalCPUInfo.Features.Count) {
+                                $chkcpu = @{}
+                                try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                                $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                            }
                         }
+
+                        if (-not $Global:GlobalCPUInfo.Family   -and $CIM_CPU[0].Caption -match "Family\s*(\d+)")   {$Global:GlobalCPUInfo.Family   = $Matches[1]}
+                        if (-not $Global:GlobalCPUInfo.Model    -and $CIM_CPU[0].Caption -match "Model\s*(\d+)")    {$Global:GlobalCPUInfo.Model    = $Matches[1]}
+                        if (-not $Global:GlobalCPUInfo.Stepping -and $CIM_CPU[0].Caption -match "Stepping\s*(\d+)") {$Global:GlobalCPUInfo.Stepping = $Matches[1]}
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
                     }
 
-                    if (-not $Global:GlobalCPUInfo.Family   -and $CIM_CPU[0].Caption -match "Family\s*(\d+)")   {$Global:GlobalCPUInfo.Family   = $Matches[1]}
-                    if (-not $Global:GlobalCPUInfo.Model    -and $CIM_CPU[0].Caption -match "Model\s*(\d+)")    {$Global:GlobalCPUInfo.Model    = $Matches[1]}
-                    if (-not $Global:GlobalCPUInfo.Stepping -and $CIM_CPU[0].Caption -match "Stepping\s*(\d+)") {$Global:GlobalCPUInfo.Stepping = $Matches[1]}
+                    if (-not $Global:GlobalCPUInfo.Features -or -not $Global:GlobalCPUInfo.Features.Count) {
+                        Write-Log -Level Info "CIM CPU detection has failed. Trying alternative."
+
+                        # Windows has problems to identify the CPU, so use fallback
+                        $chkcpu = @{}
+                        try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+
+                        $Global:GlobalCPUInfo = [PSCustomObject]@{}
+
+                        $Global:GlobalCPUInfo | Add-Member Name          "$($chkcpu.cpu_name)".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  "$($chkcpu.cpu_vendor)".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]$chkcpu.cores)
+                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]$chkcpu.threads)
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$chkcpu.physical_cpus)
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]$chkcpu.l3)
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$chkcpu.cpu_speed)
+                        $Global:GlobalCPUInfo | Add-Member Family        0
+                        $Global:GlobalCPUInfo | Add-Member Model         0
+                        $Global:GlobalCPUInfo | Add-Member Stepping      0
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
+
+                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+
+                        try {
+                            $lscpu = Get-CpuInfo
+                            $Global:GlobalCPUInfo.Family   = $lscpu.family
+                            $Global:GlobalCPUInfo.Model    = $lscpu.model
+                            $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
+                            $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+
+                    }
 
                     $Global:GlobalCPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
 
