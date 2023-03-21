@@ -14,6 +14,20 @@
                     ]
     },
     {
+        "symbol":  "ERG",
+        "coin":  "Ergo",
+        "algo":  "Autolykos2",
+        "rpc":  "ergo.baikalmine.com",
+        "host":  "ergo.baikalmine.com",
+        "port":  [
+                     1212
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
         "symbol":  "ETC",
         "coin":  "Ethereum Classic",
         "algo":  "Ethash",
@@ -42,13 +56,13 @@
                     ]
     },
     {
-        "symbol":  "DAE",
-        "coin":  "DAEfrom",
+        "symbol":  "FLR",
+        "coin":  "Flora",
         "algo":  "Ethash",
-        "rpc":  "dae.baikalmine.com",
-        "host":  "dae.baikalmine.com",
+        "rpc":  "flr.baikalmine.com",
+        "host":  "flr.baikalmine.com",
         "port":  [
-                     7070
+                     1818
                  ],
         "fee":  0.5,
         "regions":  [
