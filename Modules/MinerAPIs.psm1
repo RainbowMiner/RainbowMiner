@@ -2406,7 +2406,7 @@ class Rigel : Miner {
 
         $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix0
 
-        $PowerDraw      = [Double]($Data.devices.monitoring_info.power_usage | Measure-Object -Sum).Sum
+        $PowerDraw      = [Double]$Data.power_usage
 
         if ($HashRate_Name0 -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name0 = $HashRate_Value}
