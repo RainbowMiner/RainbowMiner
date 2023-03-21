@@ -14,6 +14,20 @@
                     ]
     },
     {
+        "symbol":  "ERG",
+        "coin":  "Ergo",
+        "algo":  "Autolykos2",
+        "rpc":  "ergo-solo.baikalmine.com",
+        "host":  "ergo-solo.baikalmine.com",
+        "port":  [
+                     1214
+                 ],
+        "fee":  1.00,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
         "symbol":  "ETC",
         "coin":  "Ethereum Classic",
         "algo":  "Ethash",
@@ -23,6 +37,20 @@
                      1444
                  ],
         "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "FLR",
+        "coin":  "Flora",
+        "algo":  "Ethash",
+        "rpc":  "flr-solo.baikalmine.com",
+        "host":  "flr-solo.baikalmine.com",
+        "port":  [
+                     1816
+                 ],
+        "fee":  0.5,
         "regions":  [
                         "eu"
                     ]
