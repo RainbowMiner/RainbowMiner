@@ -376,11 +376,6 @@
             }
             Currencies=@("ETC")
         }
-        "Poolium" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{API_Key="";Password="x"}
-            SetupFields=[PSCustomObject]@{API_Key="Enter your poolium.win API-Key";Password="Enter your poolium.win password"}
-            Currencies=@("VRM")
-        }
         "ProHashing" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";AECurrency="BTC";API_Key="";EnableAPIKeyForMiners="0"}
             SetupFields=[PSCustomObject]@{User="Enter your ProHashing username";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
