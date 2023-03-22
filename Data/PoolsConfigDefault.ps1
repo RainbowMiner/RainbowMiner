@@ -203,11 +203,6 @@
             SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency";BalanceCoinSymbol="Add all coin symbols, that the balance module should load and list"}
             Currencies=@()
         }
-        "MiningPoolOvh" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{API_Key="";Password="x"}
-            SetupFields=[PSCustomObject]@{API_Key="Enter your mining-pool.ovh API-Key";Password="Enter your mining-pool.ovh password"}
-            Currencies=@("VRM")
-        }
         "MiningRigRentals" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{
                         User=""

@@ -23,7 +23,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, 6Block, Acepool, Aionmine, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlockMasters, C3pool, Ekpool, EthashPool, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Minerpool, Minafacil, MinerRocks, MiningDutch, MiningPoolHub, MiningPoolOvh, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Poolin, Poolium, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, Zergpool and Zpool)**
+- **Profit auto-switch between pools (2Miners, 6Block, Acepool, Aionmine, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlockMasters, C3pool, Ekpool, EthashPool, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Minerpool, Minafacil, MinerRocks, MiningDutch, MiningPoolHub, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), Poolin, Poolium, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, Zergpool and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -50,11 +50,11 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 ## REQUIRED PRE-REQUISITES
 
-**Important note: do NOT use the newer Powershell Core v7.3.0. It comes with a severe memory leak. Until this problem is solved, I strongly recommend you stick with Powershell Core v7.2.7**
+**Important note: do NOT use the newer Powershell Core v7.3.x. It comes with a severe memory leak. Until this problem is solved, I strongly recommend you stick with Powershell Core v7.2.10**
 
 ### Windows 7/8.1/10 pre-requisites
 
-1. Install PowerShell 7: [Download Installer for version 7.2.7](https://github.com/PowerShell/PowerShell/releases/download/v7.2.7/PowerShell-7.2.7-win-x64.msi)
+1. Install PowerShell 7: [Download Installer for version 7.2.10](https://github.com/PowerShell/PowerShell/releases/download/v7.2.10/PowerShell-7.2.10-win-x64.msi)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
     - **Nvidia official downloads**:
@@ -253,19 +253,19 @@ At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v7.2.7 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v7.2.10 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 
     # if not already done, download the package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.7/powershell-lts_7.2.7-1.deb_amd64.deb
-    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.7/powershell_7.2.7-1.deb_amd64.deb
+    wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.10/powershell-lts_7.2.10-1.deb_amd64.deb
+    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.10/powershell_7.2.10-1.deb_amd64.deb
 
     # install powershell package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    dpkg -i powershell-lts_7.2.7-1.deb_amd64.deb
-    #dpkg -i powershell_7.2.7-1.deb_amd64.deb
+    dpkg -i powershell-lts_7.2.10-1.deb_amd64.deb
+    #dpkg -i powershell_7.2.10-1.deb_amd64.deb
 
     # install powershell dependencies
     apt install -f
@@ -325,7 +325,7 @@ Alternative: start as Linux `screen`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Acepool, Aionmine, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, Minafacil, Minerpool, MinerRocks, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningPoolOvh, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, NiceHash, Poolin, Poolium, ProHashing, ProHashingCoins, ProHashingCoinsSolo, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Acepool, Aionmine, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlexPool, FlockPool, FluxPools, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, Minafacil, Minerpool, MinerRocks, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, NiceHash, Poolin, Poolium, ProHashing, ProHashingCoins, ProHashingCoinsSolo, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -501,7 +501,6 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>MiningDutchCoins</summary> https://mining-dutch.nl/ auto-exchange and paymout in various currencies, username required. Mining by coin profitability</details>
 <details><summary>MiningPoolHub</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm</details>
 <details><summary>MiningPooHubCoins</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).</details>
-<details><summary>MiningPoolOvh</summary> https://www.mining-pool.ovh/ no auto-exchange registration is mandatory, mines VRM (VeriumReserve). Set Mining-Pool.ovh user plus worker (e.g. "miner.001") as wallet address and your worker password in pools configuration or edit pools.config.txt</details>
 <details><summary>MiningRigRentals</summary> [https://www.miningrigrentals.com/](https://www.miningrigrentals.com/?ref=2598069) rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
 <details><summary>Mintpond</summary> https://mintpond.com/ if you are totally in Zcoin, then this pool might be the best choice. A separate wallet address is needed for XZC. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Molepool</summary> https://molepool.com/ no auto-exchange, a separate wallet address is needed for ETHW. Set in pools configuration or edit pools.config.txt</details>
