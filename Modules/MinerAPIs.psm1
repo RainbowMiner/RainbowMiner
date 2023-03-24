@@ -1942,25 +1942,28 @@ class MiniZ : Miner {
             return
         }
 
-        $HashRate_Name    = [String]$this.Algorithm[0]
-        $HashRate_Value   = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum
+        if ($Data.pers -ne "zil") {
+            $HashRate_Name    = [String]$this.Algorithm[0]
 
-        $PowerDraw        = [Double]($Data.result.gpu_power_usage | Measure-Object -Sum).Sum
+            $HashRate_Value   = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum
 
-        if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $PowerDraw        = [Double]($Data.result.gpu_power_usage | Measure-Object -Sum).Sum
 
-            $Difficulty_Value = [Double]$Data.pool.difficulty
-            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+            if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
 
-            $Accepted_Shares  = [Int64]($Data.result.accepted_shares | Measure-Object -Sum).Sum
-            $Rejected_Shares  = [Int64]($Data.result.rejected_shares | Measure-Object -Sum).Sum
-            #$Stale_Shares     = [Int64]($Data.result.stale_shares | Measure-Object -Sum).SUm
-            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+                $Difficulty_Value = [Double]$Data.pool.difficulty
+                $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+                $Accepted_Shares  = [Int64]($Data.result.accepted_shares | Measure-Object -Sum).Sum
+                $Rejected_Shares  = [Int64]($Data.result.rejected_shares | Measure-Object -Sum).Sum
+                #$Stale_Shares     = [Int64]($Data.result.stale_shares | Measure-Object -Sum).SUm
+                $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+            }
+
+            $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
+
         }
-
-        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
-
         $this.CleanupMinerData()
     }
 }
