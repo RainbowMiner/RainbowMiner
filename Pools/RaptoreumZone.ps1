@@ -94,5 +94,6 @@ if ($Pool_User -or $InfoOnly) {
                 WTM           = $true
             }
         }
+        $Pool_SSL = $true
     }
 }
