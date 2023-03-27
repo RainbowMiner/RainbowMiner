@@ -397,6 +397,9 @@
             Autoexchange=$true
             BalancesKeepAlive="90d"
         }
+        "RaptoreumZone" = [PSCustomObject]@{
+            Currencies=@("RTM")
+        }
         "Ravenminer" = [PSCustomObject]@{
             Currencies=@("RVN")
         }
