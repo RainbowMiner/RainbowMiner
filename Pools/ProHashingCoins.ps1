@@ -60,7 +60,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_APIKey = "$(if ($EnableAPIKeyForMiners -and $API_Key) {",k=$($API_Key)"})"
 
-$PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $_.Value.enabled -and $_.Value.lastblock -and ($Wallets."$($_.Name)" -or ($User -ne "" -and $CoinSymbol -contains $_.Name) -or $InfoOnly)} | ForEach-Object {
+$PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $_.Value.enabled -and $_.Value.lastblock -and ($Wallets."$($_.Name)" -or $User -ne "" -or $InfoOnly)} | ForEach-Object {
     $Pool_CoinSymbol = $_.Name
     $Pool_CoinName   = $_.Value.name
     $Pool_Port       = $_.Value.port
