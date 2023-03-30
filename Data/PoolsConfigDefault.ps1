@@ -384,7 +384,7 @@
             BalancesKeepAlive="90d"
         }
         "ProHashingCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";PPMode="pps";API_Key="";EnableAPIKeyForMiners="0"}
+            Fields=[PSCustomObject]@{User="";PPMode="pps";API_Key="";AECurrency="BTC";EnableAPIKeyForMiners="0"}
             SetupFields=[PSCustomObject]@{User="Enter your ProHashing username and select payout coins with CoinSymbol (or use separate wallet symbols with username in it)";PPMode="Enter the payout/mining mode (pps,pplns or solo)";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
             Autoexchange=$true
