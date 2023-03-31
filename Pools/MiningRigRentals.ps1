@@ -417,7 +417,13 @@ if ($AllRigs_Request) {
 
                                 $Pool_Algorithm_Norm_Mapped   = Get-MappedAlgorithm $Pool_Algorithm_Norm
 
-                                $Rig_StartMessage = Get-MiningRigRentalsSubst $StartMessage -Subst @{
+                                $Rig_StartMessage = if ($Optimal_Difficulty.min -gt 0 -and $Optimal_Difficulty.max -gt 0) {
+                                    $StartMessage -replace "<[/]?diff>"
+                                } else {
+                                    $StartMessage -replace "<diff>.+</diff>"
+                                }
+
+                                $Rig_StartMessage = Get-MiningRigRentalsSubst $Rig_StartMessage -Subst @{
                                     "Algorithm"   = $Pool_Algorithm_Norm_Mapped
                                     "Coin"        = $Pool_CoinSymbol
                                     "Type"        = $Pool_Algorithm
@@ -561,7 +567,7 @@ if ($AllRigs_Request) {
                                                                       else {$DiffMessageTolerancyPercent}
                                 $DiffMessageTolerancyPercent_Value  = [Double]("$($DiffMessageTolerancyPercent_Value)" -replace ",","." -replace "[^0-9\.]+") / 100
 
-                                if ($Pool_Diff -lt (1 - $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.min -or $Pool_Diff -gt (1 + $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.max) {
+                                if ($Optimal_Difficulty.min -gt 0 -and $Optimal_Difficulty.max -gt 0 -and $Pool_Diff -lt (1 - $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.min -or $Pool_Diff -gt (1 + $DiffMessageTolerancyPercent_Value)*$Optimal_Difficulty.max) {
 
                                     $Pool_DiffIsOk = $false
 

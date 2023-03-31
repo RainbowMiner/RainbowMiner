@@ -251,7 +251,7 @@
                         PriceCurrencies="BTC"
                         Title = "%algorithmex% mining with RainbowMiner rig %rigid%"
                         Description = "Autostart mining with RainbowMiner on $(if ($IsWindows) {"Windows"} else {"Linux"}). This rig is idle and will activate itself, as soon, as you rent it. %workername%"
-                        StartMessage="Dear renter, thank you for renting my rig. It will be up-and-running in no time: offline pool or zero hashrate is normal in the first 5-10 minutes. Please allow at least 10 minutes to pass before raising an issue. Please make sure, that your pool's difficulty is between %mindifffmt% (%mindiff%) and %maxdifffmt% (%maxdiff%) to get the advertised hashrate. Happy mining! (Automated message, do not respond)"
+                        StartMessage="Dear renter, thank you for renting my rig. It will be up-and-running in no time: offline pool or zero hashrate is normal in the first 5-10 minutes. Please allow at least 10 minutes to pass before raising an issue.<diff> Please make sure, that your pool's difficulty is between %mindifffmt% (%mindiff%) and %maxdifffmt% (%maxdiff%) to get the advertised hashrate.</diff> Happy mining! (Automated message, do not respond)"
                         ExtensionMessageTime="2h"
                         ExtensionMessage="Dear renter, your rental will end soon. Now would be a good time to extend the rental, if you are happy with the result."
                         DiffMessageTime="15m"
@@ -384,15 +384,15 @@
             BalancesKeepAlive="90d"
         }
         "ProHashingCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";PPMode="pps";API_Key="";EnableAPIKeyForMiners="0"}
-            SetupFields=[PSCustomObject]@{User="Enter your ProHashing username and select payout coins with CoinSymbol (or use separate wallet symbols with username in it)";PPMode="Enter the payout/mining mode (pps,pplns or solo)";API_Key="Enter your ProHashing API-Key for balance";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
+            Fields=[PSCustomObject]@{User="";PPMode="pps";API_Key="";AECurrency="BTC";EnableAPIKeyForMiners="0"}
+            SetupFields=[PSCustomObject]@{User="Enter your ProHashing username and select payout coins with CoinSymbol (or use separate wallet symbols with username in it)";PPMode="Enter the payout/mining mode (pps,pplns or solo)";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
             Autoexchange=$true
             BalancesKeepAlive="90d"
         }
         "ProHashingCoinsSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_Key="";EnableAPIKeyForMiners="0"}
-            SetupFields=[PSCustomObject]@{User="Enter your ProHashing username and select payout coins with CoinSymbol (or use separate wallet symbols with username in it)";API_Key="Enter your ProHashing API-Key for balance";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
+            Fields=[PSCustomObject]@{User="";API_Key="";AECurrency="BTC";EnableAPIKeyForMiners="0"}
+            SetupFields=[PSCustomObject]@{User="Enter your ProHashing username and select payout coins with CoinSymbol (or use separate wallet symbols with username in it)";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
             Autoexchange=$true
             BalancesKeepAlive="90d"
