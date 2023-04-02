@@ -1,6 +1,7 @@
 {
     "america": "US",
     "ap":  "SoutheastAsia",
+    "arg":  "SouthAmerica",
     "as":  "Asia",
     "asia":  "Asia",
     "aspac":  "SoutheastAsia",
@@ -54,5 +55,5 @@
     "usw": "USWest",
     "uswest": "USWest",
     "wa":  "WesternAsia",
-    "za": "SouthAfrica",
+    "za": "SouthAfrica"
 }
