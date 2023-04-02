@@ -15,7 +15,7 @@
             Currencies=@("HNS")
         }
         "AccPool" = [PSCustomObject]@{
-            Currencies=@("KAS")
+            Currencies=@("KAS","NEXA")
         }
         "Acepool" = [PSCustomObject]@{
             Currencies=@("BEAM","XGM")

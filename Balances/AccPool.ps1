@@ -7,7 +7,8 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol="KAS"; region=@("eu","ca","us","ru","hk"); host="acc-pool.pw"; web="kaspa.acc-pool.pw"; port=16061; fee=2}
+    [PSCustomObject]@{symbol="KAS";  region=@("eu","ca","us","ru","hk","arg"); host="acc-pool.pw"; web="kaspa.acc-pool.pw"; port=@(16061,16062); fee=0.8}
+    [PSCustomObject]@{symbol="NEXA"; region=@("eu","ca","us","ru","hk","arg"); host="acc-pool.pw"; web="nexa.acc-pool.pw";  port=@(16011,16012); fee=1}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Config.Pools.$Name.Wallets.$Pool_Currency -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Pool_Currency)} | Foreach-Object {
