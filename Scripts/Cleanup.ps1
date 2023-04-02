@@ -1875,6 +1875,12 @@ try {
 
     if ($CacheCleanup) {if (Test-Path "Cache") {Get-ChildItem "Cache" -Filter "*.asy" | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}}}
 
+    if (Test-Path ".\Bin\ANY-SRBMinerMulti\Cache") {
+        Get-ChildItem -Path ".\Bin\ANY-SRBMinerMulti\Cache" -Filter "*.cnf" -File | Foreach-Object {
+            Remove-Item $_.FullName -Force -ErrorAction Ignore
+        }
+    }
+
     $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
 
     if ($DownloadsCleanup) {
