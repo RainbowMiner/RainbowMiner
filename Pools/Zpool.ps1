@@ -66,6 +66,10 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
     $Pool_CoinSymbol = $Pool_Coins.$Pool_Algorithm.Symbol
     $Pool_PoolFee    = [Double]$Pool_Request.$_.fees
 
+    $PoolCoins_Result = $PoolCoins_Request.PSObject.Properties.Value | Where-Object {$_.algo -eq $Pool_Algorithm -and $_.conversion_disabled -ne 1}
+
+    if (-not $PoolCoins_Result) {return}
+
     if ($Pool_CoinName -and -not $Pool_CoinSymbol) {$Pool_CoinSymbol = Get-CoinSymbol $Pool_CoinName}
 
     if ($Pool_Algorithm -eq "ethash" -and $Pool_CoinSymbol) {
@@ -83,8 +87,8 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         return
     }
 
-    $Pool_TSL = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast -Minimum).Minimum
-    $Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks" -Maximum).Maximum
+    $Pool_TSL = ($PoolCoins_Result | Measure-Object timesincelast -Minimum).Minimum
+    $Pool_BLK = ($PoolCoins_Result | Measure-Object "24h_blocks" -Maximum).Maximum
     
     if (-not $InfoOnly) {
         $NewStat = $false
