@@ -61,6 +61,10 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 	$Pool_PoolFee    = if ($Pool_Request.$Pool_Algorithm) {[double]$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
 	$Pool_Currency   = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
 
+	$Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} else {$AECurrency}
+
+    if (-not $InfoOnly -and $PoolCoins_Request.$Pool_CoinSymbol.conversion_disabled -eq "1" -and $Pool_ExCurrency -ne $Pool_CoinSymbol) {return}
+
 	if ($Pool_Algorithm -eq "ethash") {
 		$Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
 	} else {
@@ -84,8 +88,6 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 		$Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
 		if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 	}
-
-	$Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} else {$AECurrency}
 
 	if (($Pool_ExCurrency -and $Wallets.$Pool_ExCurrency) -or $InfoOnly) {
 		$Pool_Params = if ($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)") {",$($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)")"} elseif ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"}
