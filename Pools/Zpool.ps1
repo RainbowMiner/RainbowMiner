@@ -68,7 +68,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
 
     $PoolCoins_Result = $PoolCoins_Request.PSObject.Properties.Value | Where-Object {$_.algo -eq $Pool_Algorithm -and $_.conversion_disabled -ne 1}
 
-    if (-not $PoolCoins_Result) {return}
+    if (-not $PoolCoins_Result -and -not $InfoOnly) {return}
 
     if ($Pool_CoinName -and -not $Pool_CoinSymbol) {$Pool_CoinSymbol = Get-CoinSymbol $Pool_CoinName}
 
