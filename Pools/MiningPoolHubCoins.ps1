@@ -73,11 +73,6 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.symbol} | ForEach-Object {
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    # temporary fixes for API errors
-    #Switch ($Pool_CoinSymbol) {
-    #    "VTC" {$Pool_Port = 20534}
-    #}
-
     Switch ($Pool_Algorithm_Norm) {
         "KawPow" {$Pool_Hosts = $Pool_Hosts | Where-Object {$_ -match "us-east"}}
     }

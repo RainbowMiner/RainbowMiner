@@ -71,11 +71,6 @@ $Pool_Request.return | Where-Object {$_.algo -and $_.current_mining_coin_symbol}
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -Quiet
     }
 
-    # temporary fixes for API errors
-    Switch ($Pool_CoinSymbol) {
-        "VTC" {$Pool_Port = 20534}
-    }
-
     Switch ($Pool_Algorithm_Norm) {
         "KawPow" {$Pool_Hosts = $Pool_Hosts | Where-Object {$_ -match "us-east"}}
     }
