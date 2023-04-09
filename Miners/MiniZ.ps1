@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "2.0c4"
+$Version = "2.0c5"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c4-miniz/miniZ_v2.0c4_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c5-miniz/miniZ_v2.0c5_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c4-miniz/miniZ_v2.0c4_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0c5-miniz/miniZ_v2.0c5_win-x64.7z"
             Cuda = "8.0"
         }
     )
