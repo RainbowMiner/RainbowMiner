@@ -63,7 +63,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 
 	$Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} else {$AECurrency}
 
-    if (-not $InfoOnly -and $PoolCoins_Request.$Pool_CoinSymbol.conversion_disabled -eq "1" -and $Pool_ExCurrency -ne $Pool_CoinSymbol) {return}
+    if (-not $InfoOnly -and [double]$PoolCoins_Request.$Pool_CoinSymbol.estimate -eq 0 -and $Pool_ExCurrency -ne $Pool_CoinSymbol) {return}
 
 	if ($Pool_Algorithm -eq "ethash") {
 		$Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
