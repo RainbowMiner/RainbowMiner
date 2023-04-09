@@ -11,14 +11,14 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "200{0:d2}"
 $DevFee = 0.0
-$Version = "3.22.1"
+$Version = "3.22.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.22.1-jayddee/cpuminer-opt-3.22.1-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.22.2-jayddee/cpuminer-opt-3.22.2-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.22.1-jayddee/cpuminer-opt-3.22.1-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.22.2-jayddee/cpuminer-opt-3.22.2-windows.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -56,8 +56,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; Params = ""} #Scrypt8k
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
+    [PSCustomObject]@{MainAlgorithm = "sha256dt"; Params = ""} #sha256dt
     [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #sha256q
     [PSCustomObject]@{MainAlgorithm = "sha3d"; Params = ""} #sha3d, BSHA3
+    [PSCustomObject]@{MainAlgorithm = "sha512256d"; Params = ""} #sha512256d
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #shavite3
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
