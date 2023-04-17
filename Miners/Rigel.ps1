@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.3.11"
+$Version = "1.4.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.11-rigel/rigel-1.3.11-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-rigel/rigel-1.4.0-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.11-rigel/rigel-1.3.11-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-rigel/rigel-1.4.0-win.zip"
             Cuda = "8.0"
         }
     )
@@ -33,23 +33,45 @@ if ($IsLinux) {
 
 $Commands = [PSCustomObject[]]@(
     # Single mining
-    [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA")} #Etchash (ETC)
-    [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA")} #Ethash (ETH)
-    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
-    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
-    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGB = 3; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
-    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGB = 4; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "alephium";                     MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #Alephium/ALPH
+    [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA")} #Etchash (ETC)
+    [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA")} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGB = 3; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGB = 4; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH) for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "kheavyhash";                 MinMemGB = 2; Params = "";   Vendor = @("NVIDIA")} #kheavyhash/KASPA
-    [PSCustomObject]@{MainAlgorithm = "nexapow";           DAG = $true; MinMemGB = 2; Params = "";   Vendor = @("NVIDIA"); Fee = 2.0} #NexaPoW/NEXA
+    [PSCustomObject]@{MainAlgorithm = "ironfish";                     MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #IronFish/IRON
+    [PSCustomObject]@{MainAlgorithm = "kheavyhash";                   MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #kheavyhash/KASPA
+    [PSCustomObject]@{MainAlgorithm = "nexapow";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0} #NexaPoW/NEXA
 
     # Dual mining
+    [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"} #Etchash (ETC)
+    [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"} #Etchash (ETC)
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"} #Etchash (ETC)
+
+    [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"} #Ethash (ETH)
+
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"; Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"; Algorithm = "ethash"} #Ethash (ETH)
+
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"; Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"; Algorithm = "ethash"} #Ethash (ETH)
+
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGB = 3; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGB = 3; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"; Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGB = 3; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"; Algorithm = "ethash"} #Ethash (ETH)
+
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGB = 4; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Algorithm = "ethash"} #Ethash (ETH)
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGB = 4; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"; Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGB = 4; Params = ""; ExtendInterval = 2;   Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"; Algorithm = "ethash"} #Ethash (ETH)
+
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Algorithm = "ethash"} #Ethash (ETH) for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"; Algorithm = "ethash"} #Ethash (ETH) for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"; Algorithm = "ethash"} #Ethash (ETH) for low memory coins
 )
 
