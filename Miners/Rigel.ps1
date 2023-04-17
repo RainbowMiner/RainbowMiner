@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.4.0"
+$Version = "1.4.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-rigel/rigel-1.4.0-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.1-rigel/rigel-1.4.1-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.0-rigel/rigel-1.4.0-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.1-rigel/rigel-1.4.1-win.zip"
             Cuda = "8.0"
         }
     )
@@ -117,8 +117,8 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
         if ($Session.Config.Pools.FlexPool.EnableRigelDual -and $Pools.ZilliqaFP) {
             if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
                 $ZilAlgorithm = "+zil"
-                $ZilParams2   = " -o [2]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [2]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [2]$($Pools.ZilliqaFP.Worker)"})"
-                $ZilParams3   = " -o [3]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [3]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [3]$($Pools.ZilliqaFP.Worker)"})"
+                $ZilParams2   = " -o [2]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [2]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [2]$($Pools.ZilliqaFP.Worker)"}) --zil-countdown"
+                $ZilParams3   = " -o [3]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [3]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [3]$($Pools.ZilliqaFP.Worker)"}) --zil-countdown"
             }
         }
 
