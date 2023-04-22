@@ -130,7 +130,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                     Host               = if ($Pool_Region -eq "us") {$Pool_Host} else {"$($Pool_Algorithm).$($Pool_Region).mine.zergpool.com"}
                     Port               = $Pool_Port_SSL
                     User               = $Wallets.$Pool_ExCurrency
-                    Pass               = "ID={workername:$Worker},c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency{diff:,sd=`$difficulty}$Pool_Params"
+                    Pass               = "c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency,ID={workername:$Worker}{diff:,sd=`$difficulty}$Pool_Params"
                     Region             = $Pool_RegionsTable.$Pool_Region
                     SSL                = $Pool_SSL
                     SSLSelfSigned      = $Pool_SSL
