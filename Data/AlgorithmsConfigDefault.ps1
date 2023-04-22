@@ -6,6 +6,8 @@
     "Blake2bSHA3" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Blake2s" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Blake3" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
+    "Blake3Alephium" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
+    "Blake3IronFish" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "BMW512" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "CryptonightHeavyXhv" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Cuckatoo32" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
