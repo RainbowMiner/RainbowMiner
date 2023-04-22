@@ -12,7 +12,7 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "3.33"
+$Version = "3.34"
 $DeviceCapability = "5.0"
 $EnableContest = $false
 
@@ -45,6 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus";     Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 4.00} #Octopus/CFX
     [PSCustomObject]@{MainAlgorithm = "ProgpowSero";     DAG = $true; MinMemGb = 3;                     Params = "--algo sero";        Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #ProgpowSero
     [PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 1;                     Params = "--algo ton";         Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 2.00} #SHA256ton/TON
+    [PSCustomObject]@{MainAlgorithm = "SHA512256d";                   MinMemGb = 1;                     Params = "--algo radiant";     Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 2.00} #SHA512256d/RAD
 
 
     [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2 --dalgo kaspa";  Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 2.0; SecondaryAlgorithm = "kHeavyHash"} #Autolykos2/ERG
