@@ -20,6 +20,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "FLUX";  port = 1200; fee = 0.9; rpc = "flux"; region = $Pool_AllRegions; wtmmode = "WTM"}
     [PSCustomObject]@{symbol = "GRIN-PRI";port = 1125; fee = 0.9; rpc = "grin"; region = $Pool_AllRegions; cycles = 32}
     [PSCustomObject]@{symbol = "XHV";   port = 1110; fee = 0.9; rpc = "haven"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "IRON";  port = 1145; fee = 0.0; rpc = "ironfish"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "KAS";   port = 1206; fee = 0.9; rpc = "kaspa"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XLA";   port = 1190; fee = 0.9; rpc = "scala"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
