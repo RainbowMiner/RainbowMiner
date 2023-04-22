@@ -11,21 +11,21 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # 
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.10.10"
+$Version = "0.10.11"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.10-teamred/teamredminer-v0.10.10-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.11-teamred/teamredminer-v0.10.11-linux.tgz"
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.10-teamred/teamredminer-v0.10.10-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.11-teamred/teamredminer-v0.10.11-win.zip"
     $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 1.5; Params = ""; DevFee = 2.0; ExtendInterval = 2; ExcludeCompute = @("CGN1","CGN2")} #Autolykos2/ERGO
-    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "IronFish"}
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"}
     [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas";  SecondAlgorithmXlat = "kHeavyHash"}
     [PSCustomObject]@{MainAlgorithm = "cn_conceal";                    MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeCompute = @("CGN1","CGN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "cn_haven";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeCompute = @("CGN1","CGN2","RDNA1","RDNA2","RDNA3")}
@@ -47,12 +47,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash4g";         DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 0.75; ExtendInterval = 3; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash5g";         DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "IronFish"; ExcludeCompute = @("CGN1","CGN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash2g";         DAG = $true; MinMemGb = 1;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash3g";         DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash4g";         DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash5g";         DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
+    [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; ExcludeCompute = @("CGN1","CGN2")}
+    [PSCustomObject]@{MainAlgorithm = "ethash2g";         DAG = $true; MinMemGb = 1;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
+    [PSCustomObject]@{MainAlgorithm = "ethash3g";         DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
+    [PSCustomObject]@{MainAlgorithm = "ethash4g";         DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
+    [PSCustomObject]@{MainAlgorithm = "ethash5g";         DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
+    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash2g";         DAG = $true; MinMemGb = 1;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash3g";         DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash5g";         DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "firopow";          DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("CGN1","CGN2","RDNA3")}
-    [PSCustomObject]@{MainAlgorithm = "ironfish";                      MinMemGb = 1.5; Params = ""; DevFee = 1.0; ExcludeCompute = @("CGN1","CGN2")}
+    [PSCustomObject]@{MainAlgorithm = "Blake3IronFish";                      MinMemGb = 1.5; Params = ""; DevFee = 1.0; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "kas";                           MinMemGb = 1.5; Params = ""; DevFee = 1.0; MainAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("CGN1","CGN2")}
     [PSCustomObject]@{MainAlgorithm = "kawpow";           DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("CGN1","CGN2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3";                     MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeCompute = @("CGN1","CGN2","RDNA1","RDNA2","RDNA3")}
@@ -164,6 +164,9 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 }
                 if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^cn") {
                     $AdditionalParams.Add("--allow_large_alloc")
+                }
+                if ($_.MainAlgorithm -eq "iron" -or $_.SecondAlgorithm -eq "iron") {
+                    $AdditionalParams.Add("--iron_user_graffiti=RainbowMiner")
                 }
                 if ($_.MainAlgorithm -eq "nimiq") {
                     $Pool_User = $Pools.$MainAlgorithm_Norm.Wallet
