@@ -1759,6 +1759,11 @@ try {
         $RemoveMinerStats += @("*-SrbMinerMulti-*_DynexSolve_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.8.8.9")) {
+        Get-ChildItem ".\Stats\Miners" -Filter "*_Blake3_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "_Blake3_","_Blake3Alephium_") -Force -ErrorAction Ignore}
+        Get-ChildItem ".\Stats\Miners" -Filter "*-Blake3-*HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "-Blake3-","-Blake3Alephium-") -Force -ErrorAction Ignore}
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
