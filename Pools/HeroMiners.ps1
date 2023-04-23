@@ -20,7 +20,7 @@ $Pool_AllRegions = @("de","fi","ru","ca","us","br","hk","kr","in","sg","tr","au"
 $Pool_AllRegions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ALPH";  port = 1199; fee = 0.0; rpc = "alephium"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "ALPH";  port = 1199; fee = 0.0; rpc = "alephium"; region = $Pool_AllRegions; pass = "x"}
     [PSCustomObject]@{symbol = "BEAM";  port = 1130; fee = 0.9; rpc = "beam"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "CCX";   port = 1115; fee = 0.9; rpc = "conceal"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "CFX";   port = 1170; fee = 0.9; rpc = "conflux"; region = $Pool_AllRegions}
@@ -33,7 +33,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "FLUX";  port = 1200; fee = 0.9; rpc = "flux"; region = $Pool_AllRegions; wtmmode = "WTM"}
     [PSCustomObject]@{symbol = "GRIN-PRI";port = 1125; fee = 0.9; rpc = "grin"; region = $Pool_AllRegions; cycles = 32}
     [PSCustomObject]@{symbol = "XHV";   port = 1110; fee = 0.9; rpc = "haven"; region = $Pool_AllRegions}
-    [PSCustomObject]@{symbol = "IRON";  port = 1145; fee = 0.0; rpc = "ironfish"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "IRON";  port = 1145; fee = 0.0; rpc = "ironfish"; region = $Pool_AllRegions; pass = "x"}
     [PSCustomObject]@{symbol = "KAS";   port = 1206; fee = 0.9; rpc = "kaspa"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XLA";   port = 1190; fee = 0.9; rpc = "scala"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
@@ -73,6 +73,9 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
 
     $Pool_Request  = [PSCustomObject]@{}
     $Pool_Ports    = @([PSCustomObject]@{})
+
+    $Pool_Password = "$(if ($_.pass) {$_.pass} else {"{workername:$Worker}"})"
+    $Pool_UserWN   = "$(if ($_.pass) {".{workername:$Worker}"})"
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -139,8 +142,8 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
                         Host          = "$($Pool_Region).$($Pool_HostPath).herominers.com"
                         Port          = if ($Pool_Port.CPU -ne $null) {$Pool_Port.CPU} else {$_.port}
                         Ports         = if ($Pool_Port.CPU -ne $null) {$Pool_Port} else {$null}
-                        User          = "$($Pool_Wallet.wallet)$(if ($Pool_Request.config.fixedDiffEnabled) {if ($Pool_Wallet.difficulty) {"$($Pool_Request.config.fixedDiffSeparator)$($Pool_Wallet.difficulty)"} else {"{diff:$($Pool_Request.config.fixedDiffSeparator)`$difficulty}"}})"
-                        Pass          = "{workername:$Worker}"
+                        User          = "$($Pool_Wallet.wallet)$(if ($Pool_Request.config.fixedDiffEnabled) {if ($Pool_Wallet.difficulty) {"$($Pool_Request.config.fixedDiffSeparator)$($Pool_Wallet.difficulty)"} else {"{diff:$($Pool_Request.config.fixedDiffSeparator)`$difficulty}"}})$($Pool_UserWN)"
+                        Pass          = $Pool_Password
                         Region        = $Pool_RegionsTable[$Pool_Region]
                         SSL           = $Pool_SSL
                         Updated       = $Stat.Updated
