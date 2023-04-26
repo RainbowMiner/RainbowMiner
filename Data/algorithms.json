@@ -97,6 +97,8 @@
     "blake2s": "Blake2s",
     "blake3": "Blake3",
     "blake3alephium": "Blake3Alephium",
+    "blake3alph": "Blake3Alephium",
+    "blake3iron": "Blake3IronFish",
     "blake3ironfish": "Blake3IronFish",
     "blakecoin": "Blakecoin",
     "blakevanilla": "BlakeVanilla",
