@@ -12,7 +12,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.73"
+$Version = "1.75"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
@@ -25,7 +25,8 @@ if ($IsLinux) {
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Autolykos2";                   MinMemGb = 2;   Params = "--algo AUTOLYKOS2"; Pers=$false; Fee=1.5; ExtendInterval = 3; Vendor = @("AMD","NVIDIA")} #Autolykos2/ERGO temp. deactivated (v1.54 runs fine)
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                    MinMemGb = 3;   Params = "--algo BEAM-III";   Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #BeamHash III
-    [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";               MinMemGB = 2;   Params = "--algo ALEPH";      Pers=$false; Fee=0.75; ExtendInterval = 3; Vendor = @("NVIDIA"); CUDAArch = "P"} #Blake3/ALPH
+    [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";               MinMemGB = 2;   Params = "--algo ALEPH";      Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #Blake3/ALPH
+    [PSCustomObject]@{MainAlgorithm = "Blake3IronFish";               MinMemGB = 2;   Params = "--algo IRONFISH";   Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #Blake3/ALPH
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";                  MinMemGb = 6;   Params = "--algo CR29-40";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29b
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";                  MinMemGb = 6;   Params = "--algo CR29-32";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   MinMemGb = 7.6; Params = "--algo C30CTX";     Pers=$false; Fee=2.5; ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo30
