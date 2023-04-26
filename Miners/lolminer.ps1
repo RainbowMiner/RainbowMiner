@@ -16,10 +16,10 @@ $Version = "1.75"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.73-lolminer/lolMiner_v1.73_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.75-lolminer/lolMiner_v1.75_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.73-lolminer/lolMiner_v1.73_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.75-lolminer/lolMiner_v1.75_Win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
