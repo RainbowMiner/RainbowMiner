@@ -76,7 +76,7 @@ if ($InfoOnly) {
     return
 }
 
-$ValidCompute = @("CGN1","CGN2","CGN3")
+$ValidCompute = @("GCN1","GCN2","GCN3")
 
 if (-not (Test-Path "$(Join-Path $Session.MainPath "Bin\ANY-SRBMinerMulti\Cache\verthash.dat")")) {
     $VerthashDatFile = if ($IsLinux) {"$env:HOME/.vertcoin/verthash.dat"} else {"$env:APPDATA\Vertcoin\verthash.dat"}

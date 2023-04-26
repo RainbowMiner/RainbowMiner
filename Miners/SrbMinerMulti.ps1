@@ -193,7 +193,7 @@ if ($InfoOnly) {
     return
 }
 
-$ValidCompute_AMD    = @("RDNA3","RDNA2","RDNA1","CGN51","CGN50","CGN4")
+$ValidCompute_AMD    = @("RDNA3","RDNA2","RDNA1","GCN51","GCN50","GCN4")
 $ValidCompute_NVIDIA = @("Pascal","Turing","Ampere","Ada","Hopper")
 
 if (-not (Test-Path "$(Join-Path $Session.MainPath "Bin\ANY-SRBMinerMulti\Cache\verthash.dat")")) {
