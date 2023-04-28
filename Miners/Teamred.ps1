@@ -11,15 +11,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # 
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.10.11"
+$Version = "0.10.12"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.11-teamred/teamredminer-v0.10.11-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.12-teamred/teamredminer-v0.10.12-linux.tgz"
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.11-teamred/teamredminer-v0.10.11-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.12-teamred/teamredminer-v0.10.12-win.zip"
     $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
@@ -164,9 +164,6 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 }
                 if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^cn") {
                     $AdditionalParams.Add("--allow_large_alloc")
-                }
-                if ($_.MainAlgorithm -eq "iron" -or $_.SecondAlgorithm -eq "iron") {
-                    $AdditionalParams.Add("--iron_user_graffiti=RainbowMiner")
                 }
                 if ($_.MainAlgorithm -eq "nimiq") {
                     $Pool_User = $Pools.$MainAlgorithm_Norm.Wallet
