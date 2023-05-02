@@ -315,9 +315,9 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
                         if (-not $Miner_Intensity) {
                             if ($Miner_Vendor -eq "NVIDIA") {
-                                $Miner_Intensity = @(3)
+                                $Miner_Intensity = @(0)
                             } else {
-                                $Miner_Intensity = @(1,5,10)
+                                $Miner_Intensity = @(0)
                             }
                         }
 
