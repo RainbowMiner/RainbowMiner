@@ -675,7 +675,7 @@ function Invoke-Core {
                 Remove-Variable "ConfigSetup"
                 Remove-Variable "Parameters"
 
-                if (-not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
+                if (-not $Session.Config.WorkerName) {
                     $Session.RunSetup = $true
                 } else {
                     if (Set-Proxy -Proxy "$($Session.Config.Proxy -replace "^`$Proxy$")" -Username "$($Session.Config.ProxyUsername -replace "^`$ProxyUsername$")" -Password "$($Session.Config.ProxyPassword -replace "^`$ProxyPassword$")") {
