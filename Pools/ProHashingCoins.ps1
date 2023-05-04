@@ -55,7 +55,7 @@ if ($PoolCoins_Request.code -ne 200) {
 
 $Pool_Host = "mining.prohashing.com"
 
-$Pool_Regions = @("us","eu")
+$Pool_Regions = @("us","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_APIKey = "$(if ($EnableAPIKeyForMiners -and $API_Key) {",k=$($API_Key)"})"

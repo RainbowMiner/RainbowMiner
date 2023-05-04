@@ -57,7 +57,7 @@ if ($PoolCoins_Request.code -ne 200) {
 
 $Pool_Host = "mining.prohashing.com"
 
-$Pool_Regions = @("us","eu")
+$Pool_Regions = @("us","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Currencies = @("BTC") + @($PoolCoins_Request.data.PSObject.Properties.Name | Where-Object {$_ -notmatch "_"}) | Select-Object -Unique
