@@ -12,7 +12,7 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "3.37"
+$Version = "3.38"
 $DeviceCapability = "5.0"
 $EnableContest = $false
 
@@ -40,6 +40,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGb = 4;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #Ethash
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "FiroPoW";         DAG = $true; MinMemGb = 3;                     Params = "--algo firo";        Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #FiroPOW
+    [PSCustomObject]@{MainAlgorithm = "Blake3IronFish";               MinMemGb = 1;                     Params = "--algo ironfish";    Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #Blake3IronFish/IRON
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "kHeavyHash";                   MinMemGb = 1;                     Params = "--algo kheavyhash";  Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00; ExcludePoolName = "MiningRigRentals"} #kHeavyHash/KAS
     [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus";     Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 4.00} #Octopus/CFX
@@ -48,18 +49,21 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "SHA512256d";                   MinMemGb = 1;                     Params = "--algo radiant";     Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 2.00} #SHA512256d/RAD
 
 
-    [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2 --dalgo kaspa";   Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 2.0; SecondaryAlgorithm = "kHeavyHash"} #Autolykos2/ERG
-    [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2 --dalgo radiant"; Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 2.0; SecondaryAlgorithm = "SHA512256d"} #Autolykos2/ERG
-    [PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo kaspa";      Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Etchash
-    [PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo radiant";    Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "SHA512256d"} #Etchash
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGb = 3;                     Params = "--algo ethash --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGb = 1;                     Params = "--algo ethash --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGb = 2;                     Params = "--algo ethash --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGb = 3;                     Params = "--algo ethash --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGb = 4;                     Params = "--algo ethash --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash for low memory coins
-    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus --dalgo kaspa";      Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 4.00; SecondaryAlgorithm = "kHeavyHash"} #Octopus/Kaspa
-    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus --dalgo radiant";    Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 4.00; SecondaryAlgorithm = "SHA512256d"} #Octopus/Kaspa
+    [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2 --dalgo ironfish"; Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 2.0; SecondaryAlgorithm = "Blake3IronFish"} #Autolykos2/ERG+IRON
+    [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2 --dalgo kaspa";    Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 2.0; SecondaryAlgorithm = "kHeavyHash"} #Autolykos2/ERG+KAS
+    [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 3;                     Params = "--algo autolykos2 --dalgo radiant";  Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 2.0; SecondaryAlgorithm = "SHA512256d"} #Autolykos2/ERG+RAD
+    [PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo ironfish";    Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "Blake3IronFish"} #Etchash+IRON
+    [PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Etchash+KAS
+    [PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo radiant";     Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "SHA512256d"} #Etchash+RAD
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGb = 3;                     Params = "--algo ethash --dalgo kaspa";        Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGb = 1;                     Params = "--algo ethash --dalgo kaspa";        Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; MinMemGb = 2;                     Params = "--algo ethash --dalgo kaspa";        Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash4g";        DAG = $true; MinMemGb = 3;                     Params = "--algo ethash --dalgo kaspa";        Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGb = 4;                     Params = "--algo ethash --dalgo kaspa";        Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash --dalgo kaspa";        Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00; SecondaryAlgorithm = "kHeavyHash"} #Ethash for low memory coins
+    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus --dalgo ironfish";    Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 4.00; SecondaryAlgorithm = "Blake3IronFish"} #Octopus+IRON
+    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus --dalgo kaspa";       Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 4.00; SecondaryAlgorithm = "kHeavyHash"} #Octopus+KAS
+    [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus --dalgo radiant";     Vendor = @("NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 4.00; SecondaryAlgorithm = "SHA512256d"} #Octopus+RAD
 
     #[PSCustomObject]@{MainAlgorithm = "Etchash";         DAG = $true; MinMemGb = 3;                     Params = "--algo etchash --dalgo ton";    Vendor = @("NVIDIA");       ExtendInterval = 3; DualZIL = $true; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Etchash + SHA256ton
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGb = 3;                     Params = "--algo ethash --dalgo ton";     Vendor = @("NVIDIA");       ExtendInterval = 3; DualZIL = $true; Fee = 1.50; SecondaryAlgorithm = "SHA256ton"} #Ethash + SHA256ton
