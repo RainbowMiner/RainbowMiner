@@ -814,8 +814,9 @@ function Invoke-Core {
         if ($Session.Config.DeviceName -match "^CPU") {
             $CPUAffinityInt = (ConvertFrom-CPUAffinity "$($Session.Config.CPUMiningAffinity)" -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
             if ($CPUAffinityInt -eq 0) {
-                $CPUAffinityInt = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToInt
-                Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "Parameter CPUMiningAffinity (config.txt) is empty or contains errors. Falling back to $(Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToHex)"
+                $CPUThreads = if ($Session.Config.CPUMiningThreads -gt 0) {$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.RealCores.Count}
+                $CPUAffinityInt = Get-CPUAffinity $CPUThreads -ToInt
+                Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "Parameter CPUMiningAffinity (config.txt) is empty or contains errors. Falling back to $(Get-CPUAffinity $CPUThreads -ToHex)"
             }
             if ($Session.Config.EnableAutoAdjustAffinity -and $Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
                 $CPUThreads = ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2)))
