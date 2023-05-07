@@ -188,53 +188,69 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                         if ($SecondAlgorithm_Norm_0) {
 
-                            foreach($SecondAlgorithm_Norm in @($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")) {
-                                if ($Pools.$SecondAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
+                            $Miner_Intensity = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)".Intensity
+    
+                            if (-not $Miner_Intensity) {$Miner_Intensity = @(2,5,8)}
 
-                                    $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
-                                    $SecondPool_Host = if ($SecondPool_Port -and $Pools.$SecondAlgorithm_Norm.Host -notmatch "^[^/]+/.+$") {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"} else {$Pools.$SecondAlgorithm_Norm.Host}
+                            foreach($Intensity in @($Miner_Intensity)) {
 
-                                    $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($SecondPool_Host) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm_0 -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})"
-
-                                    $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthMode) {
-                                        Switch ($Pools.$SecondAlgorithm_Norm.EthMode) {
-                                            "icemining" {6}
-                                            "toncoinpool" {3}
-                                            "tonpool" {2}
-                                        }
-                                    }
-
-					                [PSCustomObject]@{
-						                Name           = $Miner_Name
-						                DeviceName     = $Miner_Device.Name
-						                DeviceModel    = $Miner_Model
-						                Path           = $Path
-						                Arguments      = "$($Pool_Arguments)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams)$($DeviceParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
-						                HashRates      = [PSCustomObject]@{
-                                                            $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
-                                                            $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm_0)_HashRate".Week
-                                                         }
-						                API            = "Lol"
-						                Port           = $Miner_Port
-                                        FaultTolerance = $_.FaultTolerance
-					                    ExtendInterval = $_.ExtendInterval
-                                        Penalty        = 0
-							            DevFee         = [PSCustomObject]@{
-                                                        ($MainAlgorithm_Norm) = $_.Fee
-                                                        ($SecondAlgorithm_Norm) = 0
-							                        }
-						                Uri            = $Uri
-						                ManualUri      = $ManualUri
-                                        Version        = $Version
-                                        PowerDraw      = 0
-                                        BaseName       = $Name
-                                        BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)"
-                                        Benchmarked    = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
-                                        LogFile        = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
-                                        ExcludePoolName = $_.ExcludePoolName
-                                        DualZIL        = $ZilParams -ne ""
-					                }
+                                if ($Intensity -gt 0) {
+                                    $Miner_Name_Dual = (@($Name) + @("$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)-$($Intensity)") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                                    $DeviceIntensitiesAll = " --dualfactor $($Intensity)"
+                                } else {
+                                    $Miner_Name_Dual = $Miner_Name
+                                    $DeviceIntensitiesAll = ""
                                 }
+
+                                foreach($SecondAlgorithm_Norm in @($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")) {
+                                    if ($Pools.$SecondAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
+
+                                        $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
+                                        $SecondPool_Host = if ($SecondPool_Port -and $Pools.$SecondAlgorithm_Norm.Host -notmatch "^[^/]+/.+$") {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"} else {$Pools.$SecondAlgorithm_Norm.Host}
+
+                                        $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($SecondPool_Host) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm_0 -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})$($DeviceIntensitiesAll)"
+
+                                        $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthMode) {
+                                            Switch ($Pools.$SecondAlgorithm_Norm.EthMode) {
+                                                "icemining" {6}
+                                                "toncoinpool" {3}
+                                                "tonpool" {2}
+                                            }
+                                        }
+
+					                    [PSCustomObject]@{
+						                    Name           = $Miner_Name_Dual
+						                    DeviceName     = $Miner_Device.Name
+						                    DeviceModel    = $Miner_Model
+						                    Path           = $Path
+						                    Arguments      = "$($Pool_Arguments)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams)$($DeviceParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
+						                    HashRates      = [PSCustomObject]@{
+                                                                $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week
+                                                                $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week
+                                                             }
+						                    API            = "Lol"
+						                    Port           = $Miner_Port
+                                            FaultTolerance = $_.FaultTolerance
+					                        ExtendInterval = $_.ExtendInterval
+                                            Penalty        = 0
+							                DevFee         = [PSCustomObject]@{
+                                                            ($MainAlgorithm_Norm) = $_.Fee
+                                                            ($SecondAlgorithm_Norm) = 0
+							                            }
+						                    Uri            = $Uri
+						                    ManualUri      = $ManualUri
+                                            Version        = $Version
+                                            PowerDraw      = 0
+                                            BaseName       = $Name
+                                            BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)"
+                                            Benchmarked    = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Benchmarked
+                                            LogFile        = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
+                                            ExcludePoolName = $_.ExcludePoolName
+                                            DualZIL        = $ZilParams -ne ""
+					                    }
+                                    }
+                                }
+
                             }
 
                         } else {
