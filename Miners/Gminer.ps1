@@ -12,16 +12,16 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "3.38"
+$Version = "3.39"
 $DeviceCapability = "5.0"
 $EnableContest = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.38-gminer/gminer_3_38_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.39-gminer/gminer_3_39_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.38-gminer/gminer_3_38_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.39-gminer/gminer_3_39_windows64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
