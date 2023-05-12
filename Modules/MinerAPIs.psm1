@@ -1986,29 +1986,26 @@ class Nanominer : Miner {
                 "mport=-$($this.Port)",
                 "webPort=0",
                 "Watchdog=false",
-                "noLog=true",
-                "$(if ($Parameters.Coin -eq "ETH") {"switchToEtc=false"})",
-                "[$($Parameters.Algo)]",
-                "wallet=$($Parameters.Wallet)",
-                "rigName=$($Parameters.Worker)",
-                "pool1=$($Parameters.Host):$($Parameters.Port)",
-                "devices=$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})",
-                "useSSL=$(if ($Parameters.SSL) {"true"} else {"false"})"
+                "noLog=true"
             )
-            if ($Parameters.PaymentId -ne $null) {$FileC += "paymentId=$($Parameters.PaymentId)"}
-            if ($Parameters.Pass)                {$FileC += "rigPassword=$($Parameters.Pass)"}
-            if ($Parameters.Email)               {$FileC += "email=$($Parameters.Email)"}
-            if ($Parameters.Threads)             {$FileC += "cpuThreads=$($Parameters.Threads)"}
-            if ($Parameters.Coin)                {$FileC += "coin=$($Parameters.Coin)"}
-            if ($Parameters.Protocol)            {$FileC += "protocol=$($Parameters.Protocol)"}
-            if ($Parameters.LHR)                 {$FileC += "lhr=$($Parameters.LHR)"}
 
-            if ($Parameters.ZilWallet -and $Parameters.ZilPool) {
-                $FileC += ""
-                $FileC += "[zil]"
-                $FileC += "wallet=$($Parameters.ZilWallet)"
-                $FileC += "zilEpoch=0 ; number of DAG epoch for caching"
-                $FileC += "pool1=$($Parameters.ZilPool)"
+            foreach ($Algo in $Parameters.Algorithms) {
+                $FileC += @(
+                                "[$($Algo.Algo)]",
+                                "wallet=$($Algo.Wallet)",
+                                "rigName=$($Algo.Worker)",
+                                "pool1=$($Algo.Host):$($Algo.Port)",
+                                "devices=$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})",
+                                "useSSL=$(if ($Algo.SSL) {"true"} else {"false"})"
+                            )
+                if ($Algo.PaymentId -ne $null) {$FileC += "paymentId=$($Algo.PaymentId)"}
+                if ($Algo.Pass)                {$FileC += "rigPassword=$($Algo.Pass)"}
+                if ($Algo.Email)               {$FileC += "email=$($Algo.Email)"}
+                if ($Algo.Coin)                {$FileC += "coin=$($Algo.Coin)"}
+                if ($Algo.Protocol)            {$FileC += "protocol=$($Algo.Protocol)"}
+                if ($Algo.Algo -eq "zil")      {$FileC += "zilEpoch=0"}
+                if ($Parameters.LHR)           {$FileC += "lhr=$($Parameters.LHR)"}
+                if ($Parameters.Threads)       {$FileC += "cpuThreads=$($Parameters.Threads)"}                
             }
 
             $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
