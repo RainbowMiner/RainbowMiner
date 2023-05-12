@@ -11,15 +11,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.2.5"
+$Version = "2.2.6"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.5-srbminermulti/SRBMiner-Multi-2-2-5-Linux.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.6-srbminermulti/SRBMiner-Multi-2-2-6-Linux.tar.xz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.5-srbminermulti/SRBMiner-Multi-2-2-5-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.6-srbminermulti/SRBMiner-Multi-2-2-6-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -126,6 +126,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "kaspa"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "sha256dt"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + SHA256dt/NOVO
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "sha512_256d_radiant"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + Radiant
+
+    [PSCustomObject]@{MainAlgorithm = "dynex"            ;              Params = ""; Fee = 2.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "blake3_ironfish"; ExcludePoolName="Nicehash"} #DynexSolve/DNX + Ironfish/IRON
+    [PSCustomObject]@{MainAlgorithm = "dynex"            ;              Params = ""; Fee = 2.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "kaspa"; ExcludePoolName="Nicehash"} #DynexSolve/DNX + kHeavyHash
 
     [PSCustomObject]@{MainAlgorithm = "etchash"          ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "blake3_alephium"} #etchash + Alephium/ALPH
     [PSCustomObject]@{MainAlgorithm = "etchash"          ; DAG = $true; Params = ""; Fee = 0.65; MinMemGb = 3; Vendor = @("AMD","NVIDIA"); SecondaryAlgorithm = "blake3_ironfish"} #etchash + Ironfish/IRON
@@ -339,7 +342,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					                    DeviceName     = $Miner_Device.Name
 					                    DeviceModel    = $Miner_Model
 					                    Path           = $Path
-                                        Arguments      = "--api-enable --api-port `$mport --api-rig-name $($Session.Config.Pools.$($Pools.$MainAlgorithm_Norm.Name).Worker)$Miner_Protocol --gpu-id $DeviceIDsAll$DeviceParams$WatchdogParams$(if ($Miner_Vendor -ne "NVIDIA") {" --gpu-auto-tune 1"}) --gpu-dual-max-loss $($Intensity) --algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm});$(if ($_.Algorithm2) {$_.Algorithm2} else {$SecondAlgorithm}) --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --pool $($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) --wallet $($Pools.$MainAlgorithm_Norm.User) --wallet $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker -or $Pools.$SecondAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker);$($Pools.$SecondAlgorithm_Norm.Worker)"})$(if ($Pools.$MainAlgorithm_Norm.Pass -or $Pools.$SecondAlgorithm_Norm.Pass) {" --password $(if ($Pools.$MainAlgorithm_Norm.Pass) {$Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1"} else {"x"}) --password $(if ($Pools.$SecondAlgorithm_Norm.Pass) {$Pools.$SecondAlgorithm_Norm.Pass -replace "([;!])","#`$1"} else {"x"})"}) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --tls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"}) --nicehash $(if ($Pools.$SecondAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"})$($MallobParam)$($ZilParams) --keepalive --retry-time 10 --disable-startup-monitor $($_.Params)"
+                                        Arguments      = "--api-enable --api-port `$mport --api-rig-name $($Session.Config.Pools.$($Pools.$MainAlgorithm_Norm.Name).Worker)$Miner_Protocol --gpu-id $DeviceIDsAll$DeviceParams$WatchdogParams$(if ($Miner_Vendor -ne "NVIDIA") {" --gpu-auto-tune 1"}) --gpu-dual-max-loss $($Intensity) --algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm});$(if ($_.Algorithm2) {$_.Algorithm2} else {$SecondAlgorithm}) --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --pool $($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port) --wallet $($Pools.$MainAlgorithm_Norm.User) --wallet $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.Password -eq "x" -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker $($Pools.$MainAlgorithm_Norm.Worker);$($Pools.$SecondAlgorithm_Norm.Worker)"})$(if ($Pools.$MainAlgorithm_Norm.Pass -or $Pools.$SecondAlgorithm_Norm.Pass) {" --password $(if ($Pools.$MainAlgorithm_Norm.Pass) {$Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1"} else {"x"}) --password $(if ($Pools.$SecondAlgorithm_Norm.Pass) {$Pools.$SecondAlgorithm_Norm.Pass -replace "([;!])","#`$1"} else {"x"})"}) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --tls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"}) --nicehash $(if ($Pools.$SecondAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"})$($MallobParam)$($ZilParams) --keepalive --retry-time 10 --disable-startup-monitor $($_.Params)"
 					                    HashRates      = [PSCustomObject]@{
                                                             $MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                             $SecondAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
@@ -377,7 +380,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path
-					        Arguments      = "--algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm}) --api-enable --api-port `$mport --api-rig-name $($Session.Config.Pools.$($Pools.$MainAlgorithm_Norm.Name).Worker)$Miner_Protocol $(if ($Miner_Vendor -ne "CPU") {"--gpu-id $DeviceIDsAll$WatchdogParams"})$DeviceParams --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --wallet $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --password $($Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1")"}) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"})$($MallobParam)$($ZilParams) --keepalive --retry-time 10 --disable-startup-monitor $($_.Params)" # --disable-worker-watchdog
+					        Arguments      = "--algorithm $(if ($_.Algorithm) {$_.Algorithm} else {$MainAlgorithm}) --api-enable --api-port `$mport --api-rig-name $($Session.Config.Pools.$($Pools.$MainAlgorithm_Norm.Name).Worker)$Miner_Protocol $(if ($Miner_Vendor -ne "CPU") {"--gpu-id $DeviceIDsAll$WatchdogParams"})$DeviceParams --pool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) --wallet $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Worker -and $Pools.$MainAlgorithm_Norm.Password -eq "x" -and $Pools.$MainAlgorithm_Norm.User -eq $Pools.$MainAlgorithm_Norm.Wallet) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --password $($Pools.$MainAlgorithm_Norm.Pass -replace "([;!])","#`$1")"}) --tls $(if ($Pools.$MainAlgorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$MainAlgorithm_Norm.Host -match 'NiceHash') {"true"} else {"false"})$($MallobParam)$($ZilParams) --keepalive --retry-time 10 --disable-startup-monitor $($_.Params)" # --disable-worker-watchdog
 					        HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_HR}
 					        API            = "SrbMinerMulti"
 					        Port           = $Miner_Port
