@@ -1983,8 +1983,8 @@ class Nanominer : Miner {
             $FileC = @(
                 ";Automatic config file created by RainbowMiner",
                 ";Do not edit!",
-                "mport=-$($this.Port)",
-                "webPort=0",
+                "mport=0",
+                "webPort=$($this.Port)",
                 "Watchdog=false",
                 "noLog=true"
             )
@@ -2020,14 +2020,13 @@ class Nanominer : Miner {
         $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
-        $Request = @{id = 1; jsonrpc = "2.0"; method = "miner_getstat1"} | ConvertTo-Json -Depth 10 -Compress
+        $Request = ""
         $Response = ""
 
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request -ErrorAction Stop -Quiet
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stats" -Timeout $Timeout
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2035,22 +2034,53 @@ class Nanominer : Miner {
             return
         }
 
-        $HashRate_Name = [String]$this.Algorithm[0]
+        $HashRate_Name0 = [String]$this.Algorithm[0]
+        $HashRate_Ix0   = [String]$this.BaseAlgorithm[0] -replace "^Ethash.+$","Ethash"
 
-        $HashRate_Value = [Double]($Data.result[2] -split ";")[0]
+        $Algos          = $Data.Algorithms[0].PSObject.Properties.Name
 
-        if ($this.Algorithm -like "ethash*") {$HashRate_Value *= 1000}
+        if ($this.Algorithm.Count -gt 1) {
+            $HashRate_Name1 = [String]$this.Algorithm[1]
+            $HashRate_Ix1   = [String]$this.BaseAlgorithm[1] -replace "^Ethash.+$","Ethash"
+        } else {
+            $HashRate_Name1 = ''
+            $HashRate_Ix1   = ''
+        }
+        
+        $Algos | Foreach-Object {
+            $Algo_Norm = Get-Algorithm "$(if ($_ -eq "Heavyhash") {"kHeavyHash"} else {$_})"
+            if ($HashRate_Ix0 -eq $Algo_Norm)     {$HashRate_Ix0 = $_}
+            elseif ($HashRate_Ix1 -eq $Algo_Norm) {$HashRate_Ix1 = $_}
 
-        if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-
-            $Accepted_Shares = [Int64]($Data.result[2] -split ";")[1]
-            $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
-            $Accepted_Shares -= $Rejected_Shares
-            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData($Response,$HashRate)
+        $HashRate_Value = [Double]$Data.Algorithms[0].$HashRate_Ix0.Total.Hashrate
+
+        $PowerDraw      = [Double]($Data.Devices[0].PSObject.Properties.Value | Foreach-Object {[Double]$_.Power} | Measure-Object -Sum).Sum
+
+        if ($HashRate_Name0 -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name0 = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]$Data.Algorithms[0].$HashRate_Ix0.Total.Accepted
+            $Rejected_Shares = [Int64]$Data.Algorithms[0].$HashRate_Ix0.Total.Rejected
+            #$Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix0.invalid
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+
+            if ($HashRate_Ix1) {
+                $HashRate_Value = [Double]$Data.Algorithms[0].$HashRate_Ix1.Total.Hashrate
+
+                if ($HashRate_Name1 -and $HashRate_Value -gt 0) {
+                    $HashRate | Add-Member @{$HashRate_Name1 = $HashRate_Value}
+
+                    $Accepted_Shares = [Int64]$Data.Algorithms[0].$HashRate_Ix1.Total.Accepted
+                    $Rejected_Shares = [Int64]$Data.Algorithms[0].$HashRate_Ix1.Total.Accepted
+                    #$Stale_Shares    = [Int64]$Data.solution_stat.$HashRate_Ix1.invalid
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
+                }
+            }
+        }
+
+        $this.AddMinerData("",$HashRate,$null,$PowerDraw)
 
         $this.CleanupMinerData()
     }
