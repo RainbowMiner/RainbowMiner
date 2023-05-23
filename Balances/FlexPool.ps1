@@ -9,7 +9,6 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC";  ports = @(4444,5555); fee = 0.9;  divisor = 1e18; stratum = "etc-%region%.flexpool.io"; regions = @("us-east","de","sg","asia"); altstratum = [PSCustomObject]@{asia="sgeetc.gfwroute.co"}}
     [PSCustomObject]@{symbol = "IRON"; ports = @(8888);      fee = 0.95; divisor = 1e18; stratum = "iron.fpmp.net";            regions = @("us-east")}
-    [PSCustomObject]@{symbol = "ZIL";  ports = @(4444,5555); fee = 0.9;  divisor = 1e18; stratum = "zil.flexpool.io";          regions = @("us-east")}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Config.Pools.$Name.Wallets.$Pool_Currency -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Pool_Currency)} | Foreach-Object {
