@@ -151,53 +151,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$InfoOnly -or $Wallets.$P
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
-            [PSCustomObject]@{
-                Algorithm     = "$($Pool_Algorithm_Norm)FP"
-                Algorithm0    = "$($Pool_Algorithm_Norm)FP"
-                CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = $Pool_Protocol
-                Host          = $Pool_Stratum
-                Port          = $Pool_Port
-                User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $Pool_SSL
-                Updated       = $Stat.Updated
-                PoolFee       = $_.fee
-                Failover      = @($Pool_FailoverStratumTable.$Pool_Region | Foreach-Object {
-                                    [PSCustomObject]@{
-                                        Protocol = $Pool_Protocol
-                                        Host     = $_
-                                        Port     = $Pool_Port
-                                        User     = "$($Pool_User).{workername:$Worker}"
-                                        Pass     = "x"
-                                    }
-                                })
-                DataWindow    = $DataWindow
-                Workers       = $Pool_Workers.result
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-                WTM           = $true
-                ErrorRatio    = $Stat.ErrorRatio
-                EthMode       = "ethproxy"
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Disabled      = $false
-                HasMinerExclusions = $false
-                Price_0       = 0.0
-                Price_Bias    = 0.0
-                Price_Unbias  = 0.0
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
             $Pool_SSL = $true
         }
     }
