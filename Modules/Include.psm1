@@ -4510,7 +4510,7 @@ function Get-Algorithm {
         $Algorithm = $Algorithm -replace "[^a-z0-9]+"
         if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {
             $Algorithm = $Global:GlobalAlgorithms[$Algorithm]
-            if ($CoinSymbol -ne "" -and $Algorithm -eq "Ethash" -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 10) -le 5) {
+            if ($CoinSymbol -ne "" -and $Algorithm -eq "Ethash" -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 1) -le 5) {
                 if ($DAGSize -le 2) {$Algorithm = "$($Algorithm)2g"}
                 elseif ($DAGSize -le 3) {$Algorithm = "$($Algorithm)3g"}
                 elseif ($DAGSize -le 4) {$Algorithm = "$($Algorithm)4g"}
@@ -4623,7 +4623,7 @@ function Get-EthDAGSize {
         [Parameter(Mandatory = $false)]
         [String]$Algorithm = "",
         [Parameter(Mandatory = $false)]
-        [Double]$Minimum = 3
+        [Double]$Minimum = 1
     )
     if (-not (Test-Path Variable:Global:GlobalEthDAGSizes)) {Get-EthDAGSizes -Silent}
     if     ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null)          {$Global:GlobalEthDAGSizes.$CoinSymbol} 
