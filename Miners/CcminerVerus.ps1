@@ -10,17 +10,17 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerVerus\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8-ccminerverus/ccminerverus-3.8cuda-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.3-ccminerverus/ccminerverus22-3.8.3cuda-linux.7z"
     $Cuda = "10.2"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerVerus\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8-ccminerverus/ccminerverus-3.8cuda-win.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.3-ccminerverus/ccminerverus22-3.8.3cuda-win.7z"
     $Cuda = "8.0"
 }
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "139{0:d2}"
 $DevFee = 0.0
-$Version = "3.8"
+$Version = "3.8.3"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "verus"; Params = "-a verus"; ExtendInterval = 2} #Verushash
