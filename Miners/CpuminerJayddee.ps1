@@ -64,7 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
-    [PSCustomObject]@{MainAlgorithm = "verthash"; Params = ""} #VertHash
+    #[PSCustomObject]@{MainAlgorithm = "verthash"; Params = ""} #VertHash
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #x12
     [PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
     #[PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
