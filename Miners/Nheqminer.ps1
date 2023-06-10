@@ -21,7 +21,7 @@ $DevFee = 0.0
 $Version = "0.8.2"
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "verus"; Params = ""; ExtendInterval = 2} #VerusHash
+    #[PSCustomObject]@{MainAlgorithm = "verus"; Params = ""; ExtendInterval = 2} #VerusHash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
