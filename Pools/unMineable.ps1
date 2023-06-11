@@ -40,10 +40,12 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pools_Data = @(
     [PSCustomObject]@{algo = "autolykos";  port = @(3333,4444); ethproxy = $null;          rpc = "autolykos";  divisor = 1e6; mh = 1e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "beamhash";   port = @(3333,4444); ethproxy = $null;          rpc = "beamhash";   divisor = 1;   mh = 100; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "blake3alephium"; port = @(3333,4444); ethproxy = $null;      rpc = "blake3";     divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia"); rewardalgo = "blake3"}
     [PSCustomObject]@{algo = "equihash";   port = @(3333,4444); ethproxy = $null;          rpc = "equihash";   divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "etchash";    port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; mh = 5e3; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ethash";     port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; mh = 5e3; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "firopow";    port = @(3333,4444); ethproxy = $null;          rpc = "firopow";    divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "ironfish";   port = @(3333,4444); ethproxy = $null;          rpc = "ironfish";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kheavyhash"; port = @(3333,4444); ethproxy = $null;          rpc = "kheavyhash"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "randomx";    port = @(3333,4444); ethproxy = $null;          rpc = "rx";         divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kawpow";     port = @(3333,4444); ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
@@ -63,7 +65,7 @@ $Pool_Referrals = [PSCustomObject]@{
     BAND = "d04a-ce0q"
     BAT = "36zw-tmam"
     BCH = "tmy8-h32j"
-    BNB = "09eg-lit0"
+    BNB = "na9y-sqn2"
     BTC = "9fh9-4fa8"
     BTG = "ad7b-d4tl"
     CAKE = "m4q0-ijmx"
@@ -113,7 +115,6 @@ $Pool_Referrals = [PSCustomObject]@{
     WAVES = "k9oe-8z69"
     WBTC = "2xlm-0f06"
     WIN = "15aw-8hft"
-    XLM = "mvri-yw11"
     XMR = "qhky-kirz"
     XRP = "m6vk-imiz"
     XTZ = "ios2-qfwf"
