@@ -917,13 +917,19 @@ function Set-Stat {
     $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
     $Cached   = $true
 
-    if ($Name -match '_Profit$')       {$Path0 = "Stats\Pools";    $Mode = "Pools"}
+    if ($Name -match '_Profit$')       {
+        $Path0 = "Stats\Pools";    $Mode = "Pools"
+        if ($Actual24h -gt 0 -and $Estimate24h -gt 0 -and ($Estimate24h / $Actual24h) -gt 1000) {
+            $Estimate24h = $Actual24h
+        }
+    }
     elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"}
     else                               {$Path0 = "Stats";          $Mode = "Profit"; $Cached = $false}
 
     $Path = if ($Sub) {"$Path0\$Sub-$Name.txt"} else {"$Path0\$Name.txt"}
 
     $SmallestValue = 1E-20
+
 
     if (-not $Reset -and ($Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached)) {
         try {
