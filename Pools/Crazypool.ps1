@@ -73,7 +73,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     foreach($Pool_Region in $_.region) {
-        if ($Pool_Currency -ne "ZIL" -or $EnableMiniZDual -or $EnableSrbminerMultiDual) {
+        if ($Pool_Currency -ne "ZIL" -or $EnableMiniZDual -or $EnableSrbminerMultiDual -or $EnableTTminerDual) {
             $Pool_Ssl = $false
             foreach($Pool_Port in $Pool_Ports) {
                 [PSCustomObject]@{
