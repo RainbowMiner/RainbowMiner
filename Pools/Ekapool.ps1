@@ -128,6 +128,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
 }
 
 $OtherCoins = @(
+    [PSCustomObject]@{coin = "APEPEPOW";  stratum = "apepe";  rpc = "apepe-api"}
     [PSCustomObject]@{coin = "CHN";  stratum = "chn";  rpc = "chn-api"}
     [PSCustomObject]@{coin = "DNX";  stratum = "dnx";  rpc = "dnx-api"}
     [PSCustomObject]@{coin = "ZANO"; stratum = "zano"; rpc = "zano-api"}
