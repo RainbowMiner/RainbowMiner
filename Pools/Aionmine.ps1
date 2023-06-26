@@ -30,7 +30,7 @@ catch {
 }
 
 if (-not $ok) {
-    Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
+    Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
