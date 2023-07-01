@@ -15,14 +15,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "15.3.0"
+$Version = "15.4.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.3.0-bzminer/bzminer_v15.3.0_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.4.0-bzminer/bzminer_v15.4.0_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.3.0-bzminer/bzminer_v15.3.0_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.4.0-bzminer/bzminer_v15.4.0_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
@@ -73,9 +73,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "nexa";                         MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "NexaPoW"} #NexaPow/NEXA
     [PSCustomObject]@{MainAlgorithm = "novo";                         MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "SHA256dt"} #SHA256dt/NOVO
     [PSCustomObject]@{MainAlgorithm = "radiant";                      MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "SHA512256d"} #SHA512256d/RAD
-    #[PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; ExcludeCoinSymbol = @("MEWC","NEOX")} #KawPow
-    #[PSCustomObject]@{MainAlgorithm = "neox";            DAG = $true; MinMemGb = 1;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; CoinSymbol = @("NEOX"); Algorithm = "KawPow"} #NEOXA/KawPow
-    #[PSCustomObject]@{MainAlgorithm = "mewc";            DAG = $true; MinMemGb = 1;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; CoinSymbol = @("MEWC"); Algorithm = "KawPow"} #NEOXA/KawPow
+    [PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0; ExcludeCoinSymbol = @("MEWC","NEOX","XNA")} #KawPow
+    [PSCustomObject]@{MainAlgorithm = "neox";            DAG = $true; MinMemGb = 1;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0; CoinSymbol = @("NEOX"); Algorithm = "KawPow"} #NEOXA/KawPow
+    [PSCustomObject]@{MainAlgorithm = "mewc";            DAG = $true; MinMemGb = 1;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0; CoinSymbol = @("MEWC"); Algorithm = "KawPow"} #MEWC/KawPow
+    [PSCustomObject]@{MainAlgorithm = "xna";             DAG = $true; MinMemGb = 1;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0; CoinSymbol = @("XNA"); Algorithm = "KawPow"} #XNA/KawPow
     [PSCustomObject]@{MainAlgorithm = "olhash";                       MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Olhash/Overline
     [PSCustomObject]@{MainAlgorithm = "woodcoin";                     MinMemGb = 2;                     Params = "";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Skein2/WoodCoin LOG
 )
