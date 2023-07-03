@@ -320,7 +320,7 @@ $(function() {
                                     key = key.replace(/-Params$/,"")
                                 }
                                 if (-1 == coins.indexOf(key)) {
-                                    item.coins.push({coin:key, wallet:val, params:result.Config[key+'-Params']})
+                                    item.coins.push({coin:key, wallet:result.Config[key], params:result.Config[key+'-Params']})
                                     coins.push(key)
                                 }
                             } else if (hasSetupField) {
