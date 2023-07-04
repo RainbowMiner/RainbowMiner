@@ -10,7 +10,8 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
-    [String]$StatAverageStable = "Week"
+    [String]$StatAverageStable = "Week",
+    [Bool]$EnableHybridSoloMining = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -19,12 +20,12 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("na","eu","ap") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
+    [PSCustomObject]@{symbol = "VRSC";  port = @(3956,3958); fee = 1.0; rpc = "verus"; region = @("na","eu","ap"); allow_difficulty = $true}
     #[PSCustomObject]@{symbol = "YEC";   port = @(3456,3458); fee = 0.0; rpc = "ycash"; region = @("na","eu","ap")}
-    [PSCustomObject]@{symbol = "VRSC";  port = @(3956);      fee = 1.0; rpc = "verus"; region = @("na","eu","ap"); allow_difficulty = $true}
-    [PSCustomObject]@{symbol = "ZEN";   port = @(3056,3058); fee = 1.0; rpc = "zen"; region = @("na","eu","ap"); allow_difficulty = $true}
-    [PSCustomObject]@{symbol = "KMD";   port = @(3856,3858); fee = 1.0; rpc = "komodo"; region = @("na","eu","ap"); allow_difficulty = $true}
-    [PSCustomObject]@{symbol = "HUSH";  port = @(3756,3758); fee = 1.0; rpc = "hush"; region = @("na","eu","ap"); allow_difficulty = $true}
-    [PSCustomObject]@{symbol = "ZEC";   port = @(3356,3358); fee = 1.0; rpc = "zcash"; region = @("na","eu","ap"); allow_difficulty = $true}
+    #[PSCustomObject]@{symbol = "ZEN";   port = @(3056,3058); fee = 1.0; rpc = "zen"; region = @("na","eu","ap"); allow_difficulty = $true}
+    #[PSCustomObject]@{symbol = "KMD";   port = @(3856,3858); fee = 1.0; rpc = "komodo"; region = @("na","eu","ap"); allow_difficulty = $true}
+    #[PSCustomObject]@{symbol = "HUSH";  port = @(3756,3758); fee = 1.0; rpc = "hush"; region = @("na","eu","ap"); allow_difficulty = $true}
+    #[PSCustomObject]@{symbol = "ZEC";   port = @(3356,3358); fee = 1.0; rpc = "zcash"; region = @("na","eu","ap"); allow_difficulty = $true}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -73,7 +74,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Host          = "$Pool_Region.luckpool.net"
                     Port          = $Pool_Port
                     User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                    Pass          = "x{diff:,d=`$difficulty}"
+                    Pass          = "$(if ($EnableHybridSoloMining) {"hybrid"} else {"x"}){diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable[$Pool_Region]
                     SSL           = $Pool_SSL
                     WTM           = $true

@@ -153,6 +153,8 @@
             Currencies=@("ZANO","XWP")
         }
         "LuckPool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{EnableHybridSoloMining="0"}
+            SetupFields=[PSCustomObject]@{EnableHybridSoloMining="Enable hybrid solo mining mode"}
             Currencies=@("VRSC")
         }
         "Luxor" = [PSCustomObject]@{
