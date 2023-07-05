@@ -11,14 +11,14 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "232{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.33a"
+$Version = "5.0.29"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.33a-rplant/cpuminer-rplant-5.0.33a-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.29-rplant/cpuminer-rplant-5.0.29-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.33a-rplant/cpuminer-rplant-5.0.33a-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.29-rplant/cpuminer-rplant-5.0.29-win.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -65,7 +65,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "Zpool"} #Lyra2z330
-    [PSCustomObject]@{MainAlgorithm = "memehashv2"; Params = ""} #MemeHashV2/PEPE2
+    #[PSCustomObject]@{MainAlgorithm = "memehashv2"; Params = ""} #MemeHashV2/PEPE2
     [PSCustomObject]@{MainAlgorithm = "mike"; FaultTolerance = 8; ExtendInterval = 3; Params = ""} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
     [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""; ExcludePoolName = "MiningRigRentals"} #Minotaurx
