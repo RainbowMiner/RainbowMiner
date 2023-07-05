@@ -12,14 +12,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.36.5b"
+$Version = "0.36.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.5b-wildrigmulti/wildrig-multi-linux-0.36.5b.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.7-wildrigmulti/wildrig-multi-linux-0.36.7.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.5b-wildrigmulti/wildrig-multi-windows-0.36.5b.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.7-wildrigmulti/wildrig-multi-windows-0.36.7.7z"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -50,6 +50,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";                   Vendor = @("AMD");          Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";               Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "megabtx";                   Vendor = @("AMD","NVIDIA"); Params = ""} #, new in v0.26.0
+    [PSCustomObject]@{MainAlgorithm = "memehashv2";                Vendor = @("AMD","NVIDIA"); Params = ""} #MemehashV2/PEPE2, new in v0.36.7
     [PSCustomObject]@{MainAlgorithm = "mike";                      Vendor = @("AMD","NVIDIA"); Params = ""; FaultTolerance = 8; ExtendInterval = 3} #Mike
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 5.0} #, new in v0.26.0
     [PSCustomObject]@{MainAlgorithm = "nexapow"; DAG = $true;      Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; DevFee = 2.0} #NexaPow/NEXA
