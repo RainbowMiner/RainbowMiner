@@ -1764,6 +1764,10 @@ try {
         Get-ChildItem ".\Stats\Miners" -Filter "*-Blake3-*HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "-Blake3-","-Blake3Alephium-") -Force -ErrorAction Ignore}
     }
 
+    if ($Version -le (Get-Version "4.8.9.6")) {
+        $RemoveMinerStats += @("*-Rigel-EtcHash-kHeavyHash*_HashRate.txt")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
