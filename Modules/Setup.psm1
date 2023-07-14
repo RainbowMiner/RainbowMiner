@@ -2436,7 +2436,13 @@ function Start-Setup {
 
                         $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
 
-                        $Pool_Avail_Currency = @($Pool.Currency | Select-Object -Unique | Sort-Object)
+                        if ($Pool_Name -match "^ZergPool.+") {
+                            $PoolZergPool = Get-PoolsInfo "ZergPool"
+                            $Pool_Avail_Currency = @($PoolZergPool.Currency | Select-Object -Unique | Sort-Object)
+                            $PoolZergPool = $null
+                        } else {
+                            $Pool_Avail_Currency = @($Pool.Currency | Select-Object -Unique | Sort-Object)
+                        }
                         $Pool_Avail_CoinName = @($Pool | Foreach-Object {@($_.CoinName | Select-Object) -join ','} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
                         $Pool_Avail_CoinSymbol = @($Pool | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ','} | Select-Object -Unique | Sort-Object)
 

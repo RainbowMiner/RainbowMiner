@@ -48,18 +48,7 @@ $Pool_Fee = 0.5
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Currencies = @("BTC", "DASH", "LTC","TRX","USDT","BNB") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
-
-if (-not $InfoOnly) {
-    $USDT_Token = if ($Pool_Currencies -contains "USDT") {
-        if ($Wallets.USDT -match "^0x") {"USDT"}
-        elseif ($Wallets.USDT -clike "T*") {"USDT-TRC20"}
-        else {
-            Write-Log -Level Warn "Pool $($Name): wrong wallet address format for USDT. Please use either ERC20 0x... or TRC20 T... format"
-            $Pool_Currencies = $Pool_Currencies | Where-Object {$_ -ne "USDT"}
-        }
-    }
-}
+$Pool_Currencies = @("BTC","DOGE","LTC") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
@@ -108,6 +97,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 
     if (($Pool_ExCurrency -and $Wallets.$Pool_ExCurrency) -or $InfoOnly) {
         $Pool_Params = if ($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)") {",$($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)")"} elseif ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"}
+        $Pool_ExCurrencySymbol = if ($InfoOnly) {$Pool_ExCurrency} else {$Pool_ExCurrency -replace "-(BEP|TRC)20"}
 
         foreach($Pool_SSL in ($false,$true)) {
             if ($Pool_SSL) {
@@ -125,7 +115,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                     Algorithm0         = $Pool_Algorithm_Norm
                     CoinName           = $Pool_CoinName
                     CoinSymbol         = $Pool_Currency
-                    Currency           = $Pool_ExCurrency
+                    Currency           = $Pool_ExCurrencySymbol
                     Price              = $Stat.$StatAverage #instead of .Live
                     StablePrice        = $Stat.$StatAverageStable
                     MarginOfError      = $Stat.Week_Fluctuation
@@ -133,7 +123,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                     Host               = if ($Pool_Region -eq "us") {$Pool_Host} else {"$($Pool_Algorithm).$($Pool_Region).mine.zergpool.com"}
                     Port               = $Pool_Port_SSL
                     User               = $Wallets.$Pool_ExCurrency
-                    Pass               = "c=$(if ($Pool_ExCurrency -eq "USDT" -and $USDT_Token) {$USDT_Token} else {$Pool_ExCurrency}),mc=$Pool_Currency,m=solo,ID={workername:$Worker}{diff:,sd=`$difficulty}$Pool_Params"
+                    Pass               = "c=$($Pool_ExCurrency),mc=$Pool_Currency,m=solo,ID={workername:$Worker}{diff:,sd=`$difficulty}$Pool_Params"
                     Region             = $Pool_RegionsTable.$Pool_Region
                     SSL                = $Pool_SSL
                     SSLSelfSigned      = $Pool_SSL
