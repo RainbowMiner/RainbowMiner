@@ -9,8 +9,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Request = [PSCustomObject]@{}
 
 $Count = 0
-@("ETH","ETC") | Where-Object {$Config.Pools.$Name.Wallets.$_ -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
-    $Pool_Wallet = "$($Config.Pools.$Name.Wallets."$($_)" -replace "^0x")".ToLower()
+@("BTC","ETC","RVN") | Where-Object {$Config.Pools.$Name.Wallets.$_ -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
+    $Pool_Wallet = "$($Config.Pools.$Name.Wallets.$_ -replace "^0x")".ToLower()
     try {
         $Request = Invoke-RestMethodAsync "https://hiveon.net/api/v1/stats/miner/$($Pool_Wallet)/$($_)/billing-acc" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         [PSCustomObject]@{
