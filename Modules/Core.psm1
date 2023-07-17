@@ -3031,7 +3031,7 @@ function Invoke-Core {
             $ActiveMiner.Speed              = $Miner.HashRates.PSObject.Properties.Value
             #$ActiveMiner.DeviceName         = $Miner.DeviceName
             #$ActiveMiner.DeviceModel        = $Miner.DeviceModel
-            $ActiveMiner.ShowMinerWindow    = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
+            $ActiveMiner.ShowMinerWindow    = ($Session.Config.ShowMinerWindow -or $IsLinux -or $Miner.ShowMinerWindow)
             $ActiveMiner.MSIAprofile        = $Miner.MSIAprofile
             $ActiveMiner.DevFee             = $Miner.DevFee
             $ActiveMiner.OCprofile          = $Miner.OCprofile
@@ -3109,7 +3109,7 @@ function Invoke-Core {
                     OCprofile            = $Miner.OCprofile
                     EnableOCprofile      = $Session.Config.EnableOCProfiles
                     ExtendInterval       = $Miner.ExtendInterval
-                    ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
+                    ShowMinerWindow      = ($Session.Config.ShowMinerWindow -or $IsLinux -or $Miner.ShowMinerWindow)
                     FaultTolerance       = $Miner.FaultTolerance
                     Penalty              = $Miner.Penalty
                     ManualUri            = $Miner_ManualUri
