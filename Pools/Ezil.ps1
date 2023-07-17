@@ -19,7 +19,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Regions = @("eu","us-east","us-west","asia","cn")
+$Pool_Regions = @("eu","us-east","us-west","asia","tw","hk")
 
 $Pool_RegionsTable = [ordered]@{}
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
@@ -27,7 +27,10 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_RegionsTable["asia"] = Get-Region "sea"
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "ETC"; port = @(4444,24443)}
+    [PSCustomObject]@{symbol = "ETC";  port = @(4444,24443); symbol2 = "ZIL"}
+    [PSCustomObject]@{symbol = "ETHF"; port = @(50200,50203); symbol2 = "ZIL"}
+    [PSCustomObject]@{symbol = "ETHW"; port = @(50100,50103); symbol2 = "ZIL"}
+    [PSCustomObject]@{symbol = "IRON"; port = @(50710,50713); symbol2 = "ZIL"}
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
