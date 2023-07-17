@@ -10,7 +10,7 @@ if (-not $Config.Pools.$Name.Wallets.ZIL) {return}
 
 $Zil = [ordered]@{}
 
-@("ETH","ETC") | Where-Object {$Config.Pools.$Name.Wallets.$_ -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
+@("ETC","ETHF","ETHW","IRON") | Where-Object {$Config.Pools.$Name.Wallets.$_ -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_)} | Foreach-Object {
     $Request = [PSCustomObject]@{}
     try {
         $Request = Invoke-RestMethodAsync "https://billing.ezil.me/balances/$($Config.Pools.$Name.Wallets.$_).$($Config.Pools.$Name.Wallets.ZIL)" -cycletime ($Config.BalanceUpdateMinutes*60)
@@ -26,7 +26,9 @@ $Zil = [ordered]@{}
             Payouts     = @()
             LastUpdated = (Get-Date).ToUniversalTime()
         }
-        $Zil["$($Request.zil_wallet)"] = $Request.zil
+        if ($Request.zil_wallet) {
+            $Zil["$($Request.zil_wallet)"] = $Request.zil
+        }
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
