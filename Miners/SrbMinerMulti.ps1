@@ -373,6 +373,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                                         SetLDLIBRARYPATH = $false
                                         ListDevices    = "--list-devices"
                                         ExcludePoolName = $_.ExcludePoolName
+                                        ShowMinerWindow = $true
 				                    }
                                 }
                             }
