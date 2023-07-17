@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.6.2"
+$Version = "1.6.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.2-rigel/rigel-1.6.2-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.3-rigel/rigel-1.6.3-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.2-rigel/rigel-1.6.2-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.3-rigel/rigel-1.6.3-win.zip"
             Cuda = "8.0"
         }
     )
@@ -119,11 +119,11 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
         $ZilParams2   = ""
         $ZilParams3   = ""
 
-        if ($Session.Config.Pools.FlexPool.EnableRigelDual -and $Pools.ZilliqaFP) {
-            if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
+        if ($Session.Config.Pools.CrazyPool.EnableRigelDual -and $Pools.ZilliqaCP) {
+            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
                 $ZilAlgorithm = "+zil"
-                $ZilParams2   = " -o [2]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [2]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [2]$($Pools.ZilliqaFP.Worker)"}) --zil-countdown"
-                $ZilParams3   = " -o [3]$($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) -u [3]$($Pools.ZilliqaFP.User)$(if ($Pools.ZilliqaFP.Worker -and $Pools.ZilliqaFP.User -eq $Pools.ZilliqaFP.Wallet) {" -w [3]$($Pools.ZilliqaFP.Worker)"}) --zil-countdown"
+                $ZilParams2   = " -o [2]$($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host) -u [2]$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -eq $Pools.ZilliqaCP.Wallet) {" -w [2]$($Pools.ZilliqaCP.Worker)"}) --zil-countdown"
+                $ZilParams3   = " -o [3]$($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host) -u [3]$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -eq $Pools.ZilliqaCP.Wallet) {" -w [3]$($Pools.ZilliqaCP.Worker)"}) --zil-countdown"
             }
         }
 
@@ -143,6 +143,11 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
             if ($ZilParams2 -ne "") {
                 $ZilParams = if ($SecondAlgorithm_Norm_0) {$ZilParams3} else {$ZilParams2}
+                $ZilNoCache = @($Miner_Device | Foreach-Object {if ($_.OpenCL.GlobalMemsize -le 8gb) {"off"} else {"on"}}) -join ","
+                if ($ZilNoCache -match "off") {
+                    $ZilParams = "$($ZilParams) --zil-cache-dag $($ZilNoCache)"
+                }
+
             }
 
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
