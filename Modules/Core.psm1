@@ -4712,6 +4712,11 @@ function Invoke-ReportMinerStatus {
                         # do something :)
                         Write-Log "Executing action `"$($Action.Action)`""
                         Switch($Action.Action) {
+                            "resetfailedbenchmarks" {
+                                $Action_Response = & ".\web\scripts\resetzerohashrateminers"
+                                $Action_Response = $Action_Response | Where-Object {$_ -and $_ -notmatch "<.+?>"}
+                                Break
+                             }
                             "resetneededbenchmarks" {
                                 $Action_Response = & ".\web\scripts\resetneededbenchmarks"
                                 $Action_Response = $Action_Response | Where-Object {$_ -and $_ -notmatch "<.+?>"}

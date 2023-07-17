@@ -3,15 +3,21 @@
 $text = ""
 $count = 0
 
-Get-ChildItem "Stats" -Recurse -File | Where-Object {$_.Name -like '*HashRate.txt'} | Foreach-Object {
-  $FileName = $_.FullName
-  $Stats = Get-Content $Filename | ConvertFrom-Json
-  
-  if($Stats.Minute -eq 0) {
-    Remove-Item $FileName
-    $text += "$($_.Name)`n"
-    $count++
-  }
+Get-ChildItem "Stats\Miners" -File | Where-Object {$_.Name -like '*HashRate.txt'} | Foreach-Object {
+    $FileName = $_.FullName
+
+    $Stats = $null
+
+    try {
+        $Stats = Get-Content $Filename | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+    if (-not $Stats.Minute) {
+        Remove-Item $FileName
+        $text += "$($_.Name)`n"
+        $count++
+    }
 }  
 
 Write-Output "Removed $count stat files:"
