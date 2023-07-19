@@ -362,6 +362,12 @@
             Yiimp=$true
             BalancesKeepAlive="30d"
         }
+        "Pmpmining" = [PSCustomObject]@{
+            Currencies=@("NOVO","RXD")
+        }
+        "PmpminingSolo" = [PSCustomObject]@{
+            Currencies=@("NOVO","RXD")
+        }
         "Poolin" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{API_ETH_PUID="";API_ETH_ReadToken="";API_ETC_PUID="";API_ETC_ReadToken="";API_ETF_PUID="";API_ETF_ReadToken="";API_ETHW_PUID="";API_ETHW_ReadToken=""}
             SetupFields=[PSCustomObject]@{
