@@ -20,9 +20,6 @@
         "Acepool" = [PSCustomObject]@{
             Currencies=@("BEAM","XGM")
         }
-        "Aionmine" = [PSCustomObject]@{
-            Currencies=@("AION")
-        }
         "Aionpool" = [PSCustomObject]@{
             Currencies=@("AION")
         }
