@@ -19,25 +19,12 @@
     },
     {
         "symbol":  "BCH",
-        "match":  "^1",
-        "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
-        "address":  "data.{w}.address.formats.legacy",
-        "balance":  "data.{w}.address.balance",
-        "received":  "data.{w}.address.received",
-        "divisor":  100000000,
-        "verify":  "context.code",
-        "verify_value":  "200"
-    },
-    {
-        "symbol":  "BCH",
-        "match":  "^q",
-        "rpc":  "https://api.blockchair.com/bitcoin-cash/dashboards/address/{w}",
-        "address":  "data.{w}.address.formats.cashaddr",
-        "balance":  "data.{w}.address.balance",
-        "received":  "data.{w}.address.received",
-        "divisor":  100000000,
-        "verify":  "context.code",
-        "verify_value":  "200"
+        "match":  "^[1qb]",
+        "rpc":  "https://api.blockchain.info/haskoin-store/bch/address/{w}/balance",
+        "address":  "",
+        "balance":  "confirmed",
+        "received":  "",
+        "divisor":  100000000
     },
     {
         "symbol":  "BTG",
