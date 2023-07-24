@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.6.3"
+$Version = "1.6.4"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.3-rigel/rigel-1.6.3-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.4-rigel/rigel-1.6.4-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.3-rigel/rigel-1.6.3-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.4-rigel/rigel-1.6.4-win.zip"
             Cuda = "8.0"
         }
     )
@@ -48,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                   MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #SHA512256d/RAD
 
     # Dual mining
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; MinMemGB = 2; Params = "";                       Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Fee = 1.0} #Autolykos2/ERG + ALPH
     [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; MinMemGB = 2; Params = "";                       Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"; Fee = 1.0} #Autolykos2/ERG + KAS
     [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; MinMemGB = 2; Params = "";                       Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"; Fee = 1.0} #Autolykos2/ERG + RXD
 
@@ -147,7 +148,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                 if ($ZilNoCache -match "off") {
                     $ZilParams = "$($ZilParams) --zil-cache-dag $($ZilNoCache)"
                 }
-
             }
 
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
