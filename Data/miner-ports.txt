@@ -143,6 +143,7 @@
 367	FiroPOWNvidia
 368	ClaymoreDual
 369	Gminer294
+370	OneZeroMiner
 
 400	Sgminer
 401	SgminerBitcore
