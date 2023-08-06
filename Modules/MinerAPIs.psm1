@@ -2265,6 +2265,53 @@ class Nqminer : Miner {
     }
 }
 
+class OneZeroMiner : Miner {
+
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "127.0.0.1" #"localhost"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate = [PSCustomObject]@{}
+
+        try {
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
+            return
+        }
+
+        #$Version = if ($Data.version -match "(\d\.[\d\.]+)") {$Matches[1]} else {$null}
+
+        $HashRate_Name  = [String]$this.Algorithm[0]
+
+        $Data_Algos     = $Data.algos | WHere-Object {$HashRate_Name -eq (Get-Algorithm $_.name)}
+
+        $HashRate_Value = [Double]($Data_Algos.total_hashrate)
+
+        $PowerDraw      = [Double]($Data.devices.power | Measure-Object -Sum).Sum
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            #if ($HashRate_Name -eq "Eaglesong" -and $Version -ne $null -and [version]$Version -le [version]"1.77") {$HashRate_Value /= 2}
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Accepted_Shares = [Int64]($Data_Algos.total_accepted_shares)
+            $Rejected_Shares = [Int64]($Data_Algos.total_rejected_shares)
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData("",$HashRate,$null,$PowerDraw)
+
+        $this.CleanupMinerData()
+    }
+}
+
 class Prospector : Miner {
     [Void]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
