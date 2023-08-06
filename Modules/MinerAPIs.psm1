@@ -2279,7 +2279,7 @@ class OneZeroMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2485,7 +2485,21 @@ class Rigel : Miner {
 
         $PowerDraw      = [Double]$Data.power_usage
 
+        $ZilHashRate = 0
+
+        if ($Data.algorithm -match "\+zil") {
+            $ZilHashRate = [Double]$Data.hashrate.zil
+            if ($ZilHashRate -gt 0) {
+                if ($HashRate_Value -le 1) {
+                    $HashRate_Value = $this.LastHR0
+                }
+            }
+        }
+
         if ($HashRate_Name0 -and $HashRate_Value -gt 0) {
+
+            $this.LastHR0 = $HashRate_Value
+
             $HashRate | Add-Member @{$HashRate_Name0 = $HashRate_Value}
 
             $Accepted_Shares = [Int64]$Data.solution_stat.$HashRate_Ix0.accepted
@@ -2494,7 +2508,16 @@ class Rigel : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares,$Stale_Shares)
 
             if ($HashRate_Ix1) {
+
                 $HashRate_Value = [Double]$Data.hashrate.$HashRate_Ix1
+
+                if ($ZilHashRate -gt 0) {
+                    if ($HashRate_Value -le 1) {
+                        $HashRate_Value = $this.LastHR1
+                    }
+                }
+                
+                $this.LastHR1 = $HashRate_Value
 
                 if ($HashRate_Name1 -and $HashRate_Value -gt 0) {
                     $HashRate | Add-Member @{$HashRate_Name1 = $HashRate_Value}
