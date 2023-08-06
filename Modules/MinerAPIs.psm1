@@ -32,6 +32,7 @@ class Miner {
     $Stratum
     [double[]]$Speed
     [double[]]$Speed_Live
+    [double[]]$Speed_Last
     [double[]]$BLK
     [double[]]$Variance
     [string]$StartCommand
@@ -2491,14 +2492,14 @@ class Rigel : Miner {
             $ZilHashRate = [Double]$Data.hashrate.zil
             if ($ZilHashRate -gt 0) {
                 if ($HashRate_Value -le 1) {
-                    $HashRate_Value = $this.LastHR0
+                    $HashRate_Value = $this.Speed_Last[0]
                 }
             }
         }
 
         if ($HashRate_Name0 -and $HashRate_Value -gt 0) {
 
-            $this.LastHR0 = $HashRate_Value
+            $this.Speed_Last[0] = $HashRate_Value
 
             $HashRate | Add-Member @{$HashRate_Name0 = $HashRate_Value}
 
@@ -2513,11 +2514,11 @@ class Rigel : Miner {
 
                 if ($ZilHashRate -gt 0) {
                     if ($HashRate_Value -le 1) {
-                        $HashRate_Value = $this.LastHR1
+                        $HashRate_Value = $this.Speed_Last[1]
                     }
                 }
                 
-                $this.LastHR1 = $HashRate_Value
+                $this.Speed_Last[1] = $HashRate_Value
 
                 if ($HashRate_Name1 -and $HashRate_Value -gt 0) {
                     $HashRate | Add-Member @{$HashRate_Name1 = $HashRate_Value}
