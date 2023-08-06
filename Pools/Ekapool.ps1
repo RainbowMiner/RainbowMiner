@@ -33,7 +33,7 @@ if (($Pool_Request.pools | Measure-Object).Count -le 1) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us","eu","sg")
+$Pool_Regions = @("us","eu","ca","sg")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentProcessing.payoutScheme -eq "PPLNS" -and ($Wallets.$Pool_Currency -or $InfoOnly)} | Foreach-Object {
@@ -128,10 +128,10 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
 }
 
 $OtherCoins = @(
-    [PSCustomObject]@{coin = "APEPEPOW";  stratum = "apepe";  rpc = "apepe-api"}
     [PSCustomObject]@{coin = "CHN";  stratum = "chn";  rpc = "chn-api"}
     [PSCustomObject]@{coin = "DNX";  stratum = "dnx";  rpc = "dnx-api"}
-    [PSCustomObject]@{coin = "ZANO"; stratum = "zano"; rpc = "zano-api"}
+    [PSCustomObject]@{coin = "ZEPH"; stratum = "zeph"; rpc = "zeph-api"}
+
 )
 
 $OtherCoins | Where-Object {$Pool_Currency = $_.coin;($Wallets.$Pool_Currency -and $Pool_Currency -notin $Pool_Request.pools.coin.symbol -or $InfoOnly)} | Foreach-Object {
