@@ -506,6 +506,7 @@
     "ethash3g": "Ethash3g",
     "ethash4g": "Ethash4g",
     "ethash5g": "Ethash5g",
+    "ethashb3": "EthashB3",
     "ethashfp": "Ethashfp",
     "ethashlowmemory": "EthashLowMemory",
     "ethashnh": "EthashNH",
