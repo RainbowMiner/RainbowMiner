@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.7.0"
+$Version = "1.7.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.0-rigel/rigel-1.7.0-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.1-rigel/rigel-1.7.1-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.0-rigel/rigel-1.7.0-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.1-rigel/rigel-1.7.1-win.zip"
             Cuda = "8.0"
         }
     )
@@ -80,6 +80,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Algorithm = "ethash"} #Ethash (ETH) for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"; Algorithm = "ethash"} #Ethash (ETH) for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); SecondaryAlgorithm = "kheavyhash"; Algorithm = "ethash"} #Ethash (ETH) for low memory coins
+
+    [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                       Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"} #BlakeB3/RTH + RXD
+
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -181,7 +184,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
                             if ($Intensity -gt 0) {
                                 $Miner_Name_Dual = (@($Name) + @("$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)-$($Intensity)") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                                $IntensityParams = " --dual-mode $(@("a12:r$($Intensity)") * ($Miner_Device | Measure-Object).Count) -join ",")"
+                                $IntensityParams = " --dual-mode $((@("a12:r$($Intensity)") * ($Miner_Device | Measure-Object).Count) -join ",")"
                             } else {
                                 $Miner_Name_Dual = $Miner_Name
                                 $IntensityParams = ''
