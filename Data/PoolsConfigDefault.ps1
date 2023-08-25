@@ -232,7 +232,7 @@
                         EnableRecoveryMode="0"
                         AutoPriceModifierPercent="0"
                         EnableUpdatePriceModifier="0"
-                        UpdateInterval="1h"
+                        UpdateInterval="30m"
                         PriceBTC="0"
                         PriceFactor="1.8"
                         PriceFactorMin="1.2"
@@ -257,8 +257,8 @@
                         PoolOfflineTime="3m"
                         PoolOfflineRetryTime="15m"
                         PoolOfflineMessage="Dear renter, it looks like your pool is currently offline. Please check your settings."
-                        ProfitAverageTime="Day"
-                        PauseBetweenRentals="10m"
+                        ProfitAverageTime="Hour"
+                        PauseBetweenRentals="2h"
                         UseHost=""
             }
             SetupFields=[PSCustomObject]@{
