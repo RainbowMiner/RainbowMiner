@@ -24,7 +24,7 @@ if (-not $Payout_Currencies) {
 }
 
 $Count = 0
-$Payout_Currencies | Foreach-Object {
+$Payout_Currencies | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Name} | Foreach-Object {
     try {
         $Request = Invoke-RestMethodAsync "https://zpool.ca/api/walletEx?address=$($_.Value)" -tag $Name -delay 750 -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
