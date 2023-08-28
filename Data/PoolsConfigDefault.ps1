@@ -359,6 +359,9 @@
             Yiimp=$true
             BalancesKeepAlive="30d"
         }
+        "PhalanxMine" = [PSCustomObject]@{
+            Currencies=@("DGC","MZC","ZUR")
+        }
         "Pmpmining" = [PSCustomObject]@{
             Currencies=@("NOVO","RXD")
         }
