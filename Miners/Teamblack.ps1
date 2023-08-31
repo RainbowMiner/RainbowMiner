@@ -36,7 +36,7 @@ if ($IsLinux) {
     )
 }
 
-$ExcludePools = "Binance|Ethwmine|KuCoin|NiceHash|Poolin|ProHashing|SoloPool|unMineable|UUpool"
+$ExcludePools = "Binance|Ethwmine|KuCoin|NiceHash|Poolin|ProHashing|SoloPool|unMineable|UUpool|ZergPool"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; DevFee = 0.5; ExcludePoolName = $ExcludePools} #Ethash
