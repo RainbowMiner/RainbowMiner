@@ -294,8 +294,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join '!'
-                        $DeviceIntensity = ($Miner_Device | % {"0"}) -join '!'
+                        $DeviceIDsAll = $Miner_Device.BusId_Type_Vendor_Index -join ','
+                        $DeviceIntensity = ($Miner_Device | % {"0"}) -join ','
                         $MallobParam = "$(if ($Pools.$MainAlgorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$MainAlgorithm_Norm.Mallob)"})"
                         $Miner_HR = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week
                         if ($_.MaxRejectedShareRatio) {
