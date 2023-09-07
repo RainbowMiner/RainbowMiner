@@ -89,7 +89,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         if ($Session.Config.Pools.Crazypool.EnableTTminerDual -and $Pools.ZilliqaCP) {
             if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                $ZilParams = " -cZ ZIL -PZ $(if ($Pools.ZilliqaCP.SSL) {"ssl://"})$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {":$($Pools.ZilliqaCP.Pass)"})@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port)"
+                $ZilParams = " -cz ZIL$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -notmatch "{workername") {" -wz $($Pools.ZilliqaCP.Worker)"}) -Pz $(if ($Pools.ZilliqaCP.SSL) {"ssl://"})$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {":$($Pools.ZilliqaCP.Pass)"})@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port)"
             }
         }
         
@@ -111,8 +111,8 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
                 $Params = $_.Params
                 if ($ZilParams -ne "") {
-                    $Params_Symbol = "$(if ($Pools.$Algorithm_Norm.CoinSymbol) {$Pools.$Algorithm_Norm.CoinSymbol} else {$Algorithm_Norm})".Substring(0,2)
-                    $Params = $Params -replace "-c ","-c$($Params_Symbol) " -replace "-a ","-a$($Params_Symbol) "
+                    $Params_Symbol = "$(if ($Pools.$Algorithm_Norm.CoinSymbol) {$Pools.$Algorithm_Norm.CoinSymbol} else {$Algorithm_Norm})".Substring(0,2).ToLower()
+                    $Params = $Params -replace "-c ","-c$($Params_Symbol) " -replace "-a ","-a$($Params_Symbol) " -replace "-w ","-w$($Params_Symbol)"
                 } else {
                     $Params_Symbol = ""
                 }
@@ -122,7 +122,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -P$($Params_Symbol) $($Miner_Protocol)$($Pools.$Algorithm_Norm.User)$(if ($Pass) {":$($Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -notmatch "{workername") {" -w $($Pools.$Algorithm_Norm.Worker)"})$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
+					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -P$($Params_Symbol) $($Miner_Protocol)$($Pools.$Algorithm_Norm.User)$(if ($Pass) {":$($Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -notmatch "{workername") {" -w$($Params_Symbol) $($Pools.$Algorithm_Norm.Worker)"})$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					API            = "Claymore"
 					Port           = $Miner_Port                
