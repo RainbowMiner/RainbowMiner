@@ -16,6 +16,14 @@ $Version = "8.26x2"
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer"
     $UriCuda = @(
+            [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda118-linux.7z"
+            Cuda = "11.8"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda117-linux.7z"
+            Cuda = "11.7"
+        },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda116-linux.7z"
             Cuda = "11.6"
@@ -36,6 +44,14 @@ if ($IsLinux) {
 } else {
     $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
     $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda118-x64.7z"
+            Cuda = "11.8"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda117-x64.7z"
+            Cuda = "11.7"
+        },
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.26-klaust/ccminerklaust-826x2-cuda116-x64.7z"
             Cuda = "11.6"
@@ -61,6 +77,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; ExtendInterval = 3} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "neoscrypt-xaya"; Params = ""; ExtendInterval = 3} #Neoscrypt-Xaya
     [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""; ExtendInterval = 2} #Qubit
+    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""; ExtendInterval = 2} #X17
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
