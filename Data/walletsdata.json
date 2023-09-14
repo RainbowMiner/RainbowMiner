@@ -90,6 +90,15 @@
         "divisor":  1E+18
     },
     {
+        "symbol":  "ERG",
+        "match":  "^[984]",
+        "rpc":  "https://api.ergoplatform.com/api/v1/addresses/{w}/balance/total",
+        "address":  "",
+        "balance":  "balance.confirmed.nanoErgs",
+        "received":  "",
+        "divisor":  1000000000
+    },
+    {
         "symbol":  "FIRO",
         "match":  "^[aZ]",
         "rpc":  "https://explorer.zcoin.io/insight-api-zcoin/addr/{w}/?noTxList=1",
