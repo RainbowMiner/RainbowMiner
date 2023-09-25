@@ -72,7 +72,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
 
     if ($Pool_CoinName -and -not $Pool_CoinSymbol) {$Pool_CoinSymbol = Get-CoinSymbol $Pool_CoinName}
 
-    if ($Pool_Algorithm -eq "ethash" -and $Pool_CoinSymbol) {
+    if ($Pool_Algorithm -in @("ethash","kawpow") -and $Pool_CoinSymbol) {
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
     } else {
         if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}

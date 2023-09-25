@@ -65,7 +65,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 
     if (-not $InfoOnly -and [double]$PoolCoins_Request.$Pool_CoinSymbol.estimate -eq 0 -and $Pool_ExCurrency -ne $Pool_CoinSymbol) {return}
 
-	if ($Pool_Algorithm -eq "ethash") {
+	if ($Pool_Algorithm -in @("ethash","kawpow")) {
 		$Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
 	} else {
 		if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
