@@ -75,6 +75,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; SecondAlgorithm = "octopus"; DAG = $true; Params = ""; MinMemGB = 2; MinMemGB2nd = 4; ExtendInterval = 3; Algorithm = "ethash"} #Ethash+Octopus/CFX (new with 0.24.1)
     [PSCustomObject]@{MainAlgorithm = "firopow"; DAG = $true; Params = ""; MinMemGB = 4; ExtendInterval = 3} #FiroPoW (new with 0.22.0)
     [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = ""; ExtendInterval = 3} #KawPOW (new with v0.15.2)
+    [PSCustomObject]@{MainAlgorithm = "kawpow2g"; DAG = $true; Params = ""; ExtendInterval = 3; Algorithm = "kawpow"} #KawPOW (new with v0.15.2)
+    [PSCustomObject]@{MainAlgorithm = "kawpow3g"; DAG = $true; Params = ""; ExtendInterval = 3; Algorithm = "kawpow"} #KawPOW (new with v0.15.2)
+    [PSCustomObject]@{MainAlgorithm = "kawpow4g"; DAG = $true; Params = ""; ExtendInterval = 3; Algorithm = "kawpow"} #KawPOW (new with v0.15.2)
+    [PSCustomObject]@{MainAlgorithm = "kawpow5g"; DAG = $true; Params = ""; ExtendInterval = 3; Algorithm = "kawpow"} #KawPOW (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; MinMemGB = 5; Params = ""; ExtendInterval = 2} #MTP-TCR (new with v0.15.2)
     [PSCustomObject]@{MainAlgorithm = "octopus"; DAG = $true; Params = ""; MinMemGB = 4; ExtendInterval = 2; DevFee = 2.0} #Octopus  (new with v0.19.0)

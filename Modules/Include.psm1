@@ -4517,7 +4517,7 @@ function Get-Algorithm {
         $Algorithm = $Algorithm -replace "[^a-z0-9]+"
         if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {
             $Algorithm = $Global:GlobalAlgorithms[$Algorithm]
-            if ($CoinSymbol -ne "" -and $Algorithm -eq "Ethash" -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 1) -le 5) {
+            if ($CoinSymbol -ne "" -and $Algorithm -in @("Ethash","KawPOW") -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 1) -le 5) {
                 if ($DAGSize -le 2) {$Algorithm = "$($Algorithm)2g"}
                 elseif ($DAGSize -le 3) {$Algorithm = "$($Algorithm)3g"}
                 elseif ($DAGSize -le 4) {$Algorithm = "$($Algorithm)4g"}
@@ -4549,7 +4549,7 @@ function Get-Coin {
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
         $Coin = if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
                 elseif ($Algorithm -ne "" -and $Global:GlobalCoinsDB.ContainsKey("$CoinSymbol-$Algorithm")) {$Global:GlobalCoinsDB["$CoinSymbol-$Algorithm"]}
-        if ($Coin.Algo -eq "Ethash") {$Coin.Algo = Get-Algorithm $Coin.Algo -CoinSymbol $CoinSymbol}
+        if ($Coin.Algo -in @("Ethash","KawPOW")) {$Coin.Algo = Get-Algorithm $Coin.Algo -CoinSymbol $CoinSymbol}
         $Coin
     }
 }

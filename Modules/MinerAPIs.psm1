@@ -2039,14 +2039,14 @@ class Nanominer : Miner {
 
 
         $HashRate_Ix0 = [String]$this.BaseAlgorithm[0]
-        if ($HashRate_Ix0 -match "^Ethash(\d+|low|NH)") {$HashRate_Ix0 = "Ethash"}
+        if ($HashRate_Ix0 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$HashRate_Ix0 = $Matches[1]}
 
         $Algos          = $Data.Algorithms[0].PSObject.Properties.Name
 
         if ($this.Algorithm.Count -gt 1) {
             $HashRate_Name1 = [String]$this.Algorithm[1]
             $HashRate_Ix1   = [String]$this.BaseAlgorithm[1]
-            if ($HashRate_Ix1 -match "^Ethash(\d+|low|NH)") {$HashRate_Ix1 = "Ethash"}
+            if ($HashRate_Ix1 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$HashRate_Ix1 = $Matches[1]}
         } else {
             $HashRate_Name1 = ''
             $HashRate_Ix1   = ''
@@ -2468,14 +2468,14 @@ class Rigel : Miner {
 
         $HashRate_Name0 = [String]$this.Algorithm[0]
         $HashRate_Ix0   = [String]$this.BaseAlgorithm[0]
-        if ($HashRate_Ix0 -match "^Ethash(\d+|low|NH)") {$HashRate_Ix0 = "Ethash"}
+        if ($HashRate_Ix0 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$HashRate_Ix0 = $Matches[1]}
 
         $Algos          = $Data.algorithm -split '\+'
 
         if ($this.Algorithm.Count -gt 1) {
             $HashRate_Name1 = [String]$this.Algorithm[1]
             $HashRate_Ix1   = [String]$this.BaseAlgorithm[1]
-            if ($HashRate_Ix1 -match "^Ethash(\d+|low|NH)") {$HashRate_Ix1 = "Ethash"}
+            if ($HashRate_Ix1 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$HashRate_Ix1 = $Matches[1]}
         } else {
             $HashRate_Name1 = ''
             $HashRate_Ix1   = ''
@@ -2715,7 +2715,7 @@ class SrbMinerMulti : Miner {
 
         $BaseAlgorithm0 = [String]$this.BaseAlgorithm[0]
 
-        if ($BaseAlgorithm0 -match "^Ethash(\d+|low|NH)") {$BaseAlgorithm0 = "Ethash"}
+        if ($BaseAlgorithm0 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$BaseAlgorithm0 = $Matches[1]}
 
         $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0}
 

@@ -68,6 +68,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5; HashrateDuration = "Day"} #HEX/XDNA, new in 1.15a
     #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
     [PSCustomObject]@{MainAlgorithm = "kawpow"; DAG = $true; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; ExcludePoolName = "MiningRigRentals"} #KawPOW/RVN, new in 2.5
+    [PSCustomObject]@{MainAlgorithm = "kawpow2g"; DAG = $true; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; ExcludePoolName = "MiningRigRentals";Algorithm = "kawpow"} #KawPOW/RVN, new in 2.5
+    [PSCustomObject]@{MainAlgorithm = "kawpow3g"; DAG = $true; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; ExcludePoolName = "MiningRigRentals";Algorithm = "kawpow"} #KawPOW/RVN, new in 2.5
+    [PSCustomObject]@{MainAlgorithm = "kawpow4g"; DAG = $true; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; ExcludePoolName = "MiningRigRentals";Algorithm = "kawpow"} #KawPOW/RVN, new in 2.5
+    [PSCustomObject]@{MainAlgorithm = "kawpow5g"; DAG = $true; Params = "-N 1"; ExtendInterval = 3; MinMemGB=3; ExcludePoolName = "MiningRigRentals";Algorithm = "kawpow"} #KawPOW/RVN, new in 2.5
     #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
     #[PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
@@ -119,6 +123,8 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $First = $true
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+        
+        $MainAlgorithm_0 = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
         $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
@@ -138,7 +144,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 --api-bind=0 --api-bind-http=`$mport -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User)$(if ($_.Pass) {" -p $($_.Pass)"})"}) --no-cert-verify $($_.Params)"
+					Arguments      = "-R 1 --api-bind=0 --api-bind-http=`$mport -d $($DeviceIDsAll) -a $($MainAlgorithm_0) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User)$(if ($_.Pass) {" -p $($_.Pass)"})"}) --no-cert-verify $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					API            = "EnemyZ"
 					Port           = $Miner_Port

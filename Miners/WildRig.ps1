@@ -46,6 +46,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD");          Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "kawpow";       DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "unMineable"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "kawpow2g";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "kawpow3g";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "kawpow4g";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "kawpow5g";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "unMineable"; Algorithm = "kawpow"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "lyra2tdc";                  Vendor = @("AMD");          Params = ""; DevFee = 2.0} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";                   Vendor = @("AMD");          Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";               Vendor = @("AMD");          Params = ""} #Lyra2vc0ban
@@ -121,6 +125,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $First = $True
 
             $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}

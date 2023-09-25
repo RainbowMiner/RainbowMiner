@@ -1415,7 +1415,7 @@ function Start-Setup {
                             $Config.MaxActivityDays = Read-HostInt -Prompt "History length for activity-list on localhost in days" -Default $Config.MaxActivityDays -Min 1 -Max 7 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enablealgorithmvariants" {
-                            $Config.EnableAlgorithmVariants = Read-HostBool -Prompt "Enable automatic use of algorithm variants (e.g. if you exclude/select Ethash, all variants like Ethash2g, EthasLowMemory will be excluded/selected too)" -Default $Config.EnableAlgorithmVariants | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.EnableAlgorithmVariants = Read-HostBool -Prompt "Enable automatic use of algorithm variants (e.g. if you exclude/select Ethash, all variants like Ethash2g, KawPow2g will be excluded/selected too)" -Default $Config.EnableAlgorithmVariants | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enablealgorithmmapping" {
                             $Config.EnableAlgorithmMapping = Read-HostBool -Prompt "Show Equihash ','-numbers, instead of the RainbowMiner way" -Default $Config.EnableAlgorithmMapping | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}

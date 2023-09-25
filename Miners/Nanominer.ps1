@@ -36,6 +36,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "FiroPow";         DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ZombieMode = $true} #FiroPOW
     [PSCustomObject]@{MainAlgorithm = "heavyhash";                    Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0} #kHeavyHash/KAS
     [PSCustomObject]@{MainAlgorithm = "KawPow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow2g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow3g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
+    [PSCustomObject]@{MainAlgorithm = "KawPow5g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #Octopus/Conflux
     [PSCustomObject]@{MainAlgorithm = "RandomX";                      Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0} #RandomX
     [PSCustomObject]@{MainAlgorithm = "Verushash";                    Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes"); ExcludePoolName="LuckPool"} #Verushash
@@ -80,11 +84,13 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
         $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and ($Miner_Vendor -ne "CPU" -or -not $_.CPUFeatures -or ($Global:GlobalCPUInfo.Features -and -not (Compare-Object @($Global:GlobalCPUInfo.Features.Keys) $_.CPUFeatures | Where-Object SideIndicator -eq "=>" | Measure-Object).Count))}).ForEach({
             $First = $true
 
-            $MainAlgorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
-            $SecondAlgorithm = $_.SecondaryAlgorithm
+            $MainAlgorithm_0   = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+            $SecondAlgorithm_0 = $_.SecondaryAlgorithm
+
+            $MainAlgorithm_Norm_0 = Get-Algorithm "$(if ($_.MainAlgorithm -eq "heavyhash") {"kHeavyHash"} else {$_.MainAlgorithm})"
+            $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
             
-            $MainAlgorithm_Norm_0 = Get-Algorithm "$(if ($MainAlgorithm -eq "heavyhash") {"kHeavyHash"} else {$MainAlgorithm})"
-            $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm "$(if ($SecondAlgorithm -eq "heavyhash") {"kHeavyHash"} else {$SecondAlgorithm})"} else {$null}
+            $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm "$(if ($_.SecondaryAlgorithm -eq "heavyhash") {"kHeavyHash"} else {$_.SecondaryAlgorithm})"} else {$null}
 
             if ($Miner_Vendor -eq "CPU") {
                 $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$MainAlgorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$MainAlgorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
@@ -161,7 +167,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                 $Arguments = [PSCustomObject]@{
                                     Algorithms = @(
                                         [PSCustomObject]@{
-                                            Algo      = $MainAlgorithm
+                                            Algo      = $MainAlgorithm_0
                                             Coin      = $MainCoin
                                             Host      = $Pools.$MainAlgorithm_Norm.Host
                                             Port      = $Pool_Port
@@ -173,7 +179,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                             Email     = $Pools.$MainAlgorithm_Norm.Email
                                         }
                                         [PSCustomObject]@{
-                                            Algo      = $SecondAlgorithm
+                                            Algo      = $SecondAlgorithm_0
                                             Coin      = $SecondCoin
                                             Host      = $Pools.$SecondAlgorithm_Norm.Host
                                             Port      = $SecondPool_Port
@@ -235,7 +241,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $Arguments = [PSCustomObject]@{
                             Algorithms = @(
                                 [PSCustomObject]@{
-                                    Algo      = $MainAlgorithm
+                                    Algo      = $MainAlgorithm_0
                                     Coin      = $MainCoin
                                     Host      = $Pools.$MainAlgorithm_Norm.Host
                                     Port      = $Pool_Port
