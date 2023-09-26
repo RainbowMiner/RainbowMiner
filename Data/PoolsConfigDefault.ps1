@@ -53,14 +53,17 @@
             SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, MiniZ will dual mine ZIL on CrazyPool for various algorithms";EnableRigelDual="If you set this to 1, Rigel will dual mine ZIL on Crazypool for various algorithms";EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Crazypool for various algorithms";EnableTTminerDual="If you set this to 1, TTminer will dual mine ZIL on Crazypool for various algorithms"}
             Currencies=@("ETC","UBQ","ZIL")
         }
+        "DeepMinerZ" = [PSCustomObject]@{
+            Currencies=@("DNX")
+        }
+        "DeepMinerZSolo" = [PSCustomObject]@{
+            Currencies=@("DNX")
+        }
         "Ekapool" = [PSCustomObject]@{
             Currencies=@("AVS","FLR","DNX","ZANO")
         }
         "EthashPool" = [PSCustomObject]@{
             Currencies=@("ETC","ETP")
-        }
-        "Ethermine" = [PSCustomObject]@{
-            Currencies=@("ETC","RVN","ERG")
         }
         "Ethwmine" = [PSCustomObject]@{
             Currencies=@("ETHW")
@@ -360,6 +363,9 @@
             BalancesKeepAlive="30d"
         }
         "PhalanxMine" = [PSCustomObject]@{
+            Currencies=@("DGC","MZC","ZUR")
+        }
+        "PhalanxMineSolo" = [PSCustomObject]@{
             Currencies=@("DGC","MZC","ZUR")
         }
         "Pmpmining" = [PSCustomObject]@{
