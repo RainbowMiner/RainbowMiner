@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "2.1c"
+$Version = "2.2c"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1c-miniz/miniZ_v2.1c_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2c-miniz/miniZ_v2.2c_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1c-miniz/miniZ_v2.1c_win-x64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2c-miniz/miniZ_v2.2c_win-x64.7z"
             Cuda = "8.0"
         }
     )
@@ -46,6 +46,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";              MinMemGB = 2; Params = "--par=125,4";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2")} #Equihash 125,4,0 (ZelCash)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";              MinMemGB = 3; Params = "--par=150,5";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2")} #Equihash 150,5,0 (GRIMM)
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";               MinMemGB = 2; Params = "--par=210,9";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $true;  Fee = $DevFee;               Compute = @("GCN4","RDNA2")} #Equihash 210,9 (AION)
+    [PSCustomObject]@{MainAlgorithm = "EvrProgPow";    DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=EVRMORE-PROGPOW"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #EvrProgPow (EVR)
     [PSCustomObject]@{MainAlgorithm = "KawPoW";        DAG = $true; MinMemGB = 2; Params = "--par=kawpow";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #KawPow (RVN)
     [PSCustomObject]@{MainAlgorithm = "KawPoW2g";      DAG = $true; MinMemGB = 2; Params = "--par=kawpow";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #KawPow (RVN)
     [PSCustomObject]@{MainAlgorithm = "KawPoW3g";      DAG = $true; MinMemGB = 2; Params = "--par=kawpow";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #KawPow (RVN)
@@ -53,11 +54,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "KawPoW5g";      DAG = $true; MinMemGB = 2; Params = "--par=kawpow";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #KawPow (RVN)
     [PSCustomObject]@{MainAlgorithm = "kHeavyHash";                 MinMemGB = 2; Params = "--par=kaspa";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 0.8;                   Compute = @("RDNA2")} #kHeavyHash/KAS
     [PSCustomObject]@{MainAlgorithm = "Octopus";       DAG = $true; MinMemGB = 2; Params = "--par=octopus";    Vendor = @("NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = $DevFee;                     Compute = @()} #Octopus (CFX)
-    [PSCustomObject]@{MainAlgorithm = "ProgPowSero";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=sero"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;       Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowSero (SERO)
-    [PSCustomObject]@{MainAlgorithm = "ProgPowVeil";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=veil"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;       Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowVeil (VEIL)
-    [PSCustomObject]@{MainAlgorithm = "ProgPowZ";      DAG = $true; MinMemGB = 2; Params = "--par=ProgPowZ --pers=zano"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;      Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowZano (ZANO)
-    [PSCustomObject]@{MainAlgorithm = "UbqHash";       DAG = $true; MinMemGB = 2; Params = "--par=ubqhash";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 0.75;                  Compute = @("RDNA2")} #Ethash (ETH)
-    [PSCustomObject]@{MainAlgorithm = "vProgPow";      DAG = $true; MinMemGB = 2; Params = "--par=vProgPow --pers=VeriBlock"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00; Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #vProgPow (VBK)
+    [PSCustomObject]@{MainAlgorithm = "ProgPowSero";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=sero";  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;        Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowSero (SERO)
+    [PSCustomObject]@{MainAlgorithm = "ProgPowVeil";   DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=veil";  Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;        Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowVeil (VEIL)
+    [PSCustomObject]@{MainAlgorithm = "ProgPowZ";      DAG = $true; MinMemGB = 2; Params = "--par=ProgPowZ --pers=zano"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;        Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #ProgPowZano (ZANO)
+    [PSCustomObject]@{MainAlgorithm = "EthashB3";      DAG = $true; MinMemGB = 2; Params = "--par=ethashb3";   Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;                  Compute = @("RDNA2")} #EthashB3 (RTH)
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";       DAG = $true; MinMemGB = 2; Params = "--par=ubqhash";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 0.75;                  Compute = @("RDNA2")} #UbqHash (UBQ)
+    [PSCustomObject]@{MainAlgorithm = "vProgPow";      DAG = $true; MinMemGB = 2; Params = "--par=vProgPow --pers=VeriBlock"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 3; AutoPers = $false; Fee = 1.00;   Compute = @("RDNA2"); ExcludePoolName = "MiningRigRentals"} #vProgPow (VBK)
 
     #[PSCustomObject]@{MainAlgorithm = "FiroPow";       DAG = $true; MinMemGB = 2; Params = "--par=ProgPow --pers=firo";  ExtendInterval = 3; AutoPers = $false; Fee = 1.00} #FiroPow (FIRO)
 )
