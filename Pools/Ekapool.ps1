@@ -178,7 +178,6 @@ $OtherCoins | Where-Object {$Pool_Currency = $_.coin;($Wallets.$Pool_Currency -a
             $Pool_Profit = (86400 / $Pool_LiveStats.network.difficulty) * $Pool_LiveStats.lastblock.reward / $Pool_LiveStats.config.coinUnits / $Global:Rates[$Pool_Currency]
         }
 
-
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -Quiet
     }
 
