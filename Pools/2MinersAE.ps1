@@ -36,6 +36,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "erg";   symbol = "ERG";   port = 8888; fee = 1.0; divisor = 1e9;  currencies = @("BTC","ERG")}
     [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18; currencies = @("BTC","ETC")}
     [PSCustomObject]@{rpc = "kas";   symbol = "KAS";   port = 2020; fee = 1.0; divisor = 1e8;  currencies = @("BTC","KAS")}
+    [PSCustomObject]@{rpc = "nexa";  symbol = "NEXA";  port = 5050; fee = 1.0; divisor = 1e8;  currencies = @("BTC","NEXA")}
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8;  currencies = @("BTC","RVN")}
 )
 
