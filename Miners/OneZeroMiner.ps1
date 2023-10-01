@@ -66,7 +66,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --api-port `$mport$(if ($Pools.$MainAlgorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$MainAlgorithm_Norm.Mallob)"}) $($_.Params)"
+					Arguments      = "-d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --api-port `$mport$(if ($Pools.$Algorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$Algorithm_Norm.Mallob)"}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "OneZeroMiner"
 					Port           = $Miner_Port
