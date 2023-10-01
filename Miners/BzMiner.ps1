@@ -15,7 +15,7 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "16.0.3"
+$Version = "17.0.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
@@ -28,7 +28,7 @@ if ($IsLinux) {
 $ExcludePoolName = "prohashing|miningrigrentals"
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "alph";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Blake3/Alephium
+    [PSCustomObject]@{MainAlgorithm = "alph";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Blake3/Alephium
     [PSCustomObject]@{MainAlgorithm = "canxium";         DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; CoinSymbol = @("CAU"); Algorithm = "Ethash2g"} #Ethash/ETHW
     [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #ERG/Autolykos2
     [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "kaspa"} #ERG/Autolykos2+kHeavyHash
@@ -74,13 +74,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "nexa";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "NexaPoW"} #NexaPow/NEXA
     [PSCustomObject]@{MainAlgorithm = "novo";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "SHA256dt"} #SHA256dt/NOVO
     [PSCustomObject]@{MainAlgorithm = "radiant";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #SHA512256d/RAD
-    [PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; Fee = 1.0} #KawPow
-    [PSCustomObject]@{MainAlgorithm = "kawpow2g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow2g
-    [PSCustomObject]@{MainAlgorithm = "kawpow3g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow3g
-    [PSCustomObject]@{MainAlgorithm = "kawpow4g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow4g
-    [PSCustomObject]@{MainAlgorithm = "kawpow5g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow5g
+    [PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #KawPow
+    [PSCustomObject]@{MainAlgorithm = "kawpow2g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow2g
+    [PSCustomObject]@{MainAlgorithm = "kawpow3g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow3g
+    [PSCustomObject]@{MainAlgorithm = "kawpow4g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow4g
+    [PSCustomObject]@{MainAlgorithm = "kawpow5g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow5g
     [PSCustomObject]@{MainAlgorithm = "olhash";                       MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Olhash/Overline
-    [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Rethereum/RTH
+    [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Rethereum/RTH
+    [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "alph"; Fee = 1.00} #Rethereum/ALPH
     [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "radiant"; Fee = 1.00} #Rethereum/RTH
     [PSCustomObject]@{MainAlgorithm = "woodcoin";                     MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Skein2/WoodCoin LOG
 )
@@ -135,7 +136,14 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             $MainAlgorithm_0  = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
             if ($MainAlgorithm_0 -eq "kawpow") {
-                if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -in @("NEOX","MEWC","XNA")) {$MainAlgorithm_0 = $Pools.$MainAlgorithm_Norm_0.CoinSymbol.ToLower()}
+                Switch ($Pools.$MainAlgorithm_Norm_0.CoinSymbol) {
+                    "CLORE" { $MainAlgorithm_0 = "clore" }
+                    "GPN"   { $MainAlgorithm_0 = "gamepass" }
+                    "NEOX"  { $MainAlgorithm_0 = "neox" }
+                    "MEWC"  { $MainAlgorithm_0 = "meowcoin" }
+                    "RVN"   { $MainAlgorithm_0 = "rvn" }
+                    "XNA"   { $MainAlgorithm_0 = "xna" }
+                }
             } elseif ($MainAlgorith_0 -eq "ethash") {
                 if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "CAU") {$MainAlgorithm_0 = "canxium"}
             }
@@ -240,7 +248,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                             DeviceName      = $Miner_Device.Name
                             DeviceModel     = $Miner_Model
                             Path            = $Path
-                            Arguments       = "-a $($MainAlgorithm_0) --$($Miner_Vendor.ToLower()) 1$(if ($DisableDevices) {" --disable $($DisableDevices)"}) -p $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port -and $Pools.$MainAlgorithm_Norm.Host -notmatch "/") {":$($Pool_Port)"}) -w $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pool_password $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker) {" -r $($Pools.$MainAlgorithm_Norm.Worker)"}) $($ZilParams)$($CommonParams) $($_.Params)"
+                            Arguments       = "-a $($MainAlgorithm_0) --$($Miner_Vendor.ToLower()) 1$(if ($DisableDevices) {" --disable $($DisableDevices)"})  -p $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host)$(if ($Pool_Port -and $Pools.$MainAlgorithm_Norm.Host -notmatch "/") {":$($Pool_Port)"}) -w $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" --pool_password $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($Pools.$MainAlgorithm_Norm.Worker) {" -r $($Pools.$MainAlgorithm_Norm.Worker)"}) $($ZilParams)$($CommonParams) $($_.Params)"
                             HashRates       = [PSCustomObject]@{$MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
                             API             = "BzMiner"
                             Port            = $Miner_Port
