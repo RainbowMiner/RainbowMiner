@@ -94,7 +94,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "-mining-address $($Pools.$Algorithm_Norm.User) $($Device_Params) -stratum-url $($Pools.$Algorithm_Norm.Host) -stratum-port $($Pool_Port) -stratum-password $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+					    Arguments      = "-mining-address $($Pools.$Algorithm_Norm.User) $($Device_Params) -stratum-url $($Pools.$Algorithm_Norm.Host) -stratum-port $($Pool_Port) -stratum-password $($Pools.$Algorithm_Norm.Pass)$(if ($Pools.$Algorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$Algorithm_Norm.Mallob)"}) $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					    API            = "DynexsolveWrapper"
 					    Port           = $Miner_Port
