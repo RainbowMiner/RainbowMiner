@@ -15,6 +15,10 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$Pool_Currency       = "DNX"
+
+if (-not $Wallets.$Pool_Currency -and -not $InfoOnly) {return}
+
 $Pool_Request = [PSCustomObject]@{}
 try {
     $Pool_Request = Invoke-RestMethodAsync "https://pool.deepminerz.com:8071/live_stats" -tag $Name -cycletime 120 -retry 5 -retrywait 250
@@ -30,7 +34,6 @@ catch {
 $Pool_Regions = @("uk","us","sg")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Currency       = "DNX"
 $Pool_Host            = "pool.{region_with_dot}deepminerz.com"
 
 $Pool_Coin           = Get-Coin $Pool_Currency

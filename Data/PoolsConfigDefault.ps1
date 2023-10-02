@@ -181,6 +181,12 @@
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("TUBE")
         }
+        "Mining4people" = [PSCustomObject]@{
+            Currencies=@("PEPEW")
+        }
+        "Mining4peopleSolo" = [PSCustomObject]@{
+            Currencies=@("PEPEW")
+        }
         "MiningDutch" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=3}
             SetupFields=[PSCustomObject]@{User="Enter your MiningDutch username";API_ID="Enter your MiningDutch account ID";API_Key = "Enter your MiningDutch API key";AECurrency = "Enter your MiningDutch autoexchange currency"}
