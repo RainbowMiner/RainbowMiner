@@ -11,7 +11,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.8.1"
+$Version = "1.9.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
@@ -46,6 +46,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ironfish";                     MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #IronFish/IRON
     [PSCustomObject]@{MainAlgorithm = "kheavyhash";                   MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #kheavyhash/KASPA
     [PSCustomObject]@{MainAlgorithm = "nexapow";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0} #NexaPoW/NEXA
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0} #Octopus/CFX
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "ravencoin"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW2g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "ravencoin"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW3g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "ravencoin"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
@@ -90,6 +91,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"}   #BlakeB3/RTH + ALPH
     [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"}   #BlakeB3/RTH + IRON
     [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"} #BlakeB3/RTH + RXD
+
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Fee = 2.0} #Octopus/CFX + ALPH
+    [PSCustomObject]@{MainAlgorithm = "octopus";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"; Fee = 2.0} #Octopus/CFX + RXD
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
