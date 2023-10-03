@@ -58,7 +58,7 @@ if ($Payout_Currencies) {
             $page = 0
             $Payments = @()
             while ($page -ge 0) {
-                $Payments_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools/pepecoin-pplns/account/PDLBYE9TL9x5uJ2iXYXdrbKRSYwHkp78om/payments?page=$($page)&pageSize=50" -delay 250 -cycletime ($Config.BalanceUpdateMinutes*60)
+                $Payments_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools/$($Pool.id)/account/$($_.Value)/payments?page=$($page)&pageSize=50" -delay 250 -cycletime ($Config.BalanceUpdateMinutes*60)
                 if ($Payments_Request.success) {
                     $Payments += $Payments_Request.result
                     if ($page -lt $Payments_Request.pageCount) {
@@ -104,7 +104,7 @@ if ($Payout_CurrenciesSolo) {
             $page = 0
             $Payments = @()
             while ($page -ge 0) {
-                $Payments_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools/pepecoin-pplns/account/PDLBYE9TL9x5uJ2iXYXdrbKRSYwHkp78om/payments?page=$($page)&pageSize=50" -delay 250 -cycletime ($Config.BalanceUpdateMinutes*60)
+                $Payments_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools/$($Pool.id)/account/$($_.Value)/payments?page=$($page)&pageSize=50" -delay 250 -cycletime ($Config.BalanceUpdateMinutes*60)
                 if ($Payments_Request.success) {
                     $Payments += $Payments_Request.result
                     if ($page -lt $Payments_Request.pageCount) {
