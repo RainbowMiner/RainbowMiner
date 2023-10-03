@@ -79,12 +79,12 @@ $Pool_Request | Where-Object {$_.id -match "pplns$" -and ($Wallets."$($_.coin)" 
         }
 
         $Pool_TSL = ((Get-Date) - ([datetime]$Pool_CoinRequest.lastPoolBlockTime)).TotalSeconds
-        $Pool_BLK = $_.poolHashrate / $_.networkHashrate * $_.networkBlockTime
+        $Pool_BLK = $_.poolHashrate * $_.networkBlockTime / $_.networkHashrate
 
         $Pool_Profit    = 0
 
         if ($Global:Rates.ContainsKey($Pool_Currency) -and $Global:Rates[$Pool_Currency]) {
-            $Pool_Profit = (86400 / $Pool_CoinRequest.networkStats.networkDifficulty) * $_.blockReward / $Global:Rates[$Pool_Currency]
+            $Pool_Profit =  $_.blockReward  * $_.networkBlockTime / $_.networkHashrate / $Global:Rates[$Pool_Currency]
         }
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -HashRate ([decimal]$_.poolHashrate) -BlockRate $Pool_BLK -Quiet
