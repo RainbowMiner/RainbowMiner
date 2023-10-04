@@ -81,11 +81,11 @@ $Pool_Request | Where-Object {$_.id -match "pplns$" -and ($Wallets."$($_.coin)" 
         $avgTime       = $Pool_CoinRequest.networkStats.networkDifficulty * [Math]::Pow(2,32) / $_.poolHashrate
         $Pool_BLK      = [int]$(if ($avgTime) {86400/$avgTime})
         $Pool_TSL      = ((Get-Date) - ([datetime]$Pool_CoinRequest.lastPoolBlockTime)).TotalSeconds
-        $reward        = $_.blockReward
+        $reward        = [int]$_.blockReward
         $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
         $hashrate      = $_.poolHashrate
 
-        $btcRewardLive =  if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $Pool_Request.hashrate} else {0}
+        $btcRewardLive =  if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $hashrate} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
