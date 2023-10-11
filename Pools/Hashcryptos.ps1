@@ -20,7 +20,7 @@ $Pool_Request = [PSCustomObject]@{}
 $headers = @{"Accept"="text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.hashcryptos.com/api/status" -headers $headers -retry 3 -retrywait 500 -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://hashcryptos.com/api/status" -headers $headers -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
