@@ -12,14 +12,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
 $Cuda = "8.0"
-$Version = "0.36.10"
+$Version = "0.37.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.10-wildrigmulti/wildrig-multi-linux-0.36.10.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.37.1-wildrigmulti/wildrig-multi-linux-0.37.1.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.36.10-wildrigmulti/wildrig-multi-windows-0.36.10.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.37.1-wildrigmulti/wildrig-multi-windows-0.37.1.7z"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -65,6 +65,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowVeil
     [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Fairpool"} #ProgPowZ
     [PSCustomObject]@{MainAlgorithm = "pufferfish2";               Vendor = @("AMD","NVIDIA"); Params = ""} #Pufferfish2/BMB
+    [PSCustomObject]@{MainAlgorithm = "rwahash";                   Vendor = @("AMD","NVIDIA"); Params = ""} #RWAHash
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                Vendor = @("AMD","NVIDIA"); Params = ""} #SHA512256d
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","NVIDIA"); Params = ""; DevFee = 2.0} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";                   Vendor = @("AMD","NVIDIA"); Params = ""} #SHA256q
