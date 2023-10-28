@@ -8,7 +8,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Request = [PSCustomObject]@{}
 
-$Payout_Currencies = $Config.Pools.$Name.Wallets.PSObject.Properties | Where-Object {$_.Value -and @("BCH","BSV","BTC","DASH","DGB","DOGE","FTC","GRS","HATCH","LTC","MONA","NLG","RVN","SIB","XMY","XVG","ZEC") -icontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value
+$Payout_Currencies = $Config.Pools.$Name.Wallets.PSObject.Properties | Where-Object {$_.Value -and @("BCH","BSV","BTC","DASH","DGB","DOGE","FTC","GRS","LTC","MONA","PEPEW","RVN","VTC","XEC","XMR","XMY","XVG","ZEC") -icontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value
 
 if (-not $Payout_Currencies) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
