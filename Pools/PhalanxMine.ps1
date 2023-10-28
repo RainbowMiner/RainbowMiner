@@ -19,7 +19,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://pool.phalanxmine.com/api/currencies" -tag $Name -cycletime 120 -timeout 20 -delay 500
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://pool.phalanxmine.com/api/currencies" -tag $Name -cycletime 120 -timeout 20 -delay 500 -retry 3
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
