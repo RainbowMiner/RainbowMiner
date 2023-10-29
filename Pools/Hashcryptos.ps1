@@ -13,8 +13,6 @@ param(
     [String]$StatAverageStable = "Week"
 )
 
-$AllowZero = $true
-
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Request = [PSCustomObject]@{}
