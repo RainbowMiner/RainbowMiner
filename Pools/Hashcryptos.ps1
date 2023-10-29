@@ -13,6 +13,8 @@ param(
     [String]$StatAverageStable = "Week"
 )
 
+$AllowZero = $true
+
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Request = [PSCustomObject]@{}
@@ -40,9 +42,9 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{algo = "blake2s";   port = 4001; stratum = "stratum3.hashcryptos.com"}
-    [PSCustomObject]@{algo = "equihash";  port = 4003; stratum = "stratum4.hashcryptos.com"}
-    [PSCustomObject]@{algo = "equihash192";  port = 6660; stratum = "stratum4.hashcryptos.com"}
-    [PSCustomObject]@{algo = "ghostrider";  port = 9997; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "equihash";  port = 4003; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "equihash192";  port = 6660; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "ghostrider";  port = 9997; stratum = "stratum4.hashcryptos.com"; factor = 1000}
     [PSCustomObject]@{algo = "groestl";   port = 4004; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "kawpow";  port = 9985; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "keccak";    port = 4005; stratum = "stratum3.hashcryptos.com"}
@@ -60,11 +62,11 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "x11";       port = 4018; stratum = "stratum1.hashcryptos.com"}
     [PSCustomObject]@{algo = "x11gost";   port = 4016; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "x13";   port = 9980; stratum = "stratum3.hashcryptos.com"}
-    [PSCustomObject]@{algo = "yescrypt";  port = 4024; stratum = "stratum4.hashcryptos.com"}
-    [PSCustomObject]@{algo = "yescryptr16";  port = 4025; stratum = "stratum4.hashcryptos.com"}
-    [PSCustomObject]@{algo = "yescryptr32";  port = 9993; stratum = "stratum4.hashcryptos.com"}
-    [PSCustomObject]@{algo = "yespower";  port = 9986; stratum = "stratum4.hashcryptos.com"}
-    [PSCustomObject]@{algo = "yespowerr16";  port = 9987; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "yescrypt";  port = 4024; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "yescryptr16";  port = 4025; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "yescryptr32";  port = 9993; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "yespower";  port = 9986; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "yespowerr16";  port = 9987; stratum = "stratum4.hashcryptos.com"; factor = 1000}
 )
 
 #"`"$(@(([Regex]'value="(\w+)"').Matches('<select class="form-control"id="WalletCurrency"><option value="BCH">BCH BitcoinCashNode</option><option value="BSV">BSV BitcoinSV</option><option value="BTC" selected >BTC Bitcoin</option><option value="DASH">DASH Dash</option><option value="DGB">DGB Digibyte</option><option value="DOGE">DOGE Dogecoin</option><option value="FTC">FTC FeatherCoin</option><option value="GRS">GRS GroestlCoin</option><option value="LTC">LTC Litecoin</option><option value="MONA">MONA MonaCoin</option><option value="PEPEW">PEPEW PepePow</option><option value="RVN">RVN Ravencoin</option><option value="VTC">VTC Vertcoin</option><option value="XEC">XEC Ecash</option><option value="XMR">XMR Monero</option><option value="XMY">XMY Myriadcoin</option><option value="XVG">XVG Verge</option><option value="ZEC">ZEC Zcash</option></select>') | Foreach-Object {$_.Groups[1].Value}) -join '","')`""
@@ -86,16 +88,18 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
 
     $Pool_Factor = [Double]$Pool_Request.$_.mbtc_mh_factor
+    if ($Pool_Data.factor) {$Pool_Factor /= $Pool_Data.factor}
+
     if ($Pool_Factor -le 0) {
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
         return
     }
 
     if (-not $InfoOnly) {
-        $NewStat = $false
-        $Pool_DataWindow = if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$NewStat = $true;"actual_last24h"} else {$DataWindow}
+        $OldStat = $true
+        $Pool_DataWindow = if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$OldStat=$false;"actual_last24h"} else {$DataWindow}
         $Pool_Price = Get-YiiMPValue $Pool_Request.$_ -DataWindow $Pool_DataWindow -Factor $Pool_Factor -ActualDivisor 1
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -Actual24h $([double]$Pool_Request.$_.actual_last24h/1000) -Estimate24h $([double]$Pool_Request.$_.estimate_last24h) -HashRate $([Double]$Pool_Request.$_.hashrate) -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $OldStat -Actual24h $Pool_Request.$_.actual_last24h -Estimate24h $Pool_Request.$_.estimate_last24h -HashRate $Pool_Request.$_.hashrate -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
