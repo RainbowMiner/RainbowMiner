@@ -41,7 +41,7 @@ $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "blake2s";   port = 4001; stratum = "stratum3.hashcryptos.com"}
+    [PSCustomObject]@{algo = "blake2s";   port = 4001; stratum = "stratum3.hashcryptos.com"; factor = 1000}
     [PSCustomObject]@{algo = "equihash";  port = 4003; stratum = "stratum4.hashcryptos.com"; factor = 1000}
     [PSCustomObject]@{algo = "equihash192";  port = 6660; stratum = "stratum4.hashcryptos.com"; factor = 1000}
     [PSCustomObject]@{algo = "ghostrider";  port = 9997; stratum = "stratum4.hashcryptos.com"; factor = 1000}
@@ -50,7 +50,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "keccak";    port = 4005; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "lbry";  port = 9988; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "lyra2rev2"; port = 4006; stratum = "stratum3.hashcryptos.com"}
-    [PSCustomObject]@{algo = "memehash";  port = 9978; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "memehash";  port = 9978; stratum = "stratum4.hashcryptos.com"; factor = 1e-3}
     [PSCustomObject]@{algo = "myrgro";    port = 4009; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "neoscrypt"; port = 4010; stratum = "stratum1.hashcryptos.com"}
     [PSCustomObject]@{algo = "odocrypt";  port = 4029; stratum = "stratum2.hashcryptos.com"}
