@@ -9,6 +9,7 @@
     "India": ["SoutheastAsia", "HongKong", "Japan", "Asia"],
 	"Japan": ["Korea", "Taiwan", "HongKong", "Asia", "SoutheastAsia", "India"],
     "Korea": ["Japan", "Taiwan", "HongKong", "Asia", "SoutheastAsia", "India"],
+    "MiddleEast": ["SoutheastAsia", "India", "Asia"],
     "NorthernEurope": ["UK", "CentralEurope", "Germany", "US", "USEast", "Canada", "WesternAsia", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
 	"Russia": ["WesternAsia", "Asia", "CentralEurope", "SoutheastAsia"],
 	"SouthAmerica": ["USSouth", "US", "Texas", "USEast", "USCentral", "USWest", "Canada", "USNorthWest"],
