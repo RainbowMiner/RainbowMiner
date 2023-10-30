@@ -63,12 +63,12 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
     - **AMD**: [AMD Adrenalin 2022 Edition 22.3.2](https://drivers.amd.com/drivers/amd-software-adrenalin-edition-22.3.2-win10-win11-march24.exe) - if you run into trouble, try older versions from here: https://www.amd.com/de/support
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
-Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
+Finally: check, if Powershell 7 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes `C:\Program Files\PowerShell\7` has to be added manually to the PATH environment variable after installing Powershell 6. Here is a nice tutorial, on how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
 
 ### Ubuntu 22.04 AMD Pre-requisites
-AMD drivers on recent versions of Ubuntu have been flakley, and challenging to install. As of December 22 there is a nearly out of the box solution that works. Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) is going to be a popular distro choice for rigs.
+AMD drivers on recent versions of Ubuntu have been flakley, and challenging to install. As of December 22, there is a nearly out of the box solution that works. Using older, or non-LTS versions of Ubuntu is always going to present a challenge down the road in terms of staying current from a security perspective, and who wants their rig getting owned? So 22.04.01 (LTS) is going to be a popular distro choice for rigs.
 
 This has only been confirmed as working with RX 6700XT, RX 5700XT and RX5700.
 
