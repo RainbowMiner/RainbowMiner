@@ -173,9 +173,9 @@ Other distros will have settings in different places (hugepages) and the softwar
 
 ###### Huge Pages
 
-By default, linux sets memory-chunk size fairly small. This is to save RAM usage for low-requirement software (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is call 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)
+By default, linux sets memory-chunk size fairly small. This is to save RAM usage for low-requirement software (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is call 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitute 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)
 
-On newer Ubuntu distros (Ubuntu 18.04 - Bionic Beaver and up), the value can be added to `/etc/sysctl.conf` and you need to be root do it (ie: `sudo emacs -wm /etc/sysctl.conf` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.) The system will need to be rebooted to load the new kernel parameters or you can run `sudo sysctl -p` to load any new or changed parameters at runtime. 
+On newer Ubuntu distros (Ubuntu 18.04 - Bionic Beaver and up), the value can be added to `/etc/sysctl.conf` and you need to be root do it (ie: `sudo emacs -wm /etc/sysctl.conf` (substitute 'emacs -wm' with your editor of choice - nano, vi, joe, etc.) The system will need to be rebooted to load the new kernel parameters or you can run `sudo sysctl -p` to load any new or changed parameters at runtime. 
 
 On my system (@ParalegicRacehorse), xmr-stak will not run with hugepages<1024. Setting it to 2048 did gain me anything more than 1024, but experience in the verium/vericoin community have shown hugepages as large as 4096 can be beneficial. YMMV. Tuning is left to the rig operator, but I recommend keeping it as low as you can get away with so your other programs can run lean.
 
@@ -223,7 +223,7 @@ Run the following to install it "headless" (this is necessary for Ubuntu Desktop
 
 Reboot and you should be good to go! 
 
-**Important:** Some algorithms, on some miner-software, will not hash with a kernel version greater than 4.2. You may have to downgrade your OS to Ubuntu 16.04 since more recent editions will not run kernel numbers lower than 4.8. This has everything to do with a mismatch between OpenCL versions provided by recent drivers and those supported by the mining software. Yes, that means you will be running older drivers. If you want the newer drivers, with newer versions of OpenCL to work, feel free to provide assistance to the affected mining softwares by fixing their code and sending pull-requests.
+**Important:** Some algorithms, on some miner-software, will not hash with a kernel version greater than 4.2. You may have to downgrade your OS to Ubuntu 16.04 since more recent editions will not run kernel numbers lower than 4.8. This has everything to do with a mismatch between OpenCL versions provided by recent drivers and those supported by the mining software. Yes, that means you will be running older drivers. If you want the newer drivers, with newer versions of OpenCL to work, feel free to provide assistance to the affected mining software by fixing their code and sending pull-requests.
 
 ## INSTALLATION
 
@@ -579,11 +579,11 @@ RainbowMiner uses a built-in hash table to convert different algorithm names to 
 
 ## Special notes for Equihash
 
-The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9). For BEAM and ZEL a new variant EquihashR has been introduced. These add an extra paramter (r).
+The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9). For BEAM and ZEL a new variant EquihashR has been introduced. These add an extra parameter (r).
 
 The n, k and r values create enormous differences in the minimum memory requirement, and create enormous differences in how the actual mining software is coded in order to do the mining.
 
-RainbowMiner uses the following nameing convention:
+RainbowMiner uses the following naming convention:
 - Equihash16x5 = Equihash (96, 5)
 - Equihash20x9 = Equihash (200, 9)
 - Equihash21x9 = Equihash (210, 9)
@@ -612,7 +612,7 @@ There are two ways to adjust overclocking values in RainbowMiner:
   - to enable, set "**EnableOCProfiles**" to "**1**" ([C]onfiguration->[C]ommon)
   - custom profiles have freely defined names (it differs from option 1!)
   - **important:** set a default profile for each GPU group ([C]onfiguration->[D]evices). Use the name of the profiles (look into ocprofiles.config.txt, if in doubt)
-  - independant of MSI Afterburner
+  - independent of MSI Afterburner
 
 If you do not want to use the overclocking features in RainbowMiner: set both, "**EnableOCProfiles**" and "**MSIAprofile**", to "**0**" ([C]onfiguration->[C]ommon)
 
@@ -748,7 +748,7 @@ Change this to control the setup behavior.
 
 **Settings of the `"Autostart"` section explained:**
 
-- `"Enable"` setting this to "1" will force RainbowMiner to skip the import questionaire during start. It will import all data and begin mining at once.
+- `"Enable"` setting this to "1" will force RainbowMiner to skip the import questionnaire during start. It will import all data and begin mining at once.
 - `"ConfigName"` define which of the config file's should be imported. A well approved combination would be `"Config,Coins,Pools"`. `"All"` will import all possible modules.
 - `"DeviceName"` define which devices RainbowMiner should use. Possible values are CPU, GPU, NVIDIA, AMD (and even GPU#00, GPU#01, ..). Leave empty to start without devices.
 - `"WorkerName"` define the workername of the new rig. If left empty, the rig's machinename will be used as workername, automatically.
@@ -804,8 +804,8 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
 - **APIPort** = enter a free web-interface port localhost:<port> [default=4000]
 - **APIThreads** = Enter number of possible, parallel API threads (0=automatic, see notes) [default=0]
 - **APIauth** = set to "1" for username/password auth on localhost [default=0]
-- **APIuser** = enter an username for localhost accessability
-- **APIpassword** = enter a password for localhost accessability
+- **APIuser** = enter an username for localhost accessibility
+- **APIpassword** = enter a password for localhost accessibility
 - **APIlockConfig** = set to "1" to lock config and disable save via API/localhost [default=0]
 - **APImaxLoginAttemps** = Maximum number of failed login attempts, until IP gets blocked (0=turn off) [default=3]
 - **APIblockLoginAttemptsTime** = Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds) [default=30m]
@@ -908,14 +908,14 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 - **PoolStatAverage** = set global default for all pool moving average live price trend [default=Minute_10]
 - **PoolStatAverageStable** = set global default for all pool moving average stable price trend [default=Week]
 - **EnableErrorRatio** = Enable yiimp pool price auto-correction [default=1]
-- **MaxErrorRatio** = Maxium error ratio for yiimp pool price auto-correction [default=1.5]
+- **MaxErrorRatio** = Maximum error ratio for yiimp pool price auto-correction [default=1.5]
 
 #### Select mining mode
 
 - **MiningMode** = possible values are "legacy", "device" and "combo", see explanation below
   - "legacy": one miner will handle all devices of one vendor together. Only NVIDIA, INTEL, AMD, CPU are possible to select.
   - "device" (default): each device group (e.g. GTX1070, RX570, CPU..) will get the most profitable miner to work on the different algorithm. If you have three different device groups, there will be three miners launched.
-  - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperately: if the combo is less efficient than single miners, it will be deactivated automatically.
+  - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored separately: if the combo is less efficient than single miners, it will be deactivated automatically.
 - **EnableResetVega** = set to 1 to always reset Vega Gpus before mining
 
 #### Setup network operations
@@ -953,7 +953,7 @@ For Server (Runmode=server) setup:
 - **OctopusTariffCode** = if you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current trariff code. It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
 - **PowerPriceCurrency** = currency of your PowerPrice [default=USD]
 - **FixedCostPerDay** = cumulative fixed costs per day (in power price currency) [default=0]
-- **UsePowerPrice** = set to (1), if electricity cost and/or fixed cost should be substracted from profits [default=0]
+- **UsePowerPrice** = set to (1), if electricity cost and/or fixed cost should be subtracted from profits [default=0]
 - **CheckProfitability** = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
 - **ProfitabilityLevel** = profitability level in BTC in case CheckProfitability is set to 1 (e.g. -0.00002) [default=0]
 - **EnableMiningHeatControl** =  set to (1), if the mining heat control should be enabled [default=0]
@@ -975,7 +975,7 @@ For Server (Runmode=server) setup:
 
 - **Interval** = timing interval in seconds of RainbowMiner [default=60]
 - **BenchmarkInterval** = timing interval in seconds, used for benchmarks [default=60]
-- **EnableFastlaneBenchmark** = set to 1 if you want to skip all benchmarks and dowload (very inaccurate) hashrate and powerdraw values from rbminer.net instead [default=0]
+- **EnableFastlaneBenchmark** = set to 1 if you want to skip all benchmarks and download (very inaccurate) hashrate and powerdraw values from rbminer.net instead [default=0]
 - **FastlaneBenchmarkTypeCPU** = if EnableFastlaneBenchmark="1": choose the value-set for CPU miners (avg, min or max) [default=avg]
 - **FastlaneBenchmarkTypeGPU** = if EnableFastlaneBenchmark="1": choose the value-set for GPU miners (avg, min or max) [default=avg]
 - **EnableFastlaneBenchmarkMissing** = if EnableFastlaneBenchmark="1": set to 1 if you want to benchmark all device/miners/algos not found on rbminer.net [default=1]
@@ -992,7 +992,7 @@ For Server (Runmode=server) setup:
 - **PoolSwitchingHysteresis** = prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, can be overwritten per pool) [default=3]
 - **MinerSwitchingHysteresis** = prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable) [default=3]
 - **MaxRejectedShareRatio** = set max. allowed ratio "bad shares/found shares" until a miner gets disabled [default=0.3]
-- **EnableFastSwitching** = set to 1 to remove switching prevention completly. Expect a lot of switching [default=0]
+- **EnableFastSwitching** = set to 1 to remove switching prevention completely. Expect a lot of switching [default=0]
 - **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=20]
 - **HashrateWeightStrength** = adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square) [default=50]
 - **PoolAccuracyWeight** = adjust weight of pool accuracy on the profit comparison in % (0..100, 0=disable) [default=15]
@@ -1019,7 +1019,7 @@ For Server (Runmode=server) setup:
 - **MiningPriorityGPU** = process priority for GPU miners (-2..2) [default=-1]
 - **AutoexecPriority** = process priority for commands started via autoexec.txt (-2..2) [default=0]
 - **EthPillEnable** = set to "revA" or "revB" (read [Wiki](https://github.com/OhGodACompany/OhGodAnETHlargementPill/wiki) for more information on revA/revB), or "disable" to stop using the EthPill for Ethereum mining [default=disable]
-- **RemoteAPI** = set to 1 to enable accessability of API within your network [default=0]
+- **RemoteAPI** = set to 1 to enable accessibility of API within your network [default=0]
 - **Donate** = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
 - **EnableAutoMinerPorts** = set to 1, if miners get into conflict with the ports in use
 - **StaticCPUMinerPort** = enter a static API port number for all CPU miners (0=use default ports) [default=0]
@@ -1095,7 +1095,7 @@ For non-autoexchange pools, you may define multiple wallets. The wallets define,
         "Penalty": "0"
     }
 `
-Alternatively you may instruct RainbowMiner to automatically use every currency defined in coins.config.txt (which is enabled by adding a wallet address and setting parameter "EnableAutoPool" to "1") for a certain pool. To do so, set paremeter "EnableAutoCoin" to "1".
+Alternatively you may instruct RainbowMiner to automatically use every currency defined in coins.config.txt (which is enabled by adding a wallet address and setting parameter "EnableAutoPool" to "1") for a certain pool. To do so, set parameter "EnableAutoCoin" to "1".
 Example:
 
     "Icemining": {
@@ -1135,7 +1135,7 @@ In example 2, when mining for some MBC on ZergPoolCoins, the difficulty will be 
 
 #### Change a pool's penalty
     
-If you feel like a pool tends to exagerate it's results, you can set a penalty in % through the field "Penalty":
+If you feel like a pool tends to exaggerate it's results, you can set a penalty in % through the field "Penalty":
 
     "Ravenminer": {
         "RVN": "<YOUR_RAVENCOIN_ADDRESS>",
@@ -1368,7 +1368,7 @@ in config.txt, add the Flexpool to the "PoolName" list:
 - **Enable** = set to "1", to enable your new entry [default=0]
 - **Name** = name of the pool, every unique name will automatically get an own entry in pools.config.txt
 - **CoinSymbol** = coin, that will be mined
-- **Currency** = coin, that will be payed, determines the wallet address. Each currency will have an entry in pools.config.txt
+- **Currency** = coin, that will be paid, determines the wallet address. Each currency will have an entry in pools.config.txt
 - **Host** = stratum server address, without `stratum+tcp://`, just my.server.name
 - **Port** = stratum server port
 
@@ -1478,8 +1478,8 @@ Example:
 - "CcminerAlexis78-GTX1070": miner CcminerAlexis78 in non-LegacyMining mode on selected GPU devices with model name GTX1070, Algorithms c11 and keccak
 - "CcminerAlexis78-GTX1070": miner will use custom overclocking profile "Profile1"
 - "Sgminer-AMD": miner Sgminer in LegacyMining mode, mine on all selected amd GPU, Algorithms c11 and keccak
-- "MainAlgorithm": alogrithm, for which the extra configuration will be used
-- "SecondaryAlgorithm": secondary alogrithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
+- "MainAlgorithm": algorithm, for which the extra configuration will be used
+- "SecondaryAlgorithm": secondary algorithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
 - "Params": these are the extra parameters, that will be added to the miner call
 - "MSIAprofile": desired MSI Afterburner profile
 
@@ -1491,7 +1491,7 @@ To *remove* a certain parameter from the RainbowMiner's miner commandline, use t
 
 - find out, which parameters are being used (e.g. `--cpu-affinity` for affinity and `-t` for threads) by looking at the command line, RainbowMiner is using
 - edit miners.config.txt and find the miner
-- now add the paramters, that you want to have removed to "Params", each followed by a blank and #
+- now add the parameters, that you want to have removed to "Params", each followed by a blank and #
 
 e.g.
 
@@ -1586,7 +1586,7 @@ Example:
 This configuration would:
 - **Penalty**: reduce all X17 pool prices by a "Penalty" of 10%
 - **MinHashrate**: set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
-- **MinWorkers**: set the mimimum pool workers mining X17 to 300 for a pool to be selected
+- **MinWorkers**: set the minimum pool workers mining X17 to 300 for a pool to be selected
 - **MaxTimeToFind**: set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 - **MSIAprofile**: set the MSI Afterburner overclocking profile to 4 (if MSIA is used)
 - **OCprofile**: set the overclocking profile to "Profile4" (if the RainbowMiner oc is used)
@@ -1619,9 +1619,9 @@ Example:
 This configuration would:
 - reduce all RVN pool coin prices by a "Penalty" of 10%
 - set a minimum RVN pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
-- set the mimimum pool workers mining RVN to 300 for a pool to be selected
+- set the minimum pool workers mining RVN to 300 for a pool to be selected
 - set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
-- define a global RVN wallet with value <YOUR_RAVENCOIN_ADDRESS>. Every occurence of "$RVN" in pools.config.txt will be automatically substituted with this wallet.
+- define a global RVN wallet with value <YOUR_RAVENCOIN_ADDRESS>. Every occurrence of "$RVN" in pools.config.txt will be automatically substituted with this wallet.
 - each pool, that has it's parameter "EnableAutoCoin" set to "1" will use this RVN wallet
 - if a RVN block has been found within the timespan of 5 minutes (PostBlockMining) at a pool that has "EnablePostBlockMining" set to "1", RainbowMiner will force mining RVN on this pool
 - switching to postblock mining only, if the post block miner's profit is at least 80% of the best miner's profit (field "MinProfitPercent")
@@ -1649,7 +1649,7 @@ This file contains all custom overclocking profiles. These profiles can be assig
 
 To make it easy to handle names, profiles may be assigned to devices. Just add the device model (see file Config\devices.config.txt for all model names), a specific device's name ("GPU#00","GPU#01",..) or PCI bus id ("00:02","00:03",..) with "-" to the profile name. With this feature, it is very easy to use different overclocking rules for devices under one name.
 
-Example (this is the setup for one of my GTX1070 rigs, basicly substituting the MSI Afterburner profiles I recommended above)
+Example (this is the setup for one of my GTX1070 rigs, basically substituting the MSI Afterburner profiles I recommended above)
 
     {
       "Profile1-GTX1070": {
