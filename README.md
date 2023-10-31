@@ -159,7 +159,7 @@ Happy AMD mining. Nothing here stops you also installing the Nvidia drivers, it'
 
     sudo apt install nvidia-driver-520 nvidia-dkms-520 nvidia-utils-520 nvidia-settings xserver-xorg-video-nvidia-520  libnvidia-ml1
 
-but mixed rigs can present there own challenges further down the road.
+But mixed rigs can present there own challenges further down the road.
 
 You may also want to tweak huge pages as noted in the Ubuntu 18.x notes below
 
