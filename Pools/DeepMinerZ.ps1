@@ -31,7 +31,7 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("uk","us","sg")
+$Pool_Regions = @("uk","us","us2","sg","uae","kaunda","xpone","rondy")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Host            = "pool.{region_with_dot}deepminerz.com"
