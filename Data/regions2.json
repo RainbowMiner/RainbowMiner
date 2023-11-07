@@ -3,6 +3,7 @@
     "Australia": ["SoutheastAsia", "US", "HongKong", "Japan", "India"],
 	"Canada": ["US", "USEast", "USCentral", "USNorthWest", "USWest"],
 	"CentralEurope": ["Germany", "France", "UK", "NorthernEurope", "US", "USEast", "Canada", "WesternAsia", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
+    "EasternEurope": ["CentralEurope","Germany", "France", "UK", "NorthernEurope", "US", "USEast", "Canada", "WesternAsia", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
     "France": ["CentralEurope", "Germany", "UK", "NorthernEurope", "US", "USEast", "Canada", "WesternAsia", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
     "Germany": ["CentralEurope", "France", "UK", "NorthernEurope", "US", "USEast", "Canada", "WesternAsia", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
     "HongKong": ["SoutheastAsia", "Asia", "India", "Japan"],
