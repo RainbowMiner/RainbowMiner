@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.9.1"
+$Version = "1.9.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.1-rigel/rigel-1.9.1-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.2-rigel/rigel-1.9.2-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.1-rigel/rigel-1.9.1-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.2-rigel/rigel-1.9.2-win.zip"
             Cuda = "8.0"
         }
     )
@@ -156,6 +156,8 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                 elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "NEOX") {$MainAlgorithm_0 = "neoxa"}
                 elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "XNA")  {$MainAlgorithm_0 = "neurai"}
                 elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -ne "RVN")  {$MainAlgorithm_0 = "neurai"}
+            } elseif ($MainAlgorithm_0 -eq "ethash") {
+                if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "XPB") {$MainAlgorithm_0 = "powblocks"}
             }
 
             $HasEthproxy = $MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy
