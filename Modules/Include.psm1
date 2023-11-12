@@ -6706,18 +6706,29 @@ param(
                 }
             }
 
-            if ($WebProxy) {
-                try {
-                    $httpHandler = [System.Net.Http.SocketsHttpHandler]::New()
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    $httpHandler = [System.Net.Http.HttpClientHandler]::New()
-                }
-                $httpHandler.Proxy = $WebProxy
-                $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new($httpHandler)
-            } else {
-                $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new()
+            try {
+                $httpHandler = [System.Net.Http.SocketsHttpHandler]::New()
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $httpHandler = [System.Net.Http.HttpClientHandler]::New()
             }
+
+            if (Test-IsCore) {
+                $httpHandler.ServerCertificateCustomValidationCallback = {
+                            param(
+                                [Net.Http.HttpRequestMessage]$HttpRequestMessage,
+                                [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
+                                [Security.Cryptography.X509Certificates.X509Chain]$chain,
+                                [Net.Security.SslPolicyErrors]$sslPolicyErrors
+                            )
+                            $true
+                }
+            }
+
+            if ($WebProxy) {
+                $httpHandler.Proxy = $WebProxy
+            }
+            $Global:GlobalHttpClient = [System.Net.Http.HttpClient]::new($httpHandler)
 
             $Global:GlobalHttpClient.Timeout = New-TimeSpan -Seconds 100
             if ($Session.LogLevel -eq "Debug") {Write-Log "New HttpClient created"}
