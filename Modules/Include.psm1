@@ -6714,14 +6714,18 @@ param(
             }
 
             if (Test-IsCore) {
-                $httpHandler.ServerCertificateCustomValidationCallback = {
-                            param(
-                                [Net.Http.HttpRequestMessage]$HttpRequestMessage,
-                                [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
-                                [Security.Cryptography.X509Certificates.X509Chain]$chain,
-                                [Net.Security.SslPolicyErrors]$sslPolicyErrors
-                            )
-                            $true
+                try {
+                    $httpHandler.ServerCertificateCustomValidationCallback = {
+                                param(
+                                    [Net.Http.HttpRequestMessage]$HttpRequestMessage,
+                                    [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
+                                    [Security.Cryptography.X509Certificates.X509Chain]$chain,
+                                    [Net.Security.SslPolicyErrors]$sslPolicyErrors
+                                )
+                                $true
+                    }
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
                 }
             }
 
