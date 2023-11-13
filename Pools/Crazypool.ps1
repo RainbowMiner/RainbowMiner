@@ -21,13 +21,16 @@ $Pool_Regions = @("us","br","eu","asia","hk","au")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "clo.crazypool.org";  symbol = "CLO";  port = @(4444,8888); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "cau.crazypool.org";  symbol = "CAU";  port = @(3113,3223); fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "etc.crazypool.org";  symbol = "ETC";  port = @(7000,7777); fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "ethf.crazypool.org"; symbol = "ETHF"; port = @(8008,9009); fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "pom.crazypool.org";  symbol = "POM";  port = @(7070);      fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "octa.crazypool.org"; symbol = "OCTA"; port = @(5225,5885); fee = 1; region = $Pool_Regions}
+    #[PSCustomObject]@{rpc = "pac.crazypool.org";  symbol = "PAC";  port = @();      fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "rth.crazypool.org";  symbol = "RTH";  port = @(3553);      fee = 1; region = $Pool_Regions}
     [PSCustomObject]@{rpc = "ubq.crazypool.org";  symbol = "UBQ";  port = @(3335);      fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "zil.crazypool.org";  symbol = "ZIL";  port = @(5005);      fee = 10; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "xpb.crazypool.org";  symbol = "XPB";  port = @(4114,4224); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "zil.crazypool.org";  symbol = "ZIL";  port = @(5005,5995); fee = 1; region = $Pool_Regions}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
