@@ -26,7 +26,7 @@ $Payout_Currencies | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count 
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
             [PSCustomObject]@{
-                Caption     = "$($Name) ($($Request.currency))"
+                Caption     = "$($Name) ($($Request.symbol))"
 				BaseName    = $Name
                 Currency    = $Request.symbol
                 Balance     = [Decimal]$Request.balance
