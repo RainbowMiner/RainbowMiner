@@ -86,9 +86,10 @@ if ($Pool_User -or $InfoOnly) {
                 PoolFee       = $Pool_PoolFee
                 PaysLive      = $false
                 DataWindow    = $DataWindow
-                Workers       = $Pool_Request.pool.miners
-                Hashrate      = $Stat.Hashrate_Live
-                TSL           = $Pool_TSL
+                Workers       = $null
+                Hashrate      = $null
+                TSL           = $null
+                BLK           = $null
                 Difficulty    = $Stat.Diff_Average
                 SoloMining    = $true
                 WTM           = $true
