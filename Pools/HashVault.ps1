@@ -25,11 +25,10 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "MSR";   port = 3333; fee = 0.9; rpc = "masari"} #pool.masari.hashvault.pro:3333
     [PSCustomObject]@{symbol = "SUMO";  port = 3333; fee = 0.9; rpc = "sumokoin"} #pool.sumo.hashvault.pro:3333
     [PSCustomObject]@{symbol = "TUBE";  port = 3333; fee = 0.9; rpc = "bittubecash"} #pool.bittube.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "TRTL";  port = 3333; fee = 0.9; rpc = "turtle"} #pool.turtle.hashvault.pro:3333
-    #[PSCustomObject]@{symbol = "WOW";   port = 3333; fee = 0.9; rpc = "wownero"} #pool.wownero.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XHV";   port = 3333; fee = 0.9; rpc = "haven"} #pool.haven.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XMR";   port = 3333; fee = 0.9; rpc = "monero"} #pool.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XWP";   port = 3333; fee = 0.9; rpc = "swap"} #pool.swap.hashvault.pro:3333
+    [PSCustomObject]@{symbol = "ZEPH";  port = 3333; fee = 0.9; rpc = "zephyr"} #pool.zephyr.hashvault.pro:3333
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
