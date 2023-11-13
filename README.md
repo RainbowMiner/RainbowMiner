@@ -33,10 +33,10 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 - **Built-in automatic update**
 - **Mine with any device, arbitrarily - Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
-- **Bind/exclude devices to and from specific algorithm and miners**
+- **Bind/exclude devices to and from specific algorithms and miners**
 - **Define algorithms and/or to mine, per pool**
 - **Unlimited custom overclocking profiles per miner/algorithm**
-- **Easy overclocking of GPUs (memory, core, power limit and voltage)**
+- **Easy overclocking of GPUs (memory, core, power limit, and voltage)**
 - **Switch MSI Afterburner profiles per miner/algorithm**
 - **Includes [OhGodAnETHlargementPill](https://bitcointalk.org/index.php?topic=3370685.0)**
 - **Very low CPU usage to increase CPU mining profit**
