@@ -112,7 +112,7 @@ $Pool_Request | Where-Object {$_.id -match "pplns$" -and ($Wallets."$($_.coin)" 
                     Host          = "$($Pool_Region)$($Pool_Host)"
                     Port          = $Pool_Port
                     User          = "$Pool_User.{workername:$Worker}"
-                    Pass          = "{diff:d=`$difficulty}"
+                    Pass          = "x{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_TLS
                     Updated       = $Stat.Updated
