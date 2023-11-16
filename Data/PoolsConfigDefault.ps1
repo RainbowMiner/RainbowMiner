@@ -92,28 +92,10 @@
         "FlyPool" = [PSCustomObject]@{
             Currencies=@("BEAM","YEC")
         }
-        "GosCx" = [PSCustomObject]@{
-            Currencies=@("GIN")
-            Yiimp=$true
-        }
-        "GosCxParty" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
-            SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
-            Currencies=@("GIN")
-            Yiimp=$true
-        }
-        "GosCxSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1"}
-            Currencies=@("GIN")
-            Yiimp=$true
-        }
         "Grinmint" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your Grinmint password"}
             Currencies=@("GRIN")
-        }
-        "HashCity" = [PSCustomObject]@{
-            Currencies=@("XMR")
         }
         "Hashcryptos" = [PSCustomObject]@{
             Currencies=@("BTC")
@@ -122,11 +104,6 @@
         }
         "Hashpool" = [PSCustomObject]@{
             Currencies=@("HNS","CKB")
-        }
-        "Hashrefinery" = [PSCustomObject]@{
-            Currencies=@("BTC")
-            Autoexchange=$true
-            Yiimp=$true
         }
         "HashVault" = [PSCustomObject]@{
             Currencies=@("XMR")
@@ -143,9 +120,6 @@
         "Icemining" = [PSCustomObject]@{
             Currencies=@("NIM")
         }
-        "KuCoin" = [PSCustomObject]@{
-            Currencies=@()
-        }
         "LeafPool" = [PSCustomObject]@{
             Currencies=@("BEAM")
         }
@@ -161,12 +135,6 @@
             Fields=[PSCustomObject]@{User="";API_Key=""}
             SetupFields=[PSCustomObject]@{User="Enter your Luxor username to enable all coins (or leavy it empty and set your username as wallet address in pools.config.txt)";API_Key="Enter your Luxor API key (Profile Settings > Api Keys > Generate New Key)"}
             Currencies=@("ARRR","DASH","ZEC","ZEN")
-        }
-        "Minafacil" = [PSCustomObject]@{
-            Currencies=@("RTM")
-        }
-        "MinafacilSolo" = [PSCustomObject]@{
-            Currencies=@("RTM")
         }
         "Minerpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="xyz"}
@@ -359,24 +327,6 @@
             Autoexchange=$true
             BalancesKeepAlive="180d"
         }
-        "NLPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=16}
-            Currencies=@("BTC")
-            Autoexchange=$true
-            Yiimp=$true
-            BalancesKeepAlive="30d"
-        }
-        "NLPoolCoins" = [PSCustomObject]@{
-            Currencies=@("BTC")
-            Yiimp=$true
-            BalancesKeepAlive="30d"
-        }
-        "PhalanxMine" = [PSCustomObject]@{
-            Currencies=@("DGC","MZC","ZUR")
-        }
-        "PhalanxMineSolo" = [PSCustomObject]@{
-            Currencies=@("DGC","MZC","ZUR")
-        }
         "Pmpmining" = [PSCustomObject]@{
             Currencies=@("NOVO","RXD")
         }
@@ -424,9 +374,6 @@
         "Ravenminer" = [PSCustomObject]@{
             Currencies=@("RVN")
         }
-        "Ravepool" = [PSCustomObject]@{
-            Currencies=@("GRIMM")
-        }
         "RPlant" = [PSCustomObject]@{
             Currencies=@("BTX","NEXA","VKAX")
         }
@@ -447,9 +394,6 @@
         }
         "SuprNova" = [PSCustomObject]@{
             Currencies=@("BTG")
-        }
-        "Tecracoin" = [PSCustomObject]@{
-            Currencies=@("TCR")
         }
         "unMineable" = [PSCustomObject]@{
             Currencies=@("BTC","BTT","ETC","TRX","UNI","XTZ","YFI")
