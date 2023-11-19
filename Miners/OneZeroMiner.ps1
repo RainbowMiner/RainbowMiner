@@ -10,19 +10,19 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.5-onezerominer/onezerominer-linux-1.2.5.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.6-onezerominer/onezerominer-linux-1.2.6.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.5-onezerominer/onezerominer-win64-1.2.5.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.6-onezerominer/onezerominer-win64-1.2.6.zip"
 }
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.2.5"
+$Version = "1.2.6"
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5} #DynexSolve/DNX
+    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; IncludePoolName = "neuropool|deepminerz|minenow"} #DynexSolve/DNX
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -53,7 +53,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Host -match $_.IncludePoolName)) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -66,7 +66,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --api-port `$mport$(if ($Pools.$Algorithm_Norm.Mallob) {" --mallob-endpoint $($Pools.$Algorithm_Norm.Mallob)"}) $($_.Params)"
+					Arguments      = "-d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) --api-port `$mport $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "OneZeroMiner"
 					Port           = $Miner_Port
