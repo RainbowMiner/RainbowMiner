@@ -15,10 +15,10 @@ $Version = "2.3.9"
 $Cuda = "11.7"
 
 if ($IsLinux) {
-    $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
+    $Path = ".\Bin\ANY-SRBMinerMulti239\SRBMiner-MULTI"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.9-srbminermulti/SRBMiner-Multi-2-3-9-Linux.tar.xz"
 } else {
-    $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
+    $Path = ".\Bin\ANY-SRBMinerMulti239\SRBMiner-MULTI.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.9-srbminermulti/SRBMiner-Multi-2-3-9-win64.zip"
 }
 
