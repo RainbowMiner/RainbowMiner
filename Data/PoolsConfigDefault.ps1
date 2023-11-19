@@ -92,6 +92,16 @@
         "FlyPool" = [PSCustomObject]@{
             Currencies=@("BEAM","YEC")
         }
+        "Gteh" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Account_Id="";API_Key="";DefaultMiningCoinSymbol="";EnableMiningSwitch="1"}
+            SetupFields=[PSCustomObject]@{
+                            Account_Id="Enter your Gteh Account Id (add a worker on gteh.org with your rig's workername before start mining!)"
+                            API_Key="Enter your Gteh API key (Settings, scroll down a bit)"
+                            DefaultMiningCoinSymbol="Please enter the coin symbol, that you have set as default mining in the settings"
+                            EnableMiningSwitch="If set to 1, the module will change mining to the most profitable coin, as defined in CoinSymbol automatically"
+            }
+            Currencies=@()
+        }
         "Grinmint" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your Grinmint password"}
