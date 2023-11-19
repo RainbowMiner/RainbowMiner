@@ -126,7 +126,7 @@
 350	SrbMinerMulti094
 351	EwbfZcash
 352	DynexSolve
-353	
+353	SrbminerMulti239
 354	Gminer258
 355	ProgPOWSeroNvidia
 356	6Miner
