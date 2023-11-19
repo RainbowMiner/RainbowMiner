@@ -93,11 +93,18 @@
             Currencies=@("BEAM","YEC")
         }
         "Gteh" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Account_Id="";API_Key="";DefaultMiningCoinSymbol="";EnableMiningSwitch="1"}
+            Fields=[PSCustomObject]@{
+                            Account_Id=""
+                            API_Key=""
+                            UseWorkerName=""
+                            ExcludeWorkerName=""
+                            EnableMiningSwitch="1"
+            }
             SetupFields=[PSCustomObject]@{
                             Account_Id="Enter your Gteh Account Id (add a worker on gteh.org with your rig's workername before start mining!)"
                             API_Key="Enter your Gteh API key (Settings, scroll down a bit)"
-                            DefaultMiningCoinSymbol="Please enter the coin symbol, that you have set as default mining in the settings"
+                            UseWorkerName="Enter workernames to explicitly use (leave empty for all=default)"
+                            ExcludeWorkerName="Enter workernames to explicitly exclude (leave empty for none=default)"
                             EnableMiningSwitch="If set to 1, the module will change mining to the most profitable coin, as defined in CoinSymbol automatically"
             }
             Currencies=@()
