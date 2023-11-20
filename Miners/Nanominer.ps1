@@ -74,7 +74,10 @@ if ($InfoOnly) {
     return
 }
 
-if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
+    $Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name
+    $Cuda11 = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "11.0"
+}
 
 foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
@@ -103,7 +106,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 $MinMemGB = $_.MinMemGB
             }
 
-            $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (($MainAlgorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and ($Miner_Vendor -ne "NVIDIA" -or $Cuda -match "^11" -or $_.Model -notmatch "^RTX30") -and (Test-VRAM $_ $MinMemGb))})
+            $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (($MainAlgorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and ($Miner_Vendor -ne "NVIDIA" -or $Cuda11 -or $_.Model -notmatch "^RTX[345]0") -and (Test-VRAM $_ $MinMemGb))})
 
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")} else {@($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")}
             $All_SecondAlgorithms = if ($SecondAlgorithm_Norm_0) {if ($Miner_Vendor -eq "CPU") {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)")} else {@($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")}} else {$null}
