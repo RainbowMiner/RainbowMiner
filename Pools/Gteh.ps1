@@ -37,7 +37,7 @@ if (-not $Account_Id -and -not $InfoOnly) {
 if (-not $ok) {return}
 
 $Pool_Fee = 1.0
-$Pool_EthProxy = "stratum"
+$Pool_EthProxy = "ethstratumnh"
 
 $Coins_Request = [PSCustomObject]@{}
 
