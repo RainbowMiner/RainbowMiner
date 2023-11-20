@@ -25,14 +25,14 @@ if (-not $Pool_Request.result) {
     return
 }
 
-$Payout_Request.data | Where-Object {$Currency = $_.coin;(-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency)} | Foreach-Object {
+$Pool_Request.data | Where-Object {$Currency = $_.coin;(-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency)} | Foreach-Object {
     [PSCustomObject]@{
         Caption     = "$($Name) ($($Currency))"
 		BaseName    = $Name
         Currency    = $Currency
-        Balance     = [Decimal]$_.balance
-        Pending     = [Decimal]$_.balanceImmature
-        Total       = [Decimal]$_.balance + [Decimal]$_.balanceImmature
+        Balance     = [Decimal]$_.balance / 1e9
+        Pending     = [Decimal]$_.balanceImmature / 1e9
+        Total       = ([Decimal]$_.balance + [Decimal]$_.balanceImmature) / 1e9
         LastUpdated = (Get-Date).ToUniversalTime()
     }
 }
