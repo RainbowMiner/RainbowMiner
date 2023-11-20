@@ -90,34 +90,38 @@ if (-not $InfoOnly) {
 
     if (-not $Workers.Count) {return}
 
-    $Workers_Request = [PSCustomObject]@{}
-
-    try {
-        $Workers_Request = Invoke-RestMethodAsync "https://api.gteh.org/?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Pool Workers API ($Name) has failed. "
-        return
-    }
-
-
-    if (-not $Workers_Request.result) {
-        Write-Log -Level Warn "Pool Workers API ($Name) returned nothing. "
-        return
-    }
-
     $AllCoins_Request   = $Coins_Request.data | Where-Object {$_.active -and (-not $CoinSymbol -or $CoinSymbol -contains $_.coin) -and (-not $ExcludeCoinSymbol -or $ExcludeCoinSymbol -notcontains $_.coin)} | Sort-Object -Descending {$_.profit.revenue_usd}
 
     if ($AllCoins_Request) {
 
+        $Workers_Request = [PSCustomObject]@{}
+
+        try {
+            $Workers_Request = Invoke-RestMethodAsync "https://api.gteh.org/?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Pool Workers API ($Name) has failed. "
+            return
+        }
+
+
+        if (-not $Workers_Request.result) {
+            Write-Log -Level Warn "Pool Workers API ($Name) returned nothing. "
+            return
+        }
+
         $Worker_Count = 0
+
+        $EnableMiningSwitch_bool = Get-Yes $EnableMiningSwitch
 
         foreach($Worker1 in $Workers) {
 
             $Current_Worker = $Workers_Request.data | Where-Object {$_.name -eq $Worker1} | Select-Object -First 1
 
             if ($Current_Worker) {
+
+                $Pool_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
                 $Pool_Coin = Get-Coin $Current_Worker.coin
 
@@ -129,7 +133,7 @@ if (-not $InfoOnly) {
 
                 $BestCoin_Request = $AllCoins_Request | Select-Object -First 1
 
-                if (-not $Current_Coin -or ($EnableMiningSwitch -and $BestCoin_Request.coin -ne $Pool_CoinSymbol)) {
+                if (-not $Current_Coin -or ($EnableMiningSwitch_bool -and $BestCoin_Request.coin -ne $Pool_CoinSymbol)) {
                     $BestCoin_Mining = $Mining_Request.data | Where-Object {$_.coin -eq $BestCoin_Request.coin -and $_.mining -match "PPLN"} | Select-Object -First 1
                     $Switch_Request = [PSCustomObject]@{}
                     try {
@@ -155,8 +159,6 @@ if (-not $InfoOnly) {
                 }
 
                 if (-not $Current_Coin) {return}
-
-                $Pool_Model = if ($Worker1 -ne $Worker) {"$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object -Unique) -join '-')"} elseif ($Global:DeviceCache.DeviceNames.CPU -ne $null) {"GPU"}
 
                 $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
                 $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Pool_Model) {"-$Pool_Model"})"
