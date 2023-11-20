@@ -313,7 +313,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         "ethstratum"       {" --esm 2"}
                         "ethstratum1"      {" --esm 2"}
                         "ethstratum2"      {""}
-						"ethstratumnh"     {" --esm 1"}
+						"ethstratumnh"     {""}
 						default            {""}
 					}
 
