@@ -121,7 +121,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     Port      = $Pools.ZilliqaETH.Port
                                     SSL       = $Pools.ZilliqaETH.SSL
                                     Wallet    = $Pools.ZilliqaETH.Wallet
-                                    Worker    = "{workername:$($Pools.ZilliqaETH.Worker)}"
+                                    Worker    = $Pools.ZilliqaETH.Worker
                                     Pass      = $Pools.ZilliqaETH.Pass
                                     Email     = $Pools.ZilliqaETH.Email
                             }
@@ -174,7 +174,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                             SSL       = $Pools.$MainAlgorithm_Norm.SSL
                                             Wallet    = $Wallet
                                             PaymentId = $PaymentId
-                                            Worker    = "{workername:$($Pools.$MainAlgorithm_Norm.Worker)}"
+                                            Worker    = $Pools.$MainAlgorithm_Norm.Worker
                                             Pass      = $Pools.$MainAlgorithm_Norm.Pass
                                             Email     = $Pools.$MainAlgorithm_Norm.Email
                                         }
@@ -186,7 +186,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                             SSL       = $Pools.$SecondAlgorithm_Norm.SSL
                                             Wallet    = $SecondWallet
                                             PaymentId = $SecondPaymentId
-                                            Worker    = "{workername:$($Pools.$SecondAlgorithm_Norm.Worker)}"
+                                            Worker    = $Pools.$SecondAlgorithm_Norm.Worker
                                             Pass      = $Pools.$SecondAlgorithm_Norm.Pass
                                             Email     = $Pools.$SecondAlgorithm_Norm.Email
                                         }
@@ -248,7 +248,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     SSL       = $Pools.$MainAlgorithm_Norm.SSL
                                     Wallet    = $Wallet
                                     PaymentId = $PaymentId
-                                    Worker    = "{workername:$($Pools.$MainAlgorithm_Norm.Worker)}"
+                                    Worker    = $Pools.$MainAlgorithm_Norm.Worker
                                     Pass      = $Pools.$MainAlgorithm_Norm.Pass
                                     Email     = $Pools.$MainAlgorithm_Norm.Email
                                 }
