@@ -12,19 +12,19 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.75
 $Cuda = "8.0"
-$Version = "0.39.0"
+$Version = "0.39.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.0-wildrigmulti/wildrig-multi-linux-0.39.0.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.1-wildrigmulti/wildrig-multi-linux-0.39.1.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.0-wildrigmulti/wildrig-multi-windows-0.39.0.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.1-wildrigmulti/wildrig-multi-windows-0.39.1.7z"
 }
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo";                     Vendor = @("AMD","INTEL");          Params = ""} #Aergo
-    [PSCustomObject]@{MainAlgorithm = "anime";                     Vendor = @("AMD","INTEL");          Params = ""} #Anime
+    [PSCustomObject]@{MainAlgorithm = "anime";                     Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #Anime
     [PSCustomObject]@{MainAlgorithm = "bcd";                       Vendor = @("AMD","INTEL");          Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";                   Vendor = @("AMD","INTEL");          Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "blake2b-btcc";              Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; CoinSymbols = @("BCHC","TNET")} #Blake2b-TNET/BTCC
@@ -83,7 +83,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16s";                      Vendor = @("AMD","INTEL");          Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";                       Vendor = @("AMD","INTEL");          Params = ""} #X17
     [PSCustomObject]@{MainAlgorithm = "x18";                       Vendor = @("AMD","INTEL");          Params = ""} #X18
-    [PSCustomObject]@{MainAlgorithm = "x20r";                      Vendor = @("AMD","INTEL");          Params = ""} #X20r
+    [PSCustomObject]@{MainAlgorithm = "x20r";                      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";                      Vendor = @("AMD","INTEL");          Params = ""} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i";                      Vendor = @("AMD","INTEL");          Params = ""} #X22i
     [PSCustomObject]@{MainAlgorithm = "x25x";                      Vendor = @("AMD","INTEL");          Params = ""; ExtendInterval = 2} #X25x
