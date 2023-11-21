@@ -53,6 +53,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";                   Vendor = @("AMD","INTEL");          Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";               Vendor = @("AMD","INTEL");          Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "megabtx";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #, new in v0.26.0
+    [PSCustomObject]@{MainAlgorithm = "memehash";                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #Memehash/PEPE
     [PSCustomObject]@{MainAlgorithm = "memehashv2";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #MemehashV2/PEPE2, new in v0.36.7
     [PSCustomObject]@{MainAlgorithm = "mike";                      Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 1.0; FaultTolerance = 8; ExtendInterval = 3} #Mike
     [PSCustomObject]@{MainAlgorithm = "minotaur";                  Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #, new in v0.26.0
