@@ -6706,8 +6706,10 @@ param(
                 }
             }
 
+            $Sockets = $false
             try {
                 $httpHandler = [System.Net.Http.SocketsHttpHandler]::New()
+                $Sockets = $true
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $httpHandler = [System.Net.Http.HttpClientHandler]::New()
@@ -6715,15 +6717,28 @@ param(
 
             if (Test-IsCore) {
                 try {
-                    $httpHandler.ServerCertificateCustomValidationCallback = {
-                                param(
-                                    [Net.Http.HttpRequestMessage]$HttpRequestMessage,
-                                    [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
-                                    [Security.Cryptography.X509Certificates.X509Chain]$chain,
-                                    [Net.Security.SslPolicyErrors]$sslPolicyErrors
-                                )
-                                $true
-                    }
+                    #if ($Sockets) {
+                    #    $httpHandler.SslOptions.RemoteCertificateValidationCallback = {
+                    #                param(
+                    ß                    [object]$sender,
+                    #                    [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
+                    #                    [Security.Cryptography.X509Certificates.X509Chain]$chain,
+                    #                    [Net.Security.SslPolicyErrors]$sslPolicyErrors
+                    #                )
+                    #                $true
+                    #    }
+                    #    $httpHandler.SslOptions.EncryptionPolicy = "AllowNoEncryption"
+                    #} else {
+                        $httpHandler.ServerCertificateCustomValidationCallback = {
+                                    param(
+                                        [Net.Http.HttpRequestMessage]$HttpRequestMessage,
+                                        [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
+                                        [Security.Cryptography.X509Certificates.X509Chain]$chain,
+                                        [Net.Security.SslPolicyErrors]$sslPolicyErrors
+                                    )
+                                    $true
+                        }
+                    #}
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
                 }
