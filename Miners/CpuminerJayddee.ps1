@@ -11,14 +11,14 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "200{0:d2}"
 $DevFee = 0.0
-$Version = "23.11"
+$Version = "23.13"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.11-jayddee/cpuminer-opt-23.11-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.13-jayddee/cpuminer-opt-23.13-linux.7z"
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.11-jayddee/cpuminer-opt-23.11-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.13-jayddee/cpuminer-opt-23.13-windows.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -73,6 +73,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
     #[PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
     [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rv2
+    [PSCustomObject]@{MainAlgorithm = "x20r"; Params = ""} #x20r
     [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""} #x21s
     [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #x22i
     [PSCustomObject]@{MainAlgorithm = "x25x"; Params = ""} #x25x
