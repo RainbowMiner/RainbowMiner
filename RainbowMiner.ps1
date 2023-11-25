@@ -377,12 +377,12 @@ if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyComm
 
 Initialize-Session
 
-$Session.Version         = "4.9.0.3"
+$Session.Version         = "4.9.0.4"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
 
-$Session.SupportedPSVersion = "7.2.16"
+$Session.SupportedPSVersion = "7.2.17"
 
 $Session.OpenCLPlatformSorting = @()
 
