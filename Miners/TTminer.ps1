@@ -12,15 +12,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2023.4.1"
+$Version = "2023.4.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.1-ttminer/TT-Miner-2023.4.1.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.2-ttminer/TT-Miner-2023.4.2.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.1-ttminer/TT-Miner-2023.4.1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.2-ttminer/TT-Miner-2023.4.2.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -48,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ProgPoWVEIL"   ; DAG = $true; MinMemGB = 3;   Params = "-c VEIL";          ExtendInterval = 2} #ProgPoWSero (VEIL)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWZ"      ; DAG = $true; MinMemGB = 3;   Params = "-c ZANO";          ExtendInterval = 2} #ProgPoWZ (ZANO)
     [PSCustomObject]@{MainAlgorithm = "SHA3d"         ;              MinMemGB = 2;   Params = "-a Sha3d";         ExtendInterval = 2} #SHA3d
+    [PSCustomObject]@{MainAlgorithm = "SHA3Solidity"  ;              MinMemGB = 2;   Params = "-a Sha3solidity";  ExtendInterval = 2} #SHA3Solidity
     [PSCustomObject]@{MainAlgorithm = "SHA256dt"      ;              MinMemGB = 2;   Params = "-a Sha256dt";      ExtendInterval = 2} #SHA256dt
     [PSCustomObject]@{MainAlgorithm = "SHA512256d"    ;              MinMemGB = 2;   Params = "-a Sha512256d";    ExtendInterval = 2} #Sha512256d
     [PSCustomObject]@{MainAlgorithm = "UbqHash"       ;              MinMemGB = 2.4; Params = "-a UBQHASH";       ExtendInterval = 2} #Ubqhash
@@ -56,7 +57,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"; SecondaryAlgorithm = "SHA512256d"; SecondaryParams = "-a Sha512256d"} #EthashB3 + SHA512256d
 )
 
-$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BTC","BTRM","BUT","CLO","CLORE","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","JGC","KAW","KCN","KIIRO","LAB","LTR","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL")
+$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BTC","BTRM","BUT","CLO","CLORE","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","JGC","KAW","KCN","KIIRO","LAB","LTR","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL")
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
