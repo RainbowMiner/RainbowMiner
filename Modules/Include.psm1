@@ -6720,7 +6720,7 @@ param(
                     #if ($Sockets) {
                     #    $httpHandler.SslOptions.RemoteCertificateValidationCallback = {
                     #                param(
-                    ß                    [object]$sender,
+                    #                    [object]$sender,
                     #                    [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
                     #                    [Security.Cryptography.X509Certificates.X509Chain]$chain,
                     #                    [Net.Security.SslPolicyErrors]$sslPolicyErrors
