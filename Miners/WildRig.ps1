@@ -64,7 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-sero"; DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowSero
     [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowVeil
     [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Fairpool"} #ProgPowZ
-    [PSCustomObject]@{MainAlgorithm = "pufferfish2";               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 1.0} #Pufferfish2/BMB
+    #[PSCustomObject]@{MainAlgorithm = "pufferfish2";               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 1.0} #Pufferfish2/BMB
     [PSCustomObject]@{MainAlgorithm = "rwahash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.0} #RWAHash
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA512256d
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.0} #SHA256csm
