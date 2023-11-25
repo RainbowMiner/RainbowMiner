@@ -6717,28 +6717,21 @@ param(
 
             if (Test-IsCore) {
                 try {
-                    #if ($Sockets) {
-                    #    $httpHandler.SslOptions.RemoteCertificateValidationCallback = {
-                    #                param(
-                    #                    [object]$sender,
-                    #                    [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
-                    #                    [Security.Cryptography.X509Certificates.X509Chain]$chain,
-                    #                    [Net.Security.SslPolicyErrors]$sslPolicyErrors
-                    #                )
-                    #                $true
-                    #    }
-                    #    $httpHandler.SslOptions.EncryptionPolicy = "AllowNoEncryption"
-                    #} else {
-                        $httpHandler.ServerCertificateCustomValidationCallback = {
-                                    param(
-                                        [Net.Http.HttpRequestMessage]$HttpRequestMessage,
-                                        [Security.Cryptography.X509Certificates.X509Certificate2]$certificate2,
-                                        [Security.Cryptography.X509Certificates.X509Chain]$chain,
-                                        [Net.Security.SslPolicyErrors]$sslPolicyErrors
-                                    )
-                                    $true
-                        }
-                    #}
+                    Add-Type -TypeDefinition @"
+public class SSLHandler
+{
+    public static System.Net.Security.RemoteCertificateValidationCallback GetSSLHandler()
+    {
+        return new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate, chain, policyErrors) => { return true; });
+    }
+    
+}
+"@
+                    if ($Sockets) {
+                        $httpHandler.SslOptions.RemoteCertificateValidationCallback = [SSLHandler]::GetSSLHandler()
+                    } else {
+                        $httpHandler.ServerCertificateCustomValidationCallback = [SSLHandler]::GetSSLHandler()
+                    }
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
                 }

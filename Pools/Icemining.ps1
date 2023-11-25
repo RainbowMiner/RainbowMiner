@@ -21,7 +21,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://icemining.ca/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/icemining.json" -tag $Name -cycletime 120
     if ($PoolCoins_Request -is [string]) {$PoolCoins_Request = ($PoolCoins_Request -replace '<script.+?/script>' -replace '<.+?>').Trim() | ConvertFrom-Json -ErrorAction Stop}
 }
 catch {
@@ -42,7 +42,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{symbol="EPIC-RandomEPIC"; region = @("ca","hk","sg");                      host="epic.%region%.hashrate.to"; port=4100; fee = 2; hashrate = "randomx"; ssl = $true}
     #[PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("ca","eu-north","eu-de","tr","hk","sg"); host="epic.%region%.hashrate.to"; port=4000; fee = 2; hashrate = "progpow"}
     #[PSCustomObject]@{symbol="EPIC-ProgPoW";    region = @("ca","hk","sg");                      host="epic.%region%.hashrate.to"; port=4100; fee = 2; hashrate = "progpow"; ssl = $true}
-    [PSCustomObject]@{symbol="NIM";             region = @("ca");                                host="nimiq.icemining.ca";        port=2053; fee = 1.25; ssl = $true}
+    [PSCustomObject]@{symbol="NIM";             region = @("ca");                                 host="nimiq.icemining.ca";        port=2053; fee = 1.25; ssl = $true}
     #[PSCustomObject]@{symbol="TON";             region = @("ca","fi","de","sg","hk","tr");       host="ton.%region%.hashrate.to";  port=4003; fee = 1}
     #[PSCustomObject]@{symbol="TON";             region = @("sg","hk");                           host="ton.%region%.hashrate.to";  port=4103; fee = 1; ssl = $true}
 )
@@ -68,7 +68,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_User     = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -ne "TON") {".{workername:$Worker}"})"
+    $Pool_User     = "$($Wallets.$Pool_Currency -replace "\s")$(if ($Pool_Currency -ne "TON") {".{workername:$Worker}"})"
     $Pool_Protocol = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
     $Pool_Fee      = if ($PoolCoins_Request.$Pool_Currency.reward_model.PPLNS -ne $null) {[double]$PoolCoins_Request.$Pool_Currency.reward_model.PPLNS} else {$_.fee}
     $Pool_Pass     = if ($Pool_Currency -eq "SIN") {
