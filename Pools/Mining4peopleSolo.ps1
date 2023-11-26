@@ -41,8 +41,9 @@ $Pool_Fee = 1
 $Pool_Request | Where-Object {$_.id -match "solo$" -and ($Wallets."$($_.coin)" -or $InfoOnly)} | ForEach-Object {
 
     $Pool_Currency = $_.coin
+    $Pool_Coin = Get-Coin $Pool_Currency
 
-    if ($_.id -notmatch "^\w+-\w+-solo$" -and ($Pool_Coin = Get-Coin $Pool_Currency)) {
+    if ($_.id -notmatch "^\w+-\w+-solo$" -and $Pool_Coin -and -not $Pool_Coin.Multi) {
         $Pool_Algorithm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
     } else {
