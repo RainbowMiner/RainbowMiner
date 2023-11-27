@@ -3716,8 +3716,8 @@ function Get-Device {
                 if ($IsWindows) {
                     try {
                         $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
-                        $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
-                        $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
+                        $Global:GlobalCPUInfo | Add-Member Name          "$($CIM_CPU[0].Name)".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  "$($CIM_CPU[0].Manufacturer)".Trim()
                         $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
                         $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
                         $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
