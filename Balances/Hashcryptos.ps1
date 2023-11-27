@@ -31,7 +31,7 @@ $Payout_Currencies | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count 
                 Currency    = $Request.symbol
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold
-                Total       = [Decimal]$Request.total
+                Total       = [Decimal]$Request.balance + [Decimal]$Request.unsold
                 Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
                 Paid24h     = [Decimal]$Request.paid24h
                 Earned      = [Decimal]$Request.total
