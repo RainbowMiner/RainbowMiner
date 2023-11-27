@@ -4440,9 +4440,6 @@ function Update-DeviceInformation {
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
             if (-not $Session.SysInfo.Cpus) {$Session.SysInfo = Get-SysInfo}
 
-            if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
-            $CpuName = $Global:GlobalCPUInfo.Name.Trim()
-
             if ($IsWindows) {
                 $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
@@ -4454,15 +4451,13 @@ function Update-DeviceInformation {
                         $Device.Data.PowerDraw   = [int]$_.PowerDraw
                         $Device.Data.Temperature = [int]$_.Temperature
                         $Device.Data.Method      = $_.Method
-                    }
-
-                    if ($Device.Data.Utilization -gt 0 -and $Device.Data.PowerDraw -eq 0) {
-                        if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
-                        $Device.Data.PowerDraw = [int]($CPU_tdp * $Utilization / 100)
                     } 
                 }
             }
             elseif ($IsLinux) {
+                if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                $CpuName = $Global:GlobalCPUInfo.Name.Trim()
+
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
@@ -8350,6 +8345,8 @@ function Get-SysInfo {
     )
 
     if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+    $CpuName = $Global:GlobalCPUInfo.Name.Trim()
+
     if ($IsWindows) {
 
         $CIM_CPU = $null
@@ -8395,13 +8392,14 @@ function Get-SysInfo {
                         if (-not $CPU.Clock)       {$CPU.Clock = $_.MaxClockSpeed}
                         if (-not $CPU.Utilization) {$CPU.Utilization = $_.LoadPercentage}
                         if (-not $CPU.Utilization) {$CPU.Utilization = 100}
-                        if (-not $CPU.PowerDraw) {
-                            $CpuName = "$($_.Name.Trim()) "
-                            if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
-                            $CPU.PowerDraw = $CPU_tdp * ($CPU.Utilization / 100)
-                            $CPU.Method = "tdp"
-                        }
                     }
+                }
+
+                if ($CPU.Utilization -gt 0 -and $CPU.PowerDraw -eq 0) {
+                    $CpuName = "$($CpuName)".Trim()
+                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                    $CPU.PowerDraw = $CPU_tdp * ($CPU.Utilization / 100)
+                    $CPU.Method = "tdp"
                 }
 
                 $Index++
