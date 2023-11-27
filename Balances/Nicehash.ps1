@@ -13,6 +13,7 @@ if (-not $PoolConfig.BTC) {
 }
 
 $Request = [PSCustomObject]@{}
+$RequestUnpaid = [PSCustomObject]@{}
 
 if (-not (Test-Path "Variable:Global:NHWallets")) {$Global:NHWallets = [hashtable]@{}}
 
@@ -20,6 +21,14 @@ if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.Organizatio
 
     try {
         $Request = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
+    }
+	
+	try {
+        $RequestUnpaid = Invoke-NHRequest "/main/api/v2/mining/rigs2/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -35,8 +44,8 @@ if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.Organizatio
             BaseName    = $Name
             Currency    = $Request.currency
             Balance     = [Decimal]$Request.available
-            Pending     = [Decimal]$Request.pending
-            Total       = [Decimal]$Request.totalBalance
+            Pending     = [Decimal]$RequestUnpaid.unpaidAmount
+            Total       = [Decimal]$Request.available + [Decimal]$RequestUnpaid.unpaidAmount
             Payouts     = @()
             LastUpdated = (Get-Date).ToUniversalTime()
         }        
