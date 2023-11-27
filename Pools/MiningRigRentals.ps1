@@ -1326,7 +1326,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                             } elseif ($RigRunMode -eq "update") {
 
-                                                $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
+                                                $RigAlreadyCreated.Where({$_.type -eq $RigMRRid}).Foreach({
 
                                                     $RigPools_Id = [int]$_.id
 
@@ -1337,48 +1337,50 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                         }
                                                     }
 
-                                                    if ($RigControl_Data -and ($_.status.status -eq "rented" -or $_.status.rented)) {
-                                                        $RigControl_Data.LastReset = (Get-Date).ToUniversalTime()
-                                                    }
-                                                    $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
-                                                    $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
-
-                                                    if ( (-not $RigMinPriceCurrent) -or
-                                                         ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
-                                                         ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
-                                                         ([int]$_.minhours -ne $CreateRig.minhours) -or
-                                                         ([int]$_.maxhours -ne $CreateRig.maxhours) -or
-                                                         ([int]$_.ndevices -ne $CreateRig.ndevices) -or 
-                                                         ($CreateRig.device_ram -and ([decimal]$_.device_ram -ne $CreateRig.device_ram)) -or
-                                                         ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
-                                                         ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
-                                                         ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
-                                                         ($_.price.LTC.enabled -ne $CreateRig.price.ltc.enabled) -or
-                                                         ($_.price.ETH.enabled -ne $CreateRig.price.eth.enabled) -or
-                                                         ($_.price.BCH.enabled -ne $CreateRig.price.bch.enabled) -or
-                                                         ($RigServer -and ($_.region -ne $RigServer.region)) -or
-                                                         ($_.extensions -ne $CreateRig.extensions)
-                                                    ) {
-                                                        $CreateRig["id"] = $RigPools_Id
-                                                        if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
-                                                        $RigUpdated = $false
-                                                        if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
-                                                            #if ($RigCreated -lt $MaxAPICalls) {
-                                                                $RigUpdated = $true
-                                                                try {
-                                                                    $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
-                                                                } catch {
-                                                                    if ($Error.Count){$Error.RemoveAt(0)}
-                                                                    Write-Log -Level Warn "$($Name): Unable to update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
-                                                                }
-                                                                $RigCreated++
-                                                            #}
-                                                        } else {
-                                                            $RigUpdated = $true
-                                                            $RigsToUpdate += $CreateRig
+                                                    if ($_.price.BTC.autoprice) {
+                                                        if ($RigControl_Data -and ($_.status.status -eq "rented" -or $_.status.rented)) {
+                                                            $RigControl_Data.LastReset = (Get-Date).ToUniversalTime()
                                                         }
-                                                        if ($RigUpdated) {
-                                                            Write-Log -Level Info "$($Name): Update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $(if ($_.rental_id) {"rental=$($_.rental_id), "})hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day,$(if ($RigExtPercent -gt 0) {" rise=$($RigExtPercent)%,"}) minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
+                                                        $RigHashCurrent     = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
+                                                        $RigMinPriceCurrent = [double]$_.price.BTC.minimum / $(ConvertFrom-Hash "1$($_.price.type)")
+
+                                                        if ( (-not $RigMinPriceCurrent) -or
+                                                             ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
+                                                             ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
+                                                             ([int]$_.minhours -ne $CreateRig.minhours) -or
+                                                             ([int]$_.maxhours -ne $CreateRig.maxhours) -or
+                                                             ([int]$_.ndevices -ne $CreateRig.ndevices) -or 
+                                                             ($CreateRig.device_ram -and ([decimal]$_.device_ram -ne $CreateRig.device_ram)) -or
+                                                             ($MRRConfig.$RigName.EnableUpdateTitle -and $_.name -ne $CreateRig.name) -or
+                                                             ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) -or
+                                                             ($CreateRig.price.btc.modifier -ne $null -and $_.price.BTC.modifier -ne $CreateRig.price.btc.modifier) -or
+                                                             ($_.price.LTC.enabled -ne $CreateRig.price.ltc.enabled) -or
+                                                             ($_.price.ETH.enabled -ne $CreateRig.price.eth.enabled) -or
+                                                             ($_.price.BCH.enabled -ne $CreateRig.price.bch.enabled) -or
+                                                             ($RigServer -and ($_.region -ne $RigServer.region)) -or
+                                                             ($_.extensions -ne $CreateRig.extensions)
+                                                        ) {
+                                                            $CreateRig["id"] = $RigPools_Id
+                                                            if ($_.region -ne $RigServer.region) {$CreateRig["server"] = $RigServer.name}
+                                                            $RigUpdated = $false
+                                                            if ($MRRConfig.$RigName.EnableUpdateDescription -and $_.description -ne $CreateRig.description) {
+                                                                #if ($RigCreated -lt $MaxAPICalls) {
+                                                                    $RigUpdated = $true
+                                                                    try {
+                                                                        $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
+                                                                    } catch {
+                                                                        if ($Error.Count){$Error.RemoveAt(0)}
+                                                                        Write-Log -Level Warn "$($Name): Unable to update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
+                                                                    }
+                                                                    $RigCreated++
+                                                                #}
+                                                            } else {
+                                                                $RigUpdated = $true
+                                                                $RigsToUpdate += $CreateRig
+                                                            }
+                                                            if ($RigUpdated) {
+                                                                Write-Log -Level Info "$($Name): Update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $(if ($_.rental_id) {"rental=$($_.rental_id), "})hash=$($CreateRig.hash.hash)$($CreateRig.hash.type), minimum=$($RigMinPrice)/$($RigDivisors[$PriceDivisor].type)/day,$(if ($RigExtPercent -gt 0) {" rise=$($RigExtPercent)%,"}) minhours=$($CreateRig.minhours), ndevices=$($CreateRig.ndevices), device_ram=$($CreateRig.device_ram), modifier=$($CreateRig.price.btc.modifier), region=$($RigServer.region), extensions=$($CreateRig.extensions)"
+                                                            }
                                                         }
                                                     }
 
