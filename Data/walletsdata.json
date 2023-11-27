@@ -167,11 +167,11 @@
     {
         "symbol":  "RVN",
         "match":  "^R",
-        "rpc":  "https://ravencoin.network/api/addr/{w}/?noTxList=1",
-        "address":  "addrStr",
+        "rpc":  "https://rvn.cryptoscope.io/api/getbalance/?address={w}",
+        "address":  "address",
         "balance":  "balance",
-        "received":  "totalReceived",
-        "divisor":  1
+        "received":  "",
+        "divisor":  100000000
     },
     {
         "symbol":  "RXD",
