@@ -84,6 +84,23 @@ if ($IsWindows) {
         if ($Error.Count){$Error.RemoveAt(0)}
     }
 
+    " " | Out-File $TestFileName -Append
+    "5. GetCPU.exe" | Out-File $TestFileName -Append
+    "-"*80 | Out-File $TestFileName -Append
+    " " | Out-File $TestFileName -Append
+    if (Test-IsElevated) {
+        try {
+            $GetCPU = Invoke-Exe ".\Includes\GetCPU\GetCPU.exe" -ArgumentList "--debug" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop | ConvertTo-Json | Out-File $TestFileName -Append
+        } catch {
+            "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
+            "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
+            "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    } else {
+        "not started, needs elevated rights" | Out-File $TestFileName -Append
+    }
+    $lfnr = 5
 }
 
 
@@ -164,11 +181,13 @@ if ($IsLinux) {
             if ($Error.Count){$Error.RemoveAt(0)}
         }
     }
-
+    $lfnr = 4
 }
 
+$lfnr++
+
 " " | Out-File $TestFileName -Append
-"5. Add Vendor to CPUInfo object" | Out-File $TestFileName -Append
+"$($lfnr). Add Vendor to CPUInfo object" | Out-File $TestFileName -Append
 "-"*80 | Out-File $TestFileName -Append
 " " | Out-File $TestFileName -Append
 
@@ -187,8 +206,10 @@ try {
     if ($Error.Count){$Error.RemoveAt(0)}
 }
 
+$lfnr++
+
 " " | Out-File $TestFileName -Append
-"6. Add RealCores to CPUInfo object" | Out-File $TestFileName -Append
+"$($lfnr). Add RealCores to CPUInfo object" | Out-File $TestFileName -Append
 "-"*80 | Out-File $TestFileName -Append
 " " | Out-File $TestFileName -Append
 
@@ -203,8 +224,10 @@ try {
     if ($Error.Count){$Error.RemoveAt(0)}
 }
 
+$lfnr++
+
 " " | Out-File $TestFileName -Append
-"Result: CPUInfo" | Out-File $TestFileName -Append
+"$($lfnr). Result: CPUInfo" | Out-File $TestFileName -Append
 "-"*80 | Out-File $TestFileName -Append
 " " | Out-File $TestFileName -Append
 
