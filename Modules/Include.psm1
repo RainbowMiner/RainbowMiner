@@ -8341,11 +8341,16 @@ function Get-SysInfo {
         [Parameter(Mandatory = $False)]
         [int]$PhysicalCPUs = 1,
         [Parameter(Mandatory = $false)]
-        [bool]$FromRegistry = $false
+        [bool]$FromRegistry = $false,
+        [Parameter(Mandatory = $false)]
+        [string]$CPUName = $false
     )
 
     if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
-    $CpuName = $Global:GlobalCPUInfo.Name.Trim()
+
+    if (-not $CPUName) {
+        $CPUName = $Global:GlobalCPUInfo.Name.Trim()
+    }
 
     if ($IsWindows) {
 
@@ -8361,7 +8366,7 @@ function Get-SysInfo {
             }
         } | Select-Object)
 
-        $GetCPU_Data = if (Test-IsElevated) {
+        $GetCPU_Data = @(if (Test-IsElevated) {
             try {
                 if ($FromRegistry) {
                     Get-ItemPropertyValue "HKCU:\Software\RainbowMiner" -Name "GetCPU" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -8371,7 +8376,7 @@ function Get-SysInfo {
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
-        }
+        })
         
         try {
             $Index = 0
@@ -8396,8 +8401,7 @@ function Get-SysInfo {
                 }
 
                 if ($CPU.Utilization -gt 0 -and $CPU.PowerDraw -eq 0) {
-                    $CpuName = "$($CpuName)".Trim()
-                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CPUName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
                     $CPU.PowerDraw = $CPU_tdp * ($CPU.Utilization / 100)
                     $CPU.Method = "tdp"
                 }
