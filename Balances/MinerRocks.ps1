@@ -7,18 +7,10 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    #ASIC
-    [PSCustomObject]@{symbol = "AEON";  port = 30112; fee = 0.9; rpc = "aeon"; regions = @("fr")}
-    [PSCustomObject]@{symbol = "QWC";   port = 30052; fee = 0.9; rpc = "qwertycoin";   regions = @("fr")}
-
-    #Other
-    [PSCustomObject]@{symbol = "TUBE";  port = 30212; fee = 0.9; rpc = "bittubecash"; regions = @("fr")}
     [PSCustomObject]@{symbol = "CCX";   port = 30041; fee = 0.9; rpc = "conceal"; regions = @("fr")}
     [PSCustomObject]@{symbol = "DERO";  port = 30182; fee = 0.9; rpc = "dero";   regions =@("fr","ca","sg"); solo = $true}
     [PSCustomObject]@{symbol = "XHV";   port = 30031; fee = 0.9; rpc = "haven"; regions = @("fr","ca","us-w","br","sg","za")}
-    [PSCustomObject]@{symbol = "MSR";   port = 30162; fee = 0.9; rpc = "masari";   regions = @("fr")}
     [PSCustomObject]@{symbol = "RYO";   port = 30172; fee = 1.2; rpc = "ryo"; regions = @("fr","ca","us-w","br","sg","za")}
-    [PSCustomObject]@{symbol = "SUMO";  port = 30152; fee = 0.9; rpc = "sumokoin"; regions = @("fr")}
     [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"; regions = @("fr")}
 )
 
