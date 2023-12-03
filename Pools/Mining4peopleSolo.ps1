@@ -71,7 +71,7 @@ $Pool_Request | Where-Object {$_.id -match "solo$" -and ($Wallets."$($_.coin)" -
 
         $Pool_CoinRequest = $Pool_CoinRequest.pool | Select-Object -First 1
 
-        $Pool_CoinRequest.ports.PSObject.Properties | Sort-Object {[int]$_.Name},{[bool]$_.Value.tls} | Foreach-Object {
+        $Pool_CoinRequest.ports.PSObject.Properties | Sort-Object {[double]$_.Value.difficulty},{[int]$_.Name},{[bool]$_.Value.tls} | Foreach-Object {
             if ([bool]$_.Value.tls) {
                 if (-not $Pool_Ports[1]) {$Pool_Ports[1] = $_.Name}
             } else {
