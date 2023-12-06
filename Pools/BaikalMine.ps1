@@ -90,6 +90,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
                 WTM           = $true
+                Mallob        = $_.mallob
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0

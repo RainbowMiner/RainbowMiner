@@ -1,12 +1,13 @@
 [
     {
-        "symbol":  "CLO",
-        "coin":  "Callisto Network",
-        "algo":  "Ethash",
-        "rpc":  "clo.baikalmine.com",
-        "host":  "clo.baikalmine.com",
+        "symbol":  "DNX",
+        "coin":  "Dynexcoin",
+        "algo":  "DynexSolve",
+        "rpc":  "dnx.baikalmine.com",
+        "host":  "dnx.baikalmine.com",
+        "mallob":  "https://dnx-mallob.baikalmine.com",
         "port":  [
-                     3333
+                     9090
                  ],
         "fee":  0.5,
         "regions":  [
@@ -42,11 +43,53 @@
                     ]
     },
     {
-        "symbol":  "ETHW",
-        "coin":  "EthereumPoW",
-        "algo":  "Ethash",
-        "rpc":  "ethw.baikalmine.com",
-        "host":  "ethw.baikalmine.com",
+        "symbol":  "KAS",
+        "coin":  "Kaspa",
+        "algo":  "kHeavyHash",
+        "rpc":  "kaspa.baikalmine.com",
+        "host":  "kaspa.baikalmine.com",
+        "port":  [
+                     2525
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "KLS",
+        "coin":  "Karlsen",
+        "algo":  "KarlsenHash",
+        "rpc":  "kls.baikalmine.com",
+        "host":  "kls.baikalmine.com",
+        "port":  [
+                     2626
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "NYC",
+        "coin":  "NewyorkCoin",
+        "algo":  "Scrypt",
+        "rpc":  "nyc.baikalmine.com",
+        "host":  "nyc.baikalmine.com",
+        "port":  [
+                     8095
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "RTH",
+        "coin":  "Rethereum",
+        "algo":  "EthashB3",
+        "rpc":  "rth.baikalmine.com",
+        "host":  "rth.baikalmine.com",
         "port":  [
                      1515
                  ],
@@ -56,13 +99,13 @@
                     ]
     },
     {
-        "symbol":  "FLR",
-        "coin":  "Flora",
+        "symbol":  "XPB",
+        "coin":  "Powblocks",
         "algo":  "Ethash",
-        "rpc":  "flr.baikalmine.com",
-        "host":  "flr.baikalmine.com",
+        "rpc":  "xpb.baikalmine.com",
+        "host":  "xpb.baikalmine.com",
         "port":  [
-                     1818
+                     9595
                  ],
         "fee":  0.5,
         "regions":  [
