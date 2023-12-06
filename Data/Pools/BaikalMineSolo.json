@@ -1,14 +1,15 @@
 [
     {
-        "symbol":  "CLO",
-        "coin":  "Callisto Network",
-        "algo":  "Ethash",
-        "rpc":  "clo-solo.baikalmine.com",
-        "host":  "clo-solo.baikalmine.com",
+        "symbol":  "DNX",
+        "coin":  "Dynexcoin",
+        "algo":  "DynexSolve",
+        "rpc":  "dnx-solo.baikalmine.com",
+        "host":  "dnx-solo.baikalmine.com",
+        "mallob":  "https://dnx-mallob.baikalmine.com",
         "port":  [
-                     4433
+                     9095
                  ],
-        "fee":  1.0,
+        "fee":  0.5,
         "regions":  [
                         "eu"
                     ]
@@ -22,7 +23,7 @@
         "port":  [
                      1214
                  ],
-        "fee":  1.00,
+        "fee":  0.5,
         "regions":  [
                         "eu"
                     ]
@@ -36,19 +37,47 @@
         "port":  [
                      1444
                  ],
-        "fee":  1.0,
+        "fee":  0.5,
         "regions":  [
                         "eu"
                     ]
     },
     {
-        "symbol":  "FLR",
-        "coin":  "Flora",
-        "algo":  "Ethash",
-        "rpc":  "flr-solo.baikalmine.com",
-        "host":  "flr-solo.baikalmine.com",
+        "symbol":  "KAS",
+        "coin":  "Kaspa",
+        "algo":  "kHeavyHash",
+        "rpc":  "kaspa-solo.baikalmine.com",
+        "host":  "kaspa-solo.baikalmine.com",
         "port":  [
-                     1816
+                     2535
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "NYC",
+        "coin":  "NewyorkCoin",
+        "algo":  "Scrypt",
+        "rpc":  "nyc-solo.baikalmine.com",
+        "host":  "nyc-solo.baikalmine.com",
+        "port":  [
+                     8093
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "RTH",
+        "coin":  "Rethereum",
+        "algo":  "EthashB3",
+        "rpc":  "rth-solo.baikalmine.com",
+        "host":  "rth-solo.baikalmine.com",
+        "port":  [
+                     1520
                  ],
         "fee":  0.5,
         "regions":  [

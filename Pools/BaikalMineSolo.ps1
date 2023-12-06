@@ -73,6 +73,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Hashrate      = $null
                 TSL           = $null
                 BLK           = $null
+                Mallob        = $_.mallob
                 Difficulty    = $Stat.Diff_Average
                 SoloMining    = $true
                 WTM           = $true
