@@ -38,7 +38,7 @@ if (($PoolCoins_Request.PSObject.Properties.Name | Measure-Object).Count -le 1) 
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("americas","asia","eu")
+$Pool_Regions = @("americas","asia","brazil","canada","europe","india","singapore","hongkong","moscow","kazakhstan")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 2
