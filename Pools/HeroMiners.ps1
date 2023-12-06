@@ -25,6 +25,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "CCX";   port = 1115; fee = 0.9; rpc = "conceal"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "CFX";   port = 1170; fee = 0.9; rpc = "conflux"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "CTXC";  port = 1155; fee = 0.9; rpc = "cortex"; region = $Pool_AllRegions; cycles = 42}
+    [PSCustomObject]@{symbol = "CLORE"; port = 1163; fee = 0.9; rpc = "clore"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "DNX";   port = 1120; fee = 0.9; rpc = "dynex"; region = $Pool_AllRegions; MallobPort = 1119}
     [PSCustomObject]@{symbol = "ERG";   port = 1180; fee = 0.9; rpc = "ergo"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ETC";   port = 1150; fee = 0.9; rpc = "etc"; region = $Pool_AllRegions}
@@ -37,9 +38,11 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XLA";   port = 1190; fee = 0.9; rpc = "scala"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "NEOX";  port = 1202; fee = 0.9; rpc = "neoxa"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "XNA";   port = 1160; fee = 0.9; rpc = "neurai"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "QRL";   port = 1166; fee = 0.9; rpc = "qrl"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "RVN";   port = 1140; fee = 0.9; rpc = "ravencoin"; region = $Pool_AllRegions; diffFactor = [Math]::Pow(2,32)}
     [PSCustomObject]@{symbol = "ZEPH";  port = 1123; fee = 0.9; rpc = "zephyr"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "KLS";   port = 1195; fee = 0.9; rpc = "karlsen"; region = $Pool_AllRegions}
 
     #[PSCustomObject]@{symbol = "AEON";  port = 1145; fee = 0.9; rpc = "aeon"; region = @("de","fi","hk")}
     #[PSCustomObject]@{symbol = "ARQ";   port = 1143; fee = 0.9; rpc = "arqma"; region = $Pool_AllRegions}
