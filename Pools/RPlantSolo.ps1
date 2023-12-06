@@ -32,10 +32,12 @@ catch {
 $Pool_Regions = @("ru","eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and (($Wallets."$($_.symbol)" -and $_.Symbol -ne "SKY") -or ($Wallets.SKYDOGE -and $_.Symbol -eq "SKY")) -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.symbol
+
+    $Pool_CurrencyXlat = if ($Pool_Currency -eq "SKY") {"SKYDOGE"} else {$Pool_Currency}
     
-    $Pool_Coin           = Get-Coin $Pool_Currency -Algorithm $_.algo
+    $Pool_Coin           = Get-Coin $Pool_CurrencyXlat -Algorithm $_.algo
     
     if ($Pool_Coin) {
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
@@ -46,7 +48,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $
     }
 
     $Pool_Fee            = if ($PoolCurrencies_Request.$Pool_Currency.fee_solo -ne $null) {[double]$PoolCurrencies_Request.$Pool_Currency.fee_solo} else {1.0}
-    $Pool_User           = $Wallets.$Pool_Currency
+    $Pool_User           = $Wallets.$Pool_CurrencyXlat
     $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Stratum        = if ($_.info.links.stratums) {"randomx"} else {"stratum-%region%"}
@@ -55,7 +57,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $
 
     if (-not $InfoOnly) {
         $Pool_Profit = if ($_.marketStats.btc -and $_.d) {86400 / [Math]::Pow(2,32) / $_.d * $_.r * $_.marketStats.btc} else {0}
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.d -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CurrencyXlat)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.d -Quiet
     }
 
     $Pool_Ports = $_.info.ports.PSObject.Properties | Group-Object {$_.Value.tls}
@@ -68,8 +70,8 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and $
                         Algorithm     = $Pool_Algorithm_Norm
                         Algorithm0    = $Pool_Algorithm_Norm
                         CoinName      = $Pool_CoinName
-                        CoinSymbol    = $Pool_Currency
-                        Currency      = $Pool_Currency
+                        CoinSymbol    = $Pool_CurrencyXlat
+                        Currency      = $Pool_CurrencyXlat
                         Price         = if ($Pool_Profit) {$Stat.$StatAverage} else {0}
                         StablePrice   = if ($Pool_Profit) {$Stat.$StatAverageStable} else {0}
                         MarginOfError = if ($Pool_Profit) {$Stat.Week_Fluctuation} else {0}

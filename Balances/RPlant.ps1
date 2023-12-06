@@ -21,6 +21,8 @@ if (-not $Payout_Currencies) {
     return
 }
 
+if ($Payout_Currencies -contains "SKYDOGE") {$Payout_Currencies = @($Payout_Currencies | Where-Object {$_ -ne "SKYDOGE"}) + "SKY"}
+
 try {
     $Pools_Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/stats" -tag $Name -timeout 15 -cycletime 120
 }
@@ -39,6 +41,7 @@ $Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Va
         try {
             $Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/wallet/$($Pool_Name)/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
             $Count++
+            if ($Pool_Currency -eq "SKY") {$Pool_Currency = "SKYDOGE"}
             if (-not $Request.address) {
                 Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
             } else {
