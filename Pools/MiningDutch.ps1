@@ -54,7 +54,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
     $Pool_Fee = [double]$_.Value.fees
     $Pool_Symbol = ''
     $Pool_Port = [int]$_.Value.port
-    $Pool_Host = "$($_.Value.name).mining-dutch.nl"
+    $Pool_Host = "mining-dutch.nl"
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
         
     $Pool_Factor = [double]$_.Value.mbtc_mh_factor
@@ -84,7 +84,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
                 StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = "$(if ($Pool_Region -ne "eu") {"$($Pool_Region)."})$($Pool_Host)"
+                Host          = "$($Pool_Region).$($Pool_Host)"
                 Port          = $Pool_Port
                 User          = "$User.{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"
