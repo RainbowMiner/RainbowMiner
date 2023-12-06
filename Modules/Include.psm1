@@ -1712,7 +1712,7 @@ function Get-PoolsContent {
 
         foreach($c in @($Content)) {
             if ($PoolName -ne "WhatToMine") {
-                if ($Parameters.Region -and ($c.Region -ne $Parameters.Region)) {
+                if (-not $InfoOnly -and $Parameters.Region -and ($c.Region -ne $Parameters.Region)) {
                     continue
                 }
                 $Penalty = [Double]$Parameters.Penalty
