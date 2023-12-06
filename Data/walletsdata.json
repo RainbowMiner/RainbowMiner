@@ -117,6 +117,15 @@
         "divisor":  100000000
     },
     {
+        "symbol":  "KLS",
+        "match":  "^karlsen:",
+        "rpc":  "https://api.karlsencoin.com/addresses/{w}/balance",
+        "address":  "address",
+        "balance":  "balance",
+        "received":  "",
+        "divisor":  100000000
+    },
+    {
         "symbol":  "KMD",
         "match":  "^R",
         "rpc":  "https://komodoblockexplorer.com/api/v2/address/{w}?details=basic",
