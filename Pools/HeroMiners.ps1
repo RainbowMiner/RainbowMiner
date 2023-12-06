@@ -83,20 +83,18 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
     $Pool_UserWN   = "$(if ($_.pass) {".{workername:$Worker}"})"
 
     $ok = $true
-    if (-not $InfoOnly) {
-        try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -timeout 15 -cycletime 120
-            $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "" -mGPU "(modern|mid)" -mRIG "(higher|high-end|cloud|nicehash)"
-            if ($Pool_Request.config.cycleLength) {$Pool_Divisor = $Pool_Request.config.cycleLength}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
-            $ok = $false
-        }
-
-        if (-not ($Pool_Ports | Where-Object {$_} | Measure-Object).Count) {$ok = $false}
+    try {
+        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -timeout 15 -cycletime 120
+        $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "" -mGPU "(modern|mid)" -mRIG "(higher|high-end|cloud|nicehash)"
+        if ($Pool_Request.config.cycleLength) {$Pool_Divisor = $Pool_Request.config.cycleLength}
     }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
+        $ok = $false
+    }
+
+    if (-not ($Pool_Ports | Where-Object {$_} | Measure-Object).Count) {$ok = $false}
 
 
     if ($ok -and -not $InfoOnly) {
@@ -127,7 +125,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
     }
-    
+
     if ($ok -or $InfoOnly) {
         $Pool_SSL = $false
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -asobject
