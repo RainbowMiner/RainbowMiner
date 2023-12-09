@@ -78,9 +78,6 @@
             SetupFields=[PSCustomObject]@{UserName="Enter your f2pool username, if you want to see balances"}
             Currencies=@("ETC","RVN","ERG","BEAM")
         }
-        "FlexPool" = [PSCustomObject]@{
-            Currencies=@("ETC","IRON")
-        }
         "FlockPool" = [PSCustomObject]@{
             Currencies=@("RTM")
         }
