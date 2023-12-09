@@ -49,8 +49,22 @@
             Currencies=@("CPU","MBC")
         }
         "Crazypool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{EnableMiniZDual="1";EnableRigelDual="1";EnableSrbminerMultiDual="1";EnableTTminerDual="1"}
-            SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, MiniZ will dual mine ZIL on CrazyPool for various algorithms";EnableRigelDual="If you set this to 1, Rigel will dual mine ZIL on Crazypool for various algorithms";EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Crazypool for various algorithms";EnableTTminerDual="If you set this to 1, TTminer will dual mine ZIL on Crazypool for various algorithms"}
+            Fields=[PSCustomObject]@{
+                EnableBzminerDual="1"
+                EnableGminerDual="1"
+                EnableMiniZDual="1"
+                EnableRigelDual="1"
+                EnableSrbminerMultiDual="1"
+                EnableTTminerDual="1"
+            }
+            SetupFields=[PSCustomObject]@{
+                EnableBzMinerDual="If you set this to 1, BzMiner will dual mine ZIL on CrazyPool for various algorithms"
+                EnableGminerDual="If you set this to 1, Gminer will dual mine ZIL on CrazyPool for various algorithms"
+                EnableMiniZDual="If you set this to 1, MiniZ will dual mine ZIL on CrazyPool for various algorithms"
+                EnableRigelDual="If you set this to 1, Rigel will dual mine ZIL on Crazypool for various algorithms"
+                EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Crazypool for various algorithms"
+                EnableTTminerDual="If you set this to 1, TTminer will dual mine ZIL on Crazypool for various algorithms"
+            }
             Currencies=@("ETC","UBQ","ZIL")
         }
         "DeepMinerZ" = [PSCustomObject]@{
