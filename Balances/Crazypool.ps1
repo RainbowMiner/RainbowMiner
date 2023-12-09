@@ -30,7 +30,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         if (-not $Request.stats) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.symbol) returned nothing. "            
         } else {
-			$Divisor = [Decimal]1e9
+			$Divisor = [Decimal]1e12
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.symbol))"
 				BaseName    = $Name
