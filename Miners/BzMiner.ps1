@@ -123,7 +123,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
         if ($Session.Config.Pools.CrazyPool.EnableBzminerDual -and $Pools.ZilliqaCP) {
             if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
                 $ZilParams2 = "--a2 zil --w2 $($Pools.ZilliqaCP.User) --p2 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --oc_enable2 0 "
-                $ZilParams2 = "--a3 zil --w3 $($Pools.ZilliqaCP.User) --p3 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --oc_enable3 0 "
+                $ZilParams3 = "--a3 zil --w3 $($Pools.ZilliqaCP.User) --p3 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --oc_enable3 0 "
             }
         }
 
@@ -159,7 +159,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             $ZilParams = ""
 
             if ($ZilParams2 -ne "") {
-                $ZilParams = if ($SecondAlgorithm_Norm_0) {$ZilParams3} else {$ZilParams2}
+                $ZilParams = if ($SecondAlgorithm_Norm_0 -ne $null) {$ZilParams3} else {$ZilParams2}
             }
 
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
