@@ -3052,6 +3052,50 @@ class VerthashWrapper : Miner {
     }
 }
 
+class WildRig : Miner {
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
+
+        $Server = "127.0.0.1" #"localhost"
+        $Timeout = 10 #seconds
+
+        $Request = ""
+        $Response = ""
+
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
+
+        try {
+            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Failed to connect to miner $($this.Name). "
+            return
+        }
+        
+        $HashRate_Name = $this.Algorithm[0]
+        $HashRate_Value = [Double]$Data.hashrate.total[0]
+        if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[1]} #fix
+        if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[2]} #fix
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+
+            $Difficulty_Value = [Double]$Data.results.diff_current
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+
+            $Accepted_Shares  = [Double]$Data.results.shares_good
+            $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $this.AddMinerData($Response,$HashRate,$Difficulty)
+
+        $this.CleanupMinerData()
+    }
+}
+
 class Wrapper : Miner {
 }
 
