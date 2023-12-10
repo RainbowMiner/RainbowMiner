@@ -12,14 +12,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.75
 $Cuda = "11.0"
-$Version = "0.39.9a"
+$Version = "0.39.9b"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.9a-wildrigmulti/wildrig-multi-linux-0.39.9a.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.9b-wildrigmulti/wildrig-multi-linux-0.39.9b.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.9a-wildrigmulti/wildrig-multi-windows-0.39.9a.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.39.9b-wildrigmulti/wildrig-multi-windows-0.39.9b.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -154,7 +154,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 					    Path           = $Path
 					    Arguments      = "--api-port `$mport -a $($Algorithm) -o stratum+tcp$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User -replace "^nexa:")$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 5 --max-rejects 10 --multiple-instance --opencl-devices $($DeviceIDsAll) $($DeviceParams) --opencl-threads auto --gpu-temp-limit=95 $($Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
-					    API            = "WildRig"
+					    API            = "Xmrig"
 					    Port           = $Miner_Port
 					    Uri            = $Uri
                         FaultTolerance = $_.FaultTolerance
