@@ -15,14 +15,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "19.0.0"
+$Version = "19.0.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v19.0.0-bzminer/bzminer_v19.0.0_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v19.0.1-bzminer/bzminer_v19.0.1_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v19.0.0-bzminer/bzminer_v19.0.0_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v19.0.1-bzminer/bzminer_v19.0.1_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
@@ -70,7 +70,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "radiant"; CoinSymbol = @("ETHW"); Algorithm = "Ethash"} #Ethash+SHA512256d/ETHW
     [PSCustomObject]@{MainAlgorithm = "ironfish";                     MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Ironfish
     [PSCustomObject]@{MainAlgorithm = "ixi";                          MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Argon2Ixi/Ixian
-    [PSCustomObject]@{MainAlgorithm = "karlsen";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #kHeavyHash
+    [PSCustomObject]@{MainAlgorithm = "karlsen";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #KarlsenHash
     [PSCustomObject]@{MainAlgorithm = "kaspa";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "kylacoin";                     MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "SHA3d"} #SHA3d/KCN
     [PSCustomObject]@{MainAlgorithm = "nexa";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "NexaPoW"} #NexaPow/NEXA
