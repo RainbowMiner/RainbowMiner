@@ -2,7 +2,7 @@
 101	CcminerPigeoncoin
 102	CcminerAlexis78
 103	CcminerAllium
-104	CcminerCool
+104	CcminerBalloon
 105	CcminerCryptonight
 106	CcminerLyra2v3
 107	CcminerHeavyHash
@@ -44,6 +44,7 @@
 143	CcminerSha3d
 144	CcminerZP
 145	CcminerXaja
+146	CcminerCool
 
 200	CpuminerJayddee
 201	CpuminerRplantPW
