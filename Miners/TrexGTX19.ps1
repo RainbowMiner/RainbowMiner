@@ -35,6 +35,7 @@ if ($IsLinux) {
 }
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2Z
     [PSCustomObject]@{MainAlgorithm = "megabtx"; Params = ""} #MegaBTX (Bitcore) (new with v0.18.1)
     [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #SHA256q (Pyrite)
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""} #SHA256t
