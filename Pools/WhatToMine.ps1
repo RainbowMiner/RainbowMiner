@@ -155,6 +155,10 @@ $ok = $false
 $Pool_Request = [PSCustomObject]@{}
 try {
     $Pool_Request = Invoke-RestMethodAsync "https://whattomine.com/calculators.json" -tag $Name -cycletime (12*3600)
+    if ($Pool_Request -is [string]) {
+        #temporary fix
+        $Pool_Request = $Pool_Request -creplace "Bitnet","Bitnetmoney" | ConvertFrom-Json -ErrorAction Stop
+    }
     if ($Pool_Request.coins -and ($Pool_Request.coins.PSObject.Properties.Name | Measure-Object).Count -ge 10) {
         $ok = $true
     } else {
