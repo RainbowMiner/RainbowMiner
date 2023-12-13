@@ -21,10 +21,8 @@ if (-not $User -and -not $InfoOnly) {return}
 
 $Pool_Request = [PSCustomObject]@{}
 
-$headers = @{"Accept"="text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"}
-
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.mining-dutch.nl/api/status/" -retry 3 -retrywait 500 -tag $Name -cycletime 120 -headers $headers
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/miningdutch.json" -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
