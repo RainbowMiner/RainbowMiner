@@ -12,14 +12,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.80a"
+$Version = "1.81"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.80a-lolminer/lolMiner_v1.80a_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.81-lolminer/lolMiner_v1.81_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.80a-lolminer/lolMiner_v1.80a_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.81-lolminer/lolMiner_v1.81_Win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -63,10 +63,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3Alephium"; CUDAArch = "P"} #EthashB3/RTH + Blake3
     [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode FISHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3IronFish"; CUDAArch = "P"} #EthashB3/RTH + Blake3IronFish
     [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode KARLSENDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "KarlsenHash"; CUDAArch = "P"} #EthashB3/RTH + KarlsenHash
+    [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode PYRINDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "HeavyHashPyrin"; CUDAArch = "P"} #EthashB3/RTH + Pyrin
     [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode RXDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA512256d"; CUDAArch = "P"} #EthashB3/RTH + SHA512256d
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3Alephium"; CUDAArch = "P"} #Ethash for low memory coins + Blake3
     [PSCustomObject]@{MainAlgorithm = "EtHashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode KASPADUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "kHeavyHash"; CUDAArch = "P"} #Ethash for low memory coins + kHeavyHash
+    [PSCustomObject]@{MainAlgorithm = "HeavyHashPyrin";               MinMemGB = 2;   Params = "--algo PYRIN";                                                Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #HeavyHashPyrin/PYI
     [PSCustomObject]@{MainAlgorithm = "KarlsenHash";                  MinMemGb = 2;   Params = "--algo KARLSEN"; Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #KarlsenHash
     [PSCustomObject]@{MainAlgorithm = "kHeavyHash";                   MinMemGB = 2;   Params = "--algo KASPA";                                                Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "NexaPoW";         DAG = $true; MinMemGb = 2;   Params = "--algo NEXA";                             Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #NexaPow/NEOX
