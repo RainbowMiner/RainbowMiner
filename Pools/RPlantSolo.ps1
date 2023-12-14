@@ -29,7 +29,7 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("ru","eu","asia","na")
+$Pool_Regions = @("eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and (($Wallets."$($_.symbol)" -and $_.Symbol -ne "SKY") -or ($Wallets.SKYDOGE -and $_.Symbol -eq "SKY")) -or $InfoOnly} | ForEach-Object {
@@ -47,7 +47,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and (
         $Pool_CoinName       = (Get-Culture).TextInfo.ToTitleCase($_.info.coin)
     }
 
-    $Pool_Fee            = if ($PoolCurrencies_Request.$Pool_Currency.fee_solo -ne $null) {[double]$PoolCurrencies_Request.$Pool_Currency.fee_solo} else {1.0}
+    $Pool_Fee            = if ($PoolsCurrencies_Request.$Pool_Currency.fee_solo -ne $null) {[double]$PoolsCurrencies_Request.$Pool_Currency.fee_solo} else {2.0}
     $Pool_User           = $Wallets.$Pool_CurrencyXlat
     $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
