@@ -69,6 +69,9 @@
             }
             Currencies=@("ETC","UBQ","ZIL")
         }
+        "Kryptex" = [PSCustomObject]@{
+            Currencies=@("KAS","XMR")
+        }
         "DeepMinerZ" = [PSCustomObject]@{
             Currencies=@("DNX")
         }
