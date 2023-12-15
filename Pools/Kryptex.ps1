@@ -69,7 +69,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
 
         $Pool_TSL = $timestamp - ($PoolCoin_Request.last_blocks_found | Select-Object -First 1).date
 
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value 0 -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $true -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value 0 -Duration $StatSpan -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $true -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
