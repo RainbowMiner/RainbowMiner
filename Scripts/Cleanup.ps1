@@ -1768,6 +1768,10 @@ try {
         $RemoveMinerStats += @("*-Rigel-EtcHash-kHeavyHash*_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.9.1.0")) {
+        $RemovePoolStats += @("Hashcryptos_*_Profit.txt")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
