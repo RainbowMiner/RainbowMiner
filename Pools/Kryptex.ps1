@@ -10,7 +10,8 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
-    [String]$StatAverageStable = "Week"
+    [String]$StatAverageStable = "Week",
+    [String]$EMail
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -38,7 +39,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Ports = @(7777,8888)
 
-$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC","UBQ") -and ($Wallets.$_ -or $InfoOnly)} | ForEach-Object {
+$Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC","UBQ") -and ($Wallets.$_ -or $Email -ne "" -or $InfoOnly)} | ForEach-Object {
      
     $Pool_Rpc = $_.ToLower()
     $Pool_Host = "$($Pool_Rpc).kryptex.network" 
@@ -75,14 +76,28 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_ExCurrency = try {
-        [mailaddress]$Wallets.$_ > $null
-        "BTC"
+    if ($Wallets.$Pool_Currency) {
+        $Pool_ExCurrency = try {
+            [mailaddress]$Wallets.$Pool_Currency > $null
+            "BTC"
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $Pool_Currency
+        }
+        $Pool_Wallet = $Wallets.$Pool_Currency
+    } elseif ($Email -ne "") {
+        $Pool_ExCurrency = try {
+            [mailaddress]$Email > $null
+            "BTC"
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+        $Pool_Wallet = $Email
     }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        $Pool_Currency
-    }
+
+    if (-not $Pool_ExCurrency) {return}
 
     foreach($Pool_Region in $Pool_Regions) {
         $Pool_SSL = $false

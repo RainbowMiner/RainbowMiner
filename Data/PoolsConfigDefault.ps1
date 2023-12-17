@@ -69,9 +69,6 @@
             }
             Currencies=@("ETC","UBQ","ZIL")
         }
-        "Kryptex" = [PSCustomObject]@{
-            Currencies=@("KAS","XMR")
-        }
         "DeepMinerZ" = [PSCustomObject]@{
             Currencies=@("DNX")
         }
@@ -152,6 +149,11 @@
         }
         "Icemining" = [PSCustomObject]@{
             Currencies=@("NIM")
+        }
+        "Kryptex" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Email=""}
+            SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address to enable all coins for autoexchange"}
+            Currencies=@("KAS","XMR")
         }
         "LeafPool" = [PSCustomObject]@{
             Currencies=@("BEAM")
