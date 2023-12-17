@@ -39,16 +39,16 @@ $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "blake2s";   port = 4001; stratum = "stratum3.hashcryptos.com"; factor = 1000}
-    [PSCustomObject]@{algo = "equihash";  port = 4003; stratum = "stratum4.hashcryptos.com"; factor = 1000}
-    [PSCustomObject]@{algo = "equihash192";  port = 6660; stratum = "stratum4.hashcryptos.com"; factor = 1000}
-    [PSCustomObject]@{algo = "ghostrider";  port = 9997; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "blake2s";   port = 4001; stratum = "stratum3.hashcryptos.com"}
+    [PSCustomObject]@{algo = "equihash";  port = 4003; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "equihash192";  port = 6660; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "ghostrider";  port = 9997; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "groestl";   port = 4004; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "kawpow";  port = 9985; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "keccak";    port = 4005; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "lbry";  port = 9988; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "lyra2rev2"; port = 4006; stratum = "stratum3.hashcryptos.com"}
-    [PSCustomObject]@{algo = "memehash";  port = 9978; stratum = "stratum4.hashcryptos.com"; factor = 1e-3}
+    [PSCustomObject]@{algo = "memehash";  port = 9978; stratum = "stratum4.hashcryptos.com"}
     [PSCustomObject]@{algo = "myrgro";    port = 4009; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "neoscrypt"; port = 4010; stratum = "stratum1.hashcryptos.com"}
     [PSCustomObject]@{algo = "odocrypt";  port = 4029; stratum = "stratum2.hashcryptos.com"}
@@ -60,11 +60,11 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "x11";       port = 4018; stratum = "stratum1.hashcryptos.com"}
     [PSCustomObject]@{algo = "x11gost";   port = 4016; stratum = "stratum3.hashcryptos.com"}
     [PSCustomObject]@{algo = "x13";   port = 9980; stratum = "stratum3.hashcryptos.com"}
-    [PSCustomObject]@{algo = "yescrypt";  port = 4024; stratum = "stratum4.hashcryptos.com"; factor = 1000}
-    [PSCustomObject]@{algo = "yescryptr16";  port = 4025; stratum = "stratum4.hashcryptos.com"; factor = 1000}
-    [PSCustomObject]@{algo = "yescryptr32";  port = 9993; stratum = "stratum4.hashcryptos.com"; factor = 1000}
-    [PSCustomObject]@{algo = "yespower";  port = 9986; stratum = "stratum4.hashcryptos.com"; factor = 1000}
-    [PSCustomObject]@{algo = "yespowerr16";  port = 9987; stratum = "stratum4.hashcryptos.com"; factor = 1000}
+    [PSCustomObject]@{algo = "yescrypt";  port = 4024; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "yescryptr16";  port = 4025; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "yescryptr32";  port = 9993; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "yespower";  port = 9986; stratum = "stratum4.hashcryptos.com"}
+    [PSCustomObject]@{algo = "yespowerr16";  port = 9987; stratum = "stratum4.hashcryptos.com"}
 )
 
 #"`"$(@(([Regex]'value="(\w+)"').Matches('<select class="form-control"id="WalletCurrency"><option value="BCH">BCH BitcoinCashNode</option><option value="BSV">BSV BitcoinSV</option><option value="BTC" selected >BTC Bitcoin</option><option value="DASH">DASH Dash</option><option value="DGB">DGB Digibyte</option><option value="DOGE">DOGE Dogecoin</option><option value="FTC">FTC FeatherCoin</option><option value="GRS">GRS GroestlCoin</option><option value="LTC">LTC Litecoin</option><option value="MONA">MONA MonaCoin</option><option value="PEPEW">PEPEW PepePow</option><option value="RVN">RVN Ravencoin</option><option value="VTC">VTC Vertcoin</option><option value="XEC">XEC Ecash</option><option value="XMR">XMR Monero</option><option value="XMY">XMY Myriadcoin</option><option value="XVG">XVG Verge</option><option value="ZEC">ZEC Zcash</option></select>') | Foreach-Object {$_.Groups[1].Value}) -join '","')`""
