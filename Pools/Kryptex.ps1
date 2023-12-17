@@ -45,6 +45,8 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
 
     $Pool_Coin = Get-Coin $_
 
+    $Pool_Currency = $Pool_Coin.Symbol
+
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
     $PoolCoin_Request = [PSCustomObject]@{}
@@ -73,13 +75,13 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_Currency = try {
+    $Pool_ExCurrency = try {
         [mailaddress]$Wallets.$_ > $null
         "BTC"
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        $Pool_Coin.Symbol
+        $Pool_Currency
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -89,8 +91,8 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
                 Algorithm     = $Pool_Algorithm_Norm
                 Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin.Name
-                CoinSymbol    = $Pool_Coin.Symbol
-                Currency      = $Pool_Currency
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_ExCurrency
                 Price         = 0
                 StablePrice   = 0
                 MarginOfError = 0
