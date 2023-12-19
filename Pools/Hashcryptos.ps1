@@ -53,7 +53,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "neoscrypt"; port = 4010; stratum = "stratum1.hashcryptos.com"}
     [PSCustomObject]@{algo = "odocrypt";  port = 4029; stratum = "stratum2.hashcryptos.com"}
     [PSCustomObject]@{algo = "qubit";     port = 4013; stratum = "stratum3.hashcryptos.com"}
-    [PSCustomObject]@{algo = "randomx";   port = 3339; stratum = "stratum1.hashcryptos.com"; factor = 1e-3}
+    [PSCustomObject]@{algo = "randomx";   port = 3339; stratum = "stratum1.hashcryptos.com"}
     [PSCustomObject]@{algo = "scrypt";    port = 4000; stratum = "stratum2.hashcryptos.com"}
     [PSCustomObject]@{algo = "sha256";  port = 4014; stratum = "stratum1.hashcryptos.com"}
     [PSCustomObject]@{algo = "verthash";  port = 9991; stratum = "stratum3.hashcryptos.com"}
