@@ -1,4 +1,4 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
     [PSCustomObject]$Wallets,
@@ -114,7 +114,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = $Pool_Host
                 Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency)/{workername:$Worker}"
+                User          = "$($Pool_Wallet)/{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $Pool_SSL
