@@ -4,13 +4,15 @@
         "coin":  "Ergo",
         "algo":  "Autolykos2",
         "rpc":  "ergo-pps.baikalmine.com",
-        "host":  "ergo-pps.baikalmine.com",
+        "host":  {
+                    "ru": "ergo-pps.baikalmine.com"
+                 },
         "port":  [
                      1516
                  ],
         "fee":  0.75,
         "regions":  [
-                        "eu"
+                        "ru"
                     ]
     },
     {
@@ -18,29 +20,16 @@
         "coin":  "Ethereum Classic",
         "algo":  "Ethash",
         "rpc":  "etc-pps.baikalmine.com",
-        "host":  "etc-pps.baikalmine.com",
+        "host":  {
+                    "ru": "etc-pps.baikalmine.com"
+                 },
         "port":  [
                      3030,
                      3031
                  ],
         "fee":  0.75,
         "regions":  [
-                        "eu"
-                    ]
-    },
-    {
-        "symbol":  "ETHW",
-        "coin":  "EthereumPoW",
-        "algo":  "Ethash",
-        "rpc":  "ethw-pps.baikalmine.com",
-        "host":  "ethw-pps.baikalmine.com",
-        "port":  [
-                     1616,
-                     1615
-                 ],
-        "fee":  0.75,
-        "regions":  [
-                        "eu"
+                        "ru"
                     ]
     }
 ]
