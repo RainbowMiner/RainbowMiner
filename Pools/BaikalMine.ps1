@@ -16,7 +16,7 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 [hashtable]$Pool_RegionsTable = @{}
-@("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("eu","ru") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = Get-PoolsData $Name
 
@@ -76,7 +76,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
-                Host          = $_.host
+                Host          = $_.host.$Pool_Region
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = "x"
@@ -90,7 +90,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
                 WTM           = $true
-                Mallob        = $_.mallob
+                Mallob        = if ($_.mallob) {$_.mallob.$Pool_Region} else {$null}
                 EthMode       = $Pool_EthProxy
                 Name          = $Name
                 Penalty       = 0
