@@ -12,16 +12,16 @@ $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "3.42"
+$Version = "3.43"
 $DeviceCapability = "5.0"
 $EnableContest = $false
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.42-gminer/gminer_3_42_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.43-gminer/gminer_3_43_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.42-gminer/gminer_3_42_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.43-gminer/gminer_3_43_windows64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -41,6 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "FiroPoW";         DAG = $true; MinMemGb = 3;                     Params = "--algo firo";        Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #FiroPOW
     [PSCustomObject]@{MainAlgorithm = "Blake3IronFish";               MinMemGb = 1;                     Params = "--algo ironfish";    Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #Blake3IronFish/IRON
+    [PSCustomObject]@{MainAlgorithm = "KarlsenHash";                  MinMemGb = 1;                     Params = "--algo karlsenhash"; Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00; ZilFee=2.00} #KarlsenHash/KLS
     [PSCustomObject]@{MainAlgorithm = "KawPOW";          DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW2g";        DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW3g";        DAG = $true; MinMemGb = 3;                     Params = "--algo kawpow";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #KawPOW
@@ -105,9 +106,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         $ZilParams = ""
 
-        if ($Session.Config.Pools.FlexPool.EnableGminerDual -and $Pools.ZilliqaFP) {
-            if ($ZilWallet = $Pools.ZilliqaFP.Wallet) {
-                $ZilParams = " --zilserver $($Pools.ZilliqaFP.Protocol)://$($Pools.ZilliqaFP.Host) --ziluser $($Pools.ZilliqaFP.User)"
+        if ($Session.Config.Pools.CrazyPool.EnableGminerDual -and $Pools.ZilliqaCP) {
+            if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
+                $ZilParams = " --zilserver $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) --ziluser $($Pools.ZilliqaCP.User)"
             }
         }
 
@@ -172,7 +173,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					                    ExtendInterval = $_.ExtendInterval
                                         Penalty        = 0
 					                    DevFee         = [PSCustomObject]@{
-								                            ($MainAlgorithm_Norm) = if ($_.Fee -ne $null) {$_.Fee} else {$DevFee}
+								                            ($MainAlgorithm_Norm) = if ($_.ZilFee -ne $null -and $ZilParams -ne "") {$_.ZilFee} elseif ($_.Fee -ne $null) {$_.Fee} else {$DevFee}
 								                            ($SecondAlgorithm_Norm) = 0
                                                           }
 					                    Uri            = $Uri
@@ -203,7 +204,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             FaultTolerance = $_.FaultTolerance
 					        ExtendInterval = $_.ExtendInterval
                             Penalty        = 0
-					        DevFee         = if ($_.Fee -ne $null) {$_.Fee} else {$DevFee}
+					        DevFee         = if ($_.ZilFee -ne $null -and $ZilParams -ne "") {$_.ZilFee} elseif ($_.Fee -ne $null) {$_.Fee} else {$DevFee}
 					        Uri            = $Uri
 					        ManualUri      = $ManualUri
 					        NoCPUMining    = $_.NoCPUMining

@@ -29,13 +29,15 @@ catch {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("ru","eu","asia","na")
+$Pool_Regions = @("eu","asia","na")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.symbol)" -and $_.Symbol -ne "SKY") -or ($Wallets.SKYDOGE -and $_.Symbol -eq "SKY")) -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.symbol
     
-    $Pool_Coin           = Get-Coin $Pool_Currency -Algorithm $_.algo
+    $Pool_CurrencyXlat = if ($Pool_Currency -eq "SKY") {"SKYDOGE"} else {$Pool_Currency}
+    
+    $Pool_Coin           = Get-Coin $Pool_CurrencyXlat -Algorithm $_.algo
     
     if ($Pool_Coin) {
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
@@ -45,14 +47,14 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symb
         $Pool_CoinName       = (Get-Culture).TextInfo.ToTitleCase($_.info.coin)
     }
 
-    $Pool_Fee            = if ($PoolCurrencies_Request.$Pool_Currency.fee -ne $null) {[double]$PoolCurrencies_Request.$Pool_Currency.fee_solo} else {1.0}
-    $Pool_User           = $Wallets.$Pool_Currency
+    $Pool_Fee            = if ($PoolsCurrencies_Request.$Pool_Currency.fee -ne $null) {[double]$PoolsCurrencies_Request.$Pool_Currency.fee} else {1.0}
+    $Pool_User           = $Wallets.$Pool_CurrencyXlat
     $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Stratum        = if ($_.info.links.stratums) {"randomx"} else {"stratum-%region%"}
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hr) -BlockRate ([double]$_.b24) -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CurrencyXlat)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hr) -BlockRate ([double]$_.b24) -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -66,8 +68,8 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$Wallets."$($_.symb
                         Algorithm     = $Pool_Algorithm_Norm
                         Algorithm0    = $Pool_Algorithm_Norm
                         CoinName      = $Pool_CoinName
-                        CoinSymbol    = $Pool_Currency
-                        Currency      = $Pool_Currency
+                        CoinSymbol    = $Pool_CurrencyXlat
+                        Currency      = $Pool_CurrencyXlat
                         Price         = 0
                         StablePrice   = 0
                         MarginOfError = 0

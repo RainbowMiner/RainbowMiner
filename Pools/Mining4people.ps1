@@ -71,7 +71,7 @@ $Pool_Request | Where-Object {$_.id -match "pplns$" -and ($Wallets."$($_.coin)" 
 
         $Pool_CoinRequest = $Pool_CoinRequest.pool | Select-Object -First 1
 
-        $Pool_CoinRequest.ports.PSObject.Properties | Sort-Object {[int]$_.Name},{[bool]$_.Value.tls} | Foreach-Object {
+        $Pool_CoinRequest.ports.PSObject.Properties | Sort-Object {[double]$_.Value.difficulty},{[int]$_.Name},{[bool]$_.Value.tls} | Foreach-Object {
             if ([bool]$_.Value.tls) {
                 if (-not $Pool_Ports[1]) {$Pool_Ports[1] = $_.Name}
             } else {
@@ -79,14 +79,15 @@ $Pool_Request | Where-Object {$_.id -match "pplns$" -and ($Wallets."$($_.coin)" 
             }
         }
 
-        $avgTime       = $Pool_CoinRequest.networkStats.networkDifficulty * [Math]::Pow(2,32) / $_.poolHashrate
-        $Pool_BLK      = [int]$(if ($avgTime) {86400/$avgTime})
-        $Pool_TSL      = ((Get-Date) - ([datetime]$Pool_CoinRequest.lastPoolBlockTime)).TotalSeconds
+        $hashrate      = $_.poolHashrate
+        $avgTime       = if ($_.poolHashrate -gt 0) {$Pool_CoinRequest.networkStats.networkDifficulty * [Math]::Pow(2,32) / $hashrate} else {0}
+        $Pool_BLK      = [int]$(if ($avgTimec-gt 0) {86400/$avgTime})
+        $lastBlocktime = if ($Pool_CoinRequest.lastPoolBlockTime) {([datetime]$Pool_CoinRequest.lastPoolBlockTime)} else {[datetime]"1970-01-01T00:00:00"}
+        $Pool_TSL      = ((Get-Date) - $lastBlocktime).TotalSeconds
         $reward        = [int]$_.blockReward
         $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
-        $hashrate      = $_.poolHashrate
 
-        $btcRewardLive =  if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $hashrate} else {0}
+        $btcRewardLive =  if ($hashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $hashrate} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $hashrate -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}

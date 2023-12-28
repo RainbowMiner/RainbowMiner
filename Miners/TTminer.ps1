@@ -12,15 +12,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2023.4.2"
+$Version = "2023.4.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.2-ttminer/TT-Miner-2023.4.2.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.3-ttminer/TT-Miner-2023.4.3.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.2-ttminer/TT-Miner-2023.4.2.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.3-ttminer/TT-Miner-2023.4.3.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -48,7 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ProgPoWVEIL"   ; DAG = $true; MinMemGB = 3;   Params = "-c VEIL";          ExtendInterval = 2} #ProgPoWSero (VEIL)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWZ"      ; DAG = $true; MinMemGB = 3;   Params = "-c ZANO";          ExtendInterval = 2} #ProgPoWZ (ZANO)
     [PSCustomObject]@{MainAlgorithm = "SHA3d"         ;              MinMemGB = 2;   Params = "-a Sha3d";         ExtendInterval = 2} #SHA3d
-    [PSCustomObject]@{MainAlgorithm = "SHA3Solidity"  ;              MinMemGB = 2;   Params = "-c ETI";           ExtendInterval = 2} #SHA3Solidity
+    [PSCustomObject]@{MainAlgorithm = "SHA3Solidity"  ;              MinMemGB = 2;   Params = "";                 ExtendInterval = 2; Coins = @("EGAZ","ETI")} #SHA3Solidity
     [PSCustomObject]@{MainAlgorithm = "SHA256dt"      ;              MinMemGB = 2;   Params = "-a Sha256dt";      ExtendInterval = 2} #SHA256dt
     [PSCustomObject]@{MainAlgorithm = "SHA512256d"    ;              MinMemGB = 2;   Params = "-a Sha512256d";    ExtendInterval = 2} #Sha512256d
     [PSCustomObject]@{MainAlgorithm = "UbqHash"       ;              MinMemGB = 2.4; Params = "-a UBQHASH";       ExtendInterval = 2} #Ubqhash
@@ -57,7 +57,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"; SecondaryAlgorithm = "SHA512256d"; SecondaryParams = "-a Sha512256d"} #EthashB3 + SHA512256d
 )
 
-$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BTC","BTRM","BUT","CLO","CLORE","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","JGC","KAW","KCN","KIIRO","LAB","LTR","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL")
+$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BTC","BTRM","BUT","CLO","CLORE","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","EGAZ","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","JGC","KAW","KCN","KIIRO","LAB","LTR","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL")
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -104,7 +104,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $Miner_Protocol = "stratum$(if ($Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Host -notmatch "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {"1"})+$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl"} else {"tcp"})://"
-                    if ($Algorithm_Norm -eq "SHA3Solidity") {$Miner_Protocol = "etica://"}
+                    if ($Algorithm_Norm -eq "SHA3Solidity") {$Miner_Protocol = ""}
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                     $First = $False
                 }
@@ -128,7 +128,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -P$($Params_Symbol) $($Miner_Protocol)$($Pools.$Algorithm_Norm.Wallet)$(if ($Pools.$Algorithm_Norm.Pass -notmatch "{workername") {".$($Pools.$Algorithm_Norm.Worker)"})$(if ($Pass) {":$($Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
+					Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -P$($Params_Symbol) $($Miner_Protocol)$(if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User})$(if ($Pools.$MainAlgorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Pass -notmatch "{workername") {".$($Pools.$Algorithm_Norm.Worker)"})$(if ($Pass) {":$($Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					API            = "Claymore"
 					Port           = $Miner_Port                

@@ -1,16 +1,37 @@
 [
     {
-        "symbol":  "CLO",
-        "coin":  "Callisto Network",
+        "symbol":  "DOGETHER",
+        "coin":  "Dogethereum",
         "algo":  "Ethash",
-        "rpc":  "clo-solo.baikalmine.com",
-        "host":  "clo-solo.baikalmine.com",
+        "rpc":  "dogeth-solo.baikalmine.com",
+        "host":  {
+                    "ru": "dogeth-solo.baikalmine.com"
+                 },
         "port":  [
-                     4433
+                     9079
                  ],
-        "fee":  1.0,
+        "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
+                    ]
+    },
+    {
+        "symbol":  "DNX",
+        "coin":  "Dynexcoin",
+        "algo":  "DynexSolve",
+        "rpc":  "dnx-solo.baikalmine.com",
+        "host":  {
+                    "ru": "dnx-solo.baikalmine.com"
+                 },
+        "mallob":  {
+                    "ru": "https://dnx-mallob.baikalmine.com"
+                   }
+        "port":  [
+                     9095
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "ru"
                     ]
     },
     {
@@ -18,13 +39,15 @@
         "coin":  "Ergo",
         "algo":  "Autolykos2",
         "rpc":  "ergo-solo.baikalmine.com",
-        "host":  "ergo-solo.baikalmine.com",
+        "host":  {
+                    "ru": "ergo-solo.baikalmine.com"
+                 },
         "port":  [
                      1214
                  ],
-        "fee":  1.00,
+        "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
                     ]
     },
     {
@@ -32,27 +55,97 @@
         "coin":  "Ethereum Classic",
         "algo":  "Ethash",
         "rpc":  "etc-solo.baikalmine.com",
-        "host":  "etc-solo.baikalmine.com",
+        "host":  {
+                    "ru": "etc-solo.baikalmine.com"
+                 },
         "port":  [
                      1444
                  ],
-        "fee":  1.0,
+        "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
                     ]
     },
     {
-        "symbol":  "FLR",
-        "coin":  "Flora",
-        "algo":  "Ethash",
-        "rpc":  "flr-solo.baikalmine.com",
-        "host":  "flr-solo.baikalmine.com",
+        "symbol":  "HYP",
+        "coin":  "Hypro",
+        "algo":  "EthashB3",
+        "rpc":  "rth-solo.baikalmine.com",
+        "host":  {
+                    "ru": "rth-solo.baikalmine.com"
+                 },
         "port":  [
-                     1816
+                     9079
                  ],
         "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
+                    ]
+    },
+    {
+        "symbol":  "KAS",
+        "coin":  "Kaspa",
+        "algo":  "kHeavyHash",
+        "rpc":  "kaspa-solo.baikalmine.com",
+        "host":  {
+                    "ru": "kaspa-solo.baikalmine.com"
+                 },
+        "port":  [
+                     2535
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "ru"
+                    ]
+    },
+    {
+        "symbol":  "KLS",
+        "coin":  "Karlsen",
+        "algo":  "KarlsenHash",
+        "rpc":  "kls-solo.baikalmine.com",
+        "host":  {
+                    "ru": "kls-solo.baikalmine.com",
+                    "eu": "kls-eu-solo.baikalmine.com"
+                 },
+        "port":  [
+                     2636
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu","ru"
+                    ]
+    },
+    {
+        "symbol":  "NYC",
+        "coin":  "NewyorkCoin",
+        "algo":  "Scrypt",
+        "rpc":  "nyc-solo.baikalmine.com",
+        "host":  {
+                    "ru": "nyc-solo.baikalmine.com"
+                 },
+        "port":  [
+                     8093
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "ru"
+                    ]
+    },
+    {
+        "symbol":  "PYI",
+        "coin":  "Pyrin",
+        "algo":  "HeavyHashPyron",
+        "rpc":  "pyi-solo.baikalmine.com",
+        "host":  {
+                    "ru": "pyi-solo.baikalmine.com",
+                    "eu": "pyi-eu-solo.baikalmine.com"
+                 },
+        "port":  [
+                     2737
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu","ru"
                     ]
     }
 ]

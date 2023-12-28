@@ -21,10 +21,8 @@ if (-not $User -and -not $InfoOnly) {return}
 
 $Pool_Request = [PSCustomObject]@{}
 
-$headers = @{"Accept"="text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"}
-
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.mining-dutch.nl/api/status/" -retry 3 -retrywait 500 -tag $Name -cycletime 120 -headers $headers
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/miningdutch.json" -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -39,7 +37,7 @@ if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Obj
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("americas","asia","eu")
+$Pool_Regions = @("americas","asia","brazil","canada","europe","india","singapore","hongkong","moscow","kazakhstan")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 2
@@ -54,7 +52,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
     $Pool_Fee = [double]$_.Value.fees
     $Pool_Symbol = ''
     $Pool_Port = [int]$_.Value.port
-    $Pool_Host = "$($_.Value.name).mining-dutch.nl"
+    $Pool_Host = "mining-dutch.nl"
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
         
     $Pool_Factor = [double]$_.Value.mbtc_mh_factor
@@ -84,7 +82,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
                 StablePrice   = $Stat.$StatAverageStable
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = "$(if ($Pool_Region -ne "eu") {"$($Pool_Region)."})$($Pool_Host)"
+                Host          = "$($Pool_Region).$($Pool_Host)"
                 Port          = $Pool_Port
                 User          = "$User.{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"

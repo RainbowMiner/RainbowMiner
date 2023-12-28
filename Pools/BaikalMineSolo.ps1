@@ -60,7 +60,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 StablePrice   = 0
                 MarginOfError = 0
                 Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
-                Host          = $_.host
+                Host          = $_.host.$Pool_Request
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = "x"
@@ -73,6 +73,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Hashrate      = $null
                 TSL           = $null
                 BLK           = $null
+                Mallob        = if ($_.mallob) {$_.mallob.$Pool_Region} else {$null}
                 Difficulty    = $Stat.Diff_Average
                 SoloMining    = $true
                 WTM           = $true

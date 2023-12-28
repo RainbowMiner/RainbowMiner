@@ -1,16 +1,39 @@
 [
     {
-        "symbol":  "CLO",
-        "coin":  "Callisto Network",
+        "symbol":  "DOGETHER",
+        "coin":  "Dogethereum",
         "algo":  "Ethash",
-        "rpc":  "clo.baikalmine.com",
-        "host":  "clo.baikalmine.com",
+        "rpc":  "dogeth.baikalmine.com",
+        "host":  {
+                    "ru": "dogeth.baikalmine.com"
+                 },
         "port":  [
-                     3333
+                     9085
                  ],
         "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
+                    ]
+    },
+    {
+        "symbol":  "DNX",
+        "coin":  "Dynexcoin",
+        "algo":  "DynexSolve",
+        "rpc":  "dnx.baikalmine.com",
+        "host":  {
+                    "ru": "dnx.baikalmine.com",
+                    "eu": "dnx-eu.baikalmine.com"
+                 },
+        "mallob":  {
+                    "ru": "https://dnx-mallob.baikalmine.com",
+                    "eu": "https://eu-mallob.baikalmine.com"
+                   }
+        "port":  [
+                     9090
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu","ru"
                     ]
     },
     {
@@ -18,13 +41,15 @@
         "coin":  "Ergo",
         "algo":  "Autolykos2",
         "rpc":  "ergo.baikalmine.com",
-        "host":  "ergo.baikalmine.com",
+        "host":  {
+                    "ru": "ergo.baikalmine.com"
+                 },
         "port":  [
                      1212
                  ],
         "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
                     ]
     },
     {
@@ -32,41 +57,113 @@
         "coin":  "Ethereum Classic",
         "algo":  "Ethash",
         "rpc":  "etc.baikalmine.com",
-        "host":  "etc.baikalmine.com",
+        "host":  {
+                    "ru": "etc.baikalmine.com"
+                 },
         "port":  [
                      8008
                  ],
         "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
                     ]
     },
     {
-        "symbol":  "ETHW",
-        "coin":  "EthereumPoW",
-        "algo":  "Ethash",
-        "rpc":  "ethw.baikalmine.com",
-        "host":  "ethw.baikalmine.com",
+        "symbol":  "HYP",
+        "coin":  "Hypro",
+        "algo":  "EthashB3",
+        "rpc":  "rth.baikalmine.com",
+        "host":  {
+                    "ru": "rth.baikalmine.com"
+                 },
         "port":  [
                      1515
                  ],
         "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
                     ]
     },
     {
-        "symbol":  "FLR",
-        "coin":  "Flora",
-        "algo":  "Ethash",
-        "rpc":  "flr.baikalmine.com",
-        "host":  "flr.baikalmine.com",
+        "symbol":  "KAS",
+        "coin":  "Kaspa",
+        "algo":  "kHeavyHash",
+        "rpc":  "kaspa.baikalmine.com",
+        "host":  {
+                    "ru": "kaspa.baikalmine.com"
+                 },
         "port":  [
-                     1818
+                     2525
                  ],
         "fee":  0.5,
         "regions":  [
-                        "eu"
+                        "ru"
+                    ]
+    },
+    {
+        "symbol":  "KLS",
+        "coin":  "Karlsen",
+        "algo":  "KarlsenHash",
+        "rpc":  "kls.baikalmine.com",
+        "host":  {
+                    "ru": "kls.baikalmine.com",
+                    "eu": "kls-eu.baikalmine.com"
+                 },
+        "port":  [
+                     2626
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu","ru"
+                    ]
+    },
+    {
+        "symbol":  "NYC",
+        "coin":  "NewyorkCoin",
+        "algo":  "Scrypt",
+        "rpc":  "nyc.baikalmine.com",
+        "host":  {
+                    "ru": "nyc.baikalmine.com"
+                 },
+        "port":  [
+                     8095
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "ru"
+                    ]
+    },
+    {
+        "symbol":  "PYI",
+        "coin":  "Pyrin",
+        "algo":  "HeavyHashPyron",
+        "rpc":  "pyi.baikalmine.com",
+        "host":  {
+                    "ru": "pyi.baikalmine.com",
+                    "eu": "pyi-eu.baikalmine.com"
+                 },
+        "port":  [
+                     2727
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "eu","ru"
+                    ]
+    },
+    {
+        "symbol":  "XPB",
+        "coin":  "Powblocks",
+        "algo":  "Ethash",
+        "rpc":  "xpb.baikalmine.com",
+        "host":  {
+                    "ru": "xpb.baikalmine.com"
+                 },
+        "port":  [
+                     9595
+                 ],
+        "fee":  0.5,
+        "regions":  [
+                        "ru"
                     ]
     }
 ]

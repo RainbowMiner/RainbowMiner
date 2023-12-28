@@ -95,8 +95,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
 			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 			            $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)$(if ($DualIntensity -ne $null) {"-$($DualIntensity)"})"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $offset = if ($Miner_Vendor -eq "AMD") {($Session.AllDevices | Where-Object Vendor -eq "NVIDIA" | Measure-Object).Count} else {0}
-                        $DeviceIDsAll = ($Miner_Device | % {'{0:d}' -f ($_.Type_Vendor_Index + $offset)}) -join ','
+                        #$offset = if ($Miner_Vendor -eq "AMD") {($Session.AllDevices | Where-Object Vendor -eq "NVIDIA" | Measure-Object).Count} else {0}
+                        $DeviceIDsAll = ($Miner_Device | % {'{0:d}' -f ($_.Type_Vendor_Index)}) -join ','
                         if ($_.Intensity -ne $null) {
                             $DeviceIntensitiesAll = ",$($DualIntensity)"*($Miner_Device | Measure-Object).Count -replace '^,',' '
                         }
@@ -131,7 +131,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog$(if ($Pools.$MainAlgorithm_Norm.Host -notmatch "Flexpool|Nicehash") {" --share-check 0"}) $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport --platform $(if ($Miner_Vendor -eq "NVIDIA") {1} else {2}) -d $($DeviceIDsAll) -o $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -p $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) --no-watchdog$(if ($Pools.$MainAlgorithm_Norm.Host -notmatch "Nicehash") {" --share-check 0"}) $($_.Params)"
 							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
 							API            = "NBminer"
 							Port           = $Miner_Port
@@ -177,7 +177,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DeviceName     = $Miner_Device.Name
 							DeviceModel    = $Miner_Model
 							Path           = $Path
-							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Pool_Protocol2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -u $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($FailoverSecondary) {" $FailoverSecondary"}) -do $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -dp $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) -di$($DeviceIntensitiesAll) --no-watchdog --no-health $($_.Params)"
+							Arguments      = "--api 127.0.0.1:`$mport --platform $(if ($Miner_Vendor -eq "NVIDIA") {1} else {2}) -d $($DeviceIDsAll) -o $($Pool_Protocol2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -u $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -p $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($FailoverSecondary) {" $FailoverSecondary"}) -do $($Pool_Protocol)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -dp $($Pools.$MainAlgorithm_Norm.Pass)"})$(if ($FailoverMain) {" $FailoverMain"}) -di$($DeviceIntensitiesAll) --no-watchdog --no-health $($_.Params)"
 							HashRates      = [PSCustomObject]@{
                                                 $MainAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                 $SecondAlgorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))

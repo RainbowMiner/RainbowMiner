@@ -1253,6 +1253,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "BCH"
                                                     autoprice   = $true
                                                 }
+                                                doge = @{
+                                                    enabled     = $MRRConfig.$RigName.PriceCurrencies -contains "DOGE"
+                                                    autoprice   = $true
+                                                }
                                                 type = $RigDivisors[$PriceDivisor].type
                                             }
 
@@ -1357,6 +1361,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                              ($_.price.LTC.enabled -ne $CreateRig.price.ltc.enabled) -or
                                                              ($_.price.ETH.enabled -ne $CreateRig.price.eth.enabled) -or
                                                              ($_.price.BCH.enabled -ne $CreateRig.price.bch.enabled) -or
+                                                             ($_.price.DOGE.enabled -ne $CreateRig.price.doge.enabled) -or
                                                              ($RigServer -and ($_.region -ne $RigServer.region)) -or
                                                              ($_.extensions -ne $CreateRig.extensions)
                                                         ) {
