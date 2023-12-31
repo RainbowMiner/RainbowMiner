@@ -169,6 +169,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                 if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "CLORE")    {$MainAlgorithm_0 = "clore"}
                 elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "NEOX") {$MainAlgorithm_0 = "neoxa"}
                 elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "XNA")  {$MainAlgorithm_0 = "neurai"}
+                elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "AIPG")  {$MainAlgorithm_0 = "aipg"}
                 elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -ne "RVN")  {$MainAlgorithm_0 = "neurai"}
             } elseif ($MainAlgorithm_0 -eq "ethash") {
                 if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "XPB") {$MainAlgorithm_0 = "powblocks"}
