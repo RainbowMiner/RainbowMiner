@@ -177,6 +177,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
                         $Pool_Host = if ($Pool_Port -and $Pools.$MainAlgorithm_Norm.Host -notmatch "^[^/]+/.+$") {"$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)"} else {$Pools.$MainAlgorithm_Norm.Host}
                         $Pool_User = if ($Pools.$MainAlgorithm_Norm.Host -match "miningrigrentals") {$Pools.$MainAlgorithm_Norm.User -replace "\.","*"} else {$Pools.$MainAlgorithm_Norm.User}
+                        $Pool_User = $Pool_User -replace "@","%40"
 
                         $Pool_Arguments = if (-not $_.SecondAlgorithm -and $Session.Config.Pools.Ezil.EnableLolminerDual -and $_.DualZIL -and $Pools."Zilliqa$($_.DualZIL)" -and $Pools."Zilliqa$($_.DualZIL)".EthMode -eq $Pools.$MainAlgorithm_Norm.EthMode) {
                             $ZilWallet = $Pools."Zilliqa$($_.DualZIL)".Wallet
@@ -216,7 +217,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                         $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
                                         $SecondPool_Host = if ($SecondPool_Port -and $Pools.$SecondAlgorithm_Norm.Host -notmatch "^[^/]+/.+$") {"$($Pools.$SecondAlgorithm_Norm.Host):$($SecondPool_Port)"} else {$Pools.$SecondAlgorithm_Norm.Host}
 
-                                        $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($SecondPool_Host) --dualuser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm_0 -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})$($DeviceIntensitiesAll)"
+                                        $SecondPool_Arguments = "--dualpool $(if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.Protocol) {"$($Pools.$SecondAlgorithm_Norm.Protocol)://"})$($SecondPool_Host) --dualuser $($Pools.$SecondAlgorithm_Norm.User -replace "@","%40")$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dualpass $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if ($SecondAlgorithm_Norm_0 -ne "SHA256ton") {" --dualtls $(if ($Pools.$SecondAlgorithm_Norm.SSL) {"on"} else {"off"})"})$($DeviceIntensitiesAll)"
 
                                         $TonMode = if ($SecondAlgorithm_Norm_0 -eq "SHA256ton" -and $Pools.$SecondAlgorithm_Norm.EthMode) {
                                             Switch ($Pools.$SecondAlgorithm_Norm.EthMode) {

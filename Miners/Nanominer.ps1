@@ -144,6 +144,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $PaymentId = "0"
                     }
 
+                    $Wallet = $Wallet -replace "@","%40"
+
                     $MainCoin = $Pools.$MainAlgorithm_Norm.CoinSymbol
                     $MainCoin_Data = Get-Coin $MainCoin
                     if ($MainCoin_Data.Algo -ne $MainAlgorithm_Norm) {$MainCoin = $null}
@@ -157,6 +159,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
                                 $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.$Pool_Port_Index) {$Pools.$SecondAlgorithm_Norm.Ports.$Pool_Port_Index} else {$Pools.$SecondAlgorithm_Norm.Port}
                                 $SecondWallet    = if ($Pools.$SecondAlgorithm_Norm.Wallet) {$Pools.$SecondAlgorithm_Norm.Wallet} else {$Pools.$SecondAlgorithm_Norm.User}
+
+                                $SecondWallet = $SecondWallet -replace "@","%40"
 
                                 $SecondPaymentId = $null
                                 if ($Wallet -match "^(.+?)[\.\+]([0-9a-f]{16,})") {
