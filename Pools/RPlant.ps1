@@ -54,7 +54,10 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.sy
     $Pool_Stratum        = if ($_.info.links.stratums) {"randomx"} else {"stratum-%region%"}
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CurrencyXlat)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hr) -BlockRate ([double]$_.b24) -Quiet
+        $reward = if ($PoolsCurrencies_Request.$Pool_Currency.hashrate) {$PoolsCurrencies_Request.$Pool_Currency."24h_blocks" * $PoolsCurrencies_Request.$Pool_Currency.reward / $PoolsCurrencies_Request.$Pool_Currency.hashrate} else {0}
+        $btcPrice = if ($Global:Rates."$($Pool_Currency)") {1/[double]$Global:Rates."$($Pool_Currency)"} elseif ($Global:Rates.USD -and $_.marketStats.usd) {[double]$_.marketStats.usd/[double]$Global:Rates.USD} else {0}
+        $Pool_Profit = $reward * $btcPrice
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CurrencyXlat)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$PoolsCurrencies_Request.$Pool_Currency.hashrate) -BlockRate ([double]$PoolsCurrencies_Request.$Pool_Currency."24h_blocks") -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
@@ -70,9 +73,9 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.sy
                         CoinName      = $Pool_CoinName
                         CoinSymbol    = $Pool_CurrencyXlat
                         Currency      = $Pool_CurrencyXlat
-                        Price         = 0
-                        StablePrice   = 0
-                        MarginOfError = 0
+                        Price         = $Stat.$StatAverage #instead of .Live
+                        StablePrice   = $Stat.$StatAverageStable
+                        MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+$(if ($SSL) {"ssl"} else {"tcp"})"
                         Host          = "$($Pool_Stratum -replace "%region%",$Pool_Region).rplant.xyz"
                         Port          = $Pool_Port
@@ -82,7 +85,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.sy
                         SSL           = $SSL
                         Updated       = (Get-Date).ToUniversalTime()
                         PoolFee       = $Pool_Fee
-                        Workers       = [int]$_.wc
+                        Workers       = [int]$PoolsCurrencies_Request.$Pool_Currency.workers
                         Hashrate      = $Stat.HashRate_Live
                         TSL           = [int]$PoolsCurrencies_Request.$Pool_Currency.timesincelast
                         BLK           = $Stat.BlockRate_Average
@@ -98,7 +101,6 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.sy
                         Wallet        = $Pool_User
                         Worker        = "{workername:$Worker}"
                         Email         = $Email
-                        WTM           = $true
                     }
                 }
             }
