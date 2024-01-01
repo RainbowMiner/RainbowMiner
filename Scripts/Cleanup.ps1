@@ -1772,6 +1772,10 @@ try {
         $RemovePoolStats += @("Hashcryptos_*_Profit.txt")
     }
 
+    if ($Version -le (Get-Version "4.9.1.1")) {
+        $RemovePoolStats += @("RPlant_*_Profit.txt")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
