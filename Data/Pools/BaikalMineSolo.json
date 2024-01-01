@@ -25,7 +25,7 @@
                  },
         "mallob":  {
                     "ru": "https://dnx-mallob.baikalmine.com"
-                   }
+                   },
         "port":  [
                      9095
                  ],
