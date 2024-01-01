@@ -2177,9 +2177,16 @@ function Invoke-Core {
         if ($SortedPools -ne $null) {Remove-Variable "SortedPools"}
 
         #$NewPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($NewPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {-not $_.PostBlockMining -and (-not $_.CoinSymbol -or $Session.Config.Pools."$($_.Name)".CoinSymbolPBM -inotcontains $_.CoinSymbol)}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {[int](($ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region)) -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.SSL} | Select-Object -First 1)}
-        $Pools_OutOfSyncMinutes = ($Pools.PSObject.Properties.Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {$NewPools | Where-Object Name -EQ $_ | Where-Object Updated -ge $OutOfSyncTime | Measure-Object Updated -Maximum | Select-Object -ExpandProperty Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes)
-        if ($Pools_OutOfSyncMinutes -gt $Session.SyncWindow) {
-            Write-Log "Pool prices are out of sync ($([int]$Pools_OutOfSyncMinutes) minutes). "
+        $Pools_OutOfSyncMinutes = 0
+        if ($Pools.PSObject.Properties.Name.Count -gt 1) {
+            try {
+                $Pools_OutOfSyncMinutes = [double]($Pools.PSObject.Properties.Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {($NewPools | Where-Object Name -eq $_ | Where-Object Updated -ge $OutOfSyncTime | Measure-Object Updated -Maximum).Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum}).TotalMinutes
+                if ($Pools_OutOfSyncMinutes -gt $Session.SyncWindow) {
+                    Write-Log "Pool prices are out of sync ($([int]$Pools_OutOfSyncMinutes) minutes). "
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
         }
 
         if ($Pools_Hashrates -ne $null) {Remove-Variable "Pools_Hashrates"}
