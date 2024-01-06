@@ -108,7 +108,7 @@
 331	ProgPOWNvidia
 332	BzMiner
 333	TTminer
-334	Energiminer
+334	SrbMinerMulti244
 335	GrinProMiner
 336	VioletMiner
 337	SwapMiner
