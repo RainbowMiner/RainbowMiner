@@ -2012,7 +2012,7 @@ class Nanominer : Miner {
             $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
         }
 
-        return $ConfigFile
+        return "$($ConfigFile)$(if ($Parameters.Params) {" $($Parameters.Params)"})"
     }
 
     [Void]UpdateMinerData () {

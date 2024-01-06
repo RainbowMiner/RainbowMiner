@@ -205,6 +205,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                     Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.BusId_Type_Mineable_Index} else {$null}
                                     LHR       = "$(if ($Miner_Vendor -eq "NVIDIA" -and $MainAlgorithm_Norm -match "^Etc?hash") {($Miner_Device | Foreach-Object {if ($_.IsLHR) {"0"} else {"off"}}) -join ','})"
                                     Threads   = if ($Miner_Vendor -eq "CPU") {$CPUThreads} else {$null}
+                                    Params    = "$($_.Params)"
                                 }
 
                                 if ($ZilWallet) {

@@ -306,7 +306,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                 }
                             )
                             Vendor  = $Miner_Vendor
-                            Params  = $Params
+                            Params  = "$($_.Params)"
                             HwSig   = if ($Miner_Vendor -eq "CPU") {"$(($Global:DeviceCache.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"} else {"$($Miner_Model)-$(($Miner_Device.Type_Vendor_Index | Sort-Object | %{"{0:x}" -f $_}) -join '')"}
                             Threads = if ($Miner_Vendor -eq "CPU") {if ($CPUThreads) {$CPUThreads} else {$Global:GlobalCPUInfo.Cores}} else {1}
                             Devices = $Miner_Device.Type_Vendor_Index
