@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash3g"      ; DAG = $true; MinMemGB = 2;   Params = "-a ETHASH";        ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "Ethash4g"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASH";        ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "Ethash5g"      ; DAG = $true; MinMemGB = 4;   Params = "-a ETHASH";        ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2} #EthashB3
+    #[PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2} #EthashB3
     [PSCustomObject]@{MainAlgorithm = "Etchash"       ; DAG = $true; MinMemGB = 3;   Params = "-a ETCHASH";       ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Etchash 
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory" ; DAG = $true; MinMemGB = 2;   Params = "-a ETHASH";      ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EvrProgPow"    ; DAG = $true; MinMemGB = 3;   Params = "-a EvrProgPow";    ExtendInterval = 2} #EvrProgPow
