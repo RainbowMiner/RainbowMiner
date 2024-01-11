@@ -70,7 +70,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "memehashv2"; Params = ""; LinuxOnly = $true} #MemeHashV2/PEPE2
     [PSCustomObject]@{MainAlgorithm = "mike"; FaultTolerance = 8; ExtendInterval = 3; Params = ""} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
-    [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""; ExcludePoolName = "MiningRigRentals"} #Minotaurx
+    [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""} #Minotaurx
     [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #Myriad-groestl
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt(128,2,1)
     [PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #NIST5
@@ -116,6 +116,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespowerIOTS"; Params = ""} #Yespower .. (IOTS)
     [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = ""} #Yespower LightBit (LITB)
     [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""} #Yespower LighningCash-Gold v3 (LTNCG)
+    [PSCustomObject]@{MainAlgorithm = "yespowerMGPC"; Params = ""} #Yespower Magpiecoin (MGPC)
     [PSCustomObject]@{MainAlgorithm = "yespowerRES"; Params = ""} #Yespower Resistance (RES)
     [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = ""} #Yespower SugarChain (SUGAR)
     [PSCustomObject]@{MainAlgorithm = "yespowerTIDE"; Params = ""} #Yespower Tidecoin (TDC)
