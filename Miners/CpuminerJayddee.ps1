@@ -87,6 +87,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespowerIOTS"; Params = "--param-n 2048 --param-key `"Iots is committed to the development of IOT`""; Algorithm = "yespower"} #Yespower .. (IOTS)
     [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = "--param-n 2048 --param-r 32 --param-key `"LITBpower: The number of LITB working or available for proof-of-work mini`""; Algorithm = "yespower"} #Yespower LightBit (LITB)
     [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = "--param-n 2048 --param-r 32 --param-key `"LTNCGYES`""; Algorithm = "yespower"} #Yespower LighningCash-Gold v3 (LTNCG)
+    [PSCustomObject]@{MainAlgorithm = "yespowerMGPC"; Params = "--param-n 2048 --param-r 32 --param-key `"Magpies are birds of the Corvidae family.`""; Algorithm = "yespower"} #Magpiecoin
     #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YesPowerR16, CpuminerRplant faster
     [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = "--param-n 2048 --param-r 32 --param-key `"Satoshi Nakamoto 31/Oct/2008 Proof-of-work is essentially one-CPU-one-vote`""; Algorithm = "yespower"} #Yespower SugarChain (SUGAR)
     [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = "--param-n 2048 --param-r 32 --param-key `"UraniumX`""; Algorithm = "yespower"} #Yespower Uranium-X (URX)
