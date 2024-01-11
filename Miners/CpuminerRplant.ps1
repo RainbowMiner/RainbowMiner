@@ -18,7 +18,8 @@ if ($IsLinux) {
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.36-rplant/cpuminer-rplant-5.0.36-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.36-rplant/cpuminer-rplant-5.0.36-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.29-rplant/cpuminer-rplant-5.0.29-win.zip"
+    $Version = "5.0.29"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -57,6 +58,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Maxcoin
     [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #Creative
     [PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #LBRY
+    [PSCustomObject]@{MainAlgorithm = "lyra2a40"; Params = ""; LinuxOnly = $true} #Lyra2AA40/APPLE
     #[PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
     [PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; LinuxOnly = $true} #Lyra2h
     [PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""} #LYRA2
@@ -65,7 +67,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #LYRA2z
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExcludePoolName = "Zpool"} #Lyra2z330
-    [PSCustomObject]@{MainAlgorithm = "memehashv2"; Params = ""} #MemeHashV2/PEPE2
+    [PSCustomObject]@{MainAlgorithm = "memehashv2"; Params = ""; LinuxOnly = $true} #MemeHashV2/PEPE2
     [PSCustomObject]@{MainAlgorithm = "mike"; FaultTolerance = 8; ExtendInterval = 3; Params = ""} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaur"; Params = ""} #Minotaur/RING
     [PSCustomObject]@{MainAlgorithm = "minotaurx"; Params = ""; ExcludePoolName = "MiningRigRentals"} #Minotaurx
@@ -81,6 +83,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "phichox"; Params = ""} #phiCHOX/CHOX algo has changed 03/01/2022
     [PSCustomObject]@{MainAlgorithm = "quark"; Params = ""} #Quark
     [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
+    [PSCustomObject]@{MainAlgorithm = "rwahash"; Params = ""; LinuxOnly = $true} #RwaHash
     ####[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
     #[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #ScryptN2, CpuminerVerium and CpuminerJayddee faster
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
