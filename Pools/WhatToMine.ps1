@@ -19,6 +19,54 @@ if (-not ($WTMWallets | Measure-Object).Count) {return}
 $ok = $false
 $Pool_Request = @()
 try {
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/hashrateno.json" -tag $Name -cycletime 240
+    if ($Pool_Request -and ($Pool_Request | Measure-Object).Count -ge 10) {
+        $ok = $true
+    } else {
+        Write-Log -Level Warn "Pool API Hashrate.no ($Name) returned nothing. "
+    }
+}
+catch {
+    if ($Error.Count){$Error.RemoveAt(0)}
+    Write-Log -Level Warn "Pool Hashrate.no ($Name) has failed. "
+}
+
+if ($ok) {
+
+    $Pool_Coins = @($WTMWallets.CoinSymbol | Select-Object)
+
+    $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin -or $Pool_Coins -eq "$($_.coin)-HNO"} | Foreach-Object {
+        $Pool_Currency   = $_.coin
+        $Pool_Algorithm  = $_.algo
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+
+        if (($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and "$($_.CoinSymbol -replace "-HNO$")" -eq $Pool_Currency} | Measure-Object).Count) {
+
+            if (-not ($lastSatPrice = Get-LastSatPrice $_.coin)) {
+                $lastSatPrice = if ($Global:Rates.USD -and $_.price -gt 0) {$_.price / $Global:Rates.USD * 1e8} else {0}
+            }
+
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_HNO_Profit" -Value ($_.reward * $lastSatPrice / 1e8 / (ConvertFrom-Hash "1$($_.unit)")) -Duration $StatSpan -ChangeDetection $false -Quiet
+
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinSymbol    = $Pool_Currency
+                Price         = $Stat.$StatAverage #instead of .Live
+                StablePrice   = $Stat.$StatAverageStable
+                MarginOfError = $Stat.Week_Fluctuation
+                Updated       = $Stat.Updated
+                Mode          = "HNO"
+            }
+
+            $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or "$($_.CoinSymbol -replace "-HNO$")" -ne $Pool_Currency}
+        }
+    }
+}
+
+$ok = $false
+$Pool_Request = @()
+try {
     $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/minerstat.json" -tag $Name -cycletime 240
     if ($Pool_Request -and ($Pool_Request | Measure-Object).Count -ge 10) {
         $ok = $true
