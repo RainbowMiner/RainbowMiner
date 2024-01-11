@@ -144,7 +144,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $PaymentId = "0"
                     }
 
-                    $Wallet = $Wallet -replace "@","%40"
+                    #$Wallet = $Wallet -replace "@","%40"
 
                     $MainCoin = $Pools.$MainAlgorithm_Norm.CoinSymbol
                     $MainCoin_Data = Get-Coin $MainCoin
