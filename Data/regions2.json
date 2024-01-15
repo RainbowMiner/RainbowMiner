@@ -20,7 +20,7 @@
 	"SoutheastAsia": ["HongKong", "India", "Japan", "Asia"],
     "Taiwan": ["HongKong", "SoutheastAsia", "Asia", "India"],
     "Texas": ["US", "USCentral", "USWest", "USEast", "USNorthWest", "Canada"],
-    "Türkiye": ["CentralEurope", "WesternAsia", "Russia", "Asia", "HongKong", "India"]
+    "Tuerkiye": ["CentralEurope", "WesternAsia", "Russia", "Asia", "HongKong", "India"]
     "UK": ["CentralEurope", "Germany", "NorthernEurope", "US", "USEast", "Canada", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
     "Ukraine": ["EasternEurope", "CentralEurope","Poland", "Germany", "France", "UK", "NorthernEurope", "US", "USEast", "Canada", "WesternAsia", "SoutheastAsia", "USCentral", "USNorthWest", "USWest"],
     "US": ["USCentral", "USWest", "USNorthWest", "Texas", "USEast", "Canada"],
