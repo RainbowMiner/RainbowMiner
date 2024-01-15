@@ -33,7 +33,7 @@ if (($Pool_Request.pools | Measure-Object).Count -le 1) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us","eu","ap","sg","ru","cn","sa","fr","ca","usw")
+$Pool_Regions = @("pl","de","ro","fr","ua","fi","ru","ca","usse","us","kz","ussw","usw","sg","sa","cn","tr","ap")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentProcessing.payoutScheme -eq "SOLO" -and ($Wallets.$Pool_Currency -or $InfoOnly)} | Foreach-Object {
@@ -44,7 +44,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_PoolFee = [Double]$_.poolFeePercent
 
-    $Pool_Port = [int]($_.ports.PSObject.Properties | Where-Object {$_.Value.name -eq $Pool_CoinName -and -not $_.Value.tls} | Foreach-Object {$_.Name} | Select-Object -First 1)
+    $Pool_Port = [int]($_.ports.PSObject.Properties | Where-Object {-not $_.Value.tls} | Foreach-Object {$_.Name} | Select-Object -First 1)
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty $_.networkStats.networkDifficulty -Quiet
