@@ -413,7 +413,7 @@ function Start-Setup {
                             if ($PoolNames -icontains "NiceHash") {
                                 if ($IsInitialSetup) {
                                     Write-Host " "
-                                    Write-Host "You will mine on Nicehash. If you want to see your balance in RainbowMiner, you can now enter your API Key and the API Secret. Create a new key-pair on `"My Settings->API key`" page, `"Wallet permission`" needs to be set. " -ForegroundColor Cyan
+                                    Write-Host "You will mine on Nicehash. If you want to see your balance in RainbowMiner, you can now enter your API Key and the API Secret. Create a new key-pair on `"My Settings->API key`" page, `"Wallet permission->View..`" and `"Mining permission->View..`" need to be set. " -ForegroundColor Cyan
                                     Write-Host " "
                                 }
                                 $NicehashOrganizationID = Read-HostString -Prompt "Enter your Nicehash Organization Id (found on `"My Settings->API key`", enter including all '-')" -Default $NicehashOrganizationID -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
