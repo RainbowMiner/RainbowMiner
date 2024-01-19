@@ -5149,7 +5149,7 @@ function Read-HostString {
         [Parameter(Mandatory = $False)]
         [Switch]$Mandatory = $False,
         [Parameter(Mandatory = $False)]
-        [String]$Characters = "A-Z0-9",
+        [String]$Characters = "A-Z0-9\-",
         [Parameter(Mandatory = $False)]
         [Array]$Valid = @(),
         [Parameter(Mandatory = $False)]
