@@ -141,6 +141,7 @@
     "Intel.+Core.+i7-9800X": 165,
     "Intel.+Core.+i7-8086K": 95,
     "Intel.+Core.+i7-[6789]7[0-9]{2}": 65,
+    "Intel.+Core.+i7-[67][0-9]{2}HQ": 45,
 
     "Intel.+Core.+i9-79[02]0": 140,
     "Intel.+Core.+i9-9990": 255,
