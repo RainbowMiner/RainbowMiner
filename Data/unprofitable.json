@@ -41,11 +41,6 @@
         "ZCL"
       ]
     },
-    "ZergPool": {
-      "Algorithms": [
-        "RandomX"
-      ]
-    },
     "ZergPoolCoins": {
       "Algorithms": [],
       "Coins": [
