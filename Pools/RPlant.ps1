@@ -47,7 +47,8 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.sy
         $Pool_CoinName       = (Get-Culture).TextInfo.ToTitleCase($_.info.coin)
     }
 
-    $Pool_Fee            = if ($PoolsCurrencies_Request.$Pool_Currency.fee -ne $null) {[double]$PoolsCurrencies_Request.$Pool_Currency.fee} else {1.0}
+    $Pool_Fee            = if ($PoolsCurrencies_Request.$Pool_Currency.fee -ne $null) {$PoolsCurrencies_Request.$Pool_Currency.fee} else {1.0}
+    if ($Pool_Fee -is [string]) { $Pool_Fee = [double]($Pool_Fee -replace "[^\.,0-9]") }
     $Pool_User           = $Wallets.$Pool_CurrencyXlat
     $Pool_EthProxy       = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"minerproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
