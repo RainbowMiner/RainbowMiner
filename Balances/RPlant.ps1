@@ -45,14 +45,15 @@ $Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Va
             if (-not $Request.address) {
                 Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
             } else {
+                $Divisor = if ([Decimal]$Request.unpaid -ge 1e6) {1e12} else {1}
                 [PSCustomObject]@{
                     Caption     = "$($Name) ($($Pool_Currency))"
 				    BaseName    = $Name
                     Currency    = $Pool_Currency
-                    Balance     = [Decimal]$Request.balance
-                    Pending     = [Decimal]$Request.unsold
-                    Total       = [Decimal]$Request.unpaid
-                    Paid        = [Decimal]$Request.total
+                    Balance     = [Decimal]$Request.balance / $Divisor
+                    Pending     = [Decimal]$Request.unsold / $Divisor
+                    Total       = [Decimal]$Request.unpaid / $Divisor
+                    Paid        = [Decimal]$Request.total / $Divisor
                     Payouts     = @()
                     LastUpdated = (Get-Date).ToUniversalTime()
                 }
