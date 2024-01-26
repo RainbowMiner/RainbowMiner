@@ -1,5 +1,6 @@
 {
     "0x10": "0x10",
+    "abelian": "Abelian",
     "aeon": "Aeon",
     "aergo": "AeriumX",
     "aeriumx": "AeriumX",
@@ -721,6 +722,7 @@
     "rxtest": "RandomX",
     "rxv": "RandomV",
     "rxwow": "RandomWow",
+    "rxxdag": "RandomXDAG",
     "ryo": "CryptoNightGPU",
     "s3": "SHA256t",
     "scrypt": "Scrypt",
