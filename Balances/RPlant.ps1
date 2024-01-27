@@ -21,10 +21,10 @@ if (-not $Payout_Currencies) {
     return
 }
 
-if ($Payout_Currencies -contains "SKYDOGE") {$Payout_Currencies = @($Payout_Currencies | Where-Object {$_ -ne "SKYDOGE"}) + "SKY"}
+if ($Payout_Currencies -contains "SKYDOGE") {$Payout_Currencies[$Payout_Currencies.indexOf("SKYDOGE")] = "SKY"}
 
 try {
-    $Pools_Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/stats" -tag $Name -timeout 15 -cycletime 120
+    $Pools_Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/dash" -tag $Name -timeout 30 -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -32,10 +32,12 @@ catch {
     return
 }
 
+$Pool_Coins = @($Pools_Request.tbs.PSObject.Properties.Value | Select-Object -ExpandProperty symbol -Unique) 
+
 $Count = 0
-$Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Value | Select-Object -ExpandProperty symbol -Unique) -icontains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Name)} | Foreach-Object {
+$Payout_Currencies | Where-Object {$Pool_Coins -contains $_.Name -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Name)} | Foreach-Object {
     $Pool_Currency = $_.Name
-    $Pool_Name = "$($Pools_Request.pools.PSObject.Properties | Where-Object {$_.Value.symbol -eq $Pool_Currency} | Foreach-Object {$_.Name} | Select-Object -First 1)"
+    $Pool_Name = "$($Pools_Request.tbs.PSObject.Properties | Where-Object {$_.Value.symbol -eq $Pool_Currency} | Foreach-Object {$_.Name} | Select-Object -First 1)"
     if ($Pool_Name) {
         $Request = [PSCustomObject]@{}
         try {
@@ -45,7 +47,7 @@ $Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Va
             if (-not $Request.address) {
                 Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
             } else {
-                $Divisor = if ([Decimal]$Request.unpaid -ge 1e6) {1e12} else {1}
+                $Divisor = [Math]::Pow(10,$Pools_Request.tbs.$Pool_Name.info.div2)
                 [PSCustomObject]@{
                     Caption     = "$($Name) ($($Pool_Currency))"
 				    BaseName    = $Name
