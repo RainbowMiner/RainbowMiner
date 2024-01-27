@@ -11,13 +11,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.14.0"
+$Version = "1.14.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.14.0-rigel/rigel-1.14.0-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.14.1-rigel/rigel-1.14.1-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -25,7 +25,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.14.0-rigel/rigel-1.14.0-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.14.1-rigel/rigel-1.14.1-win.zip"
             Cuda = "8.0"
         }
     )
@@ -57,6 +57,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                   MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #SHA512256d/RAD
 
     # Dual mining
+    [PSCustomObject]@{MainAlgorithm = "abelian";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"} #Abelian/ABEL + ALPH
+    [PSCustomObject]@{MainAlgorithm = "abelian";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"} #Abelian/ABEL + IRON
+    [PSCustomObject]@{MainAlgorithm = "abelian";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "karlsenhash"} #Abelian/ABEL + KLS
+    [PSCustomObject]@{MainAlgorithm = "abelian";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "pyrinhash"} #Abelian/ABEL + PYI
+    [PSCustomObject]@{MainAlgorithm = "abelian";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "sha512256d"} #Abelian/ABEL + RXD
+
     [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "alephium"; Fee = 1.0} #Autolykos2/ERG + ALPH
     [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "ironfish"; Fee = 1.0} #Autolykos2/ERG + IRON
     [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); SecondaryAlgorithm = "karlsenhash"; Fee = 1.0} #Autolykos2/ERG + KLS
