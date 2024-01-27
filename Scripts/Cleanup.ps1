@@ -1776,6 +1776,10 @@ try {
         $RemovePoolStats += @("RPlant_*_Profit.txt")
     }
 
+    if ($Version -le (Get-Version "4.9.1.5")) {
+        $RemovePoolStats += @("RPlant_BIT_Profit.txt")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
