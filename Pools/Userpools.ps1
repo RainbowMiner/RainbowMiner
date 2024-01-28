@@ -23,10 +23,7 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Currency   = "$($_.Currency)".ToUpper()
         CoinSymbol = "$($_.CoinSymbol)".ToUpper()
         Password   = "$($Password)"
-    }
-
-    if ($Params."$($_.Currency)") {
-        $Pool_Params["Password"] = $Params."$($_.Currency)"
+        Params     = $Params."$($_.Currency)"
     }
 
     $Pool_Coin     = Get-Coin $Pool_Params["CoinSymbol"]
