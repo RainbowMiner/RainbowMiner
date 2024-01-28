@@ -25,6 +25,10 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Password   = "$($Password)"
     }
 
+    if ($Params."$($_.Currency)") {
+        $Pool_Params["Password"] = $Params."$($_.Currency)"
+    }
+
     $Pool_Coin     = Get-Coin $Pool_Params["CoinSymbol"]
     $Pool_User     = "$(if ($_.User) {$_.User} else {"`$Wallet.`$WorkerName"})"
     $Pool_Pass     = "$(if ($_.Pass) {$_.Pass} else {"x"})"
