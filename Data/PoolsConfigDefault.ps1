@@ -15,6 +15,8 @@
             Currencies=@("HNS")
         }
         "Abelpool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{ReadonlyPageCode=""}
+            SetupFields=[PSCustomObject]@{ReadonlyPageCode = "To view your balance, create a readonly page on abelpool.io and input the string after code= here."}
             Currencies=@("ABEL")
         }
         "AccPool" = [PSCustomObject]@{
