@@ -33,7 +33,7 @@ if ($IsLinux) {
 
 $Commands = [PSCustomObject[]]@(
     # Single mining
-    [PSCustomObject]@{MainAlgorithm = "abelian";                      MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #Abelian/ABEL
+    [PSCustomObject]@{MainAlgorithm = "abelian";         DAG = $true; MinMemGB = 5; Params = "";                     Vendor = @("NVIDIA")} #Abelian/ABEL
     [PSCustomObject]@{MainAlgorithm = "alephium";                     MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #Alephium/ALPH
     [PSCustomObject]@{MainAlgorithm = "autolykos2";      DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #Autolykos2/ERG
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA")} #Etchash (ETC)
