@@ -38,6 +38,7 @@ if (-not $ok) {
 $Count = 0
 
 $Pool_Balance = [Decimal]0
+$Pool_Pending = [Decimal]0
 $Pool_Total   = [Decimal]0
 $Pool_Paid    = [Decimal]0
 
@@ -47,6 +48,7 @@ $Pool_Request.data.accountIds | Foreach-Object {
         $Count++
         if ($Request.code -eq 200) {
             $Pool_Balance += [Decimal]$Request.data.balance
+            $Pool_Pending += [Decimal]$Request.data.today_estimated
             $Pool_Total   += [Decimal]$Request.data.total_income
             $Pool_Paid    += [Decimal]$Request.data.total_payout
         } else {
@@ -66,8 +68,8 @@ if ($ok) {
 		BaseName    = $Name
         Currency    = $Pool_Currency
         Balance     = $Pool_Balance
-        Pending     = [Decimal]0
-        Total       = $Pool_Total
+        Pending     = $Pool_Pending
+        Total       = $Pool_Total + $Pool_Pending
         Paid        = $Pool_Paid
         Payouts     = @()
         LastUpdated = (Get-Date).ToUniversalTime()
