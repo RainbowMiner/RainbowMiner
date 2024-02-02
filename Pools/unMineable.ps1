@@ -45,6 +45,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "equihash";   port = @(3333,4444); ethproxy = $null;          rpc = "equihash";   divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "etchash";    port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; mh = 5e3; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ethash";     port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; mh = 5e3; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "ethashb3";   port = @(3333,4444); ethproxy = $null;          rpc = "ethashb3";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "firopow";    port = @(3333,4444); ethproxy = $null;          rpc = "firopow";    divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ironfish";   port = @(3333,4444); ethproxy = $null;          rpc = "ironfish";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "karlsenhash"; port = @(3333,4444); ethproxy = $null;         rpc = "karlsenhash"; divisor = 1;  mh = 1e9; region = @("us","ca","eu","asia")}
