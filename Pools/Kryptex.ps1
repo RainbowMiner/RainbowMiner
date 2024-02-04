@@ -38,7 +38,7 @@ $Pool_Regions = @("ru")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Ports = @(7777,8888)
-$Pool_MineToAccount = @("IRON","NEXA","KAS","CFX","ETC","ETHW","RVN","ERG","XMR","ZEPH","XNA","CLO")
+$Pool_MineToAccount = @("IRON","NEXA","KAS","CFX","ETC","ETHW","RVN","ERG","XMR","ZEPH","XNA","CLO","KLS","PYI")
 
 $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC","UBQ") -and ($Wallets.$_ -or ($Email -ne "" -and $_ -in $Pool_MineToAccount) -or $InfoOnly)} | ForEach-Object {
      
