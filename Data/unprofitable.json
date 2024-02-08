@@ -41,6 +41,11 @@
         "ZCL"
       ]
     },
+    "ZergPool": {
+      "Coins": [
+        "XVG"
+      ]
+    },
     "ZergPoolCoins": {
       "Algorithms": [],
       "Coins": [
@@ -48,9 +53,11 @@
         "CURVE",
         "ESP",
         "ETH",
+        "PPCN",
         "XMR",
         "XGCS",
-        "XHV"
+        "XHV",
+        "XVG"
       ]
     },
     "ZergPoolCoinsSolo": {
@@ -60,9 +67,21 @@
         "CURVE",
         "ESP",
         "ETH",
+        "PPCN",
         "XMR",
         "XGCS",
-        "XHV"
+        "XHV",
+        "XVG"
+      ]
+    },
+    "Zpool": {
+      "Algorithms": [
+        "Tribus"
+      ]
+    },
+    "ZpoolCoins": {
+      "Algorithms": [
+        "Tribus"
       ]
     }
   }
