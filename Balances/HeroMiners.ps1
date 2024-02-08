@@ -31,6 +31,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "PYI";   port = 1177; fee = 0.9; rpc = "pyrin"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "KLS";   port = 1195; fee = 0.9; rpc = "karlsen"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "AIPG";  port = 1128; fee = 0.9; rpc = "aipg"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "NXL";   port = 1143; fee = 0.9; rpc = "nexellia"; region = $Pool_AllRegions}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains "$($_.symbol)")} | Foreach-Object {

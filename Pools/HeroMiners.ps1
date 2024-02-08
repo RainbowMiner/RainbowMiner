@@ -44,6 +44,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "PYI";   port = 1177; fee = 0.9; rpc = "pyrin"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "KLS";   port = 1195; fee = 0.9; rpc = "karlsen"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "AIPG";  port = 1128; fee = 0.9; rpc = "aipg"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "NXL";   port = 1143; fee = 0.9; rpc = "nexellia"; region = $Pool_AllRegions}
 
     #[PSCustomObject]@{symbol = "AEON";  port = 1145; fee = 0.9; rpc = "aeon"; region = @("de","fi","hk")}
     #[PSCustomObject]@{symbol = "ARQ";   port = 1143; fee = 0.9; rpc = "arqma"; region = $Pool_AllRegions}
