@@ -363,15 +363,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             }
                         }) -Depth 10 -Compress
                     } elseif ($ConfigName -eq "Pools") {
-                        $ConfigActual.PSObject.Properties.Value | Foreach-Object {
-                            if ($_.PSObject.Properties.Match("MaxAllowedLuck").Count) {
-                                if ($_.MaxAllowedLuck) {
-                                    $_.MaxAllowedLuck = "$($_.MaxAllowedLuck * 100)"
-                                }
-                            } else {
-                                $_ | Add-Member MaxAllowedLuck "" -Force
-                            }
-                        }
                         $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
                         if ($Parameters.PoolName) {
                             if ($Parameters.PoolName -in @("ls","list")) {
@@ -492,16 +483,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             }
                         }
 
-                        Switch($Type) {
+                        $Value = Switch($Type) {
                             "bool" {"$([int](Get-Yes $Value))"}
                             "float" {"$([double]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
                             "int" {"$([int]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
                             "timespan" {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
                             default {$Value}
-                        }
-
-                        if ($_ -eq "MaxAllowedLuck" -and $Value) {
-                            $Value = "$($Value/100)"
                         }
 
                         if ($ConfigActual.$PoolName.$_ -ne $null) {
