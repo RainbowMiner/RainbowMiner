@@ -259,7 +259,7 @@ $(function() {
                         ExcludeCoin: "Enter coins by name, you do want to exclude. The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.",
                         MinerName: "Enter the miners you want to use (leave empty for all)",
                         ExcludeMinerName: "Enter the miners you do want to exclude",
-                        MaxAllowedLuck: "Maximum pool luck in % (0=allow any luck, leave empty to use value in config.txt)",
+                        MaxAllowedLuck: "if luck (= time_since_last_block / time_to_find_one_block) is greater than that number, increase the penalty up to 100% (0=allow any luck, leave empty to use value in config.txt)",
                         MaxMarginOfError: "Enter the maximum allowed fluctuation of pool prices in percent",
                         MaxTimeSinceLastBlock: "Enter allowed maximum time since last found block (units allowed, e.h. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
                         MaxTimeToFind: "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds, leave empty to use value in config.txt)",
