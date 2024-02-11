@@ -1780,6 +1780,54 @@ try {
         $RemovePoolStats += @("RPlant_BIT_Profit.txt")
     }
 
+    if ($Version -le (Get-Version "4.9.1.7")) {
+        $PoolsConfigActualUpdate = @()
+
+        if (Test-Path $PoolsConfigFile) {
+            $PoolsConfigActualUpdate += $PoolsConfigFile
+        }
+
+        $PoolsConfigActualUpdate | Foreach-Object {
+            $PoolsConfigActualPath = $_
+
+            try {
+                $PoolsActual  = Get-Content $PoolsConfigActualPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
+
+                $Changes = 0
+
+                $PoolsActual.PSObject.Properties.Value | Foreach-Object {
+
+                    if ($_.PSObject.Properties["Worker"] -and $_.Worker -eq $null) {
+                        $_.Worker = "`$WorkerName"
+                        $Changes++
+                    }
+                    if ($_.PSObject.Properties["User"] -and $_.User -eq $null) {
+                        $_.User = ""
+                        $Changes++
+                    }
+                    if ($_.PSObject.Properties["API_ID"] -and $_.API_ID -eq $null) {
+                        $_.API_ID = ""
+                        $Changes++
+                    }
+                    if ($_.PSObject.Properties["API_Key"] -and $_.API_Key -eq $null) {
+                        $_.API_Key = ""
+                        $Changes++
+                    }
+                    if ($_.PSObject.Properties["AECurrency"] -and $_.AECurrency -eq $null) {
+                        $_.AECurrency = ""
+                        $Changes++
+                    }
+                }
+
+
+                if ($Changes) {
+                    $PoolsActual | ConvertTo-Json -Depth 10 | Set-Content $PoolsConfigActualPath -Encoding UTF8
+                    $ChangesTotal += $Changes
+                }
+            } catch { }
+        }
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
