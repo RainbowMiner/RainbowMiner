@@ -479,16 +479,18 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             "UpdateInterval" {"timespan"}
 
                             default {
-                                if ($_ -match "^Allow|Enable|Disable") {"bool"}
+                                if ($_ -match "^Allow|Enable|Disable") {"bool"} else {$null}
                             }
                         }
 
-                        $Value = Switch($Type) {
-                            "bool" {"$([int](Get-Yes $Value))"}
-                            "float" {"$([double]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
-                            "int" {"$([int]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
-                            "timespan" {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
-                            default {$Value}
+                        if ($Type) {
+                            $Value = Switch($Type) {
+                                "bool" {"$([int](Get-Yes $Value))"}
+                                "float" {"$([double]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
+                                "int" {"$([int]($Value -replace ",","." -replace "[^0-9`-`.]+"))"}
+                                "timespan" {"$($Value -replace ",","." -replace "[^0-9smhdw`.]+"  -replace "([A-Z])[A-Z]+","`$1")"}
+                                default {$Value}
+                            }
                         }
 
                         if ($ConfigActual.$PoolName.$_ -ne $null) {
