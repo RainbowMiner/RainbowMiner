@@ -53,6 +53,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/stats" -tag $Name -timeout 15 -cycletime 120
+            $timestamp  = Get-UnixTimestamp -Milliseconds
+            $timestamp24h = $timestamp-86400000
             $Pool_Blocks = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/pool/blocks?limit=100&page=0&pooltype=collective" -tag $Name -timeout 15 -cycletime 120
             #$Pool_PortsRequest = Invoke-RestMethodAsync "https://api.hashvault.pro/v3/$($Pool_RpcPath)/pool/ports" -tag $Name -timeout 15 -cycletime 86400
             #$Pool_Ports   = Get-PoolPortsFromRequest $Pool_PortsRequest.pplns -mCPU "low" -mGPU "mid" -mRIG "(high|ultra)" -descField "description"
@@ -70,9 +72,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if ($ok -and -not $InfoOnly) {
         $Pool_Fee = $Pool_Request.config.pplns_fee
 
-        $timestamp  = Get-UnixTimestamp
-        $timestamp24h = ($timestamp-86400)*1000
-
         $coinUnits    = [decimal]$Pool_Request.config.sigDivisor
         $diffLive     = [decimal]$Pool_Request.network_statistics.difficulty
         $reward       = [decimal]$Pool_Request.network_statistics.value
@@ -82,7 +81,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $blocks_measure = $Pool_Blocks | Where-Object {$_.ts -ge $timestamp24h} | Select-Object -ExpandProperty ts | Measure-Object -Minimum -Maximum
         $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
 
-        $Pool_TSL = $timestamp - ($Pool_Blocks | Select-Object -First 1).ts/1000
+        $Pool_TSL = ($timestamp - ($Pool_Blocks | Select-Object -First 1).ts)/1000
 
         $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
         $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
