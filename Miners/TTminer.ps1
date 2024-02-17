@@ -12,15 +12,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2023.4.3"
+$Version = "2024.1.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.3-ttminer/TT-Miner-2023.4.3.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.1.2-ttminer/TT-Miner-2024.1.2.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2023.4.3-ttminer/TT-Miner-2023.4.3.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.1.2-ttminer/TT-Miner-2024.1.2.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash3g"      ; DAG = $true; MinMemGB = 2;   Params = "-a ETHASH";        ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "Ethash4g"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASH";        ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "Ethash5g"      ; DAG = $true; MinMemGB = 4;   Params = "-a ETHASH";        ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
-    #[PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2} #EthashB3
+    [PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2} #EthashB3
     [PSCustomObject]@{MainAlgorithm = "Etchash"       ; DAG = $true; MinMemGB = 3;   Params = "-a ETCHASH";       ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Etchash 
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory" ; DAG = $true; MinMemGB = 2;   Params = "-a ETHASH";      ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EvrProgPow"    ; DAG = $true; MinMemGB = 3;   Params = "-a EvrProgPow";    ExtendInterval = 2} #EvrProgPow
@@ -54,10 +54,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "UbqHash"       ;              MinMemGB = 2.4; Params = "-a UBQHASH";       ExtendInterval = 2} #Ubqhash
     [PSCustomObject]@{MainAlgorithm = "vProgPoW"      ; DAG = $true; MinMemGB = 3;   Params = "-a vProgPow";      ExtendInterval = 2} #ProgPoWSero (VBK)
 
-    #[PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"; SecondaryAlgorithm = "SHA512256d"; SecondaryParams = "-a Sha512256d"} #EthashB3 + SHA512256d
+    [PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"; SecondaryAlgorithm = "SHA512256d"; SecondaryParams = "-a Sha512256d"} #EthashB3 + SHA512256d
 )
 
-$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BTC","BTRM","BUT","CLO","CLORE","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","EGAZ","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","JGC","KAW","KCN","KIIRO","LAB","LTR","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL")
+$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BNBTC","BTC","BTRM","BUT","CLO","CLORE","EGAZ","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","JGC","KAW","KCN","KIIRO","LAB","LTR","MEWC","NAPI","NEOX","NIR","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VLC","VTE","XNA","YERB","ZANO","ZELS","ZIL")
+#$a = @($s -split "[\r\n]+" | Foreach-Object {$_ -replace "^[\w]+\s+" -split "[\s,;]+"} | Where-Object {$_ -ne ""} | Sort-Object -Unique) -join '","')
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -94,7 +95,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
         if ($Session.Config.Pools.Crazypool.EnableTTminerDual -and $Pools.ZilliqaCP) {
             if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-                $ZilParams = " -cz ZIL$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -notmatch "{workername" -and $Pools.ZilliqaCP.Pass -notmatch "{workername") {" -wz $($Pools.ZilliqaCP.Worker)"}) -Pz $(if ($Pools.ZilliqaCP.SSL) {"ssl://"})$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {":$($Pools.ZilliqaCP.Pass)"})@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port)"
+                $ZilParams = " -cZ ZIL$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -notmatch "{workername" -and $Pools.ZilliqaCP.Pass -notmatch "{workername") {" -wZ $($Pools.ZilliqaCP.Worker)"}) -PZ $(if ($Pools.ZilliqaCP.SSL) {"ssl://"})$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {":$($Pools.ZilliqaCP.Pass)"})@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port)"
             }
         }
         
@@ -103,7 +104,13 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                    $Miner_Protocol = "stratum$(if ($Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Host -notmatch "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {"1"})+$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl"} else {"tcp"})://"
+                    if ($Pools.$Algorithm_Norm.CoinSymbol -eq "EPIC") {
+                        $Miner_Protocol = "epic$(if ($Pools.$Algorithm_Norm_0.SSL) {"+ssl"})://"
+                    } elseif ($Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Host -notmatch "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {
+                        $Miner_Protocol = "stratum1$(if ($Pools.$Algorithm_Norm_0.SSL) {"+ssl"})://"
+                    } else {
+                        $Miner_Protocol = "$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl://"})"
+                    }
                     if ($Algorithm_Norm -eq "SHA3Solidity") {$Miner_Protocol = ""}
                     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                     $First = $False
@@ -117,7 +124,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
                 $Params = $_.Params
                 if ($ZilParams -ne "") {
-                    $Params_Symbol = "$(if ($Pools.$Algorithm_Norm.CoinSymbol) {$Pools.$Algorithm_Norm.CoinSymbol} else {$Algorithm_Norm})".Substring(0,2).ToLower()
+                    $Params_Symbol = "$(if ($Pools.$Algorithm_Norm.CoinSymbol) {$Pools.$Algorithm_Norm.CoinSymbol} else {$Algorithm_Norm})".Substring(0,2).ToUpper()
                     $Params = $Params -replace "-c ","-c$($Params_Symbol) " -replace "-a ","-a$($Params_Symbol) " -replace "-w ","-w$($Params_Symbol)"
                 } else {
                     $Params_Symbol = ""
