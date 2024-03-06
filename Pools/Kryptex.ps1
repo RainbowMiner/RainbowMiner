@@ -75,30 +75,33 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
 
         $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value 0 -Duration $StatSpan -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+
+        if ($Wallets.$Pool_Currency) {
+            $Pool_ExCurrency = try {
+                [mailaddress]$Wallets.$Pool_Currency > $null
+                "BTC"
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $Pool_Currency
+            }
+            $Pool_Wallet = $Wallets.$Pool_Currency
+        } elseif ($Email -ne "") {
+            $Pool_ExCurrency = try {
+                [mailaddress]$Email > $null
+                "BTC"
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+            $Pool_Wallet = $Email
+        }
+
+        if (-not $Pool_ExCurrency) {return}
+    } else {
+        $Pool_ExCurrency = if ($Pool_Currency -in $Pool_MineToAccount) {"BTC"} else {$Pool_Currency}
     }
 
-    if ($Wallets.$Pool_Currency) {
-        $Pool_ExCurrency = try {
-            [mailaddress]$Wallets.$Pool_Currency > $null
-            "BTC"
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $Pool_Currency
-        }
-        $Pool_Wallet = $Wallets.$Pool_Currency
-    } elseif ($Email -ne "") {
-        $Pool_ExCurrency = try {
-            [mailaddress]$Email > $null
-            "BTC"
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-        }
-        $Pool_Wallet = $Email
-    }
-
-    if (-not $Pool_ExCurrency) {return}
 
     foreach($Pool_Region in $Pool_Regions) {
         $Pool_SSL = $false
