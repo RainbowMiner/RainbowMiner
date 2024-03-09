@@ -146,7 +146,7 @@ if ($IsLinux) {
             $CPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
             $CPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
 
-            $Processors = ($Data | Where-Object {$_ -match "^processor"} | Measure-Object).Count
+            $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
 
             if (-not $CPUInfo.PhysicalCPUs) {$CPUInfo.PhysicalCPUs = 1}
             if (-not $CPUInfo.Cores)   {$CPUInfo.Cores = 1}

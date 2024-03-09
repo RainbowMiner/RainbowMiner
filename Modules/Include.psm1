@@ -3822,7 +3822,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member Stepping      ([int]"$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim())
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
 
-                        $Processors = ($Data | Where-Object {$_ -match "^processor"} | Measure-Object).Count
+                        $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
 
                         if (-not $Global:GlobalCPUInfo.PhysicalCPUs) {$Global:GlobalCPUInfo.PhysicalCPUs = 1}
                         if (-not $Global:GlobalCPUInfo.Cores)   {$Global:GlobalCPUInfo.Cores = 1}
