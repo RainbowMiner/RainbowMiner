@@ -13,13 +13,25 @@ $Port = "200{0:d2}"
 $DevFee = 0.0
 $Version = "23.15"
 
+$Path = $null
+
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.15-jayddee/cpuminer-opt-23.15-linux.7z"
+
+    if ($Global:GlobalCPUDevice.Vendor -eq "ARM") {
+        if ($Global:GlobalCPUDevice.Architecture -eq 8) {
+            #$Path = ".\Bin\CPU-JayDDee\"
+            #$Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.15-jayddee/cpuminer-opt-23.15-arm8.7z"
+        }
+    } else {    
+        $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.15-jayddee/cpuminer-opt-23.15-linux.7z"
+    }
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.15-jayddee/cpuminer-opt-23.15-windows.zip"
 }
+
+if ($Path -eq $null) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Garlicoin

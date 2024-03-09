@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $IsWindows -and -not $IsLinux -or $Global:GlobalCPUInfo.Vendor -eq "ARM") {return}
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"

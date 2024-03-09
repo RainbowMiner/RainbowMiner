@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $IsWindows -and -not $IsLinux -or $Global:GlobalCPUInfo.Vendor -eq "ARM") {return}
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"

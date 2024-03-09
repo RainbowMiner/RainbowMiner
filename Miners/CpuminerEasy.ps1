@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -or $Global:GlobalCPUInfo.Vendor -eq "ARM") {return}
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Path = ".\Bin\CPU-Easy\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx -and $f.aes){'aes-avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
