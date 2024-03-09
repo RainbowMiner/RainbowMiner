@@ -3726,6 +3726,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member Family        0
                         $Global:GlobalCPUInfo | Add-Member Model         0
                         $Global:GlobalCPUInfo | Add-Member Stepping      0
+                        $Global:GlobalCPUInfo | Add-Member Architecture  ""
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         try {
@@ -3783,6 +3784,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member Family        0
                         $Global:GlobalCPUInfo | Add-Member Model         0
                         $Global:GlobalCPUInfo | Add-Member Stepping      0
+                        $Global:GlobalCPUInfo | Add-Member Architecture  ""
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
@@ -3820,6 +3822,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
                         $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
                         $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Architecture  "$((($Data | Where-Object {$_ -match 'CPU architecture'}  | Select-Object -First 1) -split ":")[1])".Trim()
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
@@ -3828,7 +3831,7 @@ function Get-Device {
                         if (-not $Global:GlobalCPUInfo.Cores)   {$Global:GlobalCPUInfo.Cores = 1}
                         if (-not $Global:GlobalCPUInfo.Threads) {$Global:GlobalCPUInfo.Threads = 1}
 
-                        @("Family","Model","Stepping") | Foreach-Object {
+                        @("Family","Model","Stepping","Architecture") | Foreach-Object {
                             if ($Global:GlobalCPUInfo.$_ -match "^[0-9a-fx]+$") {$Global:GlobalCPUInfo.$_ = [int]$Global:GlobalCPUInfo.$_}
                         }
 
