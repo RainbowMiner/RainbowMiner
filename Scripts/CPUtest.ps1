@@ -112,6 +112,9 @@ if ($IsLinux) {
     " " | Out-File $TestFileName -Append
 
     Invoke-Exe 'lscpu' -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Append
+    if (-not (Test-Path ".\Data\lscpu.txt")) {
+        Invoke-Exe 'lscpu' -ExpandLines -ExcludeEmptyLines | Out-File ".\Data\lscpu.txt"
+    }
 
     " " | Out-File $TestFileName -Append
     "2. cpuinfo" | Out-File $TestFileName -Append
@@ -145,6 +148,56 @@ if ($IsLinux) {
 
             $Processors = ($Data | Where-Object {$_ -match "^processor"} | Measure-Object).Count
 
+            if (-not $CPUInfo.PhysicalCPUs) {$CPUInfo.PhysicalCPUs = 1}
+            if (-not $CPUInfo.Cores)   {$CPUInfo.Cores = 1}
+            if (-not $CPUInfo.Threads) {$CPUInfo.Threads = 1}
+
+            if (-not $CPUInfo.Name -or -not $CPUInfo.Manufacturer) {
+                try {
+                    $CPUimpl = [int]"$((($Data | Where-Object {$_ -match 'CPU implementer'} | Select-Object -First 1) -split ":")[1])".Trim()
+                    if ($CPUimpl -gt 0) {
+                        $CPUpart = @($Data | Where-Object {$_ -match "CPU part"} | Foreach-Object {[int]"$(($_ -split ":")[1])".Trim()}) | Select-Object -Unique
+                        $CPUvariant = @($Data | Where-Object {$_ -match "CPU variant"} | Foreach-Object {[int]"$(($_ -split ":")[1])".Trim()}) | Select-Object -Unique
+                        $ArmDB = Get-Content ".\Data\armdb.json" | ConvertFrom-Json -ErrorAction Stop
+                        if ($ArmDB.implementers.$CPUimpl -ne $null) {
+                            $CPUInfo.Manufacturer = $ArmDB.implementers.$CPUimpl
+                            $CPUInfo.Name = "Unknown"
+
+                            if ($CPUpart.Length -gt 0) {
+                                $CPUName = @()
+                                for($i=0; $i -lt $CPUpart.Length; $i++) {
+                                    $part = $CPUpart[$i]
+                                    $variant = if ($CPUvariant -and $CPUvariant.length -gt $i) {$CPUvariant[$i]} else {$CPUvariant[0]}
+                                    if ($ArmDB.variants.$CPUimpl.$part.$variant -ne $null) {$CPUName += $ArmDB.variants.$CPUimpl.$part.$variant}
+                                    elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {$CPUName += $ArmDB.parts.$CPUimpl.$part}
+                                }
+                                if ($CPUName.Length -gt 0) {
+                                    $CPUInfo.Name = $CPUName -join "/"
+                                }
+                            }
+                        }
+                    }
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+            }                
+
+            if ((-not $CPUInfo.Name -or -not $CPUInfo.Manufacturer -or -not $Processors) -and (Test-Path ".\Data\lscpu.txt")) {
+                try {
+                    $lscpu = (Get-Content ".\Data\lscpu.txt") -split "[\r\n]+"
+                    $CPUName = @($lscpu | Where-Object {$_ -match 'model name'} | Foreach-Object {"$(($_ -split ":")[1].Trim())"}) | Select-Object -Unique
+                    $CPUInfo.Name = $CPUName -join "/"
+                    $CPUInfo.Manufacturer = "$((($lscpu | Where-Object {$_ -match 'vendor id'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                    if (-not $Processors) {
+                        $Processors = [int]"$((($lscpu | Where-Object {$_ -match '^CPU\(s\)'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                    }
+
+                    "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$CPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+            }
+
             if ($CPUInfo.PhysicalCPUs -gt 1) {
                 $CPUInfo.Cores   *= $CPUInfo.PhysicalCPUs
                 $CPUInfo.Threads *= $CPUInfo.PhysicalCPUs
@@ -172,6 +225,7 @@ if ($IsLinux) {
     if ($Data) {
         try {
             "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$CPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+            "$((($Data | Where-Object {$_ -like "Features**"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$CPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
 
             if ($CPUInfo.Features.avx512f -and $CPUInfo.Features.avx512vl -and $CPUInfo.Features.avx512dq -and $CPUInfo.Features.avx512bw) {$CPUInfo.Features.avx512 = $true}
         } catch {
