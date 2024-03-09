@@ -3817,9 +3817,9 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
                         $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
                         $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:GlobalCPUInfo | Add-Member Family        ([int]"$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:GlobalCPUInfo | Add-Member Model         ([int]"$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:GlobalCPUInfo | Add-Member Stepping      ([int]"$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
                         $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
@@ -3827,6 +3827,10 @@ function Get-Device {
                         if (-not $Global:GlobalCPUInfo.PhysicalCPUs) {$Global:GlobalCPUInfo.PhysicalCPUs = 1}
                         if (-not $Global:GlobalCPUInfo.Cores)   {$Global:GlobalCPUInfo.Cores = 1}
                         if (-not $Global:GlobalCPUInfo.Threads) {$Global:GlobalCPUInfo.Threads = 1}
+
+                        @("Family","Model","Stepping") | Foreach-Object {
+                            if ($Global:GlobalCPUInfo.$_ -match "^[0-9a-fx]+$") {$Global:GlobalCPUInfo.$_ = [int]$Global:GlobalCPUInfo.$_}
+                        }
 
                         "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
                         "$((($Data | Where-Object {$_ -like "Features*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
