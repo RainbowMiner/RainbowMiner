@@ -3859,6 +3859,7 @@ function Get-Device {
                                             }
                                             if ($CPUName.Length -gt 0) {
                                                 $Global:GlobalCPUInfo.Name = $CPUName -join "/"
+                                                $Global:GlobalCPUInfo.Features.ARM = $true
                                             }
                                         }
                                     }
@@ -3879,6 +3880,7 @@ function Get-Device {
                                 }
 
                                 "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+
                             } catch {
                                 if ($Error.Count){$Error.RemoveAt(0)}
                             }
@@ -3906,6 +3908,8 @@ function Get-Device {
                         })
 
                 if (-not $Global:GlobalCPUInfo.Vendor) {$Global:GlobalCPUInfo.Vendor = "OTHER"}
+
+                if ($Global:GlobalCPUInfo.Vendor -eq "ARM") {$Global:GlobalCPUInfo.Features.ARM = $true}
 
                 if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
                 if ($Global:GlobalCPUInfo.Features.aesni) {$Global:GlobalCPUInfo.Features.aes = $true}
@@ -4496,7 +4500,7 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            if (-not $Session.SysInfo.Cpus) {$Session.SysInfo = Get-SysInfo}
+            if (-not $Session.SysInfo.Cpus) {$Session.SysInfo = Get-SysInfo -IsARM $Session.IsARM}
 
             if ($IsWindows) {
                 $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
@@ -8399,6 +8403,8 @@ function Get-SysInfo {
         [Parameter(Mandatory = $False)]
         [int]$PhysicalCPUs = 1,
         [Parameter(Mandatory = $false)]
+        [bool]$IsARM = $false,
+        [Parameter(Mandatory = $false)]
         [bool]$FromRegistry = $false,
         [Parameter(Mandatory = $false)]
         [string]$CPUName = $false
@@ -8505,7 +8511,7 @@ function Get-SysInfo {
         if ($HDData -ne $null) {$HDData.Dispose();$HDData = $null}
 
     } elseif ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
-        Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo.sh" -File | Foreach-Object {
+        Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo$(if ($IsARM) {"-armv8"}).sh" -File | Foreach-Object {
             try {
                 & chmod +x "$($_.FullName)" > $null
                 Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop

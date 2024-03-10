@@ -250,6 +250,7 @@ function Start-Core {
         Write-Host "Detecting devices .. " -NoNewline
         $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL -Refresh).Where({$_})
         $Session.PhysicalCPUs = $Global:GlobalCPUInfo.PhysicalCPUs
+        $Session.IsARM        = $Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM
         $CPUFound   = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
         $NVFound    = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count
         $AMDFound   = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"} | Measure-Object).Count
@@ -273,7 +274,7 @@ function Start-Core {
 
     Write-Host "Starting sysinfo .. " -NoNewline
     try {
-        $Global:GlobalSysInfoJob = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -FilePath ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs, $Global:GlobalCPUInfo.Name.Trim() -ErrorAction Stop
+        $Global:GlobalSysInfoJob = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -FilePath ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs, $Global:GlobalCPUInfo.Name.Trim(), $Session.IsARM -ErrorAction Stop
         Write-Host "ok" -ForegroundColor Green
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
