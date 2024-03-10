@@ -16,11 +16,10 @@ $Version = "23.15"
 $Path = $null
 
 if ($IsLinux) {
-
-    if ($Global:GlobalCPUDevice.Vendor -eq "ARM") {
-        if ($Global:GlobalCPUDevice.Architecture -eq 8) {
-            #$Path = ".\Bin\CPU-JayDDee\"
-            #$Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.15-jayddee/cpuminer-opt-23.15-arm8.7z"
+    if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
+        if ($Global:GlobalCPUInfo.Architecture -eq 8) {
+            $Path = ".\Bin\CPU-JayDDee\cpuminer-armv8$($f=$Global:GlobalCPUInfo.Features;$(if($f.sha2 -and $f.aes){'-aes-sha2'}elseif($f.aes){'-aes'}elseif($f.sha2){'-sha2'}))"
+            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.15-jayddee/cpuminer-opt-23.15-armv8.7z"
         }
     } else {    
         $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
