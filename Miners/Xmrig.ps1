@@ -17,11 +17,11 @@ $UriCuda = $null
 
 if ($IsLinux) {
 
-    if ($Global:GlobalCPUDevice.Vendor -eq "ARM") {
-        if ($Global:GlobalCPUDevice.Architecture -eq 8) {
+    if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
+        if ($Global:GlobalCPUInfo.Architecture -eq 8) {
             $UriCuda = @(
                 [PSCustomObject]@{
-                    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.1-xmrig/xmrig-6.21.1-arm8.7z"
+                    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.1-xmrig/xmrig-6.21.1-armv8.7z"
                     Cuda = $null
                 }
             )
