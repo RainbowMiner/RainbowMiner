@@ -1,4 +1,4 @@
-﻿param($ControllerProcessID, $PhysicalCPUs, $CPUName, $IsArm)
+﻿param($ControllerProcessID, $PhysicalCPUs, $CPUtdp, $IsArm)
 
 Import-Module ".\Modules\Include.psm1"
 
@@ -19,7 +19,7 @@ do {
     if (-not $end -and $count -le 0) {
         try {
             $GetCPU_Running = $IsWindows -and (Get-Process -Name "GetCPU" -ErrorAction Ignore)
-            if ($SysInfo = Get-SysInfo -PhysicalCPUs $PhysicalCPUs -CPUName $CPUName -IsARM $IsARM -FromRegistry $GetCPU_Running) {
+            if ($SysInfo = Get-SysInfo -PhysicalCPUs $PhysicalCPUs -CPUtdp $CPUtdp -IsARM $IsARM -FromRegistry $GetCPU_Running) {
                 Set-ContentJson -PathToFile ".\Data\sysinfo.json" -Data $SysInfo -Quiet > $null
             }
         } catch {

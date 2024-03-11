@@ -3723,6 +3723,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
                         $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
                         $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
+                        $Global:GlobalCPUInfo | Add-Member TDP           0
                         $Global:GlobalCPUInfo | Add-Member Family        0
                         $Global:GlobalCPUInfo | Add-Member Model         0
                         $Global:GlobalCPUInfo | Add-Member Stepping      0
@@ -3781,6 +3782,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$chkcpu.physical_cpus)
                         $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]$chkcpu.l3)
                         $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$chkcpu.cpu_speed)
+                        $Global:GlobalCPUInfo | Add-Member TDP           0
                         $Global:GlobalCPUInfo | Add-Member Family        0
                         $Global:GlobalCPUInfo | Add-Member Model         0
                         $Global:GlobalCPUInfo | Add-Member Stepping      0
@@ -3819,6 +3821,7 @@ function Get-Device {
                         $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
                         $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
                         $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member TDP           0
                         $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
                         $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
                         $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
@@ -3941,6 +3944,14 @@ function Get-Device {
                 if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
             }
             $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Features.iszen -or $Global:GlobalCPUInfo.Features.iszenplus -or $Global:GlobalCPUInfo.Features.iszen2 -or $Global:GlobalCPUInfo.Features.iszen3)
+
+            if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+            
+            $CpuName = $Global:GlobalCPUInfo.Name.Trim()
+            if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {$CPU_tdp = 8}
+            elseif (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+
+            $Global:GlobalCPUInfo.TDP = $CPU_tdp
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -4500,7 +4511,9 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            if (-not $Session.SysInfo.Cpus) {$Session.SysInfo = Get-SysInfo -IsARM $Session.IsARM}
+            $CPU_tdp = if ($Session.Config.PowerCPUtdp) {$Session.Config.PowerCPUtdp} else {$Global:GlobalCPUInfo.TDP}
+
+            if (-not $Session.SysInfo.Cpus) {$Session.SysInfo = Get-SysInfo -IsARM $Session.IsARM -CPUtdp $CPU_tdp}
 
             if ($IsWindows) {
                 $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
@@ -4517,13 +4530,8 @@ function Update-DeviceInformation {
                 }
             }
             elseif ($IsLinux) {
-                if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
-                $CpuName = $Global:GlobalCPUInfo.Name.Trim()
-
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
-
-                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
                     $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Clock) {$Session.SysInfo.Cpus[0].Clock} else {$Global:GlobalCPUInfo.MaxClockSpeed})
                     $_.Data.Utilization = [int]$Utilization
@@ -8407,14 +8415,8 @@ function Get-SysInfo {
         [Parameter(Mandatory = $false)]
         [bool]$FromRegistry = $false,
         [Parameter(Mandatory = $false)]
-        [string]$CPUName = $false
+        [double]$CPUtdp = 0
     )
-
-    if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
-
-    if (-not $CPUName) {
-        $CPUName = $Global:GlobalCPUInfo.Name.Trim()
-    }
 
     if ($IsWindows) {
 
@@ -8465,8 +8467,7 @@ function Get-SysInfo {
                 }
 
                 if ($CPU.Utilization -gt 0 -and $CPU.PowerDraw -eq 0) {
-                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CPUName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
-                    $CPU.PowerDraw = $CPU_tdp * ($CPU.Utilization / 100)
+                    $CPU.PowerDraw = $CPUtdp * ($CPU.Utilization / 100)
                     $CPU.Method = "tdp"
                 }
 

@@ -282,6 +282,20 @@
                         </div>
                     </div>
                     <div class="form-group row">
+                        <label for="inputPowerCPUtdp" class="col-sm-2 col-form-label">CPU max. Power/TDP</label>
+                        <div class="input-group col-sm-10">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="inputPowerCPUtdp" name="PowerCPUtdp" min="0" step="1" data-number-to-fixed="0" data-number-stepfactor="1" aria-describedby="addto-inputPowerCPUtdp">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="addto-inputPowerCPUtdp">Watt</span>
+                                </div>
+                            </div>
+                            <div id="inputPowerCPUtdpHelp" class="form-text text-muted">
+                                Enter your CPU's TDP/maximum power consumption in W (set to 0 to use internal TDP tables, set to value if that fails)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
                         <label for="inputOctopusTariffCode" class="col-sm-2 col-form-label">Octopus Tariff Code</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputOctopusTariffCode" name="OctopusTariffCode" placeholder="E-1R-...">

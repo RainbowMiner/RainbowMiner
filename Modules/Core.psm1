@@ -272,15 +272,6 @@ function Start-Core {
         $PauseByError = $true
     }
 
-    Write-Host "Starting sysinfo .. " -NoNewline
-    try {
-        $Global:GlobalSysInfoJob = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -FilePath ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs, $Global:GlobalCPUInfo.Name.Trim(), $Session.IsARM -ErrorAction Stop
-        Write-Host "ok" -ForegroundColor Green
-    } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Host "error" -ForegroundColor Red
-    }
-
     if ($IsWindows -and ($Session.MineOnCPU -ne $false -or $Session.MineOnGPU -ne $false)) {
         $GpuMemSizeMB = if ($Session.MineOnGPU -eq $false) {0} else {(($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100}
         $CpuMemSizeMB = if ($Session.MineOnCPU -eq $false) {0} else {[Math]::Max(0,32-(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum/1GB)*1100}
@@ -900,6 +891,16 @@ function Invoke-Core {
     #Start/stop services
     if ($Session.RoundCounter -eq 0) {
         Start-Autoexec -Priority $Session.Config.AutoexecPriority
+    }
+    if ($Session.RoundCounter -eq 0 -or $Session.Config.PowerCPUtdp -ne $ConfigBackup.PowerCPUtdp) {
+        if ($Session.RoundCounter -eq 0) {
+            Write-Host "Starting sysinfo .. " -NoNewline
+        }
+        $SysInfo_Ok = Start-SysInfo
+        if ($Session.RoundCounter -eq 0) {
+            if ($SysInfo_Ok) {Write-Host "ok" -ForegroundColor Green}
+            else {Write-Host "error" -ForegroundColor Red}
+        }
     }
     if (($RestartRunspaces -or $Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
     if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart}
@@ -4183,13 +4184,46 @@ function Stop-Core {
 
     if (-not $Session.SetupOnly -and (Test-Path ".\Data\rbm.pid")) {Remove-Item ".\Data\rbm.pid" -Force -ErrorAction Ignore}
 
+    Stop-SysInfo
     Stop-Autoexec
+
     [console]::TreatControlCAsInput = $false
 }
 
 ##
 ## Utility functions
 ##
+
+##
+## Sysinfo functions
+##
+
+function Start-SysInfo {
+    if ($Global:GlobalSysInfoJob) {Stop-SysInfo}
+
+    $Global:GlobalSysInfoJob = $null
+
+    $CPU_tdp = if ($Session.Config.PowerCPUtdp) {$Session.Config.PowerCPUtdp} else {$Global:GlobalCPUInfo.TDP}
+    try {
+        $Global:GlobalSysInfoJob = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -FilePath ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs, $CPU_tdp, $Session.IsARM -ErrorAction Stop
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Info "Could not start SysInfo job"
+    }
+    $Global:GlobalSysInfoJob -ne $null
+}
+
+function Stop-SysInfo {
+    if ($Global:GlobalSysInfoJob) {
+        try {
+            if ($Global:GlobalSysInfoJob.HasMoreData) {Receive-Job $_ > $null}
+            Remove-Job $Global:GlobalSysInfoJob -Force
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    }
+    $Global:GlobalSysInfoJob = $null
+}
 
 ##
 ## GET functions
