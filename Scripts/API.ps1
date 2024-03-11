@@ -151,7 +151,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             break
         }
         "/cpuinfo" {
-            $Data = if ($Global:GlobalCPUInfo) {ConvertTo-Json $Global:GlobalCPUInfo -ErrorAction Ignore -Depth 10} else {"{}"}
+            $Data = $API.CPUinfo
             break
         }
         "/sysinfo" {

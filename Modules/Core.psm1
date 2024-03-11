@@ -930,9 +930,7 @@ function Invoke-Core {
         $API.MachineName = $Session.MachineName
     }
 
-    if ($CheckConfig -or $Session.RoundCounter -eq 0) {
-        Set-APIConfig
-    }
+    if ($CheckConfig -or $Session.RoundCounter -eq 0) {Set-APIConfig}
 
     $API.PauseMiners.Pause       = $Global:PauseMiners.Test()
     $API.PauseMiners.PauseIA     = $Global:PauseMiners.TestIA()
@@ -992,6 +990,7 @@ function Invoke-Core {
                                 IsLinux                = $Global:IsLinux
                                 IsLocked               = $Session.Config.APIlockConfig
                             }) -Depth 10
+        $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
     }
 
     if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Global:PauseMiners.Test())) {$Global:PauseMiners.SetIA()}
