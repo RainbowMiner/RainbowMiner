@@ -150,6 +150,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Data = ConvertTo-Json $API.CmdKey
             break
         }
+        "/cpuinfo" {
+            $Data = if ($Global:GlobalCPUInfo) {ConvertTo-Json $Global:GlobalCPUInfo -ErrorAction Ignore -Depth 10} else {"{}"}
+            break
+        }
         "/sysinfo" {
             $Data = if ($Session.SysInfo) {ConvertTo-Json $Session.SysInfo -ErrorAction Ignore -Depth 10} else {"{}"}
             break
