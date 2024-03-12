@@ -51,7 +51,7 @@
 202	CpuminerRX2
 203	CpuminerWyfernTKC
 204	CpuminerOptBF
-205
+205	CpuminerAurum
 211	CpuminerWyvern
 212	CpuminerTake2
 213	CpuminerMulti
@@ -146,6 +146,7 @@
 369	Gminer294
 370	OneZeroMiner
 371	OneZeroMiner125
+372	Xmrig4Xdag
 
 400	Sgminer
 401	SgminerBitcore
