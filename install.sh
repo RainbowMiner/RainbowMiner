@@ -63,7 +63,7 @@ if ! [ -x "$(command -v pwsh)" ]; then
       sudo rm -f /usr/bin/pwsh
     fi
     if [ "${arch}" == "aarch64" ]; then
-      wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-arm64.tar.gz -O /tmp/powershell.tar.gz
+      wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-arm64.tar.gz -O /tmp/powershell.tar.gz
     else
       wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz -O /tmp/powershell.tar.gz
     fi
