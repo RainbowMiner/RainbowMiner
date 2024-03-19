@@ -12,15 +12,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2024.1.2"
+$Version = "2024.1.6"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.1.2-ttminer/TT-Miner-2024.1.2.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.1.6-ttminer/TT-Miner-2024.1.6.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.1.2-ttminer/TT-Miner-2024.1.2.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.1.6-ttminer/TT-Miner-2024.1.6.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -42,6 +42,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "KawPow3g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow4g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow5g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        ExtendInterval = 2} #KAWPOW
+    [PSCustomObject]@{MainAlgorithm = "MeowPow"       ; DAG = $true; MinMemGB = 3;   Params = "-c MEWC";          ExtendInterval = 2} #MEOWPOW
     [PSCustomObject]@{MainAlgorithm = "Mike"          ;              MinMemGB = 1;   Params = "-a Mike";          ExtendInterval = 2; DevFee = 2.0} #Mike
     [PSCustomObject]@{MainAlgorithm = "ProgPoWEPIC"   ; DAG = $true; MinMemGB = 3;   Params = "-c EPIC";          ExtendInterval = 2; DevFee = 2.0} #ProgPoW (only EPIC left)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWSERO"   ; DAG = $true; MinMemGB = 3;   Params = "-c SERO";          ExtendInterval = 2} #ProgPoWSero (SERO)
