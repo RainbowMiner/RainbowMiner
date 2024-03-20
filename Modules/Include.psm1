@@ -6623,23 +6623,15 @@ function Get-Subsets($a){
 
 function Get-MemoryUsage
 {
-[cmdletbinding()]
-Param(
-    [Parameter(Mandatory = $False)]
-    [Switch]$ForceFullCollection,
-    [Parameter(Mandatory = $False)]
-    [Switch]$Reset
-)
-    $memusagebyte = [System.GC]::GetTotalMemory($ForceFullCollection)
+    $memusagebyte = [System.GC]::GetTotalMemory($true)
     $memdiff = $memusagebyte - [int64]$Global:last_memory_usage_byte
     [PSCustomObject]@{
         MemUsage   = $memusagebyte
         MemDiff    = $memdiff
         MemText    = "Memory usage: {0:n1} MB ({1:n0} Bytes {2})" -f  ($memusagebyte/1MB), $memusagebyte, "$(if ($memdiff -gt 0){"+"})$($memdiff)"
     }
-    if ($Reset) {
-        $Global:last_memory_usage_byte = $memusagebyte
-    }
+
+    $Global:last_memory_usage_byte = $memusagebyte
 }
 
 function Write-MemoryUsageToLog {
@@ -6648,11 +6640,12 @@ Param(
     [Parameter(Mandatory = $False)]
     [String]$Message = ""
 )
-    [System.GC]::Collect()
-    [System.GC]::WaitForPendingFinalizers()
-    [System.GC]::Collect()
-    Get-MemoryUsage -ForceFullCollection >$null
-    Write-Log "$($Message) $((Get-MemoryUsage -Reset).MemText)"
+    #[System.GC]::Collect()
+    #[System.GC]::WaitForPendingFinalizers()
+    #[System.GC]::Collect()
+    #Get-MemoryUsage -ForceFullCollection >$null
+    #Write-Log "$($Message) $((Get-MemoryUsage -Reset).MemText)"
+    Write-Log "$($Message) $((Get-MemoryUsage).MemText)"
 }
 
 function Get-MD5Hash {

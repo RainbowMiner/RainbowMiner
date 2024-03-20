@@ -505,15 +505,22 @@ if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
 
         if (-not $Session.Stopp) {
             Write-Log "Starting next run..."
-            if ($ForceFullCollection) {
-                [System.GC]::Collect()
-                [System.GC]::WaitForPendingFinalizers()
-                [System.GC]::Collect()
-                Get-MemoryUsage -ForceFullCollection >$null
-            } else {
-                [System.GC]::Collect()
-            }
-            Write-Log (Get-MemoryUsage -Reset).MemText
+
+            #if ($ForceFullCollection) {
+            #    [System.GC]::Collect()
+            #    [System.GC]::WaitForPendingFinalizers()
+            #    [System.GC]::Collect()
+            #    Get-MemoryUsage -ForceFullCollection >$null
+            #} else {
+            #    [System.GC]::Collect()
+            #}
+            #Write-Log (Get-MemoryUsage -Reset).MemText
+
+            [System.GC]::Collect()
+            [System.GC]::WaitForPendingFinalizers()
+            [System.GC]::Collect()
+
+            Write-Log (Get-MemoryUsage).MemText
         }
     }
 
