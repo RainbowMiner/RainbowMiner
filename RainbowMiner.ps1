@@ -379,7 +379,7 @@ if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyComm
 
 Initialize-Session
 
-$Session.Version         = "4.9.1.8"
+$Session.Version         = "4.9.1.9"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
@@ -505,15 +505,22 @@ if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
 
         if (-not $Session.Stopp) {
             Write-Log "Starting next run..."
-            if ($ForceFullCollection) {
-                [System.GC]::Collect()
-                [System.GC]::WaitForPendingFinalizers()
-                [System.GC]::Collect()
-                Get-MemoryUsage -ForceFullCollection >$null
-            } else {
-                [System.GC]::Collect()
-            }
-            Write-Log (Get-MemoryUsage -Reset).MemText
+
+            #if ($ForceFullCollection) {
+            #    [System.GC]::Collect()
+            #    [System.GC]::WaitForPendingFinalizers()
+            #    [System.GC]::Collect()
+            #    Get-MemoryUsage -ForceFullCollection >$null
+            #} else {
+            #    [System.GC]::Collect()
+            #}
+            #Write-Log (Get-MemoryUsage -Reset).MemText
+
+            [System.GC]::Collect()
+            [System.GC]::WaitForPendingFinalizers()
+            [System.GC]::Collect()
+
+            Write-Log (Get-MemoryUsage).MemText
         }
     }
 

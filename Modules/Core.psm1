@@ -3765,7 +3765,7 @@ function Invoke-Core {
 
     if ($Global:GlobalSysInfoJob -and $Global:GlobalSysInfoJob.State -eq "Running") {$Global:GlobalSysInfoJob | Receive-Job > $null}
 
-    [System.GC]::Collect()
+    #[System.GC]::Collect()
 
     $Session.Timer = (Get-Date).ToUniversalTime()
 

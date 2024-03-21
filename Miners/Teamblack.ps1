@@ -10,7 +10,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "2.20"
+$Version = "2.21"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -18,7 +18,7 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.20-teamblack/TeamBlackMiner_2_20_Ubuntu_18_04_Cuda_12.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.21-teamblack/TeamBlackMiner_2_21_Ubuntu_18_04_Cuda_12.tar.xz"
             Cuda = "12.3"
         }
     )
@@ -29,8 +29,8 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.20-teamblack/TeamBlackMiner_2_20_cuda_12_0.7z"
-            Cuda = "12.0"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.21-teamblack/TeamBlackMiner_2_21_cuda_12_2.7z"
+            Cuda = "12.2"
         }
     )
 }
@@ -95,6 +95,8 @@ if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
 $Miner_DatFile = $DatFile
 if ($Miner_DatFile -match " ") {$Miner_DatFile = "`"$($Miner_DatFile)`""}
 
+$LHRCUDA = $false
+
 foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
@@ -108,9 +110,9 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             
             $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
-            $LHRCUDA = if (($Miner_Device | Where-Object {$_.IsLHR -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR -ne $null} | Measure-Object).Count -gt 0) {
-                ($Miner_Device | Foreach-Object {"$(if (($_.IsLHR -and $Session.Config.Devices."$($_.Model_Base)".EnableLHR -eq $null) -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR) {1} else {0})"}) -join ','
-            }
+            #$LHRCUDA = if (($Miner_Device | Where-Object {$_.IsLHR -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR -ne $null} | Measure-Object).Count -gt 0) {
+            #    ($Miner_Device | Foreach-Object {"$(if (($_.IsLHR -and $Session.Config.Devices."$($_.Model_Base)".EnableLHR -eq $null) -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR) {1} else {0})"}) -join ','
+            #}
 
             foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
                 if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Host -match $_.IncludePoolName)) {
