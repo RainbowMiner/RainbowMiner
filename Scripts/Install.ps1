@@ -41,6 +41,8 @@ if ($IsLinux) {
     Start-Process ".\IncludesLinux\bash\virt-what.sh" -Wait
     Write-Host "Install libomp .."
     Start-Process ".\IncludesLinux\bash\libomp.sh" -Wait
+    Write-Host "Install libssl .."
+    Start-Process ".\IncludesLinux\bash\libssl.sh" -Wait
 
     Write-Host "Linking libraries .."
     if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
