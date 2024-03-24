@@ -5,5 +5,5 @@ if [[ $PKG_MANAGER == *'pacman' ]]
  then
   sudo $PKG_MANAGER -S openmp --noconfirm
  else
-  sudo $PKG_MANAGER install libomp -y
+  sudo $PKG_MANAGER install libomp-dev -y
 fi
