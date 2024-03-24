@@ -121,18 +121,19 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $First = $false
-                        $ZilWallet = if ($Session.Config.Pools.Ezil.EnableNanominerDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.EthMode -eq $Pools.$MainAlgorithm_Norm.EthMode) {
-                            [PSCustomObject]@{
-                                    Algo      = "zil"
-                                    Host      = $Pools.ZilliqaETH.Host
-                                    Port      = $Pools.ZilliqaETH.Port
-                                    SSL       = $Pools.ZilliqaETH.SSL
-                                    Wallet    = $Pools.ZilliqaETH.Wallet
-                                    Worker    = $Pools.ZilliqaETH.Worker
-                                    Pass      = $Pools.ZilliqaETH.Pass
-                                    Email     = $Pools.ZilliqaETH.Email
-                            }
-                        } else {$null}
+                        #$ZilWallet = if ($Session.Config.Pools.Ezil.EnableNanominerDual -and $_.DualZIL -and $Pools.ZilliqaETH -and $Pools.ZilliqaETH.EthMode -eq $Pools.$MainAlgorithm_Norm.EthMode) {
+                        #    [PSCustomObject]@{
+                        #            Algo      = "zil"
+                        #            Host      = $Pools.ZilliqaETH.Host
+                        #            Port      = $Pools.ZilliqaETH.Port
+                        #            SSL       = $Pools.ZilliqaETH.SSL
+                        #            Wallet    = $Pools.ZilliqaETH.Wallet
+                        #            Worker    = $Pools.ZilliqaETH.Worker
+                        #            Pass      = $Pools.ZilliqaETH.Pass
+                        #            Email     = $Pools.ZilliqaETH.Email
+                        #    }
+                        #} else {$null}
+                        $ZilWallet = $null
                     }
                     $Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
                     $Wallet    = if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$MainAlgorithm_Norm.Wallet} else {$Pools.$MainAlgorithm_Norm.User}

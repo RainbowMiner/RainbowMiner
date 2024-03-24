@@ -89,11 +89,6 @@
         "Ethwmine" = [PSCustomObject]@{
             Currencies=@("ETHW")
         }
-        "Ezil" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{EnableLolminerDual="1";EnableNanominerDual="1";EnableTrexDual="1";EnableSrbminerMultiDual="0"}
-            SetupFields=[PSCustomObject]@{EnableLolminerDual="If you set this to 1, Lolminer will dual mine ZIL on Ezil for various algorithms";EnableNanominerDual="If you set this to 1, Nanominer will dual mine ZIL on Ezil for various algorithms";EnableTrexDual="If you set this to 1, Trex will dual mine ZIL on Ezil for Ethash";EnableSrbminerMultiDual="If you set this to 1, SrbminerMulti will dual mine ZIL on Ezil for various algorithms"}
-            Currencies=@("ETC","ZIL")
-        }
         "F2pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{UserName=""}
             SetupFields=[PSCustomObject]@{UserName="Enter your f2pool username, if you want to see balances"}
@@ -409,6 +404,9 @@
             BalancesKeepAlive="90d"
         }
         "RaptoreumZone" = [PSCustomObject]@{
+            Currencies=@("RTM")
+        }
+        "RaptorHash" = [PSCustomObject]@{
             Currencies=@("RTM")
         }
         "Ravenminer" = [PSCustomObject]@{
