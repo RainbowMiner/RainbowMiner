@@ -777,9 +777,13 @@ function Invoke-Core {
         $Session.Config.MaxTimeSinceLastBlock = ConvertFrom-Time $Session.Config.MaxTimeSinceLastBlock
         $Session.Config.FastlaneBenchmarkTypeCPU = if ($Session.Config.FastlaneBenchmarkTypeCPU -in @("avg","min","max")) {$Session.Config.FastlaneBenchmarkTypeCPU} else {"avg"}
         $Session.Config.FastlaneBenchmarkTypeGPU = if ($Session.Config.FastlaneBenchmarkTypeGPU -in @("avg","min","max")) {$Session.Config.FastlaneBenchmarkTypeGPU} else {"avg"}
+        $Session.Config.RestartRBMTimespan = ConvertFrom-Time $Session.Config.RestartRBMTimespan
+        $Session.Config.RestartRBMMemory   = ConvertFrom-Bytes $Session.Config.RestartRBMMemory
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if ($Session.Config.OCResetInterval -gt 0 -and $Session.Config.OCResetInterval -lt 600) {$Session.Config.OCResetInterval = 600}
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
+        if ($Session.Config.RestartRBMTimespan -lt 3600) {$Session.Config.RestartRBMTimespan = 0}
+        if ($Session.Config.RestartRBMMemory -lt 367001600) {$Session.Config.RestartRBMMemory = 0}
         Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.APIport} > $null
 
         #For backwards compatibility        
@@ -3891,6 +3895,8 @@ function Invoke-Core {
                             elseif ($API.UpdateBalance) {"B"}
                             elseif ($API.WatchdogReset) {"W"}
                             elseif ($API.CmdKey -ne '') {$API.CmdKey}
+                            elseif ($Session.Config.RestartRBMTimespan -gt 0 -and $Session.StartTimeCore.AddSeconds($Session.Config.RestartRBMTimespan) -le (Get-Date).ToUniversalTime()) {"RT"}
+                            elseif ($Session.Config.RestartRBMMemory -gt 0 -and $Global:last_memory_usage_byte -and $Session.Config.RestartRBMMemory -lt $Global:last_memory_usage_byte) {"RM"}
                             else {
                                 try {
                                     if ([System.Console]::KeyAvailable) {
@@ -3985,6 +3991,20 @@ function Invoke-Core {
                     $Session.Restart = $true
                     Write-Log "User requests to restart RainbowMiner."
                     Write-Host -NoNewline "[R] pressed - restarting RainbowMiner."
+                    $keyPressed = $true
+                    Break
+                }
+                "RT" {
+                    $Session.Restart = $true
+                    Write-Log "Maximum running time reached: RainbowMiner restarts"
+                    Write-Host -NoNewline "[RT] running time limit reached, restarting RainbowMiner."
+                    $keyPressed = $true
+                    Break
+                }
+                "RM" {
+                    $Session.Restart = $true
+                    Write-Log "Maximum memory usage reached: RainbowMiner restarts"
+                    Write-Host -NoNewline "[RM] memory usage limit reached, restarting RainbowMiner."
                     $keyPressed = $true
                     Break
                 }
