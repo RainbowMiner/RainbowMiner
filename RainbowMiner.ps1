@@ -520,7 +520,7 @@ if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
             [System.GC]::WaitForPendingFinalizers()
             [System.GC]::Collect()
 
-            Write-Log (Get-MemoryUsage).MemText
+            Write-Log (Get-MemoryUsage -forceFullCollection).MemText
         }
     }
 

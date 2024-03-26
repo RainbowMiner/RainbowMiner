@@ -112,6 +112,12 @@ while (-not $AsyncLoader.Stop) {
     }
     if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Error.Clear()}
 
+    if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
+        #[System.GC]::Collect()
+        #[System.GC]::GetTotalMemory($true) | out-null
+        $GCStopWatch.Restart()
+    }
+
     $Delta = [Math]::Min([Math]::Max($AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds,1),30)
 
     if ($IsVerbose) {
@@ -121,11 +127,6 @@ while (-not $AsyncLoader.Stop) {
     if ($AsyncLoader.Pause -ne $AsyncLoader_Paused) {
         $AsyncLoader_Paused = $AsyncLoader.Pause
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$(if ($AsyncLoader_Paused) {"Stopping asyncloader due to"} else {"Restarting asyncloader after"}) pause" -Append -Timestamp
-    }
-
-    if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
-        [System.GC]::Collect()
-        $GCStopWatch.Restart()
     }
 
     if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
