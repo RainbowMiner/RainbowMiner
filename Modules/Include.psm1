@@ -6621,9 +6621,13 @@ function Get-Subsets($a){
     $l | Group-Object -Property Length | %{$_.Group | sort}
 }
 
-function Get-MemoryUsage
-{
-    $memusagebyte = [System.GC]::GetTotalMemory($true)
+function Get-MemoryUsage {
+[cmdletbinding()]
+Param(   
+    [Parameter(Mandatory = $False)]
+    [Switch]$forceFullCollection = $false
+)
+    $memusagebyte = [System.GC]::GetTotalMemory($forceFullCollection)
     $memdiff = $memusagebyte - [int64]$Global:last_memory_usage_byte
     [PSCustomObject]@{
         MemUsage   = $memusagebyte
