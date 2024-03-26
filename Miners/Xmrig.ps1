@@ -107,6 +107,10 @@ if ($IsLinux) {
 } else {
     $UriCuda = @(
         [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.2-xmrig/xmrig-6.21.2-msvc-cuda12_4-win64.7z"
+            Cuda = "12.4"
+        },
+        [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.2-xmrig/xmrig-6.21.2-msvc-cuda12_3-win64.7z"
             Cuda = "12.3"
         },
