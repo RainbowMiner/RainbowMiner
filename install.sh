@@ -3,6 +3,7 @@
 cd "$(dirname "$0")"
 
 command="& {./Scripts/Install.ps1; exit \$lastexitcode}"
+arch=$(lscpu | grep Architecture | awk {'print $2'});
 
 function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 
@@ -61,7 +62,12 @@ if ! [ -x "$(command -v pwsh)" ]; then
     if [ -L "/usr/bin/pwsh" ]; then
       sudo rm -f /usr/bin/pwsh
     fi
-    wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz -O /tmp/powershell.tar.gz
+    if [ "${arch}" == "aarch64" ]; then
+      wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-arm64.tar.gz -O /tmp/powershell.tar.gz
+    else
+      wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz -O /tmp/powershell.tar.gz
+    fi
+    
     sudo mkdir -p /opt/microsoft/powershell/${pwsh_major_version}
     sudo tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/${pwsh_major_version} --overwrite
     sudo chmod +x /opt/microsoft/powershell/${pwsh_major_version}/pwsh
