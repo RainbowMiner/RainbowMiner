@@ -8,10 +8,12 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
+$Path = $null
+
 if ($IsLinux) {
     $Path = ".\Bin\CPU-CcminerVerus\ccminer"
-    if ($Global:GlobalCPUInfo.Vendor -eq "ARM"){
-    	$Uri = "https://github.com/TheRetroMike/RainbowMiner/releases/download/Binaries/ccminer-3.8.7z"
+    if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM){
+    	$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.3-ccminerverus/ccminerverus22-3.8.3cpu-arm.7z"
     }
     else{
     	$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.3-ccminerverus/ccminerverus22-3.8.3cpu-linux.7z"
@@ -20,6 +22,9 @@ if ($IsLinux) {
     $Path = ".\Bin\CPU-CcminerVerus\ccminer.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.3-ccminerverus/ccminerverus22-3.8.3cpu-win.7z"
 }
+
+if ($Path -eq $null) {return}
+
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "235{0:d2}"
 $DevFee = 0.0
