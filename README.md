@@ -23,7 +23,7 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 - **Multi-Platform (AMD, INTEL, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, 6Block, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlockMasters, C3pool, DeepMinerZ, Ekapool, EthashPool, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, FluxPools, FlyPool, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningPoolHub, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, Pmpmining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, Zergpool and Zpool)**
+- **Profit auto-switch between pools (2Miners, 6Block, Abelpool, Acepool, Aionpool, Alphpool, BaikalMiner, Binance, BlockCruncher, BlockMasters, C3pool, DeepMinerZ, Ekapool, EthashPool, Ethermine, Ethwmine, [ezil.me](https://ezil.me/?p=dcf9), F2pool, FlockPool, FluxPools, FlyPool, GrinMint, Hashcryptos, Hashpool, HashVault, [HeroMiners](https://herominers.com), Hiveon, Icemining, [Kryptex](https://pool.kryptex.com/?ref=15aa84c0), LeafPool, LuckPool, LuckyPool, Minerpool, MinerRocks, Mining4people, MiningDutch, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, Pmpmining, Poolin, RaptoreumZone, Ravenminer, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, WoolyPooly, Zergpool and Zpool)**
 - **Integrate own and custom pools**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
@@ -308,7 +308,6 @@ Alternative: start as Linux `screen`:
 #### 5. Enter your credentials:
 
 - your btc-wallet address (one for general use, and one for NiceHash)
-- your MiningPoolHub credentials, if you plan to use this pool
 - your [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) credentials, if you plan to use this pool   
 - your region. Valid names are: US, Europe, Asia
 - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETC, ..
@@ -325,7 +324,7 @@ Alternative: start as Linux `screen`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Abelpool, Acepool, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, FlyPool, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, NiceHash, PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Abelpool, Acepool, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, FlyPool, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, LeafPool, LuckPool, LuckyPool, Luxor, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningDutchCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, NiceHash, PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -498,8 +497,6 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>Mining4peopleSolo</summary> https://www.mining4people.com/ no auto-exchange, multiple coins for solo mining available, a separate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>MiningDutch</summary> https://mining-dutch.nl/ auto-exchange and paymout in various currencies, username required. Mining by algorithm profitability</details>
 <details><summary>MiningDutchCoins</summary> https://mining-dutch.nl/ auto-exchange and paymout in various currencies, username required. Mining by coin profitability</details>
-<details><summary>MiningPoolHub</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm</details>
-<details><summary>MiningPooHubCoins</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).</details>
 <details><summary>MiningRigRentals</summary> [https://www.miningrigrentals.com/](https://www.miningrigrentals.com/?ref=2598069) rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
 <details><summary>Mintpond</summary> https://mintpond.com/ if you are totally in Zcoin, then this pool might be the best choice. A separate wallet address is needed for XZC. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Molepool</summary> https://molepool.com/ no auto-exchange, a separate wallet address is needed for ETHW. Set in pools configuration or edit pools.config.txt</details>
@@ -785,12 +782,6 @@ An example:
     "Interval": "$Interval",
 
 
-You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API KEY
-
-    "StartPaused": "0",
-    "Interval": "90",
-
-
 #### Basic setup
 
 - **Wallet** = your general BTC wallet address
@@ -896,7 +887,7 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 
 #### Select pools
 
-- **PoolName** = list of pool names, you want to use for mining [default=nicehash,miningpoolhub]
+- **PoolName** = list of pool names, you want to use for mining [default=nicehash,zergpool]
 - **ExcludePoolName** = list of pool names, you want to exclude from mining
 - **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
 - **ShowPoolBalancesDetails** = set to 0 if coin balances at a pool should be added up to BTC [default=1]
@@ -1239,11 +1230,9 @@ Per default all algorithms of a pool will be used. To define your own set of alg
 
 Example:
 
-    "MiningPoolHub": {
+    "ZergPool": {
         "User": "$UserName",
         "Worker": "$WorkerName",
-        "API_ID": "$API_ID",
-        "API_Key": "$API_Key",
         "Algorithm": "lyra2z,skein,myriadgroestl,groestl,neoscrypt,equihash-btg",
         "ExcludeAlgorithm": "",
         "CoinName": "",

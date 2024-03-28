@@ -259,12 +259,12 @@ function Start-Setup {
             $DownloadServerNow = $false
 
             Switch ($SetupType) {
-                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret")) > $null}
+                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","mrr","mrrapikey","mrrapisecret")) > $null}
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("workername","miningmode","devicename","excludedevicename","devicenameend","cpuminingthreads","cpuminingaffinity","enableautoadjustaffinity","gpuminingaffinity","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataveragestable","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","uistyle","uisorting","uiprofitcolumns","uifullbenchmarklist","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","enablealgorithmmapping","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","ocresetinterval","enableocfullreset","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","enableautominerports","staticcpuminerport","staticgpuminerport","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","autobenchmarkmode","profitspikeprotection")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","powercputdp","octopustariffcode","fixedcostperday","usepowerprice","checkprofitability","profitabilitylevel")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","preferminername","preferminermargin","disabledualmining","enabledualminingduringrentals","enablecheckminingconflict","enableethashzombiemode","algorithm","excludealgorithm","enablealgorithmvariants","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","apiallowips","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","apiallowips","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enablefastlanebenchmark","fastlanebenchmarktypecpu","fastlanebenchmarktypegpu","enablefastlanebenchmarkmissing","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","autobenchmarkmode","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","preferminername","preferminermargin","algorithm","excludealgorithm","enablealgorithmvariants","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin","disabledualmining","enabledualminingduringrentals","excludeminerswithfee","enablecheckminingconflict","enableethashzombiemode","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardintel1","devicenamewizardintel2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","staticcpuminerport","staticgpuminerport","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","uistyle","uisorting","uiprofitcolumns","uifullbenchmarklist","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","excludefromwatchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","ocresetinterval","enableocfullreset","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","proxyusername","proxypassword","covalentapikey","enablecurl","delay","interval","benchmarkinterval","maxcrashesduringbenchmark","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","disableinternetcheck","usetimesync","websitesforonlinecheck","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","powercputdp","octopustariffcode","fixedcostperday","usepowerprice","checkprofitability","profitabilitylevel","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","enablepauseonbattery","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","restartrbmtimespan","restartrbmmemory","openclplatformsorting","enabledebugmode","enableverboseasyncloader","ssl","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","apiallowips","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enablefastlanebenchmark","fastlanebenchmarktypecpu","fastlanebenchmarktypegpu","enablefastlanebenchmarkmissing","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","autobenchmarkmode","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","preferminername","preferminermargin","algorithm","excludealgorithm","enablealgorithmvariants","disableunprofitablealgolist","disableunprofitablecpualgolist","excludecoinsymbol","excludecoin","disabledualmining","enabledualminingduringrentals","excludeminerswithfee","enablecheckminingconflict","enableethashzombiemode","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardintel1","devicenamewizardintel2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","staticcpuminerport","staticgpuminerport","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","uistyle","uisorting","uiprofitcolumns","uifullbenchmarklist","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","excludefromwatchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","ocresetinterval","enableocfullreset","enablelinuxheadless","linuxdisplay","linuxxauthority","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","proxyusername","proxypassword","covalentapikey","enablecurl","delay","interval","benchmarkinterval","maxcrashesduringbenchmark","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","disableinternetcheck","usetimesync","websitesforonlinecheck","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","powercputdp","octopustariffcode","fixedcostperday","usepowerprice","checkprofitability","profitabilitylevel","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","enablepauseonbattery","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","restartrbmtimespan","restartrbmmemory","openclplatformsorting","enabledebugmode","enableverboseasyncloader","ssl","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null
 
@@ -285,23 +285,6 @@ function Start-Setup {
                 $NicehashOrganizationID = ""
                 $NicehashAPIKey = ""
                 $NicehashAPISecret = ""
-            }
-
-
-            if ($PoolsActual | Get-Member MiningPoolHub -MemberType NoteProperty) {
-                $MPHUser        = $PoolsActual.MiningPoolHub.User
-                $MPHAPIID       = $PoolsActual.MiningPoolHub.API_ID
-                $MPHAPIKey      = $PoolsActual.MiningPoolHub.API_Key
-            } else {
-                $MPHUser        = ""
-                $MPHAPIID       = ""
-                $MPHAPIKey      = ""
-            }
-
-            if ($PoolsActual | Get-Member MiningPoolHubCoins -MemberType NoteProperty) {
-                if (-not $MPHUser)   {$MPHUser   = $PoolsActual.MiningPoolHubCoins.User}
-                if (-not $MPHAPIID)  {$MPHAPIID  = $PoolsActual.MiningPoolHubCoins.API_ID}
-                if (-not $MPHAPIKey) {$MPHAPIKey = $PoolsActual.MiningPoolHubCoins.API_Key}
             }
 
             if ($PoolsActual | Get-Member MiningRigRentals -MemberType NoteProperty) {
@@ -443,52 +426,12 @@ function Start-Setup {
                         "workername" {
                             if ($IsInitialSetup) {
                                 Write-Host " "
-                                Write-Host "Every pool (except the MiningPoolHub) wants the miner to send a worker's name. You can change the name later. Please enter only letters and numbers. " -ForegroundColor Cyan
+                                Write-Host "Every pool wants the miner to send a worker's name. You can change the name later. Please enter only letters and numbers. " -ForegroundColor Cyan
                                 Write-Host " "
                             }
                             $Config.WorkerName = Read-HostString -Prompt "Enter your worker's name" -Default "$(if ($Config.WorkerName) {$Config.WorkerName} else {$DefaultWorkerName})" -Mandatory -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
 
-                        "mph" {
-                            if ($IsInitialSetup) {
-                                Write-Host " "
-                                Write-Host "If you plan to use MiningPoolHub for mining, you will have to register an account with them and choose a username. Enter this username now, or leave empty to disable MiningPoolHub (can be activated, later) " -ForegroundColor Cyan
-                                Write-Host " "
-                            }
-                            $MPHUser = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $MPHUser -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-
-                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if (-not $MPHUser) {
-                                $PoolNames = $PoolNames | Where-Object {$_ -notmatch "MiningPoolHub"}
-                            } else {
-                                if ($PoolNames -inotcontains "MiningPoolHub") {$PoolNames += "MiningPoolHub"}
-                                if ($PoolNames -inotcontains "MiningPoolHubCoins") {$PoolNames += "MiningPoolHubCoins"}
-                            }
-                            $Config.PoolName = ($PoolNames | Select-Object -Unique | Sort-Object) -join ','
-                        }
-
-                        "mphapiid" {
-                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if ($PoolNames -match "MiningPoolHub") {
-                                if ($IsInitialSetup) {
-                                    Write-Host " "
-                                    Write-Host "You will mine on MiningPoolHub as $($MPHUser). If you want to see your balance in RainbowMiner, you can now enter your USER ID (a number) and the API KEY. You find these two values on MiningPoolHub's `"Edit account`" page. " -ForegroundColor Cyan
-                                    Write-Host " "
-                                }
-                                $MPHApiID = Read-HostString -Prompt "Enter your Miningpoolhub USER ID (found on `"Edit account`" page)" -Default $MPHApiID -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                            } else {
-                                $GlobalSetupStepStore = $false
-                            }
-                        }
-
-                        "mphapikey" {
-                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if ($PoolNames -match "MiningPoolHub") {
-                                $MPHApiKey = Read-HostString -Prompt "Enter your Miningpoolhub API KEY (found on `"Edit account`" page)" -Default $MPHApiKey -Characters "0-9a-f" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                            } else {
-                                $GlobalSetupStepStore = $false
-                            }
-                        }
 
                         "mrr" {
                             if ($IsInitialSetup) {
@@ -871,18 +814,6 @@ function Start-Setup {
                                                         $NicehashOrganizationID = $PoolsActual.Nicehash.OrganizationID
                                                         $NicehashAPIKey = $PoolsActual.Nicehash.API_Key
                                                         $NicehashAPISecret = $PoolsActual.Nicehash.API_Secret
-                                                    }
-
-                                                    if ($PoolsActual | Get-Member MiningPoolHub -MemberType NoteProperty) {
-                                                        $MPHUser        = $PoolsActual.MiningPoolHub.User
-                                                        $MPHAPIID       = $PoolsActual.MiningPoolHub.API_ID
-                                                        $MPHAPIKey      = $PoolsActual.MiningPoolHub.API_Key
-                                                    }
-
-                                                    if ($PoolsActual | Get-Member MiningPoolHubCoins -MemberType NoteProperty) {
-                                                        if (-not $MPHUser)   {$MPHUser   = $PoolsActual.MiningPoolHubCoins.User}
-                                                        if (-not $MPHAPIID)  {$MPHAPIID  = $PoolsActual.MiningPoolHubCoins.API_ID}
-                                                        if (-not $MPHAPIKey) {$MPHAPIKey = $PoolsActual.MiningPoolHubCoins.API_Key}
                                                     }
 
                                                     if ($PoolsActual | Get-Member MiningRigRentals -MemberType NoteProperty) {
@@ -2056,32 +1987,6 @@ function Start-Setup {
                                         API_Secret = $NicehashAPISecret
                                 }) -Force
                                 $CheckPools += "NiceHash"
-                            }
-
-                            if (Get-Member -InputObject $PoolsActual -Name MiningPoolHub) {
-                                $PoolsActual.MiningPoolHub | Add-Member User $MPHUser -Force
-                                $PoolsActual.MiningPoolHub | Add-Member API_ID $MPHAPIID -Force
-                                $PoolsActual.MiningPoolHub | Add-Member API_Key $MPHAPIKey -Force
-                            } else {
-                                $PoolsActual | Add-Member MiningPoolHub ([PSCustomObject]@{
-                                        User    = $MPHUser
-                                        API_ID  = $MPHAPIID
-                                        API_Key = $MPHAPIKey
-                                }) -Force
-                                $CheckPools += "MiningPoolHub"
-                            }
-
-                            if (Get-Member -InputObject $PoolsActual -Name MiningPoolHubCoins) {
-                                $PoolsActual.MiningPoolHubCoins | Add-Member User $MPHUser -Force
-                                $PoolsActual.MiningPoolHubCoins | Add-Member API_ID $MPHAPIID -Force
-                                $PoolsActual.MiningPoolHubCoins | Add-Member API_Key $MPHAPIKey -Force
-                            } else {
-                                $PoolsActual | Add-Member MiningPoolHubCoins ([PSCustomObject]@{
-                                        User    = $MPHUser
-                                        API_ID  = $MPHAPIID
-                                        API_Key = $MPHAPIKey
-                                }) -Force
-                                $CheckPools += "MiningPoolHubCoins"
                             }
 
                             if (Get-Member -InputObject $PoolsActual -Name MiningRigRentals) {
