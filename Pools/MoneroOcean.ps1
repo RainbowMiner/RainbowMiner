@@ -44,6 +44,7 @@ $Pool_Request | Group-Object -Property algo | ForEach-Object {
         $Pool_Algorithm_Norm = if ($Pool_Coin) {$Pool_Coin.Algo} else {Get-Algorithm $_.algo}
 
         if (-not $InfoOnly) {
+            if (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm)) {return}
             $Pool_TSL = if ($_.tsl -ge 0) {$_.tsl} else {$null}
             if ($_.profit -eq 0.0) {return}
             $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $_.profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.diff -HashRate $_.hashrate -BlockRate $(if ($_.ttf -gt 0) {86400/$_.ttf} else {0}) -Quiet

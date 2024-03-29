@@ -55,7 +55,7 @@ $Pool_Currencies = @("BTC","DOGE","LTC") + @($Wallets.PSObject.Properties.Name |
 
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
-$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$_.algo -ne "token"} | ForEach-Object {
+$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$_.algo -ne "token" -and ((-not $CoinSymbol -or $_ -in $CoinSymbol) -and (-not $ExcludeCoinSymbol -or $_ -notin $ExcludeCoinSymbol) -or $InfoOnly)} | ForEach-Object {
     $Pool_CoinSymbol = $_
     $Pool_CoinName   = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_Algorithm  = $PoolCoins_Request.$Pool_CoinSymbol.algo
@@ -70,6 +70,8 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
         if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
         $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     }
+
+    if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratum2"} else {"stratum"}} else {$null}
 
