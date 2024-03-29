@@ -1708,6 +1708,7 @@ function Get-PoolsContent {
         $Content = & {
                 $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
                 & $_.FullName @Parameters
+                $Parameters.Keys | Foreach-Object { Remove-Variable $_ -Force }
         }
 
         foreach($c in @($Content)) {
@@ -1792,6 +1793,7 @@ function Get-MinersContent {
             $Content = & { 
                     $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
                     & $Miner.FullName @Parameters
+                    $Parameters.Keys | ForEach-Object { Remove-Variable $_ -Force }
             }
             foreach($c in @($Content)) {
                 if ($Parameters.InfoOnly) {
