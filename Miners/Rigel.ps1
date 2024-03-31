@@ -44,7 +44,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash5g";        DAG = $true; MinMemGB = 4; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH)
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 1; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA"); Algorithm = "ethash"} #Ethash (ETH) for low memory coins
     [PSCustomObject]@{MainAlgorithm = "ethashb3";        DAG = $true; MinMemGB = 2; Params = ""; ExtendInterval = 2; Vendor = @("NVIDIA")} #Ethash3B (RTH)
-    [PSCustomObject]@{MainAlgorithm = "fishhash";        DAG = $true; MinMemGB = 5; Params = "";                     Vendor = @("NVIDIA")} #Fishhash/IRON from 4. April 2024
+    [PSCustomObject]@{MainAlgorithm = "fishhash";        DAG = $true; MinMemGB = 5; Params = "";                     Vendor = @("NVIDIA")} #Fishhash/IRON from 2. April 2024
     [PSCustomObject]@{MainAlgorithm = "ironfish";                     MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #IronFish/IRON
     [PSCustomObject]@{MainAlgorithm = "karlsenhash";                  MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA")} #KarlsenHash/KLS
     [PSCustomObject]@{MainAlgorithm = "nexapow";         DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 2.0} #NexaPoW/NEXA
