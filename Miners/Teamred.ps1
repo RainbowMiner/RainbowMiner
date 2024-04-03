@@ -26,7 +26,6 @@ if ($IsLinux) {
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0; ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 1.5; Params = ""; DevFee = 2.0; ExtendInterval = 2; ExcludeCompute = @("GCN1","GCN2")} #Autolykos2/ERGO
-    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"}
     [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas";  SecondAlgorithmXlat = "kHeavyHash"}
     [PSCustomObject]@{MainAlgorithm = "cn_conceal";                    MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "cn_haven";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5; ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
@@ -48,12 +47,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash4g";         DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 0.75; ExtendInterval = 3; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash5g";         DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; ExcludeCompute = @("GCN1","GCN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash2g";         DAG = $true; MinMemGb = 1;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash3g";         DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash4g";         DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethash5g";         DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
-    [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "iron"; SecondAlgorithmXlat = "Blake3IronFish"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash2g";         DAG = $true; MinMemGb = 1;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash3g";         DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
@@ -61,7 +54,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash5g";         DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory";  DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; Algorithm = "ethash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "firopow";          DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2","RDNA3")}
-    [PSCustomObject]@{MainAlgorithm = "ironfish";                      MinMemGb = 1.5; Params = ""; DevFee = 1.0; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "karlsen";                       MinMemGb = 1.5; Params = ""; DevFee = 1.0; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "kas";                           MinMemGb = 1.5; Params = ""; DevFee = 1.0; MainAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "kawpow";           DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2")}
