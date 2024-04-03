@@ -12,21 +12,20 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.84"
+$Version = "1.86"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.84-lolminer/lolMiner_v1.84_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.86-lolminer/lolMiner_v1.86_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.84-lolminer/lolMiner_v1.84_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.86-lolminer/lolMiner_v1.86_Win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Autolykos2";                   MinMemGb = 2;   Params = "--algo AUTOLYKOS2"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Autolykos2/ERGO temp. deactivated (v1.54 runs fine)
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                    MinMemGb = 3;   Params = "--algo BEAM-III";   Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #BeamHash III
     [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";               MinMemGB = 2;   Params = "--algo ALEPH";      Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #Blake3/ALPH
-    [PSCustomObject]@{MainAlgorithm = "Blake3IronFish";               MinMemGB = 2;   Params = "--algo IRONFISH";   Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #Blake3/ALPH
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";                  MinMemGb = 6;   Params = "--algo CR29-40";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29b
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";                  MinMemGb = 6;   Params = "--algo CR29-32";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   MinMemGb = 7.6; Params = "--algo C30CTX";     Pers=$false; Fee=2.5; ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo30
@@ -61,13 +60,17 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EtHash5g";        DAG = $true; MinMemGB = 4;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode KASPADUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "kHeavyHash"; CUDAArch = "P"} #Ethash + kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "EthashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1";  Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #EthashB3/RTH
     [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3Alephium"; CUDAArch = "P"} #EthashB3/RTH + Blake3
-    [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode FISHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3IronFish"; CUDAArch = "P"} #EthashB3/RTH + Blake3IronFish
     [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode KARLSENDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "KarlsenHash"; CUDAArch = "P"} #EthashB3/RTH + KarlsenHash
     [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode PYRINDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "HeavyHashPyrin"; CUDAArch = "P"} #EthashB3/RTH + Pyrin
-    [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode RXDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA512256d"; CUDAArch = "P"} #EthashB3/RTH + SHA512256d
+    [PSCustomObject]@{MainAlgorithm = "EtHashB3";        DAG = $true; MinMemGB = 2;   Params = "--algo ETHASHB3 --disable-dag-verify 1 --dualmode RXDDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA512256d"; CUDAArch = "P"} #EthashB3/RTH + SHA512256d
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1";    Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ethash for low memory coins
     [PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3Alephium"; CUDAArch = "P"} #Ethash for low memory coins + Blake3
     [PSCustomObject]@{MainAlgorithm = "EtHashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode KASPADUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "kHeavyHash"; CUDAArch = "P"} #Ethash for low memory coins + kHeavyHash
+    [PSCustomObject]@{MainAlgorithm = "FishHash";        DAG = $true; MinMemGB = 2;   Params = "--algo FISHHASH --disable-dag-verify 1";  Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #FishHash/IRON
+    [PSCustomObject]@{MainAlgorithm = "FishHash";        DAG = $true; MinMemGB = 2;   Params = "--algo FISHHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3Alephium"; CUDAArch = "P"} #FishHash/IRON + Blake3
+    [PSCustomObject]@{MainAlgorithm = "FishHash";        DAG = $true; MinMemGB = 2;   Params = "--algo FISHHASH --disable-dag-verify 1 --dualmode KARLSENDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "KarlsenHash"; CUDAArch = "P"} #FishHash/IRON + KarlsenHash
+    [PSCustomObject]@{MainAlgorithm = "FishHash";        DAG = $true; MinMemGB = 2;   Params = "--algo FISHHASH --disable-dag-verify 1 --dualmode PYRINDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "HeavyHashPyrin"; CUDAArch = "P"} #FishHash/IRON + Pyrin
+    [PSCustomObject]@{MainAlgorithm = "FishHash";        DAG = $true; MinMemGB = 2;   Params = "--algo FISHHASH --disable-dag-verify 1 --dualmode RXDDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA512256d"; CUDAArch = "P"} #FishHash/IRON + SHA512256d
     [PSCustomObject]@{MainAlgorithm = "HeavyHashPyrin";               MinMemGB = 2;   Params = "--algo PYRIN";                                                Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #HeavyHashPyrin/PYI
     [PSCustomObject]@{MainAlgorithm = "KarlsenHash";                  MinMemGb = 2;   Params = "--algo KARLSEN";                                              Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #KarlsenHash
     [PSCustomObject]@{MainAlgorithm = "kHeavyHash";                   MinMemGB = 2;   Params = "--algo KASPA";                                                Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #kHeavyHash
