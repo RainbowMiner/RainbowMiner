@@ -29,7 +29,7 @@ $ExcludePoolName = "prohashing|miningrigrentals"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alph";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Blake3/Alephium
-    [PSCustomObject]@{MainAlgorithm = "canxium";         DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; CoinSymbol = @("CAU"); Algorithm = "Ethash2g"} #Ethash/ETHW
+    [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; CoinSymbol = @("CAU"); Algorithm = "canxium"} #Ethash/ETHW
     [PSCustomObject]@{MainAlgorithm = "dynex";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.00} #DynexSolve/DNX
     [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #ERG/Autolykos2
     [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "kaspa"} #ERG/Autolykos2+kHeavyHash
@@ -62,16 +62,16 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "alph"; ExcludeCoinSymbol = @("CAU","ETHW"); Algorithm = "ethash"} #Ethash+Blake3
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "kaspa"; ExcludeCoinSymbol = @("CAU","ETHW"); Algorithm = "ethash"} #Ethash+kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "ethashlowmemory"; DAG = $true; MinMemGb = 1; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "radiant"; ExcludeCoinSymbol = @("CAU","ETHW"); Algorithm = "ethash"} #Ethash+SHA512256d
-    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; CoinSymbol = @("ETHW"); Algorithm = "Ethash"} #Ethash/ETHW
-    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "alph"; CoinSymbol = @("ETHW"); Algorithm = "Ethash"} #Ethash+Blake3/ETHW
-    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "kaspa"; CoinSymbol = @("ETHW"); Algorithm = "Ethash"} #Ethash+kHeavyHash/ETHW
-    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "radiant"; CoinSymbol = @("ETHW"); Algorithm = "Ethash"} #Ethash+SHA512256d/ETHW
+    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; CoinSymbol = @("ETHW"); Algorithm = "ethash"} #Ethash/ETHW
+    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "alph"; CoinSymbol = @("ETHW"); Algorithm = "ethash"} #Ethash+Blake3/ETHW
+    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "kaspa"; CoinSymbol = @("ETHW"); Algorithm = "ethash"} #Ethash+kHeavyHash/ETHW
+    [PSCustomObject]@{MainAlgorithm = "ethw";            DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "radiant"; CoinSymbol = @("ETHW"); Algorithm = "ethash"} #Ethash+SHA512256d/ETHW
     [PSCustomObject]@{MainAlgorithm = "ixi";                          MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Argon2Ixi/Ixian
     [PSCustomObject]@{MainAlgorithm = "karlsen";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #KarlsenHash
     [PSCustomObject]@{MainAlgorithm = "kaspa";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #kHeavyHash
-    [PSCustomObject]@{MainAlgorithm = "kylacoin";                     MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "SHA3d"} #SHA3d/KCN
-    [PSCustomObject]@{MainAlgorithm = "nexa";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "NexaPoW"} #NexaPow/NEXA
-    [PSCustomObject]@{MainAlgorithm = "novo";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "SHA256dt"} #SHA256dt/NOVO
+    [PSCustomObject]@{MainAlgorithm = "SHA3d";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kylacoin"} #SHA3d/KCN
+    [PSCustomObject]@{MainAlgorithm = "nexa";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.0} #NexaPow/NEXA
+    [PSCustomObject]@{MainAlgorithm = "SHA256dt";                     MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 2.0; Algorithm = "novo"} #SHA256dt/NOVO
     [PSCustomObject]@{MainAlgorithm = "radiant";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #SHA512256d/RAD
     [PSCustomObject]@{MainAlgorithm = "kawpow";          DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #KawPow
     [PSCustomObject]@{MainAlgorithm = "kawpow2g";        DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0; Algorithm = "kawpow"} #KawPow2g
