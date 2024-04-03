@@ -2817,6 +2817,18 @@ function Expand-WebRequest {
                     }
                 }
             }
+            $Rm_Paths = @("DAGs")
+            $Rm_Paths | Foreach-Object {
+                $Rm_Path = Join-Path $Path_Bak $_
+                try {
+                    Get-ChildItem $Rm_Path -File | Foreach-Object {
+                        Remove-Item $_.FullName -Force
+                    }
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Downloader: Could not to remove from backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
+                }
+            }
             $SkipBackups = if ($EnableMinerBackups) {3} else {0}
             Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {
                 try {
