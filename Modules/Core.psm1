@@ -593,10 +593,10 @@ function Invoke-Core {
                 #    $Fork_Meets_Target = $true
                 #}
 
-                $Request = Invoke-RestMethodAsync "https://explorer.ironfish.network/api/blocks/head" -tag "fork" -timeout 15 -cycletime 120
-                if ([int64]$Request.sequence -ge 503338) {
-                    $Fork_Meets_Target = $true
-                }
+                #$Request = Invoke-RestMethodAsync "https://explorer.ironfish.network/api/blocks/head" -tag "fork" -timeout 15 -cycletime 120
+                #if ([int64]$Request.sequence -ge 503338) {
+                #    $Fork_Meets_Target = $true
+                #}
 
             }
         }
