@@ -3112,7 +3112,7 @@ class Xgminer : Miner {
         $Server = "127.0.0.1" #"localhost"
         $Timeout = 10 #seconds
 
-        $DualMining = $this.Algorithm.Count -eq 2
+        $DualMining = $this.Algorithm.Count -ge 2
 
         $Request = @{command = "summary"; parameter = ""} | ConvertTo-Json -Depth 10 -Compress
         $Response = ""

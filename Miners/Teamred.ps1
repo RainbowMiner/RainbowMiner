@@ -161,7 +161,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 (-not $_.PoolName -or $Pools.$MainAlgorithm_Norm.Host -match $_.PoolName)) {
                 if ($First) {
 				    $Miner_Port = $Port -f (2 * ($Miner_Device | Select-Object -First 1 -ExpandProperty Index))
-					$Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)_$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+					$Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $DeviceIDsAll  = $Miner_Device.BusId_Type_Vendor_Index -join ','
                     $DeviceIDsDual = if ($SecondAlgorithm_Norm_0) {$Miner_Device_Dual.BusId_Type_Vendor_Index -join ','}
                     $First = $False
