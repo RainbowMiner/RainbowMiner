@@ -82,7 +82,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #Etchash + SHA256ton
     #[PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #Ethash + SHA256ton
     #[PSCustomObject]@{MainAlgorithm = "EthashLowMemory"; DAG = $true; MinMemGB = 2;   Params = "--algo ETHASH --disable-dag-verify 1 --dualmode TONDUAL";    Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #Ethash for low memory coins + SHA256ton
-    #[PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 2;   Params = "--algo TON";        Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #SHA256ton/TON
+    [PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 2;   Params = "--algo TON";        Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #SHA256ton/TON
     #[PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #Ubqhash + SHA256ton
 )
 
