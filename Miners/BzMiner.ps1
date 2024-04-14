@@ -15,14 +15,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "19.3.1"
+$Version = "21.1.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v19.3.1-bzminer/bzminer_v19.3.1_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v21.1.1-bzminer/bzminer_v21.1.1_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v19.3.1-bzminer/bzminer_v19.3.1_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v21.1.1-bzminer/bzminer_v21.1.1_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
@@ -82,6 +82,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Rethereum/RTH
     [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "alph"; Fee = 1.00} #Rethereum/ALPH
     [PSCustomObject]@{MainAlgorithm = "rethereum";       DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "radiant"; Fee = 1.00} #Rethereum/RTH
+    [PSCustomObject]@{MainAlgorithm = "warthog";                      MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00; Algorithm = "pobw"} #Warthog/WART
     [PSCustomObject]@{MainAlgorithm = "woodcoin";                     MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Skein2/WoodCoin LOG
 )
 
@@ -142,6 +143,7 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 
             if ($MainAlgorithm_0 -eq "kawpow") {
                 Switch ($Pools.$MainAlgorithm_Norm_0.CoinSymbol) {
+                    "DINT"  { $MainAlgorithm_0 = "dint" }
                     "CLORE" { $MainAlgorithm_0 = "clore" }
                     "GPN"   { $MainAlgorithm_0 = "gamepass" }
                     "NEOX"  { $MainAlgorithm_0 = "neox" }
@@ -150,7 +152,14 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
                     "XNA"   { $MainAlgorithm_0 = "xna" }
                 }
             } elseif ($MainAlgorith_0 -eq "ethash") {
-                if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "CAU") {$MainAlgorithm_0 = "canxium"}
+                switch ($Pools.$MainAlgorithm_Norm_0.CoinSymbol) {
+                    "CAU"   { $MainAlgorithm_0 = "canxium" }
+                    "LRS"   { $MainAlgorithm_0 = "larissa" }
+                }
+            } elseif ($MainAlgorith_0 -eq "karlsenhash") {
+                switch ($Pools.$MainAlgorithm_Norm_0.CoinSymbol) {
+                    "NXL"   { $MainAlgorithm_0 = "nexellia" }
+                }
             }
 
             $HasEthproxy = $MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy
