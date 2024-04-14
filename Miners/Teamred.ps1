@@ -11,20 +11,21 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # 
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.10.18"
+$Version = "0.10.19"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.18-teamred/teamredminer-v0.10.18-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.19-teamred/teamredminer-v0.10.19-linux.tgz"
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.18-teamred/teamredminer-v0.10.18-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.19-teamred/teamredminer-v0.10.19-win.zip"
     $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0;  ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2")}
+    [PSCustomObject]@{MainAlgorithm = "alph";                          MinMemGb = 1.5; Params = ""; DevFee = 1.0;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 1.5; Params = ""; DevFee = 2.0;  ExtendInterval = 2; ExcludeCompute = @("GCN1","GCN2")} #Autolykos2/ERGO
     [PSCustomObject]@{MainAlgorithm = "cn_conceal";                    MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "cn_haven";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
@@ -70,15 +71,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16s";                          MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
 
     # Dual mining Abelian
+    [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0; ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2"); SecondaryAlgorithm = "alph"} #Abelian/ABEL + ALPH
     [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0; ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2"); SecondaryAlgorithm = "karlsen"; SecondAlgorithmXlat = "KarlsenHash"} #Abelian/ABEL + KLS
     [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0; ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2"); SecondaryAlgorithm = "kas";     SecondAlgorithmXlat = "kHeavyHash"} #Abelian/ABEL + KAS
     [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0; ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2"); SecondaryAlgorithm = "pyrin";   SecondAlgorithmXlat = "PyrinHash"} #Abelian/ABEL + PYI
     #[PSCustomObject]@{MainAlgorithm = "abel";            DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0; ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2"); SecondaryAlgorithm = "sha512256d"} #Abelian/ABEL + RXD
 
     # Dual mining ERG + kHeavyHash/KASPA
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "alph"}
     [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"}
 
     # Dual mining Ethash + kHeavyHash/KASPA
+    [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "alph"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 1;   Params = ""; DevFee = 0.75; ExtendInterval = 3; MainAlgorithmXlat = "ethash2g"; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; MainAlgorithmXlat = "ethash3g"; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("GCN1","GCN2")}
