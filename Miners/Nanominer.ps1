@@ -12,14 +12,14 @@ $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "234{0:d2}"
 $Cuda = "10.0"
 $DevFee = 3.0
-$Version = "3.9.0"
+$Version = "3.9.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
-    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.0-nanominer/nanominer-linux-3.9.0.tar.gz"
+    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.1-nanominer/nanominer-linux-3.9.1.tar.gz"
 } else {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
-    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.0-nanominer/nanominer-windows-3.9.0.zip"
+    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.1-nanominer/nanominer-windows-3.9.1.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
