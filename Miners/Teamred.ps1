@@ -11,15 +11,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # 
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.10.20"
+$Version = "0.10.21"
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.20-teamred/teamredminer-v0.10.20-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.21-teamred/teamredminer-v0.10.21-linux.tgz"
     $DatFile = "$env:HOME/.vertcoin/verthash.dat"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.20-teamred/teamredminer-v0.10.20-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.21-teamred/teamredminer-v0.10.21-win.zip"
     $DatFile = "$env:APPDATA\Vertcoin\verthash.dat"
 }
 
@@ -48,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 4;   Params = ""; DevFee = 0.75; ExtendInterval = 3; MainAlgorithmXlat = "ethash5g"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; MainAlgorithmXlat = "ethashlowmemory"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "firopow";          DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2","RDNA3")}
+    [PSCustomObject]@{MainAlgorithm = "fishhash";         DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2","GCN3","GCN4","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "karlsen";                       MinMemGb = 1.5; Params = ""; DevFee = 1.0;  ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "kas";                           MinMemGb = 1.5; Params = ""; DevFee = 1.0;  MainAlgorithmXlat = "kHeavyHash"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "kawpow";           DAG = $true; MinMemGb = 3;   Params = ""; DevFee = 2.0;  ExtendInterval = 3; ExcludeCompute = @("GCN1","GCN2")}
