@@ -45,9 +45,9 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "equihash";   port = @(3333,4444); ethproxy = $null;          rpc = "equihash";   divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "etchash";    port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "etchash";    divisor = 1e6; mh = 5e3; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ethash";     port = @(3333,4444); ethproxy = "ethstratumnh"; rpc = "ethash";     divisor = 1e6; mh = 5e3; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "ethashb3";   port = @(3333,4444); ethproxy = $null;          rpc = "ethashb3";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "ethashb3";   port = @(3333,4444); ethproxy = $null;          rpc = "ethashb3";   divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "firopow";    port = @(3333,4444); ethproxy = $null;          rpc = "firopow";    divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "ironfish";   port = @(3333,4444); ethproxy = $null;          rpc = "ironfish";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "fishhash";   port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "karlsenhash"; port = @(3333,4444); ethproxy = $null;         rpc = "karlsenhash"; divisor = 1;  mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kawpow";     port = @(3333,4444); ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kheavyhash"; port = @(3333,4444); ethproxy = $null;          rpc = "kheavyhash"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
@@ -63,23 +63,26 @@ $Pools_Data = @(
 $Pool_Referrals = [PSCustomObject]@{
     "1INCH" = "1svs-yea0"
     AAVE = "fosa-yqe2"
-    ADA = "7vq1-243y"
+    ADA = "fpsw-w55b"
     ALGO = "vrl4-jzoe"
+    ALPH = "xhog-3n2h"
     APE = "4q81-kgaz"
     APT = "ycj3-vsni"
     ATOM = "ic6q-07z3"
     AVAX = "xmzm-757r"
-    BAT = "36zw-tmam"
+    BAND = "l7la-bhum"
     BCH = "tmy8-h32j"
-    BNB = "1mwg-ft2s"
-    BONK = "p1do-yslu"
+    BNB = "40er-b1cj"
+    BOME = "ou2g-rgnr"
+    BONK = "agcw-njc6"
     BTC = "9fh9-4fa8"
     BTG = "ad7b-d4tl"
     CAKE = "m4q0-ijmx"
+    CFX = "m4q6-x9pp"
     CHZ = "hbqc-9pxo"
     CRO = "e5vr-nl66"
-    DGB = "ysw1-6l8f"
-    DNX = "q0sl-bstz"
+    DASH = "lg3k-bdvv"
+    DNX = "ssdg-svo1"
     DOGE = "5oln-msuu"
     DOT = "6r7v-qzvp"
     ELON = "xlbi-djtr"
@@ -93,9 +96,11 @@ $Pool_Referrals = [PSCustomObject]@{
     FTM = "oz1p-zo06"
     FUN = "q00g-94gy"
     GALA = "lu1p-ld28"
-    GAS = "7sae-7dyj"
     HOT = "hgji-tmt3"
-    KAS = "r1dj-c2tv"
+    ICX = "6q59-skcz"
+    JUP = "hvnr-4dqd"
+    KAS = "qq1p-uq9i"
+    KLS = "fqc2-lu9w"
     KNC = "jw9k-db7i"
     LINK = "7sna-43ok"
     LTC = "njan-ebtu"
@@ -104,19 +109,19 @@ $Pool_Referrals = [PSCustomObject]@{
     MATIC = "81le-gb5c"
     MTL = "0b02-rnc3"
     NANO = "1x7t-hiis"
-    NEO = "9vwe-a1uc"
+    NEXA = "cc60-yyy5"
     PEPE = "jp13-14uk"
     QTUM = "yd6u-nsc6"
     RSR = "9ycq-kxhv"
     RVN = "bqjd-08zn"
-    SC = "whhb-qst0"
     SHIB = "0hcq-ztsu"
-    SOL = "4jd7-syfz"
+    SOL = "zpqt-v3rw"
     SUSHI = "33v5-pkjv"
     TRX = "wpmm-8juc"
     UNI = "odf8-0vtf"
     USDT = "5tfd-jbel"
     VET = "l6wr-52k0"
+    WAVES = "0pmt-vn9g"
     WBTC = "2xlm-0f06"
     WIN = "15aw-8hft"
     WLD = "1vlh-ix4z"
@@ -126,7 +131,6 @@ $Pool_Referrals = [PSCustomObject]@{
     XTZ = "ios2-qfwf"
     XVG = "i3c5-1h08"
     YFI = "fet2-smsf"
-    ZEC = "tp3d-km6s"
     ZIL = "x6d0-by1v"
     ZRX = "yfq7-zx60"
 }
