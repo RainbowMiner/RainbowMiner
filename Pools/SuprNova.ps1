@@ -61,7 +61,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
     $Pool_Fee  = $_.fee
     $Pool_Coin = Get-Coin $_.symbol
     $Pool_Currency = $Pool_Coin.Symbol
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Hashrate = $Pool_Workers = $null

@@ -43,7 +43,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
 
     $Pool_Regions       = $_.regions
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $Pool_Request  = [PSCustomObject]@{}
     $Pool_Request2 = [PSCustomObject]@{}

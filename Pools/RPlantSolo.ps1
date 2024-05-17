@@ -37,13 +37,11 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and (
 
     $Pool_CurrencyXlat = if ($Pool_Currency -eq "SKY") {"SKYDOGE"} else {$Pool_Currency}
     
-    $Pool_Coin           = Get-Coin $Pool_CurrencyXlat -Algorithm $_.algo
-    
-    if ($Pool_Coin) {
+    if ($Pool_Coin = Get-Coin $Pool_CurrencyXlat -Algorithm $_.algo) {
         $Pool_Algorithm_Norm = $Pool_Coin.Algo
         $Pool_CoinName       = $Pool_Coin.Name
     } else {
-        $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+        $Pool_Algorithm_Norm = Get-Algorithm $_.algo -CoinSymbol $Pool_CurrencyXlat
         $Pool_CoinName       = (Get-Culture).TextInfo.ToTitleCase($_.info.coin)
     }
 

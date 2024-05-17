@@ -25,7 +25,7 @@ $Pools_Data = @(
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency = $_.symbol
     $Pool_Coin = Get-Coin $Pool_Currency
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
     $Pool_SoloMining = $false
 

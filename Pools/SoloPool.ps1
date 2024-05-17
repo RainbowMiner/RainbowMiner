@@ -35,13 +35,11 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 [hashtable]$Pool_RegionsTable = @{}
 @("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-[hashtable]$Pool_Algorithms = @{}
-
 $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpper();($Wallets.$Pool_Currency -or ($Pool_Currency -eq "FIRO" -and $Wallets.XZC) -or $InfoOnly) -and $_ -notmatch "^dgb-"} | ForEach-Object {
 
     $Pool_Coin = Get-Coin $Pool_Currency
 
-    $Pool_Algorithm = $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
     $Pool_CoinName  = $Pool_Coin.Name
 
     if (-not ($Pool_Wallet = $Wallets.$Pool_Currency)) {
@@ -55,7 +53,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
             $Pool_MetaVars = [System.Web.HttpUtility]::UrlDecode($Matches[1]) | ConvertFrom-Json -ErrorAction Stop
             $ok = $true
             if (-not $Pool_Coin) {
-                $Pool_Algorithm = $Pool_MetaVars.TEMPLATE.algoTitle
+                $Pool_Algorithm_Norm = Get-Algorithm $Pool_MetaVars.TEMPLATE.algoTitle -CoinSymbol $Pool_Currency
                 $Pool_CoinName  = $Pool_MetaVars.TEMPLATE.title
             }
         }
@@ -63,7 +61,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
         Write-Log -Level Warn "$($Name): $($Pool_Currency) help page not readable"
     }
 
-    if (-not $Pool_Algorithm) {
+    if (-not $Pool_Algorithm_Norm) {
         Write-Log -Level Warn "Pool $($Name) missing coin $($Pool_Currency)"
         return
     }
@@ -73,8 +71,6 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Currency = $_.ToUpp
 
     $Pool_PoolFee   = $Pool_Request.$_.fee
 
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Hosts = $Pool_RegionsTable.Keys | Where-Object {$Pool_MetaVars.TEMPLATE."stratumHost$($_.toUpper())"} | Foreach-Object {[PSCustomObject]@{region=$_;host=$Pool_MetaVars.TEMPLATE."stratumHost$($_.toUpper())";port=$Pool_MetaVars.TEMPLATE."stratumPort$(if ($Pool_MetaVars.TEMPLATE.stratumPortGpu) {"Gpu"} else {"Low"})"}}

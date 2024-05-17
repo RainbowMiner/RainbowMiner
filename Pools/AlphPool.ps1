@@ -43,7 +43,7 @@ $Pool_Host            = "{region}.alph-pool.com"
 $Pool_Protocol        = "wss"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 $Pool_Ports          = @(20032,20033)
 $Pool_PoolFee        = 100 * $Pool_Request.pool_fee.pps
 #$Pool_Factor         = 1e9

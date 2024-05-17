@@ -41,7 +41,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
     $Pool_Port      = $_.port
     $Pool_RpcPath   = $_.rpc
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
+    $Pool_Algorithm_Norm = $Pool_Coin.algo
 
     $Pool_Hashrate_Request = [PSCustomObject]@{}
     $Pool_Request_Blocks = [PSCustomObject]@{}

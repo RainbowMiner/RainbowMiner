@@ -127,7 +127,7 @@ if (-not $InfoOnly) {
 
                 $Pool_CoinSymbol = $Pool_Coin.symbol
                 $Pool_CoinName   = $Pool_Coin.name
-                $Pool_Algorithm  = $Pool_Coin.algo
+                $Pool_Algorithm_Norm  = $Pool_Coin.algo
 
                 $Current_Coin = $AllCoins_Request | Where-Object {$_.coin -eq $Pool_CoinSymbol}
 
@@ -154,13 +154,12 @@ if (-not $InfoOnly) {
 
                         $Pool_CoinSymbol = $Pool_Coin.symbol
                         $Pool_CoinName   = $Pool_Coin.name
-                        $Pool_Algorithm  = $Pool_Coin.algo
+                        $Pool_Algorithm_Norm  = $Pool_Coin.algo
                     }
                 }
 
                 if (-not $Current_Coin) {return}
 
-                $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
                 $Pool_Algorithm_Norm_With_Model = "$Pool_Algorithm_Norm$(if ($Pool_Model) {"-$Pool_Model"})"
                 $Pool_TSL            = (Get-UnixTimestamp) - [int]$Current_Coin.lastPoolBlockTimestamp
 
@@ -242,9 +241,8 @@ if (-not $InfoOnly) {
 
         $Pool_CoinSymbol = $Current_Coin.coin
         $Pool_CoinName   = $Pool_Coin.name
-        $Pool_Algorithm  = $Pool_Coin.algo
+        $Pool_Algorithm_Norm  = $Pool_Coin.algo
 
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
         $Pool_TSL            = (Get-UnixTimestamp) - [int]$Current_Coin.lastPoolBlockTimestamp
 
         foreach ($Pool_SSL in @($false,$true)) {

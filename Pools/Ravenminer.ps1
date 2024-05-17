@@ -38,7 +38,7 @@ $Pool_Currency = "RVN"
 
 $Pool_Coin = Get-Coin $Pool_Currency
 $Pool_Host = "ravenminer.com"
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 $Pool_Ports = @(3838,13838)
 
 [hashtable]$Pool_RegionsTable = @{}

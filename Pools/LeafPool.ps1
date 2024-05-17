@@ -34,7 +34,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_HostPath  = "https://api-$($Pool_RpcPath).leafpool.com/$(if ($_.endpoint) {$_.endpoint} else {"api/stats"})"
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
+    $Pool_Algorithm_Norm = $Pool_Coin.algo
 
     $Pool_Request  = [PSCustomObject]@{}
     $Pool_Ports    = @([PSCustomObject]@{})

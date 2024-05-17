@@ -60,7 +60,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
     $Pool_Currency       = $_.symbol
     $Pool_RpcPath        = $_.name
     $Pool_Algorithm      = $_.algorithm
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_Currency
     $Pool_Fee            = 1.0
     $Pool_User           = $Wallets."$($_.symbol)"
 

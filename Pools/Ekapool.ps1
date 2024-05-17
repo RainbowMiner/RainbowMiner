@@ -38,11 +38,9 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentProcessing.payoutScheme -eq "PPLNS" -and ($Wallets.$Pool_Currency -or $InfoOnly)} | Foreach-Object {
 
-    $Pool_Coin = Get-Coin $Pool_Currency
-
-    if ($Pool_Coin) {
+    if ($Pool_Coin = Get-Coin $Pool_Currency) {
         $Pool_CoinName = $Pool_Coin.Name
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo -CoinSymbol $Pool_Currency
+        $Pool_Algorithm_Norm = $Pool_Coin.Algo
     } else {
         $Pool_CoinName = $_.coin.name
         $Pool_Algorithm_Norm = Get-Algorithm $_.coin.algorithm -CoinSymbol $Pool_Currency

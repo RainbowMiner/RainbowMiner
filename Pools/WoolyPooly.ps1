@@ -67,7 +67,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
     $Pool_Port      = $_.port
     $Pool_RpcPath   = $_.rpc
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
+    $Pool_Algorithm_Norm = $Pool_Coin.algo
 
     $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} else {$null}
 

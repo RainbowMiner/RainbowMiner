@@ -37,7 +37,7 @@ $Pool_Currency       = "RTM"
 $Pool_Host            = "{region}.raptoreum.zone"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 $Pool_Ports          = @(3333,4444)
 $Pool_PoolFee        = if ($Pool_Request.result.primary.config -and $null -ne $Pool_Request.result.primary.config.PSObject.Properties['recipientFee']) {100 * [double]$Pool_Request.result.primary.config.recipientFee} else {0.75}
 $Pool_TSL            = if ($Pool_Request.result.primary.blocks -and $null -ne $Pool_Request.result.primary.blocks.PSObject.Properties['lastFound']) {[int](((Get-UnixTimestamp -Milliseconds) - $Pool_Request.result.primary.blocks.lastFound)/1000)} else {$null}

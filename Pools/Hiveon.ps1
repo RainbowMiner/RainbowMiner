@@ -29,7 +29,7 @@ $Pool_Request.cryptoCurrencies | Where-Object {$Wallets."$($_.name)" -or $InfoOn
     $Pool_Currency  = $_.name
     $Pool_Coin      = Get-Coin $Pool_Currency
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     if (-not $InfoOnly) {
         $Pool_Profit   = 0

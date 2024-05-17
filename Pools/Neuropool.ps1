@@ -34,7 +34,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
     $Pool_Divisor   = 1
     $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
+    $Pool_Algorithm_Norm = $Pool_Coin.algo
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 

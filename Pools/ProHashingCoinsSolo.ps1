@@ -81,8 +81,12 @@ $PoolCoins_Request.data.PSObject.Properties | Where-Object {$_.Value.port -and $
         return
     }
 
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    if ($Pool_Algorithm -in @("Ethash","KawPow")) {
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
+    } else {
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    }
     
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.Value.hashrate -BlockRate $Pool_BLK -Quiet

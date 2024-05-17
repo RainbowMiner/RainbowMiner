@@ -49,7 +49,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
 
     $Pool_Currency = $Pool_Coin.Symbol
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $PoolCoin_Request = [PSCustomObject]@{}
 

@@ -38,8 +38,13 @@ if ($ok) {
     $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin -or $Pool_Coins -eq "$($_.coin)-HNO"} | Foreach-Object {
         $Pool_Currency   = $_.coin
         $Pool_Algorithm  = $_.algo
-        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+
+        if ($Pool_Algorithm -in @("Ethash","KawPow")) {
+            $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_Currency
+        } else {
+            if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+            $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+        }
 
         if (($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and "$($_.CoinSymbol -replace "-HNO$")" -eq $Pool_Currency} | Measure-Object).Count) {
 
@@ -87,8 +92,13 @@ if ($ok) {
     $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin -or $Pool_Coins -eq "$($_.coin)-MST"} | Foreach-Object {
         $Pool_Currency   = $_.coin
         $Pool_Algorithm  = $_.algo
-        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+
+        if ($Pool_Algorithm -in @("Ethash","KawPow")) {
+            $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_Currency
+        } else {
+            if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+            $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+        }
 
         if (($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and "$($_.CoinSymbol -replace "-MST$")" -eq $Pool_Currency} | Measure-Object).Count) {
 
@@ -137,9 +147,14 @@ if ($ok) {
     $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $Pool_Request.coins.$_.tag -or $Pool_Coins -icontains "$($Pool_Request.coins.$_.tag)-WTM"} | ForEach-Object {
         $Pool_Currency   = $Pool_Request.coins.$_.tag
         $Pool_Algorithm  = $Pool_Request.coins.$_.algorithm -replace "[^a-z0-9]+"
-        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
 
-        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+        if ($Pool_Algorithm -in @("Ethash","KawPow")) {
+            $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_Currency
+        } else {
+            if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+            $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+        }
+
         $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm -Factor 1000
 
         if ($Pool_Algorithm -eq "ProgPow") {
@@ -225,9 +240,14 @@ if ($ok) {
     $Pool_Request.coins.PSObject.Properties.Name | Where-Object {$Pool_Request.coins.$_.status -eq "Active" -and ($Pool_Coins -icontains $Pool_Request.coins.$_.tag -or $Pool_Coins -icontains "$($Pool_Request.coins.$_.tag)-WTM")} | ForEach-Object {
         $Pool_Currency   = $Pool_Request.coins.$_.tag
         $Pool_Algorithm  = $Pool_Request.coins.$_.algorithm -replace "[^a-z0-9]+"
-        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
 
-        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+        if ($Pool_Algorithm -in @("Ethash","KawPow")) {
+            $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_Currency
+        } else {
+            if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+            $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+        }
+        
         $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm -Factor 1000
 
         if ($Pool_Algorithm -eq "ProgPow") {

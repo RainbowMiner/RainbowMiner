@@ -27,14 +27,13 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
     $Pool_Coin           = Get-Coin $_.symbol
 
     if ($Pool_Coin) {
-        $Pool_Algorithm  = $Pool_Coin.Algo
+        $Pool_Algorithm_Norm  = $Pool_Coin.Algo
         $Pool_CoinName   = $Pool_Coin.Name
     } else {
-        $Pool_Algorithm  = $PoolCoins_Request.$Pool_Currency.algo
+        $Pool_Algorithm_Norm  = Get-Algorithm $PoolCoins_Request.$Pool_Currency.algo -CoinSymbol $_.symbol
         $Pool_CoinName   = $PoolCoins_Request.$Pool_Currency.name
     }
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_HR = $null
 
     try {

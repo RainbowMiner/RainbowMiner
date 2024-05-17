@@ -79,7 +79,7 @@ if (-not $InfoOnly) {
 $Pools_Data | ForEach-Object {
     $Pool_Coin = Get-Coin $_.symbol
     $Stat = if ($_.primary) {$Stat_Primary} else {$Stat_Secondary}
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
     Foreach ($Pool_Region in $Pool_Regions) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm

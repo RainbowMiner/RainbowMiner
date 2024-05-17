@@ -35,7 +35,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
     $Pool_Divisor   = if ($_.divisor) {$_.divisor} else {1}
     $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
+    $Pool_Algorithm_Norm = $Pool_Coin.algo
 
     $Pool_Request  = [PSCustomObject]@{}
 

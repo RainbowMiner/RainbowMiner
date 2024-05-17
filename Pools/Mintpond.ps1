@@ -28,7 +28,7 @@ $Pools_Data = @(
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wallets."$($_.altsymbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
     $Pool_Url = "https://api.mintpond.com/v1/$($_.url)"
 

@@ -4789,7 +4789,7 @@ function Get-CoinsDB {
     )
     if ($Force -or -not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc -gt $Global:GlobalCoinsDBTimeStamp) {
         [hashtable]$Global:GlobalCoinsDB = @{}
-        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value;$Global:GlobalCoinsDB[$_.Name].Algo = Get-Algorithm $Global:GlobalCoinsDB[$_.Name].Algo}
         $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc
     }
     if (-not $Silent) {

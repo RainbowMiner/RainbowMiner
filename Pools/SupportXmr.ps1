@@ -48,11 +48,8 @@ catch {
 
 $Pool_Coin = Get-Coin $Pool_Currency
 $Pool_Port = 3333
-
-$Pool_Algorithm = $Pool_Coin.Algo
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 $Pool_PoolFee = 0.6
-
 $Pool_User = $Wallets.$Pool_Currency
 
 $Pool_BLK = [int]$($(if ($Pool_BlocksRequest.Count -gt 1 -and ($Pool_BlocksRequest.Maximum - $Pool_BlocksRequest.Minimum)) {86400000/($Pool_BlocksRequest.Maximum - $Pool_BlocksRequest.Minimum)} else {1})*$Pool_BlocksRequest.Count)

@@ -44,17 +44,14 @@ $Pools_Data = @(
 $Pools_Data.region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
-    $Pool_Coin           = Get-Coin $_.symbol
-
-    if ($Pool_Coin) {
-        $Pool_Algorithm  = $Pool_Coin.Algo
+    
+    if ($Pool_Coin = Get-Coin $_.symbol) {
+        $Pool_Algorithm_Norm  = $Pool_Coin.Algo
         $Pool_CoinName   = $Pool_Coin.Name
     } else {
-        $Pool_Algorithm  = $PoolCoins_Request.$Pool_Currency.algo
+        $Pool_Algorithm_Norm  = Get-Algorithm $PoolCoins_Request.$Pool_Currency.algo -CoinSymbol $_.symbol
         $Pool_CoinName   = $PoolCoins_Request.$Pool_Currency.name
     }
-
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_Currency.hashrate -BlockRate $PoolCoins_Request.$Pool_Currency.blocks24h -Difficulty $PoolCoins_Request.$Pool_Currency.diff -Quiet

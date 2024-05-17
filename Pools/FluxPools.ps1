@@ -40,7 +40,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
 
     $Pool_Regions       = $_.regions
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $Pool_Request  = [PSCustomObject]@{}
     $Pool_BLK      = $null

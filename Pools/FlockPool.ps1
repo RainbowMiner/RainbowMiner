@@ -42,7 +42,7 @@ $Pool_Currency       = "RTM"
 $Pool_Host           = "flockpool.com"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 $Pool_Ports          = @(4444,5555)
 $Pool_PoolFee        = 1
 $Pool_Factor         = 1

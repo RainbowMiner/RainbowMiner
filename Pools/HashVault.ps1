@@ -41,7 +41,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Divisor   = if ($_.divisor) {$_.divisor} else {1}
     $Pool_HostPath  = "pool.hashvault.pro"
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $Pool_Request       = [PSCustomObject]@{}
     $Pool_PortsRequest  = [PSCustomObject]@{}

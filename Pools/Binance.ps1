@@ -47,7 +47,7 @@ $Pools_Request.data.algoList | ForEach-Object {
 
         $Pool_Currency = $_.symbol
         $Pool_Coin  = Get-Coin $Pool_Currency
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+        $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
         if ($Pool_Data = $Pools_Data | Where-Object {$_.coin -eq $Pool_Currency}) {
             $Pool_Host = $Pool_Data.stratum

@@ -49,7 +49,7 @@ $Pool_Regions | Foreach-Object {
 $Pool_Host            = "pool.{region_with_dot}deepminerz.com"
 
 $Pool_Coin           = Get-Coin $Pool_Currency
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 $Pool_Ports          = @(4444,9850)
 $Pool_PoolFee        = [double]$Pool_Request.config.soloFee
 $Pool_Factor         = $Pool_Request.config.coinUnits

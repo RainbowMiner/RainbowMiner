@@ -26,17 +26,24 @@ $Session.Config.Userpools | Where-Object {$_.Name -eq $Name -and $_.Enable -and 
         Params     = $Params."$($_.Currency)"
     }
 
-    $Pool_Coin     = Get-Coin $Pool_Params["CoinSymbol"]
+    if (-not $Pool_Params["CoinSymbol"]) {
+        Write-Log -Level Warn "Userpool $Name, Currency $($Pool_Params["Currency"]): no CoinSymbol set"
+        return
+    }
+
+    if ($Pool_Coin = Get-Coin $Pool_Params["CoinSymbol"]) {
+        $Pool_Algorithm_Norm = $Pool_Coin.Algo
+    } else {
+        $Pool_Algorithm_Norm = Get-Algorithm "$($_.Algorithm)" -CoinSymbol $Pool_Params["CoinSymbol"]
+        if (-not $Pool_Algorithm_Norm) {
+            Write-Log -Level Warn "Userpool $Name, Currency $($Pool_Params["Currency"]), CoinSymbol $($Pool_Params["CoinSymbol"]): no Algorithm set"
+            return
+        }
+    }
+
     $Pool_User     = "$(if ($_.User) {$_.User} else {"`$Wallet.`$WorkerName"})"
     $Pool_Pass     = "$(if ($_.Pass) {$_.Pass} else {"x"})"
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
-
-    $Pool_Algorithm_Norm = Get-Algorithm "$(if ($_.Algorithm) {$_.Algorithm} else {$Pool_Coin.Algo})"
-
-    if (-not $Pool_Algorithm_Norm) {
-        Write-Log -Level Warn "Userpool $Name has no algorithm for coin $($Pool_Params["CoinSymbol"])"
-        return
-    }
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($_.Name)_$($Pool_Algorithm_Norm)_$($Pool_Params["CoinSymbol"])_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Quiet

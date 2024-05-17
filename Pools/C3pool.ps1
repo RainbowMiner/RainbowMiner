@@ -37,7 +37,7 @@ $Pool_Request | Group-Object -Property algo | ForEach-Object {
         $Pool_Port = $_.port
         $Pool_CoinSymbol = $_.coin
         $Pool_Coin = Get-Coin $Pool_CoinSymbol
-        $Pool_Algorithm_Norm = if ($Pool_Coin) {$Pool_Coin.Algo} else {Get-Algorithm $_.algo}
+        $Pool_Algorithm_Norm = if ($Pool_Coin) {$Pool_Coin.Algo} else {Get-Algorithm $_.algo -CoinSymbol $Pool_CoinSymbol}
 
         if (-not $InfoOnly) {
             $Pool_TSL = if ($_.tsl -ge 0) {$_.tsl} else {$null}

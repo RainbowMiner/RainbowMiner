@@ -40,10 +40,10 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
 
     if ($Pool_Coin = Get-Coin $Pool_Currency) {
         $Pool_CoinName = $Pool_Coin.Name
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+        $Pool_Algorithm_Norm = $Pool_Coin.Algo
     } else {
         $Pool_CoinName = $_.coin.name
-        $Pool_Algorithm_Norm = Get-Algorithm $_.coin.algorithm
+        $Pool_Algorithm_Norm = Get-Algorithm $_.coin.algorithm -CoinSymbol $Pool_Currency
     }
 
     $Pool_PoolFee = [Double]$_.poolFeePercent

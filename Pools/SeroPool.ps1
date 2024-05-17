@@ -44,7 +44,7 @@ $Pool_Currency       = "SERO"
 $Pool_Host           = "pool2.sero.cash" #"pool4.sero.cash" is secondary
 
 $Pool_Coin           = Get-Coin $Pool_Currency
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 $Pool_Port           = 8808
 $Pool_PoolFee        = 0
 $Pool_Factor         = 1e18

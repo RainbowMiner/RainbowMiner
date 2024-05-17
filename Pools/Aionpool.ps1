@@ -43,7 +43,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
     $ok = $true
 
     $Pool_Coin = Get-Coin $Pool_Currency
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     if (-not $InfoOnly) {
         $Pool_Id = $_.id

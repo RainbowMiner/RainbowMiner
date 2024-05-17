@@ -44,15 +44,13 @@ $Pool_Request | Where-Object {$_.id -match "pplns$" -and ($Wallets."$($_.coin)" 
     $Pool_Coin = Get-Coin $Pool_Currency
 
     if ($_.id -notmatch "^\w+-\w+-pplns$" -and $Pool_Coin -and -not $Pool_Coin.Multi) {
-        $Pool_Algorithm = $Pool_Coin.algo
+        $Pool_Algorithm_Norm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
     } else {
-        $Pool_Algorithm = $_.algorithm
+        $Pool_Algorithm_Norm = Get-Algorithm $_.algorithm -CoinSymbol $Pool_Currency
         $Pool_CoinName  = $_.name
     }
 
-
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Fee = [double]$_.fee
     $Pool_Host = ".mining4people.com"
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}

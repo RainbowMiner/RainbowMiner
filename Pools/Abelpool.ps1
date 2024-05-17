@@ -34,7 +34,7 @@ $Pool_Regions = @("us","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Coin = Get-Coin $Pool_Currency
-$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
+$Pool_Algorithm_Norm = $Pool_Coin.Algo
 
 $Pool_BLK = $Pool_TSL = $null
 

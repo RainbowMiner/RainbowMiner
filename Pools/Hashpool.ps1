@@ -64,9 +64,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "DGBODO","DGB")" -or 
     $Pool_Ports = $_.port
     $Pool_Fee   = if ($Pool_Data.fee -ne $null) {$Pool_Data.fee} else {$_.fee}
 
-    $Pool_Algorithm = $Pool_Coin.Algo
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $Pool_DataWindow = $DataWindow
 

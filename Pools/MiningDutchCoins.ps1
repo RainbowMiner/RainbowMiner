@@ -45,10 +45,16 @@ $Pool_Fee = 2
 
 $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $_.Value.status -eq "online" -and $_.Value.algorithm -and (($Wallets."$($_.Value.symbol)" -ne $null) -or $InfoOnly)} | ForEach-Object {
 
-    $Pool_Algorithm = $_.Value.algorithm
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Currency = $_.Value.symbol
+    $Pool_Algorithm = $_.Value.algorithm
+
+    if ($Pool_Algorithm -in @("Ethash","KawPow")) {
+        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_Currency
+    } else {
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    }
+    
     $Pool_User = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$User}
     $Pool_Fee = [double]$_.Value.fee
     $Pool_Port = [int]$_.Value.port
