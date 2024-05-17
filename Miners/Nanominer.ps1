@@ -174,7 +174,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                 }
 
                                 $SecondCoin = $Pools.$MainAlgorithm_Norm.CoinSymbol
-                                $SecondCoin_Data = Get-Coin $MainCoin
+                                $SecondCoin_Data = Get-Coin $SecondCoin
                                 if ($SecondCoin_Data.Algo -ne $SecondAlgorithm_Norm) {$SecondCoin = $null}
 
                                 $Arguments = [PSCustomObject]@{
