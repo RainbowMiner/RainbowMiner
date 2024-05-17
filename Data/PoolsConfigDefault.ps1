@@ -148,7 +148,7 @@
             Currencies=@("ETC")
         }
         "Icemining" = [PSCustomObject]@{
-            Currencies=@("NIM")
+            Currencies=@("NIM","GRAM")
         }
         "Kryptex" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Email=""}
