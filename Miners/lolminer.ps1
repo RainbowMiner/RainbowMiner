@@ -31,15 +31,15 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   MinMemGb = 7.6; Params = "--algo C30CTX";     Pers=$false; Fee=2.5; ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo30
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";                   MinMemGb = 4;   Params = "--algo C31";        Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckatoo31
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo32";                   MinMemGb = 4;   Params = "--algo C32";        Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckatoo32
-    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";                  MinMemGb = 6;   Params = "--algo C29D";       Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckarood29
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroom29";                  MinMemGb = 6;   Params = "--algo C29M";       Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroom29
+    #[PSCustomObject]@{MainAlgorithm = "Cuckarood29";                  MinMemGb = 6;   Params = "--algo C29D";       Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckarood29
+    #[PSCustomObject]@{MainAlgorithm = "Cuckaroom29";                  MinMemGb = 6;   Params = "--algo C29M";       Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroom29
     [PSCustomObject]@{MainAlgorithm = "CuckooCycle";                  MinMemGb = 6;   Params = "--algo C29AE";      Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #CuckooCycle/AEternity
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";                 MinMemGb = 1;   Params = "--algo EQUI210_9";  Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";                 MinMemGb = 2;   Params = "--algo EQUI144_5";  ParamsAutoPers = "--coin AUTO144_5"; Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD","INTEL")} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";                 MinMemGb = 3;   Params = "--algo EQUI192_7";  ParamsAutoPers = "--coin AUTO192_7"; Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";                MinMemGb = 3;   Params = "--algo FLUX";       Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA")} #Equihash 125,4,0
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";                MinMemGb = 3;   Params = "--algo BEAM-I";     Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3";              MinMemGb = 3;   Params = "--algo BEAM-II";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","INTEL")} #Equihash 150,5,3
+    #[PSCustomObject]@{MainAlgorithm = "EquihashR25x5";                MinMemGb = 3;   Params = "--algo BEAM-I";     Pers=$true;  Fee=1;   ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
+    #[PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3";              MinMemGb = 3;   Params = "--algo BEAM-II";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","INTEL")} #Equihash 150,5,3
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); DualZIL = "ETC"} #Etchash
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3Alephium"; CUDAArch = "P"} #Etchash + Blake3
     [PSCustomObject]@{MainAlgorithm = "EtcHash";         DAG = $true; MinMemGB = 2;   Params = "--algo ETCHASH --disable-dag-verify 1 --dualmode KASPADUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); SecondAlgorithm = "kHeavyHash"; CUDAArch = "P"} #Etchash + kHeavyHash
@@ -74,7 +74,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "FishHash";        DAG = $true; MinMemGB = 2;   Params = "--algo FISHHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #FishHash/IRON + SHA256ton
     [PSCustomObject]@{MainAlgorithm = "HeavyHashPyrin";               MinMemGB = 2;   Params = "--algo PYRIN";                                                Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #HeavyHashPyrin/PYI
     [PSCustomObject]@{MainAlgorithm = "KarlsenHash";                  MinMemGb = 2;   Params = "--algo KARLSEN";                                              Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #KarlsenHash
-    [PSCustomObject]@{MainAlgorithm = "kHeavyHash";                   MinMemGB = 2;   Params = "--algo KASPA";                                                Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #kHeavyHash
+    #[PSCustomObject]@{MainAlgorithm = "kHeavyHash";                   MinMemGB = 2;   Params = "--algo KASPA";                                                Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "NexaPoW";         DAG = $true; MinMemGb = 2;   Params = "--algo NEXA";                             Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #NexaPow/NEOX
     [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ubqhash
     [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1 --dualmode ALEPHDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "Blake3Alephium"; CUDAArch = "P"} #Ubqhash + Blake3
@@ -124,8 +124,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-			$SecondAlgorithm = $_.SecondAlgorithm
-			$SecondAlgorithm_Norm_0 = if ($_.SecondAlgorithm) {Get-Algorithm $_.SecondAlgorithm} else {$null}
+            $SecondAlgorithm = $_.SecondAlgorithm
+            $SecondAlgorithm_Norm_0 = if ($_.SecondAlgorithm) {Get-Algorithm $_.SecondAlgorithm} else {$null}
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
@@ -146,10 +146,10 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $DeviceParams = "$(if ($Global:IsWindows -and $MainAlgorithm_Norm_0 -eq "NexaPoW") {" --keepfree 1024"})"
 
-			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
-				if ($Miner_Device -and $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
+            foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
+                if ($Miner_Device -and $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
-			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll  = $Miner_Device.BusId_Type_Mineable_Index -join ',' #"$($Miner_Device.BusId -join ',') --devicesbypcie"
                         $DeviceLHRsAll = if ($Miner_Vendor -eq "NVIDIA") {($Miner_Device | Foreach-Object {if ($_.IsLHR) {"auto"} else {"off"}}) -join ','}
@@ -166,15 +166,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
 
                     $ZilParams = ""
-
-                    #if ($Session.Config.Pools.Ezil.EnableLolminerDual -and $_.DualZIL -and $Pools."Zilliqa$($_.DualZIL)" -and $Pools."Zilliqa$($_.DualZIL)".EthMode -eq $Pools.$MainAlgorithm_Norm.EthMode) {
-                    #    $ZilWallet = $Pools."Zilliqa$($_.DualZIL)".Wallet
-                    #    $ZilPool   = "$($Pools."Zilliqa$($_.DualZIL)".Host):$($Pools."Zilliqa$($_.DualZIL)".Port)"
-                    #    if ($ZilWallet -and $ZilPool) {
-                    #        $EthWallet = if ($Pools.$MainAlgorithm_Norm.Wallet -match "^0x") {$Pools.$MainAlgorithm_Norm.Wallet} elseif ($_.DualZIL -eq "ETH") {"0xaaD1d2972f99A99248464cdb075B28697d4d8EEd"} else {"0x7f3E62e5bb0601bA52f0813Cb818279f40aB14BC"}
-                    #        $ZilParams = " $(if (($Miner_Device.OpenCL.GlobalMemSizeGB | Measure-Object -Minimum).Minimum -ge 6) {"--enablezilcache"}) --dualmode zil --dualpool $($ZilPool) --dualuser $($EthWallet).$($ZilWallet)"
-                    #    }
-                    #}
 
                     if (-not $_.Pers -or $PersCoin -or $_.ParamsAutoPers) {
 
@@ -202,7 +193,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         if ($SecondAlgorithm_Norm_0) {
 
                             $Miner_Intensity = $Session.Config.Miners."$($Name)-$($Miner_Model)-$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm_0)".Intensity
-    
+
                             if (-not $Miner_Intensity) {$Miner_Intensity = @(2)}
 
                             foreach($Intensity in @($Miner_Intensity)) {
@@ -231,27 +222,27 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                             }
                                         }
 
-					                    [PSCustomObject]@{
-						                    Name           = $Miner_Name_Dual
-						                    DeviceName     = $Miner_Device.Name
-						                    DeviceModel    = $Miner_Model
-						                    Path           = $Path
-						                    Arguments      = "$($Pool_Arguments)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams)$($DeviceParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
-						                    HashRates      = [PSCustomObject]@{
+                                        [PSCustomObject]@{
+                                            Name           = $Miner_Name_Dual
+                                            DeviceName     = $Miner_Device.Name
+                                            DeviceModel    = $Miner_Model
+                                            Path           = $Path
+                                            Arguments      = "$($Pool_Arguments)$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) $($SecondPool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$SecondAlgorithm_Norm.Worker) {" --dualworker $($Pools.$SecondAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams)$($DeviceParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
+                                            HashRates      = [PSCustomObject]@{
                                                                 $MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".Week
                                                                 $SecondAlgorithm_Norm = $Global:StatsCache."$($Miner_Name_Dual)_$($SecondAlgorithm_Norm_0)_HashRate".Week
                                                              }
-						                    API            = "Lol"
-						                    Port           = $Miner_Port
+                                            API            = "Lol"
+                                            Port           = $Miner_Port
                                             FaultTolerance = $_.FaultTolerance
-					                        ExtendInterval = $_.ExtendInterval
+                                            ExtendInterval = $_.ExtendInterval
                                             Penalty        = 0
-							                DevFee         = [PSCustomObject]@{
+                                            DevFee         = [PSCustomObject]@{
                                                             ($MainAlgorithm_Norm) = $_.Fee
                                                             ($SecondAlgorithm_Norm) = 0
-							                            }
-						                    Uri            = $Uri
-						                    ManualUri      = $ManualUri
+                                                        }
+                                            Uri            = $Uri
+                                            ManualUri      = $ManualUri
                                             Version        = $Version
                                             PowerDraw      = 0
                                             BaseName       = $Name
@@ -260,7 +251,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                             LogFile        = $Global:StatsCache."$($Miner_Name_Dual)_$($MainAlgorithm_Norm_0)_HashRate".LogFile
                                             ExcludePoolName = $_.ExcludePoolName
                                             DualZIL        = $ZilParams -ne ""
-					                    }
+                                        }
                                     }
                                 }
 
@@ -276,21 +267,21 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                 }
                             }
 
-					        [PSCustomObject]@{
-						        Name           = $Miner_Name
-						        DeviceName     = $Miner_Device.Name
-						        DeviceModel    = $Miner_Model
-						        Path           = $Path
-						        Arguments      = "$($Pool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams)$($DeviceParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
-						        HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
-						        API            = "Lol"
-						        Port           = $Miner_Port
+                            [PSCustomObject]@{
+                                Name           = $Miner_Name
+                                DeviceName     = $Miner_Device.Name
+                                DeviceModel    = $Miner_Model
+                                Path           = $Path
+                                Arguments      = "$($Pool_Arguments)$(if ($TonMode) {" --ton-mode $($TonMode)"})$(if ($Pools.$MainAlgorithm_Norm.Worker) {" --worker $($Pools.$MainAlgorithm_Norm.Worker)"}) --devices $($DeviceIDsAll) --apiport `$mport --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $(if ($DeviceLHRsAll) {"--lhrtune $($DeviceLHRsAll) "})$(if ($EthStratum) {"--ethstratum $($EthStratum) "})$(if ($PersCoin -and $PersCoin -ne "auto") {"--pers $($PersCoin) "})$($WatchdogParams)$($DeviceParams) $(if ($PersCoin -eq "auto" -and $_.ParamsAutoPers) {$_.ParamsAutoPers} else {$_.Params})"
+                                HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
+                                API            = "Lol"
+                                Port           = $Miner_Port
                                 FaultTolerance = $_.FaultTolerance
-					            ExtendInterval = $_.ExtendInterval
+                                ExtendInterval = $_.ExtendInterval
                                 Penalty        = 0
-						        DevFee         = $_.Fee
-						        Uri            = $Uri
-						        ManualUri      = $ManualUri
+                                DevFee         = $_.Fee
+                                Uri            = $Uri
+                                ManualUri      = $ManualUri
                                 Version        = $Version
                                 PowerDraw      = 0
                                 BaseName       = $Name
@@ -300,11 +291,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                                 ListDevices    = "--list-devices"
                                 ExcludePoolName = $_.ExcludePoolName
                                 DualZIL        = $ZilParams -ne ""
-					        }
+                            }
                         }
                     }
-				}
-			}
+                }
+            }
         })
     }
 }
