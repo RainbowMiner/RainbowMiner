@@ -150,6 +150,12 @@
         "Icemining" = [PSCustomObject]@{
             Currencies=@("NIM","GRAM")
         }
+        "K1Pool" = [PSCustomObject]@{
+            Currencies=@("NEXA","XEL")
+        }
+        "K1PoolSolo" = [PSCustomObject]@{
+            Currencies=@("NEXA","XEL")
+        }
         "Kryptex" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Email=""}
             SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address to enable all coins for autoexchange"}
