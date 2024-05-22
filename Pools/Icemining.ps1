@@ -37,6 +37,7 @@ if (-not ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction 
 $Pools_Data = @(
     [PSCustomObject]@{symbol="CHAPA";           region = @("de","fi");                            host="%region%.chapa.hashrate.to"; port=4003; fee = 30}
     [PSCustomObject]@{symbol="GRAM";            region = @("de","fi");                            host="%region%.ton.hashrate.to";   port=4003; fee = 30}
+    [PSCustomObject]@{symbol="GRAM";            region = @("us");                                 host="%region%.ton.hashrate.to";   port=4002; fee = 30}
     [PSCustomObject]@{symbol="NIM";             region = @("ca");                                 host="nimiq.icemining.ca";         port=2053; fee = 1.25; ssl = $true; solo = $true}
 )
 
