@@ -51,7 +51,8 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.symbol; $Wallets.$Pool_Currenc
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_User     = "$(if ($_.walletprefix -and $Wallets.$Pool_Currency -notmatch "^$($_.walletprefix)") {$_.walletprefix})$($Wallets.$Pool_Currency -replace "\s")$(if ($Pool_Algorithm_Norm -ne "SHA256ton") {".{workername:$Worker}"})"
+    $Pool_Wallet   = "$(if ($_.walletprefix -and $Wallets.$Pool_Currency -notmatch "^$($_.walletprefix)") {$_.walletprefix})$($Wallets.$Pool_Currency -replace "\s")"
+    $Pool_User     = "$($Pool_Wallet)$(if ($Pool_Algorithm_Norm -ne "SHA256ton") {".{workername:$Worker}"})"
     $Pool_Protocol = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
     $Pool_Fee      = if ($_.data.fee -ne $null) {[double]$_.data.fee} else {$Pool_Fee}
     $Pool_Pass     = "$(if ($Params.$Pool_Currency) {$Params.$Pool_Currency} else {"x"})"
@@ -91,7 +92,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.symbol; $Wallets.$Pool_Currenc
             Price_0       = 0.0
             Price_Bias    = 0.0
             Price_Unbias  = 0.0
-            Wallet        = $Wallets.$Pool_Currency
+            Wallet        = $Pool_Wallet
             Worker        = "{workername:$Worker}"
             Email         = $Email
         }
