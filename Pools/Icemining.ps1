@@ -18,10 +18,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Fee = 1
 
 $Pool_Request = [PSCustomObject]@{}
-$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/icemining.json" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/icemining2.json" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -29,39 +28,32 @@ catch {
     return
 }
 
-if (-not ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count) {
+if (-not ($Pool_Request | Measure-Object).Count) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$Pools_Data = @(
-    [PSCustomObject]@{symbol="CHAPA";           region = @("de","fi");                            host="%region%.chapa.hashrate.to"; port=4003; fee = 30}
-    [PSCustomObject]@{symbol="GRAM";            region = @("de","fi");                            host="%region%.ton.hashrate.to";   port=4003; fee = 30}
-    [PSCustomObject]@{symbol="GRAM";            region = @("us");                                 host="%region%.ton.hashrate.to";   port=4002; fee = 30}
-    [PSCustomObject]@{symbol="NIM";             region = @("ca");                                 host="nimiq.icemining.ca";         port=2053; fee = 1.25; ssl = $true; solo = $true}
-)
-
 [hashtable]$Pool_RegionsTable = @{}
-$Pools_Data.region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_Request.region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoins_Request.$Pool_Currency -ne $null -and ($Wallets.$Pool_Currency -or $InfoOnly)} | ForEach-Object {
+$Pool_Request | Where-Object {$Pool_Currency = $_.symbol; $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
     
     if ($Pool_Coin = Get-Coin $_.symbol) {
         $Pool_Algorithm_Norm  = $Pool_Coin.Algo
         $Pool_CoinName   = $Pool_Coin.Name
     } else {
-        $Pool_Algorithm_Norm  = Get-Algorithm $PoolCoins_Request.$Pool_Currency.algo -CoinSymbol $_.symbol
-        $Pool_CoinName   = $PoolCoins_Request.$Pool_Currency.name
+        $Pool_Algorithm_Norm  = Get-Algorithm $_.data.algo -CoinSymbol $_.symbol
+        $Pool_CoinName   = $_.symbol
     }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_Currency.hashrate -BlockRate $PoolCoins_Request.$Pool_Currency.blocks24h -Difficulty $PoolCoins_Request.$Pool_Currency.diff -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.data.hashrate -BlockRate $_.data.blocks24h -Difficulty $_.data.diff -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
-    $Pool_User     = "$($Wallets.$Pool_Currency -replace "\s")$(if ($Pool_Algorithm_Norm -ne "SHA256ton") {".{workername:$Worker}"})"
+    $Pool_User     = "$(if ($_.walletprefix -and $Wallets.$Pool_Currency -notmatch "^$($_.walletprefix)") {$_.walletprefix})$($Wallets.$Pool_Currency -replace "\s")$(if ($Pool_Algorithm_Norm -ne "SHA256ton") {".{workername:$Worker}"})"
     $Pool_Protocol = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
-    $Pool_Fee      = if ($PoolCoins_Request.$Pool_Currency.fee -ne $null) {[double]$PoolCoins_Request.$Pool_Currency.fee} else {$_.fee}
+    $Pool_Fee      = if ($_.data.fee -ne $null) {[double]$_.data.fee} else {$Pool_Fee}
     $Pool_Pass     = "$(if ($Params.$Pool_Currency) {$Params.$Pool_Currency} else {"x"})"
 
     foreach($Pool_Region in $_.region) {
@@ -83,10 +75,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$"; $PoolCoi
             SSL           = if ($_.ssl) {$true} else {$false}
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee
-            Workers       = $PoolCoins_Request.$Pool_Currency.workers
+            Workers       = $_.data.workers
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
-            TSL           = $PoolCoins_Request.$Pool_Currency.timesincelast
+            TSL           = $_.data.timesincelast
             Difficulty    = $Stat.Diff_Average
             SoloMining    = if ($_.solo) {$true} else {$false}
             WTM           = $true
