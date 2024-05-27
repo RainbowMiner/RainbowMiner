@@ -60,24 +60,16 @@ if (-not $InfoOnly) {
         $Pool_BLK = $Pool_TSL = $null
     }
 
-    $hashrates_results = $null
+    $Pool_Hashrate = $null
     $Pool_Request.regions | Foreach-Object {
-        if ($hashrates_results -eq $null) {
-            $hashrates_results = [int64[]]::new($_.hashrate_graph.hashrate.Count-1)
-        }
-        $i=0
-        $_.hashrate_graph.hashrate | Foreach-Object {
-            if ($i -lt $hashrates_results.Count) {
-                $hashrates_results[$i] += [int64]($_ -replace ",\d+$")
-                $i++
-            }
+        $region_hr = [int64]($_.hashrate_graph.hashrate | Foreach-Object {[int64]($_ -replace ".\d+$")} | select-object -last 15 | Select-Object -SkipLast 1 | Measure-Object -Average).Average
+        if ($region_hr -gt 0) {
+            if ($Pool_Hashrate -eq $null) {$Pool_Hashrate = 0}
+            $Pool_Hashrate += $region_hr
         }
     }
 
-    $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
-    $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
-
-    $Stat = Set-Stat -Name $Pool_StatFn -Value 0 -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $(if ($dayData) {($hashrates_results | Measure-Object -Average).Average} else {$hashrates_results[-1]}) -BlockRate $Pool_BLK -Quiet
+    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -Quiet
 
     $hashrates_results = $null
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
