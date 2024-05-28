@@ -561,134 +561,6 @@ function Invoke-Core {
     [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools","WhatToMine")} | Sort-Object)
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
-    #automatic fork detection
-    if (Test-Path ".\Data\forksdb.json") {
-        try {
-
-            $ForksDB = Get-ContentByStreamReader ".\Data\forksdb.json" | ConvertFrom-Json -ErrorAction Stop
-
-            $ForksDB_changed = $false
-
-            $ForksDB | Where-Object {$_.active} | Foreach-Object {
-                $Fork_Meets_Target = $false
-                if ($_.date) {
-                    $Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse($_.date)
-                } elseif ($_.height) {
-                    $Fork_Request = [PSCustomObject]@{}
-                    try {
-                        $Fork_Request = Invoke-RestMethodAsync $_.rpc -Timeout 15 -cycletime 120 -JobKey "fork$($_.symbol)"
-                        if ($Fork_Request -is [string] -and $Fork_Request -match "^{.+}$") {
-                            $Fork_Request = ConvertFrom-Json "$($Fork_Request.ToLower())" -ErrorAction Stop
-                        }
-
-                        if ($_.verify -eq $null -or "$(Invoke-Expression "`$Fork_Request.$($_.verify)")" -eq $_.verify_value) {
-                            $val = $null
-                            $_.data -split "\." | Foreach-Object {
-                                if ($_ -match '^(.+)\[([^\]]+)\]$') {
-                                    $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Fork_Request."$($Matches[1])"}
-                                    $arrp = $Matches[2].Split("=",2)
-                                    if ($arrp[0] -match '^\d+$') {
-                                        $val = $val[[int]$arrp[0]]
-                                    } else {
-                                        $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
-                                    }
-                                } else {
-                                    $val = if ($val -ne $null) {$val.$_} else {$Fork_Request.$_}
-                                }
-                            }
-                            $Fork_Meets_Target = [int64]$val -ge $_.height
-                        }
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                    }
-                    $Fork_Request = $null
-                }
-
-                if ($Fork_Meets_Target) {
-                    $CoinsDB = Get-ContentByStreamReader ".\Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore
-                    if ($CoinsDB.PSObject.Properties.Name.Contains($_.symbol)) {
-                        $CoinsDB."$($_.symbol)".Algo = Get-Algorithm $_.algorithm
-                        $CoinsDB | ConvertTo-Json -Compress | Set-Content ".\Data\coinsdb.json"
-                        Get-CoinsDB -Silent -Force
-                        Stop-AsyncJob "fork$($_.symbol)"
-                        $_.active = $false
-                        $ForksDB_changed = $true
-                        Write-Log -Level Warn "Alert: coin $($_.symbol) forked! CoinsDB successfully updated."
-                    }
-                    $CoinsDB = $null
-                }
-            }
-
-            if ($ForksDB_changed) {
-                $ForksDB | ConvertTo-Json -ErrorAction Stop | Set-Content ".\Data\forksdb.json"
-            }
-
-            if (-not ($ForksDB | Where-Object {$_.active} | Measure-Object).Count -and (Test-Path ".\Data\forksdb.json")) {
-                Remove-Item “.\Data\forksdb.json" -Force
-            }
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-        }
-    }
-
-    #manual fork detection
-    if ((Test-Path ".\Data\coinsdb-fork.json") -or (Test-Path ".\Data\algorithms.json")) {
-        try {
-            if ($true) {
-                #DateTime target
-
-                #$Fork_Meets_Target = (Get-Date) -ge [datetime]"October 31, 2020 5:00 PM GMT"
-                #$Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse("October 26, 2021 06:00:00 AM GMT")
-            } else {
-                #Blockchain target
-
-                #$Request = Invoke-RestMethodAsync "https://blockscout.com/etc/mainnet/api?module=block&action=eth_block_number" -Timeout 15 -tag "fork"
-                #if ([int64]$Request.result -ge 11700000) {
-                #    $Fork_Meets_Target = $true
-                #}
-
-                #$Request = Invoke-RestMethodAsync "https://mainnet-explorer.beam.mw/explorer/status/?format=json" -Timeout 15 -tag "fork"
-                #if ([int64]$Request.height -ge 777777) {
-                #    $Fork_Meets_Target = $true
-                #}
-
-                #$Request = Invoke-RestMethodAsync "https://api.grinmint.com/v2/networkStats" -Timeout 15 -tag "fork"
-                #if ([int64]$Request.height -ge 786240) {
-                #    $Fork_Meets_Target = $true
-                #}
-
-                #$Request = Invoke-RestMethodAsync "https://mining.bittube.app:8120/stats" -tag "fork" -timeout 15 -cycletime 120
-                #if ([int64]$Request.network.height -ge 654000) {
-                #    $Fork_Meets_Target = $true
-                #}
-
-                #$Request = Invoke-RestMethodAsync "https://explorer.ironfish.network/api/blocks/head" -tag "fork" -timeout 15 -cycletime 120
-                #if ([int64]$Request.sequence -ge 503338) {
-                #    $Fork_Meets_Target = $true
-                #}
-
-            }
-        }
-        catch {}
-
-        if ($Fork_Meets_Target) {
-            try {
-                if (Test-Path ".\Data\coinsdb-fork.json“) {
-                    Remove-Item “.\Data\coinsdb.json" -Force
-                    Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
-                    Get-CoinsDB -Silent -Force
-                }
-                if (Test-Path ".\Data\algorithms-fork.json“) {
-                    Remove-Item “.\Data\algorithms.json" -Force
-                    Rename-Item ".\Data\algorithms-fork.json" "algorithms.json"
-                    Get-Algorithms -Silent -Force
-                }
-                Stop-AsyncJob "fork"
-            }
-            catch {}
-        }
-    }
-
     #Update databases every 40 rounds
     if (-not ($Session.RoundCounter % 40)) {
         Get-AlgorithmMap -Silent
@@ -1064,6 +936,134 @@ function Invoke-Core {
                                 IsLocked               = $Session.Config.APIlockConfig
                             }) -Depth 10
         $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
+    }
+
+    #automatic fork detection
+    if (Test-Path ".\Data\forksdb.json") {
+        try {
+
+            $ForksDB = Get-ContentByStreamReader ".\Data\forksdb.json" | ConvertFrom-Json -ErrorAction Stop
+
+            $ForksDB_changed = $false
+
+            $ForksDB | Where-Object {$_.active} | Foreach-Object {
+                $Fork_Meets_Target = $false
+                if ($_.date) {
+                    $Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse($_.date)
+                } elseif ($_.height) {
+                    $Fork_Request = [PSCustomObject]@{}
+                    try {
+                        $Fork_Request = Invoke-RestMethodAsync $_.rpc -Timeout 15 -cycletime 120 -JobKey "fork$($_.symbol)"
+                        if ($Fork_Request -is [string] -and $Fork_Request -match "^{.+}$") {
+                            $Fork_Request = ConvertFrom-Json "$($Fork_Request.ToLower())" -ErrorAction Stop
+                        }
+
+                        if ($_.verify -eq $null -or "$(Invoke-Expression "`$Fork_Request.$($_.verify)")" -eq $_.verify_value) {
+                            $val = $null
+                            $_.data -split "\." | Foreach-Object {
+                                if ($_ -match '^(.+)\[([^\]]+)\]$') {
+                                    $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Fork_Request."$($Matches[1])"}
+                                    $arrp = $Matches[2].Split("=",2)
+                                    if ($arrp[0] -match '^\d+$') {
+                                        $val = $val[[int]$arrp[0]]
+                                    } else {
+                                        $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                                    }
+                                } else {
+                                    $val = if ($val -ne $null) {$val.$_} else {$Fork_Request.$_}
+                                }
+                            }
+                            $Fork_Meets_Target = [int64]$val -ge $_.height
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+                    $Fork_Request = $null
+                }
+
+                if ($Fork_Meets_Target) {
+                    $CoinsDB = Get-ContentByStreamReader ".\Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore
+                    if ($CoinsDB.PSObject.Properties.Name.Contains($_.symbol)) {
+                        $CoinsDB."$($_.symbol)".Algo = Get-Algorithm $_.algorithm
+                        $CoinsDB | ConvertTo-Json -Compress | Set-Content ".\Data\coinsdb.json"
+                        Get-CoinsDB -Silent -Force
+                        Stop-AsyncJob "fork$($_.symbol)"
+                        $_.active = $false
+                        $ForksDB_changed = $true
+                        Write-Log -Level Warn "Alert: coin $($_.symbol) forked! CoinsDB successfully updated."
+                    }
+                    $CoinsDB = $null
+                }
+            }
+
+            if ($ForksDB_changed) {
+                $ForksDB | ConvertTo-Json -ErrorAction Stop | Set-Content ".\Data\forksdb.json"
+            }
+
+            if (-not ($ForksDB | Where-Object {$_.active} | Measure-Object).Count -and (Test-Path ".\Data\forksdb.json")) {
+                Remove-Item “.\Data\forksdb.json" -Force
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    }
+
+    #manual fork detection
+    if ((Test-Path ".\Data\coinsdb-fork.json") -or (Test-Path ".\Data\algorithms.json")) {
+        try {
+            if ($true) {
+                #DateTime target
+
+                #$Fork_Meets_Target = (Get-Date) -ge [datetime]"October 31, 2020 5:00 PM GMT"
+                #$Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse("October 26, 2021 06:00:00 AM GMT")
+            } else {
+                #Blockchain target
+
+                #$Request = Invoke-RestMethodAsync "https://blockscout.com/etc/mainnet/api?module=block&action=eth_block_number" -Timeout 15 -tag "fork"
+                #if ([int64]$Request.result -ge 11700000) {
+                #    $Fork_Meets_Target = $true
+                #}
+
+                #$Request = Invoke-RestMethodAsync "https://mainnet-explorer.beam.mw/explorer/status/?format=json" -Timeout 15 -tag "fork"
+                #if ([int64]$Request.height -ge 777777) {
+                #    $Fork_Meets_Target = $true
+                #}
+
+                #$Request = Invoke-RestMethodAsync "https://api.grinmint.com/v2/networkStats" -Timeout 15 -tag "fork"
+                #if ([int64]$Request.height -ge 786240) {
+                #    $Fork_Meets_Target = $true
+                #}
+
+                #$Request = Invoke-RestMethodAsync "https://mining.bittube.app:8120/stats" -tag "fork" -timeout 15 -cycletime 120
+                #if ([int64]$Request.network.height -ge 654000) {
+                #    $Fork_Meets_Target = $true
+                #}
+
+                #$Request = Invoke-RestMethodAsync "https://explorer.ironfish.network/api/blocks/head" -tag "fork" -timeout 15 -cycletime 120
+                #if ([int64]$Request.sequence -ge 503338) {
+                #    $Fork_Meets_Target = $true
+                #}
+
+            }
+        }
+        catch {}
+
+        if ($Fork_Meets_Target) {
+            try {
+                if (Test-Path ".\Data\coinsdb-fork.json“) {
+                    Remove-Item “.\Data\coinsdb.json" -Force
+                    Rename-Item ".\Data\coinsdb-fork.json" "coinsdb.json"
+                    Get-CoinsDB -Silent -Force
+                }
+                if (Test-Path ".\Data\algorithms-fork.json“) {
+                    Remove-Item “.\Data\algorithms.json" -Force
+                    Rename-Item ".\Data\algorithms-fork.json" "algorithms.json"
+                    Get-Algorithms -Silent -Force
+                }
+                Stop-AsyncJob "fork"
+            }
+            catch {}
+        }
     }
 
     if ($Session.RoundCounter -eq 0 -and ($Session.Config.StartPaused -or $Global:PauseMiners.Test())) {$Global:PauseMiners.SetIA()}
