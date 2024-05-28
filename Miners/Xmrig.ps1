@@ -21,7 +21,7 @@ if ($IsLinux) {
         if ($Global:GlobalCPUInfo.Architecture -eq 8) {
             $UriCuda = @(
                 [PSCustomObject]@{
-                    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-armv8.7z"
+                    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-armv8.7z"
                     Cuda = $null
                 }
             )
@@ -31,71 +31,71 @@ if ($IsLinux) {
 
         $UriCuda = @(
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda12_3-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda12_3-x64.7z"
                 Cuda = "12.3"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda12_2-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda12_2-x64.7z"
                 Cuda = "12.2"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda12_1-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda12_1-x64.7z"
                 Cuda = "12.1"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda12_0-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda12_0-x64.7z"
                 Cuda = "12.0"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_8-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_8-x64.7z"
                 Cuda = "11.8"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_7-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_7-x64.7z"
                 Cuda = "11.7"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_6-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_6-x64.7z"
                 Cuda = "11.6"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_5-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_5-x64.7z"
                 Cuda = "11.5"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_4-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_4-x64.7z"
                 Cuda = "11.4"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_3-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_3-x64.7z"
                 Cuda = "11.3"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_2-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_2-x64.7z"
                 Cuda = "11.2"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_1-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_1-x64.7z"
                 Cuda = "11.1"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda11_0-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda11_0-x64.7z"
                 Cuda = "11.0"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda10_2-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda10_2-x64.7z"
                 Cuda = "10.2"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda10_1-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda10_1-x64.7z"
                 Cuda = "10.1"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda10_0-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda10_0-x64.7z"
                 Cuda = "10.0"
             },
             [PSCustomObject]@{
-                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-bionic-cuda9_2-x64.7z"
+                Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-bionic-cuda9_2-x64.7z"
                 Cuda = "9.2"
             }
         )
@@ -107,87 +107,87 @@ if ($IsLinux) {
 } else {
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda12_4-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda12_4-win64.7z"
             Cuda = "12.4"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda12_3-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda12_3-win64.7z"
             Cuda = "12.3"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda12_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda12_2-win64.7z"
             Cuda = "12.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda12_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda12_1-win64.7z"
             Cuda = "12.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda12_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda12_0-win64.7z"
             Cuda = "12.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_8-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_8-win64.7z"
             Cuda = "11.8"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_7-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_7-win64.7z"
             Cuda = "11.7"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_6-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_6-win64.7z"
             Cuda = "11.6"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_5-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_5-win64.7z"
             Cuda = "11.5"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_4-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_4-win64.7z"
             Cuda = "11.4"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_3-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_3-win64.7z"
             Cuda = "11.3"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_2-win64.7z"
             Cuda = "11.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_1-win64.7z"
             Cuda = "11.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda11_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda11_0-win64.7z"
             Cuda = "11.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda10_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda10_2-win64.7z"
             Cuda = "10.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda10_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda10_1-win64.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda10_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda10_0-win64.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda9_2-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda9_2-win64.7z"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda9_1-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda9_1-win64.7z"
             Cuda = "9.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda9_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda9_0-win64.7z"
             Cuda = "9.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3-xmrig/xmrig-6.21.3-msvc-cuda8_0-win64.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.21.3.5-xmrig/xmrig-6.21.3.5-msvc-cuda8_0-win64.7z"
             Cuda = "8.0"
         }
     )
@@ -223,6 +223,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-lite/1";                  MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico";                    MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "flex";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ForceMO = $true}
     [PSCustomObject]@{MainAlgorithm = "ghostrider";                 MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8; UseMO = $true}
     [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "kawpow2g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
@@ -237,6 +238,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "rx/loki";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/sfx";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/wow";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
+    [PSCustomObject]@{MainAlgorithm = "rx/xeq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ForceMO = $true}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -389,10 +391,12 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                                         "cn-pico"= 0
                                                         "cn-pico/tlo"= 0
                                                         "cn/gpu"= 0
+                                                        "flex" = 0
                                                         "rx/0"= 0
                                                         "rx/arq"= 0
                                                         "rx/graft"= 0
                                                         "rx/sfx"= 0
+                                                        "rx/xeq" = 0
                                                         "panthera"= 0
                                                         "argon2/chukwav2"= 0
                                                         "astrobwt"= 0
