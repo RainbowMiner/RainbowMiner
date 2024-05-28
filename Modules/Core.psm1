@@ -561,9 +561,78 @@ function Invoke-Core {
     [string[]]$Session.AvailPools  = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools","WhatToMine")} | Sort-Object)
     [string[]]$Session.AvailMiners = @(Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 
-    #Fork detection
-    if ((Test-Path ".\Data\coinsdb-fork.json“) -or (Test-Path ".\Data\algorithms-fork.json“)) {
-        $Fork_Meets_Target = $false
+    #automatic fork detection
+    if (Test-Path ".\Data\forksdb.json") {
+        try {
+
+            $ForksDB = Get-ContentByStreamReader ".\Data\forksdb.json" | ConvertFrom-Json -ErrorAction Stop
+
+            $ForksDB_changed = $false
+
+            $ForksDB | Where-Object {$_.active} | Foreach-Object {
+                $Fork_Meets_Target = $false
+                if ($_.date) {
+                    $Fork_Meets_Target = (Get-Date) -ge [datetime]::Parse($_.date)
+                } elseif ($_.height) {
+                    $Fork_Request = [PSCustomObject]@{}
+                    try {
+                        $Fork_Request = Invoke-RestMethodAsync $_.rpc -Timeout 15 -cycletime 120 -tag "fork$($_.symbol)"
+                        if ($Fork_Request -is [string] -and $Fork_Request -match "^{.+}$") {
+                            $Fork_Request = ConvertFrom-Json "$($Fork_Request.ToLower())" -ErrorAction Stop
+                        }
+
+                        if ($_.verify -eq $null -or "$(Invoke-Expression "`$Fork_Request.$($_.verify)")" -eq $_.verify_value) {
+                            $val = $null
+                            $_.data -split "\." | Foreach-Object {
+                                if ($_ -match '^(.+)\[([^\]]+)\]$') {
+                                    $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Fork_Request."$($Matches[1])"}
+                                    $arrp = $Matches[2].Split("=",2)
+                                    if ($arrp[0] -match '^\d+$') {
+                                        $val = $val[[int]$arrp[0]]
+                                    } else {
+                                        $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                                    }
+                                } else {
+                                    $val = if ($val -ne $null) {$val.$_} else {$Fork_Request.$_}
+                                }
+                            }
+                            $Fork_Meets_Target = [int64]$val -ge $_.height
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+                    $Fork_Request = $null
+                }
+
+                if ($Fork_Meets_Target) {
+                    $CoinsDB = Get-ContentByStreamReader ".\Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore
+                    if ($CoinsDB.PSObject.Properties.Name.Contains($_.symbol)) {
+                        $CoinsDB."$($_.symbol)".Algo = Get-Algorithm $_.algorithm
+                        $CoinsDB | ConvertTo-Json -Compress | Set-Content ".\Data\coinsdb.json"
+                        Get-CoinsDB -Silent -Force
+                        Stop-AsyncJob "fork$($_.symbol)"
+                        $_.active = $false
+                        $ForksDB_changed = $true
+                        Write-Log -Level Warn "Alert: coin $($_.symbol) forked! CoinsDB successfully updated."
+                    }
+                    $CoinsDB = $null
+                }
+            }
+
+            if ($ForksDB_changed) {
+                $ForksDB | ConvertTo-Json -ErrorAction Stop | Set-Content ".\Data\forksdb.json"
+            }
+
+            if (-not ($ForksDB | Where-Object {$_.active} | Measure-Object).Count -and (Test-Path ".\Data\forksdb.json")) {
+                Remove-Item “.\Data\forksdb.json" -Force
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    }
+
+    #manual fork detection
+    if ((Test-Path ".\Data\coinsdb-fork.json") -or (Test-Path ".\Data\algorithms.json")) {
         try {
             if ($true) {
                 #DateTime target
