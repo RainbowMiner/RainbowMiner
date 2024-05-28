@@ -576,7 +576,7 @@ function Invoke-Core {
                 } elseif ($_.height) {
                     $Fork_Request = [PSCustomObject]@{}
                     try {
-                        $Fork_Request = Invoke-RestMethodAsync $_.rpc -Timeout 15 -cycletime 120 -tag "fork$($_.symbol)"
+                        $Fork_Request = Invoke-RestMethodAsync $_.rpc -Timeout 15 -cycletime 120 -JobKey "fork$($_.symbol)"
                         if ($Fork_Request -is [string] -and $Fork_Request -match "^{.+}$") {
                             $Fork_Request = ConvertFrom-Json "$($Fork_Request.ToLower())" -ErrorAction Stop
                         }
