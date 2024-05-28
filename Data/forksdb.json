@@ -1,0 +1,22 @@
+[
+    {
+        "active":  true,
+        "symbol":  "KCN",
+        "algorithm":  "Flex",
+        "height":  1133000,
+        "rpc":  "https://api.kcnxp.com/height",
+        "data":  "result",
+        "verify":  "code",
+        "verify_value":  "0"
+    },
+    {
+        "active":  true,
+        "symbol":  "XEQ",
+        "algorithm":  "RandomXEQ",
+        "height":  1327780,
+        "rpc":  "https://explorer.equilibriacc.com/api/networkinfo",
+        "data":  "data.height",
+        "verify":  "status",
+        "verify_value":  "success"
+    }
+]
