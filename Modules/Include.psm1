@@ -2845,13 +2845,8 @@ function Expand-WebRequest {
                 }
             }
         } else {
-            if (Get-ChildItem $Path_Old -File) {
-                Move-Item $Path_Old $Path_New -Force
-            }
-            else {
-                Get-ChildItem $Path_Old | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New -Force}
-                Remove-Item $Path_Old -Recurse -Force
-            }
+            Get-ChildItem $Path_Old | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New -Force}
+            Remove-Item $Path_Old -Recurse -Force
         }
     }
     if (-not $EnableKeepDownloads -and (Test-Path $FileName)) {
