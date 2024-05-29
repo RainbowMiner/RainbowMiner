@@ -2721,7 +2721,9 @@ function Expand-WebRequest {
         [Parameter(Mandatory = $false)]
         [Switch]$EnableMinerBackups = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$EnableKeepDownloads = $false
+        [Switch]$EnableKeepDownloads = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$IsMiner = $false
     )
 
     # Set current path used by .net methods to the same as the script's path
@@ -2788,8 +2790,11 @@ function Expand-WebRequest {
         $Extract_Process = Start-Process @Params
         $Extract_Process.WaitForExit()>$null
 
-        if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
-        if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
+        if ($IsMiner) {
+            if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
+            if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
+        }
+
         if (Get-ChildItem $Path_Old -File) {
             Rename-Item $Path_Old (Split-Path $Path -Leaf)
         }
@@ -2797,45 +2802,48 @@ function Expand-WebRequest {
             Get-ChildItem $Path_Old -Directory | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New}
             Remove-Item $Path_Old -Recurse -Force
         }
-        if (Test-Path $Path_Bak) {
-            $ProtectedFiles | Foreach-Object {
-                $CheckForFile_Path = Split-Path $_
-                $CheckForFile_Name = Split-Path $_ -Leaf
-                Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {
-                    if ($CheckForFile_Path) {
-                        $CopyToPath = Join-Path $Path_New $CheckForFile_Path
-                        if (-not (Test-Path $CopyToPath)) {
-                            New-Item $CopyToPath -ItemType Directory -ErrorAction Ignore > $null
+
+        if ($IsMiner) {
+            if (Test-Path $Path_Bak) {
+                $ProtectedFiles | Foreach-Object {
+                    $CheckForFile_Path = Split-Path $_
+                    $CheckForFile_Name = Split-Path $_ -Leaf
+                    Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {
+                        if ($CheckForFile_Path) {
+                            $CopyToPath = Join-Path $Path_New $CheckForFile_Path
+                            if (-not (Test-Path $CopyToPath)) {
+                                New-Item $CopyToPath -ItemType Directory -ErrorAction Ignore > $null
+                            }
+                        } else {
+                            $CopyToPath = $Path_New
                         }
-                    } else {
-                        $CopyToPath = $Path_New
-                    }
-                    if ($_.Length -lt 10MB) {
-                        Copy-Item $_ $CopyToPath -Force
-                    } else {
-                        Move-Item $_ $CopyToPath -Force
+                        if ($_.Length -lt 10MB) {
+                            Copy-Item $_ $CopyToPath -Force
+                        } else {
+                            Move-Item $_ $CopyToPath -Force
+                        }
                     }
                 }
-            }
-            $Rm_Paths = @("DAGs")
-            $Rm_Paths | Foreach-Object {
-                $Rm_Path = Join-Path $Path_Bak $_
-                try {
-                    Get-ChildItem $Rm_Path -File | Foreach-Object {
-                        Remove-Item $_.FullName -Force
+                $Rm_Paths = @("DAGs")
+                $Rm_Paths | Foreach-Object {
+                    $Rm_Path = Join-Path $Path_Bak $_
+                    try {
+                        Get-ChildItem $Rm_Path -File | Foreach-Object {
+                            Remove-Item $_.FullName -Force
+                        }
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "Downloader: Could not to remove from backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
                     }
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Warn "Downloader: Could not to remove from backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
                 }
-            }
-            $SkipBackups = if ($EnableMinerBackups) {3} else {0}
-            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {
-                try {
-                    Remove-Item $_ -Recurse -Force
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Warn "Downloader: Could not to remove backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
+                $SkipBackups = if ($EnableMinerBackups) {3} else {0}
+                Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {
+                    try {
+                        Remove-Item $_ -Recurse -Force
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        Write-Log -Level Warn "Downloader: Could not to remove backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
+                    }
                 }
             }
         }
