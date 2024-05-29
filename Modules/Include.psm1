@@ -2793,17 +2793,15 @@ function Expand-WebRequest {
         if ($IsMiner) {
             if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
             if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
-        }
 
-        if (Get-ChildItem $Path_Old -File) {
-            Rename-Item $Path_Old (Split-Path $Path -Leaf)
-        }
-        else {
-            Get-ChildItem $Path_Old -Directory | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New}
-            Remove-Item $Path_Old -Recurse -Force
-        }
+            if (Get-ChildItem $Path_Old -File) {
+                Rename-Item $Path_Old (Split-Path $Path -Leaf)
+            }
+            else {
+                Get-ChildItem $Path_Old -Directory | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New}
+                Remove-Item $Path_Old -Recurse -Force
+            }
 
-        if ($IsMiner) {
             if (Test-Path $Path_Bak) {
                 $ProtectedFiles | Foreach-Object {
                     $CheckForFile_Path = Split-Path $_
@@ -2845,6 +2843,14 @@ function Expand-WebRequest {
                         Write-Log -Level Warn "Downloader: Could not to remove backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
                     }
                 }
+            }
+        } else {
+            if (Get-ChildItem $Path_Old -File) {
+                Rename-Item $Path_Old (Split-Path $Path -Leaf)
+            }
+            else {
+                Get-ChildItem $Path_Old | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New -Force}
+                Remove-Item $Path_Old -Recurse -Force
             }
         }
     }
