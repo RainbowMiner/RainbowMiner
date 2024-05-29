@@ -2846,7 +2846,7 @@ function Expand-WebRequest {
             }
         } else {
             if (Get-ChildItem $Path_Old -File) {
-                Rename-Item $Path_Old (Split-Path $Path -Leaf)
+                Move-Item $Path_Old $Path_New -Force
             }
             else {
                 Get-ChildItem $Path_Old | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New -Force}
