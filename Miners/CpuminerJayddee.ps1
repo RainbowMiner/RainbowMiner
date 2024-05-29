@@ -11,7 +11,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "200{0:d2}"
 $DevFee = 0.0
-$Version = "24.2"
+$Version = "24.3"
 
 $Path = $null
 
@@ -19,15 +19,15 @@ if ($IsLinux) {
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         if ($Global:GlobalCPUInfo.Architecture -eq 8) {
             $Path = ".\Bin\CPU-JayDDee\cpuminer-armv8$($f=$Global:GlobalCPUInfo.Features;$(if($f.sve2 -and $f.sha2 -and $f.aes){'-aes-sha2-sve2'}elseif($f.sha2 -and $f.aes){'-aes-sha2'}elseif($f.aes){'-aes'}elseif($f.sha2){'-sha2'}))"
-            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.2-jayddee/cpuminer-opt-24.2-arm8.7z"
+            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.3-jayddee/cpuminer-opt-24.3-arm.7z"
         }
     } else {    
         $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512) {'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.2-jayddee/cpuminer-opt-24.2-linux.7z"
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.3-jayddee/cpuminer-opt-24.3-linux.7z"
     }
 } else {
     $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes){'avx2-sha-vaes'}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.2-jayddee/cpuminer-opt-24.2-windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.3-jayddee/cpuminer-opt-24.3-windows.zip"
 }
 
 if ($Path -eq $null) {return}
