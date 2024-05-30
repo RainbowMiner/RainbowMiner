@@ -18,7 +18,7 @@ $Uri     = $null
 $CudaLib = $null
 $CudaData= $null
 
-$PathUriLib  = ".\Bin\Any-Xmrig\_urilib.json"
+$PathUriLib  = ".\Bin\ANY-Xmrig\_urilib.json"
 $PathCudaLib = $null
 
 if ($IsLinux) {
@@ -229,7 +229,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-lite/1";                  MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico";                    MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "flex";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ForceMO = $true}
+    [PSCustomObject]@{MainAlgorithm = "flex";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("AMD","CPU","INTEL"); ForceMO = $true}
     [PSCustomObject]@{MainAlgorithm = "ghostrider";                 MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8; UseMO = $true}
     [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "kawpow2g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
@@ -244,7 +244,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "rx/loki";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/sfx";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/wow";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
-    [PSCustomObject]@{MainAlgorithm = "rx/xeq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ForceMO = $true}
+    [PSCustomObject]@{MainAlgorithm = "rx/xeq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL"); ForceMO = $true}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -293,7 +293,7 @@ if ($UriCuda -and $CudaLib) {
         } catch {
         }
     }
-    if ($PathCudaLib_Update) {
+    if ($PathCudaLib_Update -and (Test-Path (Split-Path $PathUriLib))) {
         ConvertTo-Json ([PSCustomObject]@{URI = $UriCuda}) | Set-Content $PathUriLib
     }
 }
@@ -350,7 +350,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     if ($ByParameters) {
                         $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Host -match "Nicehash") {" --nicehash"}) --donate-level=0 --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
                     } else {
-                        $Pool_CoinSymbol = if ($Pools.$Algorithm_Norm.CoinSymbol -in @("XMR","SUMO","ARQ","GRFT","KVA","RVN","WOW","ZEPH","Townforge")) {$Pools.$Algorithm_Norm.CoinSymbol} else {$null}
+                        $Pool_CoinSymbol = if ($Pools.$Algorithm_Norm.CoinSymbol -in @("XMR","SUMO","ARQ","GRFT","KVA","RVN","WOW","XEQ","ZEPH","Townforge")) {$Pools.$Algorithm_Norm.CoinSymbol} else {$null}
 
                         $Arguments = [PSCustomObject]@{
                             Algorithm    = $Algorithm
