@@ -403,6 +403,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                                                     "rebench-algo" = $false
                                                     "bench-algo-time" = 0
                                                     "algo-min-time" = 86400
+                                                    "donate-level" = 1
                                                     "algo-perf"    = [PSCustomObject]@{
                                                         "cn/0"= 0
                                                         "cn/1"= 0
