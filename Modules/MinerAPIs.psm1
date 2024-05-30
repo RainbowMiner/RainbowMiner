@@ -3504,7 +3504,7 @@ class Xmrig6 : Miner {
 
         $Algo              = $Parameters.Algorithm
         $Algo0             = $Parameters.Algorithm -replace "/.+$"
-        $Device            = Switch($Parameters.Vendor) {"AMD" {"opencl";break}; "INTEL" {"opencl";break}; "NVIDIA" {"cuda";break}; default {"cpu"}}
+        $Device            = if ($Parameters.Codec -ne $null -and $Parameters.Codec -ne "auto") {$Parameters.Codec} else {Switch($Parameters.Vendor) {"AMD" {"opencl";break}; "INTEL" {"opencl";break}; "NVIDIA" {"cuda";break}; default {"cpu"}}}
 
         try {
             if (Test-Path $ThreadsConfigFile) {
