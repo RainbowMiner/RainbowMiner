@@ -38,16 +38,16 @@ $Pool_Request.region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTabl
 
 $Pool_Request | Where-Object {$Pool_Currency = $_.symbol; $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
     
-    if ($Pool_Coin = Get-Coin $_.symbol) {
+    if ($Pool_Coin = Get-Coin $Pool_Currency) {
         $Pool_Algorithm_Norm  = $Pool_Coin.Algo
         $Pool_CoinName   = $Pool_Coin.Name
     } else {
-        $Pool_Algorithm_Norm  = Get-Algorithm $_.data.algo -CoinSymbol $_.symbol
-        $Pool_CoinName   = $_.symbol
+        $Pool_Algorithm_Norm  = Get-Algorithm $_.data.algo -CoinSymbol $Pool_Currency
+        $Pool_CoinName   = $Pool_Currency
     }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.data.hashrate -BlockRate $_.data.blocks24h -Difficulty $_.data.diff -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $_.data.hashrate -BlockRate $_.data.blocks24h -Difficulty $_.data.diff -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
