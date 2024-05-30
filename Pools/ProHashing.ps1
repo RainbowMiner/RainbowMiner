@@ -90,12 +90,8 @@ $Pool_Request.data.PSObject.Properties.Name | Where-Object {$PoolCoins_Overview.
         return
     }
 
-    if ($Pool_Algorithm -in @("Ethash","KawPow")) {
-        $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
-    } else {
-        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    }
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
     $Pool_MemorySize = "$(if ($Pool_Algorithm_Norm -eq "EthashLowMemory") {",l=`$memsizegb"})"
     
