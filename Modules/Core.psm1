@@ -44,7 +44,9 @@ function Start-Core {
                         Invoke-Exe -FilePath "cp" -ArgumentList "$($Lib_Source) $($Lib_Dest)" -Runas > $null
                     }
 
-                    Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" -Runas:$Linux_LibRunas > $null
+                    if (-not (Test-Path $Lib_Link) -or (Get-Item $Lib_Link).LinkTarget -ne $Lib_Dest) {
+                        Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" -Runas:$Linux_LibRunas > $null
+                    }
                 }
             }
         }
@@ -298,12 +300,12 @@ function Start-Core {
             $Lib_Link   = Join-Path $Linux_LibDir2 $_.Name
                                                      
             $Lib_Link2 = $Lib_Link -replace "\.\d+$"
-            if ($Lib_Link2 -ne $Lib_Link) {
+            if ($Lib_Link2 -ne $Lib_Link -and (-not (Test-Path $Lib_Link2) -or (Get-Item $Lib_Link2).LinkTarget -ne $Lib_Dest)) {
                 Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link2)" -Runas:$Linux_LibRunas > $null
             }
 
             $Lib_Link3 = $Lib_Link -replace "\.\d+\.\d+$"
-            if ($Lib_Link3 -ne $Lib_Link) {
+            if ($Lib_Link3 -ne $Lib_Link -and (-not (Test-Path $Lib_Link3) -or (Get-Item $Lib_Link3).LinkTarget -ne $Lib_Dest)) {
                 Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link3)" -Runas:$Linux_LibRunas > $null
             }
         }
