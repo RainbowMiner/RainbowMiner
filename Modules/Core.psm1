@@ -28,13 +28,23 @@ function Start-Core {
 
             Initialize-OCDaemon
 
-            if (-not (Test-Path "/opt/rainbowminer/lib")) {
-                if ($Libs = Get-ContentByStreamReader ".\IncludesLinux\libs.json" | ConvertFrom-Json -ErrorAction Ignore) {
-                    $Dir = "$Pwd/IncludesLinux/lib"
+            if ($Linux_Libs = Get-ContentByStreamReader ".\IncludesLinux\libs.json" | ConvertFrom-Json -ErrorAction Ignore) {
 
-                    $Libs.PSObject.Properties | Where-Object {-not (Test-Path "$($Dir)/$($_.Name)")} | Foreach-Object {
-                        Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/$($_.Value) $($Dir)/$($_.Name)" > $null
+                $Linux_LibRunas = (Test-Path "/opt/rainbowminer/lib") -and ((Test-OCDaemon) -or (Test-IsElevated))
+
+                $Linux_LibDir   = "$Pwd/IncludesLinux/lib"
+                $Linux_LibDir2  = if ($Linux_LibRunas) {"/opt/rainbowminer/lib"} else {$Linux_LibDir}
+
+                $Linux_Libs.PSObject.Properties | Foreach-Object {
+                    $Lib_Source = Join-Path $Linux_LibDir  $_.Value
+                    $Lib_Dest   = Join-Path $Linux_LibDir2 $_.Value
+                    $Lib_Link   = Join-Path $Linux_LibDir2 $_.Name
+
+                    if ($Linux_LibRunas -and (Test-Path $Lib_Source) -and -not (Test-Path $Lib_Dest)) {
+                        Invoke-Exe -FilePath "cp" -ArgumentList "$($Lib_Source) $($Lib_Dest)" -Runas > $null
                     }
+
+                    Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" -Runas:$Linux_LibRunas > $null
                 }
             }
         }
@@ -147,6 +157,8 @@ function Start-Core {
         $Session.PhysicalCPUs = 0
         $Session.UserConfig = $null
         $Session.LastDonated = $null
+        $Session.CUDAversion = $false
+        $Session.DotNETRuntimeVersion = $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}})
 
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
 
@@ -258,7 +270,11 @@ function Start-Core {
         if ($CPUFound -or $NVFound -or $AMDFound -or $INTELFound) {
             $DevicesFound = @()
             if ($CPUFound)   {$DevicesFound += "$($CPUFound) CPU"}
-            if ($NVFound)    {$DevicesFound += "$($NVFound) Nvidia"}
+            if ($NVFound)    {
+                $CUDAVersion = "$($Global:GlobalCachedDevices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA" -and $_.OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)"},"First").ForEach({$Matches[1]}))"
+                $Session.CUDAVersion = if ($CUDAVersion -ne "") {$CUDAVersion}else{$false}
+                $DevicesFound += "$($NVFound) Nvidia CUDA $($CUDAVersion)"
+            }
             if ($AMDFound)   {$DevicesFound += "$($AMDFound) AMD"}
             if ($INTELFound) {$DevicesFound += "$($IntelFound) Intel"}
             Write-Host "$($DevicesFound -join ", ") found" -ForegroundColor Green
@@ -270,6 +286,27 @@ function Start-Core {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Error "Device detection failed: $($_.Exception.Message)"
         $PauseByError = $true
+    }
+
+    if ($IsLinux -and $Linux_Libs -and $Session.CUDAVersion -and $Session.CUDAVersion -match "^(\d+\.\d+)") {
+        $CUDAVersion = $Matches[1]
+
+        Write-Host "Checking for local CUDA $($CUDAVersion) libraries .. " -NoNewline
+
+        $Linux_Libs.PSObject.Properties | Where-Object {$_.Name.EndsWith($CUDAVersion)} | Foreach-Object {
+            $Lib_Dest   = Join-Path $Linux_LibDir2 $_.Value
+            $Lib_Link   = Join-Path $Linux_LibDir2 $_.Name
+                                                     
+            $Lib_Link2 = $Lib_Link -replace "\.\d+$"
+            if ($Lib_Link2 -ne $Lib_Link) {
+                Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link2)" -Runas:$Linux_LibRunas > $null
+            }
+
+            $Lib_Link3 = $Lib_Link -replace "\.\d+\.\d+$"
+            if ($Lib_Link3 -ne $Lib_Link) {
+                Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link3)" -Runas:$Linux_LibRunas > $null
+            }
+        }
     }
 
     if ($IsWindows -and ($Session.MineOnCPU -ne $false -or $Session.MineOnGPU -ne $false)) {
@@ -1707,11 +1744,9 @@ function Invoke-Core {
         }
         [hashtable]$Global:DeviceCache.DevicesToVendors = @{}
 
-        $CUDAVersion = "$($Global:GlobalCachedDevices.Where({$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA" -and $_.OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)"},"First").ForEach({$Matches[1]}))"
-
         $Session.Config | Add-Member DeviceModel @($Global:DeviceCache.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
-        $Session.Config | Add-Member CUDAVersion $(if ($CUDAVersion -ne "") {$CUDAVersion}else{$false}) -Force
-        $Session.Config | Add-Member DotNETRuntimeVersion $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}}) -Force
+        $Session.Config | Add-Member CUDAVersion $Session.CUDAVersion -Force
+        $Session.Config | Add-Member DotNETRuntimeVersion $Session.DotNETRuntimeVersion -Force
 
         if ($IsLinux) {
             $Session.OCDaemonOnEmptyAdd = @()
