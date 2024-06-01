@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-awk 'BEGIN {
+LC_ALL=C awk 'BEGIN {
         printf "{\n"
         while(getline  < "/proc/loadavg") {
                 printf "  \"CpuLoad\": %.2f,\n", $(NF-3)
