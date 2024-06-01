@@ -32,6 +32,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "QRL";   port = 1166; fee = 0.9; rpc = "qrl"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "RVN";   port = 1140; fee = 0.9; rpc = "ravencoin"; region = $Pool_AllRegions; diffFactor = [Math]::Pow(2,32)}
     [PSCustomObject]@{symbol = "SDR";   port = 1213; fee = 0.9; rpc = "sedra"; region = $Pool_AllRegions}
+    [PSCustomObject]@{symbol = "XEL";   port = 1225; fee = 0.9; rpc = "xelis"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ZEPH";  port = 1123; fee = 0.9; rpc = "zephyr"; region = $Pool_AllRegions}
 )
 
