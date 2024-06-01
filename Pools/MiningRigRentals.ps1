@@ -653,6 +653,17 @@ if ($AllRigs_Request) {
 
                     $Rigs_UserSep   = if (@("ProgPowVeil","ProgPowZ","Ubqhash") -icontains $Pool_Algorithm_Norm) {"*"} else {"."}
 
+                    $Pool_User   = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
+                    $Pool_Wallet = ""
+                    $Pool_Worker = $Worker1
+
+                    # Workaround for XelisHash
+                    if ($Pool_Algorithm_Norm -eq "XelisHash") {
+                        $Pool_Worker = $Pool_User
+                        $Pool_Wallet = $Pool_User
+                    }
+
+
                     foreach ($Pool_SSL in @($false,$true)) {
                         [PSCustomObject]@{
                             Algorithm     = $Pool_Algorithm_Norm_With_Model
@@ -666,7 +677,7 @@ if ($AllRigs_Request) {
                             Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                             Host          = $Miner_Server
                             Port          = $Miner_Port
-                            User          = "$($User)$($Rigs_UserSep)$($Pool_RigId)"
+                            User          = $Pool_User
                             Pass          = "x"
                             Region        = $Pool_RegionsTable."$($_.region)"
                             SSL           = $Pool_SSL
@@ -692,8 +703,8 @@ if ($AllRigs_Request) {
                             Price_0       = 0.0
 					        Price_Bias    = 0.0
 					        Price_Unbias  = 0.0
-                            Wallet        = ""
-                            Worker        = $Worker1
+                            Wallet        = $Pool_Wallet
+                            Worker        = $Pool_Worker
                             Email         = $Email
                         }
                     }
