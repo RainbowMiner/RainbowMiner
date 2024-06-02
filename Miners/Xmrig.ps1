@@ -105,7 +105,7 @@ if ($IsLinux) {
     }
 
     $Path    = ".\Bin\ANY-Xmrig\xmrig"
-    $PathMO  = ".\Bin\Any-Xmrig\xmrig-mo"
+    $PathMO  = ".\Bin\ANY-Xmrig\xmrig-mo"
     $CudaLib = "libxmrig-cuda.so"
 } else {
 
