@@ -2848,8 +2848,10 @@ function Expand-WebRequest {
                 }
             }
         } else {
-            Get-ChildItem $Path_Old | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New -Force}
-            Remove-Item $Path_Old -Recurse -Force
+            if (Test-Path $Path_Old) {
+                Get-ChildItem $Path_Old | ForEach-Object {Move-Item $_.FullName $Path_New -Force}
+                Remove-Item $Path_Old -Recurse -Force
+            }
         }
     }
     if (-not $EnableKeepDownloads -and (Test-Path $FileName)) {
