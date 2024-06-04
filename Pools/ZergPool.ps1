@@ -115,6 +115,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
             $Pool_Port_SSL = [int]$Pool_Request.$_.tls_port
             $Pool_Protocol = "stratum+ssl"
         } else {
+            if ($Pool_Algorithm_Norm -match "^Ethash") {continue}
             $Pool_Port_SSL = [int]$Pool_Request.$_.port
             $Pool_Protocol = "stratum+tcp"
         }

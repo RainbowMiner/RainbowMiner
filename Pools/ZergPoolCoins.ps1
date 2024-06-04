@@ -104,6 +104,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
                 $Pool_Port_SSL = [int]$PoolCoins_Request.$Pool_CoinSymbol.tls_port
                 $Pool_Protocol = "stratum+ssl"
             } else {
+                if ($Pool_Algorithm_Norm -match "^Ethash") {continue}
                 $Pool_Port_SSL = [int]$PoolCoins_Request.$Pool_CoinSymbol.port
                 $Pool_Protocol = "stratum+tcp"
             }
