@@ -110,18 +110,19 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        if ($Pools.$Algorithm_Norm.CoinSymbol -eq "EPIC") {
-                            $Miner_Protocol = "epic$(if ($Pools.$Algorithm_Norm_0.SSL) {"+ssl"})://"
-                        } elseif ($Pools.$Algorithm_Norm_0.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm_0.Host -notmatch "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {
-                            $Miner_Protocol = "stratum1$(if ($Pools.$Algorithm_Norm_0.SSL) {"+ssl"})://"
-                        } else {
-                            $Miner_Protocol = "$(if ($Pools.$Algorithm_Norm_0.SSL) {"ssl://"})"
-                        }
-                        if ($Algorithm_Norm -eq "SHA3Solidity") {$Miner_Protocol = ""}
                         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                         $First = $False
                     }
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+
+                    if ($Pools.$Algorithm_Norm.CoinSymbol -eq "EPIC") {
+                        $Miner_Protocol = "epic$(if ($Pools.$Algorithm_Norm.SSL) {"+ssl"})://"
+                    } elseif ($Pools.$Algorithm_Norm.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm.Host -notmatch "MiningRigRentals" -or $Algorithm_Norm_0 -ne "ProgPow")) {
+                        $Miner_Protocol = "stratum1$(if ($Pools.$Algorithm_Norm.SSL) {"+ssl"})://"
+                    } else {
+                        $Miner_Protocol = "$(if ($Pools.$Algorithm_Norm.SSL) {"ssl://"})"
+                    }
+                    if ($Algorithm_Norm_0 -eq "SHA3Solidity") {$Miner_Protocol = ""}
 
                     $Pass = "$($Pools.$Algorithm_Norm.Pass)"
                     if ($Pass -and $Pools.$Algorithm_Norm.Host -match "C3pool|MoneroOcean") {
@@ -141,7 +142,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -o$($Params_Symbol) $($Miner_Protocol)@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u$($Params_Symbol) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User})$(if ($Pools.$MainAlgorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Pass -notmatch "{workername") {" -w$($Params_Symbol) $($Pools.$Algorithm_Norm.Worker)"})$(if ($Pass) {" -p$($Params_Symbol) $($Pass)"})$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
+					    Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -o$($Params_Symbol) $($Miner_Protocol)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u$($Params_Symbol) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User})$(if ($Pools.$MainAlgorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Pass -notmatch "{workername") {" -w$($Params_Symbol) $($Pools.$Algorithm_Norm.Worker)"})$(if ($Pass) {" -p$($Params_Symbol) $($Pass)"})$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					    API            = "Claymore"
 					    Port           = $Miner_Port                
