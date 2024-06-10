@@ -110,7 +110,7 @@
 333	TTminer
 334	SrbMinerMulti244
 335	GrinProMiner
-336	VioletMiner
+336	MeowPowMiner
 337	SwapMiner
 338	CryptoDredge16
 339	MultiMiner
