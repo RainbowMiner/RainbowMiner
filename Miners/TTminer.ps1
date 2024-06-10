@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "KawPow3g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow4g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow5g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
-    [PSCustomObject]@{MainAlgorithm = "MeowPow"       ; DAG = $true; MinMemGB = 3;   Params = "-c MEWC";          Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #MEOWPOW
+    #[PSCustomObject]@{MainAlgorithm = "MeowPow"       ; DAG = $true; MinMemGB = 3;   Params = "-c MEWC";          Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #MEOWPOW
     [PSCustomObject]@{MainAlgorithm = "Mike"          ;              MinMemGB = 1;   Params = "-a Mike";          Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #Mike
     [PSCustomObject]@{MainAlgorithm = "ProgPoWEPIC"   ; DAG = $true; MinMemGB = 3;   Params = "-c EPIC";          Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; DevFee = 2.0} #ProgPoW (only EPIC left)
     [PSCustomObject]@{MainAlgorithm = "ProgPoWSERO"   ; DAG = $true; MinMemGB = 3;   Params = "-c SERO";          Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #ProgPoWSero (SERO)
