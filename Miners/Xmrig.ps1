@@ -399,6 +399,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                             Codec   = $DeviceCodec
                         }
                         if ($UseMO) {
+                            $Arguments.HwSig = "$($Arguments.HwSig)_mo"
                             $Arguments.Config | Add-Member @{
                                                     "rebench-algo" = $false
                                                     "bench-algo-time" = 0
