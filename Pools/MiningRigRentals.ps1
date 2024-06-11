@@ -38,7 +38,7 @@ param(
     [Bool]$EnableRecoveryMode = $false,
     [String]$AutoCreateAlgorithm = "",
     [String]$AutoCreateMinProfitPercent = "50",
-    [String]$AutoCreateMinCPUProfitBTC = "0.000001",
+    [String]$AutoCreateMinCPUProfitBTC = "0.0000001",
     [String]$AutoCreateMaxMinHours = "24",
     [String]$AutoExtendTargetPercent = "100",
     [String]$AutoExtendMaximumPercent = "30",
@@ -1011,7 +1011,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                 Write-Log -Level Info "$($Name): Start $($RigRunMode) rigs on $($RigName)"
 
-                if ($RigRunMode -eq "create" -and $RigCreated -ge $MaxAPICalls) {break}
+                if ($RigRunMode -eq "create" -and $RigCreated -ge $MaxAPICalls) {
+                    Write-Log -Level Info "$($Name): Break $($RigRunMode) rigs on $($RigName) because of too many API calls"
+                    break
+                }
 
                 if (($RigRunMode -eq "create" -and $MRRConfig.$RigName.EnableAutoCreate) -or ($RigRunMode -eq "update" -and $MRRConfig.$RigName.EnableAutoUpdate)) {
                     try {
