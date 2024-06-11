@@ -351,7 +351,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     $UseMO = ($_.UseMO -and $Pools.$Algorithm_Norm.Host -match "C3pool|MoneroOcean") -or $_.ForceMO
 
                     if ($ByParameters) {
-                        $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Host -match "Nicehash") {" --nicehash"}) --donate-level=0 --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
+                        $Arguments = "-a $($Algorithm) -o $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})$(if ($Pools.$Algorithm_Norm.Host -match "Nicehash") {" --nicehash"}) --donate-level=$(if ($UseMO) {1} else {0}) --keepalive --http-enabled --http-host=127.0.0.1 --http-port=`$mport$($DeviceParams) $($_.Params)"
                     } else {
                         $Pool_CoinSymbol = if ($Pools.$Algorithm_Norm.CoinSymbol -in @("XMR","SUMO","ARQ","GRFT","KVA","RVN","WOW","XEQ","ZEPH","Townforge")) {$Pools.$Algorithm_Norm.CoinSymbol} else {$null}
 
