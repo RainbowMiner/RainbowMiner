@@ -11,6 +11,11 @@
         "2MinersSolo" = [PSCustomObject]@{
             Currencies=@("FIRO")
         }
+        "51pool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Username="";Password="x"}
+            SetupFields=[PSCustomObject]@{Username="Enter your 51pool username";Password="Enter your 51pool password"}
+            Currencies=@("EPIC")
+        }
         "6Block" = [PSCustomObject]@{
             Currencies=@("HNS")
         }
