@@ -2720,9 +2720,13 @@ class SrbMinerMulti : Miner {
         $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0}
 
         $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = [double]$Data0.hashrate."1min"
+        $HashRate_Value = if ($Data.mining_time -gt 210) {[double]$Data0.hashrate.$Type.total} else {0}
 
-        if (-not $HashRate_Value) {$HashRate_Value = [double]$Data0.hashrate.$Type.total}
+        if ($Type -eq "GPU") {
+            $PowerDraw = ($Data.gpu_devices | Foreach-Object {$_.asic_power} | Measure-Object -Sum).Sum
+        } else {
+            $PowerDraw = $null
+        }
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
@@ -2739,9 +2743,7 @@ class SrbMinerMulti : Miner {
                 $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[1]}
 
                 $HashRate_Name = [String]$this.Algorithm[1]
-                $HashRate_Value = [double]$Data0.hashrate."1min"
-
-                if (-not $HashRate_Value) {$HashRate_Value = [double]$Data0.hashrate.$Type.total}
+                $HashRate_Value = [double]$Data0.hashrate.$Type.total
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
                     $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
@@ -2757,7 +2759,7 @@ class SrbMinerMulti : Miner {
             }
         }
 
-        $this.AddMinerData($Response,$HashRate,$Difficulty)
+        $this.AddMinerData($Response,$HashRate,$Difficulty,$PowerDraw)
 
         $this.CleanupMinerData()
     }
