@@ -79,7 +79,7 @@ if ($Pool_User -or $InfoOnly) {
                 User          = "$($Wallets.$Pool_Currency)"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $true
+                SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee
                 PaysLive      = $true
