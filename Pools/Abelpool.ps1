@@ -50,7 +50,7 @@ if (-not $InfoOnly) {
     }
 
     if ($Pool_Request.code -eq 200) {
-        $Pool_BLK = [int](86400 / $Pool_Request.data.AvgBlockTime)
+        $Pool_BLK = if ($Pool_Request.data.AvgBlockTime) {[int](86400 / $Pool_Request.data.AvgBlockTime)} else {$null}
         $Pool_TSL = [int]((Get-UnixTimestamp) - $Pool_Request.data.CreatedAt)
     }
 
