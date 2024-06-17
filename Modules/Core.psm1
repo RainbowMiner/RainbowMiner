@@ -523,7 +523,9 @@ function Start-Core {
                         $errmsg = $_.Exception.Message
                     }
                     if ((Test-Path $Lib_Link2) -and (Get-Item $Lib_Link2).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
-                    Write-Log -Level "$(if ($errmsg -eq "ok") {"Info"} else {"Warn"})" "Create link $($Lib_Link2) -> $($Lib_Dest): $($errmsg)"
+                    Write-Host ".. create link $($Lib_Link2) -> $($Lib_Dest) " -NoNewline
+                    Write-Host $errmsg -ForegroundColor "$(if ($errmsg -eq "ok") {"green"} else {"red"})"
+                    Write-Log -Level Info "Create link $($Lib_Link2) -> $($Lib_Dest) $($errmsg)"
                 }
 
                 $Lib_Link3 = $Lib_Link -replace "\.\d+\.\d+$"
@@ -535,8 +537,9 @@ function Start-Core {
                         if ($Error.Count){$Error.RemoveAt(0)}
                         $errmsg = $_.Exception.Message
                     }
-                    if ((Test-Path $Lib_Link3) -and (Get-Item $Lib_Link3).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
-                    Write-Log -Level "$(if ($errmsg -eq "ok") {"Info"} else {"Warn"})" "Create link $($Lib_Link2) -> $($Lib_Dest): $($errmsg)"
+                    Write-Host ".. create link $($Lib_Link3) -> $($Lib_Dest) " -NoNewline
+                    Write-Host $errmsg -ForegroundColor "$(if ($errmsg -eq "ok") {"green"} else {"red"})"
+                    Write-Log -Level Info "Create link $($Lib_Link3) -> $($Lib_Dest) $($errmsg)"
                 }
             }
         }
