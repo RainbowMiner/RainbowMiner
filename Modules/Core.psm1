@@ -290,27 +290,6 @@ function Start-Core {
         $PauseByError = $true
     }
 
-    if ($IsLinux -and $Linux_Libs -and $Session.CUDAVersion -and $Session.CUDAVersion -match "^(\d+\.\d+)") {
-        $CUDAVersion = $Matches[1]
-
-        Write-Host "Checking for local CUDA $($CUDAVersion) libraries .. " -NoNewline
-
-        $Linux_Libs.PSObject.Properties | Where-Object {$_.Name.EndsWith($CUDAVersion)} | Foreach-Object {
-            $Lib_Dest   = Join-Path $Linux_LibDir2 $_.Value
-            $Lib_Link   = Join-Path $Linux_LibDir2 $_.Name
-                                                     
-            $Lib_Link2 = $Lib_Link -replace "\.\d+$"
-            if ($Lib_Link2 -ne $Lib_Link -and (-not (Test-Path $Lib_Link2) -or (Get-Item $Lib_Link2).LinkTarget -ne $Lib_Dest)) {
-                Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link2)" -Runas:$Linux_LibRunas > $null
-            }
-
-            $Lib_Link3 = $Lib_Link -replace "\.\d+\.\d+$"
-            if ($Lib_Link3 -ne $Lib_Link -and (-not (Test-Path $Lib_Link3) -or (Get-Item $Lib_Link3).LinkTarget -ne $Lib_Dest)) {
-                Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link3)" -Runas:$Linux_LibRunas > $null
-            }
-        }
-    }
-
     if ($IsWindows -and ($Session.MineOnCPU -ne $false -or $Session.MineOnGPU -ne $false)) {
         $GpuMemSizeMB = if ($Session.MineOnGPU -eq $false) {0} else {(($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100}
         $CpuMemSizeMB = if ($Session.MineOnCPU -eq $false) {0} else {[Math]::Max(0,32-(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum/1GB)*1100}
@@ -457,9 +436,16 @@ function Start-Core {
         #create special config files
         if (-not (Test-Path ".\Config\minerconfigfiles.txt") -and (Test-Path ".\Data\minerconfigfiles.default.txt")) {Copy-Item ".\Data\minerconfigfiles.default.txt" ".\Config\minerconfigfiles.txt" -Force -ErrorAction Ignore}
 
-        try {
-            #cleanup legacy data
-            if ((Test-Path ".\Scripts\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Error "Please check your configuration: $($_.Exception.Message)"
+        $PauseByError = $true
+    }
+
+    try {
+        #cleanup legacy data
+        if ((Test-Path ".\Scripts\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
                 $LastVersion = (Get-ContentByStreamReader ".\Data\version.json" | ConvertFrom-Json -ErrorAction Ignore).Version
                 if ($RunCleanup -and $LastVersion -and (Compare-Version $LastVersion $Session.Version) -lt 0) {
                     Write-Host "Cleanup legacy data .."
@@ -497,33 +483,74 @@ function Start-Core {
                     }
                 }
             }
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Cleanup failed: $($_.Exception.Message)"
-        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Cleanup failed: $($_.Exception.Message)"
+    }
 
-        try {
-            #if linux and running as root re-install libraries and binaries
-            if ($IsLinux -and (Test-Path ".\IncludesLinux\linux.updated") -and (Test-Path ".\install.sh")) {
-                if ($Session.IsAdmin) {
-                    Write-Host "Re-installing libraries and binaries .."
-                    bash -c "./install.sh"
-                } else {
-                    Write-Log -Level Warn "RainbowMiner has updated some linux libraries/binaries. Please run ./install.sh as soon as possible!"
+    try {
+        #if linux and running as root re-install libraries and binaries
+        if ($IsLinux -and (Test-Path ".\IncludesLinux\linux.updated") -and (Test-Path ".\install.sh")) {
+            if ($Session.IsAdmin) {
+                Write-Host "Re-installing libraries and binaries .."
+                bash -c "./install.sh"
+            } else {
+                Write-Log -Level Warn "RainbowMiner has updated some linux libraries/binaries. Please run ./install.sh as soon as possible!"
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Re-install failed: $($_.Exception.Message)"
+    }
+
+    try {
+        if ($IsLinux -and $Linux_Libs -and $Session.CUDAVersion -and $Session.CUDAVersion -match "^(\d+\.\d+)") {
+            $CUDAVersion = $Matches[1]
+
+            Write-Host "Checking for local CUDA $($CUDAVersion) libraries .. "
+
+            $Linux_Libs.PSObject.Properties | Where-Object {$_.Name.EndsWith($CUDAVersion)} | Foreach-Object {
+                $Lib_Dest   = Join-Path $Linux_LibDir2 $_.Value
+                $Lib_Link   = Join-Path $Linux_LibDir2 $_.Name
+                                                     
+                $Lib_Link2 = $Lib_Link -replace "\.\d+$"
+                if ($Lib_Link2 -ne $Lib_Link -and (-not (Test-Path $Lib_Link2) -or (Get-Item $Lib_Link2).LinkTarget -ne $Lib_Dest)) {
+                    $errmsg = "failed"
+                    try {
+                        Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link2)" -Runas:$Linux_LibRunas > $null
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        $errmsg = $_.Exception.Message
+                    }
+                    if ((Test-Path $Lib_Link2) -and (Get-Item $Lib_Link2).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
+                    Write-Log -Level "$(if ($errmsg -eq "ok") {"Info"} else {"Warn"})" "Create link $($Lib_Link2) -> $($Lib_Dest): $($errmsg)"
+                }
+
+                $Lib_Link3 = $Lib_Link -replace "\.\d+\.\d+$"
+                if ($Lib_Link3 -ne $Lib_Link -and (-not (Test-Path $Lib_Link3) -or (Get-Item $Lib_Link3).LinkTarget -ne $Lib_Dest)) {
+                    $errmsg = "failed"
+                    try {
+                        Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link3)" -Runas:$Linux_LibRunas > $null
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        $errmsg = $_.Exception.Message
+                    }
+                    if ((Test-Path $Lib_Link3) -and (Get-Item $Lib_Link3).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
+                    Write-Log -Level "$(if ($errmsg -eq "ok") {"Info"} else {"Warn"})" "Create link $($Lib_Link2) -> $($Lib_Dest): $($errmsg)"
                 }
             }
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Re-install failed: $($_.Exception.Message)"
         }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Installation of local CUDA libraries failed: $($_.Exception.Message)"
+    }
 
+    try {
         #Remove stuck update
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force -ErrorAction Ignore}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Error "Please check your configuration: $($_.Exception.Message)"
-        $PauseByError = $true
     }
 
     try {
