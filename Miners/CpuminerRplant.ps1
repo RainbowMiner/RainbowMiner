@@ -11,15 +11,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "232{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.36"
+$Version = "5.0.40"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.36-rplant/cpuminer-rplant-5.0.36-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.40-rplant/cpuminer-rplant-linux-5.0.40.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.29-rplant/cpuminer-rplant-5.0.29-win.zip"
-    $Version = "5.0.29"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.40-rplant/cpuminer-rplant-win-5.0.40.zip"
+    #$Version = "5.0.29"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -31,6 +31,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""} #Shabal-256
     [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #BMW-256
     [PSCustomObject]@{MainAlgorithm = "circcash"; Params = ""} #CircCash
+    [PSCustomObject]@{MainAlgorithm = "dpowhash"; Params = ""} #DpowHash (DPC)
     [PSCustomObject]@{MainAlgorithm = "gr"; Params = ""; FaultTolerance = 8; ExtendInterval = 3; ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider/Take5
     [PSCustomObject]@{MainAlgorithm = "heavyhash"; Params = ""} #HeavyHash
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #Hodl
