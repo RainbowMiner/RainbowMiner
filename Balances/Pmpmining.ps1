@@ -9,7 +9,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools" -tag $Name -cycletime 120 -timeout 30
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -29,7 +29,7 @@ $Pool_Request.pools | Where-Object {$Pool_Name = "$($Name)$(if ($_.paymentProces
     $Request = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools/$($_.id)/miners/$($Pool_Wallet)" -tag $Name -timeout 15 -cycletime ($Config.BalanceUpdateMinutes*60) -delay 100
+        $Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools/$($_.id)/miners/$($Pool_Wallet)" -tag $Name -timeout 30 -cycletime ($Config.BalanceUpdateMinutes*60) -delay 100
         if ($Request.Gettype() -is [string]) {
             $Request = [Regex]::Replace($Request,'(")(":)', "`$1$("tmp")`$2") | ConvertFrom-Json -ErrorAction Stop
         }

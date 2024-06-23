@@ -18,7 +18,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools" -tag $Name -cycletime 120 -timeout 30
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
