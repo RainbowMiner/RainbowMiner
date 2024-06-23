@@ -663,7 +663,6 @@ if ($AllRigs_Request) {
                         $Pool_Wallet = $Pool_User
                     }
 
-
                     foreach ($Pool_SSL in @($false,$true)) {
                         [PSCustomObject]@{
                             Algorithm     = $Pool_Algorithm_Norm_With_Model
