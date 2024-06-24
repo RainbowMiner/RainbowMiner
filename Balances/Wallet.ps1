@@ -69,6 +69,9 @@ foreach ($Wallet_Data in $Wallets_Data) {
             try {
                 $Request = if ($Wallet_Data.payload) {Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$Wallet_Address)" -body "$($Wallet_Data.payload -replace "{w}",$Wallet_Address)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint} else {Invoke-RestMethodAsync "$($Wallet_Data.rpc -replace "{w}",$Wallet_Address)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint}
                 if ($Request -is [string] -and $Request -match "^{.+}$") {
+                    if ($Request -cmatch "OwnerCount" -and $Request -cmatch "ownerCount") {
+                        $Request = $Request -creplace "OwnerCount","OwnerCount2"
+                    }
                     $Request = ConvertFrom-Json "$($Request.ToLower())" -ErrorAction Stop
                 }
                 if (($Wallet_Data.verify -eq $null -and $Wallet_Data.address -ne "" -and "$(Invoke-Expression "`$Request.$($Wallet_Data.address -replace "{w}",$Wallet_Address)")" -ne $Wallet_Address) -or 
