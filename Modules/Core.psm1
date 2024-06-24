@@ -2144,10 +2144,6 @@ function Invoke-Core {
             $_.SSL -or $Session.Config.Pools.$Pool_Name.SSL -ne 2
         ) -and
         (
-            # "the merge" has happened - exclude ETH
-            $_.CoinSymbol -ne "ETH"
-        ) -and
-        (
             ($ServerPoolNames.Count -and $ServerPoolNames.Contains($Pool_Name)) -or (
                 -not ( (-not $Session.Config.Pools.$Pool_Name) -or
                     ($Test_PoolName.Count -and $Test_PoolName -inotcontains $Pool_Name) -or
@@ -2311,6 +2307,10 @@ function Invoke-Core {
         $SortedPools = @($NewPools | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {$ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region);[int]($ix -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.Pools."$($_.Name)".SSL})
         foreach($Algorithm_Name in @($NewPools.ForEach({$_.Algorithm.ToLower()}) | Select-Object -Unique)) {
             $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.DisabledDueToCoinSymbolPBM},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
+            #if ([bool]$Pools.PSObject.Properties[$Algorithm_Name]) {
+            #    #Add backup pool
+            #    $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.DisabledDueToCoinSymbolPBM -and $Pools.$Algorithm_Name.Name -ne $_.Name},'First').ForEach({$Pools | Add-Member "$($Algorithm_Name)-2" $_})
+            #}
             #if ($Session.Config.SSL -and -not [bool]$Pools.PSObject.Properties[$Algorithm_Name]) {
             #    $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.DisabledDueToCoinSymbolPBM -and -not $_.SSL},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
             #}
