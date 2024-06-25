@@ -15,6 +15,8 @@ then
         export SCREENDIR="$screen_dir"
 fi
 
+screen -ls RainbowMiner >/dev/null 2&>1 || { echo "RainbowMiner is not running. Use start-screen.sh first!"; exit 1; }
+
 echo "Note: Press Ctrl+A then D to exit the screen"
 echo "Hit Enter to start the screen now"
 pause
