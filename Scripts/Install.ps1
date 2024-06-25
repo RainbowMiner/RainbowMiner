@@ -1,10 +1,16 @@
 ﻿using module ..\Modules\Include.psm1
 
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [String]$mode = "sudo" # either "sudo" (using sudo) or "local"
+)
+
 Initialize-Session
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
-if (-not (Test-IsElevated)) {
+if ($mode -eq "sudo" -and -not (Test-IsElevated)) {
     Write-Host "Exiting without installation"
     Write-Host " "
     Write-Host "Please run the install script $(if ($IsWindows) {"with admin privileges"} else {"as root (use 'sudo ./install.sh')"})" -ForegroundColor Yellow    
@@ -17,37 +23,40 @@ if ($IsLinux) {
     Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
     Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
 
-    Write-Host "Install libc .."
-    Start-Process ".\IncludesLinux\bash\libc.sh" -Wait
-    Write-Host "Install libuv .."
-    Start-Process ".\IncludesLinux\bash\libuv.sh" -Wait
-    Write-Host "Install libcurl4 .."
-    Start-Process ".\IncludesLinux\bash\libcurl4.sh" -Wait
-    Write-Host "Install libaprutil1 .."
-    Start-Process ".\IncludesLinux\bash\libaprutil1.sh" -Wait
-    Write-Host "Install libopencl .."
-    Start-Process ".\IncludesLinux\bash\libocl.sh" -Wait
-    Write-Host "Install libjansson-dev .."
-    Start-Process ".\IncludesLinux\bash\libjansson.sh" -Wait
-    Write-Host "Install libltdl7 .."
-    Start-Process ".\IncludesLinux\bash\libltdl7.sh" -Wait
-    Write-Host "Install libncurses5 .."
-    Start-Process ".\IncludesLinux\bash\libncurses5.sh" -Wait
-    Write-Host "Install p7zip .."
-    Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
-    Write-Host "Install screen .."
-    Start-Process ".\IncludesLinux\bash\screen.sh" -Wait
-    Write-Host "Install virt-what .."
-    Start-Process ".\IncludesLinux\bash\virt-what.sh" -Wait
-    Write-Host "Install libomp .."
-    Start-Process ".\IncludesLinux\bash\libomp.sh" -Wait
-    Write-Host "Install libssl .."
-    Start-Process ".\IncludesLinux\bash\libssl.sh" -Wait
+    if ($mode -eq "sudo") {
+        Write-Host "Install libc .."
+        Start-Process ".\IncludesLinux\bash\libc.sh" -Wait
+        Write-Host "Install libuv .."
+        Start-Process ".\IncludesLinux\bash\libuv.sh" -Wait
+        Write-Host "Install libcurl4 .."
+        Start-Process ".\IncludesLinux\bash\libcurl4.sh" -Wait
+        Write-Host "Install libaprutil1 .."
+        Start-Process ".\IncludesLinux\bash\libaprutil1.sh" -Wait
+        Write-Host "Install libopencl .."
+        Start-Process ".\IncludesLinux\bash\libocl.sh" -Wait
+        Write-Host "Install libjansson-dev .."
+        Start-Process ".\IncludesLinux\bash\libjansson.sh" -Wait
+        Write-Host "Install libltdl7 .."
+        Start-Process ".\IncludesLinux\bash\libltdl7.sh" -Wait
+        Write-Host "Install libncurses5 .."
+        Start-Process ".\IncludesLinux\bash\libncurses5.sh" -Wait
+        Write-Host "Install p7zip .."
+        Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
+        Write-Host "Install screen .."
+        Start-Process ".\IncludesLinux\bash\screen.sh" -Wait
+        Write-Host "Install virt-what .."
+        Start-Process ".\IncludesLinux\bash\virt-what.sh" -Wait
+        Write-Host "Install libomp .."
+        Start-Process ".\IncludesLinux\bash\libomp.sh" -Wait
+        Write-Host "Install libssl .."
+        Start-Process ".\IncludesLinux\bash\libssl.sh" -Wait
+    }
 
     Write-Host "Linking libraries .."
     if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-        $Libs.PSObject.Properties | Where-Object {Test-Path "/opt/rainbowminer/lib/$($_.Value)"} | Foreach-Object {
-            Invoke-Exe -FilePath "ln" -ArgumentList "-nfs /opt/rainbowminer/lib/$($_.Value) /opt/rainbowminer/lib/$($_.Name)" > $null
+        $Linux_LibDir = if ($mode -eq "sudo") {"/opt/rainbowminer/lib"} else {"$Pwd\IncludesLinux\lib"}
+        $Libs.PSObject.Properties | Where-Object {Test-Path (Join-Path $Linux_LibDir $_.Value)} | Foreach-Object {
+            Invoke-Exe -FilePath "ln" -ArgumentList "-nfs $(Join-Path $Linux_LibDir $_.Value) $(Join-Path $Linux_LibDir $_.Name)" > $null
         }
     }
     Remove-Variable "Libs"
@@ -188,7 +197,7 @@ if ($IsWindows) {
     Expand-WebRequest "https://aka.ms/vs/16/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
 }
 
-Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green
+Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh or start-screen.sh"}))" -ForegroundColor Green
 
 if (Test-Path ".\IncludesLinux\linux.updated") {
     Get-ChildItem ".\IncludesLinux\linux.updated" -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
