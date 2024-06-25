@@ -2773,7 +2773,7 @@ function Expand-WebRequest {
                 }
             } else {
                 $Params = @{
-                    FilePath     = "7z"
+                    FilePath     = $Global:7zip
                     ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y"
                     RedirectStandardOutput = Join-Path ".\Logs" "7z-console.log"
                     RedirectStandardError  = Join-Path ".\Logs" "7z-error.log"
@@ -2781,7 +2781,7 @@ function Expand-WebRequest {
             }
         } else {
             $Params = @{
-                FilePath     = ".\7z.exe"
+                FilePath     = $Global:7zip
                 ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
                 WindowStyle  = "Hidden"
             }
@@ -8195,6 +8195,38 @@ function Set-OsFlags {
         $Global:IsWindows = [System.Environment]::OSVersion.Platform -eq "Win32NT" -or [System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore)
         $Global:IsLinux   = -not $IsWindows
         $Global:IsMacOS   = $false
+    }
+
+    $Global:7zip = if ($Global:IsWindows) {".\7z.exe"} else {"7z"}
+
+    if ($Global:IsLinux) {
+        $Global:OSArch = try {
+            Switch -Regex ("$(uname -m)".Trim()) {
+                "(i386|i686)" {"i386"; Break}
+                "x86_64" {"amd64"; Break}
+                "(arm|aarch64)" {if ("$(dpkg --print-architecture)" -match "arm64") {"arm64"} else {"arm"}; Break}
+                default {$PSItem}
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            "amd64"
+        }
+
+        if (-not (Get-Command $Global:7zip -ErrorAction Ignore)) {
+            $Path_7zz = ".\IncludesLinux\bin\7zz-$(if ($Global:OSArch -eq "arm") {"arm64"} else {$Global:OSArch})"
+            if (Test-Path $Path_7zz) {
+                $Global:7zip = $Path_7zz
+                try {
+                    Get-ChildItem $Global:7zip -File -ErrorAction Stop | Foreach-Object {
+                        & chmod +x "$($_.FullName)" > $null
+                    }
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+            }
+        }
+    } elseif ($Global:IsWindows) {
+        $Global:OSArch = if ([System.Environment]::Is64BitOperatingSystem) {"amd64"} else {"i386"}
     }
 
     if ("$((Get-Culture).NumberFormat.NumberGroupSeparator)$((Get-Culture).NumberFormat.NumberDecimalSeparator)" -notmatch "^[,.]{2}$") {

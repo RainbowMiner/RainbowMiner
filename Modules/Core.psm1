@@ -35,6 +35,9 @@ function Start-Core {
                 $Linux_LibDir   = "$Pwd/IncludesLinux/lib"
                 $Linux_LibDir2  = if ($Linux_LibRunas) {"/opt/rainbowminer/lib"} else {$Linux_LibDir}
 
+                $Linux_BinDir   = "$Pwd/IncludesLinux/bin"
+                $Linux_BinDir2  = if ($Linux_LibRunas) {"/opt/rainbowminer/bin"} else {$Linux_BinDir}
+
                 $Linux_Libs.PSObject.Properties | Foreach-Object {
                     $Lib_Source = Join-Path $Linux_LibDir  $_.Value
                     $Lib_Dest   = Join-Path $Linux_LibDir2 $_.Value
