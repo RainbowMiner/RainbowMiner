@@ -78,7 +78,7 @@ try {
 
     if ($IsWindows) {
         $Params = @{
-            FilePath     = "7z.exe"
+            FilePath     = ".\7z.exe"
             ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
         }
     } else {
@@ -100,7 +100,7 @@ try {
         try {
             if (-not (Test-Path "_update")) {New-Item "_update" -ItemType "directory" > $null}
             $Params = @{
-                FilePath     = "7z"
+                FilePath     = ".\7z.exe"
                 ArgumentList = "x `"$FromFullPath`" -o`"$(Join-Path $ToFullPath "_update")`" 7z.exe 7z.dll `"Includes\curl\x32\curl.exe`" `"Includes\curl\x64\curl.exe`" `"Includes\curl\x32\libcurl.dll`" `"Includes\curl\x64\libcurl-x64.dll`" `"Includes\getcpu\GetCPU.exe`" `"Includes\getcpu\OpenHardwareMonitorLib.dll`" -y -spe"
                 PassThru     = $true
             }
