@@ -504,42 +504,57 @@ function Start-Core {
     }
 
     try {
-        if ($IsLinux -and $Linux_Libs -and $Session.CUDAVersion -and $Session.CUDAVersion -match "^(\d+\.\d+)") {
-            $CUDAVersion = $Matches[1]
+        if ($IsLinux -and $Linux_Libs -and $Session.CUDAVersion) {
+
+            $CUDAVersion = "$(if ($Session.CUDAVersion -match "^(\d+\.\d+)") {$Matches[1]} else {$Session.CUDAversion})"
 
             Write-Host "Checking for local CUDA $($CUDAVersion) libraries .. "
 
-            $Linux_Libs.PSObject.Properties | Where-Object {$_.Name.EndsWith($CUDAVersion)} | Foreach-Object {
-                $Lib_Dest   = Join-Path $Linux_LibDir2 $_.Value
+            $Linux_CudaLatest = @{}
+
+            $Linux_Libs.PSObject.Properties | Where-Object {$_.Name -match "^(libcudart|libnvrtc|libnvrtc-builtins)\.so\.(\d+).(\d+)$"} | Foreach-Object {
+                $Cuda_MainVer = "$($Matches[1]).so.$($Matches[2])"
+                $Cuda_CurrVer = "$($Matches[2]).$($Matches[3])"
+                if (-not $Linux_CudaLatest.$Cuda_MainVer) {$Linux_CudaLatest[$Cuda_MainVer] = [PSCustomObject]@{CUDAVersion = $Cuda_CurrVer; Library = $_.Value}}
+                if ($Linux_CudaLatest[$Cuda_MainVer].CUDAVersion -ne $CUDAVersion -and ($Cuda_CurrVer -eq $CUDAVersion -or (Get-Version $Linux_CudaLatest[$Cuda_MainVer].CUDAVersion) -lt (Get-Version $Cuda_CurrVer))) {
+                    $Linux_CudaLatest[$Cuda_MainVer].CUDAVersion = $Cuda_CurrVer
+                    $Linux_CudaLatest[$Cuda_MainVer].Library     = $_.Value
+                }
+            }
+
+            $Linux_CudaLatest.GetEnumerator() | Foreach-Object {
+                $Lib_Dest   = Join-Path $Linux_LibDir2 $_.Value.Library
                 $Lib_Link   = Join-Path $Linux_LibDir2 $_.Name
                                                      
-                $Lib_Link2 = $Lib_Link -replace "\.\d+$"
-                if ($Lib_Link2 -ne $Lib_Link -and (-not (Test-Path $Lib_Link2) -or (Get-Item $Lib_Link2).LinkTarget -ne $Lib_Dest)) {
+                if (-not (Test-Path $Lib_Link) -or (Get-Item $Lib_Link).LinkTarget -ne $Lib_Dest) {
                     $errmsg = "failed"
                     try {
-                        Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link2)" -Runas:$Linux_LibRunas > $null
+                        Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" -Runas:$Linux_LibRunas > $null
                     } catch {
                         if ($Error.Count){$Error.RemoveAt(0)}
                         $errmsg = $_.Exception.Message
                     }
-                    if ((Test-Path $Lib_Link2) -and (Get-Item $Lib_Link2).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
-                    Write-Host ".. create link $($Lib_Link2) -> $($Lib_Dest) " -NoNewline
+                    if ((Test-Path $Lib_Link) -and (Get-Item $Lib_Link).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
+                    Write-Host ".. create link $($Lib_Link) -> $($Lib_Dest) " -NoNewline
                     Write-Host $errmsg -ForegroundColor "$(if ($errmsg -eq "ok") {"green"} else {"red"})"
-                    Write-Log -Level Info "Create link $($Lib_Link2) -> $($Lib_Dest) $($errmsg)"
+                    Write-Log -Level Info "Create link $($Lib_Link) -> $($Lib_Dest) $($errmsg)"
                 }
 
-                $Lib_Link3 = $Lib_Link -replace "\.\d+\.\d+$"
-                if ($Lib_Link3 -ne $Lib_Link -and (-not (Test-Path $Lib_Link3) -or (Get-Item $Lib_Link3).LinkTarget -ne $Lib_Dest)) {
-                    $errmsg = "failed"
-                    try {
-                        Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link3)" -Runas:$Linux_LibRunas > $null
-                    } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                        $errmsg = $_.Exception.Message
+                if ($CUDAVersion -eq $_.Value.CUDAVersion) {
+                    $Lib_Link2 = $Lib_Link -replace "\.\d+$"
+                    if ($Lib_Link2 -ne $Lib_Link -and (-not (Test-Path $Lib_Link2) -or (Get-Item $Lib_Link2).LinkTarget -ne $Lib_Dest)) {
+                        $errmsg = "failed"
+                        try {
+                            Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link2)" -Runas:$Linux_LibRunas > $null
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            $errmsg = $_.Exception.Message
+                        }
+                        if ((Test-Path $Lib_Link2) -and (Get-Item $Lib_Link2).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
+                        Write-Host ".. create link $($Lib_Link2) -> $($Lib_Dest) " -NoNewline
+                        Write-Host $errmsg -ForegroundColor "$(if ($errmsg -eq "ok") {"green"} else {"red"})"
+                        Write-Log -Level Info "Create link $($Lib_Link2) -> $($Lib_Dest) $($errmsg)"
                     }
-                    Write-Host ".. create link $($Lib_Link3) -> $($Lib_Dest) " -NoNewline
-                    Write-Host $errmsg -ForegroundColor "$(if ($errmsg -eq "ok") {"green"} else {"red"})"
-                    Write-Log -Level Info "Create link $($Lib_Link3) -> $($Lib_Dest) $($errmsg)"
                 }
             }
         }
