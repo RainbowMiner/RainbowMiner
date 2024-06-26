@@ -2,6 +2,11 @@
 
 cd "$(dirname "$0")"
 
+case ":$PATH:" in
+  *:$PWD/IncludesLinux/bin:*) ;;
+  *) export PATH=$PATH:$PWD/IncludesLinux/bin ;;
+esac
+
 ! command -v screen >/dev/null 2>&1 && { echo "screen command not installed!"; exit 1; }
 
 if ! test -f "/opt/rainbowminer/lib"

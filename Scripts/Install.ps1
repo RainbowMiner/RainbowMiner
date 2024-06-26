@@ -3,14 +3,14 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [String]$mode = "sudo" # either "sudo" (using sudo) or "local"
+    [String]$mode = "root" # either "root" (using sudo) or "user"
 )
 
 Initialize-Session
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
-if ($mode -eq "sudo" -and -not (Test-IsElevated)) {
+if ($mode -eq "root" -and -not (Test-IsElevated)) {
     Write-Host "Exiting without installation"
     Write-Host " "
     Write-Host "Please run the install script $(if ($IsWindows) {"with admin privileges"} else {"as root (use 'sudo ./install.sh')"})" -ForegroundColor Yellow    
@@ -23,7 +23,7 @@ if ($IsLinux) {
     Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
     Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
 
-    if ($mode -eq "sudo") {
+    if ($mode -eq "root") {
         Write-Host "Install libc .."
         Start-Process ".\IncludesLinux\bash\libc.sh" -Wait
         Write-Host "Install libuv .."
@@ -54,7 +54,7 @@ if ($IsLinux) {
 
     Write-Host "Linking libraries .."
     if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-        $Linux_LibDir = if ($mode -eq "sudo") {"/opt/rainbowminer/lib"} else {"$Pwd\IncludesLinux\lib"}
+        $Linux_LibDir = if ($mode -eq "root") {"/opt/rainbowminer/lib"} else {"$Pwd\IncludesLinux\lib"}
         $Libs.PSObject.Properties | Where-Object {Test-Path (Join-Path $Linux_LibDir $_.Value)} | Foreach-Object {
             Invoke-Exe -FilePath "ln" -ArgumentList "-nfs $(Join-Path $Linux_LibDir $_.Value) $(Join-Path $Linux_LibDir $_.Name)" > $null
         }

@@ -2,6 +2,11 @@
 
 cd "$(dirname "$0")"
 
+case ":$PATH:" in
+  *:$PWD/IncludesLinux/bin:*) ;;
+  *) export PATH=$PATH:$PWD/IncludesLinux/bin ;;
+esac
+
 export GPU_FORCE_64BIT_PTR=1
 export GPU_MAX_HEAP_SIZE=100
 export GPU_USE_SYNC_OBJECTS=1
