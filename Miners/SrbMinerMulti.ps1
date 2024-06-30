@@ -25,7 +25,7 @@ if ($IsLinux) {
 $Commands = [PSCustomObject[]]@(
     #CPU only mining
     [PSCustomObject]@{MainAlgorithm = "cpupower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
-    [PSCustomObject]@{MainAlgorithm = "flex"             ;              Params = ""; Fee = 2.00;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|Moneroocean"} #Flex
+    [PSCustomObject]@{MainAlgorithm = "flex"             ;              Params = ""; Fee = 2.00;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|MoneroOcean"} #Flex
     [PSCustomObject]@{MainAlgorithm = "ghostrider"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider/RPT
     [PSCustomObject]@{MainAlgorithm = "mike"             ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|MoneroOcean"} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaurx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Minotaurx/LCC
