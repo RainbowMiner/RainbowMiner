@@ -70,7 +70,9 @@ function Initialize-OCDaemon {
             $pre = Get-MD5Hash $Pwd
             $Session.OCDaemonPrefix = "$($pre.Substring(0,4))$($pre.Substring(28,4))"
             $Session.OCDaemonCount  = 0
-            Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($Session.OCDaemonPrefix)*" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
+            if (Test-Path "/opt/rainbowminer/ocdcmd") {
+                Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($Session.OCDaemonPrefix)*" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
+            }
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
     }
 }
