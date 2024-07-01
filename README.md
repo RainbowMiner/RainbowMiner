@@ -243,29 +243,37 @@ On Windows:
 - open RainbowMiner folder with Explorer
 - right-click "Install.bat" and choose "Run as administrator"
 
-On Linux, cd into your RainbowMiner folder, change the attributes of install.sh, start.sh and others and run the Installer as root (sudo):
+On Linux, cd into your RainbowMiner folder, change the attributes of install.sh, start.sh and others and run the Installer:
+
+- on a machine that allows root (sudo):
 
     cd RainbowMiner
     chmod +x *.sh
     sudo ./install.sh
 
+- on a machine that doesn't allow root (sudo), e.g. a managed server:
+
+    cd RainbowMiner
+    chmod +x *.sh
+    ./install.sh
+
 At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v7.2.18 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v7.2.21 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 
     # if not already done, download the package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.18/powershell-lts_7.2.18-1.deb_amd64.deb
-    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.18/powershell_7.2.18-1.deb_amd64.deb
+    wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.21/powershell-lts_7.2.21-1.deb_amd64.deb
+    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.21/powershell_7.2.21-1.deb_amd64.deb
 
     # install powershell package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    dpkg -i powershell-lts_7.2.18-1.deb_amd64.deb
-    #dpkg -i powershell_7.2.18-1.deb_amd64.deb
+    dpkg -i powershell-lts_7.2.21-1.deb_amd64.deb
+    #dpkg -i powershell_7.2.21-1.deb_amd64.deb
 
     # install powershell dependencies
     apt install -f
@@ -287,7 +295,7 @@ Alternative: start as Linux `screen`:
     ./start-screen.sh
 
 - press `Ctrl+A`, then `d` to detach from screen (imagine you want to disconnect your ssh session)
-- enter `screen -R RainbowMiner` to reconnect to screen
+- use `./show-screen.sh` or enter `screen -R RainbowMiner` to reconnect to screen
 
 
 #### 4. Enter basic information
@@ -352,7 +360,8 @@ You can press the following keys, while RainbowMiner is waiting for the next run
 | Windows                    | Linux                      | Description                                                                                                                                                             |
 | -------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Start.bat`                | `./start.sh`               | start RainbowMiner                                                                                                                                                      |
-| -                          | `./start-screen.sh`        | start as Linux `screen`, `Ctrl+A` then `d` to detach, `screen -r` to reconnect                                                                                          |
+| -                          | `./start-screen.sh`        | start as Linux `screen`, connect to screen using `./show-screen,sh` or `screen -R RainbowMiner`, `Ctrl+A` then `d` to detach                                            |
+| -                          | `./show-screen.sh`         | reconnect to current RainbowMiner screen, `Ctrl+A` then `d` to detach                                                                                          |
 | -                          | `./start-nohup.sh`         | start as background job, run `./stopp.sh` to stop rainbowminer, run `./rbmlog.sh` to follow the Rainbowminer logfile, run `./minerlog.sh` to follow the miner log files |
 | `Setup.bat`                | `./setup.sh`               | start RainbowMiner configuration                                                                                                                                        |
 | `Install.bat`              | `./install.sh`             | install pre-requisites + on linux: update powershell to the newest release with `./install.sh -pu`                                                                      |
