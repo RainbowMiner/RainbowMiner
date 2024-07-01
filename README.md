@@ -247,16 +247,16 @@ On Linux, cd into your RainbowMiner folder, change the attributes of install.sh,
 
 - on a machine that allows root (sudo):
 ```
-    cd RainbowMiner
-    chmod +x *.sh
-    sudo ./install.sh
+cd RainbowMiner
+chmod +x *.sh
+sudo ./install.sh
 ```
 
 - on a machine that doesn't allow root (sudo), e.g. a managed server:
 ```
-    cd RainbowMiner
-    chmod +x *.sh
-    ./install.sh
+cd RainbowMiner
+chmod +x *.sh
+./install.sh
 ```
 
 At the end of the install, you will be asked to start RainbowMiner.
