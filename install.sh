@@ -7,7 +7,12 @@ case ":$PATH:" in
   *) export PATH=$PATH:$PWD/IncludesLinux/bin ;;
 esac
 
-arch=$(lscpu | grep Architecture | awk {'print $2'});
+architecture="$(uname -m)"
+case $architecture in
+    i386|i686) architecture="i386" ;;
+    x86_64) architecture="amd64" ;;
+    arm|aarch64) dpkg --print-architecture | grep -q "arm64" && architecture="arm64" || architecture="arm" ;;
+esac
 
 version () { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; }
 is_user_root () { [ "${EUID:-$(id -u)}" -eq 0 ]; }
@@ -125,8 +130,10 @@ if ! [ -x "$(command -v pwsh)" ]; then
     if [ -L "$BINARY_PATH" ]; then
       $SUDO rm -f "$BINARY_PATH"
     fi
-    if [ "${arch}" == "aarch64" ]; then
+    if [ "${architecture}" == "arm64" ]; then
       wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-arm64.tar.gz -O "$PWD/powershell.tar.gz"
+    elif [ "${architecture}" == "arm" ]; then
+      wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-arm32.tar.gz -O "$PWD/powershell.tar.gz"
     else
       wget https://github.com/PowerShell/PowerShell/releases/download/v${pwsh_version}/powershell-${pwsh_version}-linux-x64.tar.gz -O "$PWD/powershell.tar.gz"
     fi
