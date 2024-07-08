@@ -46,17 +46,30 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "zeph"; symbol = "ZEPH";     port = 2222; fee = 1.0; divisor = 1e12}
     [PSCustomObject]@{rpc = "zen";  symbol = "ZEN";      port = 3030; fee = 1.0; divisor = 1e8}
 
-    #AutoExchange currencies
-    [PSCustomObject]@{rpc = "clore"; symbol = "CLORE"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "CLORE"}
-    [PSCustomObject]@{rpc = "erg";   symbol = "ERG";   port = 8888; fee = 1.0; divisor = 1e9; aesymbol = "ERG"}
-    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
-    [PSCustomObject]@{rpc = "ethw";  symbol = "ETHW";  port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETHW"}
-    [PSCustomObject]@{rpc = "kas";   symbol = "KAS";   port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KAS"}
-    [PSCustomObject]@{rpc = "kls";   symbol = "KLS";   port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KLS"}
-    [PSCustomObject]@{rpc = "nexa";  symbol = "NEXA";  port = 5050; fee = 1.0; divisor = 100; aesymbol = "NEXA"}
-    [PSCustomObject]@{rpc = "pyi";   symbol = "PYI";   port = 2121; fee = 1.0; divisor = 1e8; aesymbol = "PYI"}
-    [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "RVN"}
-    [PSCustomObject]@{rpc = "xna";   symbol = "XNA";   port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "XNA"}
+    #AutoExchange currencies BTC
+    [PSCustomObject]@{rpc = "clore"; symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "CLORE"}
+    [PSCustomObject]@{rpc = "erg";   symbol = "BTC"; port = 8888; fee = 1.0; divisor = 1e9; aesymbol = "ERG"}
+    [PSCustomObject]@{rpc = "etc";   symbol = "BTC"; port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
+    [PSCustomObject]@{rpc = "ethw";  symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETHW"}
+    [PSCustomObject]@{rpc = "kas";   symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KAS"}
+    [PSCustomObject]@{rpc = "kls";   symbol = "BTC"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KLS"}
+    [PSCustomObject]@{rpc = "nexa";  symbol = "BTC"; port = 5050; fee = 1.0; divisor = 100; aesymbol = "NEXA"}
+    [PSCustomObject]@{rpc = "pyi";   symbol = "BTC"; port = 2121; fee = 1.0; divisor = 1e8; aesymbol = "PYI"}
+    [PSCustomObject]@{rpc = "rvn";   symbol = "BTC"; port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "RVN"}
+    [PSCustomObject]@{rpc = "xna";   symbol = "BTC"; port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "XNA"}
+
+    #AutoExchange currencies TON
+    [PSCustomObject]@{rpc = "clore"; symbol = "TON"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "CLORE"}
+    [PSCustomObject]@{rpc = "erg";   symbol = "TON"; port = 8888; fee = 1.0; divisor = 1e9; aesymbol = "ERG"}
+    [PSCustomObject]@{rpc = "etc";   symbol = "TON"; port = 1010; fee = 1.0; divisor = 1e9; aesymbol = "ETC"}
+    [PSCustomObject]@{rpc = "ethw";  symbol = "TON"; port = 2020; fee = 1.0; divisor = 1e9; aesymbol = "ETHW"}
+    [PSCustomObject]@{rpc = "kas";   symbol = "TON"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KAS"}
+    #[PSCustomObject]@{rpc = "kls";   symbol = "TON"; port = 2020; fee = 1.0; divisor = 1e8; aesymbol = "KLS"}
+    #[PSCustomObject]@{rpc = "nexa";  symbol = "TON"; port = 5050; fee = 1.0; divisor = 100; aesymbol = "NEXA"}
+    #[PSCustomObject]@{rpc = "pyi";   symbol = "TON"; port = 2121; fee = 1.0; divisor = 1e8; aesymbol = "PYI"}
+    [PSCustomObject]@{rpc = "rvn";   symbol = "TON"; port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "RVN"}
+    [PSCustomObject]@{rpc = "xna";   symbol = "TON"; port = 6060; fee = 1.0; divisor = 1e8; aesymbol = "XNA"}
+
 )
 
 $Payout_Currencies | Where-Object {
