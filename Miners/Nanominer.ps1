@@ -12,17 +12,18 @@ $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "234{0:d2}"
 $Cuda = "10.0"
 $DevFee = 3.0
-$Version = "3.9.1"
+$Version = "3.9.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
-    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.1-nanominer/nanominer-linux-3.9.1.tar.gz"
+    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.2-nanominer/nanominer-linux-3.9.2.tar.gz"
 } else {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
-    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.1-nanominer/nanominer-windows-3.9.1.zip"
+    $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.2-nanominer/nanominer-windows-3.9.2.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "alephium";                     Params = ""; MinMemGb = 1;  Vendor = @("AMD","NVIDIA");                  ExtendInterval = 2; DevFee = 1.0; DualZIL = $true} #Blake3Alephium
     [PSCustomObject]@{MainAlgorithm = "autolykos";                    Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   Params = ""; MinMemGb = 14; Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
@@ -44,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "KawPow4g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow5g";        DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 2.0; Algorithm = "KawPow"; DualZIL = $true} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; Params = ""; MinMemGb = 5;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.0; DualZIL = $true} #Octopus/Conflux
-    [PSCustomObject]@{MainAlgorithm = "Pyrinhash";                    Params = ""; MinMemGb = 2;  Vendor = @("NVIDIA");               ExtendInterval = 2; DevFee = 1.0} #Pyrinhash/PYI
+    [PSCustomObject]@{MainAlgorithm = "Pyrinhash";                    Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0} #Pyrinhash/PYI
     [PSCustomObject]@{MainAlgorithm = "RandomNEVO";                   Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0} #RandomNEVO
     [PSCustomObject]@{MainAlgorithm = "RandomX";                      Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0} #RandomX
     [PSCustomObject]@{MainAlgorithm = "Verushash";                    Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes"); ExcludePoolName="LuckPool"} #Verushash
