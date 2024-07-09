@@ -6,7 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD/NVIDIA present in system
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD/CPU/NVIDIA present in system
 
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
@@ -82,17 +82,17 @@ if ($InfoOnly) {
     return
 }
 
-if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
+if ($Session.Config.CUDAVersion) {
     $Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name
 }
 
-foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
+foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
 
-        $Commands.ForEach({
+        $Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
             $First = $True
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $Miner_Fee = if ($_.DevFee -ne $null) {$_.DevFee} else {$DevFee}
