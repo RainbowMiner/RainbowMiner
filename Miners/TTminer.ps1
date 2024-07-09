@@ -6,24 +6,28 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
-if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD/NVIDIA present in system
+if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.DevicesByTypes.CPU -and -not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD/NVIDIA present in system
 
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2024.2.0"
+$Version = "2024.3.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.2.0-ttminer/TT-Miner-2024.2.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.0-ttminer/TT-Miner-2024.3.0.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.2.0-ttminer/TT-Miner-2024.2.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.0-ttminer/TT-Miner-2024.3.0.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
+    #CPU
+    [PSCustomObject]@{MainAlgorithm = "Flex";                        MinMemGB = 1;   Params = "-a Flex";          Vendor = @("CPU"); ExtendInterval = 2} #Flex
+
+    #GPU
     [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";              MinMemGB = 2;   Params = "-a Blake3";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #Blake3Alephium
     [PSCustomObject]@{MainAlgorithm = "Ethash"        ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASH";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "Ethash2g"      ; DAG = $true; MinMemGB = 1;   Params = "-a ETHASH";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"} #Ethash 
@@ -37,7 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "FiroPow"       ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPow";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #FiroPow
     [PSCustomObject]@{MainAlgorithm = "FiroPowSCC"    ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPowSCC";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #FiroPowSCC
     [PSCustomObject]@{MainAlgorithm = "FishHash"      ; DAG = $true; MinMemGB = 3;   Params = "-a FishHash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #FishHash/IRON
-    [PSCustomObject]@{MainAlgorithm = "Take2"         ;              MinMemGB = 1;   Params = "-a Ghostrider";    Vendor = @("NVIDIA");       ExtendInterval = 2; DevFee = 1.0} #Ghostrider
+    [PSCustomObject]@{MainAlgorithm = "Take2"         ;              MinMemGB = 1;   Params = "-a Ghostrider";    Vendor = @("CPU","NVIDIA"); ExtendInterval = 2; DevFee = 1.0} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "KawPow"        ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow2g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow3g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
@@ -59,14 +63,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"; SecondaryAlgorithm = "SHA512256d"; SecondaryParams = "-a Sha512256d"} #EthashB3 + SHA512256d
 )
 
-$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BNBTC","BTC","BTRM","BUT","CLO","CLORE","EGAZ","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","IRON","JGC","KAW","KCN","LAB","LTR","MEOW","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL","ZKBTC")
+$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BNBTC","BTC","BTRM","BUT","CLO","CLORE","Coin","EGAZ","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","IRON","JGC","KAW","KCN","LAB","LTR","MEOW","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL","ZKBTC")
 #$a = @($s -split "[\r\n]+" | Foreach-Object {$_ -replace "^[\w]+\s+" -split "[\s,;]+"} | Where-Object {$_ -ne ""} | Sort-Object -Unique) -join '","'
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("AMD","NVIDIA")
+        Type      = @("AMD","CPU","NVIDIA")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
@@ -82,7 +86,7 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
     $Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name
 }
 
-foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
+foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
@@ -95,25 +99,38 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
 
-            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+            $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGB)})
 
             $ZilParams = ""
 
-            if ($Session.Config.Pools.Crazypool.EnableTTminerDual -and $Pools.ZilliqaCP) {
+            if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.Crazypool.EnableTTminerDual -and $Pools.ZilliqaCP) {
                 if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
                     $ZilParams = " -cZ ZIL$(if ($Pools.ZilliqaCP.Worker -and $Pools.ZilliqaCP.User -notmatch "{workername" -and $Pools.ZilliqaCP.Pass -notmatch "{workername") {" -wZ $($Pools.ZilliqaCP.Worker)"}) -PZ $(if ($Pools.ZilliqaCP.SSL) {"ssl://"})$($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {":$($Pools.ZilliqaCP.Pass)"})@$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port)"
                 }
             }
+
+            if ($Miner_Vendor -eq "CPU") {
+                $CPUThreads = if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads)  {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Threads}  elseif ($Session.Config.Miners."$Name-CPU".Threads)  {$Session.Config.Miners."$Name-CPU".Threads}  elseif ($Session.Config.CPUMiningThreads)  {$Session.Config.CPUMiningThreads}
+                $CPUAffinity= if ($Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity) {$Session.Config.Miners."$Name-CPU-$Algorithm_Norm_0".Affinity} elseif ($Session.Config.Miners."$Name-CPU".Affinity) {$Session.Config.Miners."$Name-CPU".Affinity} elseif ($Session.Config.CPUMiningAffinity) {$Session.Config.CPUMiningAffinity}
+            }
         
-		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
+            $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
+
+		    foreach($Algorithm_Norm in $All_MainAlgorithms) {
 			    if ($Pools.$Algorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoins -or $_.ExcludeCoins -inotcontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+                        $DeviceIDsAll = if ($Miner_Vendor -eq "CPU") {"-cpu $($CPUThreads)"} else {"-d $($Miner_Device.BusId_Type_Mineable_Index -join ' ')"}
                         $First = $False
                     }
-				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+
+                    $Pool_Port = $Pools.$Algorithm_Norm.Port
+                    if ($Pools.$Algorithm_Norm.Ports -ne $null) {
+                        if ($Miner_Vendor -eq "CPU") {
+                            if ($Pools.$Algorithm_Norm.Ports.CPU) {$Pool_Port = $Pools.$Algorithm_Norm.Ports.CPU}
+                        } elseif ($Pools.$Algorithm_Norm.Ports.GPU) {$Pool_Port = $Pools.$Algorithm_Norm.Ports.GPU}
+                    }
 
                     if ($Pools.$Algorithm_Norm.CoinSymbol -eq "EPIC") {
                         $Miner_Protocol = "epic$(if ($Pools.$Algorithm_Norm.SSL) {"+ssl"})://"
@@ -142,7 +159,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--api-bind 127.0.0.1:`$mport -d $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -o$($Params_Symbol) $($Miner_Protocol)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u$($Params_Symbol) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User})$(if ($Pools.$MainAlgorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Pass -notmatch "{workername") {" -w$($Params_Symbol) $($Pools.$Algorithm_Norm.Worker)"})$(if ($Pass) {" -p$($Params_Symbol) $($Pass)"})$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
+					    Arguments      = "--api-bind 127.0.0.1:`$mport $($DeviceIDsAll)$(if ($_.DAG) {" -dag-2disk -daginfo"}) -o$($Params_Symbol) $($Miner_Protocol)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u$($Params_Symbol) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User})$(if ($Pools.$MainAlgorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Pass -notmatch "{workername") {" -w$($Params_Symbol) $($Pools.$Algorithm_Norm.Worker)"})$(if ($Pass) {" -p$($Params_Symbol) $($Pass)"})$(if ($Params -notmatch "-c" -and $Pools.$Algorithm_Norm.CoinSymbol -and $CoinSymbols -icontains $Pools.$Algorithm_Norm.CoinSymbol) {" -c$($Params_Symbol) $($Pools.$Algorithm_Norm.CoinSymbol)"})$($ZilParams) $($Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					    API            = "Claymore"
 					    Port           = $Miner_Port                
