@@ -2,5 +2,9 @@
     "active":  true,
     "symbol":  "XEL",
     "algorithm":  "XelisHashV2",
-    "date":  "July 10, 2024 12:00Z"
+    "height":  434100,
+    "rpc":  "https://index.xelis.io/views/get_stats()",
+    "data":  "rows[0].height",
+    "verify":  "count",
+    "verify_value":  "0"
 }
