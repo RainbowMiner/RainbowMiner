@@ -12,15 +12,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2024.3.0"
+$Version = "2024.3.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.0-ttminer/TT-Miner-2024.3.0.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.1-ttminer/TT-Miner-2024.3.1.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.0-ttminer/TT-Miner-2024.3.0.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.1-ttminer/TT-Miner-2024.3.1.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
