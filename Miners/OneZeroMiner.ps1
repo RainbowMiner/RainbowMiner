@@ -10,20 +10,20 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.4-onezerominer/onezerominer-linux-1.3.4.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.5-onezerominer/onezerominer-linux-1.3.5.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.4-onezerominer/onezerominer-win64-1.3.4.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.5-onezerominer/onezerominer-win64-1.3.5.zip"
 }
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.3.4"
+$Version = "1.3.5"
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5} #DynexSolve/DNX
-    [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; IncludePoolName = "k1pool|vipor"} #XelisHash/XEL
+    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true} #DynexSolve/DNX
+    [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Algorithm = "XelisHashV2"} #XelisHash/XEL
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -51,13 +51,14 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
     $ZilParams = if ($Session.Config.Pools.CrazyPool.EnableOneZeroMinerDual -and $Pools.ZilliqaCP) {
         if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
-            "--a2 zil --w2 $($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {" --p2 $($Pools.ZilliqaCP.Pass)"}) --o2 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) "
+            " --a2 zil --w2 $($Pools.ZilliqaCP.User)$(if ($Pools.ZilliqaCP.Pass) {" --p2 $($Pools.ZilliqaCP.Pass)"}) --o2 $($Pools.ZilliqaCP.Protocol)://$($Pools.ZilliqaCP.Host):$($Pools.ZilliqaCP.Port) "
         }
     }
 
     $Commands.ForEach({
 
-        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+        $Algorithm_0 = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+        $Algorithm_Norm_0 = Get-Algorithm $Algorithm_0
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Host -match $_.IncludePoolName)) {
@@ -73,7 +74,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker $($Pools.$Algorithm_Norm.Worker)"}) --api-port `$mport $($ZilParams)$($_.Params)"
+					Arguments      = "-d $($DeviceIDsAll) -a $($_.MainAlgorithm) -w $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -o $(if ($Pools.$Algorithm_Norm.SSL) {"$($Pools.$Algorithm_Norm.Protocol)://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port)$(if ($Pools.$Algorithm_Norm.Worker -and $Pools.$Algorithm_Norm.User -eq $Pools.$Algorithm_Norm.Wallet) {" --worker $($Pools.$Algorithm_Norm.Worker)"}) --api-port `$mport$(if ($_.DualZIL) {$ZilParams})$($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "OneZeroMiner"
 					Port           = $Miner_Port
