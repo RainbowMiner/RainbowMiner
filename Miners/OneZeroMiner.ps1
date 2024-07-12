@@ -10,20 +10,20 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.5-onezerominer/onezerominer-linux-1.3.5.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6-onezerominer/onezerominer-linux-1.3.6.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.5-onezerominer/onezerominer-win64-1.3.5.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6-onezerominer/onezerominer-win64-1.3.6.zip"
 }
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.3.5"
+$Version = "1.3.6"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true} #DynexSolve/DNX
-    [PSCustomObject]@{MainAlgorithm = "xelis"; Params = ""; ExtendInterval = 3; Algorithm = "XelisHashV2"} #XelisHash/XEL
+    [PSCustomObject]@{MainAlgorithm = "xelishashv2"; Params = ""; ExtendInterval = 3} #XelisHashV2/XEL
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
