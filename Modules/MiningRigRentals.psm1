@@ -515,6 +515,7 @@ param(
             "equihash1505"      {"BeamHash3";Break}
             "x16rt"             {"X16rtVeil";Break}
             "x16rtgin"          {"X16rt";Break}
+            "xelishash"         {"XelisHashV2";Break}
             default             {$Name}
         }
     )
