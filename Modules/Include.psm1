@@ -3559,6 +3559,7 @@ function Get-Device {
                         Type_Vendor_Index = [Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"
                         BusId_Index               = 0
                         BusId_Type_Index          = 0
+                        BusId_Type_Codec_Index    = 0
                         BusId_Type_Vendor_Index   = 0
                         BusId_Type_Mineable_Index = 0
                         BusId_Vendor_Index        = 0
@@ -3714,6 +3715,7 @@ function Get-Device {
         #Roundup and add sort order by PCI busid
         $BusId_Index = 0
         $BusId_Type_Index = @{}
+        $BusId_Type_Codec_Index = @{}
         $BusId_Type_Vendor_Index = @{}
         $BusId_Type_Mineable_Index = @{}
         $BusId_Vendor_Index = @{}
@@ -3721,15 +3723,21 @@ function Get-Device {
         $Global:GlobalCachedDevices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | Foreach-Object {
             $_.BusId_Index               = $BusId_Index++
             $_.BusId_Type_Index          = [int]$BusId_Type_Index."$($_.Type)"
+            $_.BusId_Type_Codec_Index    = [int]$BusId_Type_Codec_Index."$($_.Type)"."$($_.Codec)"
             $_.BusId_Type_Vendor_Index   = [int]$BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"
             $_.BusId_Type_Mineable_Index = [int]$BusId_Type_Mineable_Index."$($_.Type)"
             $_.BusId_Vendor_Index        = [int]$BusId_Vendor_Index."$($_.Vendor)"
+
+            if (-not $BusId_Type_Codec_Index."$($_.Type)") { 
+                $BusId_Type_Codec_Index."$($_.Type)" = @{}
+            }
 
             if (-not $BusId_Type_Vendor_Index."$($_.Type)") { 
                 $BusId_Type_Vendor_Index."$($_.Type)" = @{}
             }
 
             $BusId_Type_Index."$($_.Type)"++
+            $BusId_Type_Codec_Index."$($_.Type)"."$($_.Codec)"++
             $BusId_Type_Vendor_Index."$($_.Type)"."$($_.Vendor)"++
             $BusId_Vendor_Index."$($_.Vendor)"++
             if ($_.Vendor -in @("AMD","NVIDIA")) {$BusId_Type_Mineable_Index."$($_.Type)"++}
@@ -3866,8 +3874,8 @@ function Get-Device {
                             if ($Global:GlobalCPUInfo.$_ -match "^[0-9a-fx]+$") {$Global:GlobalCPUInfo.$_ = [int]$Global:GlobalCPUInfo.$_}
                         }
 
-                        "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
-                        "$((($Data | Where-Object {$_ -like "Features*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+                        "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
+                        "$((($Data | Where-Object {$_ -like "Features*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
 
                         if (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer) {
                             try {
@@ -3971,7 +3979,7 @@ function Get-Device {
                 $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
                 if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
             }
-            $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Features.iszen -or $Global:GlobalCPUInfo.Features.iszenplus -or $Global:GlobalCPUInfo.Features.iszen2 -or $Global:GlobalCPUInfo.Features.iszen3)
+            $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Features.iszen -or $Global:GlobalCPUInfo.Features.iszenplus -or $Global:GlobalCPUInfo.Features.iszen2 -or $Global:GlobalCPUInfo.Features.iszen3 -or $Global:GlobalCPUInfo.Features.iszen4)
 
             if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             

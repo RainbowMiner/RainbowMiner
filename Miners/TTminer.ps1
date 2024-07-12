@@ -12,20 +12,21 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2024.3.1"
+$Version = "2024.3.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.1-ttminer/TT-Miner-2024.3.1.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.2-ttminer/TT-Miner-2024.3.2.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.1-ttminer/TT-Miner-2024.3.1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.2-ttminer/TT-Miner-2024.3.2.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
     #CPU
     [PSCustomObject]@{MainAlgorithm = "Flex";                        MinMemGB = 1;   Params = "-a Flex";          Vendor = @("CPU"); ExtendInterval = 2} #Flex
+    [PSCustomObject]@{MainAlgorithm = "XelisHashV2";                 MinMemGB = 1;   Params = "-a Xelis";         Vendor = @("CPU"); ExtendInterval = 2} #Flex
 
     #GPU
     [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";              MinMemGB = 2;   Params = "-a Blake3";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #Blake3Alephium
@@ -63,7 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"; SecondaryAlgorithm = "SHA512256d"; SecondaryParams = "-a Sha512256d"} #EthashB3 + SHA512256d
 )
 
-$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BNBTC","BTC","BTRM","BUT","CLO","CLORE","Coin","EGAZ","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","IRON","JGC","KAW","KCN","LAB","LTR","MEOW","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XNA","YERB","ZANO","ZELS","ZIL","ZKBTC")
+$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BNBTC","BTC","BTRM","BUT","CLO","CLORE","Coin","EGAZ","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","IRON","JGC","KAW","KCN","LAB","LTR","MEOW","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XEL","XNA","YERB","ZANO","ZELS","ZIL","ZKBTC")
 #$a = @($s -split "[\r\n]+" | Foreach-Object {$_ -replace "^[\w]+\s+" -split "[\s,;]+"} | Where-Object {$_ -ne ""} | Sort-Object -Unique) -join '","'
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -82,8 +83,10 @@ if ($InfoOnly) {
     return
 }
 
+$NVmax = 0
 if ($Session.Config.CUDAVersion) {
     $Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name
+    $NVmax = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Codec -eq "CUDA"} | Measure-Object -Property BusId_Type_Codec_Index).Count
 }
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
@@ -121,7 +124,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                        $DeviceIDsAll = if ($Miner_Vendor -eq "CPU") {"-cpu $($CPUThreads)"} else {"-d $($Miner_Device.BusId_Type_Mineable_Index -join ' ')"}
+                        $DeviceIDsAll = if ($Miner_Vendor -eq "CPU") {"-d $($Miner_Device.Index -join ' ') -cpu $($CPUThreads)"}
+                                        elseif ($Miner_Vendor -eq "NVIDIA") {"-d $($Miner_Device.Type_Vendor_Index -join ' ') -cuda-order"}
+                                        else {"-d $(@($Miner_Device.BusId_Type_Codec_Index | Foreach-Object {$_ + $NVmax}) -join ' ')"}
                         $First = $False
                     }
 
