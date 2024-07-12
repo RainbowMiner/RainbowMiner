@@ -1849,6 +1849,10 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.9.3.3")) {
+        $RemoveMinerStats += @("*-OneZeroMiner-*_XelisHashV2_HashRate.txt")
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
