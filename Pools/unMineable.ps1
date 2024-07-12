@@ -57,7 +57,7 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "randomx";    port = @(3333,4444); ethproxy = $null;          rpc = "rx";         divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "sha512256d"; port = @(3333,4444); ethproxy = $null;          rpc = "sha512256d"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ghostrider"; port = @(3333,4444); ethproxy = $null;          rpc = "ghostrider"; divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "xelishash";  port = @(3333,4444); ethproxy = $null;          rpc = "xelishash";  divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "xelishashv2";port = @(3333,4444); ethproxy = $null;          rpc = "xelishash";  divisor = 1;   mh = 1e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "zelhash";    port = @(3333,4444); ethproxy = $null;          rpc = "zelhash";    divisor = 1;   mh = 100; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "zhash";      port = @(3333,4444); ethproxy = $null;          rpc = "zhash";      divisor = 1;   mh = 100; region = @("us","ca","eu","asia")}
 )
