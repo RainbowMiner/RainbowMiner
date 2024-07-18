@@ -10,16 +10,16 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6-onezerominer/onezerominer-linux-1.3.6.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.7-onezerominer/onezerominer-linux-1.3.7.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6-onezerominer/onezerominer-win64-1.3.6.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.7-onezerominer/onezerominer-win64-1.3.7.zip"
 }
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.3.6"
+$Version = "1.3.7"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true} #DynexSolve/DNX
