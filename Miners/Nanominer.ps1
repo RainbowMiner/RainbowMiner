@@ -48,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Pyrinhash";                    Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0} #Pyrinhash/PYI
     [PSCustomObject]@{MainAlgorithm = "RandomNEVO";                   Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0} #RandomNEVO
     [PSCustomObject]@{MainAlgorithm = "RandomX";                      Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0} #RandomX
+    [PSCustomObject]@{MainAlgorithm = "SCCPow";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ZombieMode = $true; Algorithm = "FiroPow"} #SCCPow
     [PSCustomObject]@{MainAlgorithm = "Verushash";                    Params = ""; MinMemGb = 3;  Vendor = @("CPU");                  ExtendInterval = 2; DevFee = 2.0; CPUFeatures = @("avx","aes"); ExcludePoolName="LuckPool"} #Verushash
     [PSCustomObject]@{MainAlgorithm = "UbqHash";                      Params = ""; MinMemGb = 3;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; Coins = @("UBQ"); ExcludePoolName = "F2Pool"} #UbqHash
     [PSCustomObject]@{MainAlgorithm = "Verthash";                     Params = ""; MinMemGb = 2;  Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 1.0} #Verthash
