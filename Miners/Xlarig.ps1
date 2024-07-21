@@ -5,22 +5,33 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux -or $Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $ManualUri = "https://github.com/scala-network/XLArig/releases"
 $Port = "241{0:d2}"
-$Version = "5.2.3"
+$Version = "5.2.4"
+
+$Uri = $null
 
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-Xlarig\xlarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.3-xlarig/XLArig-v5.2.3-linux-x86_64.zip"
+    if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
+        if ($Global:GlobalCPUInfo.Architecture -eq 8) {
+            $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.4-xlarig/xlarig-5.2.4-armv8.7z"
+        }
+    } else {
+        $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.4-xlarig/xlarig-5.2.4-bionic-x64.7z"
+    }
+
+    $Path   = ".\Bin\CPU-Xlarig\xlarig"
     $DevFee = 0.0
 } else {
-    $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.3-xlarig/XLArig-v5.2.3-win64.zip"
+    $Uri    = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.2.4-xlarig/xlarig-5.2.4-win64.7z"
+    $Path   = ".\Bin\CPU-Xlarig\xlarig.exe"
     $DevFee = 0.0
 }
+
+if ($Uri -eq $null) {return}
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "panthera"; Params = ""; ExtendInterval = 2}
