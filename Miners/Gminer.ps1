@@ -49,6 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "kHeavyHash";                   MinMemGb = 1;                     Params = "--algo kheavyhash";  Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00; ExcludePoolName = "MiningRigRentals"} #kHeavyHash/KAS
     [PSCustomObject]@{MainAlgorithm = "Octopus";         DAG = $true; MinMemGb = 6;                     Params = "--algo octopus";     Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 4.00} #Octopus/CFX
     [PSCustomObject]@{MainAlgorithm = "ProgpowSero";     DAG = $true; MinMemGb = 3;                     Params = "--algo sero";        Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #ProgpowSero
+    [PSCustomObject]@{MainAlgorithm = "SCCPow";          DAG = $true; MinMemGb = 3;                     Params = "--algo firo";        Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 1.00} #SCCPow
     [PSCustomObject]@{MainAlgorithm = "SHA256ton";                    MinMemGb = 1;                     Params = "--algo ton";         Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 2.00} #SHA256ton/TON
     [PSCustomObject]@{MainAlgorithm = "SHA512256d";                   MinMemGb = 1;                     Params = "--algo radiant";     Vendor = @("NVIDIA");       ExtendInterval = 2; DualZIL = $true; Fee = 2.00} #SHA512256d/RAD
 
