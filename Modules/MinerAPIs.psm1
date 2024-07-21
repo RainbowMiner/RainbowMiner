@@ -3622,6 +3622,9 @@ class Xmrig6 : Miner {
 
         try {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
+            if ($Data -is [string] -and $Data -match "(?smi)^({.+?`"total`":\s*\[.+?\])") {
+                $Data = "$($Matches[1])}}" | ConvertFrom-Json -ErrorAction Stop
+            }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
