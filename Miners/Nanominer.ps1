@@ -153,7 +153,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
                     $MainCoin = $Pools.$MainAlgorithm_Norm.CoinSymbol
                     $MainCoin_Data = Get-Coin $MainCoin
-                    if ($MainCoin_Data.Algo -ne $MainAlgorithm_Norm) {$MainCoin = $null}
+                    if ($MainCoin_Data.Algo -ne $MainAlgorithm_Norm -and $MainCoin -ne "SCC") {$MainCoin = $null}
                     
                     if ($All_SecondAlgorithms) {
 
