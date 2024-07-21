@@ -19,7 +19,7 @@ if ($IsLinux) {
     $Cuda = "12.0"
 } else {
     $Path = ".\Bin\GPU-SccMiner\sccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.0-sccminer/sccminer-1.1.0-Windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.0-sccminer/sccminer-1.1.0-Windows.7z"
     $Cuda = "12.0"
 }
 
