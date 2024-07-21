@@ -72,7 +72,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
 		$Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
 	}
 
-    if ($Pool_Algorithm_Norm -eq "FiroPoW") {$Pool_Algorithm_Norm = "FiroPoWSCC"}
+    if ($Pool_Algorithm_Norm -eq "FiroPoW") {$Pool_Algorithm_Norm = "SCCPow"}
 
     if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
 
