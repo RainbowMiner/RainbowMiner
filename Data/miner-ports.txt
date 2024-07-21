@@ -147,6 +147,8 @@
 370	OneZeroMiner
 371	OneZeroMiner125
 372	Xmrig4Xdag
+373	TTminerBeta
+374	SccMiner
 
 400	Sgminer
 401	SgminerBitcore
