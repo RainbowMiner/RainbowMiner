@@ -2716,6 +2716,7 @@ class SrbMinerMulti : Miner {
         $BaseAlgorithm0 = [String]$this.BaseAlgorithm[0]
 
         if ($BaseAlgorithm0 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$BaseAlgorithm0 = $Matches[1]}
+        elseif ($BaseAlgorithm0 -eq "SCCPow") {$BaseAlgorithm0 = "FiroPow"}
 
         $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0}
 
