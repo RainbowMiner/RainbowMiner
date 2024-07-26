@@ -3622,9 +3622,17 @@ class Xmrig6 : Miner {
         $Difficulty = [PSCustomObject]@{}
 
         try {
-            $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
-            if ($Data -is [string] -and $Data -match "(?smi)^({.+?`"total`":\s*\[.+?\])") {
-                $Data = "$($Matches[1])}}" | ConvertFrom-Json -ErrorAction Stop
+            if ($this.Name -match "^Xlarig") { #temporary fix for bug in windows API in Xlarig v5.2.4
+                $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient -Method "WEB"
+                if ($Data -is [string] -and $Data -match "(?smi)^({.+?`"total`":\s*\[.+?\])") {
+                    $Data = "$($Matches[1])}}"
+                }
+            } else {
+                $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
+            }
+
+            if ($Data -is [string]) {
+                $Data = $Data | ConvertFrom-Json -ErrorAction Stop
             }
         }
         catch {
