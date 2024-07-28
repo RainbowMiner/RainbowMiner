@@ -552,6 +552,7 @@
     "groestlcoin": "Groestl",
     "handshake": "Blake2bSHA3",
     "hashimotos": "Ethash",
+    "hashx7": "HashX7",
     "heavy": "Heavy",
     "heavyhash": "HeavyHash",
     "heavyhashkaspa": "kHeavyHash",

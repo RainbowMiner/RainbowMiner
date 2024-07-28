@@ -11,14 +11,14 @@ if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # 
 $ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "232{0:d2}"
 $DevFee = 0.0
-$Version = "5.0.40"
+$Version = "5.0.41"
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512 -and $f.sha -and $f.vaes){'avx512-sha-vaes'}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.40-rplant/cpuminer-rplant-linux-5.0.40.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.41-rplant/cpuminer-opt-linux-5.0.41a.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'sse42-aes'}elseif($f.sse42){'sse42'}elseif($Global:GlobalCPUInfo.Vendor -eq "AMD"){'sse2amd'}else{'sse2'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.40-rplant/cpuminer-rplant-win-5.0.40.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.41-rplant/cpuminer-opt-win-5.0.41.zip"
     #$Version = "5.0.29"
 }
 
@@ -50,6 +50,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel7 (MAC)
     [PSCustomObject]@{MainAlgorithm = "x22"; Params = ""} #X22 from v4.5.20 on
     ####[PSCustomObject]@{MainAlgorithm = "x33"; Params = ""} #X33 (QRN) from v4.5.16 on
+    [PSCustomObject]@{MainAlgorithm = "hashx7"; Params = ""} #HashX7/6ZIP
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
     #[PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
