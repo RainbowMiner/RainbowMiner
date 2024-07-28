@@ -12,14 +12,14 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 0.75
 $Cuda = "11.0"
-$Version = "0.40.5"
+$Version = "0.40.6"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.40.5-wildrigmulti/wildrig-multi-linux-0.40.5.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.40.6-wildrigmulti/wildrig-multi-linux-0.40.6.tar.xz"
 } else {
     $Path = ".\Bin\GPU-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.40.5-wildrigmulti/wildrig-multi-windows-0.40.5.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.40.6-wildrigmulti/wildrig-multi-windows-0.40.6.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -41,6 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";             Vendor = @("AMD","INTEL");        Params = ""} #GLT-JeongHash
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";              Vendor = @("AMD","INTEL");        Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";             Vendor = @("AMD","INTEL");        Params = ""} #GLT-PawelHash
+    [PSCustomObject]@{MainAlgorithm = "hashx7";                    Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; Algorithm = "x7"} #HashX7/6ZIP
     [PSCustomObject]@{MainAlgorithm = "heavyhash";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 2; FaultTolerance = 0.4} #Heavyhash/OBTC
     [PSCustomObject]@{MainAlgorithm = "hex";                       Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";                   Vendor = @("AMD","INTEL");          Params = ""} #HMQ1725
@@ -65,7 +66,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "progpow-veil"; DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3} #ProgPowVeil
     [PSCustomObject]@{MainAlgorithm = "progpowz";     DAG = $true; Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; ExtendInterval = 3; ExcludePoolName = "Fairpool"} #ProgPowZ
     #[PSCustomObject]@{MainAlgorithm = "pufferfish2";               Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 1.0} #Pufferfish2/BMB
-    #[PSCustomObject]@{MainAlgorithm = "rwahash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.0} #RWAHash #TemporarydisabledNoDevPool
+    [PSCustomObject]@{MainAlgorithm = "rwahash";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.0} #RWAHash
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA512256d
     [PSCustomObject]@{MainAlgorithm = "sha256csm";                 Vendor = @("AMD","INTEL","NVIDIA"); Params = ""; DevFee = 2.0} #SHA256csm
     [PSCustomObject]@{MainAlgorithm = "sha256q";                   Vendor = @("AMD","INTEL","NVIDIA"); Params = ""} #SHA256q
