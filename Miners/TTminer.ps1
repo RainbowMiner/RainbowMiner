@@ -89,9 +89,16 @@ if ($Session.Config.CUDAVersion) {
     $NVmax = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Codec -eq "CUDA"} | Measure-Object -Property BusId_Type_Codec_Index).Count
 }
 
-$SaveDAG = $true
-$Session.SysInfo.Disks | Where-Object {$_.IsCurrent} | Foreach-Object {
-    if ($_.FreeGB -lt 100) {$SaveDAG = $false}
+if ($SaveDAG = $Session.Config.EnableMinersToSaveDAG) {
+    $Session.SysInfo.Disks | Where-Object {$_.IsCurrent} | Foreach-Object {
+        $SaveDAGUsed = 0
+        $SaveDAGPath = Join-Path (Split-Path $Path) "DAGs"
+
+        if (Test-Path $SaveDAGPath) {
+            $SaveDAGUsed = [Decimal][Math]::Round((Get-ChildItem $SaveDAGPath -File -Filter "*.dag" | Foreach-Object {$_.Length} | Measure-Object -Sum).Sum / 1GB,1)
+        }
+        if ($_.FreeGB -lt (100 - $SaveDAGUsed)) {$SaveDAG = $false}
+    }
 }
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
