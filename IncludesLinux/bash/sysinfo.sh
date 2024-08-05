@@ -34,22 +34,5 @@ LC_ALL=C awk 'BEGIN {
                 }
         }
 
-        printf "  \"Disks\": [\n"
-        i = 0
-        while("df -lPm " | getline) {
-                if ( $NF == "/" ) {
-                        if (i>0) {printf ",\n"}
-                        printf "    {\n"
-                        printf "      \"Drive\": \"%s\",\n", $1
-                        printf "      \"Name\": \"\",\n"
-                        printf "      \"TotalGB\": %.1f,\n", $2/1024
-                        printf "      \"UsedGB\": %.1f,\n", $3/1024
-                        printf "      \"UsedPercent\": %.2f\n", $3*100/$2
-                        printf "    }"
-                        i++
-                }
-        }
-        if (i>0) {printf "\n"}
-        printf "  ]\n}\n"
-
+        printf "  \"Disks\": null\n}\n"
 }'

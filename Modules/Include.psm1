@@ -8483,7 +8483,7 @@ function Get-SysInfo {
         [double]$CPUtdp = 0
     )
 
-    if ($IsWindows) {
+    $Data = if ($IsWindows) {
 
         $CIM_CPU = $null
 
@@ -8547,7 +8547,6 @@ function Get-SysInfo {
         try {
             $CPULoad = ($CPUs | Measure-Object -Property Utilization -Average).Average
             $OSData  = Get-CimInstance -Class Win32_OperatingSystem -Property "TotalVisibleMemorySize","FreePhysicalMemory" -ErrorAction Ignore
-            $HDData  = Get-CimInstance -class Win32_LogicalDisk -namespace "root\CIMV2" -ErrorAction Ignore
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
         }
@@ -8560,21 +8559,10 @@ function Get-SysInfo {
                 UsedGB  = [decimal][Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
                 UsedPercent = if ($OSData.TotalVisibleMemorySize -gt 0) {[Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/$OSData.TotalVisibleMemorySize * 100,2)} else {0}
             }
-            Disks   = @(
-                $HDData | Where-Object {$_.Size -gt 0} | Foreach-Object {             
-                    [PSCustomObject]@{ 
-                        Drive = $_.Name 
-                        Name = $_.VolumeName
-                        TotalGB = [decimal][Math]::Round($_.Size/1GB,1)
-                        UsedGB  = [decimal][Math]::Round(($_.Size-$_.FreeSpace)/1GB,1)
-                        UsedPercent = if ($_.Size -gt 0) {[decimal][Math]::Round(($_.Size-$_.FreeSpace)/$_.Size * 100,2)} else {0}
-                    }
-                } | Select-Object
-            )
+            Disks   = $null
         }
 
         if ($OSData -ne $null) {$OSData.Dispose();$OSData = $null}
-        if ($HDData -ne $null) {$HDData.Dispose();$HDData = $null}
 
     } elseif ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
         Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo$(if ($IsARM) {"-armv8"}).sh" -File | Foreach-Object {
@@ -8584,6 +8572,21 @@ function Get-SysInfo {
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
     }
+
+    $Data.Disks = @(Get-PSDrive -PSProvider FileSystem | Foreach-Object {
+                    $total = $_.Free+$_.Used
+                    [PSCustomObject]@{ 
+                        Drive = $_.Root -replace "\\$"
+                        Name = $_.Name
+                        TotalGB = [decimal][Math]::Round($total/1GB,1)
+                        FreeGB  = [decimal][Math]::Round($_.Free/1GB,1)
+                        UsedGB  = [decimal][Math]::Round($_.Used/1GB,1)
+                        UsedPercent = if ($total -gt 0) {[decimal][Math]::Round($_.Used/$total * 100,2)} else {0}
+                        IsCurrent = "$($_.Root)$($_.CurrentLocation)" -eq "$(Pwd)"
+                    }
+                })
+
+    $Data
 }
 
 function Get-ReadableHex32 {
