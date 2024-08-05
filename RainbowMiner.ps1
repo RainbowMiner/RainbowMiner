@@ -355,6 +355,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$SetupOnly = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$EnableMinersToSaveDAG = $false, # if set to $true, allow saving DAGs to disk for miners that allow this. This will use a lot of diskspace so enable only, if your SSD is big enough.
+    [Parameter(Mandatory = $false)]
     [Switch]$EnableDebugMode = $false,
     [Parameter(Mandatory = $false)]
     [Switch]$EnableVerboseAsyncloader = $false,
