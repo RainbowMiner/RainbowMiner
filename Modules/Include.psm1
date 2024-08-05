@@ -8573,7 +8573,7 @@ function Get-SysInfo {
         }
     }
 
-    $Data.Disks = @(Get-PSDrive -PSProvider FileSystem | Foreach-Object {
+    $Data.Disks = @(Get-PSDrive -PSProvider FileSystem | Where-Object {$_.Name -ne "Temp"} | Foreach-Object {
                     $total = $_.Free+$_.Used
                     [PSCustomObject]@{ 
                         Drive = $_.Root -replace "\\$"
