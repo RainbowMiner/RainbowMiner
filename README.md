@@ -890,6 +890,7 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 - **PreferMinerMargin** = Choose one of your preferred miners, if it's hashrate is not lower than xx% of the top miner's (in percent) [default=5]
 - **EnableCheckMiningConflict** = Enable conflict check if running CPU hungry GPU miners (for weak CPUs) [default=0]
 - **EnableEthashZombieMode** = Enable Ethash mining with slower hashrate, even if the current DAG size doesn't fit into the GPU memory [default=0]
+- **EnableMinersToSaveDAG** = Allow miners to save DAGs to disk (currently TTminer only), costs a lot of space but speeds up the startup [default=0]
 - **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]
 - **EnableDualMiningDuringRentals** = set to 1, if dual mining during rentals should be allowed [default=0]
 - **IgnoreFees** = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
