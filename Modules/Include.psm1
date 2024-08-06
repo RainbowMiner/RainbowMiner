@@ -2069,15 +2069,17 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$WinTitle = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$SetLDLIBRARYPATH = $false
+        [Switch]$SetLDLIBRARYPATH = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
-        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -WinTitle $WinTitle
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -WinTitle $WinTitle
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
     }
 }
 
@@ -2102,7 +2104,9 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
-        [Switch]$SetLDLIBRARYPATH = $false
+        [Switch]$SetLDLIBRARYPATH = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
 
     [int[]]$Running = @()
@@ -2126,7 +2130,9 @@ function Start-SubProcessInBackground {
         Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
     }
     
-    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
+    if ($Priority -lt 10) {
+        Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
+    }
 
     [PSCustomObject]@{
         ScreenName = ""
@@ -2160,7 +2166,9 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [String]$WinTitle = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$SetLDLIBRARYPATH = $false
+        [Switch]$SetLDLIBRARYPATH = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
 
     [int[]]$Running = @()
@@ -2187,7 +2195,9 @@ function Start-SubProcessInConsole {
 
     if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
 
-    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
+    if ($Priority -lt 10) {
+        Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity -Quiet:$Quiet
+    }
 
     if ($IsWindows -and $JobOutput.ProcessId -and $WinTitle -ne "") {
         try {
@@ -2237,7 +2247,9 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [String]$Vendor = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$SetLDLIBRARYPATH = $false
+        [Switch]$SetLDLIBRARYPATH = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
 
     $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
@@ -2453,7 +2465,9 @@ function Set-SubProcessPriority {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0
+        [Int]$CPUAffinity = 0,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
     $ProcessId | Where-Object {$_} | Foreach-Object {
         try {
@@ -2463,7 +2477,7 @@ function Set-SubProcessPriority {
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
+            if (-not $Quiet) {Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"}
         }
     }
 }
@@ -7845,7 +7859,7 @@ function Set-LastStartTime {
 function Start-Autoexec {
 [cmdletbinding()]
 param(
-    [ValidateRange(-2, 3)]
+    [ValidateRange(-2, 10)]
     [Parameter(Mandatory = $false)]
     [Int]$Priority = 0
 )

@@ -27,11 +27,20 @@ if ($StartWithoutTakingFocus) {
     [Kernel32]::CreateProcess($lpApplicationName, $lpCommandLine, [ref] $lpProcessAttributes, [ref] $lpThreadAttributes, $bInheritHandles, $dwCreationFlags, $lpEnvironment, $lpCurrentDirectory, [ref] $lpStartupInfo, [ref] $lpProcessInformation)
     $Process = Get-Process -Id $lpProcessInformation.dwProcessID
 } else {
-    $ProcessParams = @{
-        FilePath         = $FilePath
-        ArgumentList     = $ArgumentList
-        WorkingDirectory = $WorkingDirectory
-        PassThru         = $true
+
+    if ($ArgumentList -eq "") {
+        $ProcessParams = @{
+            FilePath         = $FilePath
+            WorkingDirectory = $WorkingDirectory
+            PassThru         = $true
+        }
+    } else {
+        $ProcessParams = @{
+            FilePath         = $FilePath
+            ArgumentList     = $ArgumentList
+            WorkingDirectory = $WorkingDirectory
+            PassThru         = $true
+        }
     }
 
     if ($IsLinux) {

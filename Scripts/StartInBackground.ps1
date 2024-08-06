@@ -7,6 +7,8 @@ if ($ControllerProcess -eq $null) {return}
 
 $ControllerProcess.Handle >$null
 
+if ($Priority -ge 10) {$Priority = 0}
+
 $PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
 
 $MiningProcess = [PowerShell]::Create().AddScript("Set-Location `"$($WorkingDirectory)`"; $EnvParams (Get-Process -Id `$PID).PriorityClass = `"$($PriorityClass)`"; & `"$($FilePath)`" $($ArgumentList.Replace('"','``"')) *>&1 | Write-Verbose -Verbose")
