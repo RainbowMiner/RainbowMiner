@@ -12,15 +12,15 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "11.8"
-$Version = "2024.3.3b1"
+$Version = "2024.3.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.3b1-ttminer/TT-Miner-2024.3.3b1.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.3b5-ttminer/TT-Miner-2024.3.2.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.3b1-ttminer/TT-Miner-2024.3.3b1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.3b5-ttminer/TT-Miner-2024.3.2.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -137,7 +137,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = if ($Miner_Vendor -eq "CPU") {"-d $($Miner_Device.Index -join ' ') -cpu $($CPUThreads)"}
-                                        else {"-d $($Miner_Device.BusId  -join ' ')"}
+                                        elseif ($Miner_Vendor -eq "NVIDIA") {"-d $($Miner_Device.Type_Vendor_Index -join ' ') -cuda-order"}
+                                        else {"-d $(@($Miner_Device.BusId_Type_Codec_Index | Foreach-Object {$_ + $NVmax}) -join ' ')"}
                         $First = $False
                     }
 
