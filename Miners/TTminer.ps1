@@ -16,11 +16,11 @@ $Version = "2024.3.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.3b5-ttminer/TT-Miner-2024.3.2.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.2-ttminer/TT-Miner-2024.3.2.tar.gz"
 
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.3b5-ttminer/TT-Miner-2024.3.2.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.3.2-ttminer/TT-Miner-2024.3.2.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
