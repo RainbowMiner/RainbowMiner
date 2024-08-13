@@ -53,11 +53,25 @@ if (-not $InfoOnly) {
             })
         }
 
-        $Pool_BLK = if ($Pool_BLK -gt 0) {[int](86400 / $Pool_BLK)} else {$null}
+        $PoolInfo_Request = @()
+        try {
+            $PoolInfo_Request = Invoke-RestMethodAsync "http://yadaminers.pl/market-info" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+
+        if ($Pool_BLK -gt 0) {
+            $Pool_Profit = $PoolInfo_Request.last_btc * $Pool_Request.network.reward * 86400 / $Pool_BLK / $Pool_Request.pool.hashes_per_second
+            $Pool_BLK = [int](86400 / $Pool_BLK)
+        } else {
+            $Pool_Profit = 0
+            $Pool_BLK = $null
+        }
         $Pool_TSL = [int]((Get-UnixTimestamp) - ($Pool_Request.pool.last_five_blocks.timestamp | Measure-Object -Maximum).Maximum)
     }
 
-    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool.hashes_per_second -BlockRate $Pool_BLK
+    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool.hashes_per_second -BlockRate $Pool_BLK
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 }
 
@@ -68,9 +82,9 @@ foreach ($Pool_Region in $Pool_Regions) {
         CoinName      = $Pool_Coin.Name
         CoinSymbol    = $Pool_Currency
         Currency      = $Pool_Currency
-        Price         = 0
-        StablePrice   = 0
-        MarginOfError = 0
+        Price         = if ($Pool_Profit) {$Stat.$StatAverage} else {$null}
+        StablePrice   = if ($Pool_Profit) {$Stat.$StatAverageStable} else {$null}
+        MarginOfError = if ($Pool_Profit) {$Stat.Week_Fluctuation} else {$null}
         Protocol      = "stratum+tcp"
         Host          = "yadaminers.pl"
         Port          = 3333
@@ -85,7 +99,7 @@ foreach ($Pool_Region in $Pool_Regions) {
         Hashrate      = $Stat.HashRate_Live
         BLK           = if ($Pool_BLK -ne $null) {$Stat.BlockRate_Average} else {$null}
         TSL           = $Pool_TSL
-        WTM           = $true
+        WTM           = -not $Pool_Profit
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1
