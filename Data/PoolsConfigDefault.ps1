@@ -469,6 +469,9 @@
         "WoolyPoolySolo" = [PSCustomObject]@{
             Currencies=@("CFX","ETC","RVN","ERG","NEXA")
         }
+        "YadaMiners" = [PSCustomObject]@{
+            Currencies=@("YDA")
+        }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
