@@ -1548,8 +1548,8 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
                 CoinName      = $_.CoinName
                 CoinSymbol    = $_.CoinSymbol
                 Currency      = $_.Currency
-                Price         = 1E-20
-                StablePrice   = 1E-20
+                Price         = 1E-100
+                StablePrice   = 1E-100
                 MarginOfError = 0
                 Protocol      = $_.Protocol
                 Host          = $_.Host
@@ -1563,8 +1563,8 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
                 PoolFee       = 0
                 EthMode       = $_.EthMode
                 Name          = $Name
-                Penalty       = 99
-                PenaltyFactor = 0.01
+                Penalty       = 0
+                PenaltyFactor = 1
 			    Disabled      = $false
 			    HasMinerExclusions = $false
                 Price_0       = 0.0
