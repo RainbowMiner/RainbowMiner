@@ -3084,9 +3084,6 @@ function Invoke-Core {
     })
     if ($Miner_WatchdogTimers -ne $null) {Remove-Variable "Miner_WatchdogTimers"}
 
-    #Disable no longer needed benchmark-only miners
-    $Miners.Where({-not $_.Disabled -and $_.BenchmarkOnly -and $_.HashRates.PSObject.Properties.Value -notcontains $null}).ForEach({$_.Disabled = $true})
-
     #Give API access to the miners information
     $API.Miners = $Miners
 
@@ -3106,6 +3103,7 @@ function Invoke-Core {
         $_.IsFocusWalletMiner = $false
         $_.IsExclusiveMiner = $false
         $_.IsLocked = $false
+        $_.BenchmarkOnly = $false
         $_.PostBlockMining = 0
         $_.IsRunningFirstRounds = $_.Status -eq [MinerStatus]::Running -and $_.Rounds -lt $Session.Config.MinimumMiningIntervals -and -not $Session.IsBenchmarkingRun
     })
@@ -3227,6 +3225,7 @@ function Invoke-Core {
             $ActiveMiner.BLK                = $Miner_Pools.BLK
             $ActiveMiner.NoCPUMining        = [bool]$Miner.NoCPUMining
             $ActiveMiner.NeedsBenchmark     = $Miner.HashRates.PSObject.Properties.Value -contains $null
+            $ActiveMiner.BenchmarkOnly      = $Miner.BenchmarkOnly
             $ActiveMiner.MaxRejectedShareRatio = $Miner_MaxRejectedShareRatio
             $ActiveMiner.MiningPriority     = $Miner.MiningPriority
             $ActiveMiner.MiningAffinity     = $Miner.MiningAffinity
@@ -3299,6 +3298,7 @@ function Invoke-Core {
                     EnvVars              = $Miner.EnvVars
                     NoCPUMining          = [bool]$Miner.NoCPUMining
                     NeedsBenchmark       = $Miner.HashRates.PSObject.Properties.Value -contains $null
+                    BenchmarkOnly        = $Miner.BenchmarkOnly
                     MaxRejectedShareRatio= $Miner_MaxRejectedShareRatio
                     MiningPriority       = $Miner.MiningPriority
                     MiningAffinity       = $Miner.MiningAffinity
@@ -3338,7 +3338,7 @@ function Invoke-Core {
         
         #Get most profitable miner combination
 
-        $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$_.ExtendInterval}, {$_.Algorithm[0] -eq $_.BaseAlgorithm[0]})
+        $ActiveMiners_Sorted = @($Global:ActiveMiners.Where({$_.Enabled -and ($_.NeedsBenchmark -or -not $_.BenchmarkOnly)}) | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {$_.ExtendInterval}, {$_.Algorithm[0] -eq $_.BaseAlgorithm[0]})
 
         $BestMiners = @()
 
@@ -3385,7 +3385,7 @@ function Invoke-Core {
                 }
             }
         }
-        if ($BestMiner  -ne $null) {Remove-Variable "BestMiner"}
+        if ($BestMiner -ne $null) {Remove-Variable "BestMiner"}
 
         $Check_Profitability = $false
         if ($Session.Config.UsePowerPrice -and $MinersNeedingBenchmarkCount -eq 0) {
