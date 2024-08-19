@@ -26,7 +26,8 @@ if ($IsLinux) {
 $Commands = [PSCustomObject[]]@(
     #CPU
     [PSCustomObject]@{MainAlgorithm = "Flex";                        MinMemGB = 1;   Params = "-a Flex";          Vendor = @("CPU"); ExtendInterval = 2} #Flex
-    [PSCustomObject]@{MainAlgorithm = "XelisHashV2";                 MinMemGB = 1;   Params = "-a Xelis";         Vendor = @("CPU"); ExtendInterval = 2} #Flex
+    [PSCustomObject]@{MainAlgorithm = "SpectreX";                    MinMemGB = 1;   Params = "-a SpectreX";      Vendor = @("CPU"); ExtendInterval = 2} #Spectre
+    [PSCustomObject]@{MainAlgorithm = "XelisHashV2";                 MinMemGB = 1;   Params = "-a Xelis";         Vendor = @("CPU"); ExtendInterval = 2} #Xelis
 
     #GPU
     [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";              MinMemGB = 2;   Params = "-a Blake3";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #Blake3Alephium
@@ -64,7 +65,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EthashB3"      ; DAG = $true; MinMemGB = 3;   Params = "-a ETHASHB3";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "MiningRigRentals"; SecondaryAlgorithm = "SHA512256d"; SecondaryParams = "-a Sha512256d"} #EthashB3 + SHA512256d
 )
 
-$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BNBTC","BTC","BTRM","BUT","CLO","CLORE","Coin","EGAZ","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","IRON","JGC","KAW","KCN","LAB","LTR","MEOW","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XEL","XNA","YERB","ZANO","ZELS","ZIL","ZKBTC")
+$CoinSymbols = @("AKA","ALPH","ALT","ARL","AVS","BBC","BCH","BLACK","BNBTC","BTC","BTRM","BUT","CLO","CLORE","Coin","EGAZ","EGEM","ELH","EPIC","ETC","ETHF","ETHO","ETHW","ETI","ETP","EVOX","EVR","EXP","FIRO","FITA","FRENS","GRAMS","GSPC","HVQ","IRON","JGC","KAW","KCN","LAB","LTR","MEOW","MEWC","NAPI","NEOX","NOVO","OCTA","PAPRY","PRCO","REDE","RTH","RTM","RVN","RXD","SATO","SATOX","SCC","SERO","SPR","THOON","TTM","UBQ","VBK","VEIL","VKAX","VTE","XEL","XNA","YERB","ZANO","ZELS","ZIL","ZKBTC")
 #$a = @($s -split "[\r\n]+" | Foreach-Object {$_ -replace "^[\w]+\s+" -split "[\s,;]+"} | Where-Object {$_ -ne ""} | Sort-Object -Unique) -join '","'
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
