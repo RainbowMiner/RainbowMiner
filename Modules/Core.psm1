@@ -2648,6 +2648,7 @@ function Invoke-Core {
             Profit_Cost   = 0.0
             Profit_Cost_Bias = 0.0
             Disabled      = $false
+            BenchmarkOnly = $Pools.$($Miner_AlgoNames[0]).BenchmarkOnly -or ($Miner_AlgoNames.Count -gt 1 -and $Pools.$($Miner_AlgoNames[1]).BenchmarkOnly)
         }
 
         if ($Miner.DevFee -eq $null -or $Miner.DevFee -isnot [PSCustomObject]) {$Miner_Setup.DevFee = $(if ($Miner_AlgoNames.Count -eq 1) {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee}} else {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee;$Miner_AlgoNames[1] = 0}})}
@@ -3082,6 +3083,9 @@ function Invoke-Core {
         $Miner_WatchdogTimers.Count -lt <#stage#>2 -and $Miner_WatchdogTimers.Where({$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm}).Count -lt <#stage#>1 -and ($Session.Config.DisableDualMining -or $Session.Config.EnableDualMiningDuringRentals -or $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or -not $Miner.Pools.PSObject.Properties.Value.Where({$_.Exclusive}).Count)
     })
     if ($Miner_WatchdogTimers -ne $null) {Remove-Variable "Miner_WatchdogTimers"}
+
+    #Disable no longer needed benchmark-only miners
+    $Miners.Where({-not $_.Disabled -and $_.BenchmarkOnly -and $_.HashRates.PSObject.Properties.Value -notcontains $null}).ForEach({$_.Disabled = $true})
 
     #Give API access to the miners information
     $API.Miners = $Miners

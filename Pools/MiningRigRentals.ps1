@@ -1559,6 +1559,7 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
                 Region        = $_.Region
                 SSL           = $_.SSL
                 SSLSelfSigned = $_.SSLSelfSigned
+                BenchmarkOnly = $true
                 Updated       = (Get-Date).ToUniversalTime()
                 PoolFee       = 0
                 EthMode       = $_.EthMode
