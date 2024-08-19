@@ -83,6 +83,7 @@ class Miner {
     [Bool]$EnableAutoPort = $false
     [Bool]$NoCPUMining = $false
     [Bool]$NeedsBenchmark = $false
+    [Bool]$BenchmarkOnly = $false
     [Bool]$SetLDLIBRARYPATH = $false
     [Bool]$SkipWaitOnShutDown = $false
     [Int]$MultiProcess = 0
