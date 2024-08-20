@@ -1047,20 +1047,27 @@ function Invoke-Core {
 
                         if ($_.verify -eq $null -or "$(Invoke-Expression "`$Fork_Request.$($_.verify)")" -eq $_.verify_value) {
                             $val = $null
-                            $_.data -split "\." | Foreach-Object {
-                                if ($_ -match '^(.+)\[([^\]]+)\]$') {
-                                    $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Fork_Request."$($Matches[1])"}
-                                    $arrp = $Matches[2].Split("=",2)
-                                    if ($arrp[0] -match '^\d+$') {
-                                        $val = $val[[int]$arrp[0]]
+
+                            if ($_.data -eq $null) {
+                                $val = $Fork_Request
+                            } else {
+                                $_.data -split "\." | Foreach-Object {
+                                    if ($_ -match '^(.+)\[([^\]]+)\]$') {
+                                        $val = if ($val -ne $null) {$val."$($Matches[1])"} else {$Fork_Request."$($Matches[1])"}
+                                        $arrp = $Matches[2].Split("=",2)
+                                        if ($arrp[0] -match '^\d+$') {
+                                            $val = $val[[int]$arrp[0]]
+                                        } else {
+                                            $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                                        }
                                     } else {
-                                        $val = $val | ?{$_."$($arrp[0])" -eq $arrp[1]}
+                                        $val = if ($val -ne $null) {$val.$_} else {$Fork_Request.$_}
                                     }
-                                } else {
-                                    $val = if ($val -ne $null) {$val.$_} else {$Fork_Request.$_}
                                 }
                             }
-                            $Fork_Meets_Target = [int64]$val -ge $_.height
+                            if ("$($val)".Trim() -match "^\d+$") {
+                                $Fork_Meets_Target = [int64]$val -ge $_.height
+                            }
                         }
                     } catch {
                         if ($Error.Count){$Error.RemoveAt(0)}

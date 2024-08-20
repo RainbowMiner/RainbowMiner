@@ -1,0 +1,9 @@
+{
+    "active":  true,
+    "symbol":  "PEPEW",
+    "algorithm":  "XelisV2PepePow",
+    "height":  1930001,
+    "rpc":  "https://explorer.pepepow.org/api/getblockcount",
+    "data":  null,
+    "verify":  null
+}
