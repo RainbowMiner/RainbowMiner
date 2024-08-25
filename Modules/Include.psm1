@@ -8587,6 +8587,15 @@ function Get-SysInfo {
         }
     }
 
+    if (-not $Data) {
+        $Data = [PSCustomObject]@{
+            CpuLoad = 0
+            Cpus = @([PSCustomObject]@{Clock=0;Temperature=0;Method="nop"})
+            Memory = [PSCustomObject]@{TotalGB=0;UsedGB=0;UsedPercent=0}
+            Disks = $null
+        }
+    }
+
     $Data.Disks = @(Get-PSDrive -PSProvider FileSystem | Where-Object {$_.Name -ne "Temp"} | Foreach-Object {
                     $total = $_.Free+$_.Used
                     [PSCustomObject]@{ 
