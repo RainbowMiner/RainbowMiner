@@ -2,9 +2,22 @@
 
 LC_ALL=C awk 'BEGIN {
         printf "{\n"
-        while(getline  < "/proc/loadavg") {
-                printf "  \"CpuLoad\": %.2f,\n", $(NF-3)
+        load = 0
+        if ( (getline < file) > 0 ) {
+                close(file)
+                while(getline < file) {
+                        load = $(NF-3)
+                }
         }
+        else if (("uptime" | getline cmd_output) > 0) {
+                if (index(cmd_output, "load average:") > 0) {
+                        split(cmd_output, a, "load average: ")
+                        split(a[2], loads, ", ")
+                        load = loads[3]
+                }
+        }
+
+        printf "  \"CpuLoad\": %.2f,\n", load
 
         if ((getline _ < "/opt/rainbowminer/bin/cpuinfo") >= 0) {
                 printf "  \"Cpus\": [\n"
