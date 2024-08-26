@@ -79,8 +79,6 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     }
 
-    if ($Pool_Algorithm_Norm -eq "FiroPoW") {$Pool_Algorithm_Norm = "SCCPow"}
-
     if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
     if (-not $InfoOnly -and $Pool_CoinSymbol -and (($CoinSymbol -and $Pool_CoinSymbol -notin $CoinSymbol) -or ($ExcludeCoinSymbol -and $Pool_CoinSymbol -in $ExcludeCoinSymbol))) {return}
 
