@@ -15,7 +15,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_AllRegions = @("de","es","fi","ru","ca","us","us2","us3","mx","br","hk","kr","in","sg","tr","au")
+$Pool_AllRegions = @("de","es","fi","ru","ca","us","us2","us3","mx","br","kz","hk","kr","in","sg","tr","au")
 
 #new es
 
@@ -51,6 +51,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "PYI";   port = 1177; fee = 0.9; rpc = "pyrin"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "QRL";   port = 1166; fee = 0.9; rpc = "qrl"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "RVN";   port = 1140; fee = 0.9; rpc = "ravencoin"; region = $Pool_AllRegions; diffFactor = [Math]::Pow(2,32)}
+    [PSCustomObject]@{symbol = "SAL";   port = 1230; fee = 0.9; rpc = "salvium"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "SDR";   port = 1213; fee = 0.9; rpc = "sedra"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XEL";   port = 1225; fee = 0.0; rpc = "xelis"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "ZEPH";  port = 1123; fee = 0.9; rpc = "zephyr"; region = $Pool_AllRegions}
