@@ -27,7 +27,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cpupower"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #CPUpower
     [PSCustomObject]@{MainAlgorithm = "flex"             ;              Params = ""; Fee = 2.00;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|MoneroOcean"} #Flex
     [PSCustomObject]@{MainAlgorithm = "ghostrider"       ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|MoneroOcean"} #Ghostrider/RPT
-    [PSCustomObject]@{MainAlgorithm = "xelishashv2_pepepow";            Params = ""; Fee = 1.50;               Vendor = @("CPU")} #XelishashV2Pepepow/PEPEW
+    [PSCustomObject]@{MainAlgorithm = "xelishashv2_pepew";            Params = ""; Fee = 1.50;               Vendor = @("CPU")} #XelishashV2Pepepow/PEPEW
     [PSCustomObject]@{MainAlgorithm = "mike"             ;              Params = ""; Fee = 0.85;               Vendor = @("CPU"); FaultTolerance = 8; CpuFeatures = @("aes","sse42"); ExcludePoolName = "C3pool|MoneroOcean"} #Mike/VKAX
     [PSCustomObject]@{MainAlgorithm = "minotaurx"        ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Minotaurx/LCC
     [PSCustomObject]@{MainAlgorithm = "panthera"         ;              Params = ""; Fee = 0.85;               Vendor = @("CPU")} #Panthera
