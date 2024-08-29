@@ -1133,7 +1133,7 @@ class Claymore : Miner {
         $HashRate_Name    = [String]$this.Algorithm[0]
         $HashRate_Value   = [Double]($Data.result[2] -split ";")[0]
 
-        if ($this.Algorithm -match "^ethash|^etchash|^firopow|^kawpow|^neoscrypt|^ubqhash|progpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
+        if ($this.Algorithm -match "^ethash|^etchash|^firopow|^kawpow|^neoscrypt|^ubqhash|progpow|^sccpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
 
         $HashRate_Value = [Int64]$HashRate_Value
 
@@ -1153,7 +1153,7 @@ class Claymore : Miner {
 
             $HashRate_Value = [Double]($Data.result[4] -split ";")[0]
 
-            if ($this.Algorithm -match "^ethash|^etchash|^kawpow|^neoscrypt|progpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
+            if ($this.Algorithm -match "^ethash|^etchash|^kawpow|^neoscrypt|progpow|^sccpow" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
 
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
                 $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
