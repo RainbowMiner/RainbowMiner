@@ -11,15 +11,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.6.2"
+$Version = "2.6.3"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-srbminermulti/SRBMiner-Multi-2-6-2-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.3-srbminermulti/SRBMiner-Multi-2-6-3-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.2-srbminermulti/SRBMiner-Multi-2-6-2-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.3-srbminermulti/SRBMiner-Multi-2-6-3-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -64,6 +64,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludePoolName="Nicehash"} #Autolykos2/ERGO
     [PSCustomObject]@{MainAlgorithm = "blake3_alephium"  ;              Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #Alephium/ALPH
     [PSCustomObject]@{MainAlgorithm = "blake3_decred"    ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD","INTEL","NVIDIA")} #Blake3Decred/DCR
+    [PSCustomObject]@{MainAlgorithm = "blocx_autolykos2" ;              Params = ""; Fee = 1.00;               Vendor = @("AMD","INTEL","NVIDIA"); ExcludePoolName="Nicehash"} #BlocxAutolykos2/BLOCKX
     [PSCustomObject]@{MainAlgorithm = "cryptonight_ccx"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightCCX
     [PSCustomObject]@{MainAlgorithm = "cryptonight_gpu"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD","NVIDIA")} #CryptonightGPU
     [PSCustomObject]@{MainAlgorithm = "cryptonight_turtle";             Params = ""; Fee = 0.85;               Vendor = @("AMD","CPU")} #CryptonightTurtle
@@ -121,6 +122,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL"); SecondaryAlgorithm = "pyrinhash"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + PyrinHash
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "sha256dt"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + SHA256dt/NOVO
     [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "sha512_256d_radiant"; ExcludePoolName="Nicehash"} #Autolykos2/ERGO + Radiant
+
+    [PSCustomObject]@{MainAlgorithm = "blockx_autolykos2";              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "blake3_alephium"; ExcludePoolName="Nicehash"} #BlockxAutolykos2/BLOCKX + Alephium/ALPH
+    [PSCustomObject]@{MainAlgorithm = "blockx_autolykos2";              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "blake3_decred"; ExcludePoolName="Nicehash"} #BlockxAutolykos2/BLOCKX + Decred/DCR
+    [PSCustomObject]@{MainAlgorithm = "blockx_autolykos2";              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "heavyhash"; ExcludePoolName="Nicehash"} #BlockxAutolykos2/BLOCKX + HeavyHash/OBTC
+    [PSCustomObject]@{MainAlgorithm = "blockx_autolykos2";              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL"); SecondaryAlgorithm = "karlsenhash"; ExcludePoolName="Nicehash"} #BlockxAutolykos2/BLOCKX + KarlsenHash
+    [PSCustomObject]@{MainAlgorithm = "blockx_autolykos2";              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL"); SecondaryAlgorithm = "pyrinhash"; ExcludePoolName="Nicehash"} #BlockxAutolykos2/BLOCKX + PyrinHash
+    [PSCustomObject]@{MainAlgorithm = "blockx_autolykos2";              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "sha256dt"; ExcludePoolName="Nicehash"} #BlockxAutolykos2/BLOCKX + SHA256dt/NOVO
+    [PSCustomObject]@{MainAlgorithm = "blockx_autolykos2";              Params = ""; Fee = 1.50;               Vendor = @("AMD","INTEL","NVIDIA"); SecondaryAlgorithm = "sha512_256d_radiant"; ExcludePoolName="Nicehash"} #BlockxAutolykos2/BLOCKX + Radiant
 
     [PSCustomObject]@{MainAlgorithm = "dynex"            ;              Params = ""; Fee = 2.50;               Vendor = @("AMD","INTEL"); SecondaryAlgorithm = "blake3_alephium"; ExcludePoolName="Nicehash"} #DynexSolve/DNX + Alephium/ALPH
     [PSCustomObject]@{MainAlgorithm = "dynex"            ;              Params = ""; Fee = 2.50;               Vendor = @("AMD","INTEL"); SecondaryAlgorithm = "sha256dt"; ExcludePoolName="Nicehash"} #DynexSolve/DNX + SHA256dt/NOVO 
