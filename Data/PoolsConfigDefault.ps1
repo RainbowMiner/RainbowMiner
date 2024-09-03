@@ -50,6 +50,9 @@
             SetupFields=[PSCustomObject]@{API_Key = "Enter your Binance API key (adds balance)";API_Secret = "Enter your Binance API secret (pulls balance)";EnableShowWallets="List your Binance wallets (0=no, 1=yes)"}
             Currencies=@("ETC")
         }
+        "BlocxZone" = [PSCustomObject]@{
+            Currencies=@("BLOCX")
+        }
         "C3pool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your C3pool password (eMail or Password)"}
