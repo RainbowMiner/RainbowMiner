@@ -71,7 +71,7 @@ param(
     [Array]$ExcludeFromWatchdog = @(), #enter poolnames, minernames or algorithms to be excluded from watchdog
     [Parameter(Mandatory = $false)]
     [Alias("Uri", "Url")]
-    [String]$MinerStatusUrl = "https://rbminer.net", #i.e https://multipoolminer.io/monitor/miner.php
+    [String]$MinerStatusUrl = "https://api.rbminer.net", #i.e https://multipoolminer.io/monitor/miner.php
     [Parameter(Mandatory = $false)]
     [String]$MinerStatusKey = "", #will be generated during setup
     [Parameter(Mandatory = $false)]
@@ -385,7 +385,7 @@ if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyComm
 
 Initialize-Session
 
-$Session.Version         = "4.9.3.7"
+$Session.Version         = "4.9.3.8"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
