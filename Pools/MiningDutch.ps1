@@ -22,7 +22,7 @@ if (-not $User -and -not $InfoOnly) {return}
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/miningdutch.json" -retry 3 -retrywait 500 -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/miningdutch.json" -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

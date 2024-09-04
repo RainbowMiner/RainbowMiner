@@ -22,7 +22,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/miningdutchcoins.json" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/miningdutchcoins.json" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

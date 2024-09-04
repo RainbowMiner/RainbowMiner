@@ -21,7 +21,7 @@ $Pool_Region_Default = "asia"
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://rbminer.net/api/data/f2pool2022.json" -tag $Name -cycletime 300
+    $Pool_Request = Invoke-RestMethodAsync "http://api.rbminer.net/data/f2pool2022.json" -tag $Name -cycletime 300
     $Pool_Request.PSObject.Properties.Value.stratum.region | Select-Object -Unique | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 }
 catch {

@@ -1305,11 +1305,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
         "/resetworkers" {
             if ($Session.Config.MinerStatusKey -match "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$") {
-                $Result = Invoke-GetUrl "https://rbminer.net/api/reset_workers.php?user=$($Session.Config.MinerStatusKey)" -timeout 10
+                $Result = Invoke-GetUrl "https://api.rbminer.net/reset_workers.php?user=$($Session.Config.MinerStatusKey)" -timeout 10
                 if ($Result.status) {
-                    $Data = "The signal to delete all offline workers was successfully sent to rbminer.net."
+                    $Data = "The signal to delete all offline workers was successfully sent to api.rbminer.net."
                 } else {
-                    $Data = "Failed to send reset signal to rbminer.net."
+                    $Data = "Failed to send reset signal to api.rbminer.net."
                 }
                 if ($Result) {Remove-Variable "Result"}
             } else {
@@ -1456,7 +1456,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                             $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
                             Compare-Object $Session.GetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GetTicker.Add($_.InputObject.ToUpper()) > $null}
                             $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
-                            $Parameters.url = "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)"
+                            $Parameters.url = "https://api.rbminer.net/cmc.php?symbols=$($SymbolStr)"
                             Remove-Variable "RatesUri" -ErrorAction Ignore
                             Remove-Variable "RatesQry" -ErrorAction Ignore
                             Remove-Variable "SymbolStr" -ErrorAction Ignore

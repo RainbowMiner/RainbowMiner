@@ -5,11 +5,11 @@ if (Test-Path $ConfigFile) {
     try {
         $Config_Content = Get-Content $ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($Config_Content.MinerStatusKey -match "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$") {
-            $Result = Invoke-RestMethod "https://rbminer.net/api/reset_workers.php?user=$($Config_Content.MinerStatusKey)" -timeout 10 -UseBasicParsing
+            $Result = Invoke-RestMethod "https://api.rbminer.net/reset_workers.php?user=$($Config_Content.MinerStatusKey)" -timeout 10 -UseBasicParsing
             if ($Result.status) {
-                $Data = "The signal to delete all offline workers was successfully sent to rbminer.net."
+                $Data = "The signal to delete all offline workers was successfully sent to api.rbminer.net."
             } else {
-                $Data = "Failed to send reset signal to rbminer.net."
+                $Data = "Failed to send reset signal to api.rbminer.net."
             }
             if ($Result) {Remove-Variable "Result"}
         } else {

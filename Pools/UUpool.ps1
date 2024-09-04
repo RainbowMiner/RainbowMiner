@@ -23,7 +23,7 @@ $Pool_Request = [PSCustomObject]@{}
 
 $Pool_Request = @()
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/uupool.json" -retry 3 -retrywait 200 -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/uupool.json" -retry 3 -retrywait 200 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

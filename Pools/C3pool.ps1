@@ -20,7 +20,7 @@ if (-not $InfoOnly -and -not $Wallets.XMR -and -not $Password) {return}
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/c3pool.json" -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/c3pool.json" -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

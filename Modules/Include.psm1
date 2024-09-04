@@ -222,7 +222,7 @@ function Get-PoolPayoutCurrencies {
 function Get-UnprofitableAlgos {
     $Request = [PSCustomObject]@{}
     try {
-        $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable3.json" -cycletime 3600 -Jobkey "unprofitable3"
+        $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/unprofitable3.json" -cycletime 3600 -Jobkey "unprofitable3"
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -246,7 +246,7 @@ function Get-UnprofitableAlgos {
 function Get-UnprofitableCpuAlgos {
     $Request = [PSCustomObject]@{}
     try {
-        $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable-cpu.json" -cycletime 3600 -Jobkey "unprofitablecpu"
+        $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/unprofitable-cpu.json" -cycletime 3600 -Jobkey "unprofitablecpu"
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -273,7 +273,7 @@ function Get-CoinSymbol {
     
     if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
-            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/coins.json" -cycletime 86400 -Jobkey "coins"
+            $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -3531,7 +3531,7 @@ function Get-Device {
                             $Device_Name = "$($Device_Name)$(if ($Device_Name) {" "})$($Model)"
                         } elseif ($InstanceId -and $InstanceId -match "VEN_([0-9A-F]{4}).+DEV_([0-9A-F]{4}).+SUBSYS_([0-9A-F]{4,8})") {
                             try {
-                                $Result = Invoke-GetUrl "https://rbminer.net/api/pciids.php?ven=$($Matches[1])&dev=$($Matches[2])&subsys=$($Matches[3])"
+                                $Result = Invoke-GetUrl "https://api.rbminer.net/pciids.php?ven=$($Matches[1])&dev=$($Matches[2])&subsys=$($Matches[3])"
                                 if ($Result.status) {
                                     $Device_Name = if ($Result.data -match "\[(.+)\]") {$Matches[1]} else {$Result.data}
                                     if ($Vendor_Name -eq "AMD" -and $Device_Name -notmatch "Radeon") {$Device_Name = "Radeon $($Device_Name)"}
@@ -4862,7 +4862,7 @@ function Get-EthDAGSizes {
     if ($EnableRemoteUpdate) {
         $Request = [PSCustomObject]@{}
         try {
-            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/ethdagsizes.json" -cycletime 3600 -Jobkey "ethdagsizes"
+            $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/ethdagsizes.json" -cycletime 3600 -Jobkey "ethdagsizes"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -7469,7 +7469,7 @@ Param(
     if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
 
     if ($JobHost) {
-        if ($JobHost -eq "rbminer.net" -and $AsyncLoader.HostDelays.$JobHost -eq $null) {$AsyncLoader.HostDelays.$JobHost = 200}
+        if (($JobHost -eq "rbminer.net" -or $JobHost -eq "api.rbminer.net") -and $AsyncLoader.HostDelays.$JobHost -eq $null) {$AsyncLoader.HostDelays.$JobHost = 200}
         if ($AsyncLoader.HostDelays.$JobHost -eq $null -or $delay -gt $AsyncLoader.HostDelays.$JobHost) {
             $AsyncLoader.HostDelays.$JobHost = $delay
         }

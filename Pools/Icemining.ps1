@@ -20,7 +20,7 @@ $Pool_Fee = 1
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/icemining2.json" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/icemining2.json" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

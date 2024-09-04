@@ -19,7 +19,7 @@ if (-not ($WTMWallets | Measure-Object).Count) {return}
 $ok = $false
 $Pool_Request = @()
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/hashrateno.json" -tag $Name -cycletime 240
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/hashrateno.json" -tag $Name -cycletime 240
     if ($Pool_Request -and ($Pool_Request | Measure-Object).Count -ge 10) {
         $ok = $true
     } else {
@@ -72,7 +72,7 @@ if ($ok) {
 $ok = $false
 $Pool_Request = @()
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/minerstat.json" -tag $Name -cycletime 240
+    $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/minerstat.json" -tag $Name -cycletime 240
     if ($Pool_Request -and ($Pool_Request | Measure-Object).Count -ge 10) {
         $ok = $true
     } else {

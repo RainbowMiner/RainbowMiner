@@ -17,7 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Request = [PSCustomObject]@{}
 try {
-    $Pools_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/k1pool.json" -tag "K1Pool" -timeout 30 -cycletime 3600 
+    $Pools_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/k1pool.json" -tag "K1Pool" -timeout 30 -cycletime 3600 
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
