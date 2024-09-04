@@ -1853,6 +1853,10 @@ try {
         $RemoveMinerStats += @("*-OneZeroMiner-*_XelisHashV2_HashRate.txt")
     }
 
+    if ($Version -le (Get-Version "4.9.3.8")) {
+        $CacheCleanup = $true
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
