@@ -1857,6 +1857,10 @@ try {
         $CacheCleanup = $true
     }
 
+    if ($Version -le (Get-Version "4.9.3.9")) {
+        Get-ChildItem ".\Stats\Miners" -Filter "CPU-Xmrig**_HashRate.txt" -File | Where-Object {$_.Name -match "_(Flex|Panthera|RandomKEVA|RandomXEQ|Take2)_"} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
