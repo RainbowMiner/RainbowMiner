@@ -113,7 +113,7 @@ if ($IsLinux) {
     $CudaLib = "libxmrig-cuda.so"
 } else {
 
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.22.0.3-xmrig/xmrig-6.22.0.3-msvc-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v6.22.0.3-xmrig/xmrig-6.22.0.3fix-msvc-win64.7z"
 
     $CudaData = @(
         [PSCustomObject]@{
