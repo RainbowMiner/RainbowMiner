@@ -233,18 +233,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cn-lite/1";                  MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico";                    MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "cn-pico/tlo";                MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
-    #[PSCustomObject]@{MainAlgorithm = "flex";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); ForceMO = $true}
+    [PSCustomObject]@{MainAlgorithm = "flex";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); ForceMO = $true}
     [PSCustomObject]@{MainAlgorithm = "ghostrider";                 MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8; UseMO = $true}
     [PSCustomObject]@{MainAlgorithm = "kawpow";        DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "kawpow2g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
     [PSCustomObject]@{MainAlgorithm = "kawpow3g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
     [PSCustomObject]@{MainAlgorithm = "kawpow4g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
     [PSCustomObject]@{MainAlgorithm = "kawpow5g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
-    #[PSCustomObject]@{MainAlgorithm = "panthera";                   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU"); ForceMO = $true}
+    [PSCustomObject]@{MainAlgorithm = "panthera";                   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU"); ForceMO = $true}
     [PSCustomObject]@{MainAlgorithm = "rx/0";                       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/arq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 3; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/grft";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")} #CUDA Plugin v6.12.0 doesn't support GRFT, v6.15.0 has memory bug
-    #[PSCustomObject]@{MainAlgorithm = "rx/keva";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ForceMO = $true}
+    [PSCustomObject]@{MainAlgorithm = "rx/keva";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA"); ForceMO = $true}
     #[PSCustomObject]@{MainAlgorithm = "rx/loki";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/sfx";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/wow";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
