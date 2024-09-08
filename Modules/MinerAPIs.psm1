@@ -2295,9 +2295,10 @@ class OneZeroMiner : Miner {
 
         #$Version = if ($Data.version -match "(\d\.[\d\.]+)") {$Matches[1]} else {$null}
 
-        $HashRate_Name  = [String]$this.Algorithm[0]
+        $HashRate_Name   = [String]$this.Algorithm[0]
+        $HashRate_Name_0 = [String]$this.BaseAlgorithm[0]
 
-        $Data_Algos     = $Data.algos | WHere-Object {$HashRate_Name -eq (Get-Algorithm $_.name)}
+        $Data_Algos     = $Data.algos | WHere-Object {$HashRate_Name_0 -eq (Get-Algorithm $_.name)}
 
         $HashRate_Value = [Double]($Data_Algos.total_hashrate)
 
