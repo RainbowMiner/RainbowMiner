@@ -4878,8 +4878,9 @@ function Get-EthDAGSizes {
     $Global:GlobalEthDAGSizes = [PSCustomObject]@{}
     $Request.PSObject.Properties | Foreach-Object {$Global:GlobalEthDAGSizes | Add-Member $_.Name ($_.Value/1Gb)}
 
+    $SingleAlgos = $Global:GlobalCoinsDB.Values | Group-Object -Property Algo | Where-Object {$_.Count -eq 1} | Select-Object -ExpandProperty Name
     $Global:GlobalAlgorithms2EthDagSizes = [PSCustomObject]@{}
-    $Global:GlobalCoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Global:GlobalEthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Foreach-Object {
+    $Global:GlobalCoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Global:GlobalEthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -in $SingleAlgos -and $Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Foreach-Object {
         if ($Global:GlobalAlgorithms2EthDagSizes.$Algo -eq $null) {
             $Global:GlobalAlgorithms2EthDagSizes | Add-Member $Algo $Global:GlobalEthDAGSizes.$Coin -Force
         } elseif ($Global:GlobalAlgorithms2EthDagSizes.$Algo -lt $Global:GlobalEthDAGSizes.$Coin) {
