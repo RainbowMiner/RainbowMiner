@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "FiroPow"       ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPow";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "ZergPool|ZPool"} #FiroPow
     [PSCustomObject]@{MainAlgorithm = "SCCPow"        ; DAG = $true; MinMemGB = 3;   Params = "-a FiroPowSCC";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; ExcludePoolName = "ZergPool|ZPool"} #SCCPow
     [PSCustomObject]@{MainAlgorithm = "FishHash"      ; DAG = $true; MinMemGB = 3;   Params = "-a FishHash";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #FishHash/IRON
-    [PSCustomObject]@{MainAlgorithm = "Take2"         ;              MinMemGB = 1;   Params = "-a Ghostrider";    Vendor = @("CPU","NVIDIA"); ExtendInterval = 2; DevFee = 1.0} #Ghostrider
+    [PSCustomObject]@{MainAlgorithm = "Take2"         ;              MinMemGB = 1;   Params = "-a Ghostrider";    Vendor = @("CPU","NVIDIA"); FaultTolerance = 10; ExtendInterval = 3; DevFee = 1.0} #Ghostrider
     [PSCustomObject]@{MainAlgorithm = "KawPow"        ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow2g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
     [PSCustomObject]@{MainAlgorithm = "KawPow3g"      ; DAG = $true; MinMemGB = 3;   Params = "-a KawPow";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #KAWPOW
