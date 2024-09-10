@@ -695,6 +695,7 @@
     "pufferfish2bmb": "Pufferfish2",
     "purk": "Wildkeccak",
     "pyrinhash": "HeavyHashPyrin",
+    "pyrinhashv2": "PyrinHashV2",
     "qitmeer": "MeerKeccakV1",
     "quark": "Quark",
     "quarkcoin": "Quark",
