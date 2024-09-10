@@ -1,0 +1,21 @@
+[
+    {
+        "active":  true,
+        "symbol":  "KLS",
+        "algorithm":  "KarlsenHashV2",
+        "height":  26962009,
+        "rpc":  "https://api.karlsencoin.com/info/blockdag",
+        "data":  "virtualDaaScore",
+        "verify":  "networkName",
+        "verify_value":  "karlsen-mainnet"
+    },
+    {
+        "active":  true,
+        "symbol":  "PYI",
+        "algorithm":  "PyrinHashV2",
+        "height":  27037930,
+        "rpc":  "https://pyi.2miners.com/api/stats",
+        "data":  "nodes[0].height",
+        "verify":  null
+    }
+]
