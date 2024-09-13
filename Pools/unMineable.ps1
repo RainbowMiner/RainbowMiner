@@ -48,12 +48,12 @@ $Pools_Data = @(
     [PSCustomObject]@{algo = "ethashb3";   port = @(3333,4444); ethproxy = $null;          rpc = "ethashb3";   divisor = 1;   mh = 1e12; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "firopow";    port = @(3333,4444); ethproxy = $null;          rpc = "firopow";    divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "fishhash";   port = @(3333,4444); ethproxy = "stratum";      rpc = "fishhash";   divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "karlsenhash"; port = @(3333,4444); ethproxy = $null;         rpc = "karlsenhash"; divisor = 1;  mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "karlsenhashv2"; port = @(3333,4444); ethproxy = $null;         rpc = "karlsenhash"; divisor = 1;  mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kawpow";     port = @(3333,4444); ethproxy = "stratum";      rpc = "kp";         divisor = 1e6; mh = 100; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "kheavyhash"; port = @(3333,4444); ethproxy = $null;          rpc = "kheavyhash"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "nexapow";    port = @(3333,4444); ethproxy = $null;          rpc = "nexapow";    divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "octopus";    port = @(3333,4444); ethproxy = $null;          rpc = "octopus";    divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
-    [PSCustomObject]@{algo = "pyrinhash";  port = @(3333,4444); ethproxy = $null;          rpc = "pyrinhash";  divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
+    [PSCustomObject]@{algo = "pyrinhashv2";  port = @(3333,4444); ethproxy = $null;          rpc = "pyrinhash";  divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "randomx";    port = @(3333,4444); ethproxy = $null;          rpc = "rx";         divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "sha512256d"; port = @(3333,4444); ethproxy = $null;          rpc = "sha512256d"; divisor = 1;   mh = 1e9; region = @("us","ca","eu","asia")}
     [PSCustomObject]@{algo = "ghostrider"; port = @(3333,4444); ethproxy = $null;          rpc = "ghostrider"; divisor = 1;   mh = 5e4; region = @("us","ca","eu","asia")}
