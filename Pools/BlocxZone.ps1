@@ -76,16 +76,16 @@ if (-not $InfoOnly) {
         if ($Error.Count){$Error.RemoveAt(0)}
     }
 
-    try {
-        $Pool_NetRequest = Invoke-RestMethodAsync "https://api.thepool.zone/v1/blocx/network/stats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
-        if (-not $Pool_NetRequest.error -and $Pool_NetRequest.result) {
-            $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
-            $btcRewardLive  = if ($Pool_NetRequest.result.networkHashrate) {$btcPrice * $blocks_reward * 1440 / $Pool_NetRequest.result.networkHashrate} else {0}
-        }
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-    }
+    #try {
+    #    $Pool_NetRequest = Invoke-RestMethodAsync "https://api.thepool.zone/v1/blocx/network/stats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
+    #    if (-not $Pool_NetRequest.error -and $Pool_NetRequest.result) {
+    #        $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+    #        $btcRewardLive  = if ($Pool_NetRequest.result.networkHashrate) {$btcPrice * $blocks_reward * 1440 / $Pool_NetRequest.result.networkHashrate} else {0}
+    #    }
+    #}
+    #catch {
+    #    if ($Error.Count){$Error.RemoveAt(0)}
+    #}
 
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.result.currentHashrate -BlockRate $Pool_BLK
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
