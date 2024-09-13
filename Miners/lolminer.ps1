@@ -12,20 +12,23 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "1.88"
+$Version = "1.89"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.88-lolminer/lolMiner_v1.88_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.89-lolminer/lolMiner_v1.89_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\GPU-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.88-lolminer/lolMiner_v1.88_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.89-lolminer/lolMiner_v1.89_Win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Autolykos2";                   MinMemGb = 2;   Params = "--algo AUTOLYKOS2"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Autolykos2/ERGO temp. deactivated (v1.54 runs fine)
+    [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 2;   Params = "--algo AUTOLYKOS2"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Autolykos2/ERGO temp. deactivated (v1.54 runs fine)
+    [PSCustomObject]@{MainAlgorithm = "Autolykos2";      DAG = $true; MinMemGb = 2;   Params = "--algo AUTOLYKOS2 --dualmode TONDUAL"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"} #Autolykos2/ERGO temp. deactivated (v1.54 runs fine)
     [PSCustomObject]@{MainAlgorithm = "BeamHash3";                    MinMemGb = 3;   Params = "--algo BEAM-III";   Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #BeamHash III
     [PSCustomObject]@{MainAlgorithm = "Blake3Alephium";               MinMemGB = 2;   Params = "--algo ALEPH";      Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #Blake3/ALPH
+    [PSCustomObject]@{MainAlgorithm = "BlocxAutolykos2"; DAG = $true; MinMemGb = 2;   Params = "--algo AUTOLYKOS2"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Autolykos2/BLOCX
+    [PSCustomObject]@{MainAlgorithm = "BlocxAutolykos2"; DAG = $true; MinMemGb = 2;   Params = "--algo AUTOLYKOS2 --dualmode TONDUAL"; Pers=$false; Fee=1.5; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"} #Autolykos2/BLOCX
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29b";                  MinMemGb = 6;   Params = "--algo CR29-40";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29b
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";                  MinMemGb = 6;   Params = "--algo CR29-32";    Pers=$false; Fee=1;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #Cuckaroo29s
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   MinMemGb = 7.6; Params = "--algo C30CTX";     Pers=$false; Fee=2.5; ExtendInterval = 2; Vendor = @("AMD")} #Cuckaroo30
@@ -74,6 +77,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "FishHash";        DAG = $true; MinMemGB = 2;   Params = "--algo FISHHASH --disable-dag-verify 1 --dualmode TONDUAL";   Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #FishHash/IRON + SHA256ton
     [PSCustomObject]@{MainAlgorithm = "HeavyHashPyrin";               MinMemGB = 2;   Params = "--algo PYRIN";                                                Pers=$false; Fee=1.0; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #HeavyHashPyrin/PYI
     [PSCustomObject]@{MainAlgorithm = "KarlsenHash";                  MinMemGb = 2;   Params = "--algo KARLSEN";                                              Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA")} #KarlsenHash
+    [PSCustomObject]@{MainAlgorithm = "KarlsenHashV2";                MinMemGb = 2;   Params = "--algo KARLSENV2";                                            Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #KarlsenHashV2
+    [PSCustomObject]@{MainAlgorithm = "KarlsenHashV2";                MinMemGb = 2;   Params = "--algo KARLSENV2 --dualmode TONDUAL";                         Pers=$false; Fee=1.0;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); SecondAlgorithm = "SHA256ton"; CUDAArch = "P"} #KarlsenHashV2
     #[PSCustomObject]@{MainAlgorithm = "kHeavyHash";                   MinMemGB = 2;   Params = "--algo KASPA";                                                Pers=$false; Fee=0.75; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "NexaPoW";         DAG = $true; MinMemGb = 2;   Params = "--algo NEXA";                             Pers=$false; Fee=2;   ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); CUDAArch = "P"} #NexaPow/NEOX
     [PSCustomObject]@{MainAlgorithm = "UbqHash";         DAG = $true; MinMemGB = 2;   Params = "--algo UBQHASH --disable-dag-verify 1";   Pers=$false; Fee=0.7; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); DualZIL = "ETH"} #Ubqhash
@@ -104,9 +109,9 @@ if ($InfoOnly) {
 }
 
 $CUDAArch_Types = [PSCustomObject]@{
-    "A" = @("Ampere","Ada")
-    "T" = @("Turing","Ampere","Ada")
-    "P" = @("Pascal","Turing","Ampere","Ada")
+    "A" = @("Ampere","Ada","Hopper","Blackwell")
+    "T" = @("Turing","Ampere","Ada","Hopper","Blackwell")
+    "P" = @("Pascal","Turing","Ampere","Ada","Hopper","Blackwell")
 }
 
 if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
