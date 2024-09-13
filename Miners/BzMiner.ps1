@@ -31,9 +31,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alph";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.00} #Blake3/Alephium
     [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; CoinSymbol = @("CAU"); Algorithm = "canxium"} #Ethash/ETHW
     [PSCustomObject]@{MainAlgorithm = "dynex";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.00} #DynexSolve/DNX
-    [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #ERG/Autolykos2
-    [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "kaspa"} #ERG/Autolykos2+kHeavyHash
-    [PSCustomObject]@{MainAlgorithm = "ergo";                         MinMemGb = 2; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "radiant"} #ERG/Autolykos2+SHA512256d
+    [PSCustomObject]@{MainAlgorithm = "ergo";            DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #ERG/Autolykos2
+    [PSCustomObject]@{MainAlgorithm = "ergo";            DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "kaspa"} #ERG/Autolykos2+kHeavyHash
+    [PSCustomObject]@{MainAlgorithm = "ergo";            DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "radiant"} #ERG/Autolykos2+SHA512256d
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #Etchash
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "alph"} #Etchash+Blake3
     [PSCustomObject]@{MainAlgorithm = "etchash";         DAG = $true; MinMemGb = 3; Params = ""; Vendor = @("NVIDIA");       ExtendInterval = 2; SecondaryAlgorithm = "kaspa"} #Etchash+kHeavyHash

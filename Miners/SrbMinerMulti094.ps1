@@ -27,7 +27,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d_dynamic"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD")} #Argon2Dyn
     [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa"  ;              Params = ""; Fee = 0.85;               Vendor = @("AMD")} #Argon2Chukwa
     [PSCustomObject]@{MainAlgorithm = "argon2id_chukwa2" ;              Params = ""; Fee = 0.85;               Vendor = @("AMD")} #Argon2Chukwa2
-    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ;              Params = ""; Fee = 2.00;               Vendor = @("AMD")} #Autolykos2/ERGO
+    [PSCustomObject]@{MainAlgorithm = "autolykos2"       ; DAG = $true; Params = ""; Fee = 2.00;               Vendor = @("AMD")} #Autolykos2/ERGO
     [PSCustomObject]@{MainAlgorithm = "blake2b"          ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD"); CoinSymbols = @("TNET")} #blake2b
     #[PSCustomObject]@{MainAlgorithm = "blake2s"         ;              Params = ""; Fee = 0.00; MinMemGb = 2; Vendor = @("AMD")} #blake2s
     [PSCustomObject]@{MainAlgorithm = "blake3_alephium"  ;              Params = ""; Fee = 1.00; MinMemGb = 2; Vendor = @("AMD")} #Alephium/ALPH

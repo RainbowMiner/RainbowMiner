@@ -26,7 +26,7 @@ if ($IsLinux) {
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0;  ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2")}
     [PSCustomObject]@{MainAlgorithm = "alph";                          MinMemGb = 1.5; Params = ""; DevFee = 1.0;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
-    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 1.5; Params = ""; DevFee = 2.0;  ExtendInterval = 2; ExcludeCompute = @("GCN1","GCN2")} #Autolykos2/ERGO
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";       DAG = $true; MinMemGb = 1.5; Params = ""; DevFee = 2.0;  ExtendInterval = 2; ExcludeCompute = @("GCN1","GCN2")} #Autolykos2/ERGO
     [PSCustomObject]@{MainAlgorithm = "cn_conceal";                    MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "cn_haven";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
     [PSCustomObject]@{MainAlgorithm = "cn_heavy";                      MinMemGb = 1.5; Params = ""; DevFee = 2.5;  ExcludeCompute = @("GCN1","GCN2","RDNA1","RDNA2","RDNA3")}
@@ -79,9 +79,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "abel";             DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 1.0; ExtendInterval = 3; MainAlgorithmXlat = "Abelian"; ExcludeCompute = @("GCN1","GCN2"); SecondaryAlgorithm = "ton";     SecondAlgorithmXlat = "SHA256ton"} #Abelian/ABEL + GRAM
 
     # Dual mining ERG + kHeavyHash/KASPA
-    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "alph"}
-    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"}
-    [PSCustomObject]@{MainAlgorithm = "autolykos2";                    MinMemGb = 5;   Params = ""; DevFee = 0-75; ExtendInterval = 3; SecondAlgorithm = "ton"; SecondAlgorithmXlat = "SHA256ton" }
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";       DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "alph"}
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";       DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "kas"; SecondAlgorithmXlat = "kHeavyHash"}
+    [PSCustomObject]@{MainAlgorithm = "autolykos2";       DAG = $true; MinMemGb = 5;   Params = ""; DevFee = 0-75; ExtendInterval = 3; SecondAlgorithm = "ton"; SecondAlgorithmXlat = "SHA256ton" }
 
     # Dual mining Ethash + kHeavyHash/KASPA
     [PSCustomObject]@{MainAlgorithm = "ethash";           DAG = $true; MinMemGb = 2;   Params = ""; DevFee = 0.75; ExtendInterval = 3; SecondAlgorithm = "alph"; ExcludeCompute = @("GCN1","GCN2")}

@@ -24,7 +24,7 @@ if ($IsLinux) {
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alephium";                     Params = ""; MinMemGb = 1;  Vendor = @("AMD","NVIDIA");                  ExtendInterval = 2; DevFee = 1.0; DualZIL = $true} #Blake3Alephium
-    [PSCustomObject]@{MainAlgorithm = "autolykos";                    Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
+    [PSCustomObject]@{MainAlgorithm = "autolykos";       DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; DualZIL = $true} #Autolycos/Ergo
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo30";                   Params = ""; MinMemGb = 14; Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 5.0} #Cuckaroo30/Cortex
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
     [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"} #Ethash
@@ -54,7 +54,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Verthash";                     Params = ""; MinMemGb = 2;  Vendor = @("AMD");                  ExtendInterval = 2; DevFee = 1.0} #Verthash
 
     # Dual mining
-    [PSCustomObject]@{MainAlgorithm = "autolykos";                    Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; DualZIL = $true; SecondaryAlgorithm = "heavyhash"} #Autolycos/Ergo + kHeavyhash/KAS
+    [PSCustomObject]@{MainAlgorithm = "autolykos";       DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","NVIDIA");         ExtendInterval = 2; DevFee = 2.5; DualZIL = $true; SecondaryAlgorithm = "heavyhash"} #Autolycos/Ergo + kHeavyhash/KAS
     [PSCustomObject]@{MainAlgorithm = "Ethash";          DAG = $true; Params = ""; MinMemGb = 3;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyHash
     [PSCustomObject]@{MainAlgorithm = "Ethash2g";        DAG = $true; Params = ""; MinMemGb = 1;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
     [PSCustomObject]@{MainAlgorithm = "Ethash3g";        DAG = $true; Params = ""; MinMemGb = 2;  Vendor = @("AMD","INTEL","NVIDIA");          ExtendInterval = 2; DevFee = 1.0; Algorithm = "Ethash"; DualZIL = $true; ExcludePoolName = "F2Pool"; SecondaryAlgorithm = "heavyhash"} #Ethash + kHeavyhash/KAS
