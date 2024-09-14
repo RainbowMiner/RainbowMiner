@@ -102,7 +102,7 @@ foreach ($Wallet_Data in $Wallets_Data) {
                 }
                 default {
                     if ($Wallet_Data.balance -eq "#") {
-                        $Request
+                        if ("$($Request)".Trim() -match "^[0-9\.]+$") {$Request} else {0}
                     } elseif ($Wallet_Data.balance -eq "" -and $Wallet_Received -ne $null) {
                         $val = $Wallet_Received
                         if ($Wallet_Data.spent) {
