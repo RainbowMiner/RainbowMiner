@@ -93,20 +93,24 @@ foreach ($Wallet_Data in $Wallets_Data) {
 
             $Wallet_Received = $null
             if ($Wallet_Data.received) {
-                $Wallet_Received = [Decimal](Invoke-Expression "`$Request.$($Wallet_Data.received)")
+                $Wallet_Received = Invoke-Expression "`$Request.$($Wallet_Data.received)"
+                $Wallet_Received = [decimal]$(if ("$($Wallet_Received)".Trim() -match "^[0-9\.]+$") {$Wallet_Received})
             }
 
-            $Wallet_Balance = [Decimal]$(Switch ($Wallet_Symbol) {
+            $Wallet_Balance = Switch ($Wallet_Symbol) {
                 "XLM" {
                     ($Request.balances | Where-Object {$_.asset_type -eq "native"} | Select-Object -ExpandProperty balance | Measure-Object -Sum).Sum
                 }
                 default {
                     if ($Wallet_Data.balance -eq "#") {
-                        if ("$($Request)".Trim() -match "^[0-9\.]+$") {$Request} else {0}
+                        $Request
                     } elseif ($Wallet_Data.balance -eq "" -and $Wallet_Received -ne $null) {
                         $val = $Wallet_Received
                         if ($Wallet_Data.spent) {
-                            $val -= [Decimal](Invoke-Expression "`$Request.$($Wallet_Data.spent)")
+                            $Wallet_Spent = Invoke-Expression "`$Request.$($Wallet_Data.spent)"
+                            if ("$($Wallet_Spent)".Trim() -match "^[0-9\.]+$") {
+                                $val -= [Decimal]$Wallet_Spent
+                            }
                         }
                         $val
                     } else {
@@ -127,7 +131,9 @@ foreach ($Wallet_Data in $Wallets_Data) {
                         $val
                     }
                 }
-            })
+            }
+
+            $Wallet_Balance = [decimal]$(if ("$($Wallet_Balance)".Trim() -match "^[0-9\.]+$") {$Wallet_Balance})
 
             [PSCustomObject]@{
                     Caption     = "$Name $Wallet_Symbol ($Wallet_Address)"
