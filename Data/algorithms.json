@@ -45,6 +45,7 @@
     "argon2uis":  "Argon2d4096",
     "argon2wrkz": "Argon2Wrkz",
     "astralhash": "GLTAstralHash",
+    "astrixhash": "AstrixHash",
     "astrobwt": "AstroBWT",
     "astrobwt2": "AstroBWTv2",
     "astrobwtv2": "AstroBWTv2",
