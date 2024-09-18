@@ -38,12 +38,12 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 1
 
-$Pool_Request | Where-Object {$_.id -match "pplns$" -and ($Wallets."$($_.coin)" -or $InfoOnly)} | ForEach-Object {
+$Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF" -and ($Wallets."$($_.coin)" -or $InfoOnly)} | ForEach-Object {
 
     $Pool_Currency = $_.coin
     $Pool_Coin = Get-Coin $Pool_Currency
 
-    if ($_.id -notmatch "^\w+-\w+-pplns$" -and $Pool_Coin -and -not $Pool_Coin.Multi) {
+    if ($_.id -notmatch "^\w+-\w+-pplns" -and $Pool_Coin -and -not $Pool_Coin.Multi) {
         $Pool_Algorithm_Norm = $Pool_Coin.algo
         $Pool_CoinName  = $Pool_Coin.name
     } else {
