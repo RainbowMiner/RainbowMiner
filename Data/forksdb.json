@@ -1,0 +1,10 @@
+{
+    "active":  true,
+    "symbol":  "HTN",
+    "algorithm":  "Hoohash",
+    "height":  17500000,
+    "rpc":  "https://api.network.hoosat.fi/info/blockdag",
+    "data":  "virtualDaaScore",
+    "verify":  "networkName",
+    "verify_value":  "hoosat-mainnet"
+}
