@@ -10,7 +10,7 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 
 $ManualURI = "https://github.com/sp-hash/TeamBlackMiner"
 $Port = "365{0:d2}"
-$Version = "2.26"
+$Version = "2.27"
 
 if ($IsLinux) {
     $Path     = ".\Bin\GPU-Teamblack\TBMiner"
@@ -18,12 +18,12 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.26-teamblack/TeamBlackMiner_2_26_Ubuntu_22_04_Cuda_12.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-teamblack/TeamBlackMiner_2_27_Ubuntu_22_04_Cuda_12.tar.xz"
             Cuda = "12.6"
             Linux = "Ubuntu 22.04"
         }
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.26-teamblack/TeamBlackMiner_2_26_Ubuntu_20_04_Cuda_12.tar.xz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-teamblack/TeamBlackMiner_2_27_Ubuntu_20_04_Cuda_12.tar.xz"
             Cuda = "12.6"
             Linux = "Ubuntu 20.04"
         }
@@ -35,7 +35,7 @@ if ($IsLinux) {
 
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.26-teamblack/TeamBlackMiner_2_26_cuda_12_6.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.27-teamblack/TeamBlackMiner_2_27_cuda_12_6.7z"
             Cuda = "12.6"
         }
     )
