@@ -51,14 +51,14 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
     $Commands.ForEach({
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-        $CoinSymbol = if ($Pools.$Algorithm_Norm_0.CoinSymbol) {$Pools.$Algorithm_Norm_0.CoinSymbol} else {"BCI"}
-
-        $MinMemGB = Get-EthDAGSize -CoinSymbol $CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
-
-        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
-
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+			if (-not $Pools.$Algorithm_Norm.Host) {continue}
+
+            $CoinSymbol = if ($Pools.$Algorithm_Norm.CoinSymbol) {$Pools.$Algorithm_Norm.CoinSymbol} else {"BCI"}
+            $MinMemGB = Get-EthDAGSize -CoinSymbol $CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
+            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+
+			if ($Miner_Device) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

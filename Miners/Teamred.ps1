@@ -131,38 +131,38 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
         $SecondAlgorithm_Norm_0 = if ($SecondAlgorithm) {Get-Algorithm $SecondAlgorithm} else {$null}
 
-        $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-
-        #Zombie-mode since v0.7.14
-        if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
-            $MinMemGB = $_.MinMemGB
-        }
-
         $Miner_ExcludeCompute = $_.ExcludeCompute
         $Miner_Compute = $_.Compute
 
-        $Miner_Device = $Device.Where({(Test-VRAM $_ $MinMemGB) -and (-not $Miner_ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $Miner_ExcludeCompute) -and (-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute)})
-        $Miner_Device_Dual = if ($SecondAlgorithm_Norm_0) {$Miner_Device.Where({-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute})}
-
-        if ($SecondAlgorithm_Norm_0 -and $Miner_Compute -and (-not ($Miner_Device_Dual | Measure-Object).Count)) {
-            $Miner_Device = $null
-        }
-
-        $Miner_DevFee = $_.DevFee
-
-        if ($_.MainAlgorithm -match "^ethash" -and (($Miner_Model -split '-') -notmatch "(Baffin|Ellesmere|RX\d)" | Measure-Object).Count) {
-            $Miner_DevFee = 1.0
-        } elseif ($_.MainAlgorithm -eq "abel") {
-            $Device_Capabilities = @($Miner_Device | Foreach-Object {$_.OpenCL.DeviceCapability} | Select-Object -Unique)
-            if (Compare-Object $Device_Capabilities @("GCN50","RDNA1") -ExcludeDifferent -IncludeEqual) {
-                $Miner_DevFee = 2.0
-            } elseif (Compare-Object $Device_Capabilities @("GCN51","CDNA1") -ExcludeDifferent -IncludeEqual) {
-                $Miner_DevFee = 3.0
-            }
-        }
-
 		foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
-			if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and
+            if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
+
+            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
+            #Zombie-mode since v0.7.14
+            if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
+                $MinMemGB = $_.MinMemGB
+            }
+            $Miner_Device = $Device.Where({(Test-VRAM $_ $MinMemGB) -and (-not $Miner_ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $Miner_ExcludeCompute) -and (-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute)})
+            $Miner_Device_Dual = if ($SecondAlgorithm_Norm_0) {$Miner_Device.Where({-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute})}
+
+            if ($SecondAlgorithm_Norm_0 -and $Miner_Compute -and (-not ($Miner_Device_Dual | Measure-Object).Count)) {
+                $Miner_Device = $null
+            } else {
+                $Miner_DevFee = $_.DevFee
+
+                if ($_.MainAlgorithm -match "^ethash" -and (($Miner_Model -split '-') -notmatch "(Baffin|Ellesmere|RX\d)" | Measure-Object).Count) {
+                    $Miner_DevFee = 1.0
+                } elseif ($_.MainAlgorithm -eq "abel") {
+                    $Device_Capabilities = @($Miner_Device | Foreach-Object {$_.OpenCL.DeviceCapability} | Select-Object -Unique)
+                    if (Compare-Object $Device_Capabilities @("GCN50","RDNA1") -ExcludeDifferent -IncludeEqual) {
+                        $Miner_DevFee = 2.0
+                    } elseif (Compare-Object $Device_Capabilities @("GCN51","CDNA1") -ExcludeDifferent -IncludeEqual) {
+                        $Miner_DevFee = 3.0
+                    }
+                }
+            }
+
+			if ($Miner_Device -and
                 (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and
                 (-not $_.PoolName -or $Pools.$MainAlgorithm_Norm.Host -match $_.PoolName)) {
                 if ($First) {

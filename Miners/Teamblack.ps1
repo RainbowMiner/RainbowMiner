@@ -119,16 +119,17 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
             $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-            
-            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
-
             #$LHRCUDA = if (($Miner_Device | Where-Object {$_.IsLHR -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR -ne $null} | Measure-Object).Count -gt 0) {
             #    ($Miner_Device | Foreach-Object {"$(if (($_.IsLHR -and $Session.Config.Devices."$($_.Model_Base)".EnableLHR -eq $null) -or $Session.Config.Devices."$($_.Model_Base)".EnableLHR) {1} else {0})"}) -join ','
             #}
 
             foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-                if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Host -match $_.IncludePoolName)) {
+                if (-not $Pools.$Algorithm_Norm.Host) {continue}
+
+                $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
+                $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+
+                if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.IncludePoolName -or $Pools.$Algorithm_Norm.Host -match $_.IncludePoolName)) {
                     if ($First) {
                         $Miner_Port         = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name         = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

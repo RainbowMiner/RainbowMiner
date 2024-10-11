@@ -113,10 +113,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $Miner_Fee = if ($_.DevFee -ne $null) {$_.DevFee} else {$DevFee}
 
-            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-
-            $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGB)})
-
             $ZilParams = ""
 
             if ($Miner_Vendor -ne "CPU" -and $Session.Config.Pools.Crazypool.EnableTTminerDual -and $Pools.ZilliqaCP) {
@@ -133,7 +129,12 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $All_MainAlgorithms = if ($Miner_Vendor -eq "CPU") {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")} else {@($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")}
 
 		    foreach($Algorithm_Norm in $All_MainAlgorithms) {
-			    if ($Pools.$Algorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoins -or $_.ExcludeCoins -inotcontains $Pools.$Algorithm_Norm.CoinSymbol) -and $Miner_Device) {
+                if (-not $Pools.$Algorithm_Norm.Host) {continue}
+
+                $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
+                $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGB)})
+
+			    if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoins -or $_.ExcludeCoins -inotcontains $Pools.$Algorithm_Norm.CoinSymbol)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'

@@ -127,28 +127,26 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         $SecondAlgorithm_Norm_0 = if ($_.SecondAlgorithm) {Get-Algorithm $_.SecondAlgorithm}
         
-        $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm_0.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-        if ($_.DAG) {
-            if ($SecondAlgorithm_Norm_0) {
-                $MinMemGB += Get-EthDAGSize -CoinSymbol $Pools.$SecondAlgorithm_Norm_0.CoinSymbol -Algorithm $SecondAlgorithm_Norm_0 -Minimum $_.MinMemGB2nd
-            } elseif ($Algorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
+            if (-not $Pools.$Algorithm_Norm.Host) {continue}
+
+            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
+            if (-not $SecondAlgorithm_Norm_0 -and $_.DAG -and $Algorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
                 $MinMemGB = $_.MinMemGB
             }
-        }
 
-        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
 
-        $IsLHR = $true
-        foreach($d in $Miner_Device) {
-            $Model_Base = $d.Model_Base
-            if ((-not $d.IsLHR -and -not $Session.Config.Devices.$Model_Base.EnableLHR) -or $Session.Config.Devices.$Model_Base.EnableLHR -eq $false) {
-                $IsLHR = $false
-                break
+            $IsLHR = $true
+            foreach($d in $Miner_Device) {
+                $Model_Base = $d.Model_Base
+                if ((-not $d.IsLHR -and -not $Session.Config.Devices.$Model_Base.EnableLHR) -or $Session.Config.Devices.$Model_Base.EnableLHR -eq $false) {
+                    $IsLHR = $false
+                    break
+                }
             }
-        }
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
-            if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
+            if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
 
                 if ($First) {
                     $Miner_Port   = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
@@ -181,7 +179,12 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 
                 if ($SecondAlgorithm_Norm_0) {
 
-                    if ($IsLHR -or $_.DualAll) {
+                    if ($_.DAG) {
+                        $MinMemGB += Get-EthDAGSize -CoinSymbol $Pools.$SecondAlgorithm_Norm.CoinSymbol -Algorithm $SecondAlgorithm_Norm_0 -Minimum $_.MinMemGB2nd
+                        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+                    }
+
+                    if ($Miner_Device -and $IsLHR -or $_.DualAll) {
         
         		        foreach($SecondAlgorithm_Norm in @($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")) {
                             if ($Pools.$SecondAlgorithm_Norm.Host -and $Pools.$SecondAlgorithm_Norm.User -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {

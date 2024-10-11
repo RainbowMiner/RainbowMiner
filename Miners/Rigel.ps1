@@ -192,45 +192,46 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
             $MainAlgorithm_0  = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 
-            $CoinParams = ""
-
-            if ($MainAlgorithm_0 -eq "kawpow") {
-                if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "AIPG")      {$CoinParams = " --coin aipg"}
-                elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "NEOX")  {$CoinParams = " --coin neox"}
-                elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -ne "RVN")   {$CoinParams = " --coin ravencoin"}
-                elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "CLORE") {$CoinParams = " --coin clore"}
-                elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "XNA")   {$CoinParams = " --coin xnaget-coin octa"}
-                
-            } elseif ($MainAlgorithm_0 -eq "ethash") {
-                if ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "OCTA")      {$CoinParams = " --coin octa"}
-                elseif ($Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "XPB")   {$CoinParams = " --coin xpb"}
-            } elseif ($MainAlgorithm_Norm_0 -eq "BlocxAutolykos2") {
-                $CoinParams = " --coin blocx"
-            }
-
             $HasEthproxy = $MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy
 
-            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-            
-            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
-
-            $ZilParams = ""
-
-            if ($ZilParams2 -ne "") {
-                $ZilParams = if ($SecondAlgorithm_Norm_0) {$ZilParams3} else {$ZilParams2}
-                $ZilNoCache = @($Miner_Device | Foreach-Object {if ($_.OpenCL.GlobalMemsize -le 8gb) {"off"} else {"on"}}) -join ","
-                if ($ZilNoCache -match "off") {
-                    $ZilParams = "$($ZilParams) --zil-cache-dag $($ZilNoCache)"
-                }
-            }
-
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
-                if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.PoolName -or $Pools.$MainAlgorithm_Norm.Name -match $_.PoolName)) {
+                if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
+
+                $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}            
+                $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+
+                $CoinParams = ""
+
+                if ($MainAlgorithm_0 -eq "kawpow") {
+                    if ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "AIPG")      {$CoinParams = " --coin aipg"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "NEOX")  {$CoinParams = " --coin neox"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -ne "RVN")   {$CoinParams = " --coin ravencoin"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "CLORE") {$CoinParams = " --coin clore"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "XNA")   {$CoinParams = " --coin xnaget-coin octa"}
+                
+                } elseif ($MainAlgorithm_0 -eq "ethash") {
+                    if ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "OCTA")      {$CoinParams = " --coin octa"}
+                    elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "XPB")   {$CoinParams = " --coin xpb"}
+                } elseif ($MainAlgorithm_Norm -eq "BlocxAutolykos2") {
+                    $CoinParams = " --coin blocx"
+                }
+
+                if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Name -notmatch $_.ExcludePoolName) -and (-not $_.PoolName -or $Pools.$MainAlgorithm_Norm.Name -match $_.PoolName)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = (@($Name) + @($SecondAlgorithm_Norm_0 | Select-Object | Foreach-Object {"$($MainAlgorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
                         $First = $false
+                    }
+
+                    $ZilParams = ""
+
+                    if ($ZilParams2 -ne "") {
+                        $ZilParams = if ($SecondAlgorithm_Norm_0) {$ZilParams3} else {$ZilParams2}
+                        $ZilNoCache = @($Miner_Device | Foreach-Object {if ($_.OpenCL.GlobalMemsize -le 8gb) {"off"} else {"on"}}) -join ","
+                        if ($ZilNoCache -match "off") {
+                            $ZilParams = "$($ZilParams) --zil-cache-dag $($ZilNoCache)"
+                        }
                     }
 
                     $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}

@@ -137,15 +137,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $SecondAlgorithm = $_.SecondAlgorithm
             $SecondAlgorithm_Norm_0 = if ($_.SecondAlgorithm) {Get-Algorithm $_.SecondAlgorithm} else {$null}
 
-            $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm_0.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-
-            #Zombie-Mode since v1.11
-            if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGb -and $Session.Config.EnableEthashZombieMode) {
-                $MinMemGB = $_.MinMemGb
-            }
-
-            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
-
             if ($_.CUDAArch -ne $null -and $_.Vendor -eq "NVIDIA") {
                 $CUDAArch = $CUDAArch_Types."$($_.CUDAArch)"
                 if (-not $Miner_Device.Where({$_.OpenCL.Architecture -in $CUDAArch})) {
@@ -157,6 +148,15 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $DeviceParams = "$(if ($Global:IsWindows -and $MainAlgorithm_Norm_0 -eq "NexaPoW") {" --keepfree 1024"})"
 
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
+                if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
+
+                $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
+                #Zombie-Mode since v1.11
+                if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGb -and $Session.Config.EnableEthashZombieMode) {
+                    $MinMemGB = $_.MinMemGb
+                }
+                $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+
                 if ($Miner_Device -and $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
