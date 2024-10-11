@@ -18,6 +18,7 @@ function Initialize-Session {
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
+            $Session.LinuxDistroInfo = Get-LinuxDistroInfo
         }
         $Session.IsAdmin            = Test-IsElevated
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
@@ -31,6 +32,89 @@ function Initialize-Session {
         Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|^FiroPow|^Meraki|UbqHash|Octopus"
         Set-Variable RegexAlgoIsEthash -Option Constant -Scope Global -Value "^Etc?hash|UbqHash"
         Set-Variable RegexAlgoIsProgPow -Option Constant -Scope Global -Value "^KawPow|ProgPow|^FiroPow|^Meraki"
+    }
+}
+
+function Get-LinuxDistroInfo {
+    $distroName = $null
+    $distroVersion = $null
+
+    # Function to extract information from key-value pairs in a file
+    function ParseKeyValueFile {
+        param (
+            [string]$FilePath,
+            [string[]]$Keys
+        )
+        $result = @{}
+        if (Test-Path $FilePath) {
+            $content = Get-Content $FilePath | ForEach-Object {
+                $parts = $_ -split '='
+                $key = $parts[0]
+                $value = $parts[1] -replace '"', '' -replace '\s+$', '' # remove quotes and trailing spaces
+                if ($Keys -contains $key) {
+                    $result[$key] = $value
+                }
+            }
+        }
+        return $result
+    }
+
+    try {
+
+        # 1. Try /etc/os-release
+        if (Test-Path "/etc/os-release") {
+            $osRelease = ParseKeyValueFile "/etc/os-release" @('NAME', 'VERSION_ID')
+            if ($osRelease['NAME']) {
+                $distroName = $osRelease['NAME']
+            }
+            if ($osRelease['VERSION_ID']) {
+                $distroVersion = $osRelease['VERSION_ID']
+            }
+        }
+
+        # 2. Try /etc/lsb-release (common on Ubuntu and some Debian derivatives)
+        elseif (Test-Path "/etc/lsb-release") {
+            $lsbRelease = ParseKeyValueFile "/etc/lsb-release" @('DISTRIB_ID', 'DISTRIB_RELEASE')
+            if ($lsbRelease['DISTRIB_ID']) {
+                $distroName = $lsbRelease['DISTRIB_ID']
+            }
+            if ($lsbRelease['DISTRIB_RELEASE']) {
+                $distroVersion = $lsbRelease['DISTRIB_RELEASE']
+            }
+        }
+
+        # 3. Try /etc/debian_version (specific to Debian)
+        elseif (Test-Path "/etc/debian_version") {
+            $distroName = "Debian"
+            $distroVersion = Get-Content "/etc/debian_version" | Out-String
+        }
+
+        # 4. Try /etc/redhat-release (specific to Red Hat-based systems)
+        elseif (Test-Path "/etc/redhat-release") {
+            $content = Get-Content "/etc/redhat-release" | Out-String
+            if ($content -match "(.+)\srelease\s([\d\.]+)") {
+                $distroName = $matches[1].Trim()
+                $distroVersion = $matches[2].Trim()
+            }
+        }
+
+        # 5. Fallback to /etc/issue if others are not available
+        elseif (Test-Path "/etc/issue") {
+            $content = Get-Content "/etc/issue" | Out-String
+            if ($content -match "(.+)\s([\d\.]+)") {
+                $distroName = $matches[1].Trim()
+                $distroVersion = $matches[2].Trim()
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+
+    # Return formatted result
+    [PSCustomObject]@{
+        distroName = $distroName
+        distroVersion = $distroVersion
+        distroInfo = "$distroName $distroVersion"
     }
 }
 
@@ -215,7 +299,7 @@ function Get-PoolPayoutCurrencies {
         $Global:GlobalPoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","AllowZero","EnableAutoCoin","EnablePostBlockMining","CoinSymbolPBM","DataWindow","StatAverage","StatAverageStable","MaxMarginOfError","SwitchingHysteresis","MaxAllowedLuck","MaxTimeSinceLastBlock","MaxTimeToFind","Region","SSL","BalancesKeepAlive","Wallets","DefaultMinerSwitchCoinSymbol","ETH-Paymentmode") | Sort-Object -Unique
         
     }
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:GlobalPoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:GlobalPoolFields -notcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -917,6 +1001,7 @@ function Set-Stat {
     $Mode     = ""
     $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
     $Cached   = $true
+    $Check    = "Minute"
 
     if ($Name -match '_Profit$')       {
         $Path0 = "Stats\Pools";    $Mode = "Pools"
@@ -925,14 +1010,14 @@ function Set-Stat {
         }
     }
     elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"}
-    else                               {$Path0 = "Stats";          $Mode = "Profit"; $Cached = $false}
+    else                               {$Path0 = "Stats";          $Mode = "Profit"; $Cached = $false; $Check = $false}
 
     $Path = if ($Sub) {"$Path0\$Sub-$Name.txt"} else {"$Path0\$Name.txt"}
 
     $SmallestValue = 1E-20
 
 
-    if (-not $Reset -and ($Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached)) {
+    if (-not $Reset -and ($Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached -Check $Check)) {
         try {
             if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
 
@@ -1426,8 +1511,19 @@ function Get-StatFromFile {
         [Parameter(Mandatory = $true)]
         [String]$Name,
         [Parameter(Mandatory = $false)]
-        [Switch]$Cached = $false
+        [Switch]$Cached = $false,
+        [Parameter(Mandatory = $false)]
+        $Check = $false
     )
+
+    if ($Cached -and $Check -and $Global:StatsCache[$Name] -ne $null -and $Global:StatsCache[$Name].$Check -isnot [decimal] -and $Global:StatsCache[$Name].$Check -isnot [double]) {
+        try {
+            $Global:StatsCache[$Name].$Check = [decimal]$Global:StatsCache[$Name].$Check
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $Global:StatsCache[$Name] = $null
+        }
+    }
 
     if (-not $Cached -or $Global:StatsCache[$Name] -eq $null -or -not (Test-Path $Path)) {
         try {
@@ -1492,8 +1588,9 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        if ($Name -match '_Profit$') {$Path = "Stats\Pools"; $Cached = $true}
-        elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"; $Cached = $true}
+        $Check = $false
+        if ($Name -match '_Profit$') {$Path = "Stats\Pools"; $Cached = $true; $Check = "Minute"}
+        elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"; $Cached = $true; $Check = "Minute"}
         elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
         elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
         elseif ($Name -match '_Poolstats$') {$Path = "Stats\Pools"}
@@ -1507,7 +1604,7 @@ function Get-Stat {
             $Path = "$Path\$Name.txt"
         }
 
-        Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached
+        Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached -Check $Check
     } else {
         # Return all stats
         [hashtable]$NewStats = @{}
@@ -1518,10 +1615,12 @@ function Get-Stat {
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
+        $Check = $false
+
         [System.Collections.Generic.List[string]]$MatchArray = @()
-        if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
+        if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true; $Check = "Minute"}
         if ($Disabled)  {$MatchArray.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
-        if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
+        if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true; $Check = "Minute"}
         if ($Poolstats) {$MatchArray.Add("Poolstats") > $null;$Path = "Stats\Pools"}
         if ($Totals)    {$MatchArray.Add("Total") > $null;$Path = "Stats\Totals"}
         if ($TotalAvgs) {$MatchArray.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
@@ -1538,7 +1637,7 @@ function Get-Stat {
 
             $NewStatsKey = $BaseName -replace "^(AMD|CPU|INTEL|NVIDIA)-"
 
-            if ($Stat = Get-StatFromFile -Path $FullName -Name $NewStatsKey -Cached:$Cached) {
+            if ($Stat = Get-StatFromFile -Path $FullName -Name $NewStatsKey -Cached:$Cached -Check $Check) {
                 $NewStats[$NewStatsKey] = $Stat
             }
         }
