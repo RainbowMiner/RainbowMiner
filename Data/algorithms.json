@@ -573,7 +573,7 @@
     "hsr": "HSR",
     "hycon": "CryptoNightHycon",
     "intense": "CryptoNightV7",
-    "ironfish": "Blake3IronFish",
+    "ironfish": "FishHash",
     "ixi":  "Argon2Ixi",
     "jackpotcoin": "JHA",
     "jeonghash": "GLTJeongHash",
