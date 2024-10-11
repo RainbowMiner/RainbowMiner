@@ -293,14 +293,15 @@ function Get-AMDComputeCapability {
 
 function Get-PoolPayoutCurrencies {
     param($Pool)
-    $Payout_Currencies = [PSCustomObject]@{}
     if (-not (Test-Path Variable:Global:GlobalPoolFields)) {
-        $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"        
-        $Global:GlobalPoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","AllowZero","EnableAutoCoin","EnablePostBlockMining","CoinSymbolPBM","DataWindow","StatAverage","StatAverageStable","MaxMarginOfError","SwitchingHysteresis","MaxAllowedLuck","MaxTimeSinceLastBlock","MaxTimeToFind","Region","SSL","BalancesKeepAlive","Wallets","DefaultMinerSwitchCoinSymbol","ETH-Paymentmode") | Sort-Object -Unique
-        
+        if (-not $Session.PoolsConfigDefault) {$Session.PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"}
+        $Global:GlobalPoolFields = @($Session.PoolsConfigDefault.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","AllowZero","EnableAutoCoin","EnablePostBlockMining","CoinSymbolPBM","DataWindow","StatAverage","StatAverageStable","MaxMarginOfError","SwitchingHysteresis","MaxAllowedLuck","MaxTimeSinceLastBlock","MaxTimeToFind","Region","SSL","BalancesKeepAlive","Wallets","DefaultMinerSwitchCoinSymbol","ETH-Paymentmode","MiningMode") | Sort-Object -Unique
     }
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:GlobalPoolFields -notcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
-    $Payout_Currencies
+    if ($Pool) {
+        $Payout_Currencies = [PSCustomObject]@{}
+        $Pool.PSObject.Properties | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:GlobalPoolFields -notcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+        $Payout_Currencies
+    }
 }
 
 function Get-UnprofitableAlgos {
@@ -6097,7 +6098,7 @@ function Set-PoolsConfigDefault {
                     $Userpools = @($UserpoolsConfig | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique)
                 }
             }
-            $Global:GlobalPoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Session.PoolsConfigDefault.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+
             if ($Pools.Count -gt 0 -or $Userpools.Count -gt 0) {
                 $Pools + $Userpools | Sort-Object -Unique | Foreach-Object {
                     $Pool_Name = $_
