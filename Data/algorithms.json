@@ -659,6 +659,7 @@
     "nrghash": "NrgHash",
     "nscrypt": "ScryptN11",
     "nscryptv": "ScryptN2",
+    "nxlhash": "NxlHash",
     "octopus": "Octopus",
     "olhash": "Olhash",
     "padihash": "GLTPadiHash",
