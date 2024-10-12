@@ -1,0 +1,10 @@
+{
+    "active":  true,
+    "symbol":  "NXL",
+    "algorithm":  "NxlHash",
+    "height":  22895000,
+    "rpc":  "https://https://api.nexell-ai.com/info/blockdag",
+    "data":  "virtualDaaScore",
+    "verify":  "networkName",
+    "verify_value":  "nexellia-mainnet"
+}
