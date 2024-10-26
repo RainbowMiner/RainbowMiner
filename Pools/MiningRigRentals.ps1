@@ -1539,7 +1539,7 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
 
         $InactiveNicehashAlgorithms = @($Pool_Request_Nicehash.miningAlgorithms | Where-Object {[double]$_.paying -le 0 -or [double]$_.speed -le 0} | ForEach-Object {Get-Algorithm $_.algorithm} | Select-Object)
        
-        $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals"}).Foreach("Algorithm0") | Select-Object -Unique)
+        $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals" -and $_.Algorithm0}).Foreach("Algorithm0") | Select-Object -Unique)
 
         $PoolsData.Where({$_.Algorithm -notin $ActiveAlgorithms -and ($_.Pool -ne "Nicehash" -or $_.Algorithm -notin $InactiveNicehashAlgorithms)}).Foreach({
             [PSCustomObject]@{
