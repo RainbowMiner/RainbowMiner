@@ -45,11 +45,13 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
     $Pool_Rpc = $_.ToLower()
     $Pool_Host = "$($Pool_Rpc).kryptex.network" 
 
-    $Pool_Coin = Get-Coin $_
-
-    $Pool_Currency = $Pool_Coin.Symbol
-
-    $Pool_Algorithm_Norm = $Pool_Coin.Algo
+    if ($Pool_Coin = Get-Coin $_) {
+        $Pool_Currency = $Pool_Coin.Symbol
+        $Pool_Algorithm_Norm = $Pool_Coin.Algo
+    } else {
+        Write-Log -Level Warn "$($Name): $_ not found in CoinsDB"
+        return
+    }
 
     $PoolCoin_Request = [PSCustomObject]@{}
 
