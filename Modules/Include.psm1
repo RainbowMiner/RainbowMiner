@@ -1011,7 +1011,7 @@ function Set-Stat {
         }
     }
     elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"}
-    else                               {$Path0 = "Stats";          $Mode = "Profit"; $Cached = $false; $Check = $false}
+    else                               {$Path0 = "Stats";          $Mode = "Profit"; $Cached = $false; $Check = ""}
 
     $Path = if ($Sub) {"$Path0\$Sub-$Name.txt"} else {"$Path0\$Name.txt"}
 
@@ -1514,14 +1514,11 @@ function Get-StatFromFile {
         [Parameter(Mandatory = $false)]
         [Switch]$Cached = $false,
         [Parameter(Mandatory = $false)]
-        $Check = $false
+        [String]$Check = ""
     )
 
-    if ($Cached -and $Check -and $Global:StatsCache[$Name] -ne $null -and $Global:StatsCache[$Name].$Check -isnot [decimal] -and $Global:StatsCache[$Name].$Check -isnot [double]) {
-        try {
-            $Global:StatsCache[$Name].$Check = [decimal]$Global:StatsCache[$Name].$Check
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Cached -and $Check -ne "" -and $Global:StatsCache[$Name] -ne $null -and $Global:StatsCache[$Name].$Check -isnot [decimal] -and $Global:StatsCache[$Name].$Check -isnot [double]) {
+        if ($Global:StatsCache[$Name].$Check -notmatch "^[0-9E\-\+\.]+$") {
             $Global:StatsCache[$Name] = $null
         }
     }
@@ -1589,7 +1586,7 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        $Check = $false
+        $Check = ""
         if ($Name -match '_Profit$') {$Path = "Stats\Pools"; $Cached = $true; $Check = "Minute"}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"; $Cached = $true; $Check = "Minute"}
         elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
@@ -1616,7 +1613,7 @@ function Get-Stat {
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
-        $Check = $false
+        $Check = ""
 
         [System.Collections.Generic.List[string]]$MatchArray = @()
         if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true; $Check = "Minute"}
