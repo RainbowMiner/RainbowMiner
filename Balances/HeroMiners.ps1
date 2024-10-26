@@ -22,7 +22,6 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "KAS";   port = 1206; fee = 0.9; rpc = "kaspa"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XMR";   port = 1111; fee = 0.9; rpc = "monero"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "NEOX";  port = 1202; fee = 0.9; rpc = "neoxa"; region = $Pool_AllRegions}
-    [PSCustomObject]@{symbol = "NXL";   port = 1143; fee = 0.9; rpc = "nexellia"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "XNA";   port = 1160; fee = 0.9; rpc = "neurai"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "PYI";   port = 1177; fee = 0.9; rpc = "pyrin"; region = $Pool_AllRegions}
     [PSCustomObject]@{symbol = "QRL";   port = 1166; fee = 0.9; rpc = "qrl"; region = $Pool_AllRegions}
