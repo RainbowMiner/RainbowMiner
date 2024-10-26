@@ -50,7 +50,7 @@ if (-not $Pool_Request -or ($Pool_Request | Measure-Object).Count -le 5) {
 if ($Payout_Currencies) {
 
     $Count = 0
-    $Payout_Currencies | Where-Object {$Currency = $_.Name;$Pool = $Pool_Request | Where-Object {$_.id -match "pplns$" -and $_.coin -eq $Currency};$Pool -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency)} | Foreach-Object {
+    $Payout_Currencies | Where-Object {$Currency = $_.Name;$Pool = $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF" -and $_.coin -eq $Currency};$Pool -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency)} | Foreach-Object {
         try {
             $Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools/$($Pool.id)/account/$($_.Value)?perfMode=1" -delay $(if ($Count){250} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
             $Count++
@@ -96,7 +96,7 @@ if ($Payout_Currencies) {
 if ($Payout_CurrenciesSolo) {
 
     $Count = 0
-    $Payout_CurrenciesSolo | Where-Object {$Currency = $_.Name;$Pool = $Pool_Request | Where-Object {$_.id -match "solo$" -and $_.coin -eq $Currency};$Pool -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency)} | Foreach-Object {
+    $Payout_CurrenciesSolo | Where-Object {$Currency = $_.Name;$Pool = $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF70" -and $_.coin -eq $Currency};$Pool -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Currency)} | Foreach-Object {
         try {
             $Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools/$($Pool.id)/account/$($_.Value)?perfMode=1" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
             $Count++
