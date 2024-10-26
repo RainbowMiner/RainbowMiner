@@ -19,7 +19,7 @@ is_user_root () { [ "${EUID:-$(id -u)}" -eq 0 ]; }
 
 pwsh_major_version="7"
 pwsh_minor_version="2"
-pwsh_build_version="23"
+pwsh_build_version="24"
 
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
 
