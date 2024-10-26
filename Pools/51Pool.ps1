@@ -21,10 +21,6 @@ $Pool_Currency = "EPIC"
 $Pool_Protocol = "stratum+tcp"
 $Pool_Host     = "51pool.online"
 $Pool_Port     = 3416
-$Pool_PoolFee  = [double]$Pool_Request.data.poolInfo.fee
-
-$Pool_TSL      = if ($Pool_LastBlock.timestamp) {(Get-UnixTimestamp) - $Pool_LastBlock.timestamp/1000} else {$null}
-
 $Pool_User     = if ($Username -ne "") {$Username} else {$Wallets.$Pool_Currency}
 
 if (-not $InfoOnly -and -not $Pool_User) {return}
@@ -41,6 +37,8 @@ if (-not $Pool_Request.status) {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
+
+$Pool_PoolFee   = [double]$Pool_Request.data.poolInfo.fee
 
 $PoolBlocks_Request = $null
 try {
@@ -84,9 +82,7 @@ $timestamp24h   = $timestamp - 24*3600
 foreach ($Pool_Algorithm in @("randomx", "progpow", "cuckoo")) {
 
     $Pool_Coin = Get-Coin $Pool_Currency -Algorithm $Pool_Algorithm
-
     if (-not $InfoOnly) {
-
         $blocks         = @($PoolBlocks_Request | Where-Object {$_.sym -eq "EPIC" -and $_.algo -eq $Pool_Algorithm} | Select-Object -ExpandProperty t | Where-Object {$_ -ge $timestamp24h} | Sort-Object -Descending)
         $blocks_measure = $blocks | Measure-Object -Minimum -Maximum
 
@@ -94,7 +90,6 @@ foreach ($Pool_Algorithm in @("randomx", "progpow", "cuckoo")) {
         $Pool_TSL       = $timestamp - [int64]($blocks | Select-Object -First 1)
         
         if ($NetPer_Request.status -eq 200 -and $NetBlock_Request.status -eq 200) {
-
             #current_diff = last_block_total_diff - previous_block_total_diff 
             #network_hashrate = current_diff / block_target_time 
             #blocks_per_day = 1440 * algorithm_percentage
@@ -136,6 +131,7 @@ foreach ($Pool_Algorithm in @("randomx", "progpow", "cuckoo")) {
                 Hashrate      = $Stat.Hashrate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
+                WTM           = -not $btcRewardLive
                 EthMode       = $null
                 ErrorRatio    = $Stat.ErrorRatio
                 Name          = $Name
@@ -153,3 +149,5 @@ foreach ($Pool_Algorithm in @("randomx", "progpow", "cuckoo")) {
         }
     }
 }
+
+
