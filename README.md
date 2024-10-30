@@ -50,11 +50,11 @@ Features: easy setup wizard with ad-hoc working default (no editing of files nee
 
 ## REQUIRED PRE-REQUISITES
 
-**Important note: do NOT use the newer Powershell Core v7.3.x. It comes with a severe memory leak. Until this problem is solved, I strongly recommend you stick with Powershell Core v7.2.18**
+**Important note: do NOT use the newer Powershell Core v7.3.x/v7.4.x. Both come with a severe memory leak. Until this problem is solved, I strongly recommend you stick with Powershell Core v7.2.24**
 
 ### Windows 7/8.1/10 pre-requisites
 
-1. Install PowerShell 7: [Download Installer for version 7.2.18](https://github.com/PowerShell/PowerShell/releases/download/v7.2.18/PowerShell-7.2.18-win-x64.msi)
+1. Install PowerShell 7: [Download Installer for version 7.2.24](https://github.com/PowerShell/PowerShell/releases/download/v7.2.24/PowerShell-7.2.24-win-x64.msi)
 2. Install Microsoft .NET Framework 4.7.2 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Recommended GPU drivers (note: the latest drivers aren't always the best to use):
     - **Nvidia official downloads**:
@@ -263,19 +263,19 @@ At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v7.2.21 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v7.2.24 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 
     # if not already done, download the package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.21/powershell-lts_7.2.21-1.deb_amd64.deb
-    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.21/powershell_7.2.21-1.deb_amd64.deb
+    wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.24/powershell-lts_7.2.24-1.deb_amd64.deb
+    #wget https://github.com/PowerShell/PowerShell/releases/download/v7.2.24/powershell_7.2.24-1.deb_amd64.deb
 
     # install powershell package (use the "-lts" for LTS Linux or the second line for non-LTS)
-    dpkg -i powershell-lts_7.2.21-1.deb_amd64.deb
-    #dpkg -i powershell_7.2.21-1.deb_amd64.deb
+    dpkg -i powershell-lts_7.2.24-1.deb_amd64.deb
+    #dpkg -i powershell_7.2.24-1.deb_amd64.deb
 
     # install powershell dependencies
     apt install -f
