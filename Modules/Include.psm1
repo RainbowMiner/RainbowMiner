@@ -1858,11 +1858,11 @@ function Get-PoolsContent {
                 }
             }
             if (-not $InfoOnly -and $c.SoloMining -and $c.Difficulty) {
-                $BLKFactor = $DiffFactor / $c.Difficulty
+                $BLKFactor = [double]$DiffFactor / [double]$c.Difficulty
                 foreach ($Model in $Global:DeviceCache.DeviceCombos) {
                     $d = $c | ConvertTo-Json -Depth 10 | ConvertFrom-Json
                     $d.Algorithm = "$($d.Algorithm0)-$($Model)"
-                    $d.Hashrate  = $Global:MinerSpeeds[$d.Algorithm].Hashrate
+                    $d.Hashrate  = [double]$Global:MinerSpeeds[$d.Algorithm].Hashrate
                     $d.BLK       = $d.Hashrate * $BLKFactor
                     $d
                 }
@@ -8204,7 +8204,7 @@ function Test-Internet {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $False)]
-        [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.coinbase.com","www.baidu.com")
+        [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.coinbase.com","www.sina.com")
     )
 
     $tested = $false
