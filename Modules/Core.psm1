@@ -3097,6 +3097,9 @@ function Invoke-Core {
     #Remove all failed and disabled miners
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
 
+    #Remove miners with 0 Watt
+    if ($Session.Config.DisableZeroWattMiners) {$Miners = $Miners.Where({-not $_.PowerDraw -and -not ($_.HashRates.PSObject.Properties.Value -contains $null)})}
+
     #Reset the active miners
     $Global:ActiveMiners.ForEach({
         $_.Profit = 0

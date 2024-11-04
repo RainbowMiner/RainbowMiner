@@ -896,6 +896,7 @@ Note: RainbowMiner uses two list of unprofitable algorithms. The lists are both 
 - **EnableMinersToSaveDAG** = Allow miners to save DAGs to disk (currently TTminer only), costs a lot of space but speeds up the startup [default=0]
 - **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]
 - **EnableDualMiningDuringRentals** = set to 1, if dual mining during rentals should be allowed [default=0]
+- **DisableZeroWattMiners* = set to 1 to disable all miners that report 0-Watt [default=0]
 - **IgnoreFees** = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
 - **ShowMinerWindow** = show (1) or do not show (0) miner windows. Note: excavator will always run in an extra window [default=0]
 - **FastestMinerOnly** = set to 1 to reduce list by only showing the fastest miner [default=1]
