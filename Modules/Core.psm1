@@ -3240,6 +3240,7 @@ function Invoke-Core {
             $ActiveMiner.MiningPriority     = $Miner.MiningPriority
             $ActiveMiner.MiningAffinity     = $Miner.MiningAffinity
             $ActiveMiner.MultiProcess       = [int]$Miner.MultiProcess
+            $ActiveMiner.Executables        = $Miner.Executables
             $ActiveMiner.SetLDLIBRARYPATH   = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
             $ActiveMiner.ShareCheck         = [int]$Miner.ShareCheck
 
@@ -3313,6 +3314,7 @@ function Invoke-Core {
                     MiningPriority       = $Miner.MiningPriority
                     MiningAffinity       = $Miner.MiningAffinity
                     MultiProcess         = [int]$Miner.MultiProcess
+                    Executables          = $Miner.Executables
                     SetLDLIBRARYPATH     = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
                     ShareCheck           = [int]$Miner.ShareCheck
                     ExcludePoolName      = $Miner.ExcludePoolName

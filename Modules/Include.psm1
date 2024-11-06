@@ -2158,6 +2158,8 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
+        [String[]]$Executables = @(),
+        [Parameter(Mandatory = $false)]
         [String]$ScreenName = "",
         [Parameter(Mandatory = $false)]
         [String]$BashFileName = "",
@@ -2172,11 +2174,11 @@ function Start-SubProcess {
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
-        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -WinTitle $WinTitle
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -WinTitle $WinTitle
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
     }
 }
 
@@ -2200,6 +2202,8 @@ function Start-SubProcessInBackground {
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
         [Int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$Executables = @(),
         [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false,
         [Parameter(Mandatory = $false)]
@@ -2261,6 +2265,8 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
+        [String[]]$Executables = @(),
+        [Parameter(Mandatory = $false)]
         [String]$WinTitle = "",
         [Parameter(Mandatory = $false)]
         [Switch]$SetLDLIBRARYPATH = $false,
@@ -2276,6 +2282,13 @@ function Start-SubProcessInConsole {
     if ($IsLinux) {
         $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
         $LinuxDisplay = "$(if ($Session.Config.EnableLinuxHeadless) {$Session.Config.LinuxDisplay})"
+        $Executables | Foreach-Object {
+            $Exec_Path = Join-Path (Split-Path -Path $FilePath) $_
+            if (Test-Path $Exec_Path) {
+                $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $Exec_Path" -PassThru
+                $Chmod_Process.WaitForExit(1000) > $null
+            }
+        }
     }
 
     $Job = Start-Job -FilePath .\Scripts\StartInConsole.ps1 -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $LinuxDisplay, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $SetLDLIBRARYPATH
@@ -2337,6 +2350,8 @@ function Start-SubProcessInScreen {
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$Executables = @(),
         [Parameter(Mandatory = $false)]
         [String]$ScreenName = "",
         [Parameter(Mandatory = $false)]
@@ -2489,6 +2504,14 @@ function Start-SubProcessInScreen {
     $Chmod_Process.WaitForExit(1000) > $null
     $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
     $Chmod_Process.WaitForExit(1000) > $null
+
+    $Executables | Foreach-Object {
+        $Exec_Path = Join-Path (Split-Path -Path $FilePath) $_
+        if (Test-Path $Exec_Path) {
+            $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $Exec_Path" -PassThru
+            $Chmod_Process.WaitForExit(1000) > $null
+        }
+    }
 
     $Job = Start-Job -FilePath .\Scripts\StartInScreen.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin
 
