@@ -110,6 +110,7 @@ if ($IsLinux) {
 
     $Path    = ".\Bin\ANY-XmrigCC\xmrigDaemon"
     $CudaLib = "libxmrig-cuda.so"
+    $Executables = @("xmrigMiner")
 } else {
 
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.2-xmrigcc/xmrigcc-3.4.2-msvc-win.7z"
@@ -203,6 +204,7 @@ if ($IsLinux) {
 
     $Path    = ".\Bin\ANY-XmrigCC\xmrigDaemon.exe"
     $CudaLib = "xmrig-cuda.dll"
+    $Executables = $null
 }
 
 if ($Uri -eq $null) {return}
@@ -239,7 +241,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "kawpow4g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
     [PSCustomObject]@{MainAlgorithm = "kawpow5g";      DAG = $true; MinMemGb = 3;   Params = ""; ExtendInterval = 2; Vendor = @("AMD","INTEL","NVIDIA"); Algorithm = "kawpow"}
     #[PSCustomObject]@{MainAlgorithm = "mike";                       MinMemGb = 1;   Params = ""; ExtendInterval = 3; Vendor = @("CPU"); FaultTolerance = 8}
-    [PSCustomObject]@{MainAlgorithm = "panthera";                   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
+    #[PSCustomObject]@{MainAlgorithm = "panthera";                   MinMemGb = 1;   Params = ""; ExtendInterval = 2; Vendor = @("CPU")}
     [PSCustomObject]@{MainAlgorithm = "rx/0";                       MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/arq";                     MinMemGb = 2.0; Params = ""; ExtendInterval = 3; Vendor = @("AMD","CPU","INTEL","NVIDIA")}
     [PSCustomObject]@{MainAlgorithm = "rx/grft";                    MinMemGb = 2.0; Params = ""; ExtendInterval = 2; Vendor = @("AMD","CPU","INTEL","NVIDIA")} #CUDA Plugin v6.12.0 doesn't support GRFT, v6.15.0 has memory bug
@@ -408,7 +410,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 					    DeviceName       = $Miner_Device.Name
 					    DeviceModel      = $Miner_Model
 					    Path             = $Path
-                        MultiProcess     = 1
 					    Arguments        = $Arguments
 					    HashRates        = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					    API              = "XMRig6"
@@ -429,6 +430,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                         PrerequisitePath = $PathCudaLib
                         PrerequisiteURI  = $UriCuda
                         PrerequisiteMsg  = "Downloading Xmrig support files in the background, please wait!"
+                        MultiProcess     = 1
+                        Executables      = $Executables
 				    }
 			    }
 		    }
