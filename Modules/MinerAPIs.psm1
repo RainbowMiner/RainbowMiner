@@ -3518,8 +3518,9 @@ class Xmrig6 : Miner {
                 $InitConfig | Add-Member pools $Parameters.Pools -Force -PassThru | ConvertTo-Json -Depth 10 | Set-Content $ThreadsConfigFile -Force
 
                 $ArgumentList = ("--algo=$($Parameters.Algorithm) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
-                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper") -MultiProcess $this.MultiProcess -Executables $this.Executables -SetLDLIBRARYPATH:$this.SetLDLIBRARYPATH
                 if ($Job.XJob) {
+                    $WaitProc    = if ($Global:IsLinux) {1} else {$this.MultiProcess + 1}
                     $WaitSeconds = if ($Device -eq "cpu") {30} else {90}
                     $StopWatch = [System.Diagnostics.StopWatch]::New()
                     $StopWatch.Restart()
@@ -3530,7 +3531,7 @@ class Xmrig6 : Miner {
                         }
                         Start-Sleep -Milliseconds 500
                         $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
-                    } while ($StopWatch.Elapsed.TotalSeconds -lt $WaitSeconds -and ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)))
+                    } while ($StopWatch.Elapsed.TotalSeconds -lt $WaitSeconds -and ((-not $MiningProcess -and $Job.XJob.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq $WaitProc)))
                     $StopWatch = $null
                 }
                 if ($Job) {
