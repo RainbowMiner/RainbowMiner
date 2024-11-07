@@ -65,7 +65,7 @@ $Pool_Request.PSObject.Properties | ForEach-Object {
     #$Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks_shared" -Maximum).Maximum
 
     if (-not $InfoOnly) {
-        $Pool_Price = Get-YiiMPValue $_.Value -DataWindow $DataWindow -Factor $Pool_Factor -ActualDivisor 1
+        $Pool_Price = [double]$_.Value.estimate_current * 1e-6 / $Pool_Factor
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -HashRate ([double]$_.Value.hashrate_shared * 1e6) -BlockRate $Pool_BLK -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
