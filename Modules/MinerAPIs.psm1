@@ -2725,7 +2725,7 @@ class SrbMinerMulti : Miner {
         $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0}
 
         $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = if ($Type -eq "cpu" -or $Data.mining_time -gt 180) {[double]$Data0.hashrate.$Type.total} else {0}
+        $HashRate_Value = if ($Type -eq "cpu" -or $Data.mining_time -gt 20) {[double]$Data0.hashrate.$Type.total} else {0}
 
         $PowerDraw = if ($Type -eq "gpu") {($Data.gpu_devices | Foreach-Object {$_.asic_power} | Measure-Object -Sum).Sum} else {$null}
 
