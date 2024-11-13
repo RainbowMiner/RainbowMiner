@@ -10,19 +10,19 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.7-onezerominer/onezerominer-linux-1.3.7.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.2-onezerominer/onezerominer-linux-1.4.2.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-OneZero\onezerominer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.7-onezerominer/onezerominer-win64-1.3.7.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.2-onezerominer/onezerominer-win64-1.4.2.zip"
 }
 $ManualUri = "https://github.com/OneZeroMiner/onezerominer/releases"
 $Port = "370{0:d2}"
 $DevFee = 3.0
 $Cuda = "11.8"
-$Version = "1.3.7"
+$Version = "1.4.2"
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true} #DynexSolve/DNX
+    [PSCustomObject]@{MainAlgorithm = "dynex"; Params = ""; ExtendInterval = 5; DualZIL = $true; Fee = 2.0} #DynexSolve/DNX
     [PSCustomObject]@{MainAlgorithm = "xelishashv2"; Params = ""; ExtendInterval = 3} #XelisHashV2/XEL
 )
 
@@ -82,7 +82,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                     FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
                     Penalty        = 0
-					DevFee         = $DevFee
+					DevFee         = if ($_.Fee -ne $null) {$_.Fee} else {$DevFee}
 					ManualUri      = $ManualUri
                     Version        = $Version
                     PowerDraw      = 0
