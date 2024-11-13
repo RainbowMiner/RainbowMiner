@@ -7161,7 +7161,7 @@ Param(
                 }
             }
 
-            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)$($curlproxy)-m $($timeout+5) --compressed --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)$($curlproxy)-m $($timeout+5)$(if (-not $NoExtraHeaderData) {" --compressed"}) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
 
             $Data = (Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit $Timeout) -split "#~#"
 
