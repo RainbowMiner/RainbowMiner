@@ -7105,6 +7105,7 @@ Param(
     if (-not $NoExtraHeaderData) {
         if ($method -eq "REST" -and -not $headers_local.ContainsKey("Accept")) {$headers_local["Accept"] = "application/json"}
         if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+        if (-not $headers_local.ContainsKey("Accept-Encoding")) {$headers_local["Accept-Encoding"] = "gzip"}
     }
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
