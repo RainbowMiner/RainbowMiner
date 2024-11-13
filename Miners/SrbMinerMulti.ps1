@@ -414,7 +414,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 					        ExtendInterval = if ($_.ExtendInterval) {$_.ExtendInterval} elseif ($Miner_Vendor -eq "CPU") {2} else {3}
                             MaxRejectedShareRatio = if ($_.MaxRejectedShareRatio) {$_.MaxRejectedShareRatio} else {$null}
                             Penalty        = 0
-					        DevFee         = $_.Fee
+					        DevFee         = if ($_.Fee -ne $null) {$_.Fee} else {$DevFee}
 					        ManualUri      = $ManualUri
 					        EnvVars        = if ($Miner_Vendor -eq "AMD" -and $IsLinux) {@("GPU_MAX_WORKGROUP_SIZE=1024")} else {$null}
                             Version        = $Version
