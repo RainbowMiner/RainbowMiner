@@ -6974,6 +6974,8 @@ param(
                 $httpHandler = [System.Net.Http.HttpClientHandler]::New()
             }
 
+            $httpHandler.AutomaticDecompression = [System.Net.DecompressionMethods]::GZip -bor [System.Net.DecompressionMethods]::Deflate
+
             if (Test-IsCore) {
                 try {
                     Add-Type -TypeDefinition @"
@@ -7105,7 +7107,6 @@ Param(
     if (-not $NoExtraHeaderData) {
         if ($method -eq "REST" -and -not $headers_local.ContainsKey("Accept")) {$headers_local["Accept"] = "application/json"}
         if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
-        if (-not $headers_local.ContainsKey("Accept-Encoding")) {$headers_local["Accept-Encoding"] = "gzip"}
     }
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
@@ -7160,7 +7161,7 @@ Param(
                 }
             }
 
-            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)$($curlproxy)-m $($timeout+5) --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
+            $CurlCommand = "$(if ($requestmethod -ne "GET") {"-X $($requestmethod)"} else {"-G"}) `"$($url)`" $($CurlBody)$($CurlHeaders) $($useragent)$($curlproxy)-m $($timeout+5) --compressed --connect-timeout $($timeout) --ssl-allow-beast --ssl-no-revoke --max-redirs 5 -k -s -L -q -w `"#~#%{response_code}`""
 
             $Data = (Invoke-Exe $Session.Curl -ArgumentList $CurlCommand -WaitForExit $Timeout) -split "#~#"
 
@@ -7192,6 +7193,10 @@ Param(
         }
     
     } else {
+
+        if (-not $NoExtraHeaderData) {
+            if (-not $headers_local.ContainsKey("Accept-Encoding")) {$headers_local["Accept-Encoding"] = "gzip"}
+        }
 
         $IsForm = $false
 
