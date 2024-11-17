@@ -35,8 +35,8 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "ERG";  port = 3100; host = "erg"; rpc = "ergo-1"}
     [PSCustomObject]@{symbol = "ETC";  port = 35000; host = "etc"; rpc = "etc-1"}
     [PSCustomObject]@{symbol = "ETHW";  port = 3096; host = "ethw"; rpc = "ethw-1"}
-    [PSCustomObject]@{symbol = "FIRO"; port = 3098; host = "firo"; rpc = "firo-1"}
-    [PSCustomObject]@{symbol = "HTN"; port = 3142; host = "htn"; rpc = "htn-1"}
+    [PSCustomObject]@{symbol = "FIRO"; port = 3104; host = "firo"; rpc = "firo-1"}
+    #[PSCustomObject]@{symbol = "HTN"; port = 3142; host = "htn"; rpc = "htn-1"}
     [PSCustomObject]@{symbol = "KAS"; port = 3112; host = "kas"; rpc = "kas-1"}
     [PSCustomObject]@{symbol = "KLS"; port = 3132; host = "kls"; rpc = "kls-1"}
     [PSCustomObject]@{symbol = "MEWC"; port = 3116; host = "mewc"; rpc = "mewc-1"}
@@ -49,6 +49,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "SDR"; port = 3144; host = "sdr"; rpc = "sdr-1"}
     [PSCustomObject]@{symbol = "VTC"; port = 3102; host = "vtc"; rpc = "vtc-1"}
     [PSCustomObject]@{symbol = "WART"; port = 3140; host = "wart"; rpc = "wart-1"}
+    [PSCustomObject]@{symbol = "XEL"; port = 3150; host = "xel"; rpc = "xel-1"}
     [PSCustomObject]@{symbol = "XNA"; port = 3128; host = "xna"; rpc = "xna-1"}
     [PSCustomObject]@{symbol = "ZANO"; port = 3146; host = "zano"; rpc = "zano-1"}
 )
