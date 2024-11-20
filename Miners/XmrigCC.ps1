@@ -113,7 +113,7 @@ if ($IsLinux) {
     $Executables = @("xmrigMiner")
 } else {
 
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.2-xmrigcc/xmrigcc-3.4.2-msvc-win.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.4.2-xmrigcc/xmrigcc-3.4.2-msvc-win64.7z"
 
     $CudaData = @(
         [PSCustomObject]@{
