@@ -2228,7 +2228,7 @@ function Start-SubProcessInBackground {
     [int[]]$ProcessIds = @()
     
     if ($Job) {
-        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running -Executables $Executables | Foreach-Object {$ProcessIds += $_}
     }
     
     if ($Priority -lt 10) {
@@ -2300,7 +2300,7 @@ function Start-SubProcessInConsole {
     [int[]]$ProcessIds = @()
     
     if ($JobOutput) {
-        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running -Executables $Executables | Foreach-Object {$ProcessIds += $_}
      }
 
     if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
@@ -2363,9 +2363,6 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
     )
-
-    [int[]]$Running = @()
-    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
     $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
 
@@ -2469,6 +2466,7 @@ function Start-SubProcessInScreen {
     $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
     $Cmd.Add("  done") > $null
     $Cmd.Add(")") > $null
+    $Cmd.Add("screen -wipe >/dev/null 2>&1") > $null
     $Cmd.Add("screen -S $($ScreenName) -d -m") > $null
     $Cmd.Add("sleep .1") > $null
 
@@ -2521,11 +2519,12 @@ function Start-SubProcessInScreen {
 
     [int[]]$ProcessIds = @()
     
-    if ($JobOutput) {
-        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
-     }
-
-    if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
+    if ($JobOutput.ProcessId) {
+        $ProcessIds += $JobOutput.ProcessId
+        if ($MultiProcess) {
+            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Foreach-Object {$ProcessIds += $_}
+        }
+    }
 
     $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log "$_"}
     
@@ -2559,39 +2558,48 @@ function Get-SubProcessIds {
         [Parameter(Mandatory = $false)]
         [int[]]$Running = @(),
         [Parameter(Mandatory = $false)]
+        [string[]]$Executables = @(),
+        [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0
     )
-
-    #if (-not $IsWindows) {return}
 
     $StopWatch = [System.Diagnostics.Stopwatch]::New()
 
     $StopWatch.Restart()
 
-    $WaitCount = 0
-    $ProcessFound = 0
-    $ArgumentList = ("*$($ArgumentList.Replace("*","#!star!#").Replace("'","*").Replace('"',"*") -replace '([\[\]\?\`])','`$1')*" -replace "\*+","*").Replace("#!star!#",'`*')
-    $FilePathOnly = "$(Split-Path -Path $FilePath)"
+    if ($IsWindows) {
 
-    do {
-        Start-Sleep -Milliseconds 100
-        if ($IsWindows) {
+        $WaitCount = 0
+        $ProcessFound = 0
+        $ArgumentList = ("*$($ArgumentList.Replace("*","#!star!#").Replace("'","*").Replace('"',"*") -replace '([\[\]\?\`])','`$1')*" -replace "\*+","*").Replace("#!star!#",'`*')
+        $FilePathOnly = "$(Split-Path -Path $FilePath)"
+
+        do {
+            Start-Sleep -Milliseconds 100
             Get-CIMInstance CIM_Process | Where-Object {($_.ExecutablePath -ne $null -and ("$(Split-Path -Path $_.ExecutablePath)" -eq $FilePathOnly)) -and $_.CommandLine -like $ArgumentList -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
                 $Running += $_.ProcessId
                 $ProcessFound++
                 $_.ProcessId
                 Write-Log "$($_.ProcessId) found for $FilePath"
             }
-        } else {
-            Get-Process | Where-Object {($_.Path -ne $null -and ("$(Split-Path -Path $_.Path)" -eq $FilePathOnly)) -and $_.CommandLine -like $ArgumentList -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
-                $Running += $_.ProcessId
+            $WaitCount++
+        } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -gt $MultiProcess))
+
+    } elseif ($IsLinux) {
+
+        $WaitCount = 0
+        $ProcessFound = 0
+
+        do {
+            Start-Sleep -Milliseconds 100
+            Get-Process | Where-Object {$_.Name -in $Executables -and ($_.Parent).Id -in $Running} | Foreach-Object {
                 $ProcessFound++
-                $_.ProcessId
-                Write-Log "$($_.ProcessId) found for $FilePath"
+                $_.Id
+                Write-Log "Success: got $($_.Id) for $($_.Name) as child of $(($_.Parent).Name)"
             }
-        }
-        $WaitCount++
-    } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -gt $MultiProcess))
+            $WaitCount++
+        } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -ge $MultiProcess))
+    }
 
     $StopWatch = $null
 }
