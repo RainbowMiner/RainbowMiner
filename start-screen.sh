@@ -20,4 +20,5 @@ then
         export SCREENDIR="$screen_dir"
 fi
 
+screen -wipe >/dev/null 2>&1
 screen -S RainbowMiner -d -m ./start.sh
