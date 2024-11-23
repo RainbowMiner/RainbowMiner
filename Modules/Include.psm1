@@ -2517,16 +2517,23 @@ function Start-SubProcessInScreen {
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job;$cnt--}
     while ($JobOutput -eq $null -and $cnt -gt 0)
 
+    $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log "$_"}
+
     [int[]]$ProcessIds = @()
     
     if ($JobOutput.ProcessId) {
         $ProcessIds += $JobOutput.ProcessId
         if ($MultiProcess) {
-            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Foreach-Object {$ProcessIds += $_}
+            if (-not $Executables) {
+                $Executables = @(Split-Path $FilePath -Leaf)
+            }
+            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Foreach-Object {
+                if ($_ -notin $ProcessIds) {
+                    $ProcessIds += $_
+                }
+            }
         }
     }
-
-    $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log "$_"}
     
     [PSCustomObject]@{
         ScreenName = $ScreenName
@@ -2592,10 +2599,10 @@ function Get-SubProcessIds {
 
         do {
             Start-Sleep -Milliseconds 100
-            Get-Process | Where-Object {$_.Name -in $Executables -and $($_.Parent).Parent.Id -in $Running} | Foreach-Object {
+            Get-Process | Where-Object {$_.Name -in $Executables -and ($($_.Parent).Parent.Id -in $Running -or $($_.Parent).Id -in $Running)} | Foreach-Object {
                 $ProcessFound++
                 $_.Id
-                Write-Log "Success: got $($_.Id) for $($_.Name) as child of $($($_.Parent).Parent.Name)"
+                Write-Log "Success: got id $($_.Id) for $($_.Name) as child of $($($_.Parent).Parent.Name)"
             }
             $WaitCount++
         } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -ge $MultiProcess))
