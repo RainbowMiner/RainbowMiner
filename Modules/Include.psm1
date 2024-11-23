@@ -2595,7 +2595,7 @@ function Get-SubProcessIds {
             Get-Process | Where-Object {$_.Name -in $Executables -and $($_.Parent).Parent.Id -in $Running} | Foreach-Object {
                 $ProcessFound++
                 $_.Id
-                Write-Log "Success: got $($_.Id) for $($_.Name) as child of $(($_.Parent).Name)"
+                Write-Log "Success: got $($_.Id) for $($_.Name) as child of $($($_.Parent).Parent.Name)"
             }
             $WaitCount++
         } until (($StopWatch.Elapsed.TotalSeconds -gt 10) -or ($ProcessFound -ge $MultiProcess))
