@@ -20,6 +20,7 @@ then
         export SCREENDIR="$screen_dir"
 fi
 
+screen -wipe >/dev/null 2>&1
 screen -ls RainbowMiner >/dev/null 2>&1 || { echo "RainbowMiner is not running. Use start-screen.sh first!"; exit 1; }
 
 echo "Note: Press Ctrl+A then D to exit the screen"
