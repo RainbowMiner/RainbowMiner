@@ -2558,7 +2558,7 @@ function Get-SubProcessIds {
         [Parameter(Mandatory = $false)]
         [int[]]$Running = @(),
         [Parameter(Mandatory = $false)]
-        [string[]]$Executables = @(),
+        [String[]]$Executables = @(),
         [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0
     )
@@ -2592,7 +2592,7 @@ function Get-SubProcessIds {
 
         do {
             Start-Sleep -Milliseconds 100
-            Get-Process | Where-Object {$_.Name -in $Executables -and ($_.Parent).Id -in $Running} | Foreach-Object {
+            Get-Process | Where-Object {$_.Name -in $Executables -and $($_.Parent).Parent.Id -in $Running} | Foreach-Object {
                 $ProcessFound++
                 $_.Id
                 Write-Log "Success: got $($_.Id) for $($_.Name) as child of $(($_.Parent).Name)"
