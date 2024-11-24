@@ -2851,20 +2851,23 @@ function Stop-SubProcess {
         try {
             $ScreenCmd = "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
             if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                [int]$ScreenProcessId = Invoke-OCDaemon -Cmd $ScreenCmd
+                $ScreenProcessIds = Invoke-OCDaemon -Cmd $ScreenCmd
                 $OCDcount++
             } else {
-                [int]$ScreenProcessId = Invoke-Expression $ScreenCmd
+                $ScreenProcessIds = Invoke-Expression $ScreenCmd
             }
-            if ($ScreenProcessId) {
-                $ArgumentList = "-S $($Job.ScreenName) -X quit"
-                if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                    $Cmd = "screen $ArgumentList"
-                    $Msg = Invoke-OCDaemon -Cmd $Cmd
-                    if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
-                } else {
-                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                    $Screen_Process.WaitForExit(5000) > $null
+            $ScreenProcessIds | Foreach-Object {
+                $ScreenProcessId = [int]$_
+                if ($ScreenProcessId) {
+                    $ArgumentList = "-S $($ScreenProcessId) -X quit"
+                    if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                        $Cmd = "screen $ArgumentList"
+                        $Msg = Invoke-OCDaemon -Cmd $Cmd
+                        if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
+                    } else {
+                        $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                        $Screen_Process.WaitForExit(5000) > $null
+                    }
                 }
             }
         } catch {
