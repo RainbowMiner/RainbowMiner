@@ -9,7 +9,7 @@ esac
 
 ! command -v screen >/dev/null 2>&1 && { echo "screen command not installed!"; exit 1; }
 
-if ! test -f "/opt/rainbowminer/lib"
+if ! test -d "/opt/rainbowminer/lib"
 then
         screen_dir="$HOME/.screen"
         if ! test -d "$screen_dir"
