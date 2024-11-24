@@ -15,6 +15,17 @@ export GPU_SINGLE_ALLOC_PERCENT=100
 export GPU_MAX_WORKGROUP_SIZE=256
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
+if command -v screen >/dev/null 2>&1 && ! test -d "/opt/rainbowminer/lib"
+then
+        screen_dir="$HOME/.screen"
+        if ! test -d "$screen_dir"
+        then
+                mkdir "$screen_dir"
+                chmod 700 "$screen_dir"
+        fi
+        export SCREENDIR="$screen_dir"
+fi
+
 command="& {./RainbowMiner.ps1 -configfile ./Config/config.txt -setuponly; exit \$lastexitcode}"
 
 while true; do
