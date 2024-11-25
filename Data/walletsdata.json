@@ -165,15 +165,6 @@
         "spent":  "chain_stats.spent_txo_sum"
     },
     {
-        "symbol":  "PYI",
-        "match":  "^pyrin:",
-        "rpc":  "https://api.pyrin.network/addresses/{w}/balance",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "",
-        "divisor":  100000000
-    },
-    {
         "symbol":  "QTUM",
         "match":  "^Q",
         "rpc":  "https://qtumblockexplorer.com/api/v2/address/{w}?details=basic",
@@ -212,13 +203,11 @@
     {
         "symbol":  "TON",
         "match":  "^E[Qf]",
-        "rpc":  "https://api.ton.sh/getAddressInformation?address={w}",
+        "rpc":  "https://toncenter.com/api/v3/addressInformation?address={w}\u0026use_v2=false",
         "address":  "",
         "balance":  "result.balance",
         "received":  "",
-        "divisor":  1000000000,
-        "verify":  "ok",
-        "verify_value":  true
+        "divisor":  1000000000
     },
     {
         "symbol":  "VRSC",
