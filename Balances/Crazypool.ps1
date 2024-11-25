@@ -7,18 +7,15 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "cau.crazypool.org";  symbol = "CAU";  port = @(3113,3223); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "etc.crazypool.org";  symbol = "ETC";  port = @(7000,7777); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "ethf.crazypool.org"; symbol = "ETHF"; port = @(8008,9009); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "kas.crazypool.org";  symbol = "KAS";  port = @(5555);      fee = 1; region = @("sg","eu","us","br"); region_prefix = "kas-"}
-    [PSCustomObject]@{rpc = "kls.crazypool.org";  symbol = "KLS";  port = @(5555);      fee = 1; region = @("sg","eu","us","br"); region_prefix = "kls-"}
-    [PSCustomObject]@{rpc = "octa.crazypool.org"; symbol = "OCTA"; port = @(5225,5885); fee = 1; region = $Pool_Regions}
-    #[PSCustomObject]@{rpc = "pac.crazypool.org";  symbol = "PAC";  port = @();      fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "rth.crazypool.org";  symbol = "RTH";  port = @(3553);      fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "ubq.crazypool.org";  symbol = "UBQ";  port = @(3335);      fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "xpb.crazypool.org";  symbol = "XPB";  port = @(4114,4224); fee = 1; region = $Pool_Regions}
-    [PSCustomObject]@{rpc = "zil.crazypool.org";  symbol = "ZIL";  port = @(5005,5995); fee = 1; region = $Pool_Regions}
+    [PSCustomObject]@{rpc = "etc.crazypool.org";  symbol = "ETC";  port = @(7000,7777);   fee = 1; region = $Pool_Regions; region_prefix = "etc-"}
+    [PSCustomObject]@{rpc = "ethw.crazypool.org"; symbol = "ETHW"; port = @(3333,5555);   fee = 1; region = $Pool_Regions; region_prefix = "ethw-"}
+    [PSCustomObject]@{rpc = "kas.crazypool.org";  symbol = "KAS";  port = @(25101);       fee = 1; region = $Pool_Regions; region_prefix = "kas-"}
+    [PSCustomObject]@{rpc = "lrs.crazypool.org";  symbol = "LRS";  port = @(25001,26001); fee = 1; region = $Pool_Regions; region_prefix = "lrs-"}
+    [PSCustomObject]@{rpc = "octa.crazypool.org"; symbol = "OCTA"; port = @(5225,5885);   fee = 1; region = $Pool_Regions; region_prefix = "octa-"}
+    #[PSCustomObject]@{rpc = "pac.crazypool.org";  symbol = "PAC";  port = @();            fee = 1; region = $Pool_Regions; region_prefix = "pac-"}
+    [PSCustomObject]@{rpc = "sdr.crazypool.org";  symbol = "SDR";  port = @(25101);       fee = 1; region = $Pool_Regions; region_prefix = "sdr-"}
+    [PSCustomObject]@{rpc = "zil.crazypool.org";  symbol = "ZIL";  port = @(5005,5995);   fee = 1; region = $Pool_Regions; region_prefix = "zil-"}
+    [PSCustomObject]@{rpc = "zth.crazypool.org";  symbol = "ZTH";  port = @(25002,26002); fee = 1; region = $Pool_Regions; region_prefix = "zth-"}
 )
 
 $Count = 0
