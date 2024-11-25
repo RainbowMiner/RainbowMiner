@@ -1793,6 +1793,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         $Error.Clear()
     }
 
+    $task.Dispose()
+
     $Data = $null
     $Parameters = $null
     $Utf8NoBomEncoding = $null

@@ -3088,6 +3088,7 @@ function Invoke-Exe {
     } finally {
         if ($psi) {
             $process.Dispose()
+            $process = $null
         }
     }
 }
@@ -3111,6 +3112,8 @@ function Invoke-Process {
         [Parameter(Mandatory = $false)]
         [Switch]$AutoWorkingDirectory = $false
     )
+
+    $cmd = $null
 
     try {
         if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
@@ -3150,6 +3153,10 @@ function Invoke-Process {
         if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not start process $FilePath $($ArgumentList): $($_.Exception.Message)"
     } finally {
         Remove-Item -Path $stdOutTempFile, $stdErrTempFile -Force -ErrorAction Ignore
+        if ($cmd) {
+            $cmd.Dispose()
+            $cmd = $null
+        }
     }
 }
 

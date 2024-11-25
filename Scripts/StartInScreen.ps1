@@ -105,58 +105,65 @@ $Process.Handle >$null
 $ProcessName = $Process.Name
 
 do {
-    if ($ControllerProcess.WaitForExit(1000)) {
-        $ToKill = @()
-        $ToKill += $Process
-        $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
-
-        $ArgumentList = "-S $($ScreenName) -X stuff `^C"
-        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
-            $OCDcount++
-        } else {
-            $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-            $Screen_Process.WaitForExit(5000) > $null
-        }
-
-        $StopWatch.Restart()
-        while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
-            Start-Sleep -Milliseconds 500
-        }
-
-        if (-not $Process.HasExited -and $StartStopDaemon) {
-            $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
-            if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-                Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
-                $OCDcount++
-            } else {
-                $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
-                $StartStopDaemon_Process.WaitForExit(10000) > $null
-            }
-        }
-                
-        $ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
-            if (Test-OCDaemon) {
-                Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "kill -9 $($_.Id)" -Quiet > $null
-                $OCDcount++
-            } else {
-                Stop-Process -InputObject $_ -Force -ErrorAction Ignore
-            }
-        }
-
-        if ($ScreenProcessId) {
-            $ArgumentList = "-S $($ScreenName) -X quit"
-            if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-                Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
-                $OCDcount++
-            } else {
-                $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                $Screen_Process.WaitForExit(5000) > $null
-            }
-        }
-    }
-    $StopWatch = $null
+    $Done = $ControllerProcess.WaitForExit(1000);
     if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
     $Error.Clear()
 }
-while ($Process.HasExited -eq $false)
+while (-not $Done -and $Process.HasExited -eq $false)
+
+$ArgumentList = "-S $($ScreenName) -X stuff `^C"
+if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+    Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
+    $OCDcount++
+} else {
+    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+    $Screen_Process.WaitForExit(5000) > $null
+}
+
+$ToKill = @()
+$ToKill += $Process
+$ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
+
+$StopWatch.Restart()
+while (($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) -and $StopWatch.Elapsed.TotalSeconds -le 10) {
+    Start-Sleep -Milliseconds 500
+}
+
+if (-not $Process.HasExited -and $StartStopDaemon) {
+    $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
+    if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
+        $OCDcount++
+    } else {
+        $StartStopDaemon_Process = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
+        $StartStopDaemon_Process.WaitForExit(10000) > $null
+    }
+}
+                
+$ToKill | Where-Object {-not $_.HasExited} | Foreach-Object {
+    if (Test-OCDaemon) {
+        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "kill -9 $($_.Id)" -Quiet > $null
+        $OCDcount++
+    } else {
+        Stop-Process -InputObject $_ -Force -ErrorAction Ignore
+    }
+}
+
+if ($ScreenProcessId) {
+    $ArgumentList = "-S $($ScreenName) -X quit"
+    if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
+        Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen $ArgumentList" -Quiet > $null
+        $OCDcount++
+    } else {
+        $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+        $Screen_Process.WaitForExit(5000) > $null
+    }
+}
+
+$ToKill | Foreach-Object {$_.Dispose()}
+$ToKill = $null
+
+$Process.Dispose()
+$Process = $null
+
+$StopWatch = $null
