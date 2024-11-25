@@ -155,16 +155,6 @@
         "divisor":  100000000
     },
     {
-        "symbol":  "OBTC",
-        "match":  "^bc1",
-        "rpc":  "https://explorer.powx.org:4221/address/{w}",
-        "address":  "address",
-        "balance":  "",
-        "received":  "chain_stats.funded_txo_sum",
-        "divisor":  100000000,
-        "spent":  "chain_stats.spent_txo_sum"
-    },
-    {
         "symbol":  "QTUM",
         "match":  "^Q",
         "rpc":  "https://qtumblockexplorer.com/api/v2/address/{w}?details=basic",
