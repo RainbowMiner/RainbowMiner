@@ -1142,7 +1142,10 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                     $RigSpeed_Current = $RigSpeed
                                     if ($RigCurrentRentals.ContainsKey($RigName) -and $RigCurrentRentals[$RigName].rig.type -eq $RigMRRid) {
-                                        $RigSpeed_Current = [Math]::Min([double]$RigCurrentRentals[$RigName].hashrate.advertised.hash * $(ConvertFrom-Hash "1$($RigCurrentRentals[$RigName].hashrate.advertised.type)"),$RigSpeed)
+                                        $RigSpeed_Rental  = [double]$RigCurrentRentals[$RigName].hashrate.advertised.hash * $(ConvertFrom-Hash "1$($RigCurrentRentals[$RigName].hashrate.advertised.type)")
+                                        if ($RigSpeed_Rental -gt 0) {
+                                            $RigSpeed_Current = [Math]::Min($RigSpeed_Rental,$RigSpeed)
+                                        }
                                     }
 
                                     $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor_Algorithm + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed_Current
