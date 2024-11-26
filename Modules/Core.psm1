@@ -47,7 +47,7 @@ function Start-Core {
                         Invoke-Exe -FilePath "cp" -ArgumentList "$($Lib_Source) $($Lib_Dest)" -Runas > $null
                     }
 
-                    if (-not (Test-Path $Lib_Link) -or (Get-Item $Lib_Link).LinkTarget -ne $Lib_Dest) {
+                    if ((Test-Path $Lib_Dest) -and (-not (Test-Path $Lib_Link) -or (Get-Item $Lib_Link).LinkTarget -ne $Lib_Dest)) {
                         Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" -Runas:$Linux_LibRunas > $null
                     }
                 }
