@@ -7094,6 +7094,7 @@ Param(
                     fixbigint = [bool]$JobData.fixbigint
                     jobkey    = $JobKey
                     machinename = $Session.MachineName
+                    workername  = $Config.Workername
                     myip      = $Session.MyIP
                 }
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Config.ServerName):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
