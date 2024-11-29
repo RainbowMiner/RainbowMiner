@@ -3334,12 +3334,12 @@ function Test-TcpServer {
 function Get-MyIP {
     if ($IsWindows -and ($cmd = Get-Command "ipconfig" -ErrorAction Ignore)) {
         $IpcResult = Invoke-Exe $cmd.Source -ExpandLines | Where-Object {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'} | Foreach-Object {$Matches[1]}
-        if ($IpcResult.Count -gt 1 -and (Get-Command "Get-NetRoute" -ErrorAction Ignore) -and ($Trunc = Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Select-Object -ExpandProperty NextHop | Where-Object {$_ -match '^(\d{1,3}\.\d{1,3}\.)'} | Foreach-Object {$Matches[1]})) {
+        if ($IpcResult.Count -gt 1 -and (Get-Command "Get-NetRoute" -ErrorAction Ignore) -and ($Trunc = Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Select-Object -ExpandProperty NextHop | Where-Object {$_ -match '^(\d{1,3}\.\d{1,3}\.)'} | Foreach-Object {$Matches[1]} | Select-Object -First 1)) {
             $IpcResult = $IpcResult | Where-Object {$_ -match "^$($Trunc)"}
         }
         $IpcResult | Select-Object -First 1
     } elseif ($IsLinux) {
-        try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {if ($Error.Count){$Error.RemoveAt(0)};try {hostname -I} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {if ($Error.Count){$Error.RemoveAt(0)};try {hostname -I | Where-Object {$_ -match "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"} | Foreach-Object {$Matches[1]} | Select-Object -First 1} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
     }
 }
 
