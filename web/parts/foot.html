@@ -147,6 +147,11 @@ $(function () {
         } else {
             $(".is--linux").hide()
         }
+        if (typeof globalconfig.IsServer !== "undefined" && globalconfig.IsServer) {
+            $('a#navnetwork').closest('li').show()
+        } else {
+            $('a#navnetwork').closest('li').hide()
+        }
         setTimeout(q, 600000);
     })();
 
