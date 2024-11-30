@@ -4,42 +4,54 @@
 </div>
 
 <form id="formConfig">
-    <input type="hidden" name="ConfigName" value="Coins" />
-    <div id="accordion"></div>
-    <div class="card mb-3">
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </div>
+    <input type="hidden" name="ConfigName" value="Coins">
+
+    <!-- Accordion -->
+    <div class="accordion" id="accordion"></div>
 </form>
 
 <script id="coinsetup_template" type="text/x-handlebars-template">
-    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}">
-        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapse{{coinsymbol}}" aria-expanded="true" aria-controls="collapse{{coinsymbol}}"><div class="card-header" id="heading{{coinsymbol}}"><h5>{{title}}</h5></div></button>
-        <div id="collapse{{coinsymbol}}" class="collapse" aria-labelledby="heading{{coinsymbol}}" data-parent="#accordion">
-            <div class="card-body">
-                <input type="hidden" name="Coins[]" value="{{coinsymbol}}" />
+    <!-- Accordion Item -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading{{coinsymbol}}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{coinsymbol}}" aria-expanded="false" aria-controls="collapse{{coinsymbol}}">
+                {{title}}
+            </button>
+        </h2>
+        <div id="collapse{{coinsymbol}}" class="accordion-collapse collapse" aria-labelledby="heading{{coinsymbol}}" data-bs-parent="#accordionExample">
+            <div class="accordion-body">
+                <input type="hidden" name="Coins[]" value="{{coinsymbol}}">
+
+                <!-- Dynamic Fields -->
                 {{#each common}}
                 {{#if (eq this.type "text")}}
-                <div class="form-group row">
+                <!-- Text Input -->
+                <div class="mb-3 row">
                     <label for="{{this.coinsymbol}}--input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}" value="{{this.value}}">
-                        <div class="form-text text-muted">{{this.text}}</div>
+                        <div class="form-text">{{this.text}}</div>
                     </div>
                 </div>
                 {{else if (eq this.type "bool")}}
-                <div class="form-group row">
+                <!-- Boolean Dropdown -->
+                <div class="mb-3 row">
                     <label for="{{this.coinsymbol}}--input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
                     <div class="col-sm-10">
-                        <select class="form-control mr-sm-2" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}">
-                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
-                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
+                        <select class="form-select" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}">
+                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>Disable</option>
+                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>Enable</option>
                         </select>
-                        <div class="form-text text-muted">{{this.text}}</div>
+                        <div class="form-text">{{this.text}}</div>
                     </div>
                 </div>
                 {{else if (eq this.type "checkbox")}}
-                <div class="form-group row">
-                    <div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}" value="{{this.value}}"><label class="custom-control-label" for="{{this.coinsymbol}}--input{{this.key}}">{{this.text}}</label></div>
+                <!-- Checkbox -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="{{this.coinsymbol}}--input{{this.key}}" name="{{this.coinsymbol}}--{{this.key}}" value="{{this.value}}" {{#if this.checked}} checked{{/if}}>
+                    <label class="form-check-label" for="{{this.coinsymbol}}--input{{this.key}}">
+                        {{this.text}}
+                    </label>
                 </div>
                 {{/if}}
                 {{/each}}
@@ -94,7 +106,6 @@ $(function() {
                     var item = {
                         title: "Enter a new coin",
                         coinsymbol: "Newcoin",
-                        dark: theme=="dark",
                         common: [{coinsymbol:"Newcoin",key:"CoinSymbol",text:"Enter a valid coin symbol (no spaces!)",value:"",type:"text"}]
                     }
                     $.each(common,function(key,val) {
@@ -106,7 +117,6 @@ $(function() {
                     var item = {
                         title: coinsymbol,
                         coinsymbol: coinsymbol,
-                        dark: theme=="dark",
                         common: []
                     }
                     $.each(common,function(key,val) {
@@ -118,6 +128,7 @@ $(function() {
                 
                     $('#accordion').append(template(item))                
                 })
+                $('#accordion').append('<div class="accordion-item"><div class="accordion-body text-center"><button type="submit" class="btn btn-primary">Submit</button></div></div>');
             }
         });
     }
@@ -128,20 +139,25 @@ $(function() {
         // Stop form from submitting normally
         event.preventDefault();
         if (globalconfig.IsLocked) {
-            $('.modal-body').html('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt');
-            $('.modal-title').text('Warning: config lock is enabled');
-            $('#myModal').modal({ show: true });
+            document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
+            document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
             return false;
         }
         $.post("/saveconfig", $(this).serialize()).done(function (data) {
+            var mbody, mtitle;
             if (data.Success) {
-                $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
-                $('.modal-title').text('Configuration saved!');
+                mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
+                mtitle = 'Configuration saved!';
             } else {
-                $('.modal-body').html('Something went wrong or the configuration is locked via APILockConfig in config.txt');
-                $('.modal-title').text('Configuration NOT saved!');
+                mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
+                mtitle = 'Configuration NOT saved!';
             }
-            $('#myModal').modal({ show: true });
+            document.querySelector('.modal-body').innerHTML = mbody;
+            document.querySelector('.modal-title').textContent = mtitle;
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
             loadconfig();
         });
     })

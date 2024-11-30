@@ -6,10 +6,6 @@ pre {
     color: inherit;
 }
 
-.detail-icon:before {
-  content: "+";
-}
-
 .nav-item .svg-inline--fa {
   width: 16px;
   height: 16px;
@@ -176,10 +172,6 @@ pre {
   color: #333;
 }
 
-.sidebar .nav-link-dark {
-  color: #AAA;
-}
-
 .sidebar .nav-link .feather {
   margin-right: 4px;
   color: #999;
@@ -197,6 +189,42 @@ pre {
 .sidebar-heading {
   font-size: .75rem;
   text-transform: uppercase;
+}
+
+/*
+ * Cards
+*/
+
+.card-deck {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+}
+
+.card-deck .card {
+    margin-bottom: 15px
+}
+
+@media (min-width:576px) {
+    .card-deck {
+        -ms-flex-flow: row wrap;
+        flex-flow: row wrap;
+        margin-right: -15px;
+        margin-left: -15px
+    }
+
+    .card-deck .card {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex: 1 0 0%;
+        flex: 1 0 0%;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        margin-right: 15px;
+        margin-bottom: 0;
+        margin-left: 15px
+    }
 }
 
 /*
@@ -230,7 +258,36 @@ pre {
     opacity: 0.1;
 }
 
-#accordion button {
-    padding:0;
-    border:none;
+.Running, .Benchmarking, tr.Running td, tr.Benchmarking td {
+    background-color: rgb(127,191,144) !important;
+}
+
+.Offline, tr.Offline td {
+    background-color: rgb(213,142,176) !important;
+}
+
+.Paused, .Waiting, tr.Paused td, tr.Waiting td {
+    background-color: rgb(247,252,168) !important;
+}
+
+
+[data-bs-theme=dark] .Running, [data-bs-theme=dark] .Benchmarking, [data-bs-theme=dark] tr.Running td, [data-bs-theme=dark] tr.Benchmarking td {
+    background-color: rgb(80, 121, 91) !important;
+}
+
+[data-bs-theme=dark] .Offline, [data-bs-theme=dark] tr.Offline td {
+    background-color: rgb(189, 78, 78) !important;
+}
+
+[data-bs-theme=dark] .Paused, [data-bs-theme=dark] .Waiting, [data-bs-theme=dark] tr.Paused td, [data-bs-theme=dark] tr.Waiting td {
+    background-color: rgb(145, 148, 101) !important;
+}
+
+[data-bs-theme=dark] .sidebar .nav-link {
+    color: #AAA;
+}
+
+[data-bs-theme=dark] .h-selector:hover {
+    color: #fff;
+    background-color: rgba(255,255,255,.075);
 }

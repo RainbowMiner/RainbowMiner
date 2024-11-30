@@ -1,61 +1,20 @@
-﻿html,body,.form-control,.sidebar,button.btn.btn-default,.page-list .btn {
-    background-color: #343a40!important;
-    color: #f8f9fa!important;
+﻿[data-bs-theme=dark] .Running, [data-bs-theme=dark] .Benchmarking, [data-bs-theme=dark] tr.Running td, [data-bs-theme=dark] tr.Benchmarking td {
+    background-color: rgb(80, 121, 91) !important;
 }
 
-.page-link {
-    background-color: #343a40;
-    border-color: #454d55;
-    color: #fff;
+[data-bs-theme=dark] .Offline, [data-bs-theme=dark] tr.Offline td {
+    background-color: rgb(189, 78, 78) !important;
 }
 
-.page-link.active {
-    background-color: #007bff;
+[data-bs-theme=dark] .Paused, [data-bs-theme=dark] .Waiting, [data-bs-theme=dark] tr.Paused td, [data-bs-theme=dark] tr.Waiting td {
+    background-color: rgb(145, 148, 101) !important;
 }
 
-.page-link:hover {
-    background-color: rgba(255,255,255,.075);
-    border-color: #454d55;
-    color: #fff;
+[data-bs-theme=dark] .sidebar .nav-link {
+    color: #AAA;
 }
 
-.page-item.disabled .page-link {
-    background-color: #343a40;
-    border-color: #454d55;
-    color: #fff;
-}
-
-button.btn.btn-default {
-    border: 1px solid rgba(0,0,0,0.125);
-}
-
-.Running, .Benchmarking {
-    background-color: rgb(80, 121, 91);
-}
-
-.Offline {
-    background-color: rgb(189, 78, 78);
-}
-
-.Paused, .Waiting {
-    background-color: rgb(145, 148, 101);
-}
-
-.h-selector:hover {
+[data-bs-theme=dark] .h-selector:hover {
     color: #fff;
     background-color: rgba(255,255,255,.075);
-}
-
-.modal .modal-content {
-    background-color: #343a40!important;
-}
-
-.modal .modal-header {
-    background-color: rgba(0,0,0,0.03);
-    border-bottom: 1px solid rgba(0,0,0,0.125);
-}
-
-.modal .modal-footer {
-    background-color: rgba(0,0,0,0.03);
-    border-top: 1px solid rgba(0,0,0,0.125);
 }

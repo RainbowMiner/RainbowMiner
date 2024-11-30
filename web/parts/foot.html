@@ -6,19 +6,12 @@
 
     function setTheme(val) {
         if (val == "dark") {
-            $('table.table').addClass("table-dark");
-            $('body').removeClass("text-dark bg-light").addClass("text-light bg-dark");
-            $('.card:not(.bg-primary)').removeClass("text-dark bg-white").addClass("text-light bg-dark");
-            $('a.nav-link').addClass("nav-link-dark");            
+            document.documentElement.setAttribute('data-bs-theme', val);
         } else {
-            $('table.table').removeClass("table-dark");
-            $('body').removeClass("text-light bg-dark").addClass("text-dark bg-light");
-            $('.card:not(.bg-primary)').removeClass("text-light bg-dark").addClass("text-dark bg-white");
-            $('a.nav-link').removeClass("nav-link-dark");
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         }
         setCookie("rbm-theme", val, -1);
         theme = val;
-        $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
     }
 
     function updateProfitHead() {

@@ -48,7 +48,8 @@
     $("#applyoc").click(function () {
         $('.modal-body').load('/applyoc', function () {
             $('.modal-title').text('Overclocking Profiles will be applied');
-            $('#myModal').modal({ show: true });
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
         });
     });
 

@@ -93,23 +93,22 @@
     }
 </style>
 <!-- Modal -->
-<div class="modal fade" id="logModal" role="dialog">
+<div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-dialog">
-        <!-- Modal content-->
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"></h4>
+                <h5 class="modal-title" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <pre></pre>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
-
 
 <!-- End of page scripts -->
 <script>
@@ -118,7 +117,8 @@
             if (confirm("Do you really want to rebench ALL miners?\n\nThis will delete all your benchmarks, so please think twice.\n\nAre you sure?")) {
                 $('#myModal .modal-body').load('scripts/resetallbenchmarks.ps1', function () {
                     $('#myModal .modal-title').text('Reset All Benchmarks');
-                    $('#myModal').modal({ show: true });
+                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                    myModal.show();
                 });
             }
             return false
@@ -127,14 +127,16 @@
         $('#resetneededbenchmarks').click(function () {
             $('#myModal .modal-body').load('scripts/resetneededbenchmarks.ps1', function () {
                 $('#myModal .modal-title').text('Reset Needed Benchmarks');
-                $('#myModal').modal({ show: true });
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
             });
         });
 
         $('#resetzerohashrateminers').click(function () {
             $('#myModal .modal-body').load('scripts/resetzerohashrateminers.ps1', function () {
                 $('#myModal .modal-title').text('Reset 0H/s Miners');
-                $('#myModal').modal({ show: true });
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
             });
         });
 
@@ -154,9 +156,10 @@
                     params.devicemodel.push(btn.attr('data-devicemodel').toString());
                 })
                 $.post('scripts/resetselectedbenchmark.ps1',params,function(result) {
-                    $('#myModal .modal-body').html(result)
-                    $('#myModal.modal-title').text('Reset Selected Benchmarks');
-                    $('#myModal').modal({ show: true });
+                    document.querySelector('#myModal .modal-body').innerHTML = result;
+                    document.querySelector('#myModal .modal-title').textContent = 'Reset Selected Benchmarks';
+                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                    myModal.show();
                 })
             }
             return false;
@@ -171,7 +174,8 @@
                 };
                 $('#myModal .modal-body').load('scripts/resetonebenchmark.ps1?' + jQuery.param(params), function () {
                     $('#myModal .modal-title').text('Reset miner '+params.name.replace(/-GPU.+$/,'')+params.devicemodel+'-'+params.algorithm);
-                    $('#myModal').modal({ show: true });
+                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                    myModal.show();
                 });
             });
             $('#minerstats button[name=logfile]').click(function () {
@@ -180,9 +184,10 @@
                 };
                 $.get('/getminerlog?' + jQuery.param(params), function (result) {
                     if (result.Status) {
-                        $('#logModal .modal-title').text(params.logfile);
-                        $('#logModal .modal-body pre').text(result.Content);
-                        $('#logModal').modal({ show: true });
+                        document.querySelector('#logModal .modal-title').textContent = params.logfile;
+                        document.querySelector('#logModal .modal-body pre').textContent = result.Content;
+                        var myModal = new bootstrap.Modal(document.getElementById('logModal'));
+                        myModal.show();
                     }
                 });
             });

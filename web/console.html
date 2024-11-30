@@ -21,7 +21,7 @@
 
 <!-- End of page scripts -->
 <script id="miner_template" type="text/x-handlebars-template">
-    <div class="mb-2 card {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" style="min-width: 400px">
+    <div class="mb-2 card" style="min-width: 400px">
         <div class="card-header">
             <h5>{{name}}</h5>
         </div>
@@ -83,7 +83,7 @@ $(function () {
                 $("#minerboxes").empty()
                 if (result.Miners && result.Miners.length) {
                     $.each(result.Miners,function(ix,item) {
-                        $("#minerboxes").append(template({name: item.Name, content: item.Content, dark: theme == "dark"}));
+                        $("#minerboxes").append(template({name: item.Name, content: item.Content}));
                     })
                     if ($("#miners").is(":hidden"))
                         $("#miners").show()

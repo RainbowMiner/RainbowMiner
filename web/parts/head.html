@@ -3,15 +3,15 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.15.5/bootstrap-table.min.css" integrity="sha384-P/g/stccCNzevh4v2oX0d2JNytkVt/aAXj7TTG8xEFvo66uansVguApJSc/38GWf" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.15.5/extensions/filter-control/bootstrap-table-filter-control.css" integrity="sha384-ebW79iNYmzzTNDfT+GK21+oVV7TmD6HlkYgEeZVwTx9NgqFzaJIyPC+h68nAGw8/" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.css" integrity="sha384-fuVQAFcapNt186pSM9/Ah9HzxyJ82xlqLcRuQmASn5PGL6aTtF/hcSCqKnKu/rDQ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.css" integrity="sha384-4Glx18jZ0Un+yDG6KUpYJ/af8hkssJ02jRASuFv23gfCl0mTXaVMPI9cB4cn3GvE" crossorigin="anonymous">
 
     <link rel="stylesheet" href="/css/dashboard.css" />
-    <link rel="stylesheet" href="/css/theme-nop.css" id="themecss" />
     <link rel="stylesheet" href="/js/extensions/json-editor/jquery.json-viewer.css" />
 
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
     <script src="/js/extensions/json-editor/jquery.json-viewer.js"></script>
     <script src="/js/extensions/json-editor/jquery.json-editor.js"></script>
     <script src="/js/utilities-1.7.js"></script>
@@ -19,15 +19,14 @@
         var theme = getCookie("rbm-theme");
         $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.15.5/bootstrap-table.min.js" integrity="sha384-h1ojEby9jGU0Cj4twQ+/FiHMUe4dTTAhqb4pHTv8RWPOZkEuBezxYDADWQiyJJl9" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.15.5/extensions/auto-refresh/bootstrap-table-auto-refresh.min.js" integrity="sha384-lcMMtWlfQmLDJ3xKe/JsWF5DA0k0JYXu/TJZot7aKivxzjRhkX9eEPpTZuIOZNDw" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.15.5/extensions/filter-control/bootstrap-table-filter-control.min.js" integrity="sha384-vJAtHU2z67D36zCEkzWQCwZKLng8n9B5uwdsgmk70eFt/cb4EbO9qIZRBFL3A8aZ" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.15.5/extensions/export/bootstrap-table-export.min.js" integrity="sha384-tEVX4XUbfV4bhT6126PT01Ek133f+d5pEPuMKZKaTKq3hKPxgvky10pBgoFYApOe" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.2/handlebars.min.js" integrity="sha384-r11LwXDT+FAqmjJLLg2EjmzYbSlNCeRywaNcD0DXcBVzhR+7ieOvEc3SDpcujOJu" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" integrity="sha384-QzN1ywg2QLsf72ZkgRHgjkB/cfI4Dqjg6RJYQUqH6Wm8qp/MvmEYn+2NBsLnhLkr" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha384-8CYhPwYlLELodlcQV713V9ZikA3DlCVaXFDpjHfP8Z36gpddf/Vrt47XmKDsCttu" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js" integrity="sha384-XzG6fkTWfBdkqo/0fud7EdAH6saZWQH46UMq/cFc++2Xkhy5+98u/N2UJQ/lM3Q+" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/auto-refresh/bootstrap-table-auto-refresh.js" integrity="sha384-rl1d2uFLFg0Td49B9N5PTHM5UBZ3aSIskNRiGFopLqLeEH8xrkgQDD8ApT3ODtS6" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.js" integrity="sha384-LlnY0s6dgHfx5K2Xw4o3ziZTNRH4pwiCiRvzdWO5l1MctR+6wcZgEObDZYt6Xb3T" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/export/bootstrap-table-export.js" integrity="sha384-IXCw6ilqS1pJJOLzEfq7PE8HThCz0/7EWAkOanc/QtLkC3l3UGv9HBrBkSv8smgN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.js" integrity="sha384-QUhmvCKocyfe+3p0uc73Hq5wMpUERuIahFAsyHXwZ01QxtaILhVpAYsJLeFnuNhY" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js" integrity="sha384-J08i8An/QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.10.2/js/all.js" integrity="sha384-QMu+Y+eu45Nfr9fmFOlw8EqjiUreChmoQ7k7C1pFNO8hEbGv9yzsszTmz+RzwyCh" crossorigin="anonymous"></script>
     <!-- script src="/js/bootstrap-table-contextmenu.js"></script -->
     <title>RainbowMiner Local Dashboard</title>
@@ -71,7 +70,7 @@
                     E-Price: <span></span>
                 </div>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>Main</span>
                 </h6>
                 <ul class="nav flex-column mb-2">
@@ -91,13 +90,18 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a id="navnetwork" class="nav-link" href="network.html">
+                            <i class="fas fa-network-wired"></i>Network
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a id="navdonate" class="nav-link" href="donate.html">
                             <i class="fas fa-donate"></i>Support RBM
                         </a>
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>Devices</span>
                 </h6>
                 <ul class="nav flex-column mb-2">
@@ -118,7 +122,7 @@
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>Pools</span>
                     <a class="nav-link" style="padding:0" href="setuppools.html">
                         <i class="fas fa-cog"></i>
@@ -152,7 +156,7 @@
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>Miners</span>
                 </h6>
                 <ul class="nav flex-column mb-2">
@@ -182,7 +186,7 @@
                         </a>
                     </li>
                 </ul>
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>Config</span>
                 </h6>
                 <ul class="nav flex-column mb-2">
@@ -228,7 +232,7 @@
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>MRR</span>
                 </h6>
                 <ul class="nav flex-column mb-2">
@@ -244,7 +248,7 @@
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>Links</span>
                 </h6>
                 <ul class="nav flex-column mb-2">
@@ -259,7 +263,7 @@
                         </a>
                     </li>
                 </ul>
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted fw-normal">
                     <span>Theme</span>
                 </h6>
                 <ul class="nav flex-column mb-2">
@@ -273,20 +277,19 @@
             </div>
         </nav>
         <main role="main" class="main col-sm-12">
-        
-        <!-- Modal -->
-        <div class="modal fade" id="myModal" role="dialog">
-          <div class="modal-dialog">
-            <!-- Modal content-->
-            <div class="modal-content">
-              <div class="modal-header">
-                <h4 class="modal-title"></h4>
-              </div>
-              <div class="modal-body">
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              </div>
+
+        <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>

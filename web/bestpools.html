@@ -54,7 +54,7 @@
             item.tAlgorithm = formatAlgorithm(item.Algorithm);
             item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
             item.tErrorRatio = typeof item.ErrorRatio != "undefined" ? parseFloat(item.ErrorRatio).toFixed(3) : "-";
-            item.tWTM = typeof item.WTM != "undefined" && item.WTM? "<span class='text-success font-weight-bold'>&check;</span>":"";
+            item.tWTM = typeof item.WTM != "undefined" && item.WTM? "<span class='text-success fw-bold'>&check;</span>":"";
             if (typeof item.tCoin == "undefined" || item.tCoin == null) {item.tCoin = ""}
         });
         return data;

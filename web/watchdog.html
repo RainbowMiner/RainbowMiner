@@ -43,9 +43,10 @@
         $("#resetwatchdog").click(function () {
             $.ajax({
                 url: '/watchdogreset', success: function (result) {
-                    $('.modal-body').text('Watchdog will be reset asap');
-                    $('.modal-title').text('Watchdog reset initiated');
-                    $('#myModal').modal({ show: true });
+                    document.querySelector('.modal-body').innerHTML = 'Watchdog will be reset asap';
+                    document.querySelector('.modal-title').textContent = 'Watchdog reset initiated';
+                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                    myModal.show();
                 }
             })
         });

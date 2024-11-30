@@ -9,62 +9,68 @@
     <input type="hidden" name="savearrays[]" value="ExcludeDeviceName" />
     <input type="hidden" name="savearrays[]" value="PoolName" />
     <input type="hidden" name="savearrays[]" value="ExcludePoolName" />
-    <div id="accordion">
+    <div class="accordion" id="accordionExample">
 
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"><div class="card-header" id="headingOne"><h5>Basic Setup</h5></div></button>
-            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+        <!-- Basic Setup -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Basic Setup
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Form elements for Basic Setup -->
+                    <div class="mb-3 row">
                         <label for="inputWallet" class="col-sm-2 col-form-label">BTC Wallet</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputWallet" name="Wallet" placeholder="Enter your BTC wallet address">
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputWorkerName" class="col-sm-2 col-form-label">WorkerName</label>
+                    <div class="mb-3 row">
+                        <label for="inputWorkerName" class="col-sm-2 col-form-label">Worker Name</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputWorkerName" name="WorkerName" placeholder="Enter your worker's name">
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="mb-3 row">
                         <label for="inputRegion" class="col-sm-2 col-form-label">Region</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputRegion" name="Region" placeholder="Enter your region">
                         </div>
                     </div>
-                    <div class="form-group row">
+                    <div class="mb-3 row">
                         <label for="inputCurrency" class="col-sm-2 col-form-label">Currencies</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputCurrency" name="Currency" placeholder="Enter all currencies to be displayed (e.g. EUR,USD,BTC)">
+                            <input type="text" class="form-control" id="inputCurrency" name="Currency" placeholder="Enter all currencies to be displayed (e.g., EUR,USD,BTC)">
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputMiningMode" class="col-sm-2 col-form-label">Mining-Mode</label>
+                    <div class="mb-3 row">
+                        <label for="inputMiningMode" class="col-sm-2 col-form-label">Mining Mode</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputMiningMode" name="MiningMode">
+                            <select class="form-select" id="inputMiningMode" name="MiningMode">
                                 <option value="legacy">Legacy (all CPU and all NVIDIA/AMD are handled as one)</option>
-                                <option value="device">Device (each CPU/GPU is handled seperately)</option>
+                                <option value="device">Device (each CPU/GPU is handled separately)</option>
                                 <option value="combo">Combo (like "Device", plus equal GPU types are handled as combos)</option>
                             </select>
                         </div>
                     </div>
                     <div class="is--linux">
-                        <div class="form-group row">
+                        <div class="mb-3 row">
                             <label for="inputEnableLinuxHeadless" class="col-sm-2 col-form-label">Headless Linux</label>
                             <div class="col-sm-10">
-                                <select class="form-control mr-sm-2" id="inputEnableLinuxHeadless" name="EnableLinuxHeadless">
-                                    <option value="0">disable</option>
-                                    <option value="1">enable</option>
+                                <select class="form-select" id="inputEnableLinuxHeadless" name="EnableLinuxHeadless">
+                                    <option value="0">Disable</option>
+                                    <option value="1">Enable</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group row">
+                        <div class="mb-3 row">
                             <label for="inputEnableMinersAsRoot" class="col-sm-2 col-form-label">Miners as Root</label>
                             <div class="col-sm-10">
-                                <select class="form-control mr-sm-2" id="inputEnableMinersAsRoot" name="EnableMinersAsRoot">
-                                    <option value="0">disable</option>
-                                    <option value="1">enable</option>
+                                <select class="form-select" id="inputEnableMinersAsRoot" name="EnableMinersAsRoot">
+                                    <option value="0">Disable</option>
+                                    <option value="1">Enable</option>
                                 </select>
                             </div>
                         </div>
@@ -72,144 +78,184 @@
                 </div>
             </div>
         </div>
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo"><div class="card-header" id="headingTwo"><h5>Devices</h5></div></button>
-            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+
+        <!-- Devices -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Devices
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Form elements for Devices -->
+                    <div class="mb-3 row">
                         <label for="inputDeviceName" class="col-sm-2 col-form-label">Devices</label>
-                        <div class="col-sm-10" id="devices">
-                        </div>
+                        <div class="col-sm-10" id="devices"></div>
                     </div>
-                    <div class="form-group row">
+                    <div class="mb-3 row">
                         <label for="inputPools" class="col-sm-2 col-form-label">Exclude Devices</label>
-                        <div class="col-sm-10" id="excludedevices">
-                        </div>
+                        <div class="col-sm-10" id="excludedevices"></div>
                     </div>
-                    <div class="form-group row is--cpu">
-                        <label for="inputCPUMiningThreads" class="col-sm-2 col-form-label">CPU mining threads</label>
+                    <div class="mb-3 row is--cpu">
+                        <label for="inputCPUMiningThreads" class="col-sm-2 col-form-label">CPU Mining Threads</label>
                         <div class="col-sm-10">
                             <input type="number" class="form-control" id="inputCPUMiningThreads" name="CPUMiningThreads" min="1" max="255" step="1" placeholder="Enter number of CPU threads for mining on CPU">
                         </div>
                     </div>
-                    <div class="form-group row is--cpu">
-                        <label for="inputCPUMiningAffinity" class="col-sm-2 col-form-label">CPU mining affinity</label>
+                    <div class="mb-3 row is--cpu">
+                        <label for="inputCPUMiningAffinity" class="col-sm-2 col-form-label">CPU Mining Affinity</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputCPUMiningAffinity" name="CPUMiningAffinity">
-                            <div id="inputCPUMiningAffinityHelp" class="form-text text-muted">Enter the CPU mining affinity as hex string starting with 0x... or leave empty for automatic affinity</div>
+                            <div id="inputCPUMiningAffinityHelp" class="form-text">Enter the CPU mining affinity as a hex string starting with 0x... or leave empty for automatic affinity</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree"><div class="card-header" id="headingThree"><h5>Pools, Miners and Algorithms</h5></div></button>
-            <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+
+        <!-- Pools, Miners, and Algorithms -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    Pools, Miners and Algorithms
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Pools -->
+                    <div class="mb-3 row">
                         <label for="inputPools" class="col-sm-2 col-form-label">Pools</label>
                         <div class="col-sm-10" id="pools">
+                            <!-- Add dynamic content here -->
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputPools" class="col-sm-2 col-form-label">Exclude Pools</label>
+
+                    <!-- Exclude Pools -->
+                    <div class="mb-3 row">
+                        <label for="inputExcludePools" class="col-sm-2 col-form-label">Exclude Pools</label>
                         <div class="col-sm-10" id="excludepools">
+                            <!-- Add dynamic content here -->
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Algorithm -->
+                    <div class="mb-3 row">
                         <label for="inputAlgorithm" class="col-sm-2 col-form-label">Algorithm</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputAlgorithm" name="Algorithm" placeholder="Enter the algorithm you want to mine (leave empty for all)">
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Exclude Algorithm -->
+                    <div class="mb-3 row">
                         <label for="inputExcludeAlgorithm" class="col-sm-2 col-form-label">Exclude Algorithm</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputExcludeAlgorithm" name="ExcludeAlgorithm" placeholder="Enter the algorithm you do not want to exclude">
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Enable Algorithm Variants -->
+                    <div class="mb-3 row">
                         <label for="inputEnableAlgorithmVariants" class="col-sm-2 col-form-label">Enable automatic Algo-Variants</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableAlgorithmVariants" name="EnableAlgorithmVariants">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableAlgorithmVariants" name="EnableAlgorithmVariants">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
-                            <div id="inputEnableAlgorithmVariantsHelp" class="form-text text-muted">Enable automatic use of algorithm variants (e.g. if you exclude/select Ethash, all variants like Ethash2g, EthasLowMemory, ... will be excluded/selected too)</div>
+                            <div id="inputEnableAlgorithmVariantsHelp" class="form-text">Enable automatic use of algorithm variants (e.g., if you exclude/select Ethash, all variants like Ethash2g, EthasLowMemory, ... will be excluded/selected too)</div>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputMinerName" class="col-sm-2 col-form-label">MinerName</label>
+
+                    <!-- Miner Name -->
+                    <div class="mb-3 row">
+                        <label for="inputMinerName" class="col-sm-2 col-form-label">Miner Name</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputMinerName" name="MinerName" placeholder="Enter the miners you want to use (leave empty for all)">
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputExcludeMinerName" class="col-sm-2 col-form-label">Exclude MinerName</label>
+
+                    <!-- Exclude Miner Name -->
+                    <div class="mb-3 row">
+                        <label for="inputExcludeMinerName" class="col-sm-2 col-form-label">Exclude Miner Name</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputExcludeMinerName" name="ExcludeMinerName" placeholder="Enter the miners you do want to exclude">
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputDisableDualMining" class="col-sm-2 col-form-label">Disable DualMining</label>
+
+                    <!-- Disable Dual Mining -->
+                    <div class="mb-3 row">
+                        <label for="inputDisableDualMining" class="col-sm-2 col-form-label">Disable Dual Mining</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputDisableDualMining" name="DisableDualMining">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputDisableDualMining" name="DisableDualMining">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputEnableDualMiningDuringRentals" class="col-sm-2 col-form-label">DualMining during Rental</label>
+
+                    <!-- Dual Mining During Rental -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableDualMiningDuringRentals" class="col-sm-2 col-form-label">Dual Mining During Rental</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableDualMiningDuringRentals" name="EnableDualMiningDuringRentals">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableDualMiningDuringRentals" name="EnableDualMiningDuringRentals">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Disable 0-Watt Miners -->
+                    <div class="mb-3 row">
                         <label for="inputDisableZeroWattMiners" class="col-sm-2 col-form-label">Disable 0-Watt Miners</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputDisableZeroWattMiners" name="DisableZeroWattMiners">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputDisableZeroWattMiners" name="DisableZeroWattMiners">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Exclude Miners with Fee -->
+                    <div class="mb-3 row">
                         <label for="inputExcludeMinersWithFee" class="col-sm-2 col-form-label">Exclude Miners with Fee</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputExcludeMinersWithFee" name="ExcludeMinersWithFee">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputExcludeMinersWithFee" name="ExcludeMinersWithFee">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Check CPU/GPU Conflicts -->
+                    <div class="mb-3 row">
                         <label for="inputEnableCheckMiningConflict" class="col-sm-2 col-form-label">Check CPU/GPU Conflicts</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableCheckMiningConflict" name="EnableCheckMiningConflict">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableCheckMiningConflict" name="EnableCheckMiningConflict">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputEnableEthashZombieMode" class="col-sm-2 col-form-label">Enable Ethash zombie-mode</label>
+
+                    <!-- Enable Ethash Zombie Mode -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableEthashZombieMode" class="col-sm-2 col-form-label">Enable Ethash Zombie Mode</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableEthashZombieMode" name="EnableEthashZombieMode">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableEthashZombieMode" name="EnableEthashZombieMode">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputEnableMinersToSaveDAG" class="col-sm-2 col-form-label">Allow miners to save DAGs to disk</label>
+
+                    <!-- Allow Miners to Save DAG -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableMinersToSaveDAG" class="col-sm-2 col-form-label">Allow Miners to Save DAGs to Disk</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableMinersToSaveDAG" name="EnableMinersToSaveDAG">
-                                <option value="0">disallow</option>
-                                <option value="1">allow</option>
+                            <select class="form-select" id="inputEnableMinersToSaveDAG" name="EnableMinersToSaveDAG">
+                                <option value="0">Disallow</option>
+                                <option value="1">Allow</option>
                             </select>
                         </div>
                     </div>
@@ -217,49 +263,61 @@
             </div>
         </div>
 
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour"><div class="card-header" id="headingFour"><h5>Enable Overclocking</h5></div></button>
-            <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFour">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                    Enable Overclocking
+                </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Enable OC-Profiles -->
+                    <div class="mb-3 row">
                         <label for="inputEnableOCProfiles" class="col-sm-2 col-form-label">Enable OC-Profiles</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableOCProfiles" name="EnableOCProfiles">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableOCProfiles" name="EnableOCProfiles">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
-                            <div id="inputEnableOCProfilesHelp" class="form-text text-muted">Enable custom overclocking profiles in ocprofiles.config.txt</div>
+                            <div id="inputEnableOCProfilesHelp" class="form-text">Enable custom overclocking profiles in ocprofiles.config.txt</div>
                         </div>
                     </div>
-                    <div class="form-group row is--ocprofiles">
+
+                    <!-- Enable Voltage OC -->
+                    <div class="mb-3 row is--ocprofiles">
                         <label for="inputEnableOCVoltage" class="col-sm-2 col-form-label">Enable Voltage OC</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2 " id="inputEnableOCVoltage" name="EnableOCVoltage">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableOCVoltage" name="EnableOCVoltage">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
-                            <div id="inputEnableOCVoltageHelp" class="form-text text-muted">Enable custom overclocking voltage setting in ocprofiles.config.txt</div>
+                            <div id="inputEnableOCVoltageHelp" class="form-text">Enable custom overclocking voltage setting in ocprofiles.config.txt</div>
                         </div>
                     </div>
+
+                    <!-- Linux Specific Options -->
                     <div class="is--linux">
-                        <div class="form-group row is--ocprofiles">
-                            <label for="inputEnableOCLinuxSetAllPStates" class="col-sm-2 col-form-label">Set all PStates</label>
+                        <!-- Set All PStates -->
+                        <div class="mb-3 row is--ocprofiles">
+                            <label for="inputEnableOCLinuxSetAllPStates" class="col-sm-2 col-form-label">Set All PStates</label>
                             <div class="col-sm-10">
-                                <select class="form-control mr-sm-2" id="inputEnableOCLinuxSetAllPStates" name="EnableOCLinuxSetAllPStates">
-                                    <option value="0">disable</option>
-                                    <option value="1">enable</option>
+                                <select class="form-select" id="inputEnableOCLinuxSetAllPStates" name="EnableOCLinuxSetAllPStates">
+                                    <option value="0">Disable</option>
+                                    <option value="1">Enable</option>
                                 </select>
-                                <div id="inputEnableOCLinuxSetAllPStatesHelp" class="form-text text-muted">Enable set mem/core offsets to all PStates, instead to the highest only.</div>
+                                <div id="inputEnableOCLinuxSetAllPStatesHelp" class="form-text">Enable setting memory/core offsets to all PStates, instead of the highest only.</div>
                             </div>
                         </div>
-                        <div class="form-group row is--ocprofiles">
+
+                        <!-- Force PState -->
+                        <div class="mb-3 row is--ocprofiles">
                             <label for="inputEnableOCLinuxForcePState" class="col-sm-2 col-form-label">Force PState</label>
                             <div class="col-sm-10">
-                                <select class="form-control mr-sm-2" id="inputEnableOCLinuxForcePState" name="EnableOCLinuxForcePState">
-                                    <option value="0">disable</option>
-                                    <option value="1">enable</option>
+                                <select class="form-select" id="inputEnableOCLinuxForcePState" name="EnableOCLinuxForcePState">
+                                    <option value="0">Disable</option>
+                                    <option value="1">Enable</option>
                                 </select>
-                                <div id="inputEnableOCLinuxForcePStateHelp" class="form-text text-muted">Enable force all GPUs into workload P-State, even when not mining.</div>
+                                <div id="inputEnableOCLinuxForcePStateHelp" class="form-text">Force all GPUs into workload P-State, even when not mining.</div>
                             </div>
                         </div>
                     </div>
@@ -267,110 +325,151 @@
             </div>
         </div>
 
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive"><div class="card-header" id="headingFive"><h5>Set electricity cost handling</h5></div></button>
-            <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFive">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                    Set Electricity Cost Handling
+                </button>
+            </h2>
+            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Powerprice -->
+                    <div class="mb-3 row">
                         <label for="inputPowerPrice" class="col-sm-2 col-form-label">Powerprice</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" class="form-control currency" id="inputPowerPrice" name="PowerPrice" min="0" step="0.00000001" data-number-to-fixed="8" data-number-stepfactor="100000000" placeholder="price of 1kW/h (kilowatt per hour) that your electricity supplier charges" aria-describedby="addto-inputPowerPrice" style="width:auto">
-                            <input type="text" class="form-control" id="inputPowerPriceCurrency" name="PowerPriceCurrency" maxlength="3" placeholder="ISO currency code (three letters) of your PowerPrice" style="width:64px;text-transform:uppercase;">
-                            <div class="input-group-append">
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="inputPowerPrice" name="PowerPrice" min="0" step="0.00000001"
+                                       data-number-to-fixed="8" data-number-stepfactor="100000000"
+                                       placeholder="Price of 1kW/h (kilowatt per hour) that your electricity supplier charges"
+                                       aria-describedby="addto-inputPowerPrice" style="width:auto;">
+                                <input type="text" class="form-control" id="inputPowerPriceCurrency" name="PowerPriceCurrency" maxlength="3"
+                                       placeholder="ISO currency code (three letters) of your PowerPrice" style="width:64px;text-transform:uppercase;">
                                 <span class="input-group-text" id="addto-inputPowerPrice">per kW/h</span>
                             </div>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputPowerOffset" class="col-sm-2 col-form-label">Poweroffset Watt</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" class="form-control" id="inputPowerOffset" name="PowerOffset" min="0" step="1" data-number-to-fixed="0" data-number-stepfactor="1" placeholder="power offset to allow consideration for overhead power" aria-describedby="addto-inputPowerOffset">
-                            <div class="input-group-append">
+
+                    <!-- Power Offset Watt -->
+                    <div class="mb-3 row">
+                        <label for="inputPowerOffset" class="col-sm-2 col-form-label">Power Offset Watt</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="inputPowerOffset" name="PowerOffset" min="0" step="1"
+                                       data-number-to-fixed="0" data-number-stepfactor="1"
+                                       placeholder="Power offset to allow consideration for overhead power" aria-describedby="addto-inputPowerOffset">
                                 <span class="input-group-text" id="addto-inputPowerOffset">Watt</span>
                             </div>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputPowerOffsetPercent" class="col-sm-2 col-form-label">PowerOffset Percent</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" class="form-control" id="inputPowerOffsetPercent" name="PowerOffsetPercent" min="0" max="100" step="1" data-number-to-fixed="0" data-number-stepfactor="1" placeholder="power offset to allow consideration for overhead power in percent" aria-describedby="addto-inputPowerOffsetPercent">
-                            <div class="input-group-append">
+
+                    <!-- Power Offset Percent -->
+                    <div class="mb-3 row">
+                        <label for="inputPowerOffsetPercent" class="col-sm-2 col-form-label">Power Offset Percent</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="inputPowerOffsetPercent" name="PowerOffsetPercent" min="0" max="100" step="1"
+                                       data-number-to-fixed="0" data-number-stepfactor="1"
+                                       placeholder="Power offset to allow consideration for overhead power in percent"
+                                       aria-describedby="addto-inputPowerOffsetPercent">
                                 <span class="input-group-text" id="addto-inputPowerOffsetPercent">%</span>
                             </div>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- CPU Power/TDP -->
+                    <div class="mb-3 row">
                         <label for="inputPowerCPUtdp" class="col-sm-2 col-form-label">CPU max. Power/TDP</label>
-                        <div class="input-group col-sm-10">
+                        <div class="col-sm-10">
                             <div class="input-group">
-                                <input type="number" class="form-control" id="inputPowerCPUtdp" name="PowerCPUtdp" min="0" step="1" data-number-to-fixed="0" data-number-stepfactor="1" aria-describedby="addto-inputPowerCPUtdp">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="addto-inputPowerCPUtdp">Watt</span>
-                                </div>
+                                <input type="number" class="form-control" id="inputPowerCPUtdp" name="PowerCPUtdp" min="0" step="1"
+                                       data-number-to-fixed="0" data-number-stepfactor="1" aria-describedby="addto-inputPowerCPUtdp">
+                                <span class="input-group-text" id="addto-inputPowerCPUtdp">Watt</span>
                             </div>
-                            <div id="inputPowerCPUtdpHelp" class="form-text text-muted">
-                                Enter your CPU's TDP/maximum power consumption in W (set to 0 to use internal TDP tables, set to value if that fails)
+                            <div id="inputPowerCPUtdpHelp" class="form-text">
+                                Enter your CPU's TDP/maximum power consumption in W
+                                (set to 0 to use internal TDP tables, set to value if that fails).
                             </div>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Octopus Tariff Code -->
+                    <div class="mb-3 row">
                         <label for="inputOctopusTariffCode" class="col-sm-2 col-form-label">Octopus Tariff Code</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputOctopusTariffCode" name="OctopusTariffCode" placeholder="E-1R-...">
-                            <div id="inputOctopusTariffCodeHelp" class="form-text text-muted">
-                                If you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices. Just enter your current trariff code. <br />It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and region code is a capital letter, range A to P
+                            <div id="inputOctopusTariffCodeHelp" class="form-text">
+                                If you live in the UK and are an Octopus customer, you can let RainbowMiner pull the variable energy prices.
+                                Just enter your current tariff code.<br />
+                                It's in the format E-1R-{product_code}-{region_code}, where product code is something like SILVER-2017-1, AGILE-18-02-21, ... and
+                                region code is a capital letter, range A to P.
                             </div>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Fixed Cost per Day -->
+                    <div class="mb-3 row">
                         <label for="inputFixedCostPerDay" class="col-sm-2 col-form-label">Fixed Cost per Day</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" class="form-control" id="inputFixedCostPerDay" name="FixedCostPerDay" min="0" step="0.00000001" data-number-to-fixed="8" data-number-stepfactor="100000000" placeholder="enter cumulative fixed costs per day" aria-describedby="addto-inputFixedCostPerDay">
-                            <div class="input-group-append">
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="inputFixedCostPerDay" name="FixedCostPerDay" min="0" step="0.00000001"
+                                       data-number-to-fixed="8" data-number-stepfactor="100000000"
+                                       placeholder="Enter cumulative fixed costs per day" aria-describedby="addto-inputFixedCostPerDay">
                                 <span class="input-group-text" id="addto-inputFixedCostPerDay">per day</span>
                             </div>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Use Powerprice -->
+                    <div class="mb-3 row">
                         <label for="inputUsePowerPrice" class="col-sm-2 col-form-label">Use Powerprice</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputUsePowerPrice" name="UsePowerPrice">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputUsePowerPrice" name="UsePowerPrice">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Check Profitability -->
+                    <div class="mb-3 row">
                         <label for="inputCheckProfitability" class="col-sm-2 col-form-label">Check Profitability</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputCheckProfitability" name="CheckProfitability">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputCheckProfitability" name="CheckProfitability">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Profitability Level -->
+                    <div class="mb-3 row">
                         <label for="inputProfitabilityLevel" class="col-sm-2 col-form-label">Profitability Level</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" class="form-control" id="inputProfitabilityLevel" name="ProfitabilityLevel" step="0.00000001" data-number-to-fixed="8" data-number-stepfactor="100000000" placeholder="enter profitability level in BTC" aria-describedby="addto-inputFixedCostPerDay">
-                            <div class="input-group-append">
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="inputProfitabilityLevel" name="ProfitabilityLevel" step="0.00000001"
+                                       data-number-to-fixed="8" data-number-stepfactor="100000000"
+                                       placeholder="Enter profitability level in BTC" aria-describedby="addto-inputFixedCostPerDay">
                                 <span class="input-group-text" id="addto-inputProfitabilityLevel">BTC</span>
                             </div>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Enable Heat Control -->
+                    <div class="mb-3 row">
                         <label for="inputEnableMiningHeatControl" class="col-sm-2 col-form-label">Enable Heat Control</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableMiningHeatControl" name="EnableMiningHeatControl">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableMiningHeatControl" name="EnableMiningHeatControl">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Heat Control -->
+                    <div class="mb-3 row">
                         <label for="inputMiningHeatControl" class="col-sm-2 col-form-label">Heat Control</label>
-                        <div class="col col-sm-6">
-                            <input type="range" class="custom-range" min="0" max="5" step="0.1" id="inputMiningHeatControl" name="MiningHeatControl">
+                        <div class="col-sm-6">
+                            <input type="range" class="form-range" min="0" max="5" step="0.1" id="inputMiningHeatControl" name="MiningHeatControl">
                         </div>
                         <div class="col d-flex" style="width:110px">
                             <span class="input-group-text" id="inputMiningHeatControlValue">2</span>
@@ -379,129 +478,169 @@
                 </div>
             </div>
         </div>
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix"><div class="card-header" id="headingSix"><h5>Machine's localhost API setup</h5></div></button>
-            <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingSix">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                    Machine's localhost API setup
+                </button>
+            </h2>
+            <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Machine's API Port -->
+                    <div class="mb-3 row">
                         <label for="inputAPIport" class="col-sm-2 col-form-label">Machine's API port</label>
-                        <div class="input-group col-sm-10">
+                        <div class="col-sm-10">
                             <input type="number" min="80" max="65535" step="1" class="form-control" id="inputAPIport" name="APIport" placeholder="If needed, choose a different API port">
                         </div>
                     </div>
-                    <div class="form-group row">
+
+                    <!-- Enable Auth -->
+                    <div class="mb-3 row">
                         <label for="inputAPIauth" class="col-sm-2 col-form-label">Enable Auth</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputAPIauth" name="APIauth">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputAPIauth" name="APIauth">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
-                        </div>
-                    </div>
-                    <div class="form-group row is--auth">
-                        <label for="inputAPIuser" class="col-sm-2 col-form-label">Machine's Username</label>
-                        <div class="input-group col-sm-10">
-                            <input type="text" class="form-control" id="inputAPIuser" name="APIuser" placeholder="Enter an API username">
-                        </div>
-                    </div>
-                    <div class="form-group row is--auth">
-                        <label for="inputAPIpassword" class="col-sm-2 col-form-label">Machine's Password</label>
-                        <div class="input-group col-sm-10">
-                            <input type="password" class="form-control" id="inputAPIpassword" name="APIpassword">
-                        </div>
-                    </div>
-                    <div class="form-group row is--auth">
-                        <label for="inputAPImaxLoginAttemps" class="col-sm-2 col-form-label">Max. Login Attempts</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="0" step="1" class="form-control" id="inputAPImaxLoginAttemps" name="APImaxLoginAttemps" placeholder="Maximum number of failed login attempts">
-                            <div id="inputAPImaxLoginAttempsHelp" class="form-text text-muted">Maximum number of failed login attempts, until IP gets blocked (0=turn off)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row is--auth">
-                        <label for="inputAPIblockLoginAttemptsTime" class="col-sm-2 col-form-label">Block IP Time</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputAPIblockLoginAttemptsTime" name="APIblockLoginAttemptsTime" placeholder="Enter an API username">
-                            <div id="inputAPIblockLoginAttemptsTime" class="form-text text-muted">Enter timespan, that an IP gets blocked, after the defined failed login attempts (units allowed, e.h. 1h=one hour, default unit is s=seconds)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputAPIthreads" class="col-sm-2 col-form-label">Parallel API Threads</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="0" max="100" step="1" class="form-control" id="inputAPIthreads" name="APIthreads" placeholder="Maximum number of parallel API threads (0=automatic)">
-                            <div id="inputAPIthreadsHelp" class="form-text text-muted">Enter the maximum parallel API threads (or set to 0 for automatic)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputAPIlockConfig" class="col-sm-2 col-form-label">Lock Config</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputAPIlockConfig" name="APIlockConfig">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                            <div id="inputAPIlockConfigHelp" class="form-text text-muted">Lock config files, so that API/localhost cannot change them anymore. Warning: you need to edit config.txt manually to reset value "APIlockConfig"</div>
                         </div>
                     </div>
 
+                    <!-- Username -->
+                    <div class="mb-3 row is--auth">
+                        <label for="inputAPIuser" class="col-sm-2 col-form-label">Machine's Username</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputAPIuser" name="APIuser" placeholder="Enter an API username">
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3 row is--auth">
+                        <label for="inputAPIpassword" class="col-sm-2 col-form-label">Machine's Password</label>
+                        <div class="col-sm-10">
+                            <input type="password" class="form-control" id="inputAPIpassword" name="APIpassword">
+                        </div>
+                    </div>
+
+                    <!-- Max Login Attempts -->
+                    <div class="mb-3 row is--auth">
+                        <label for="inputAPImaxLoginAttemps" class="col-sm-2 col-form-label">Max. Login Attempts</label>
+                        <div class="col-sm-10">
+                            <input type="number" min="0" step="1" class="form-control" id="inputAPImaxLoginAttemps" name="APImaxLoginAttemps" placeholder="Maximum number of failed login attempts">
+                            <div id="inputAPImaxLoginAttempsHelp" class="form-text">Maximum number of failed login attempts, until IP gets blocked (0=turn off).</div>
+                        </div>
+                    </div>
+
+                    <!-- Block IP Time -->
+                    <div class="mb-3 row is--auth">
+                        <label for="inputAPIblockLoginAttemptsTime" class="col-sm-2 col-form-label">Block IP Time</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputAPIblockLoginAttemptsTime" name="APIblockLoginAttemptsTime" placeholder="Enter block time">
+                            <div class="form-text">Enter timespan for IP blocking after failed login attempts (e.g., 1h=one hour, default unit is seconds).</div>
+                        </div>
+                    </div>
+
+                    <!-- Parallel API Threads -->
+                    <div class="mb-3 row">
+                        <label for="inputAPIthreads" class="col-sm-2 col-form-label">Parallel API Threads</label>
+                        <div class="col-sm-10">
+                            <input type="number" min="0" max="100" step="1" class="form-control" id="inputAPIthreads" name="APIthreads" placeholder="Maximum number of parallel API threads (0=automatic)">
+                            <div class="form-text">Enter the maximum parallel API threads (or set to 0 for automatic).</div>
+                        </div>
+                    </div>
+
+                    <!-- Lock Config -->
+                    <div class="mb-3 row">
+                        <label for="inputAPIlockConfig" class="col-sm-2 col-form-label">Lock Config</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputAPIlockConfig" name="APIlockConfig">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div class="form-text">Lock config files to prevent API/localhost changes. Warning: config.txt must be edited manually to reset.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven"><div class="card-header" id="headingSeven"><h5>Client / Server setup</h5></div></button>
-            <div id="collapseSeven" class="collapse" aria-labelledby="headingSeven" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingSeven">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                    Client / Server setup
+                </button>
+            </h2>
+            <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Run Mode -->
+                    <div class="mb-3 row">
                         <label for="inputRunMode" class="col-sm-2 col-form-label">Run Mode</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputRunMode" name="RunMode">
+                            <select class="form-select" id="inputRunMode" name="RunMode">
                                 <option value="standalone">Standalone</option>
                                 <option value="client">Machine is a Client</option>
                                 <option value="server">Machine is a Server</option>
                             </select>
                         </div>
                     </div>
+
                     <div class="is--client">
-                        <div class="form-group row">
+                        <!-- Server Name or IP -->
+                        <div class="mb-3 row">
                             <label for="inputServerName" class="col-sm-2 col-form-label">Server Name or IP</label>
-                            <div class="input-group col-sm-10">
+                            <div class="col-sm-10">
                                 <input type="text" class="form-control" id="inputServerName" name="MinerServerName" placeholder="Enter the server's name or IP-address">
                             </div>
                         </div>
-                        <div class="form-group row">
-                            <label for="inputServerPort" class="col-sm-2 col-form-label">Servers's API port</label>
-                            <div class="input-group col-sm-10">
+
+                        <!-- Server's API Port -->
+                        <div class="mb-3 row">
+                            <label for="inputServerPort" class="col-sm-2 col-form-label">Server's API Port</label>
+                            <div class="col-sm-10">
                                 <input type="number" min="80" max="65535" step="1" class="form-control" id="inputServerPort" name="ServerPort" placeholder="Enter the server's API port">
                             </div>
                         </div>
-                        <div class="form-group row">
-                            <label for="inputServerUser" class="col-sm-2 col-form-label">Servers's Username</label>
-                            <div class="input-group col-sm-10">
-                                <input type="text" class="form-control" id="inputServerUser" name="MinerServerUser" placeholder="If you have auth enabled on your server's API, enter the username">
+
+                        <!-- Server Username -->
+                        <div class="mb-3 row">
+                            <label for="inputServerUser" class="col-sm-2 col-form-label">Server's Username</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputServerUser" name="MinerServerUser" placeholder="If auth is enabled, enter username">
                             </div>
                         </div>
-                        <div class="form-group row">
+
+                        <!-- Server Password -->
+                        <div class="mb-3 row">
                             <label for="inputServerPassword" class="col-sm-2 col-form-label">Server's Password</label>
-                            <div class="input-group col-sm-10">
+                            <div class="col-sm-10">
                                 <input type="password" class="form-control" id="inputServerPassword" name="ServerPassword">
                             </div>
                         </div>
-                        <div class="form-group row">
-                            <label for="inputEnableServerConfig" class="col-sm-2 col-form-label">Use Server's config</label>
+
+                        <!-- Use Server's Config -->
+                        <div class="mb-3 row">
+                            <label for="inputEnableServerConfig" class="col-sm-2 col-form-label">Use Server's Config</label>
                             <div class="col-sm-10">
-                                <select class="form-control mr-sm-2" id="inputEnableServerConfig" name="EnableServerConfig">
-                                    <option value="0">disable</option>
-                                    <option value="1">enable</option>
+                                <select class="form-select" id="inputEnableServerConfig" name="EnableServerConfig">
+                                    <option value="0">Disable</option>
+                                    <option value="1">Enable</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group row is--serverconfig">
+
+                        <!-- Client-Group Name -->
+                        <div class="mb-3 row is--serverconfig">
                             <label for="inputGroupName" class="col-sm-2 col-form-label">Client-Group Name</label>
-                            <div class="input-group col-sm-10">
-                                <input type="text" class="form-control" id="inputGroupName" name="GroupName" placeholder="Enter a group name, if clients should be grouped together for shared config">
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputGroupName" name="GroupName" placeholder="Group name for shared config">
                             </div>
                         </div>
-                        <div class="form-group row is--serverconfig">
-                            <label for="inputServerConfigName" class="col-sm-2 col-form-label">Select Serverconfig Files</label>
+
+                        <!-- Server Config Files -->
+                        <div class="mb-3 row is--serverconfig">
+                            <label for="inputServerConfigName" class="col-sm-2 col-form-label">Select Server Config Files</label>
                             <div class="col-sm-10" id="serverconfigname">
+                                <!-- Add dynamic content here -->
                             </div>
                         </div>
                     </div>
@@ -509,323 +648,296 @@
             </div>
         </div>
 
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight"><div class="card-header" id="headingEight"><h5>Reporting / Monitoring</h5></div></button>
-            <div id="collapseEight" class="collapse" aria-labelledby="headingEight" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingEight">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                    Reporting / Monitoring
+                </button>
+            </h2>
+            <div id="collapseEight" class="accordion-collapse collapse" aria-labelledby="headingEight" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Enable Reporting -->
+                    <div class="mb-3 row">
                         <label for="inputEnableMinerStatus" class="col-sm-2 col-form-label">Enable Reporting</label>
                         <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableMinerStatus" name="EnableMinerStatus">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
+                            <select class="form-select" id="inputEnableMinerStatus" name="EnableMinerStatus">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
                             </select>
                         </div>
                     </div>
-                    <div class="form-group row is--reporting">
+
+                    <!-- Miner Status Key -->
+                    <div class="mb-3 row is--reporting">
                         <label for="inputMinerStatusKey" class="col-sm-2 col-form-label">Miner Status Key</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputMinerStatusKey" name="MinerStatusKey" placeholder="Enter your miner monitoring status key (or enter 'new' to create one)">
-                            <div id="inputMinerStatusKeyHelp" class="form-text text-muted">Enter your miner monitoring status key (or enter 'new' to create one)</div>
+                            <input type="text" class="form-control" id="inputMinerStatusKey" name="MinerStatusKey" placeholder="Enter your miner monitoring status key (or 'new' to create one)">
+                            <div id="inputMinerStatusKeyHelp" class="form-text">Enter your miner monitoring status key (or 'new' to create one).</div>
                         </div>
                     </div>
-                    <div class="form-group row is--reporting">
+
+                    <!-- Miner Status Email -->
+                    <div class="mb-3 row is--reporting">
                         <label for="inputMinerStatusEmail" class="col-sm-2 col-form-label">Miner Status Email</label>
-                        <div class="input-group col-sm-10">
-                            <input type="text" class="form-control" id="inputMinerStatusEmail" name="MinerStatusEmail" placeholder="Enter a offline notification eMail">
+                        <div class="col-sm-10">
+                            <input type="email" class="form-control" id="inputMinerStatusEmail" name="MinerStatusEmail" placeholder="Enter an offline notification email">
                         </div>
                     </div>
-                    <div class="form-group row is--reporting">
+
+                    <!-- Pushover Key -->
+                    <div class="mb-3 row is--reporting">
                         <label for="inputPushOverUserKey" class="col-sm-2 col-form-label">Pushover Key</label>
-                        <div class="input-group col-sm-10">
+                        <div class="col-sm-10">
                             <input type="text" class="form-control" id="inputPushOverUserKey" name="PushOverUserKey" placeholder="Enter your https://pushover.net user key">
                         </div>
                     </div>
-                    <div class="form-group row is--reporting">
+
+                    <!-- Miner Status Max Temp -->
+                    <div class="mb-3 row is--reporting">
                         <label for="inputMinerStatusMaxTemp" class="col-sm-2 col-form-label">Miner Status Max-Temp</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" min="0" max="100" step="1" class="form-control" id="inputMinerStatusMaxTemp" name="MinerStatusMaxTemp" placeholder="Enter maximum allowed GPU temperature" aria-describedby="addto-inputMinerStatusMaxTemp">
-                            <div class="input-group-append">
-                                <span class="input-group-text" id="addto-inputMinerStatusMaxTemp">°C</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row is--reporting">
-                        <label for="inputMinerStatusMaxCrashesPerHour" class="col-sm-2 col-form-label">Max. crashes per hour</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" min="-1" step="1" class="form-control" id="inputMinerStatusMaxCrashesPerHour" name="MinerStatusMaxCrashesPerHour" placeholder="Enter maximum allowed crashes per hour" aria-describedby="addto-inputMinerStatusMaxTemp">
-                            <div class="input-group-append">
-                                <span class="input-group-text" id="addto-inputMinerStatusMaxCrashesPerHour">cph</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row is--reporting">
-                        <label for="inputDiskMinGB" class="col-sm-2 col-form-label">Hard Disk min. free space</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" min="0" step="0.5" class="form-control" id="inputDiskMinGB" name="DiskMinGB" placeholder="Enter minimum free space on Hard Drive" aria-describedby="addto-inputDiskMinGB">
-                            <div class="input-group-append">
-                                <span class="input-group-text" id="addto-inputDiskMinGB">GB</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine"><div class="card-header" id="headingNine"><h5>Automatic Updates</h5></div></button>
-            <div id="collapseNine" class="collapse" aria-labelledby="headingNine" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
-                        <label for="inputEnableAutoUpdate" class="col-sm-2 col-form-label">Enable automatic update</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableAutoUpdate" name="EnableAutoUpdate">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputEnableUpdateDuringPause" class="col-sm-2 col-form-label">Updates during Pause</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableUpdateDuringPause" name="EnableUpdateDuringPause">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                            <div id="inputEnableUpdateDuringPauseHelp" class="form-text text-muted">Allow automatic updates, even if RainbowMiner is paused</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputEnableUpdateWhenScheduled" class="col-sm-2 col-form-label">Scheduled Updates</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableUpdateWhenScheduled" name="EnableUpdateWhenScheduled">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                            <div id="inputEnableUpdateWhenScheduledHelp" class="form-text text-muted">Restrict automatic updates to when scheduler allows (set EnableUpdate to "1" in scheduler.config.txt)</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card mb-3">
-            <button type="button" class="btn btn-secondary collapsed" data-toggle="collapse" data-target="#collapseTen" aria-expanded="false" aria-controls="collapseTen"><div class="card-header" id="headingTen"><h5>Technical</h5></div></button>
-            <div id="collapseTen" class="collapse" aria-labelledby="headingTen" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="form-group row">
-                        <label for="inputInterval" class="col-sm-2 col-form-label">Interval</label>
                         <div class="col-sm-10">
                             <div class="input-group">
-                                <input type="number" min="20" step="1" class="form-control" id="inputInterval" name="Interval" placeholder="Enter interval in seconds" aria-describedby="addto-inputInterval">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="addto-inputInterval">seconds</span>
-                                </div>
+                                <input type="number" min="0" max="100" step="1" class="form-control" id="inputMinerStatusMaxTemp" name="MinerStatusMaxTemp" placeholder="Enter maximum allowed GPU temperature">
+                                <span class="input-group-text">°C</span>
                             </div>
-                            <div id="inputIntervalHelp" class="form-text text-muted">Enter the script's loop interval in seconds</div>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputMinimumMiningIntervals" class="col-sm-2 col-form-label">Min. Mining Intervals</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="1" step="1" class="form-control" id="inputMinimumMiningIntervals" name="MinimumMiningIntervals" placeholder="Minimum mining intervals, before the regular loop starts">
-                            <div id="inputMinimumMiningIntervalsHelp" class="form-text text-muted">Minimum mining intervals, before the regular loop starts</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputBenchmarkInterval" class="col-sm-2 col-form-label">Benchmark Interval</label>
+
+                    <!-- Max Crashes Per Hour -->
+                    <div class="mb-3 row is--reporting">
+                        <label for="inputMinerStatusMaxCrashesPerHour" class="col-sm-2 col-form-label">Max. Crashes Per Hour</label>
                         <div class="col-sm-10">
                             <div class="input-group">
-                                <input type="number" min="20" max="300" step="1" class="form-control" id="inputBenchmarkInterval" name="BenchmarkInterval" placeholder="Enter benchmark interval in seconds" aria-describedby="addto-inputBenchmarkInterval">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="addto-inputBenchmarkInterval">seconds</span>
-                                </div>
+                                <input type="number" min="-1" step="1" class="form-control" id="inputMinerStatusMaxCrashesPerHour" name="MinerStatusMaxCrashesPerHour" placeholder="Enter maximum allowed crashes per hour">
+                                <span class="input-group-text">cph</span>
                             </div>
-                            <div id="inputBenchmarkIntervalHelp" class="form-text text-muted">Enter the script's loop interval in seconds, used for benchmarks</div>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="inputRestartRBMTimespan" class="col-sm-2 col-form-label">Restart RainbowMiner after a timespan</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputRestartRBMTimespan" name="RestartRBMTimespan" placeholder="">
-                            <div id="inputRestartRBMTimespanHelp" class="form-text text-muted">Enter maximum runtime until restart in seconds (units allowed, e.g. 1h=one hour, default unit is s=seconds, leave empty for no limit)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputRestartRBMMemory" class="col-sm-2 col-form-label">Restart RainbowMiner after a Memory</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputRestartRBMMemory" name="RestartRBMMemory" placeholder="">
-                            <div id="inputRestartRBMMemoryHelp" class="form-text text-muted">Enter maximum memory usage until restart (units allowed, e.g. 1.2G=1.2 Gigabytes, default unit is bytes, leave empty for no limit)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputEnableFastlaneBenchmark" class="col-sm-2 col-form-label">Fastlane for Benchmark</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableFastlaneBenchmark" name="EnableFastlaneBenchmark">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                            <div id="inputEnableFastlaneBenchmarkHelp" class="form-text text-muted">If enabled, RainbowMiner will skip all benchmarks and try to download live values from rbminer.net. This is VERY inaccurate.</div>
-                        </div>
-                    </div>
-                    <div class="form-group row is--fastlane">
-                        <label for="inputFastlaneBenchmarkTypeCPU" class="col-sm-2 col-form-label">Fastlane CPU values</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputFastlaneBenchmarkTypeCPU" name="FastlaneBenchmarkTypeCPU">
-                                <option value="avg">live average</option>
-                                <option value="min">live minimum</option>
-                                <option value="max">live maximum</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row is--fastlane">
-                        <label for="inputFastlaneBenchmarkTypeGPU" class="col-sm-2 col-form-label">Fastlane GPU values</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputFastlaneBenchmarkTypeGPU" name="FastlaneBenchmarkTypeGPU">
-                                <option value="avg">live average</option>
-                                <option value="min">live minimum</option>
-                                <option value="max">live maximum</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row is--fastlane">
-                        <label for="inputEnableFastlaneBenchmarkMissing" class="col-sm-2 col-form-label">Fastlane missing</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableFastlaneBenchmarkMissing" name="EnableFastlaneBenchmarkMissing">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                            <div id="inputEnableFastlaneBenchmarkMissing" class="form-text text-muted">If enabled, the fastlane benchmark downloader will benchmark missing device/miner/algos on the machine, instead of setting them to "Failed Benchmark"</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputSwitchingPrevention" class="col-sm-2 col-form-label">Switching Prevention</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="0" max="10" step="1" class="form-control" id="inputSwitchingPrevention" name="SwitchingPrevention" placeholder="Adjust switching prevention: the higher, the less switching of miners (0 to disable)">
-                            <div id="inputSwitchingPreventionHelp" class="form-text text-muted">Adjust switching prevention: the higher, the less switching of miners (0 to disable)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputDelay" class="col-sm-2 col-form-label">Delay</label>
-                        <div class="input-group col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" step="1" class="form-control" id="inputDelay" name="Delay" placeholder="Enter the delay before each minerstart in seconds (set to a value > 0 if you experience BSOD)" aria-describedby="addto-inputDelay">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="addto-inputDelay">seconds</span>
-                                </div>
-                            </div>
-                            <div id="inputDelayHelp" class="form-text text-muted">Enter the delay before each minerstart in seconds (set to a value > 0 if you experience BSOD)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputPoolSwitchingHysteresis" class="col-sm-2 col-form-label">Pool Switching Hysteresis</label>
+
+                    <!-- Hard Disk Min Free Space -->
+                    <div class="mb-3 row is--reporting">
+                        <label for="inputDiskMinGB" class="col-sm-2 col-form-label">Hard Disk Min. Free Space</label>
                         <div class="col-sm-10">
                             <div class="input-group">
-                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputPoolSwitchingHysteresis" name="PoolSwitchingHysteresis" placeholder="Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable)" aria-describedby="addto-inputPoolSwitchingHysteresis">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="addto-inputPoolSwitchingHysteresis">%</span>
-                                </div>
+                                <input type="number" min="0" step="0.5" class="form-control" id="inputDiskMinGB" name="DiskMinGB" placeholder="Enter minimum free space on Hard Drive">
+                                <span class="input-group-text">GB</span>
                             </div>
-                            <div id="inputPoolSwitchingHysteresisHelp" class="form-text text-muted">Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputMinerSwitchingHysteresis" class="col-sm-2 col-form-label">Miner Switching Hysteresis</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputMinerSwitchingHysteresis" name="MinerSwitchingHysteresis" placeholder="Prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable)" aria-describedby="addto-inputMinerSwitchingHysteresis">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="addto-inputMinerSwitchingHysteresis">%</span>
-                                </div>
-                            </div>
-                            <div id="inputMinerSwitchingHysteresisHelp" class="form-text text-muted">Prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable)</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputMaxActivityDays" class="col-sm-2 col-form-label">Max. Activity Days</label>
-                        <div class="col-sm-10">
-                            <input type="number" min="1" step="1" class="form-control" id="inputMaxActivityDays" name="MaxActivityDays" placeholder="History length for activity-list on localhost in days">
-                            <div id="inputMaxActivityDaysHelp" class="form-text text-muted">History length for activity-list on localhost in days</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputProxy" class="col-sm-2 col-form-label">Proxy</label>
-                        <div class="input-group col-sm-10">
-                            <input type="text" class="form-control" id="inputProxy" name="Proxy" placeholder="Enter proxy address, if used">
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputProxyUsername" class="col-sm-2 col-form-label">Proxy's Username</label>
-                        <div class="input-group col-sm-10">
-                            <input type="text" class="form-control" id="inputProxyUsername" name="ProxyUsername" placeholder="Enter the proxy's username, if needed">
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputProxyPassword" class="col-sm-2 col-form-label">Proxy's Password</label>
-                        <div class="input-group col-sm-10">
-                            <input type="password" class="form-control" id="inputProxyPassword" name="ProxyPassword" placeholder="Enter the proxy's password, if needed">
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputEnableCurl" class="col-sm-2 col-form-label">Use cURL instead of the build in web requests (enable this, if you get Asyncloader has crashed warnings)</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableCurl" name="EnableCurl">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputEnableAutoMinerPorts" class="col-sm-2 col-form-label">Automatic port switching</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputEnableAutoMinerPorts" name="EnableAutoMinerPorts">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputIgnoreFees" class="col-sm-2 col-form-label">Ignore all Developer-Fees</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputIgnoreFees" name="IgnoreFees">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputWatchdog" class="col-sm-2 col-form-label">Enable Watchdog</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputWatchdog" name="Watchdog">
-                                <option value="0">disable</option>
-                                <option value="1">enable</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputDisableExtendInterval" class="col-sm-2 col-form-label">Extended Intervals</label>
-                        <div class="col-sm-10">
-                            <select class="form-control mr-sm-2" id="inputDisableExtendInterval" name="DisableExtendInterval">
-                                <option value="1">disable</option>
-                                <option value="0">enable</option>
-                            </select>
-                            <div id="inputDisableExtendIntervalHelp" class="form-text text-muted">Disabling the interval extension during benchmark speeds benchmark up, but will be less accurate for some algorithm</div>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="inputProfitSpikeProtection" class="col-sm-2 col-form-label">Profit Spike Protection</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="number" min="0" step="0.1" class="form-control" id="inputProfitSpikeProtection" name="ProfitSpikeProtection" placeholder="Prevent profit files to be updated, if the actual value is greater than the avg. profit x this factor (0 to disable)">
-                            </div>
-                            <div id="inputProfitSpikeProtectionHelp" class="form-text text-muted">Prevent profit files to be updated, if the actual value is greater than the avg. profit x this factor (0 to disable)</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-    </div>
-    <div class="card mb-3">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingNine">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine">
+                    Automatic Updates
+                </button>
+            </h2>
+            <div id="collapseNine" class="accordion-collapse collapse" aria-labelledby="headingNine" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Enable Automatic Update -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableAutoUpdate" class="col-sm-2 col-form-label">Enable Automatic Update</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputEnableAutoUpdate" name="EnableAutoUpdate">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Updates During Pause -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableUpdateDuringPause" class="col-sm-2 col-form-label">Updates During Pause</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputEnableUpdateDuringPause" name="EnableUpdateDuringPause">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div id="inputEnableUpdateDuringPauseHelp" class="form-text">Allow automatic updates, even if RainbowMiner is paused.</div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduled Updates -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableUpdateWhenScheduled" class="col-sm-2 col-form-label">Scheduled Updates</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputEnableUpdateWhenScheduled" name="EnableUpdateWhenScheduled">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div id="inputEnableUpdateWhenScheduledHelp" class="form-text">Restrict automatic updates to when the scheduler allows (set EnableUpdate to "1" in scheduler.config.txt).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTen">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTen" aria-expanded="false" aria-controls="collapseTen">
+                    Technical
+                </button>
+            </h2>
+            <div id="collapseTen" class="accordion-collapse collapse" aria-labelledby="headingTen" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <!-- Interval -->
+                    <div class="mb-3 row">
+                        <label for="inputInterval" class="col-sm-2 col-form-label">Interval</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="20" step="1" class="form-control" id="inputInterval" name="Interval" placeholder="Enter interval in seconds">
+                                <span class="input-group-text">seconds</span>
+                            </div>
+                            <div class="form-text">Enter the script's loop interval in seconds.</div>
+                        </div>
+                    </div>
+
+                    <!-- Minimum Mining Intervals -->
+                    <div class="mb-3 row">
+                        <label for="inputMinimumMiningIntervals" class="col-sm-2 col-form-label">Min. Mining Intervals</label>
+                        <div class="col-sm-10">
+                            <input type="number" min="1" step="1" class="form-control" id="inputMinimumMiningIntervals" name="MinimumMiningIntervals" placeholder="Minimum mining intervals before the regular loop starts">
+                            <div class="form-text">Minimum mining intervals before the regular loop starts.</div>
+                        </div>
+                    </div>
+
+                    <!-- Benchmark Interval -->
+                    <div class="mb-3 row">
+                        <label for="inputBenchmarkInterval" class="col-sm-2 col-form-label">Benchmark Interval</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="20" max="300" step="1" class="form-control" id="inputBenchmarkInterval" name="BenchmarkInterval" placeholder="Enter benchmark interval in seconds">
+                                <span class="input-group-text">seconds</span>
+                            </div>
+                            <div class="form-text">Enter the script's loop interval in seconds, used for benchmarks.</div>
+                        </div>
+                    </div>
+
+                    <!-- Restart Timespan -->
+                    <div class="mb-3 row">
+                        <label for="inputRestartRBMTimespan" class="col-sm-2 col-form-label">Restart RainbowMiner after a timespan</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputRestartRBMTimespan" name="RestartRBMTimespan" placeholder="Enter maximum runtime until restart">
+                            <div class="form-text">Enter maximum runtime until restart in seconds (e.g., 1h = one hour, default unit is seconds).</div>
+                        </div>
+                    </div>
+
+                    <!-- Restart Memory -->
+                    <div class="mb-3 row">
+                        <label for="inputRestartRBMMemory" class="col-sm-2 col-form-label">Restart RainbowMiner after Memory</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputRestartRBMMemory" name="RestartRBMMemory" placeholder="Enter memory limit">
+                            <div class="form-text">Enter maximum memory usage until restart (e.g., 1.2G = 1.2 Gigabytes, default unit is bytes).</div>
+                        </div>
+                    </div>
+
+                    <!-- Fastlane for Benchmark -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableFastlaneBenchmark" class="col-sm-2 col-form-label">Fastlane for Benchmark</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputEnableFastlaneBenchmark" name="EnableFastlaneBenchmark">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div class="form-text">If enabled, skips benchmarks and downloads live values from rbminer.net. This is very inaccurate.</div>
+                        </div>
+                    </div>
+
+                    <!-- Fastlane Benchmark Settings -->
+                    <div class="mb-3 row is--fastlane">
+                        <label for="inputFastlaneBenchmarkTypeCPU" class="col-sm-2 col-form-label">Fastlane CPU values</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputFastlaneBenchmarkTypeCPU" name="FastlaneBenchmarkTypeCPU">
+                                <option value="avg">Live Average</option>
+                                <option value="min">Live Minimum</option>
+                                <option value="max">Live Maximum</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Switching Prevention -->
+                    <div class="mb-3 row">
+                        <label for="inputSwitchingPrevention" class="col-sm-2 col-form-label">Switching Prevention</label>
+                        <div class="col-sm-10">
+                            <input type="number" min="0" max="10" step="1" class="form-control" id="inputSwitchingPrevention" name="SwitchingPrevention" placeholder="Adjust switching prevention">
+                            <div class="form-text">Higher values result in less switching of miners (0 to disable).</div>
+                        </div>
+                    </div>
+
+                    <!-- Delay -->
+                    <div class="mb-3 row">
+                        <label for="inputDelay" class="col-sm-2 col-form-label">Delay</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="0" step="1" class="form-control" id="inputDelay" name="Delay" placeholder="Enter delay in seconds">
+                                <span class="input-group-text">seconds</span>
+                            </div>
+                            <div class="form-text">Set a delay before each miner starts (use >0 to avoid BSOD).</div>
+                        </div>
+                    </div>
+
+                    <!-- Pool Switching Hysteresis -->
+                    <div class="mb-3 row">
+                        <label for="inputPoolSwitchingHysteresis" class="col-sm-2 col-form-label">Pool Switching Hysteresis</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputPoolSwitchingHysteresis" name="PoolSwitchingHysteresis" placeholder="Adjust pool-switching hysteresis">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">Higher values reduce pool-to-pool hopping (in %, 0 to disable).</div>
+                        </div>
+                    </div>
+
+                    <!-- Miner Switching Hysteresis -->
+                    <div class="mb-3 row">
+                        <label for="inputMinerSwitchingHysteresis" class="col-sm-2 col-form-label">Miner Switching Hysteresis</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="number" min="0" max="100" step="0.1" class="form-control" id="inputMinerSwitchingHysteresis" name="MinerSwitchingHysteresis" placeholder="Adjust miner-switching hysteresis">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">Higher values reduce miner-to-miner hopping (in %, 0 to disable).</div>
+                        </div>
+                    </div>
+
+                    <!-- Max Activity Days -->
+                    <div class="mb-3 row">
+                        <label for="inputMaxActivityDays" class="col-sm-2 col-form-label">Max. Activity Days</label>
+                        <div class="col-sm-10">
+                            <input type="number" min="1" step="1" class="form-control" id="inputMaxActivityDays" name="MaxActivityDays" placeholder="Activity history length in days">
+                            <div class="form-text">Length of activity history shown on localhost (in days).</div>
+                        </div>
+                    </div>
+
+                    <!-- Proxy -->
+                    <div class="mb-3 row">
+                        <label for="inputProxy" class="col-sm-2 col-form-label">Proxy</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="inputProxy" name="Proxy" placeholder="Enter proxy address (if used)">
+                        </div>
+                    </div>
+
+                    <!-- Enable Watchdog -->
+                    <div class="mb-3 row">
+                        <label for="inputWatchdog" class="col-sm-2 col-form-label">Enable Watchdog</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputWatchdog" name="Watchdog">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-body text-center">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
     </div>
 </form>
 
@@ -853,7 +965,7 @@ function update_miningheatcontrol() {
 $(function() {
     $.ajax({
         url: '/userconfig', success: function (result) {
-            $("input.form-control,select.form-control,input.custom-range").each(function(index) {
+            $("input.form-control,select.form-select,input.form-range").each(function(index) {
                 var conf = $(this).attr('id').replace(/^input/, "")
                 var res = result[conf];
                 if (typeof res == "boolean") { res = res? 1:0 }
@@ -864,9 +976,9 @@ $(function() {
             var pools = new Array(), excludepools = new Array()
             $.each(result.Pools, function (key, data) {
                 var checked = $.inArray(key,result.PoolName) !== -1? " checked":''
-                pools.push('<div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="custom-control-label" for="pool' + key + '">' + key + '</label></div>')
+                pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + '</label></div>')
                 checked = $.inArray(key, result.ExcludePoolName) !== -1 ? " checked" : ''
-                excludepools.push('<div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="custom-control-label" for="excludepool' + key + '">' + key + '</label></div>')
+                excludepools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="form-check-label" for="excludepool' + key + '">' + key + '</label></div>')
             })
             $("#pools").html(pools.join(''));
             $("#excludepools").html(excludepools.join(''));
@@ -874,7 +986,7 @@ $(function() {
             var serverconfigname = new Array();
             $.each(new Array("algorithms","coins","config","miners","ocprofiles","pools","scheduler"), function (key, data) {
                 var checked = $.inArray(data,result.ServerConfigName) !== -1? " checked":''
-                serverconfigname.push('<div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="serverconfig' + data + '" name="ServerConfigName[]" value="'+data+'"' + checked + '><label class="custom-control-label" for="serverconfig' + data + '">' + data + '</label></div>')
+                serverconfigname.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="serverconfig' + data + '" name="ServerConfigName[]" value="'+data+'"' + checked + '><label class="form-check-label" for="serverconfig' + data + '">' + data + '</label></div>')
             })
             $("#serverconfigname").html(serverconfigname.join(''));
 
@@ -946,8 +1058,8 @@ $(function() {
         url: '/getdeviceconfig', success: function (result) {
             var devices = new Array(), excludedevices = new Array(), cpuenabled = false, cpudisabled = false, maxthreads = 0
             $.each(result, function (key, data) {
-                devices.push('<div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="device' + key + '" name="DeviceName[]" value="'+data.Name+'"' + (data.Selected? ' checked':'') + '><label class="custom-control-label" for="device' + key + '">' + data.Name + '</label></div>')
-                excludedevices.push('<div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="excludedevice' + key + '" name="ExcludeDeviceName[]" value="'+data.Name+'"' + (data.Excluded? ' checked':'') + '><label class="custom-control-label" for="excludedevice' + key + '">' + data.Name + '</label></div>')
+                devices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="device' + key + '" name="DeviceName[]" value="'+data.Name+'"' + (data.Selected? ' checked':'') + '><label class="form-check-label" for="device' + key + '">' + data.Name + '</label></div>')
+                excludedevices.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludedevice' + key + '" name="ExcludeDeviceName[]" value="'+data.Name+'"' + (data.Excluded? ' checked':'') + '><label class="form-check-label" for="excludedevice' + key + '">' + data.Name + '</label></div>')
                 if (data.Name == 'CPU') {
                     if (data.Selected) cpuenabled = true;
                     if (data.Excluded) cpudisabled = true;
@@ -967,23 +1079,28 @@ $(function() {
         // Stop form from submitting normally
         event.preventDefault();
         if (globalconfig.IsLocked) {
-            $('.modal-body').html('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt');
-            $('.modal-title').text('Warning: config lock is enabled');
-            $('#myModal').modal({ show: true });
+            document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
+            document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
             return false;
         } else if ($("#inputAPIlockConfig").val() == "1") {
             if (!confirm("Warning: you are about to lock the config.\nYou will have to manually set parameter \"APIlockConfig\" to \"0\" in config.txt to reset this.\n\nDo you really want to proceed?"))
             return false;
         }
         $.post("/saveconfig", $(this).serialize()).done(function (data) {
+            var mbody, mtitle;
             if (data.Success) {
-                $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
-                $('.modal-title').text('Configuration saved!');
+                mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
+                mtitle = 'Configuration saved!';
             } else {
-                $('.modal-body').html('Something went wrong or the configuration is locked via APILockConfig in config.txt');
-                $('.modal-title').text('Configuration NOT saved!');
+                mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
+                mtitle = 'Configuration NOT saved!';
             }
-            $('#myModal').modal({ show: true });
+            document.querySelector('.modal-body').innerHTML = mbody;
+            document.querySelector('.modal-title').textContent = mtitle;
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
         });
     })
     $("#inputMiningHeatControl").change(update_miningheatcontrol);

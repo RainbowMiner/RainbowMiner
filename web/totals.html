@@ -50,7 +50,8 @@
         $('#resettotals').click(function () {
             $('.modal-body').load('scripts/resettotals.ps1', function () {
                 $('.modal-title').text('Reset All Totals');
-                $('#myModal').modal({ show: true });
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
             });
         });
     });

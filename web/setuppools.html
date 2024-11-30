@@ -4,37 +4,47 @@
 </div>
 
 <form id="formConfig">
-    <input type="hidden" name="ConfigName" value="Pools" />
-    <div class="card mb-3">
-        <select id="select--PoolName" name="PoolName" class="form-control"><option>-- please select --</option></select>
+    <input type="hidden" name="ConfigName" value="Pools">
+
+    <!-- Dropdown -->
+    <div class="mb-3">
+        <select id="select--PoolName" name="PoolName" class="form-select">
+            <option>-- please select --</option>
+        </select>
     </div>
-    <div id="accordion"></div>
-    <div class="card mb-3" id="submitButton">
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </div>
+
+    <!-- Accordion -->
+    <div class="accordion" id="accordion"></div>
 </form>
 
 <script id="poolsetup_template" type="text/x-handlebars-template">
-    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" id="config--Coins">
-        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseCoins" aria-expanded="true" aria-controls="collapseCoins"><div class="card-header" id="headingCoins"><h5>Coins</h5></div></button>
-        <div id="collapseCoins" class="collapse" aria-labelledby="headingCoins" data-parent="#accordion">
-            <div class="card-body">
+    <!-- Coins Section -->
+    <div class="accordion-item" id="config--Coins">
+        <h2 class="accordion-header" id="headingCoins">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCoins" aria-expanded="true" aria-controls="collapseCoins">
+                Coins
+            </button>
+        </h2>
+        <div id="collapseCoins" class="accordion-collapse collapse" aria-labelledby="headingCoins" data-bs-parent="#accordionExample">
+            <div class="accordion-body">
                 {{#each coins}}
-                <div class="form-group row">
+                <div class="mb-3 row">
                     {{#if isNew}}
+                    <!-- Add New Coin -->
                     <label for="inputAddNewCoin" class="col-sm-2 col-form-label">Add New Coin</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="inputAddNewCoin" name="AddNewCoin" placeholder="Symbol of new coin" value="">
+                        <input type="text" class="form-control" id="inputAddNewCoin" name="AddNewCoin" placeholder="Symbol of new coin">
                     </div>
                     <label for="inputAddNewCoinWallet" class="col-sm-2 col-form-label">Add Wallet for New Coin</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="inputAddNewCoinWallet" name="AddNewCoinWallet" placeholder="Wallet address of new coin, use $ for coins in coins.config.txt" value="">
+                        <input type="text" class="form-control" id="inputAddNewCoinWallet" name="AddNewCoinWallet" placeholder="Wallet address of new coin, use $ for coins in coins.config.txt">
                     </div>
                     <label for="inputAddNewCoinParams" class="col-sm-2 col-form-label">Add Params for New Coin</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="inputAddNewCoinParams" name="AddNewCoinParams" placeholder="Additional password parameters of new coin" value="">
+                        <input type="text" class="form-control" id="inputAddNewCoinParams" name="AddNewCoinParams" placeholder="Additional password parameters of new coin">
                     </div>
                     {{else}}
+                    <!-- Existing Coin -->
                     <label for="input{{this.coin}}" class="col-sm-2 col-form-label">{{this.coin}}</label>
                     <div class="col-sm-10">
                         <input type="text" class="form-control" id="input{{this.coin}}" name="{{this.coin}}" placeholder="{{this.coin}} Wallet address" value="{{this.wallet}}">
@@ -49,122 +59,89 @@
             </div>
         </div>
     </div>
-    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" id="config--Common">
-        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseCommon" aria-expanded="true" aria-controls="collapseCommon"><div class="card-header" id="headingCommon"><h5>Common</h5></div></button>
-        <div id="collapseCommon" class="collapse" aria-labelledby="headingCommon" data-parent="#accordion">
-            <div class="card-body">
+
+    <!-- Common Section -->
+    <div class="accordion-item" id="config--Common">
+        <h2 class="accordion-header" id="headingCommon">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCommon" aria-expanded="true" aria-controls="collapseCommon">
+                Common
+            </button>
+        </h2>
+        <div id="collapseCommon" class="accordion-collapse collapse" aria-labelledby="headingCommon" data-bs-parent="#accordionExample">
+            <div class="accordion-body">
                 {{#each common}}
-                {{#if (eq this.type "password")}}
-                <div class="form-group row">
+                <div class="mb-3 row">
+                    {{#if (eq this.type "password")}}
+                    <!-- Password Field -->
                     <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
                     <div class="col-sm-10">
                         <input type="password" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
-                        <div class="form-text text-muted">{{this.text}}</div>
+                        <div class="form-text">{{this.text}}</div>
                     </div>
-                </div>
-                {{else if (eq this.type "bool")}}
-                <div class="form-group row">
+                    {{else if (eq this.type "bool")}}
+                    <!-- Boolean Dropdown -->
                     <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
                     <div class="col-sm-10">
-                        <select class="form-control mr-sm-2" id="input{{this.key}}" name="{{this.key}}">
-                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
-                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
+                        <select class="form-select" id="input{{this.key}}" name="{{this.key}}">
+                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>Disable</option>
+                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>Enable</option>
                         </select>
-                        <div class="form-text text-muted">{{this.text}}</div>
+                        <div class="form-text">{{this.text}}</div>
                     </div>
-                </div>
-                {{else if (eq this.type "boolplus")}}
-                <div class="form-group row">
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <select class="form-control mr-sm-2" id="input{{this.key}}" name="{{this.key}}">
-                            <option value="" {{#if (eq this.value "")}} selected{{/if}}>default</option>
-                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
-                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
-                        </select>
-                        <div class="form-text text-muted">{{this.text}}</div>
-                    </div>
-                </div>
-                {{else if (eq this.type "checkbox")}}
-                <div class="form-group row">
-                    <div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}"><label class="custom-control-label" for="input{{this.key}}">{{this.text}}</label></div>
-                </div>
-                {{else}}
-                <div class="form-group row">
+                    {{else}}
+                    <!-- Default Input -->
                     <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
                     <div class="col-sm-10">
                         <div class="input-group">
-                            <input type="{{this.type}}" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}" {{#if (ne this.inputmode null)}} inputmode="{{this.inputmode}}" {{/if}} {{#if (ne this.min null)}} min="{{this.min}}" {{/if}} {{#if (ne this.max null)}} max="{{this.max}}" {{/if}} {{#if (ne this.step null)}} step="{{this.step}}" {{/if}} {{#if (ne this.append null)}} aria-describedby="addto-input{{this.key}}" {{/if}}>
-                            {{#if (ne this.append null)}}<div class="input-group-append">
-                                <span class="input-group-text" id="addto-input{{this.key}}">{{this.append}}</span>
-                            </div>{{/if}}
+                            <input type="{{this.type}}" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
                         </div>
-                        <div class="form-text text-muted">{{this.text}}</div>
+                        <div class="form-text">{{this.text}}</div>
                     </div>
+                    {{/if}}
                 </div>
-                {{/if}}
                 {{/each}}
             </div>
         </div>
     </div>
-    <div class="card mb-3 {{#if dark}}text-light bg-dark{{else}}text-dark bg-white{{/if}}" id="config--Specific">
-        <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseSpecific" aria-expanded="true" aria-controls="collapseSpecific"><div class="card-header" id="headingSpecific"><h5>Specific</h5></div></button>
-        <div id="collapseSpecific" class="collapse" aria-labelledby="headingSpecific" data-parent="#accordion">
-            <div class="card-body">
+
+    <!-- Specific Section -->
+    <div class="accordion-item" id="config--Specific">
+        <h2 class="accordion-header" id="headingSpecific">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpecific" aria-expanded="true" aria-controls="collapseSpecific">
+                Specific
+            </button>
+        </h2>
+        <div id="collapseSpecific" class="accordion-collapse collapse" aria-labelledby="headingSpecific" data-bs-parent="#accordionExample">
+            <div class="accordion-body">
                 {{#each specific}}
-                {{#if (eq this.type "password")}}
-                <div class="form-group row">
+                <div class="mb-3 row">
+                    {{#if (eq this.type "password")}}
+                    <!-- Password Field -->
                     <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
                     <div class="col-sm-10">
                         <input type="password" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
-                        <div class="form-text text-muted">{{this.text}}</div>
+                        <div class="form-text">{{this.text}}</div>
                     </div>
-                </div>
-                {{else if (eq this.type "bool")}}
-                <div class="form-group row">
+                    {{else}}
+                    <!-- Default Input -->
                     <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
                     <div class="col-sm-10">
-                        <select class="form-control mr-sm-2" id="input{{this.key}}" name="{{this.key}}">
-                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
-                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
-                        </select>
-                        <div class="form-text text-muted">{{this.text}}</div>
+                        <input type="{{this.type}}" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}">
+                        <div class="form-text">{{this.text}}</div>
                     </div>
+                    {{/if}}
                 </div>
-                {{else if (eq this.type "boolplus")}}
-                <div class="form-group row">
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <select class="form-control mr-sm-2" id="input{{this.key}}" name="{{this.key}}">
-                            <option value="" {{#if (eq this.value "")}} selected{{/if}}>default</option>
-                            <option value="0" {{#if (eq this.value "0")}} selected{{/if}}>disable</option>
-                            <option value="1" {{#if (eq this.value "1")}} selected{{/if}}>enable</option>
-                        </select>
-                        <div class="form-text text-muted">{{this.text}}</div>
-                    </div>
-                </div>
-                {{else if (eq this.type "checkbox")}}
-                <div class="form-group row">
-                    <div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}"><label class="custom-control-label" for="input{{this.key}}">{{this.text}}</label></div>
-                </div>
-                {{else}}
-                <div class="form-group row">
-                    <label for="input{{this.key}}" class="col-sm-2 col-form-label">{{this.key}}</label>
-                    <div class="col-sm-10">
-                        <div class="input-group">
-                            <input type="{{this.type}}" class="form-control" id="input{{this.key}}" name="{{this.key}}" value="{{this.value}}" {{#if (ne this.inputmode null)}} inputmode="{{this.inputmode}}" {{/if}} {{#if (ne this.min null)}} min="{{this.min}}" {{/if}} {{#if (ne this.max null)}} max="{{this.max}}" {{/if}} {{#if (ne this.step null)}} step="{{this.step}}" {{/if}} {{#if (ne this.append null)}} aria-describedby="addto-input{{this.key}}" {{/if}}>
-                            {{#if (ne this.append null)}}<div class="input-group-append">
-                                <span class="input-group-text" id="addto-input{{this.key}}">{{this.append}}</span>
-                            </div>{{/if}}
-                        </div>
-                        <div class="form-text text-muted">{{this.text}}</div>
-                    </div>
-                </div>
-                {{/if}}
                 {{/each}}
             </div>
         </div>
     </div>
+
+    <div class="accordion-item">
+        <div class="accordion-body text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+
 </script>
 
 <style>
@@ -190,8 +167,6 @@ $(function() {
 
     var template = Handlebars.compile($("#poolsetup_template").html());
 
-    $("#submitButton").hide()
-
     $.ajax({
         url: '/loadconfig',
         data: {ConfigName: "Pools", PoolName: "list"},
@@ -212,14 +187,12 @@ $(function() {
         var name = $("#select--PoolName").val()
         if (name.slice(-1)=='-') {
             $("#accordion").empty()
-            $("#submitButton").hide()
         }
         else {
             $.ajax({
                 url: '/loadconfig',
                 data: {ConfigName: "Pools", PoolName: name},
                 success: function (result) {
-                    $("#submitButton").show();
                     var limits = {
                         AutoBonusExtendByHours: {min:0, max:null, step:0.001, append:"hours"},
                         AutoBonusExtendForHours: {min:0, max:null, step:0.001, append:"hours"},
@@ -274,7 +247,6 @@ $(function() {
                         var coins = []
                         var item = {
                             poolname: result.PoolName,
-                            dark: theme=="dark",
                             coins: [],
                             common: [],
                             specific: []
@@ -380,21 +352,26 @@ $(function() {
         // Stop form from submitting normally
         event.preventDefault();
         if (globalconfig.IsLocked) {
-            $('.modal-body').html('To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt');
-            $('.modal-title').text('Warning: config lock is enabled');
-            $('#myModal').modal({ show: true });
+            document.querySelector('.modal-body').innerHTML = 'To be able to save, manually set parameter "APIlockConfig" to "0" in config.txt';
+            document.querySelector('.modal-title').textContent = 'Warning: config lock is enabled';
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
             return false;
         }
         $.post("/saveconfig", $(this).serialize()).done(function (data) {
+            var mbody, mtitle;
             $("#select--PoolName").trigger("change");
             if (data.Success) {
-                $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
-                $('.modal-title').text('Configuration saved!');
+                mbody = 'RainbowMiner will pick up the new configuration after the current round has ended.';
+                mtitle = 'Configuration saved!';
             } else {
-                $('.modal-body').html('Something went wrong or the configuration is locked via APILockConfig in config.txt');
-                $('.modal-title').text('Configuration NOT saved!');
+                mbody = 'Something went wrong or the configuration is locked via APILockConfig in config.txt';
+                mtitle = 'Configuration NOT saved!';
             }
-            $('#myModal').modal({ show: true });
+            document.querySelector('.modal-body').innerHTML = mbody;
+            document.querySelector('.modal-title').textContent = mtitle;
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
         });
     })
 });

@@ -1,20 +1,11 @@
-﻿html,body,.form-control,.sidebar,table.table .detail-view,.page-list .btn {
-    background: #f8f9fa!important;
-    color: #343a40!important;
+﻿.Running, .Benchmarking, tr.Running td, tr.Benchmarking td {
+    background-color: rgb(127,191,144)!important;
 }
 
-table.table {
-    background:#fff;
+.Offline, tr.Offline td {
+    background-color: rgb(213,142,176)!important;
 }
 
-.Running, .Benchmarking {
-    background-color: rgb(127,191,144);
-}
-
-.Offline {
-    background-color: rgb(213,142,176);
-}
-
-.Paused, .Waiting {
-    background-color: rgb(247,252,168);
+.Paused, .Waiting, tr.Paused td, tr.Waiting td {
+    background-color: rgb(247,252,168)!important;
 }
