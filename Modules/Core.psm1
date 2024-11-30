@@ -1021,6 +1021,7 @@ function Invoke-Core {
                                 IsWindows              = $Global:IsWindows
                                 IsLinux                = $Global:IsLinux
                                 IsLocked               = $Session.Config.APIlockConfig
+                                IsServer               = $Session.Config.RunMode -eq "Server"
                             }) -Depth 10
         $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
     }
