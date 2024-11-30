@@ -6512,7 +6512,7 @@ function Get-SessionServerConfig {
 
     $CurrentConfig = if ($Session.Config) {$Session.Config} else {
         $Result = Get-ConfigContent "Config"
-        @("RunMode","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","EnableServerExcludeList","WorkerName","GroupName") | Where-Object {$Session.DefaultValues.ContainsKey($_) -and $Result.$_ -eq "`$$_"} | ForEach-Object {
+        @("RunMode","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","EnableServerExcludeList","WorkerName","GroupName","APIPort") | Where-Object {$Session.DefaultValues.ContainsKey($_) -and $Result.$_ -eq "`$$_"} | ForEach-Object {
             $val = $Session.DefaultValues[$_]
             if ($val -is [array]) {$val = $val -join ','}
             $Result.$_ = $val
@@ -6523,7 +6523,7 @@ function Get-SessionServerConfig {
     if ($CurrentConfig -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig)) {
         $ServerConfigName = if ($CurrentConfig.ServerConfigName) {Get-ConfigArray $CurrentConfig.ServerConfigName}
         if (($ServerConfigName | Measure-Object).Count) {
-            Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -WorkerName $CurrentConfig.WorkerName -GroupName $CurrentConfig.GroupName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force -EnableServerExcludeList:(Get-Yes $CurrentConfig.EnableServerExcludeList) > $null
+            Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -APIPort $CurrentConfig.APIPort -WorkerName $CurrentConfig.WorkerName -GroupName $CurrentConfig.GroupName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force -EnableServerExcludeList:(Get-Yes $CurrentConfig.EnableServerExcludeList) > $null
         }
     }
 }
@@ -6541,6 +6541,8 @@ function Get-ServerConfig {
         [string]$Server = "",
         [Parameter(Mandatory = $False)]
         [int]$Port = 0,
+        [Parameter(Mandatory = $False)]
+        [int]$APIPort = 4000,
         [Parameter(Mandatory = $False)]
         [string]$WorkerName = "",
         [Parameter(Mandatory = $False)]
@@ -6563,7 +6565,7 @@ function Get-ServerConfig {
         $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-ContentByStreamReader $ServerLWTFile | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
-        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$($Session.Version)"
+        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&port=$($APIPort)&version=$($Session.Version)"
         try {
             $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -Timeout 30
         } catch {
@@ -7096,6 +7098,7 @@ Param(
                     machinename = $Session.MachineName
                     workername  = $Config.Workername
                     myip      = $Session.MyIP
+                    port      = $Config.APIPort
                 }
                 #Write-ToFile -FilePath "Logs\geturl_$(Get-Date -Format "yyyy-MM-dd").txt" -Message "http://$($Config.ServerName):$($Config.ServerPort)/getjob $(ConvertTo-Json $serverbody)" -Append -Timestamp
                 $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getjob" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
@@ -8860,6 +8863,7 @@ param(
                     machinename = $Session.MachineName
                     workername  = $Config.Workername
                     myip      = $Session.MyIP
+                    port      = $Config.APIPort
                 }
                 try {
                     $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
@@ -8949,6 +8953,7 @@ param(
                     machinename = $Session.MachineName
                     workername  = $Config.Workername
                     myip      = $Session.MyIP
+                    port      = $Config.APIPort
                 }
                 try {
                     $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30

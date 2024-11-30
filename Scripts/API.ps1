@@ -1397,9 +1397,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
+                        $Client.port      = $Parameters.port 
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
                 }
                 $Result = [PSCustomObject]@{}
                 $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
@@ -1432,9 +1433,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
+                        $Client.port      = $Parameters.port; 
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
                 }
                 $Result = $null
                 try {
@@ -1483,9 +1485,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
+                        $Client.port      = $Parameters.port; 
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
                 }
                 $Result = $null
                 try {
@@ -1534,9 +1537,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
+                        $Client.port      = $Parameters.port
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
                 }
                 $Result = $null
                 try {
@@ -1563,9 +1567,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Client = $APIClients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                     if ($Client) {
                         $Client.machineip = $Parameters.myip
+                        $Client.port      = $Parameters.port
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
+                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
                 }
                 $Result = $null
                 try {
