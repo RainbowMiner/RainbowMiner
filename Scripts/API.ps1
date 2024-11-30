@@ -1347,7 +1347,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/clients" {
-            $Data = ConvertTo-Json $APIClients
+            if ($Parameters.include_server -eq "true") {
+                $Config = if ($API.UserConfig) {ConvertFrom-Json $API.UserConfig} else {$Session.Config}
+                $Data = @($APIClients) + @([PSCustomObject]@{workername = $Config.Workername; machinename = $Session.MachineName; machineip = $Session.MyIP; port = $Config.APIPort; timestamp = Get-UnixTimestamp; isserver=$true}) | ConvertTo-Json
+            } else {
+                $Data = ConvertTo-Json $APIClients
+            }
             Break
         }
         "/action/toggleminer" {
