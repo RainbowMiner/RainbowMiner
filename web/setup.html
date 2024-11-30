@@ -975,9 +975,9 @@ $(function() {
             update_miningheatcontrol()
             var pools = new Array(), excludepools = new Array()
             $.each(result.Pools, function (key, data) {
-                var checked = $.inArray(key,result.PoolName) !== -1? " checked":''
+                var checked = result.PoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
                 pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + '</label></div>')
-                checked = $.inArray(key, result.ExcludePoolName) !== -1 ? " checked" : ''
+                checked = result.ExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
                 excludepools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="form-check-label" for="excludepool' + key + '">' + key + '</label></div>')
             })
             $("#pools").html(pools.join(''));
@@ -985,7 +985,7 @@ $(function() {
 
             var serverconfigname = new Array();
             $.each(new Array("algorithms","coins","config","miners","ocprofiles","pools","scheduler"), function (key, data) {
-                var checked = $.inArray(data,result.ServerConfigName) !== -1? " checked":''
+                var checked = result.ServerConfigName.some(item => item.toLowerCase() === data.toLowerCase())? " checked":"";
                 serverconfigname.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="serverconfig' + data + '" name="ServerConfigName[]" value="'+data+'"' + checked + '><label class="form-check-label" for="serverconfig' + data + '">' + data + '</label></div>')
             })
             $("#serverconfigname").html(serverconfigname.join(''));
