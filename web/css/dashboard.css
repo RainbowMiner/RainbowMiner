@@ -1,4 +1,8 @@
-﻿body {
+﻿:root {
+    --bs-secondary-color: #6c757d; /* Replace with your custom color */
+}
+
+body {
   font-size: .875rem;
 }
 
