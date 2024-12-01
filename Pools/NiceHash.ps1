@@ -31,7 +31,7 @@ catch {
     return
 }
 
-if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_MiningRequest.miningAlgorithms | Measure-Object).Count -le 10) {
+if (($Pool_Request.algos | Measure-Object).Count -le 10 -or ($Pool_MiningRequest.miningAlgorithms | Measure-Object).Count -le 10) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
@@ -42,51 +42,52 @@ $Pool_PoolFee = 2.0
 
 $Grin29_Algorithm = (Get-Coin "GRIN").algo
 
-$Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt 0 -and [int]$_.o -gt 0) -or $InfoOnly} | ForEach-Object {
+$Pool_Request.algos | Where-Object {([Double]$_.p -gt 0.00 -and [Double]$_.s -gt 0) -or $InfoOnly} | ForEach-Object {
     $Pool_Algo_Id   = $_.a
     $Pool_Data      = $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled -and $_.order -eq $Pool_Algo_Id}
 
     if (-not $Pool_Data) {return}
 
     $Pool_Algorithm = $Pool_Data.algorithm.ToLower()
-    $Pool_Host      = "$($Pool_Algorithm).auto.nicehash.com"
 
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
     if (-not $InfoOnly -and (($Algorithm -and $Pool_Algorithm_Norm -notin $Algorithm) -or ($ExcludeAlgorithm -and $Pool_Algorithm_Norm -in $ExcludeAlgorithm))) {return}
 
-    $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
-        "BeamHash3"         {"BEAM"}
-        "CuckooCycle"       {"AE"}
-        "Cuckaroo29"        {"XBG"}
-        "Cuckarood29"       {"MWC"}
-        "$Grin29_Algorithm" {"GRIN"}
-        "Eaglesong"         {"CKB"}
-        "EquihashR25x5x3"   {"BEAM"}
-        "Lbry"              {"LBC"}
-        "RandomX"           {"XMR"}
-        "Octopus"           {"CFX"}
-    }
-    
-    $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
-
-    if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
-    if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
-
-    $Pool_EthProxy = $null
-
-    if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
-        $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
-    }
-
-    $Pool_IsEthash = $Pool_Algorithm_Norm -match "^Etc?hash"
+    #if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
+    #if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.p / 1e8) -Duration $StatSpan -HashRate ([Double]$_.s) -ChangeDetection $true -Quiet
     }
 
-    if ($Pool_Wallet -or $InfoOnly) {
+    if (($Pool_Wallet -and [int]$_.o -gt 0) -or $InfoOnly) {
+
+        $Pool_CoinSymbol = Switch ($Pool_Algorithm_Norm) {
+            "BeamHash3"         {"BEAM"}
+            "CuckooCycle"       {"AE"}
+            "Cuckaroo29"        {"XBG"}
+            "Cuckarood29"       {"MWC"}
+            "$Grin29_Algorithm" {"GRIN"}
+            "Eaglesong"         {"CKB"}
+            "EquihashR25x5x3"   {"BEAM"}
+            "Lbry"              {"LBC"}
+            "RandomX"           {"XMR"}
+            "Octopus"           {"CFX"}
+        }
+    
+        $Pool_Coin = if ($Pool_CoinSymbol) {Get-Coin $Pool_CoinSymbol}
+
+        $Pool_EthProxy = $null
+
+        if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasDAGSize) {
+            $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsEthash) {"ethstratumnh"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
+        }
+
+        $Pool_IsEthash = $Pool_Algorithm_Norm -match "^Etc?hash"
+
+        $Pool_Host      = "$($Pool_Algorithm).auto.nicehash.com"
 
         foreach($Pool_SSL in @($false,$true)) {
             if ($Pool_SSL) {
