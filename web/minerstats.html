@@ -112,87 +112,89 @@
 
 <!-- End of page scripts -->
 <script>
-    $(function () {
-        $('#resetallbenchmarks').click(function () {
-            if (confirm("Do you really want to rebench ALL miners?\n\nThis will delete all your benchmarks, so please think twice.\n\nAre you sure?")) {
-                $('#myModal .modal-body').load('scripts/resetallbenchmarks.ps1', function () {
-                    $('#myModal .modal-title').text('Reset All Benchmarks');
-                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                    myModal.show();
-                });
+
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
+    $('#resetallbenchmarks').click(function () {
+        if (confirm("Do you really want to rebench ALL miners?\n\nThis will delete all your benchmarks, so please think twice.\n\nAre you sure?")) {
+            $('#myModal .modal-body').load('scripts/resetallbenchmarks.ps1', function () {
+                $('#myModal .modal-title').text('Reset All Benchmarks');
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+            });
+        }
+        return false
+    });
+
+    $('#resetneededbenchmarks').click(function () {
+        $('#myModal .modal-body').load('scripts/resetneededbenchmarks.ps1', function () {
+            $('#myModal .modal-title').text('Reset Needed Benchmarks');
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
+        });
+    });
+
+    $('#resetzerohashrateminers').click(function () {
+        $('#myModal .modal-body').load('scripts/resetzerohashrateminers.ps1', function () {
+            $('#myModal .modal-title').text('Reset 0H/s Miners');
+            var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+            myModal.show();
+        });
+    });
+
+    $('#benchmarkselected').click(function() {
+        var sel = $('#minerstats tbody tr td input[data-index]:checked');
+        if (sel.length && confirm("Do you really want to rebench all selected miners?")) {
+            var params = {
+                name: [],
+                algorithm: [],
+                devicemodel: []
             }
-            return false
-        });
+            $.each(sel,function() {
+                var ix = $(this).attr('data-index');
+                var btn = $('#minerstats tbody tr[data-index='+ix+'] td button[data-name]');
+                params.name.push(btn.attr('data-name').toString());
+                params.algorithm.push(btn.attr('data-algorithm').toString());
+                params.devicemodel.push(btn.attr('data-devicemodel').toString());
+            })
+            $.post('scripts/resetselectedbenchmark.ps1',params,function(result) {
+                document.querySelector('#myModal .modal-body').innerHTML = result;
+                document.querySelector('#myModal .modal-title').textContent = 'Reset Selected Benchmarks';
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+            })
+        }
+        return false;
+    });
 
-        $('#resetneededbenchmarks').click(function () {
-            $('#myModal .modal-body').load('scripts/resetneededbenchmarks.ps1', function () {
-                $('#myModal .modal-title').text('Reset Needed Benchmarks');
+    $('#minerstats').on("post-body.bs.table", function () {
+        $('#minerstats button[name=benchmark]').click(function () {
+            var params = {
+                name: $(this).attr('data-name').toString(),
+                algorithm: $(this).attr('data-algorithm'),
+                devicemodel: $(this).attr('data-devicemodel')
+            };
+            $('#myModal .modal-body').load('scripts/resetonebenchmark.ps1?' + jQuery.param(params), function () {
+                $('#myModal .modal-title').text('Reset miner '+params.name.replace(/-GPU.+$/,'')+params.devicemodel+'-'+params.algorithm);
                 var myModal = new bootstrap.Modal(document.getElementById('myModal'));
                 myModal.show();
             });
         });
-
-        $('#resetzerohashrateminers').click(function () {
-            $('#myModal .modal-body').load('scripts/resetzerohashrateminers.ps1', function () {
-                $('#myModal .modal-title').text('Reset 0H/s Miners');
-                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                myModal.show();
-            });
-        });
-
-        $('#benchmarkselected').click(function() {
-            var sel = $('#minerstats tbody tr td input[data-index]:checked');
-            if (sel.length && confirm("Do you really want to rebench all selected miners?")) {
-                var params = {
-                    name: [],
-                    algorithm: [],
-                    devicemodel: []
+        $('#minerstats button[name=logfile]').click(function () {
+            var params = {
+                logfile: $(this).attr('data-logfile').toString()
+            };
+            $.get('/getminerlog?' + jQuery.param(params), function (result) {
+                if (result.Status) {
+                    document.querySelector('#logModal .modal-title').textContent = params.logfile;
+                    document.querySelector('#logModal .modal-body pre').textContent = result.Content;
+                    var myModal = new bootstrap.Modal(document.getElementById('logModal'));
+                    myModal.show();
                 }
-                $.each(sel,function() {
-                    var ix = $(this).attr('data-index');
-                    var btn = $('#minerstats tbody tr[data-index='+ix+'] td button[data-name]');
-                    params.name.push(btn.attr('data-name').toString());
-                    params.algorithm.push(btn.attr('data-algorithm').toString());
-                    params.devicemodel.push(btn.attr('data-devicemodel').toString());
-                })
-                $.post('scripts/resetselectedbenchmark.ps1',params,function(result) {
-                    document.querySelector('#myModal .modal-body').innerHTML = result;
-                    document.querySelector('#myModal .modal-title').textContent = 'Reset Selected Benchmarks';
-                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                    myModal.show();
-                })
-            }
-            return false;
-        });
-
-        $('#minerstats').on("post-body.bs.table", function () {
-            $('#minerstats button[name=benchmark]').click(function () {
-                var params = {
-                    name: $(this).attr('data-name').toString(),
-                    algorithm: $(this).attr('data-algorithm'),
-                    devicemodel: $(this).attr('data-devicemodel')
-                };
-                $('#myModal .modal-body').load('scripts/resetonebenchmark.ps1?' + jQuery.param(params), function () {
-                    $('#myModal .modal-title').text('Reset miner '+params.name.replace(/-GPU.+$/,'')+params.devicemodel+'-'+params.algorithm);
-                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                    myModal.show();
-                });
-            });
-            $('#minerstats button[name=logfile]').click(function () {
-                var params = {
-                    logfile: $(this).attr('data-logfile').toString()
-                };
-                $.get('/getminerlog?' + jQuery.param(params), function (result) {
-                    if (result.Status) {
-                        document.querySelector('#logModal .modal-title').textContent = params.logfile;
-                        document.querySelector('#logModal .modal-body pre').textContent = result.Content;
-                        var myModal = new bootstrap.Modal(document.getElementById('logModal'));
-                        myModal.show();
-                    }
-                });
             });
         });
-
     });
 
     function formatMinerstats(data) {

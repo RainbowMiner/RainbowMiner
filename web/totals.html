@@ -46,6 +46,11 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
     $(function () {
         $('#resettotals').click(function () {
             $('.modal-body').load('scripts/resettotals.ps1', function () {

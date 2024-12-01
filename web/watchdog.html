@@ -39,17 +39,19 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-    $(function () {
-        $("#resetwatchdog").click(function () {
-            $.ajax({
-                url: '/watchdogreset', success: function (result) {
-                    document.querySelector('.modal-body').innerHTML = 'Watchdog will be reset asap';
-                    document.querySelector('.modal-title').textContent = 'Watchdog reset initiated';
-                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                    myModal.show();
-                }
-            })
-        });
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
+    $("#resetwatchdog").click(function () {
+        $.ajax({
+            url: '/watchdogreset', success: function (result) {
+                document.querySelector('.modal-body').innerHTML = 'Watchdog will be reset asap';
+                document.querySelector('.modal-title').textContent = 'Watchdog reset initiated';
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+            }
+        })
     });
 
     function formatWatchdogTimers(data) {

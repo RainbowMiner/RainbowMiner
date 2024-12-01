@@ -45,6 +45,10 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
     $("#applyoc").click(function () {
         $('.modal-body').load('/applyoc', function () {
             $('.modal-title').text('Overclocking Profiles will be applied');
@@ -53,9 +57,9 @@
         });
     });
 
-  function formatOCProfiles(data) {
-  // This function can alter the returned data before building the table, formatting it in a way
-  // that is easier to display and manipulate in a table
+function formatOCProfiles(data) {
+// This function can alter the returned data before building the table, formatting it in a way
+// that is easier to display and manipulate in a table
       $.each(data, function (index, item) {
           item.tPowerLimit = typeof (item.PowerLimit) !== "undefined" && item.PowerLimit? Number(item.PowerLimit) : -1
           item.tThermalLimit = typeof (item.ThermalLimit) !== "undefined" && item.ThermalLimit ? Number(item.ThermalLimit) : -1

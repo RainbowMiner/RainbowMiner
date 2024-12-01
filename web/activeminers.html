@@ -21,7 +21,7 @@
 >
   <thead>
       <tr>
-          <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
+          <th data-field="Name" data-sortable="true" data-filter-control="select" data-formatter="formatName">Name</th>
           <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
           <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
           <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
@@ -39,6 +39,11 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
     $(function () {
         function refreshTable() {
             if (!$("table#miners tr.detail-view").length) $("table#miners").bootstrapTable("refresh", { silent: true });
@@ -51,6 +56,14 @@
         if (typeof data == "undefined" || !data) return "-";
         var value = parseFloat(data) * 1e8;
         return value.toFixed(2).toString();
+    }
+
+    function formatName(value, item, index) {
+        var Name = item.Name.split(/\-/)[0];
+        if (item.ManualUri && item.ManualUri.toString() != '') {
+            Name = '<a href="' + item.ManualUri.toString() + '" target="_blank" title="Official miner page">' + Name + '</a>';
+        }
+        return Name
     }
 
     function sleep(milliseconds) {
@@ -81,10 +94,6 @@
 
             // Format the device(s)
             item.tDevices = item.DeviceModel.toString();
-            item.Name = item.Name.split(/\-/)[0];
-            if (item.ManualUri && item.ManualUri.toString() != '') {
-                item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
-            }
 
             var powerDraw = parseFloat(item.PowerDraw);
             item.tPowerDraw = Math.round(powerDraw) + ' W';

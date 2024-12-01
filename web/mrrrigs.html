@@ -71,22 +71,27 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-    $(function () {
-        $("#updatemrr").click(function (event) {
-            event.stopPropagation()
-            $.ajax({
-                url: '/updatemrr',
-                success: function (result) {
-                    var mbody = 'MiningRigRental rigs will be automatically created/updated next round.';
-                    var mtitle = 'Run Rig-Updates';
-                    document.querySelector('.modal-body').innerHTML = mbody;
-                    document.querySelector('.modal-title').textContent = mtitle;
-                    var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-                    myModal.show();
-                }
-            })
-        });
 
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
+    $("#updatemrr").click(function (event) {
+        event.stopPropagation()
+        $.ajax({
+            url: '/updatemrr',
+            success: function (result) {
+                var mbody = 'MiningRigRental rigs will be automatically created/updated next round.';
+                var mtitle = 'Run Rig-Updates';
+                document.querySelector('.modal-body').innerHTML = mbody;
+                document.querySelector('.modal-title').textContent = mtitle;
+                var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+                myModal.show();
+            }
+        })
+    });
+
+    $(function () {
         function refreshTable() {
             if (!$("table#mrrrigs tr.detail-view").length) $("table#mrrrigs").bootstrapTable("refresh", { silent: true });
             window.setTimeout(refreshTable, 600000);

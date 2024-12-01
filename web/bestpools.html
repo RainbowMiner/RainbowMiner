@@ -39,6 +39,11 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
     $(function () {
         function refreshTable() {
             if (!$("table#pools tr.detail-view").length) $("table#pools").bootstrapTable("refresh", { silent: true });

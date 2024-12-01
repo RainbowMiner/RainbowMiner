@@ -42,12 +42,34 @@
 <script type="text/javascript">
     var $table = $('table#miners')
 
-    /*
-    $table.on('all.bs.table', function (e, name, args) {
-        console.log(name, args)
+    $table.on('load-success.bs.table', function (e, data) {
+        $.getJSON("/disabled", function (disabled) {
+            $.each(data, function (index, item) {
+                var algos = item.BaseAlgorithm.split(/-/)
+                var disable = false
+                if (disabled.length) {
+                    for (i = 0; !disable && i < algos.length; i++) {
+                        var name = item.Name + '_' + algos[i] + '_HashRate'
+                        if (disabled.indexOf(name) > -1) { disable = true }
+                    }
+                }
+                if (disable && item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: false, reinit: false }) }
+                else if (!disable && !item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: true, reinit: false }) }
+            })
+        })
+        sortFilterOptions(this);
     })
-    */
 
+    $table.on("change", "input[type='checkbox'].enable-switch", function (event) {
+        event.preventDefault();
+        var data = $table.bootstrapTable('getData')
+        var index = parseInt($(this).attr("id").split(/-/)[1])
+        $.getJSON("/action/toggleminer?name=" + encodeURIComponent(data[index].Name) + "&algorithm=" + encodeURIComponent(data[index].BaseAlgorithm) + "&devicemodel=" + encodeURIComponent(data[index].DeviceModel), function (res) {
+            if (res.Status) {
+                $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: !res.Disabled, reinit: false })
+            }
+        })
+    })
 
     $(function () {
         function refreshTable() {            
@@ -55,33 +77,6 @@
             window.setTimeout(refreshTable, 30000);
         }
         //window.setTimeout(refreshTable, 30000);
-
-        $table.on('load-success.bs.table', function (e, data) {
-            $.getJSON("/disabled", function (disabled) {
-                $.each(data, function (index, item) {
-                    var algos = item.BaseAlgorithm.split(/-/)
-                    var disable = false
-                    if (disabled.length) {
-                        for (i = 0; !disable && i < algos.length; i++) {
-                            var name = item.Name + '_' + algos[i] + '_HashRate'
-                            if (disabled.indexOf(name) > -1) { disable = true }
-                        }
-                    }
-                    if (disable && item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: false, reinit: false }) }
-                    else if (!disable && !item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: true, reinit: false }) }
-                })
-            })
-        })
-        $table.on("change", "input[type='checkbox'].enable-switch", function (event) {
-            event.preventDefault();
-            var data = $table.bootstrapTable('getData')
-            var index = parseInt($(this).attr("id").split(/-/)[1])
-            $.getJSON("/action/toggleminer?name=" + encodeURIComponent(data[index].Name) + "&algorithm=" + encodeURIComponent(data[index].BaseAlgorithm) + "&devicemodel=" + encodeURIComponent(data[index].DeviceModel), function (res) {
-                if (res.Status) {
-                    $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: !res.Disabled, reinit: false })
-                }
-            })
-        })
     });
 
     function formatBTCEff(data) {

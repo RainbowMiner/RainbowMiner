@@ -50,6 +50,10 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+    $("table.table").on('load-success.bs.table', function (e, data) {
+        sortFilterOptions(this);
+    });
+
     function colorStatus(row, index) {
         return { classes: row.Crashed? (row.Crashed == 1? "Offline":"Paused"):"Standard" };
     }
