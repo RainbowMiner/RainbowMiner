@@ -254,15 +254,6 @@
         "divisor":  100000000
     },
     {
-        "symbol":  "YEC",
-        "match":  "^s1",
-        "rpc":  "https://yecblockexplorer.com/api/v2/address/{w}?details=basic",
-        "address":  "address",
-        "balance":  "balance",
-        "received":  "totalReceived",
-        "divisor":  100000000
-    },
-    {
         "symbol":  "YTN",
         "match":  "^Y",
         "rpc":  "http://ytn.ccore.online/ext/getaddress/{w}",
