@@ -24,6 +24,8 @@ $ChangesTotal = 0
 $AddAlgorithm = @()
 $RemoveMinerStats = @()
 $RemovePoolStats = @()
+$RenamePools = @()
+
 try {
 
     ### 
@@ -1861,6 +1863,11 @@ try {
         Get-ChildItem ".\Stats\Miners" -Filter "CPU-Xmrig**_HashRate.txt" -File | Where-Object {$_.Name -match "_(Flex|Panthera|RandomKEVA|RandomXEQ|Take2)_"} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore;$ChangesTotal++}
     }
 
+
+    if ($Version -le (Get-Version "4.9.4.6")) {
+        $RenamePools += [PSCustomObject]@{From="Gteh";To="Gtpool";Force=$true}
+    }
+
     ###
     ### END OF VERSION CHECKS
     ###
@@ -1941,6 +1948,73 @@ try {
         if (Test-Path ".\Stats\Pools") {
             $RemovePoolStats | Foreach-Object {
                 Get-ChildItem ".\Stats\Pools" -Filter $_ -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+            }
+        }
+    }
+
+    if ($RenamePools.Count -gt 0) {
+        $CacheCleanup = $true
+        $RenamePools | Foreach-Object {
+            $PoolFrom = $_.From
+            $PoolTo   = $_.To
+            $PoolForce= $_.Force
+            $Changes = 0
+            $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            if ($ConfigActual.PoolName -match $PoolFrom) {
+                $PoolNames = @($ConfigActual.PoolName -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Foreach-Object {if ($_ -eq $PoolFrom) {$PoolTo} else {$_}} | Select-Object)
+                $ConfigActual.PoolName = $PoolNames -join ","
+                $Changes++
+            }
+            if ($ConfigActual.ExcludePoolName -match $PoolFrom) {
+                $PoolNames = @($ConfigActual.ExcludePoolName -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Foreach-Object {if ($_ -eq $PoolFrom) {$PoolTo} else {$_}} | Select-Object)
+                $ConfigActual.ExcludePoolName = $PoolNames -join ","
+                $Changes++
+            }
+            if ($Changes) {
+                $ConfigActual | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
+                $ChangesTotal += $Changes
+                $Changes = 0
+            }
+
+            $SchedulerConfigActual = Get-Content "$SchedulerConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            $SchedulerConfigActual | Foreach-Object {
+                if ($_.PoolName -match $PoolFrom) {
+                    $PoolNames = @($_.PoolName -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Foreach-Object {if ($_ -eq $PoolFrom) {$PoolTo} else {$_}} | Select-Object)
+                    $_.PoolName = $PoolNames -join ","
+                    $Changes++
+                }
+                if ($_.ExcludePoolName -match $PoolFrom) {
+                    $PoolNames = @($_.ExcludePoolName -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Foreach-Object {if ($_ -eq $PoolFrom) {$PoolTo} else {$_}} | Select-Object)
+                    $_.ExcludePoolName = $PoolNames -join ","
+                    $Changes++
+                }
+            }
+            if ($Changes) {
+                Set-ContentJson -PathToFile $SchedulerConfigFile -Data $SchedulerConfigActual > $null
+                $ChangesTotal += $Changes
+                $Changes = 0
+            }
+
+            $PoolsActual = Get-Content "$PoolsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            $PoolsNew = [PSCustomObject]@{}
+            $PoolsActual.PSObject.Properties | ForEach-Object {
+                if ($_.Name -eq $PoolFrom) {
+                    if ($Force -or -not [bool]$PoolsActual.PSObject.Properties[$PoolTo]) {
+                        $PoolsNew | Add-Member $PoolTo $_.Value -Force
+                    }
+                    $Changes++
+                } else {
+                    $PoolsNew | Add-Member $_.Name $_.Value
+                }
+            }
+            if ($Changes) {
+                Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsNew > $null
+                $ChangesTotal += $Changes
+                $Changes = 0
+            }
+
+            @("Balances","Pools","Totals") | Foreach-Object {
+                Get-ChildItem ".\Stats\$($_)" -Filter "$($PoolFrom)_*.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace $PoolFrom,$PoolTo) -Force -ErrorAction Ignore}
             }
         }
     }
