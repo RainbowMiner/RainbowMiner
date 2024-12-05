@@ -42,7 +42,7 @@ $Pool_EthProxy = "ethstratumnh"
 $Coins_Request = [PSCustomObject]@{}
 
 try {
-    $Coins_Request = Invoke-RestMethodAsync "https://api.gteh.org/?key=$($API_Key)" -body '{"method":"coins_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+    $Coins_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"coins_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -58,7 +58,7 @@ if (-not $Coins_Request.result) {
 $Mining_Request = [PSCustomObject]@{}
 
 try {
-    $Mining_Request = Invoke-RestMethodAsync "https://api.gteh.org/?key=$($API_Key)" -body '{"method":"mining_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 3600
+    $Mining_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"mining_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 3600
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -97,7 +97,7 @@ if (-not $InfoOnly) {
         $Workers_Request = [PSCustomObject]@{}
 
         try {
-            $Workers_Request = Invoke-RestMethodAsync "https://api.gteh.org/?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
+            $Workers_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -137,7 +137,7 @@ if (-not $InfoOnly) {
                     $BestCoin_Mining = $Mining_Request.data | Where-Object {$_.coin -eq $BestCoin_Request.coin -and $_.mining -match "PPLN"} | Select-Object -First 1
                     $Switch_Request = [PSCustomObject]@{}
                     try {
-                        $Switch_Request = Invoke-GetUrl "https://api.gteh.org/?key=$($API_Key)" -body "{`"method`":`"change_mining`",`"workers`":[`"$($Current_Worker.uniq)`"],`"mining`":`"$($BestCoin_Mining.uniq)`"}"
+                        $Switch_Request = Invoke-GetUrl "https://api.gtpool.io/?key=$($API_Key)" -body "{`"method`":`"change_mining`",`"workers`":[`"$($Current_Worker.uniq)`"],`"mining`":`"$($BestCoin_Mining.uniq)`"}"
                     }
                     catch {
                         if ($Error.Count){$Error.RemoveAt(0)}

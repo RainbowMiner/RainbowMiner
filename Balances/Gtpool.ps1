@@ -12,7 +12,7 @@ if (-not $Config.Pools.$Name.API_Key) {return}
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.gteh.org/?key=$($Config.Pools.$Name.API_Key)" -body '{"method":"coins_reward"}' -retry 3 -retrywait 1000 -tag $Name -cycletime ($Config.BalanceUpdateMinutes*60)
+    $Pool_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($Config.Pools.$Name.API_Key)" -body '{"method":"coins_reward"}' -retry 3 -retrywait 1000 -tag $Name -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
