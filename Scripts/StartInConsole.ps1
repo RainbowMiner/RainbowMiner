@@ -74,8 +74,10 @@ do {
     if ($Done = $ControllerProcess.WaitForExit(1000)) {
         $Process.CloseMainWindow()>$null
     }
-    if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
-    $Error.Clear()
+    if ($Error.Count) {
+        $Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}
+        $Error.Clear()
+    }
 }
 while (-not $Done -and $Process.HasExited -eq $false)
 
