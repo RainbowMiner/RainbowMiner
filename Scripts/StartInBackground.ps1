@@ -15,8 +15,10 @@ $MiningProcess = [PowerShell]::Create().AddScript("Set-Location `"$($WorkingDire
 $MiningStatus  = $MiningProcess.BeginInvoke()
 
 do {
-    $Done = $ControllerProcess.WaitForExit(1000)
-    if (-not $Done) {
+    if ($Done = $ControllerProcess.WaitForExit(1000)) {
+        $MiningProcess.Streams.ClearStreams() > $null
+        $MiningProcess.Stop() > $null
+    } else {
         if ($LogPath) {
             $MiningProcess.Streams.Verbose.ReadAll() | Tee-Object $LogPath -Append
         } else {
@@ -26,7 +28,4 @@ do {
     }
 } until ($Done -or $MiningStatus.IsCompleted)
 
-$MiningProcess.Streams.ClearStreams() > $null
-$MiningProcess.Stop() > $null
-$MiningProcess.Dispose() > $null
 $MiningProcess = $null
