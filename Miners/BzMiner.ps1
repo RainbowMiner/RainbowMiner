@@ -15,20 +15,21 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "21.5.3"
+$Version = "22.0.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v21.5.3-bzminer/bzminer_v21.5.3_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.0.0-bzminer/bzminer_v22.0.0_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v21.5.3-bzminer/bzminer_v21.5.3_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.0.0-bzminer/bzminer_v22.0.0_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alph";                         MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #Blake3/Alephium
+    [PSCustomObject]@{MainAlgorithm = "blocx";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2} #BLOCX/BlocxAutolykos2
     [PSCustomObject]@{MainAlgorithm = "dynex";                        MinMemGb = 2; Params = ""; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Fee = 2.00} #DynexSolve/DNX
     [PSCustomObject]@{MainAlgorithm = "ergo";            DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("AMD","INTEL","NVIDIA"); ExtendInterval = 2; Fee = 1.0} #ERG/Autolykos2
     [PSCustomObject]@{MainAlgorithm = "ergo";            DAG = $true; MinMemGb = 2; Params = ""; Vendor = @("NVIDIA"); ExtendInterval = 2; SecondaryAlgorithm = "kaspa"; Fee = 1.0} #ERG/Autolykos2+kHeavyHash
