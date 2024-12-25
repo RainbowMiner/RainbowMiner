@@ -196,7 +196,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     }
                 }
 
-                if ($Miner_Vendor -eq "CPU") {
+                if ($Miner_Vendor -ne "CPU") {
                     $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}            
                     $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
                     $DisableDevices = @(Compare-Object $Device_BusId @($Miner_Device | Select-Object -ExpandProperty BusId -Unique) | Where-Object {$_.SideIndicator -eq "<="} | Foreach-Object {($_.InputObject -split ':' | Foreach-Object {[uint32]"0x$_"}) -join ':'}) -join ' '
