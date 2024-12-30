@@ -149,6 +149,9 @@
 372	Xmrig4Xdag
 373	TTminerBeta
 374	SccMiner
+375	Gminer234
+376	XmrigCC
+377	SrbMinerMulti268
 
 400	Sgminer
 401	SgminerBitcore
