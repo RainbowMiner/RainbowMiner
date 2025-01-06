@@ -317,7 +317,7 @@ Alternative: start as Linux `screen`:
 
 #### 5. Enter your credentials:
 
-- your btc-wallet address (one for general use, and one for NiceHash)
+- your btc-wallet address (one for general use, and one for [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1))
 - your [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) credentials, if you plan to use this pool   
 - your region. Valid names are: US, Europe, Asia
 - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETC, ..
@@ -334,7 +334,7 @@ Alternative: start as Linux `screen`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Abelpool, Acepool, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, BlocxZone, BlocxZoneSolo, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, K1Pool, K1PoolSolo, Kryptex, LeafPool, LuckPool, LuckyPool, Luxor, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningDutchCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, NiceHash, PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersAE, 2MinersSolo, 6Block, Abelpool, Acepool, Aionpool, AlphPool, BaikalMine, BaikalMineSolo, Binance, BlockMasters, BlockMastersCoins, BlocxZone, BlocxZoneSolo, C3pool, CpuPool, Crazypool, Ekpool, EthashPool, Ethermine, Ethwmine, Ezil, F2pool, FlockPool, FluxPools, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Hiveon, Icemining, K1Pool, K1PoolSolo, Kryptex, LeafPool, LuckPool, LuckyPool, Luxor, Minerpool, MinerRocks, Mining4people, MiningDutch, MiningDutchCoins, MiningRigRentals, Mintpond, Molepool, MoneroOcean, Nanopool, Neuropool, [Nicehash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1), PhalanxMining, PhalanxMiningSolo, Pmpmining, Poolin, ProHashing, ProHashingCoins, ProHashingCoinsSolo, RaptoreumZone, Ravenminer, RPlant, SeroPool, SoloPool, Sunpool, SuprNova, unMineable, UUpool, ViaBTC, WhatToMine, WoolyPooly, WoolyPoolySolo, YadaMiners, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool, ZpoolCoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -517,7 +517,7 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
 <details><summary>MoneroOcean</summary> https://moneroocean.stream/ auto-exchange and payout in XMR, enter your Monero wallet address and a password (either a real password or your email-address) into pools.config.txt to start mining</details>
 <details><summary>NanoPool</summary> https://nanopool.org/ no auto-exchange, a separate wallet address is needed for each coin (ETHW, ETC, ZEC, ETN, SIA, PASC) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Neuropool</summary> https://neuropool.net/ DNX, DynexSolve pool, pays in DNX, enter your DNX wallet address in pools configuration or edit pools.config.txt</details>
-<details><summary>Nicehash</summary> [https://www.nicehash.com/](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1) auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
+<details><summary>Nicehash</summary> [https://www.nicehash.com/](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1) auto-exchange and payout in BTC, use of a special Nicehash mining wallet is mandatory, see note below</details>
 <details><summary>PhalanxMining</summary> https://pool.phalanxmining.com/ no auto-exchange, multiple coins, no autoexchange. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Pmpmining</summary> https://pmpmining.com/ no auto-exchange, multiple pooled coins, no autoexchange. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>PmpminingSolo</summary> https://pmpmining.com/ no auto-exchange, multiple solo coins, no autoexchange. Set in pools configuration or edit pools.config.txt</details>
@@ -551,8 +551,8 @@ If "EnableServerPools" is set to "1", the client will download the server's pool
   
 <details><summary>Notes for [NiceHash](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1)</summary>
 
-If you plan to mine through Nicehash, I strongly recommend, that you register an account with them ([https://www.nicehash.com/register](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1)). In this case, NiceHash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
-This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). Payout via Bitcoin-Lightning channel possible. If you want to see balance details, first create a new API key (My Settings->API-Key) with "Wallet permission->View.." and "Mining permission->View.." enabled. Second add API key, API secret and Organizazion ID to pools.config.txt</details>
+If you plan to mine through Nicehash, you need to register an account with them ([https://www.nicehash.com/register](https://www.nicehash.com/?refby=c402ea4d-9203-414c-b96e-526e34ad20e1)). NiceHash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
+Payout via Bitcoin-Lightning channel is possible. If you want to see balance details, first create a new API key (My Settings->API-Key) with "Wallet permission->View.." and "Mining permission->View.." enabled. Second add API key, API secret and Organizazion ID to pools.config.txt</details>
 <details><summary>Notes for the pools BlockCruncher, BlockMasters, CryptoKnight, Hashcryptos, HashPool, Minerpool, MinerRocks, Mining4people, PocketWhale, ProHashing, Ravenminer, YiiMP and Zpool</summary>
   
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Minerpool, MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.

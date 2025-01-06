@@ -281,7 +281,7 @@ function Start-Setup {
                 $NicehashAPIKey = $PoolsActual.Nicehash.API_Key
                 $NicehashAPISecret = $PoolsActual.Nicehash.API_Secret
             } else {
-                $NicehashWallet = "`$Wallet"
+                $NicehashWallet = ""
                 $NicehashOrganizationID = ""
                 $NicehashAPIKey = ""
                 $NicehashAPISecret = ""
@@ -369,14 +369,13 @@ function Start-Setup {
                                 Write-Host " "
                             }
 
-                            if ($NicehashWallet -eq "`$Wallet"){$NicehashWallet=$Config.Wallet}
                             $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash BTC mining wallet address ($(if ($NicehashWallet) {"enter 'clear'"} else {"leave empty"}) for none)" -Default $NicehashWallet -MinLength 34 -MaxLength 64 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "nicehash2" {
                             if ($NiceHashWallet -and ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet)) {
-                                if (Read-HostBool "You have entered your default wallet as Nicehash wallet. Do you want to disable NiceHash mining for now? (Or enter `"<`" to return to the wallet query)" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
-                                    $NiceHashWallet = ''
-                                }
+                                Write-Host "You have entered your default wallet as Nicehash wallet. This is no longer possible, mining on Nicehash will be disabled for now." -ForegroundColor Yellow
+                                Write-Host "Go to nicehash.com and create your mining wallet first, in case you want to mine on Nicehash. " -ForegroundColor Yellow
+                                $NiceHashWallet = ''
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -384,7 +383,6 @@ function Start-Setup {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if (-not $NicehashWallet) {
                                 $PoolNames = $PoolNames | Where-Object {$_ -ne "NiceHash"}
-                                $NicehashWallet = "`$Wallet"
                             } elseif ($PoolNames -inotcontains "NiceHash") {
                                 $PoolNames += $PoolNames
                             }
