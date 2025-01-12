@@ -3509,13 +3509,22 @@ function Get-Device {
                 Get-CimInstance CIM_VideoController | ForEach-Object {
                     $BusId = $null
                     try {
-                        if ((Get-ItemProperty -path "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.PNPDeviceID)" -name locationInformation -ErrorAction Stop).locationInformation -match "\d+,\d+,\d+") {
-                            $BusId = "$("{0:x2}:{1:x2}" -f ($Matches[0] -split "," | Foreach-Object {[int]$_}))"
+                        $RegPath = "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.PNPDeviceID)"
+                        if (Test-Path $RegPath) {
+                            $RegProperties = Get-ItemProperty -Path $RegPath
+            
+                            if ($RegProperties.PSObject.Properties.Match('locationInformation')) {
+                                if ($RegProperties.locationInformation -match "\d+,\d+,\d+") {
+                                    $BusId = "$("{0:x2}:{1:x2}" -f ($Matches[0] -split "," | ForEach-Object {[int]$_}))"
+                                }
+                            }
                         }
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Error.Count) { $Error.RemoveAt(0) }
                         $BusId = $null
                     }
+
+                    $BusId = $null
                     if (-not $BusId -or $BusId -notmatch "[0-9A-F]+:[0-9A-F]+") {
                         $PnpInfo = Get-PnpDevice $_.PNPDeviceId | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber","DEVPKEY_Device_Address" -ErrorAction Ignore
                         $BusNumber     = ($PnpInfo | Where-Object KeyName -eq "DEVPKEY_Device_BusNumber").Data
