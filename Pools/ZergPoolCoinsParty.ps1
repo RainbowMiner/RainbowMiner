@@ -49,12 +49,21 @@ catch {
 
 $Pool_Fee = 0.5
 
-if ($Region -ne "" -and $Region -in @("na","eu","asia")) {
-    $Pool_Regions = @($Region)
-} else {
-    $Pool_Regions = @("us")
+$Pool_Regions = $null
+if ($Region -ne "") {
+    foreach($Region_0 in @("na","eu","asia")) {
+        $Pool_Region = Get-Region $Region_0
+        if ($Pool_Region -eq $Region) {
+            $Pool_Regions = @($Region_0)
+            $Pool_RegionsTable.$Region_0 = $Region
+            break
+        }
+    }
 }
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+if (-not $Pool_Regions) {
+    $Pool_Regions = @("us")
+    $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+}
 
 $Pool_Currencies = @("BTC","DOGE","LTC") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 

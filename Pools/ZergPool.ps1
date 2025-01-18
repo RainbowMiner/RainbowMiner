@@ -50,12 +50,21 @@ if ($DataWindow -eq "actual_last24h") {$DataWindow = "actual_last24h_shared"}
 
 $Pool_Fee = 0.5
 
-if ($Region -ne "" -and $Region -in @("na","eu","asia")) {
-    $Pool_Regions = @($Region)
-} else {
-    $Pool_Regions = @("us")
+$Pool_Regions = $null
+if ($Region -ne "") {
+    foreach($Region_0 in @("na","eu","asia")) {
+        $Pool_Region = Get-Region $Region_0
+        if ($Pool_Region -eq $Region) {
+            $Pool_Regions = @($Region_0)
+            $Pool_RegionsTable.$Region_0 = $Region
+            break
+        }
+    }
 }
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+if (-not $Pool_Regions) {
+    $Pool_Regions = @("us")
+    $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+}
 
 if ($InfoOnly) {
     $Pool_Currencies = @("BTC") + @($PoolCoins_Request.PSObject.Properties.Name | Foreach-Object {if ($PoolCoins_Request.$_.symbol -eq $null -or $_ -match "^USD(T|C)-"){$_} else {$PoolCoins_Request.$_.symbol}}) | Select-Object -Unique
