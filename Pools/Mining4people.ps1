@@ -33,7 +33,7 @@ if (-not $Pool_Request -or ($Pool_Request | Measure-Object).Count -le 5) {
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("au","br","eu","fi","in","jp","us-west","us-east","us-cent")
+$Pool_Regions = @("au","br","eu","in","jp","us-west","us-east","us-cent")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 1
