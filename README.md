@@ -557,6 +557,10 @@ Payout via Bitcoin-Lightning channel is possible. If you want to see balance det
   
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Minerpool, MinerRocks, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
+<details><summary>Notes for all ZergPool modules</summary>
+
+All ZergPool modules make use of the "Anycast" type stratum addresses "<algo>.mine.zergpool.com". If you want to let you miner use one of the specific stratum regions "na","eu" and "asia", set the "Region" parameter of the respective ZergPool module in pools.config.txt to the desired region code.
+</detail>
 <details><summary>Notes for Solo- and Party-mining</summary>
   
 Gos.cx and ZergPool allow solo mining and party mining. This is achieved by adding parameters "m=solo" or "m=party.yourpassword" to the password of the pool. There are two ways to achieve this with RainbowMiner:

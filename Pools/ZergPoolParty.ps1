@@ -12,7 +12,8 @@ param(
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
     [String]$PartyPassword = "",
-    [String]$AECurrency = ""
+    [String]$AECurrency = "",
+    [String]$Region = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -52,7 +53,11 @@ if ($DataWindow -eq "actual_last24h") {$DataWindow = "actual_last24h_solo"}
 
 $Pool_Fee = 0.5
 
-$Pool_Regions = @("us")
+if ($Region -ne "" -and $Region -in @("na","eu","asia")) {
+    $Pool_Regions = @($Region)
+} else {
+    $Pool_Regions = @("us")
+}
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Currencies = @("BTC","DOGE","LTC") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
