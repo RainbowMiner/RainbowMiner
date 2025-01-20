@@ -2842,6 +2842,7 @@ function Stop-SubProcess {
     }
 
     if ($Job.XJob) {
+        if ($Job.XJob.HasMoreData) {Receive-Job $Job.XJob > $null}
         Remove-Job $Job.XJob -Force -ErrorAction Ignore
         $Job.Name = $null
         $Job.XJob = $null
