@@ -1305,6 +1305,12 @@ function Invoke-Core {
                         $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                     }
 
+                    foreach($q in @("Month")) {
+                        if ($_.$q -is [string]) {$_.$q = @($_.$q -replace "[^0-9,;\*]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
+                        $_ | Add-Member $q @(($_.$q | Select-Object) | Where-Object {$_} | Foreach-Object {$_} | Select-Object -Unique) -Force
+                        if ($_.$q -contains "*" -and $_.$q.Count -gt 1) {$_.$q = @("*")}
+                    }
+
                     if ($Session.Config.EnableAlgorithmVariants) {
                         if ($_.Algorithm.Count) {
                             $SchedulerAlgorithm = $_.Algorithm
@@ -1574,11 +1580,13 @@ function Invoke-Core {
     $MiningHeatControl       = $Session.Config.MiningHeatControl
     $PauseRentals            = $false
     $MRRPriceFactor          = 0
-    $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
-    $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
+    $GetDate = Get-Date
+    $TimeOfDay = $GetDate.TimeOfDay.ToString("hh\:mm")
+    $DayOfWeek = "$([int]$GetDate.DayOfWeek)"
+    $CurMonth  = "$([int]$GetDate.Month)"
     $Scheduler = $null
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$PauseByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$PauseRentals = $_.PauseRentals;$MRRPriceFactor = $_.MRRPriceFactor;$Scheduler = $_})
-    $Session.Config.Scheduler.Where({$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$PauseByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$PauseRentals = $_.PauseRentals;$MRRPriceFactor = $_.MRRPriceFactor;$Scheduler = $_})
+
+    $Session.Config.Scheduler.Where({$_.Enable -and ($_.DayOfWeek -eq "*" -or $_.DayOfWeek -eq $DayOfWeek) -and ($_.Month -contains "*" -or $_.Month -contains $CurMonth) -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To}).ForEach({$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$PauseByScheduler = $_.Pause -and -not $Session.IsExclusiveRun;$PauseRentals = $_.PauseRentals;$MRRPriceFactor = $_.MRRPriceFactor;$Scheduler = $_})
 
     $Global:PauseMiners.Set([PauseStatus]::ByScheduler,$PauseByScheduler)
 

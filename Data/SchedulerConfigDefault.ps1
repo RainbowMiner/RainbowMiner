@@ -1,6 +1,7 @@
 ﻿[PSCustomObject]@{
     Name       = ""
     DayOfWeek  = "*"
+    Month      = "*"
     From       = "00:00"
     To         = "23:59"
     PowerPrice = ""
