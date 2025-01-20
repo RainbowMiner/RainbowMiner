@@ -1591,7 +1591,7 @@ function Invoke-Core {
     $Global:PauseMiners.Set([PauseStatus]::ByScheduler,$PauseByScheduler)
 
     if ($Scheduler) {
-        Write-Log "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To)"
+        Write-Log "Scheduler profile $($Scheduler.Name) currently active: DayOfWeek=$($Scheduler.DayOfWeek), From=$($Scheduler.From), To=$($Scheduler.To), Month=$($Scheduler.Month -join ",")"
     }
 
     $Session.CurrentPowerPrice              = $PowerPrice
