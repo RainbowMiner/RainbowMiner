@@ -21,22 +21,50 @@ pwsh_major_version="7"
 pwsh_minor_version="2"
 pwsh_build_version="24"
 
+nv_cudalibs="https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.04.18-cudalibs/cudalibs-linux-20240418.tar.gz"
+
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
 
 if [ -x "$(command -v pwsh)" ]; then
   pwsh_version_current="$(pwsh --version | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')"
 fi
 
+check_lspci() {
+    if command -v lspci &>/dev/null; then
+        lspci | grep -i nvidia &>/dev/null && return 0
+    fi
+    return 1
+}
+
+check_nvidia_smi() {
+    if command -v nvidia-smi &>/dev/null; then
+        nvidia-smi --query-gpu=name --format=csv,noheader &>/dev/null && return 0
+    fi
+    return 1
+}
+
+check_proc_sys() {
+    grep -i nvidia /proc/driver/nvidia/version &>/dev/null || \
+    ls /sys/class/drm/card*/device/vendor 2>/dev/null | grep -q '0x10de'
+}
+
+if check_lspci || check_nvidia_smi || check_proc_sys; then
+    nv_present=true
+else
+    nv_present=false
+fi
+
 pwsh_update=false
 install_as_root=false
 install_as_user=false
+install_nv=false
 
 for arg in "$@"
 do
   if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
     cat << EOF
 
-RainbowMiner Installer v2.0
+RainbowMiner Installer v2.1
 
 Commandline options:
 
@@ -44,6 +72,7 @@ Commandline options:
   -r, --root            force install as root (adds sudo to everything)
   -pv, --pwsh_version   shows version of currently installed powershell
   -pu, --pwsh_update    updates powershell to version ${pwsh_version}
+  -nv                   (re-)installs the most current NVIDIA CUDA package
   -h, --help            displays this help page
 
 EOF
@@ -61,6 +90,8 @@ EOF
     install_as_root=true
   elif [ "$arg" == "--pwsh_update" ] || [ "$arg" == "-pu" ]; then
     pwsh_update=true
+  elif [ "$arg" == "-nv" ]; then
+    install_nv=true
   fi
 done
 
@@ -113,9 +144,9 @@ if $pwsh_update; then
       if [ -L "$BINARY_PATH" ]; then
         $SUDO rm -f "$BINARY_PATH"
       fi
-      printf "\nPowershell will be updated from ${pwsh_version_current} -> ${pwsh_version}\n\n"
+      printf "\nPowershell will be updated from %s -> %s\n\n" "$pwsh_version_current" "$pwsh_version"
     else
-      printf "\nPowershell ${pwsh_version_current} already up to date\n\n"
+      printf "\nPowershell %s already up to date\n\n" "$pwsh_version_current"
     fi
   else
     printf "\nPowershell not installed, yet\n\n"
@@ -150,6 +181,49 @@ if [ "${pwsh_update}" == "1" ]; then
   exit
 fi
 
+target_folder="./IncludesLinux/lib"
+uri_file="$target_folder/_uri.txt"
+
+if $nv_present && ! $install_nv; then
+  install_nv=true
+  if [ -f "$uri_file" ]; then
+    current_uri=$(cat "$uri_file" 2>/dev/null)
+    if [ "$current_uri" = "$nv_cudalibs" ]; then
+      install_nv=false
+    fi
+  fi
+fi
+
+if $install_nv; then
+  printf "\nDownloading %s\n" "$nv_cudalibs"
+  wget -q -O "$target_folder/cudalibs.tar.gz" "$nv_cudalibs" &
+  wget_pid=$!  # Get the PID of the wget process
+
+  spinner="/-\|"
+  while kill -0 $wget_pid 2>/dev/null; do
+    for i in $(seq 0 3); do
+        printf "\rPlease wait .. ${spinner:$i:1}"
+        sleep 0.1
+    done
+  done
+
+  wait $wget_pid
+
+  status=$?
+
+  printf "\r"
+
+  if [ $status -eq 0 ]; then
+    printf "Unpacking the archive now ..\n"
+    tar -xzf "$target_folder/cudalibs.tar.gz" -C "$target_folder"
+    echo "$nv_cudalibs" > "$uri_file"
+  else
+    printf "Download failed!\n"
+  fi
+
+  rm -f "$target_folder/cudalibs.tar.gz"
+fi
+
 $SUDO chmod +x ./IncludesLinux/bin/*
 
 if $install_as_root; then
@@ -161,7 +235,7 @@ if $install_as_root; then
     fi
   fi
 
-  $SUDO cp -Rf ./IncludesLinux/* /opt/rainbowminer
+  $SUDO find ./IncludesLinux/ -type f -exec sh -c 'mkdir -p "/opt/rainbowminer/$(dirname "${1#./IncludesLinux/}")" && cp -f "$1" "/opt/rainbowminer/${1#./IncludesLinux/}"' _ {} \;
   $SUDO chmod +x /opt/rainbowminer/bin/ocdaemon
   $SUDO ln -nfs /opt/rainbowminer/bin/ocdaemon /usr/bin/ocdaemon
   $SUDO /opt/rainbowminer/bin/ocdaemon reinstall
