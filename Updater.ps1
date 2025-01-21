@@ -46,10 +46,13 @@ if (-not $DownloaderConfig) {
 $Proxy = Get-Proxy
 
 $Name = "RainbowMiner"
+
+$MaxPages = if ($IsWindows) {"3"} else {"4"}
+
 try {
     if ($RBMVersion.RemoteVersion -gt $RBMVersion.Version -and $RBMVersion.DownloadURI) {
         Write-Host "Updating from v$($RBMVersion.Version) to v$($RBMVersion.RemoteVersion)" -ForegroundColor Yellow
-        Write-Host " (1/3) Downloading $($RBMVersion.DownloadURI) .. "
+        Write-Host " (1/$($MaxPages)) Downloading $($RBMVersion.DownloadURI) .. "
         
         if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" | Out-Null}
         $FileName = Join-Path ".\Downloads" (Split-Path $RBMVersion.DownloadURI -Leaf)
@@ -61,14 +64,14 @@ try {
 
         if (-not (Test-Path $FileName) -or (Get-Item $FileName).Length -lt 2MB) {throw}
 
-        Write-Host " (2/3) Deleting and backup old files .."
+        Write-Host " (2/$($MaxPages)) Deleting and backup old files .."
 
         @("Start.bat","start.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
         if (Test-Path "MinersOldVersions") {$PreserveMiners = Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty Name) @(Get-ChildItem "MinersOldVersions" | Select-Object -ExpandProperty Name) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject}
         @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}
         Get-ChildItem ".\Data" -Filter "*.json" -File | Where-Object {$_.Name -notin @("lastdrun.json","localapiport.json","minerdata.json","mrrinfo.json","poolsdata.json","unprofitable.json","version.json")} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
 
-        Write-Host " (3/3) Extracting new files .."
+        Write-Host " (3/$($MaxPages)) Extracting new files .."
         
         $FromFullPath = [IO.Path]::GetFullPath($FileName)
         $ToFullPath   = [IO.Path]::GetFullPath(".")
@@ -137,6 +140,8 @@ try {
             Get-ChildItem ".\*.sh" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
+            Write-Host " (4/$($MaxPages)) Checking for libraries and dependancies .."
+            Start-Process ".\IncludesLinux\bash\libnv.sh" -ArgumentList "-q" -Wait
         }
 
         if (-not $DownloaderConfig.EnableKeepDownloads -and (Test-Path $FileName)) {
