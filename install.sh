@@ -21,8 +21,6 @@ pwsh_major_version="7"
 pwsh_minor_version="2"
 pwsh_build_version="24"
 
-nv_cudalibs="https://github.com/RainbowMiner/miner-binaries/releases/download/v2024.04.18-cudalibs/cudalibs-linux-20240418.tar.gz"
-
 pwsh_version="${pwsh_major_version}.${pwsh_minor_version}.${pwsh_build_version}"
 
 if [ -x "$(command -v pwsh)" ]; then
