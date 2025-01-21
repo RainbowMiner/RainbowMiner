@@ -19,11 +19,10 @@ if ($IsLinux) {
     if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         if ($Global:GlobalCPUInfo.Architecture -eq 8) {
             $Path = ".\Bin\CPU-JayDDee\cpuminer-armv8$($f=$Global:GlobalCPUInfo.Features;$(if($f.sha3 -and $f.sve2 -and $f.aes){'.5-crypto-sha3-sve2'}elseif($f.sha3 -and $f.aes){'.4-crypto-sha3'}elseif($f.sha2 -and $f.aes){'-crypto'}))"
-            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v24.4-jayddee/cpuminer-opt-24.4-arm.7z"
-            $Version = "24.4"
+            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.3-jayddee/cpuminer-opt-25.3fix-arm.7z"
         } elseif ($Global:GlobalCPUInfo.Architecture -eq 9) {
             $Path = ".\Bin\CPU-JayDDee\cpuminer-armv9$($f=$Global:GlobalCPUInfo.Features;$(if($f.sha3 -and $f.aes){'-crypto-sha3'}elseif($f.sha2 -and $f.aes){'-crypto'}))"
-            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.3-jayddee/cpuminer-opt-25.3-arm.7z"
+            $Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.3-jayddee/cpuminer-opt-25.3fix-arm.7z"
         }
     } else {
         $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$v=$Global:GlobalCPUInfo.Vendor;$(if($f.avx512 -and $f.sha -and $f.vaes) {if ($v -eq "AMD"){"zen4"}else{'avx512-sha-vaes'}}elseif($f.avx512){'avx512'}elseif($f.avx2 -and $f.sha -and $f.vaes) {if ($v -eq "AMD"){"zen3"}else{"avx2-sha-vaes"}}elseif($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}elseif($f.sse42){'sse42'}elseif($f.ssse3){"ssse3"}else{'sse2'}))"
