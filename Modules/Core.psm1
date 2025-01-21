@@ -50,6 +50,14 @@ function Start-Core {
                     if ((Test-Path $Lib_Dest) -and (-not (Test-Path $Lib_Link) -or (Get-Item $Lib_Link).LinkTarget -ne $Lib_Dest)) {
                         Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" -Runas:$Linux_LibRunas > $null
                     }
+
+                    if ($Linux_LibDir -ne $Linux_LibDir2) {
+                        $Lib_Dest   = Join-Path $Linux_LibDir $_.Value
+                        $Lib_Link   = Join-Path $Linux_LibDir $_.Name
+                        if ((Test-Path $Lib_Dest) -and (-not (Test-Path $Lib_Link) -or (Get-Item $Lib_Link).LinkTarget -ne $Lib_Dest)) {
+                            Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" > $null
+                        }
+                    }
                 }
             }
         }
