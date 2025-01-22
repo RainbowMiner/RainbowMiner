@@ -9,27 +9,27 @@ esac
 
 is_user_root () { [ "${EUID:-$(id -u)}" -eq 0 ]; }
 
-install_nv=false
+install_nv=0
 
 for arg in "$@"
 do
   if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
     cat << EOF
 
-RainbowMiner Nvidia CUDA Installer v1.0
+RainbowMiner Nvidia CUDA Installer v1.1
 
 Commandline options:
-  -f                    force (re-)install of the most current NVIDIA CUDA package
+  -f, --force           force (re-)install of the most current NVIDIA CUDA package
   -h, --help            displays this help page
 
 EOF
     exit
-  elif [ "$arg" == "-f" ]; then
-    install_nv=true
+  elif [ "$arg" == "--force" ] || [ "$arg" == "-f" ]; then
+    install_nv=1
   fi
 done
 
-if $install_nv; then
+if [ "$install_nv" -eq 1 ]; then
   install_nv_params="-f"
 else
   install_nv_params=""
@@ -37,7 +37,9 @@ fi
 
 ./IncludesLinux/bash/libnv.sh $install_nv_params
 
-if is_user_root; then
+exit_code=$?
+
+if [ "$exit_code" -eq 0 ] && is_user_root; then
   SUDO=""
   if ! [ -d "/opt/rainbowminer" ]; then
     $SUDO mkdir -p /opt/rainbowminer
