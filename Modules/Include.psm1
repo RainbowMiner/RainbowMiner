@@ -3525,7 +3525,6 @@ function Get-Device {
                         $BusId = $null
                     }
 
-                    $BusId = $null
                     if (-not $BusId -or $BusId -notmatch "[0-9A-F]+:[0-9A-F]+") {
                         $PnpInfo = Get-PnpDevice $_.PNPDeviceId | Get-PnpDeviceProperty "DEVPKEY_Device_BusNumber","DEVPKEY_Device_Address" -ErrorAction Ignore
                         $BusNumber     = ($PnpInfo | Where-Object KeyName -eq "DEVPKEY_Device_BusNumber").Data
