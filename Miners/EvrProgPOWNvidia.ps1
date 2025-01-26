@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if ($IsLinux -and ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM)) {return} # No ARM binaries available
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Port = "304{0:d2}"

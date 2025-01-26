@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsLinux -and -not $IsWindows) {return}
+if ($IsLinux -and ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM)) {return} # No ARM binaries available
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 if ($IsLinux) {

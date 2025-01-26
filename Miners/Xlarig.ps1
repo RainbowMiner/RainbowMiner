@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if ($IsLinux -and ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM)) {return} # No ARM binaries available
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $ManualUri = "https://github.com/scala-network/XLArig/releases"

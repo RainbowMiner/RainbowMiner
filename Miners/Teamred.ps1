@@ -6,6 +6,7 @@ param(
 )
 
 if (-not $IsWindows -and -not $IsLinux) {return}
+if ($IsLinux -and ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM)) {return} # No ARM binaries available
 if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Port = "409{0:d2}"
