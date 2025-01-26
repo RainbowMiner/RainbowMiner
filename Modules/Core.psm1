@@ -877,6 +877,8 @@ function Invoke-Core {
             $StopWatch_Outer = [System.Diagnostics.StopWatch]::New()
             $StopWatch_Inner = [System.Diagnostics.StopWatch]::New()
 
+            $WarnedConsole = $false
+
             do {                
                 Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"
 
@@ -884,7 +886,16 @@ function Invoke-Core {
                 $StopWatch_Inner.Restart()
 
                 do {
-                    $keyPressedValue = try {if ([console]::KeyAvailable) {$([System.Console]::ReadKey($true)).key}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    $keyPressedValue = if (-not $WarnedConsole) {
+                        try {
+                            if ([console]::KeyAvailable) {
+                                $([System.Console]::ReadKey($true)).key
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            $WarnedConsole = $true
+                        }
+                    }
                     if ($StopWatch_Inner.Elapsed.TotalSeconds -ge 10) {
                         $Internet_ok = Test-Internet -CheckDomains $Session.Config.WebsitesForOnlineCheck
                         $StopWatch_Inner.Restart()
@@ -4006,6 +4017,7 @@ function Invoke-Core {
     $WaitRound = 0
     $SomeMinersFailed = $false
     $MinerStart = $Session.Timer
+    $WarnedConsole = $false
     do {        
         $TimerBackup = $Session.Timer
 
@@ -4085,7 +4097,7 @@ function Invoke-Core {
                             elseif ($API.CmdKey -ne '') {$API.CmdKey}
                             elseif ($Session.Config.RestartRBMTimespan -gt 0 -and $Session.StartTimeCore.AddSeconds($Session.Config.RestartRBMTimespan) -le (Get-Date).ToUniversalTime()) {"RT"}
                             elseif ($Session.Config.RestartRBMMemory -gt 0 -and $Global:last_memory_usage_byte -and $Session.Config.RestartRBMMemory -lt $Global:last_memory_usage_byte) {"RM"}
-                            else {
+                            elseif (-not $WarnedConsole) {
                                 try {
                                     if ([System.Console]::KeyAvailable) {
                                         $key = [System.Console]::ReadKey($true)
@@ -4094,6 +4106,7 @@ function Invoke-Core {
                                 } catch {
                                     if ($Error.Count) {$Error.RemoveAt(0)}
                                     Write-Log -Level Warn "Console not available. Please use the web console. ($($_.Exception.Message))"
+                                    $WarnedConsole = $true
                                 }
                             }
 
