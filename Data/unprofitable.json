@@ -1,5 +1,6 @@
 {
   "Algorithms": [
+    "Blake3IronFish",
     "BlakeCoin",
     "BlakeVanilla",
     "Cuckatoo31",
@@ -41,6 +42,11 @@
         "ZCL"
       ]
     },
+    "unMineable": {
+      "Algorithms": [
+        "HeavyHashPyrin"
+      ]
+    },
     "ZergPool": {
       "Coins": [
         "XVG"
@@ -76,11 +82,13 @@
     },
     "Zpool": {
       "Algorithms": [
+        "Equihash",
         "Tribus"
       ]
     },
     "ZpoolCoins": {
       "Algorithms": [
+        "Equihash",
         "Tribus"
       ]
     }
