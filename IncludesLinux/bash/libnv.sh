@@ -66,45 +66,34 @@ fi
 exit_status=1
 
 if [ "$install_nv" -eq 1 ]; then
-  printf "\nDownloading %s\n" "$nv_cudalibs"
 
   if [ "$quiet" -eq 0 ]; then
-    wget -q -O "$target_folder/cudalibs.tar.gz" "$nv_cudalibs" &
-    wget_pid=$!  # Get the PID of the wget process
-
-    while kill -0 "$wget_pid" 2>/dev/null; do
-      for char in / - \\ \|; do
-        printf "\rPlease wait .. %s" "$char"
-        sleep 0.1
-      done
-    done
-    wait $wget_pid
-
-    status=$?
-
-    printf "\r%40s\r" ""
+    printf "\nDownloading %s\n" "$nv_cudalibs"
+    wget -O "$target_folder/cudalibs.tar.gz" "$nv_cudalibs"
   else
     wget -q -O "$target_folder/cudalibs.tar.gz" "$nv_cudalibs"
-    status=$?
   fi
 
+  status=$?
+
   if [ "$status" -eq 0 ]; then
-    printf "Unpacking the archive now ..\n"
+    [ "$quiet" -eq 0 ] && printf "Unpacking the archive now ..\n"
     tar -xzf "$target_folder/cudalibs.tar.gz" -C "$target_folder"
     status=$?
     if [ "$status" -eq 0 ]; then
       echo "$nv_cudalibs" > "$uri_file"
-      printf "Successfully updated Nvidia CUDA libs!\n"
+      [ "$quiet" -eq 0 ] && printf "Successfully updated Nvidia CUDA libs!\n"
       exit_status=0
     else
-      printf "Unpacking failed!\n"
+      [ "$quiet" -eq 0 ] && printf "Unpacking failed!\n"
     fi
   else
-    printf "Download failed!\n"
+    [ "$quiet" -eq 0 ] && printf "Download failed!\n"
   fi
   rm -f "$target_folder/cudalibs.tar.gz"
+
 else
-  printf "Nothing to do\n"
+  [ "$quiet" -eq 0 ] && printf "Nothing to do\n"
 fi
 
 exit $exit_status

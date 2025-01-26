@@ -141,7 +141,7 @@ try {
             Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Write-Host " (4/$($MaxPages)) Checking for libraries and dependancies .."
-            Start-Process ".\IncludesLinux\bash\libnv.sh" -ArgumentList "-q" -Wait
+            Start-Process ".\IncludesLinux\bash\libnv.sh" -Wait
         }
 
         if (-not $DownloaderConfig.EnableKeepDownloads -and (Test-Path $FileName)) {
