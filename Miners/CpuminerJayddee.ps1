@@ -85,6 +85,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #zr5
 
     #GPU or ASIC - never profitable
+    [PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""; NeverProfitable = $true} #Axiom
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""; NeverProfitable = $true} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""; NeverProfitable = $true} #blake
     [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""; NeverProfitable = $true} #Blakecoin
@@ -109,6 +110,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; NeverProfitable = $true} #pentablake
     [PSCustomObject]@{MainAlgorithm = "phi1612"; Params = ""; NeverProfitable = $true} #phi1612
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; NeverProfitable = $true} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""; NeverProfitable = $true} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "quark"; Params = ""; NeverProfitable = $true} #Quark
+    [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""; NeverProfitable = $true} #Qubit
+    [PSCustomObject]@{MainAlgorithm = "scrypt"; Params = ""; NeverProfitable = $true} #Scrypt
     [PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""; NeverProfitable = $true} #sha256d
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""; NeverProfitable = $true} #sha256t
     [PSCustomObject]@{MainAlgorithm = "sha3d"; Params = ""; NeverProfitable = $true} #sha3d, BSHA3
@@ -121,6 +126,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""; NeverProfitable = $true} #BlakeVanilla
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""; NeverProfitable = $true} #Veltor
     [PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""; NeverProfitable = $true} #whirlpoolx
+    [PSCustomObject]@{MainAlgorithm = "x11"; Params = ""; NeverProfitable = $true} #X11
     [PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""; NeverProfitable = $true} #X11evo
     [PSCustomObject]@{MainAlgorithm = "x13"; Params = ""; NeverProfitable = $true} #x13
     [PSCustomObject]@{MainAlgorithm = "x13sm3"; Params = ""; NeverProfitable = $true} #x13sm3
@@ -137,6 +143,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""; NeverProfitable = $true} #x21s
     [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""; NeverProfitable = $true} #x22i
     [PSCustomObject]@{MainAlgorithm = "x25x"; Params = ""; NeverProfitable = $true} #x25x
+    [PSCustomObject]@{MainAlgorithm = "xevan"; Params = ""; NeverProfitable = $true} #Xevan
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
