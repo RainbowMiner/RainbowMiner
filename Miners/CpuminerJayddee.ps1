@@ -86,70 +86,70 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #zr5
 
     #GPU or ASIC - never profitable
-    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
-    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #blake
-    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""} #Blakecoin
-    #[PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""} #Blake2b, new with v3.9.6.2
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; ExcludePoolName = "Nicehash"} #blake2s
-    #[PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""} #bmw512
-    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
-    #[PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} #cryptolight
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #CryptoNight
-    #[PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""} #CryptoNightV7
-    #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
-    #[PSCustomObject]@{MainAlgorithm = "drop"; Params = ""} #drop
-    #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
-    #[PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""} #heavy
-    #[PSCustomObject]@{MainAlgorithm = "hex"; Params = ""} #HEX
-    #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
-    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
-    #[PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""} #Ethash
-    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #keccakc
-    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""} #lyra2h
-    #[PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""} #lyra2re
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z, ZCoin
-    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl
-    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
-    #[PSCustomObject]@{MainAlgorithm = "pascal"; Params = ""} #Pascal
-    #[PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""} #pentablake
-    #[PSCustomObject]@{MainAlgorithm = "phi1612"; Params = ""} #phi1612
-    #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
-    #[PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""} #pluck
-    #[PSCustomObject]@{MainAlgorithm = "scrypt:N"; Params = ""} #scrypt:N
-    #[PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""} #sha256d
-    #[PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""} #sha256t
-    #[PSCustomObject]@{MainAlgorithm = "sha3d"; Params = ""} #sha3d, BSHA3
-    #[PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #shavite3
-    #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""} #Sib
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
-    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
-    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
-    #[PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
-    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
-    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""} #BlakeVanilla
-    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
-    #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
-    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""} #X11evo
-    #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""} #x13
-    #[PSCustomObject]@{MainAlgorithm = "x13sm3"; Params = ""} #x13sm3
-    #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""} #x14
-    #[PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
-    #[PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
-    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16r
-    #[PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
-    #[PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
-    #[PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rv2
-    #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""} #X16s
-    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
-    #[PSCustomObject]@{MainAlgorithm = "x20r"; Params = ""} #x20r
-    #[PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""} #x21s
-    #[PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #x22i
-    #[PSCustomObject]@{MainAlgorithm = "x25x"; Params = ""} #x25x
+    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""; NeverProfitable = $true} #Bitcore
+    [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""; NeverProfitable = $true} #blake
+    [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""; NeverProfitable = $true} #Blakecoin
+    [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""; NeverProfitable = $true} #Blake2b, new with v3.9.6.2
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; ExcludePoolName = "Nicehash"; NeverProfitable = $true} #blake2s
+    [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""; NeverProfitable = $true} #bmw512
+    [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""; NeverProfitable = $true} #C11
+    [PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""; NeverProfitable = $true} #cryptolight
+    [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""; NeverProfitable = $true} #CryptoNight
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""; NeverProfitable = $true} #CryptoNightV7
+    [PSCustomObject]@{MainAlgorithm = "deep"; Params = ""; NeverProfitable = $true} #deep
+    [PSCustomObject]@{MainAlgorithm = "drop"; Params = ""; NeverProfitable = $true} #drop
+    [PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""; NeverProfitable = $true} #fresh
+    [PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""; NeverProfitable = $true} #heavy
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = ""; NeverProfitable = $true} #HEX
+    [PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""; NeverProfitable = $true} #dmd-gr
+    [PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""; NeverProfitable = $true} #Equihash
+    [PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""; NeverProfitable = $true} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""; NeverProfitable = $true} #Groestl
+    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""; NeverProfitable = $true} #Keccak
+    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""; NeverProfitable = $true} #keccakc
+    [PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""; NeverProfitable = $true} #Lbry
+    [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""; NeverProfitable = $true} #Lyra2RE2
+    [PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; NeverProfitable = $true} #lyra2h
+    [PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""; NeverProfitable = $true} #lyra2re
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""; NeverProfitable = $true} #Lyra2z, ZCoin
+    [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""; NeverProfitable = $true} #MyriadGroestl
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; NeverProfitable = $true} #NeoScrypt
+    [PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""; NeverProfitable = $true} #Nist5
+    [PSCustomObject]@{MainAlgorithm = "pascal"; Params = ""; NeverProfitable = $true} #Pascal
+    [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; NeverProfitable = $true} #pentablake
+    [PSCustomObject]@{MainAlgorithm = "phi1612"; Params = ""; NeverProfitable = $true} #phi1612
+    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; NeverProfitable = $true} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""; NeverProfitable = $true} #pluck
+    [PSCustomObject]@{MainAlgorithm = "scrypt:N"; Params = ""; NeverProfitable = $true} #scrypt:N
+    [PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""; NeverProfitable = $true} #sha256d
+    [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""; NeverProfitable = $true} #sha256t
+    [PSCustomObject]@{MainAlgorithm = "sha3d"; Params = ""; NeverProfitable = $true} #sha3d, BSHA3
+    [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; NeverProfitable = $true} #shavite3
+    [PSCustomObject]@{MainAlgorithm = "sib"; Params = ""; NeverProfitable = $true} #Sib
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""; NeverProfitable = $true} #Skein
+    [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; NeverProfitable = $true} #skein2
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""; NeverProfitable = $true} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""; NeverProfitable = $true} #Sonoa
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""; NeverProfitable = $true} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""; NeverProfitable = $true} #BlakeVanilla
+    [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""; NeverProfitable = $true} #Veltor
+    [PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""; NeverProfitable = $true} #whirlpoolx
+    [PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""; NeverProfitable = $true} #X11evo
+    [PSCustomObject]@{MainAlgorithm = "x13"; Params = ""; NeverProfitable = $true} #x13
+    [PSCustomObject]@{MainAlgorithm = "x13sm3"; Params = ""; NeverProfitable = $true} #x13sm3
+    [PSCustomObject]@{MainAlgorithm = "x14"; Params = ""; NeverProfitable = $true} #x14
+    [PSCustomObject]@{MainAlgorithm = "x15"; Params = ""; NeverProfitable = $true} #x15
+    [PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""; NeverProfitable = $true} #bcd
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; NeverProfitable = $true} #x16r
+    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; NeverProfitable = $true} #x16rt
+    [PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; NeverProfitable = $true} #x16rt-veil
+    [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; NeverProfitable = $true} #x16rv2
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; NeverProfitable = $true} #X16s
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""; NeverProfitable = $true} #X17
+    [PSCustomObject]@{MainAlgorithm = "x20r"; Params = ""; NeverProfitable = $true} #x20r
+    [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""; NeverProfitable = $true} #x21s
+    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""; NeverProfitable = $true} #x22i
+    [PSCustomObject]@{MainAlgorithm = "x25x"; Params = ""; NeverProfitable = $true} #x25x
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -181,7 +181,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
     $Miner_Model = $_.Model
     $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU.Where({$_.Model -eq $Miner_Model})
 
-    $Commands.ForEach({
+    $Commands.Where({-not $_.NeverProfitable -or $Session.Conifg.EnableNeverprofitableAlgos}).ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
