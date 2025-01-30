@@ -39,7 +39,6 @@ if ($Path -eq $null) {return}
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Garlicoin
     [PSCustomObject]@{MainAlgorithm = "anime";  Params = ""} #Anime
-    #[PSCustomObject]@{MainAlgorithm = "argon2"; Params = ""} #Argon2
     [PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""} #Argon2Credits (argon2d-crds)
     [PSCustomObject]@{MainAlgorithm = "argon2d500";  Params = ""} #Argon2Dynamic (argon2d-dyn)
     [PSCustomObject]@{MainAlgorithm = "argon2d4096";  Params = ""} #Argon2Unitus (argon2d-uis)
@@ -85,7 +84,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #zr5
 
     #GPU or ASIC - never profitable
-    [PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""; NeverProfitable = $true} #Axiom
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""; NeverProfitable = $true} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""; NeverProfitable = $true} #blake
     [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""; NeverProfitable = $true} #Blakecoin
