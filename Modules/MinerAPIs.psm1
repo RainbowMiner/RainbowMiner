@@ -2724,7 +2724,7 @@ class SrbMinerMulti : Miner {
         if ($BaseAlgorithm0 -match "^(Ethash|KawPOW)(\d+|low|NH)") {$BaseAlgorithm0 = $Matches[1]}
         elseif ($BaseAlgorithm0 -eq "SCCPow") {$BaseAlgorithm0 = "FiroPow"}
 
-        $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0}
+        $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq $BaseAlgorithm0} | Select-Object -First 1
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = if ($Type -eq "cpu" -or $Data.mining_time -gt 20) {[double]$Data0.hashrate.$Type.total} else {0}
@@ -2743,7 +2743,7 @@ class SrbMinerMulti : Miner {
 
             if ($DualMining) {
 
-                $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[1]}
+                $Data0 = $Data.algorithms | Where-Object {"$(Get-Algorithm $_.name)" -eq [String]$this.BaseAlgorithm[1]} | Select-Object -First 1
 
                 $HashRate_Name = [String]$this.Algorithm[1]
                 $HashRate_Value = [double]$Data0.hashrate.$Type.total
