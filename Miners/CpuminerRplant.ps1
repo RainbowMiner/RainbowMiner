@@ -56,6 +56,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
     #[PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32glt"; Params = ""} #YescryptR32GLT
     [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #YescryptR8
     [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""} #YescryptR8g (KOTO)
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower
@@ -74,53 +75,47 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #Ziftr
 
     #GPU or ASIC - never profitable
-    #[PSCustomObject]@{MainAlgorithm = "balloon"; Algorithm = "BalloonZenX"; Params = ""} #ZentoshiCoin (ZENX)
-    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #Blake256r14
-    #[PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""} #Blake2b 256
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake-2 s
-    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""} #Blake256r8
-    #[PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""} #BMW-512
-    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11 (CHC)
-    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Deepcoin (DCN)
-    #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #Diamond
-    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
-    #[PSCustomObject]@{MainAlgorithm = "hex"; Params = ""} #h16r-hex
-    #[PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #Espers
-    #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
-    #[PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #Jackpot
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Maxcoin
-    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #Creative
-    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #LBRY
-    #[PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
-    #[PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""} #LYRA2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = ""} #LYRAv2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyrav2v3
-    #[PSCustomObject]@{MainAlgorithm = "lyra2tdc"; Params = ""} #Lyra2TDC
-    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #Myriad-groestl
-    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt(128,2,1)
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #NIST5
-    #[PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""} #5xBlake512
-    #[PSCustomObject]@{MainAlgorithm = "phi1612"; Params = ""} #Phi
-    #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #Phi2
-    #[PSCustomObject]@{MainAlgorithm = "phi5"; Params = ""} #Combode Coin
-    #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
-    #[PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b, Jayddee faster
-    #[PSCustomObject]@{MainAlgorithm = "phichox"; Params = ""} #phiCHOX/CHOX algo has changed 03/01/2022
-    #[PSCustomObject]@{MainAlgorithm = "quark"; Params = ""} #Quark
-    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
-    ####[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""} #X33 (new QRN) from v4.5.17 on
-    #[PSCustomObject]@{MainAlgorithm = "sha256csm"; Params = ""} #SHA256csm
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
-    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #Skein 2 - Wood coin
-    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #SIGT
-    #[PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sono    
-    #[PSCustomObject]@{MainAlgorithm = "timetravel10"; Params = ""} #Bitcore (BTX)
-    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Denarius (DNR)
-    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
-    #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
-    #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #WhirlpoolX
-    #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""} #Dash
-
+    [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""; NeverProfitable = $true} #Blake256r14
+    [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""; NeverProfitable = $true} #Blake2b 256
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; NeverProfitable = $true} #Blake-2 s
+    [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""; NeverProfitable = $true} #Blake256r8
+    [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""; NeverProfitable = $true} #BMW-512
+    [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""; NeverProfitable = $true} #C11 (CHC)
+    [PSCustomObject]@{MainAlgorithm = "decred"; Params = ""; NeverProfitable = $true} #Deepcoin (DCN)
+    [PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""; NeverProfitable = $true} #Diamond
+    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""; NeverProfitable = $true} #Groestl
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = ""; NeverProfitable = $true} #h16r-hex
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""; NeverProfitable = $true} #Espers
+    [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""; NeverProfitable = $true} #Jackpot
+    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""; NeverProfitable = $true} #Maxcoin
+    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""; NeverProfitable = $true} #Creative
+    [PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""; NeverProfitable = $true} #LBRY
+    [PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""; NeverProfitable = $true} #LYRA2
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = ""; NeverProfitable = $true} #LYRAv2
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""; NeverProfitable = $true} #Lyrav2v3
+    [PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""; NeverProfitable = $true} #Myriad-groestl
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""; NeverProfitable = $true} #NeoScrypt(128,2,1)
+    [PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""; NeverProfitable = $true} #NIST5
+    [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; NeverProfitable = $true} #5xBlake512
+    [PSCustomObject]@{MainAlgorithm = "phi1612"; Params = ""; NeverProfitable = $true} #Phi
+    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; NeverProfitable = $true} #Phi2
+    [PSCustomObject]@{MainAlgorithm = "phi5"; Params = ""; NeverProfitable = $true} #Combode Coin
+    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""; NeverProfitable = $true} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b, Jayddee faster
+    [PSCustomObject]@{MainAlgorithm = "phichox"; Params = ""; NeverProfitable = $true} #phiCHOX/CHOX algo has changed 03/01/2022
+    [PSCustomObject]@{MainAlgorithm = "quark"; Params = ""; NeverProfitable = $true} #Quark
+    [PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""; NeverProfitable = $true} #Qubit
+    ###[PSCustomObject]@{MainAlgorithm = "qureno"; Params = ""; NeverProfitable = $true} #X33 (new QRN) from v4.5.17 on
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""; NeverProfitable = $true} #Skein
+    [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; NeverProfitable = $true} #Skein 2 - Wood coin
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""; NeverProfitable = $true} #SIGT
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""; NeverProfitable = $true} #Sono    
+    [PSCustomObject]@{MainAlgorithm = "timetravel10"; Params = ""; NeverProfitable = $true} #Bitcore (BTX)
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""; NeverProfitable = $true} #Denarius (DNR)
+    [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""; NeverProfitable = $true} #Veltor
+    [PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""; NeverProfitable = $true} #Whirlpool
+    [PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""; NeverProfitable = $true} #WhirlpoolX
+    [PSCustomObject]@{MainAlgorithm = "x11"; Params = ""; NeverProfitable = $true} #Dash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -144,7 +139,7 @@ $Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | F
     $Miner_Model = $_.Model
     $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU.Where({$_.Model -eq $Miner_Model})
 
-    $Commands.Where({-not $_.LinuxOnly -or $IsLinux}).ForEach({
+    $Commands.Where({(-not $_.LinuxOnly -or $IsLinux) -and (-not $_.NeverProfitable -or $Session.Config.EnableNeverprofitableAlgos)}).ForEach({
 
         $Algorithm_Norm_0 = Get-Algorithm "$(if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm})"
 
