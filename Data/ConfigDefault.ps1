@@ -32,6 +32,8 @@
     EnableFastlaneBenchmarkMissing = $true
     MiningHeatControl = 2.0
     DisableUnprofitableAlgolist = $false
+    DisableUnprofitableCpuAlgolist = $false
+    EnableNeverprofitableAlgos = $false
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores
     CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -ToHex
     GPUMiningAffinity = ""
