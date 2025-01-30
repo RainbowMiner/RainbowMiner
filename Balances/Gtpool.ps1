@@ -30,9 +30,9 @@ $Pool_Request.data | Where-Object {$Currency = $_.coin;(-not $Config.ExcludeCoin
         Caption     = "$($Name) ($($Currency))"
 		BaseName    = $Name
         Currency    = $Currency
-        Balance     = [Decimal]$_.balance / 1e9
-        Pending     = [Decimal]$_.balanceImmature / 1e9
-        Total       = ([Decimal]$_.balance + [Decimal]$_.balanceImmature) / 1e9
+        Balance     = [Decimal]$_.balance / 1e8
+        Pending     = [Decimal]$_.balanceImmature / 1e8
+        Total       = ([Decimal]$_.balance + [Decimal]$_.balanceImmature) / 1e8
         LastUpdated = (Get-Date).ToUniversalTime()
     }
 }
