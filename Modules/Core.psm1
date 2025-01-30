@@ -2421,7 +2421,7 @@ function Invoke-Core {
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Session.Config.MinerName, if specified, and don't match $Session.Config.ExcludeMinerName
 
-    $Miner_DontCheckForUnprofitableCpuAlgos = -not $Global:DeviceCache.DevicesByTypes.CPU -or $Session.Config.DisableUnprofitableCpuAlgolist
+    $Miner_DontCheckForUnprofitableCpuAlgos = -not $Global:DeviceCache.DevicesByTypes.CPU -or $Session.Config.DisableUnprofitableCpuAlgolist -or $Session.Conifg.EnableNeverprofitableAlgos
 
     $AllMiner_Warnings = @()
     $AllMiners = @(if (($NewPools | Measure-Object).Count -gt 0 -and (Test-Path "Miners")) {

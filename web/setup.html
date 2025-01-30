@@ -167,6 +167,42 @@
                         </div>
                     </div>
 
+                    <!-- Disable Unprofitable Algo List -->
+                    <div class="mb-3 row">
+                        <label for="inputDisableUnprofitableAlgolist" class="col-sm-2 col-form-label">Disable the built-in list of unprofitable algorithms</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputDisableUnprofitableAlgolist" name="DisableUnprofitableAlgolist">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div id="inputDisableUnprofitableAlgolistHelp" class="form-text">RainbowMiner uses an internally updated list of algorithms that are unprofitable or currently not working. The list can be disabled with this setting.</div>
+                        </div>
+                    </div>
+
+                    <!-- Disable Unprofitable CPU Algo List -->
+                    <div class="mb-3 row">
+                        <label for="inputDisableUnprofitableCpuAlgolist" class="col-sm-2 col-form-label">Disable the built-in list of unprofitable CPU algorithms</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputDisableUnprofitableCpuAlgolist" name="DisableUnprofitableCpuAlgolist">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div id="inputDisableUnprofitableCpuAlgolistHelp" class="form-text">RainbowMiner uses an internally updated list of CPU algorithms that are unprofitable or currently not working. The list can be disabled with this setting.</div>
+                        </div>
+                    </div>
+
+                    <!-- Enable Never Profitable Algos -->
+                    <div class="mb-3 row">
+                        <label for="inputEnableNeverprofitableAlgos" class="col-sm-2 col-form-label">Enable profitable algorithms</label>
+                        <div class="col-sm-10">
+                            <select class="form-select" id="inputEnableNeverprofitableAlgos" name="EnableNeverprofitableAlgos">
+                                <option value="0">Disable</option>
+                                <option value="1">Enable</option>
+                            </select>
+                            <div id="inputEnableNeverprofitableAlgosHelp" class="form-text">Enable never profitable algorithms (e.g. BMW512 for CPUs). This setting overrides DisableUnprofitableCpuAlgoslist.</div>
+                        </div>
+                    </div>
+
                     <!-- Miner Name -->
                     <div class="mb-3 row">
                         <label for="inputMinerName" class="col-sm-2 col-form-label">Miner Name</label>
