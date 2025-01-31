@@ -707,6 +707,7 @@
     "pyrinhash": "HeavyHashPyrin",
     "pyrinhashv2": "PyrinHashV2",
     "qitmeer": "MeerKeccakV1",
+    "quai": "ProgPowQuai",
     "quark": "Quark",
     "quarkcoin": "Quark",
     "qubit": "Qubit",
