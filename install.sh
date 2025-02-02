@@ -126,6 +126,13 @@ if $pwsh_update; then
   fi
 fi
 
+$SUDO chmod +x ./IncludesLinux/bin/*
+$SUDO chmod +x ./IncludesLinux/bash/*
+
+if ! [ -x "$(command -v wget)" ]; then
+  $SUDO ./IncludesLinux/bash/wget.sh
+fi
+
 if ! [ -x "$(command -v pwsh)" ]; then
   if ps -C pwsh >/dev/null
   then
@@ -153,9 +160,6 @@ fi
 if [ "${pwsh_update}" == "1" ]; then
   exit
 fi
-
-$SUDO chmod +x ./IncludesLinux/bin/*
-$SUDO chmod +x ./IncludesLinux/bash/*
 
 if $install_nv; then
   install_nv_params="-f"
