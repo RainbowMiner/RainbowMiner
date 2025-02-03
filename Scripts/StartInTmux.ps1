@@ -36,25 +36,17 @@ if ($started) {
 
     do {
         Start-Sleep -Milliseconds 500
-        $SessionCmd = "tmux display-message -p -t $ScreenName '#{pid}'"
+        $ScreenCmd = "tmux display-message -p -t $ScreenName '#{pid}'"
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            $SessionProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $SessionCmd
+            $ScreenProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd
             $OCDcount++
         } else {
-            $SessionProcessId = Invoke-Expression $SessionCmd
+            $ScreenProcessId = Invoke-Expression $ScreenCmd
         }
-    } until ($SessionProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
+    } until ($ScreenProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
 
     if (-not $ScreenProcessId) {
         $StartLog += "Failed to get tmux session: $ScreenName"
-        $StartLog += "Result of `"$($SessionCmd)`""
-
-        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd | Foreach-Object {$StartLog += $_}
-            $OCDcount++
-        } else {
-            Invoke-Expression $ScreenCmd | Foreach-Object {$StartLog += $_}
-        }
     } else {
         $StartLog += "Success: found tmux session $ScreenName"
 
