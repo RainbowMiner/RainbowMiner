@@ -36,7 +36,7 @@ if ($started) {
 
     do {
         Start-Sleep -Milliseconds 500
-        $SessionCmd = "tmux display-message -p -t $SessionName '#{pid}'"
+        $SessionCmd = "tmux display-message -p -t $ScreenName '#{pid}'"
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
             $SessionProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $SessionCmd
             $OCDcount++
