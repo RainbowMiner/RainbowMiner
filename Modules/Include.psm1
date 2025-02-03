@@ -2173,7 +2173,9 @@ function Start-SubProcess {
         [Switch]$Quiet = $false
     )
 
-    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
+    if ($IsLinux -and (Get-Command "tmux" -ErrorAction Ignore)) {
+        Start-SubProcessInTmux -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
+    } elseif ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -WinTitle $WinTitle
@@ -2237,6 +2239,7 @@ function Start-SubProcessInBackground {
 
     [PSCustomObject]@{
         ScreenName = ""
+        ScreenCmd  = ""
         Name       = $Job.Name
         XJob       = $Job
         OwnWindow  = $false
@@ -2323,6 +2326,7 @@ function Start-SubProcessInConsole {
     
     [PSCustomObject]@{
         ScreenName = ""
+        ScreenCmd  = ""
         Name       = $Job.Name
         XJob       = $Job
         OwnWindow  = $true
@@ -2537,6 +2541,217 @@ function Start-SubProcessInScreen {
     
     [PSCustomObject]@{
         ScreenName = $ScreenName
+        ScreenCmd  = "screen"
+        Name       = $Job.Name
+        XJob       = $Job
+        OwnWindow  = $true
+        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+    }
+}
+
+function Start-SubProcessInTmux {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath, 
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$LogPath = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$WorkingDirectory = "", 
+        [ValidateRange(-2, 3)]
+        [Parameter(Mandatory = $false)]
+        [Int]$Priority = 0,
+        [Parameter(Mandatory = $false)]
+        [Int]$CPUAffinity = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$EnvVars = @(),
+        [Parameter(Mandatory = $false)]
+        [int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$Executables = @(),
+        [Parameter(Mandatory = $false)]
+        [String]$ScreenName = "",
+        [Parameter(Mandatory = $false)]
+        [String]$BashFileName = "",
+        [Parameter(Mandatory = $false)]
+        [String]$Vendor = "",
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetLDLIBRARYPATH = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
+    )
+
+    $StartStopDaemon = Get-Command "start-stop-daemon" -ErrorAction Ignore
+
+    $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
+    $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
+    $BashFileName = ($BashFileName -replace "[^A-Z0-9_-]").ToLower()
+
+    if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
+
+    $ScreenName = "$($WorkerName)_$($ScreenName)"
+
+    if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
+
+    $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_pid.txt"
+    $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_info.txt"
+    $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName).sh"
+    $PIDTest = Join-Path $WorkingDirectory "$(if ($BashFileName) {$BashFileName} else {"start_$($ScreenName)"}).sh"
+    $PIDDebug= Join-Path $WorkingDirectory "$(if ($BashFileName) {"debug_$BashFileName"} else {"debug_start_$($ScreenName)"}).sh"
+
+    if (Test-Path $PIDPath) { Remove-Item $PIDPath -Force }
+    if (Test-Path $PIDInfo) { Remove-Item $PIDInfo -Force }
+    if (Test-Path $PIDBash) { Remove-Item $PIDBash -Force }
+    if (Test-Path $PIDDebug){ Remove-Item $PIDDebug -Force }
+
+    $TestArgumentList = "$ArgumentList"
+
+    if ($LogPath) {
+        $ArgumentList = "$ArgumentList 2>&1 | tee `'$($LogPath)`'"
+    }
+
+    Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
+
+    [System.Collections.Generic.List[string]]$Stuff = @()
+    $Stuff.Add("export DISPLAY=:0") > $null
+    $Stuff.Add("cd /") > $null
+    $Stuff.Add("cd '$WorkingDirectory'") > $null
+
+    $StuffEnv = Switch ($Vendor) {
+        "AMD" {
+            [ordered]@{
+                GPU_MAX_HEAP_SIZE=100
+                GPU_MAX_USE_SYNC_OBJECTS=1
+                GPU_SINGLE_ALLOC_PERCENT=100
+                GPU_MAX_ALLOC_PERCENT=100
+                GPU_MAX_SINGLE_ALLOC_PERCENT=100
+                GPU_ENABLE_LARGE_ALLOCATION=100
+                GPU_MAX_WORKGROUP_SIZE=256
+            }
+        }
+        "INTEL" {
+            [ordered]@{
+                GPU_MAX_HEAP_SIZE=100
+                GPU_MAX_USE_SYNC_OBJECTS=1
+                GPU_SINGLE_ALLOC_PERCENT=100
+                GPU_MAX_ALLOC_PERCENT=100
+                GPU_MAX_SINGLE_ALLOC_PERCENT=100
+                GPU_ENABLE_LARGE_ALLOCATION=100
+                GPU_MAX_WORKGROUP_SIZE=256
+            }
+        }
+        "NVIDIA" {
+            [ordered]@{
+                CUDA_DEVICE_ORDER="PCI_BUS_ID"
+            }
+        }
+        default {
+            [ordered]@{}
+        }
+    }
+
+    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$StuffEnv[$matches[1]]=$matches[2]}
+
+    $StuffEnv.GetEnumerator() | Foreach-Object {
+        $Stuff.Add("export $($_.Name)=$($_.Value)") > $null
+    }
+
+    if ($SetLDLIBRARYPATH) {
+        $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+    }
+
+    [System.Collections.Generic.List[string]]$Test  = @()
+    $Stuff | Foreach-Object {$Test.Add($_) > $null}
+    $Test.Add("$FilePath $TestArgumentList") > $null
+
+    if ($StartStopDaemon) {
+        $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
+    } else {
+        $Stuff.Add("$FilePath $ArgumentList") > $null
+    }
+
+    [System.Collections.Generic.List[string]]$Cmd = @()
+
+    $Cmd.Add("tmux list-sessions -F '#{session_name}' | grep '$ScreenName' | while read -r name; do") > $null
+    $Cmd.Add("  tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
+    $Cmd.Add("  sleep 0.1") > $null
+    $Cmd.Add("  tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
+    $Cmd.Add("  sleep 0.1") > $null
+    $Cmd.Add("  tmux kill-session -t `"`$name`" >/dev/null 2>&1") > $null
+    $Cmd.Add("done") > $null
+
+    $Cmd.Add("tmux new-session -d -s $($ScreenName)") > $null
+    $Cmd.Add("sleep 0.1") > $null
+
+    $StringChunkSize = 2000
+    $Stuff | ForEach-Object {
+        $str = $_
+        while ($str) {
+            $substr = $str.Substring(0, [Math]::Min($str.Length, $StringChunkSize))
+            if ($str.Length -gt $substr.Length) {
+                $Cmd.Add("tmux send-keys -t $($ScreenName) $`"$($substr -replace '\"', '\"')`"") > $null
+                $str = $str.Substring($substr.Length)
+            } else {
+                $Cmd.Add("tmux send-keys -t $($ScreenName) $`"$($substr -replace '\"', '\"')`" C-m") > $null
+                $str = ""
+            }
+            $Cmd.Add("sleep 0.1") > $null
+        }
+    }
+
+    Set-BashFile -FilePath $PIDBash -Cmd $Cmd
+    Set-BashFile -FilePath $PIDTest -Cmd $Test
+
+    if ($Session.Config.EnableDebugMode -and (Test-Path $PIDBash)) {
+        Copy-Item -Path $PIDBash -Destination $PIDDebug -ErrorAction Ignore
+        $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru
+        $Chmod_Process.WaitForExit(1000) > $null
+    }
+
+    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
+    $Chmod_Process.WaitForExit(1000) > $null
+    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru
+    $Chmod_Process.WaitForExit(1000) > $null
+    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
+    $Chmod_Process.WaitForExit(1000) > $null
+
+    $Executables | Foreach-Object {
+        $Exec_Path = Join-Path (Split-Path -Path $FilePath) $_
+        if (Test-Path $Exec_Path) {
+            $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $Exec_Path" -PassThru
+            $Chmod_Process.WaitForExit(1000) > $null
+        }
+    }
+
+    $Job = Start-Job -FilePath .\Scripts\StartInTmux.ps1 -ArgumentList $PID, $WorkingDirectory, $FilePath, $Session.OCDaemonPrefix, $Session.Config.EnableMinersAsRoot, $PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin
+
+    $cnt = 30;
+    do {Start-Sleep 1; $JobOutput = Receive-Job $Job;$cnt--}
+    while ($JobOutput -eq $null -and $cnt -gt 0)
+
+    $JobOutput.StartLog | Where-Object {$_} | Foreach-Object {Write-Log "$_"}
+
+    [int[]]$ProcessIds = @()
+    
+    if ($JobOutput.ProcessId) {
+        $ProcessIds += $JobOutput.ProcessId
+        if ($MultiProcess) {
+            if (-not $Executables) {
+                $Executables = @(Split-Path $FilePath -Leaf)
+            }
+            Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $ProcessIds -Executables $Executables | Foreach-Object {
+                if ($_ -notin $ProcessIds) {
+                    $ProcessIds += $_
+                }
+            }
+        }
+    }
+    
+    [PSCustomObject]@{
+        ScreenName = $ScreenName
+        ScreenCmd  = "tmux"
         Name       = $Job.Name
         XJob       = $Job
         OwnWindow  = $true
@@ -2743,13 +2958,13 @@ function Stop-SubProcess {
                             if ($null -in $ToKill.HasExited -or $false -in $ToKill.HasExited) {
                                 Write-Log "Send ^C to $($Title)'s screen $($Job.ScreenName)"
 
-                                $ArgumentList = "-S $($Job.ScreenName) -X stuff `^C"
+                                $ArgumentList = if ($Job.ScreenCmd -eq "screen") {"-S $($Job.ScreenName) -X stuff `^C"} elseif ($Job.ScreenCmd -eq "tmux") {"send-keys -t $($Job.ScreenName) C-c"}
                                 if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                                    $Cmd = "screen $ArgumentList"
+                                    $Cmd = "$($Job.ScreenCmd) $ArgumentList"
                                     $Msg = Invoke-OCDaemon -Cmd $Cmd
                                     if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
                                 } else {
-                                    $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                                    $Screen_Process = Start-Process $Job.ScreenCmd -ArgumentList $ArgumentList -PassThru
                                     $Screen_Process.WaitForExit(5000) > $null
                                 }
 
@@ -2850,30 +3065,42 @@ function Stop-SubProcess {
 
     if ($IsLinux -and $Job.ScreenName) {
         try {
-            $ScreenCmd = "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
-            if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                $ScreenProcessIds = Invoke-OCDaemon -Cmd $ScreenCmd
-                $OCDcount++
-            } else {
-                $ScreenProcessIds = Invoke-Expression $ScreenCmd
-            }
-            $ScreenProcessIds | Foreach-Object {
-                $ScreenProcessId = [int]$_
-                if ($ScreenProcessId) {
-                    $ArgumentList = "-S $($ScreenProcessId) -X quit"
-                    if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
-                        $Cmd = "screen $ArgumentList"
-                        $Msg = Invoke-OCDaemon -Cmd $Cmd
-                        if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
-                    } else {
-                        $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
-                        $Screen_Process.WaitForExit(5000) > $null
+            if ($Job.ScreenCmd -eq "screen") {
+                $ScreenCmd = "screen -ls | grep $($Job.ScreenName) | cut -f1 -d'.' | sed 's/\W//g'"
+                if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                    $ScreenProcessIds = Invoke-OCDaemon -Cmd $ScreenCmd
+                    $OCDcount++
+                } else {
+                    $ScreenProcessIds = Invoke-Expression $ScreenCmd
+                }
+                $ScreenProcessIds | Foreach-Object {
+                    $ScreenProcessId = [int]$_
+                    if ($ScreenProcessId) {
+                        $ArgumentList = "-S $($ScreenProcessId) -X quit"
+                        if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                            $Cmd = "screen $ArgumentList"
+                            $Msg = Invoke-OCDaemon -Cmd $Cmd
+                            if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
+                        } else {
+                            $Screen_Process = Start-Process "screen" -ArgumentList $ArgumentList -PassThru
+                            $Screen_Process.WaitForExit(5000) > $null
+                        }
                     }
+                }
+            } elseif ($Job.ScreenCmd -eq "tmux") {
+                $ArgumentList = "kill-session -t $($ScreenProcessId) >/dev/null 2>&1"
+                if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
+                    $Cmd = "tmux $ArgumentList"
+                    $Msg = Invoke-OCDaemon -Cmd $Cmd
+                    if ($Msg) {Write-Log "OCDaemon for `"$Cmd`" reports: $Msg"}
+                } else {
+                    $Screen_Process = Start-Process "tmux" -ArgumentList $ArgumentList -PassThru
+                    $Screen_Process.WaitForExit(5000) > $null
                 }
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Problem killing bash screen $($Job.ScreenName): $($_.Exception.Message)"
+            Write-Log -Level Warn "Problem killing bash $($Job.ScreenCmd) $($Job.ScreenName): $($_.Exception.Message)"
         }
     }
 }

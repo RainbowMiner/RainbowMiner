@@ -142,6 +142,8 @@ param(
                 Write-Log -Level Warn "OCDaemon failed. Please run `"./install.sh`" at the command line"
             }
         } else {
+            $CommandTool = if (Get-Command "tmux" -ErrorAction Ignore) { "tmux" } elseif (Get-Command "screen" -ErrorAction Ignore) { "screen" } else { throw "Neither tmux nor screen is installed." }
+
             if (-not $FilePath -and -not $Miner) {
                 $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Cache\tmp_$([System.IO.Path]::GetRandomFileName() -replace "\..+$").sh")
                 $ScreenName = "$(Split-Path $FilePath -Leaf)" -replace "\.sh$"
@@ -157,38 +159,63 @@ param(
 
             if ($Miner) {
                 $DeviceNameMatch = "($(("$($Miner.DeviceName -join "|")" -replace "[^A-Z0-9\|]").ToLower()))"
-                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$($WorkerName)_oc_[a-z0-9_-]+)"} | Foreach-Object {
-                    $Name = $Matches[1]
-                    if ($Name -match $DeviceNameMatch) {
+
+                if ($CommandTool -eq "tmux") {
+                    Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}'" -ExpandLines | Where-Object { $_ -match "$($WorkerName)_oc_[a-z0-9_-]+" } | ForEach-Object {
+                        $Name = $_
+                        if ($Name -match $DeviceNameMatch) {
+                            Invoke-Exe "tmux" -ArgumentList "send-keys -t $Name C-c" > $null
+                            Start-Sleep -Milliseconds 250
+                            Invoke-Exe "tmux" -ArgumentList "kill-session -t $Name" > $null
+                            Start-Sleep -Milliseconds 250
+                        }
+                    }
+                } else {
+                    Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object { $_ -match "(\d+\.$($WorkerName)_oc_[a-z0-9_-]+)" } | ForEach-Object {
+                        $Name = $Matches[1]
+                        if ($Name -match $DeviceNameMatch) {
+                            Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
+                            Start-Sleep -Milliseconds 250
+                            Invoke-Exe "screen" -ArgumentList "-S $Name -X quit" > $null
+                            Start-Sleep -Milliseconds 250
+                        }
+                    }
+                }
+            } else {
+                if ($CommandTool -eq "tmux") {
+                    Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}'" -ExpandLines | Where-Object { $_ -match "$ScreenName" } | ForEach-Object {
+                        $Name = $_
+                        Invoke-Exe "tmux" -ArgumentList "send-keys -t $Name C-c" > $null
+                        Start-Sleep -Milliseconds 250
+                        Invoke-Exe "tmux" -ArgumentList "kill-session -t $Name" > $null
+                        Start-Sleep -Milliseconds 250
+                    }
+                } else {
+                    Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines |
+                    Where-Object { $_ -match "(\d+\.$ScreenName)\s+" } |
+                    ForEach-Object {
+                        $Name = $Matches[1]
                         Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
                         Start-Sleep -Milliseconds 250
                         Invoke-Exe "screen" -ArgumentList "-S $Name -X quit" > $null
                         Start-Sleep -Milliseconds 250
                     }
                 }
-            } else {
-                Invoke-Exe "screen" -ArgumentList "-ls" -ExpandLines | Where-Object {$_ -match "(\d+\.$ScreenName)\s+"} | Foreach-Object {
-                    $Name = $Matches[1]
-                    Invoke-Exe "screen" -ArgumentList "-S $Name -X stuff `^C" > $null
-                    Start-Sleep -Milliseconds 250
-                    Invoke-Exe "screen" -ArgumentList "-S $Name -X quit" > $null
-                    Start-Sleep -Milliseconds 250
-                }
             }
 
             if (Test-Path $FilePath) {
                 (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
-                Invoke-Exe "screen" -ArgumentList "-S $ScreenName -d -m" > $null
-                $StopWatch = [System.Diagnostics.StopWatch]::New()
-                $StopWatch.Restart()
-                do {
-                    Start-Sleep -Milliseconds 100
-                    $ScreenOut = (Invoke-Exe "screen" -ArgumentList "-ls $ScreenName" -ExpandLines | Where-Object {$_ -match $ScreenName} | Measure-Object).Count
-                } until ($ScreenOut -or $StopWatch.ElapsedMilliseconds -gt 5000)
-                if ($ScreenOut) {
+
+                if ($CommandTool -eq "tmux") {
+                    Invoke-Exe "tmux" -ArgumentList "new-session -d -s $ScreenName" > $null
+                    Start-Sleep -Milliseconds 500
+                    Invoke-Exe "tmux" -ArgumentList "send-keys -t $ScreenName $FilePath C-m" > $null
+                } else {
+                    Invoke-Exe "screen" -ArgumentList "-S $ScreenName -d -m" > $null
+                    Start-Sleep -Milliseconds 500
                     Invoke-Exe "screen" -ArgumentList "-S $ScreenName -X stuff $FilePath`n" > $null
                 }
-                $StopWatch.Stop()
+
                 if ($IsTemporaryPath) {Remove-Item $FilePath -Force -ErrorAction Ignore}
             }
         }
