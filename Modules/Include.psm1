@@ -2675,7 +2675,7 @@ function Start-SubProcessInTmux {
     [System.Collections.Generic.List[string]]$Cmd = @()
 
     $Cmd.Add("if tmux has-session 2>/dev/null; then") > $null
-    $Cmd.Add("  tmux list-sessions -F '#{session_name}' | grep '$ScreenName' | (")  $null
+    $Cmd.Add("  tmux list-sessions -F '#{session_name}' | grep '$ScreenName' | (") > $null
     $Cmd.Add("    while read -r name; do") > $null
     $Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
     $Cmd.Add("      sleep 0.1") > $null
