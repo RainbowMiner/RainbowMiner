@@ -78,9 +78,18 @@ osname=$(grep '^NAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 
 # libssl1.1 installation for ARM-based Ubuntu and Debian systems
 if [ "$arch" = "aarch64" ] && { [ "$osname" = "Ubuntu" ] || [ "$osname" = "Debian GNU/Linux" ]; }; then
-  URL="http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_arm64.deb"
+  URL="https://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_arm64.deb"
   FILE="libssl1.1_1.1.0g-2ubuntu4_arm64.deb"
-  wget "$URL"
-  $SUDO dpkg -i "$FILE"
-  rm -f "$FILE"
+
+  # Set timeouts: 10 seconds to connect, 30 seconds max for the whole download
+  wget --timeout=10 --tries=3 --waitretry=5 --read-timeout=30 -O "$FILE" "$URL"
+
+  # Install only if the download was successful
+  if [ -f "$FILE" ]; then
+    $SUDO dpkg -i "$FILE"
+    rm -f "$FILE"
+  else
+    echo "Download failed for $URL"
+  fi
 fi
+
