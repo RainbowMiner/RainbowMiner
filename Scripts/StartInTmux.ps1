@@ -38,7 +38,7 @@ if ($started) {
         Start-Sleep -Milliseconds 500
         $SessionCmd = "tmux display-message -p -t $SessionName '#{pid}'"
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            $SessionProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$SessionName" -Cmd $SessionCmd
+            $SessionProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $SessionCmd
             $OCDcount++
         } else {
             $SessionProcessId = Invoke-Expression $SessionCmd
@@ -46,7 +46,7 @@ if ($started) {
     } until ($SessionProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
 
     if (-not $ScreenProcessId) {
-        $StartLog += "Failed to get tmux session: $SessionName"
+        $StartLog += "Failed to get tmux session: $ScreenName"
         $StartLog += "Result of `"$($SessionCmd)`""
 
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
@@ -56,7 +56,7 @@ if ($started) {
             Invoke-Expression $ScreenCmd | Foreach-Object {$StartLog += $_}
         }
     } else {
-        $StartLog += "Success: found tmux session $SessionName"
+        $StartLog += "Success: found tmux session $ScreenName"
 
         $MinerExecutable = Split-Path $FilePath -Leaf
 
@@ -103,9 +103,9 @@ do {
         $ToKill += $Process
         $ToKill += Get-Process | Where-Object {$_.Parent.Id -eq $Process.Id -and $_.Name -eq $Process.Name}
 
-        $ArgumentList = "send-keys -t $SessionName C-c"
+        $ArgumentList = "send-keys -t $ScreenName C-c"
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$SessionName" -Cmd "tmux $ArgumentList" -Quiet > $null
+            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "tmux $ArgumentList" -Quiet > $null
             $OCDcount++
         } else {
             $Screen_Process = Start-Process "tmux" -ArgumentList $ArgumentList -PassThru
@@ -138,7 +138,7 @@ do {
         }
 
         if ($ScreenProcessId) {
-            $ArgumentList = "kill-session -t $SessionName"
+            $ArgumentList = "kill-session -t $ScreenName"
             if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
                 Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "tmux $ArgumentList" -Quiet > $null
                 $OCDcount++
