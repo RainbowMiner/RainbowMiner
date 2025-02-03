@@ -4406,20 +4406,22 @@ function Stop-Core {
 
             if (Test-OCDaemon) {
                 [System.Collections.Generic.List[string]]$Cmd = @()
-                $Cmd.Add("tmux list-sessions -F '#{session_name}' | grep '$($WorkerName)_' | (") > $null
-                $Cmd.Add("  while read -r name; do") > $null
-                $Cmd.Add("    tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
-                $Cmd.Add("    sleep 0.1 >/dev/null 2>&1") > $null
-                $Cmd.Add("    tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
-                $Cmd.Add("    sleep 0.1 >/dev/null 2>&1") > $null
-                $Cmd.Add("    tmux kill-session -t `"`$name`" >/dev/null 2>&1") > $null
-                $Cmd.Add("  done") > $null
-                $Cmd.Add(")") > $null
+                $Cmd.Add("if tmux has-session 2>/dev/null; then") > $null
+                $Cmd.Add("  tmux list-sessions -F '#{session_name}' | grep '$($WorkerName)_' | (") > $null
+                $Cmd.Add("    while read -r name; do") > $null
+                $Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
+                $Cmd.Add("      sleep 0.1 >/dev/null 2>&1") > $null
+                $Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
+                $Cmd.Add("      sleep 0.1 >/dev/null 2>&1") > $null
+                $Cmd.Add("      tmux kill-session -t `"`$name`" >/dev/null 2>&1") > $null
+                $Cmd.Add("    done") > $null
+                $Cmd.Add("  )") > $null
+                $Cmd.Add("fi") > $null
 
                 Invoke-OCDaemon -Cmd $Cmd > $null
             }
 
-            Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}'" -ExpandLines | Where-Object { $_ -match "($($WorkerName)_[a-z0-9_-]+)" } | ForEach-Object {
+            Invoke-Exe "tmux" -ArgumentList "list-sessions -F '#{session_name}' 2>/dev/null" -ExpandLines | Where-Object { $_ -match "($($WorkerName)_[a-z0-9_-]+)" } | ForEach-Object {
                 $SessionName = $Matches[1]       
                 Invoke-Exe "tmux" -ArgumentList "send-keys -t $SessionName C-c" > $null
                 Start-Sleep -Milliseconds 250

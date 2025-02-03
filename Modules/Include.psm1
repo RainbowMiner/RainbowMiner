@@ -2674,13 +2674,17 @@ function Start-SubProcessInTmux {
 
     [System.Collections.Generic.List[string]]$Cmd = @()
 
-    $Cmd.Add("tmux list-sessions -F '#{session_name}' | grep '$ScreenName' | while read -r name; do") > $null
-    $Cmd.Add("  tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
-    $Cmd.Add("  sleep 0.1") > $null
-    $Cmd.Add("  tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
-    $Cmd.Add("  sleep 0.1") > $null
-    $Cmd.Add("  tmux kill-session -t `"`$name`" >/dev/null 2>&1") > $null
-    $Cmd.Add("done") > $null
+    $Cmd.Add("if tmux has-session 2>/dev/null; then") > $null
+    $Cmd.Add("  tmux list-sessions -F '#{session_name}' | grep '$ScreenName' | (")  $null
+    $Cmd.Add("    while read -r name; do") > $null
+    $Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
+    $Cmd.Add("      sleep 0.1") > $null
+    $Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
+    $Cmd.Add("      sleep 0.1") > $null
+    $Cmd.Add("      tmux kill-session -t `"`$name`" >/dev/null 2>&1") > $null
+    $Cmd.Add("    done") > $null
+    $Cmd.Add("  )") > $null
+    $Cmd.Add("fi") > $null
 
     $Cmd.Add("tmux new-session -d -s $($ScreenName)") > $null
     $Cmd.Add("sleep 0.1") > $null
