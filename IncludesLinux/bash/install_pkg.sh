@@ -55,6 +55,7 @@ install_package() {
 install_package "wget" "wget" "wget" "wget" "wget"
 install_package "tar" "tar" "tar" "tar" "tar"
 install_package "screen" "screen" "screen" "screen" "screen"
+install_package "tmux" "tmux" "tmux" "tmux" "tmux"
 install_package "p7zip-full" "p7zip" "p7zip" "p7zip" "p7zip p7zip-plugins"
 install_package "libc-ares2" "c-ares" "c-ares" "libc-ares2" "c-ares"
 install_package "libuv1" "libuv" "libuv" "libuv1" "libuv"
