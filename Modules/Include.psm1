@@ -2173,9 +2173,9 @@ function Start-SubProcess {
         [Switch]$Quiet = $false
     )
 
-    if ($IsLinux -and (Get-Command "tmux" -ErrorAction Ignore)) {
+    if ($IsLinux -and (-not $Session.Config.LinuxMinerTerminal -or $Session.Config.LinuxMinerTerminal -in @("auto","tmux")) -and (Get-Command "tmux" -ErrorAction Ignore)) {
         Start-SubProcessInTmux -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
-    } elseif ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
+    } elseif ($IsLinux -and (-not $Session.Config.LinuxMinerTerminal -or $Session.Config.LinuxMinerTerminal -in @("auto","screen")) -and (Get-Command "screen" -ErrorAction Ignore)) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -ScreenName $ScreenName -BashFileName $BashFileName -Vendor $Vendor -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -Executables $Executables -SetLDLIBRARYPATH:$SetLDLIBRARYPATH -Quiet:$Quiet -WinTitle $WinTitle

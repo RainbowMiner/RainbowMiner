@@ -820,6 +820,22 @@ function Invoke-Core {
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
         if ($Session.Config.RestartRBMTimespan -lt 3600) {$Session.Config.RestartRBMTimespan = 0}
         if ($Session.Config.RestartRBMMemory -lt 367001600) {$Session.Config.RestartRBMMemory = 0}
+
+        if ($IsLinux) {
+            if ($Session.Config.LinuxMinerTerminal -notin @("auto","screen","tmux")) {
+                $Session.Config.LinuxMinerTerminal = "auto"
+            } 
+            
+            if ($Session.Config.LinuxMinerTerminal -ne "auto") {
+                foreach ( $lxterm in @("screen","tmux") ) {
+                    if ($Session.Config.LinuxMinerTerminal -eq $lxterm -and -not (Get-Command $lxterm -ErrorAction Ignore)) {
+                        Write-Log -Level Warn "config.txt: LinuxMinerTerminal=`"$($lxterm)`" but $($lxterm) command not available, switching to auto"
+                        $Session.Config.LinuxMinerTerminal = "auto"
+                    }
+                }
+            }
+        }
+
         Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.APIport} > $null
 
         #For backwards compatibility        
