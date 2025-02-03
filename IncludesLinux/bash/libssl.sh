@@ -3,11 +3,15 @@
 is_user_root() { [ "${EUID:-$(id -u)}" -eq 0 ]; }
 SUDO="${SUDO:-$(is_user_root || echo sudo)}"
 
-arch=$(lscpu | grep Architecture | awk {'print $2'});
-osname=$(. /etc/os-release && echo $NAME)
+# Architecture and OS detection
+arch=$(uname -m)
+osname=$(grep '^NAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 
-if [[ "${arch}" == "aarch64" && "${osname}" == "Ubuntu" ]]; then
-    wget http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_arm64.deb
-    $SUDO dpkg -i libssl1.1_1.1.0g-2ubuntu4_arm64.deb
-    rm libssl1.1_1.1.0g-2ubuntu4_arm64.deb
-fi 
+# libssl1.1 installation for ARM-based Ubuntu and Debian systems
+if [ "$arch" = "aarch64" ] && { [ "$osname" = "Ubuntu" ] || [ "$osname" = "Debian GNU/Linux" ]; }; then
+  URL="http://ports.ubuntu.com/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_arm64.deb"
+  FILE="libssl1.1_1.1.0g-2ubuntu4_arm64.deb"
+  wget "$URL"
+  $SUDO dpkg -i "$FILE"
+  rm -f "$FILE"
+fi

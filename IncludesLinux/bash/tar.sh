@@ -5,7 +5,7 @@ is_user_root() { [ "${EUID:-$(id -u)}" -eq 0 ]; }
 SUDO="${SUDO:-$(is_user_root || echo sudo)}"
 
 # Package to be installed
-PACKAGE="libcurl3"
+PACKAGE="tar"
 
 # Detect the package manager
 if command -v apt-get >/dev/null 2>&1; then

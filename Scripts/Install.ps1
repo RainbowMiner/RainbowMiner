@@ -23,35 +23,6 @@ if ($IsLinux) {
     Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
     Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
 
-    if ($mode -eq "root") {
-        Write-Host "Install libc .."
-        Start-Process ".\IncludesLinux\bash\libc.sh" -Wait
-        Write-Host "Install libuv .."
-        Start-Process ".\IncludesLinux\bash\libuv.sh" -Wait
-        Write-Host "Install libcurl4 .."
-        Start-Process ".\IncludesLinux\bash\libcurl4.sh" -Wait
-        Write-Host "Install libaprutil1 .."
-        Start-Process ".\IncludesLinux\bash\libaprutil1.sh" -Wait
-        Write-Host "Install libopencl .."
-        Start-Process ".\IncludesLinux\bash\libocl.sh" -Wait
-        Write-Host "Install libjansson-dev .."
-        Start-Process ".\IncludesLinux\bash\libjansson.sh" -Wait
-        Write-Host "Install libltdl7 .."
-        Start-Process ".\IncludesLinux\bash\libltdl7.sh" -Wait
-        Write-Host "Install libncurses5 .."
-        Start-Process ".\IncludesLinux\bash\libncurses5.sh" -Wait
-        Write-Host "Install p7zip .."
-        Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
-        Write-Host "Install screen .."
-        Start-Process ".\IncludesLinux\bash\screen.sh" -Wait
-        Write-Host "Install virt-what .."
-        Start-Process ".\IncludesLinux\bash\virt-what.sh" -Wait
-        Write-Host "Install libomp .."
-        Start-Process ".\IncludesLinux\bash\libomp.sh" -Wait
-        Write-Host "Install libssl .."
-        Start-Process ".\IncludesLinux\bash\libssl.sh" -Wait
-    }
-
     Write-Host "Linking libraries .."
     if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
         $Linux_LibDir = if ($mode -eq "root") {"/opt/rainbowminer/lib"} else {"$Pwd\IncludesLinux\lib"}
