@@ -303,6 +303,13 @@ Alternative: start as Linux `screen`:
 - press `Ctrl+A`, then `d` to detach from screen (imagine you want to disconnect your ssh session)
 - use `./show-screen.sh` or enter `screen -R RainbowMiner` to reconnect to screen
 
+The better alternative: start as Linux `tmux`:
+
+    ./start-tmux.sh
+
+- press `Ctrl+B`, then `d` to detach from the tmux session (imagine you want to disconnect your ssh session)
+- use `./show-tmux.sh` or enter `tmux attach-session -t RainbowMiner` to reconnect to screen
+
 
 #### 4. Enter basic information
 
@@ -368,6 +375,8 @@ You can press the following keys, while RainbowMiner is waiting for the next run
 | `Start.bat`                | `./start.sh`               | start RainbowMiner                                                                                                                                                      |
 | -                          | `./start-screen.sh`        | start as Linux `screen`, connect to screen using `./show-screen,sh` or `screen -R RainbowMiner`, `Ctrl+A` then `d` to detach                                            |
 | -                          | `./show-screen.sh`         | reconnect to current RainbowMiner screen, `Ctrl+A` then `d` to detach                                                                                          |
+| -                          | `./start-tmux.sh`          | start as Linux `tmux`, connect to tmux session using `./show-tmux,sh` or `tmux attach-session -t RainbowMiner`, `Ctrl+B` then `d` to detach                                            |
+| -                          | `./show-tmux.sh`           | reconnect to current RainbowMiner tmux session, `Ctrl+B` then `d` to detach                                                                                          |
 | -                          | `./start-nohup.sh`         | start as background job, run `./stopp.sh` to stop rainbowminer, run `./rbmlog.sh` to follow the Rainbowminer logfile, run `./minerlog.sh` to follow the miner log files |
 | `Setup.bat`                | `./setup.sh`               | start RainbowMiner configuration                                                                                                                                        |
 | `Install.bat`              | `./install.sh`             | install pre-requisites + on linux: update powershell to the newest release with `./install.sh -pu`                                                                      |
@@ -1052,6 +1061,7 @@ For Server (Runmode=server) setup:
 - **EnablePauseOnActivity** = set to 1 to automatically send RainbowMiner into pause mode, if user input is detected (also see **ResumeOnInactivitySeconds**) [default=0]
 - **EnablePauseOnBattery** = set to 1 to automatically send RainbowMiner into pause mode, if notebook runs on battery (Windows only) [default=0]
 - **ResumeOnInactivitySeconds** = seconds of no user input, until RainbowMiner leaves pause-on-activity mode (0 = never) [default=300]
+- **LinuxMinerTerminal** = select the session handler RainbowMiner will use to start the miners in the background, choose screen, tmux or auto [default=auto]
 - **EnableMinersAsRoot** = set to 0, if you do not want to run miners as root, using the OCDaemon (linux only) [default=1]
 - **OpenCLPlatformSorting** = define sort order of the OpenCL platforms, comma separated list. Valid values are AMD,INTEL,NVIDIA. Leave empty for automatic detection (recommended) [default=]
 - **CovalentAPIKey** = enter your covalenthq.com API key [default=]
@@ -1866,6 +1876,7 @@ As the user that will be running RainbowMiner, edit the crontab file using `cron
 You will be promped to select the editor you want to use (emacs, vi, etc.)
 Add one of the following lines to the end of the file and save: 
 - `@reboot /PATH_TO_RAINBOWMINER/start-screen.sh` If you want RainbowMiner to start in a separate screen
+- `@reboot /PATH_TO_RAINBOWMINER/start-tmux.sh` If you want RainbowMiner to start in a separate tmux session
 - `@reboot /PATH_TO_RAINBOWMINER/start-nohup.sh` If you want RainbowMiner to run as a background process
 
 Where `PATH_TO_RAINBOWMINER` is the RainbowMiner installation directory.
