@@ -13,7 +13,7 @@
 # Description:       Rainbowminer daemon to provide root overclocking
 ### END INIT INFO
 
-VER="1.0.1"
+VER="1.0.2"
 
 OCDDATA=/opt/rainbowminer/ocdcmd
 OCDBIN=/usr/bin/ocdaemon
@@ -23,6 +23,10 @@ OCDERRORLOGFILE=/var/log/ocdaemon_error.log
 OCDVERSIONFILE=/opt/rainbowminer/ocdcmd/version.log
 
 test -x "$OCDBIN" || exit 1
+
+# Function to check if the user is root
+is_user_root() { [ "${EUID:-$(id -u)}" -eq 0 ]; }
+SUDO="${SUDO:-$(is_user_root || echo sudo)}"
 
 do_wrpid() {
   if [ ! -f "$OCDPID" ]; then
@@ -107,7 +111,7 @@ do_stop() {
 }
 
 do_run() {
-  if [ `id -u` != 0 ]; then
+  if ! is_user_root; then
     do_log "ERROR: Daemon needs to be run as root/sudo" >&2
     exit
   fi
@@ -163,18 +167,18 @@ do_run() {
 }
 
 do_install() {  
-  sudo echo "" > "$OCDERRORLOGFILE"
+  $SUDO echo "" > "$OCDERRORLOGFILE"
   if [ -e "/etc/systemd/system/ocdaemon.service" ]; then
     echo "ocdaemon is already installed. Please use reinstall or uninstall/install."
     exit 1
   else
     if [ -d "/etc/systemd/system" ]; then
       echo "Installing ocdaemon v$VER to systemd"
-      sudo cp "/opt/rainbowminer/conf/ocdaemon.service" "/etc/systemd/system/ocdaemon.service"
-      sudo systemctl enable ocdaemon
-      sudo systemctl start ocdaemon
+      $SUDO cp "/opt/rainbowminer/conf/ocdaemon.service" "/etc/systemd/system/ocdaemon.service"
+      $SUDO systemctl enable ocdaemon
+      $SUDO systemctl start ocdaemon
       echo "Done! ocdaemon is up and running."
-      sudo echo -n "$VER" > "$OCDVERSIONFILE"
+      $SUDO echo -n "$VER" > "$OCDVERSIONFILE"
     else
       echo "No systemd found on your system. Please install by hand"
       exit 1
@@ -185,11 +189,11 @@ do_install() {
 do_uninstall() {
   if [ -e "/etc/systemd/system/ocdaemon.service" ]; then
     echo "Uninstalling ocdaemon from systemd"
-    sudo systemctl stop ocdaemon
-    sudo systemctl disable ocdaemon
-    sudo rm -f "/etc/systemd/system/ocdaemon.service"
+    $SUDO systemctl stop ocdaemon
+    $SUDO systemctl disable ocdaemon
+    $SUDO rm -f "/etc/systemd/system/ocdaemon.service"
     echo "Done! Success uninstalling ocdaemon"
-    sudo rm -f "$OCDVERSIONFILE"
+    $SUDO rm -f "$OCDVERSIONFILE"
   else
     echo "ocdaemon is currently not installed"
   fi
@@ -205,8 +209,8 @@ do_start() {
   fi
 
   if [ `id -u` != 0 ]; then
-    echo -n " sudo "
-    sudo bash -c "$OCDBIN run1"
+    echo -n " $SUDO "
+    $SUDO bash -c "$OCDBIN run1"
   else
     "$OCDBIN" run1
   fi
