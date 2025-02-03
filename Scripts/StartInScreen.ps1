@@ -47,13 +47,6 @@ if ($started) {
 
     if (-not $ScreenProcessId) {
         $StartLog += "Failed to get screen."
-        $StartLog += "Result of `"$($ScreenCmd)`""
-        if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
-            Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd | Foreach-Object {$StartLog += $_}
-            $OCDcount++
-        } else {
-            Invoke-Expression $ScreenCmd | Foreach-Object {$StartLog += $_}
-        }
         $StartLog += "Result of `"screen -ls`""
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
             Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd "screen -ls" | Foreach-Object {$StartLog += $_}
