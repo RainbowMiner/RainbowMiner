@@ -1,0 +1,97 @@
+﻿#!/usr/bin/env bash
+
+# Author: RainbowMiner <rbm2018@gmail.com>
+
+### BEGIN INIT INFO
+# Provides:          ocdaemon
+# Required-Start:    $local_fs $remote_fs $syslog
+# Required-Stop:     $local_fs $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Auto execution of oc scripts
+# Description:       Rainbowminer daemon to provide root overclocking
+### END INIT INFO
+
+VER="1.1.0"
+
+OCDDATA=/opt/rainbowminer/ocdcmd
+OCDBIN=/usr/bin/ocdaemon
+OCDPID=/var/run/ocdaemon.pid
+OCDLOGFILE=/var/log/ocdaemon.log
+OCDERRORLOGFILE=/var/log/ocdaemon_error.log
+OCDVERSIONFILE=/opt/rainbowminer/ocdcmd/version.log
+
+is_user_root() { [ "$(id -u)" -eq 0 ]; }
+SUDO="${SUDO:-$(is_user_root || echo sudo)}"
+
+log() { echo "[$(date +"%Y-%m-%d %T")] $1"; }
+
+status() {
+  if [ -s "$OCDPID" ] && kill -0 $(cat "$OCDPID") 2>/dev/null; then
+    echo "running"
+  else
+    rm -f "$OCDPID"
+    echo "stopped"
+  fi
+}
+
+cleanup() {
+  rm -f "$OCDDATA"/*.run "$OCDDATA"/*.out "$OCDDATA/stop"
+}
+
+start_daemon() {
+  if [ "$(status)" = "running" ]; then
+    log "ERROR: Daemon already running!"
+    exit 1
+  fi
+  log "Starting ocdaemon v$VER"
+  nohup "$OCDBIN" run >"$OCDLOGFILE" 2>"$OCDERRORLOGFILE" &
+  echo $! > "$OCDPID"
+  chmod 666 "$OCDPID"
+}
+
+stop_daemon() {
+  if [ "$(status)" = "running" ]; then
+    log "Stopping ocdaemon"
+    kill -TERM $(cat "$OCDPID") 2>/dev/null || true
+    rm -f "$OCDPID"
+  else
+    log "Daemon not running"
+  fi
+}
+
+install_daemon() {
+  if [ -e "/etc/systemd/system/ocdaemon.service" ]; then
+    echo "ocdaemon already installed."
+    exit 1
+  fi
+  $SUDO cp "/opt/rainbowminer/conf/ocdaemon.service" "/etc/systemd/system/ocdaemon.service"
+  $SUDO systemctl enable ocdaemon
+  $SUDO systemctl start ocdaemon
+  echo "$VER" | $SUDO tee "$OCDVERSIONFILE"
+  log "ocdaemon installed and running"
+}
+
+uninstall_daemon() {
+  $SUDO systemctl stop ocdaemon || true
+  $SUDO systemctl disable ocdaemon || true
+  $SUDO rm -f "/etc/systemd/system/ocdaemon.service"
+  $SUDO rm -f "$OCDVERSIONFILE"
+  log "ocdaemon uninstalled"
+}
+
+case "$1" in
+  start) start_daemon ;;
+  stop) stop_daemon ;;
+  status) status ;;
+  restart|reload|force-reload)
+    stop_daemon
+    start_daemon ;;
+  install) install_daemon ;;
+  uninstall) uninstall_daemon ;;
+  *)
+    echo "Usage: $0 {start|stop|status|restart|reload|force-reload|install|uninstall}" >&2
+    exit 1 ;;
+esac
+
+exit 0
