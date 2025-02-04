@@ -3113,7 +3113,7 @@ function Stop-SubProcess {
 
         if ($Job.WorkingDir -and (Test-Path $Job.WorkingDir) -and $Session.Config.EnableMinersAsRoot -and -not (Test-IsElevated) -and (Test-OCDaemon)) {
             try {
-                Invoke-OCDaemon -Cmd "./IncludesLinux/bash/setperms.sh `"$($Job.WorkingDir)`" root" -Quiet > $null
+                Invoke-OCDaemon -Cmd "$(Get-Location)/IncludesLinux/bash/setperms.sh `"$($Job.WorkingDir)`" root" -Quiet > $null
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "Problem setting permissions inside $($Job.WorkingDir): $($_.Exception.Message)"

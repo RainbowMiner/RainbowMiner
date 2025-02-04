@@ -4405,7 +4405,7 @@ function Stop-Core {
                             $exePath = (Get-Item $exeCandidate).FullName
                             $cmdDir  = Split-Path $exePath -Parent
                             try {
-                                Invoke-OCDaemon -Cmd "./IncludesLinux/bash/setperms.sh `"$($cmdDir)`" root" -Quiet > $null
+                                Invoke-OCDaemon -Cmd "$(Get-Location)/IncludesLinux/bash/setperms.sh `"$($cmdDir)`" root" -Quiet > $null
                             } catch {
                                 if ($Error.Count){$Error.RemoveAt(0)}
                                 Write-Log -Level Warn "Problem setting permissions inside $($Job.WorkingDir): $($_.Exception.Message)"
