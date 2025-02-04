@@ -28,11 +28,26 @@ PKG_MANAGER=$(detect_pkg_manager)
 
 # Function to install packages with correct names per package manager
 install_package() {
-  PACKAGE_APT=$1
-  PACKAGE_DNF=$2
-  PACKAGE_PACMAN=$3
-  PACKAGE_ZYPPER=$4
-  PACKAGE_APK=$5
+  COMMAND=$1
+  PACKAGE_APT=$2
+  PACKAGE_DNF=$3
+  PACKAGE_PACMAN=$4
+  PACKAGE_ZYPPER=$5
+  PACKAGE_APK=$6
+
+  # Special handling for 7z to ensure full support
+  if [ "$COMMAND" = "7z" ] && command -v 7z >/dev/null 2>&1; then
+    if 7z i | grep -q "Formats"; then
+      echo "7z with full support already installed. Skipping."
+      COMMAND=""  # Set COMMAND to empty to skip installation
+    fi
+  fi
+
+  # Check if the command exists, skip installation if it does
+  if [ -n "$COMMAND" ] && command -v "$COMMAND" >/dev/null 2>&1; then
+    echo "$COMMAND already installed. Skipping."
+    return
+  fi
 
   case $PKG_MANAGER in
     apt-get)
@@ -51,26 +66,24 @@ install_package() {
   esac
 }
 
-# Package installation
-install_package "wget" "wget" "wget" "wget" "wget"
-install_package "tar" "tar" "tar" "tar" "tar"
-install_package "screen" "screen" "screen" "screen" "screen"
-install_package "tmux" "tmux" "tmux" "tmux" "tmux"
-install_package "p7zip-full" "p7zip" "p7zip" "p7zip" "p7zip p7zip-plugins"
-install_package "libc-ares2" "c-ares" "c-ares" "libc-ares2" "c-ares"
-install_package "libuv1" "libuv" "libuv" "libuv1" "libuv"
-install_package "libcurl4 libcurl4-openssl-dev" "libcurl libcurl-devel" "curl" "libcurl4" "curl"
-install_package "libaprutil1" "apr-util" "apr-util" "libapr-util1" "apr-util"
-install_package "ocl-icd-libopencl1" "ocl-icd" "ocl-icd" "ocl-icd" "ocl-icd"
-install_package "libjansson4" "jansson" "jansson" "libjansson4" "jansson"
-install_package "libltdl7" "libtool-ltdl" "libtool" "libltdl7" "libtool-ltdl"
-install_package "libncurses5" "ncurses-libs" "ncurses" "ncurses5" "ncurses-libs"
-install_package "virt-what" "virt-what" "virt-what" "virt-what" "virt-what"
-install_package "libomp-dev" "libomp" "openmp" "libomp-devel" "libomp"
-#install_package "lm-sensors" "lm_sensors" "lm_sensors" "lm_sensors" "lm_sensors"
-#install_package "libcurl3" "libcurl" "libcurl-compat" "libcurl3" "libcurl"
+# Package installation (command, apt, dnf/yum, pacman, zypper, apk)
+install_package "wget" "wget" "wget" "wget" "wget" "wget"
+install_package "tar" "tar" "tar" "tar" "tar" "tar"
+install_package "screen" "screen" "screen" "screen" "screen" "screen"
+install_package "tmux" "tmux" "tmux" "tmux" "tmux" "tmux"
+install_package "7z" "p7zip-full" "p7zip" "p7zip" "p7zip" "p7zip p7zip-plugins"
+install_package "virt-what" "virt-what" "virt-what" "virt-what" "virt-what" "virt-what"
 
-#$SUDO sensors-detect --auto
+# Libraries (no direct command to check)
+install_package "" "libc-ares2" "c-ares" "c-ares" "libc-ares2" "c-ares"
+install_package "" "libuv1" "libuv" "libuv" "libuv1" "libuv"
+install_package "" "libcurl4 libcurl4-openssl-dev" "libcurl libcurl-devel" "curl" "libcurl4" "curl"
+install_package "" "libaprutil1" "apr-util" "apr-util" "libapr-util1" "apr-util"
+install_package "" "ocl-icd-libopencl1" "ocl-icd" "ocl-icd" "ocl-icd" "ocl-icd"
+install_package "" "libjansson4" "jansson" "jansson" "libjansson4" "jansson"
+install_package "" "libltdl7" "libtool-ltdl" "libtool" "libltdl7" "libtool-ltdl"
+install_package "" "libncurses5" "ncurses-libs" "ncurses" "ncurses5" "ncurses-libs"
+install_package "" "libomp-dev" "libomp" "openmp" "libomp-devel" "libomp"
 
 # Architecture and OS detection
 arch=$(uname -m)
@@ -92,4 +105,3 @@ if [ "$arch" = "aarch64" ] && { [ "$osname" = "Ubuntu" ] || [ "$osname" = "Debia
     echo "Download failed for $URL"
   fi
 fi
-
