@@ -3092,7 +3092,7 @@ function Stop-SubProcess {
                     }
                 }
             } elseif ($Job.ScreenCmd -eq "tmux") {
-                $ArgumentList = "kill-session -t $($ScreenProcessId) >/dev/null 2>&1"
+                $ArgumentList = "kill-session -t $($Job.ScreenName) >/dev/null 2>&1"
                 if ($Session.Config.EnableMinersAsRoot -and (Test-OCDaemon)) {
                     $Cmd = "tmux $ArgumentList"
                     $Msg = Invoke-OCDaemon -Cmd $Cmd
