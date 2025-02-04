@@ -506,10 +506,8 @@ function Start-Core {
                 Write-Host "Re-installing libraries and binaries .."
                 bash -c "./install.sh"
             } else {
-                $Chmod_Process = Start-Process "chmod" -ArgumentList "+x ./IncludesLinux/bash/*" -PassThru
-                $Chmod_Process.WaitForExit(1000) > $null
-                $Chmod_Process = Start-Process "chmod" -ArgumentList "+x ./IncludesLinux/bin/*" -PassThru
-                $Chmod_Process.WaitForExit(1000) > $null
+                chmod +x ./IncludesLinux/bash/* > $null
+                chmod +x ./IncludesLinux/bin/* > $null
                 Write-Log -Level Warn "RainbowMiner has updated some linux libraries/binaries. Please run ./install.sh as soon as possible!"
             }
         }
