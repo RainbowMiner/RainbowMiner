@@ -2241,6 +2241,7 @@ function Start-SubProcessInBackground {
         ScreenName = ""
         ScreenCmd  = ""
         Name       = $Job.Name
+        WorkingDir = $WorkingDirectory
         XJob       = $Job
         OwnWindow  = $false
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
@@ -2328,6 +2329,7 @@ function Start-SubProcessInConsole {
         ScreenName = ""
         ScreenCmd  = ""
         Name       = $Job.Name
+        WorkingDir = $WorkingDirectory
         XJob       = $Job
         OwnWindow  = $true
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
@@ -2543,6 +2545,7 @@ function Start-SubProcessInScreen {
         ScreenName = $ScreenName
         ScreenCmd  = "screen"
         Name       = $Job.Name
+        WorkingDir = $WorkingDirectory
         XJob       = $Job
         OwnWindow  = $true
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
@@ -2757,6 +2760,7 @@ function Start-SubProcessInTmux {
         ScreenName = $ScreenName
         ScreenCmd  = "tmux"
         Name       = $Job.Name
+        WorkingDir = $WorkingDirectory
         XJob       = $Job
         OwnWindow  = $true
         ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
@@ -3105,6 +3109,15 @@ function Stop-SubProcess {
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Problem killing bash $($Job.ScreenCmd) $($Job.ScreenName): $($_.Exception.Message)"
+        }
+
+        if ($Job.WorkingDir -and (Test-Path $Job.WorkingDir) -and $Session.Config.EnableMinersAsRoot -and -not (Test-IsElevated) -and (Test-OCDaemon)) {
+            try {
+                Invoke-OCDaemon -Cmd "./IncludesLinux/bash/setperms.sh `"$($Job.WorkingDir)`" root" -Quiet > $null
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Warn "Problem setting permissions inside $($Job.WorkingDir): $($_.Exception.Message)"
+            }
         }
     }
 }

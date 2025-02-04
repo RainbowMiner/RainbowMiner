@@ -4381,14 +4381,43 @@ function Stop-Core {
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
     } elseif ($IsLinux) {
-        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/Bin/*" -or $_.Path -like "$(Get-Location)/IncludesLinux/bin/*"} | Foreach-Object {
-            if (Test-OCDaemon) {
-                $Cmd = @()
-                @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {$Cmd += "kill $($_)"}
-                Invoke-OCDaemon -Cmd $Cmd -Quiet > $null
-            } else {
-                @($_.Id,$_.Parent.Id) | Select-Object -Unique | % {Stop-Process -Id $_ -Force -ErrorAction Ignore}
+        try {
+            $BinPath = "$(Get-Location)/Bin/*"
+            $BinPathIncludes = "$(Get-Location)/IncludesLinux/bin/*"
+            ps -eo pid,user,comm,args --no-headers | ForEach-Object {
+                $fields = ($_ -replace '\s{2,}', ' ').Trim().Split(' ', 4)
+                [PSCustomObject]@{
+                    PID  = $fields[0]
+                    User = $fields[1]
+                    Command = $fields[2]
+                    Args = if ($fields.Count -gt 3) { $fields[3] } else { "" }
+                }
+            } | Where-Object {$_.Args -like $BinPath -or $_.Args -like $BinPathIncludes} | Foreach-Object {
+                if (Test-OCDaemon) {
+                    $Cmd = "kill $($_.PID)"
+                    Invoke-OCDaemon -Cmd $Cmd -Quiet > $null
+
+                    if ($_.User -eq "root" -and $_.Args -like $BinPath -and -not (Test-IsElevated)) {
+                        $exeCandidate = $_.Args.Split(' ',2)[0]
+                        if ($exeCandidate -like $BinPath -and (Test-Path $exeCandidate)) {
+                            $exePath = (Get-Item $exeCandidate).FullName
+                            $cmdDir  = Split-Path $exePath -Parent
+                            try {
+                                Invoke-OCDaemon -Cmd "./IncludesLinux/bash/setperms.sh `"$($cmdDir)`" root" -Quiet > $null
+                            } catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                                Write-Log -Level Warn "Problem setting permissions inside $($Job.WorkingDir): $($_.Exception.Message)"
+                            }
+                        }
+                    }
+
+                } else {
+                    Stop-Process -Id $_.PID -Force -ErrorAction Ignore
+                }
             }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Problem shutting down leftover processes: $($_.Exception.Message)"
         }
         if (Get-Command "screen" -ErrorAction Ignore) {
 
