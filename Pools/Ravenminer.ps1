@@ -47,7 +47,7 @@ $Pool_Regions = @("us","eu","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee_PPLNS = 0.5
-$Pool_Fee_PPS   = 2.0 #add "pps" to "RVN-Params" in pools.config.txt
+$Pool_Fee_PPS   = 1.0 #add "pps" to "RVN-Params" in pools.config.txt
 
 $Pool_User = $Wallets.$Pool_Currency
 
