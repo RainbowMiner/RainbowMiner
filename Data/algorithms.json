@@ -747,6 +747,7 @@
     "rx0": "RandomX",
     "rx2": "RX2",
     "rxarq": "RandomArq",
+    "rxdag": "RandomXDAG",
     "rxgraft": "RandomGRFT",
     "rxgrft": "RandomGRFT",
     "rxkeva": "RandomKEVA",
