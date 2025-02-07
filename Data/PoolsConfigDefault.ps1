@@ -475,6 +475,12 @@
         "YadaMiners" = [PSCustomObject]@{
             Currencies=@("YDA")
         }
+        "XdagOrg" = [PSCustomObject]@{
+            Currencies=@("XDAG")
+        }
+        "XdagOrgSolo" = [PSCustomObject]@{
+            Currencies=@("XDAG")
+        }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
