@@ -66,15 +66,33 @@ install_package() {
   esac
 }
 
-# Package installation (command, apt, dnf/yum, pacman, zypper, apk)
+# Architecture and OS detection
+arch=$(uname -m)
+osname=$(grep '^NAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+
+# Package installation for all systems
 install_package "wget" "wget" "wget" "wget" "wget" "wget"
 install_package "tar" "tar" "tar" "tar" "tar" "tar"
 install_package "screen" "screen" "screen" "screen" "screen" "screen"
 install_package "tmux" "tmux" "tmux" "tmux" "tmux" "tmux"
 install_package "7z" "p7zip-full" "p7zip" "p7zip" "p7zip" "p7zip p7zip-plugins"
+install_package "jq" "jq" "jq" "jq" "jq" "jq"
+install_package "lm-sensors" "lm-sensors" "lm_sensors" "lm_sensors" "lm_sensors" "lm_sensors"
+install_package "clinfo" "clinfo" "clinfo" "clinfo" "clinfo" "clinfo"
 install_package "virt-what" "virt-what" "virt-what" "virt-what" "virt-what" "virt-what"
 
-# Libraries (no direct command to check)
+# Architecture-specific installations
+if [ "$arch" = "aarch64" ]; then
+  install_package "tegrastats" "nvidia-jetson-stats" "nvidia-jetson-stats" "nvidia-jetson-stats" "nvidia-jetson-stats" "nvidia-jetson-stats"
+  install_package "mali_gpu_util" "mali-gpu-utils" "mali-gpu-utils" "mali-gpu-utils" "mali-gpu-utils" "mali-gpu-utils"
+  if grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
+    install_package "vcgencmd" "libraspberrypi-bin" "libraspberrypi-bin" "libraspberrypi-bin" "libraspberrypi-bin" "libraspberrypi-bin"
+  fi
+else
+  install_package "intel_gpu_tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools"
+fi
+
+# Libraries
 install_package "" "libc-ares2" "c-ares" "c-ares" "libc-ares2" "c-ares"
 install_package "" "libuv1" "libuv" "libuv" "libuv1" "libuv"
 install_package "" "libcurl4 libcurl4-openssl-dev" "libcurl libcurl-devel" "curl" "libcurl4" "curl"
@@ -84,10 +102,6 @@ install_package "" "libjansson4" "jansson" "jansson" "libjansson4" "jansson"
 install_package "" "libltdl7" "libtool-ltdl" "libtool" "libltdl7" "libtool-ltdl"
 install_package "" "libncurses5" "ncurses-libs" "ncurses" "ncurses5" "ncurses-libs"
 install_package "" "libomp-dev" "libomp" "openmp" "libomp-devel" "libomp"
-
-# Architecture and OS detection
-arch=$(uname -m)
-osname=$(grep '^NAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 
 # libssl1.1 installation for ARM-based Ubuntu and Debian systems
 if [ "$arch" = "aarch64" ] && { [ "$osname" = "Ubuntu" ] || [ "$osname" = "Debian GNU/Linux" ]; }; then
@@ -104,4 +118,10 @@ if [ "$arch" = "aarch64" ] && { [ "$osname" = "Ubuntu" ] || [ "$osname" = "Debia
   else
     echo "Download failed for $URL"
   fi
+fi
+
+# Initialize lm-sensors if installed
+if command -v sensors-detect >/dev/null 2>&1; then
+  echo "Initializing lm-sensors..."
+  $SUDO sensors-detect --auto || echo "Failed to initialize lm-sensors"
 fi
