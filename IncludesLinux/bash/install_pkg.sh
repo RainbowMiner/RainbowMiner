@@ -89,7 +89,7 @@ if [ "$arch" = "aarch64" ]; then
     install_package "vcgencmd" "libraspberrypi-bin" "libraspberrypi-bin" "libraspberrypi-bin" "libraspberrypi-bin" "libraspberrypi-bin"
   fi
 else
-  install_package "intel_gpu_tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools"
+  #install_package "intel_gpu_tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools" "intel-gpu-tools"
 fi
 
 # Libraries

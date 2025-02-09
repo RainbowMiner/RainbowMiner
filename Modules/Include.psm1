@@ -8997,6 +8997,7 @@ function Get-SysInfo {
         [PSCustomObject]@{
             CpuLoad = $CPULoad
             Cpus    = $CPUs
+            Gpus    = $null
             Memory  = [PSCustomObject]@{
                 TotalGB = [decimal][Math]::Round($OSData.TotalVisibleMemorySize/1MB,1)
                 UsedGB  = [decimal][Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
@@ -9008,10 +9009,10 @@ function Get-SysInfo {
         if ($OSData -ne $null) {$OSData.Dispose();$OSData = $null}
 
     } elseif ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
-        Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo$(if ($IsARM) {"-armv8"}).sh" -File | Foreach-Object {
+        Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo.sh" -File | Foreach-Object {
             try {
                 & chmod +x "$($_.FullName)" > $null
-                Invoke-exe $_.FullName | ConvertFrom-Json -ErrorAction Stop
+                Invoke-exe $_.FullName -ArgumentList "--cpu --mem --disks" | ConvertFrom-Json -ErrorAction Stop
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
     }
@@ -9020,6 +9021,7 @@ function Get-SysInfo {
         $Data = [PSCustomObject]@{
             CpuLoad = 0
             Cpus = @([PSCustomObject]@{Clock=0;Temperature=0;Method="nop"})
+            Gpus = $null
             Memory = [PSCustomObject]@{TotalGB=0;UsedGB=0;UsedPercent=0}
             Disks = $null
         }
