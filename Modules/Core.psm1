@@ -2046,7 +2046,7 @@ function Invoke-Core {
             $Session.FixedCostPerDayBTC   = [Double]$Session.Config.FixedCostPerDay/$PowerPrice_Rate
             $Session.CurrentPowerPriceBTC = [Double]$Session.CurrentPowerPrice/$PowerPrice_Rate
         } elseif ($Session.CurrentPowerPrice) {
-            Write-Log -Level Warn "Powerprice currency $($PowerPriceCurreny) not found. Cost of electricity will be ignored."
+            Write-Log -Level Warn "Powerprice currency $($PowerPriceCurrency) not found. Cost of electricity will be ignored."
         }
     }
 
@@ -3064,19 +3064,22 @@ function Invoke-Core {
     #$Global:StatsCache = $null
 
     #Open firewall ports for all miners
-    try {
-        if ($IsWindows -and (Get-Command "Get-MpPreference" -ErrorAction Ignore)) {
-            if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
-                if ($Global:MinerFirewalls -eq $null) {$Global:MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
-                $OpenFirewallFor = "$(@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Global:MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ConvertTo-Json -Depth 10 -Compress)"
-                if ($OpenFirewallFor -ne "") {
-                    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); ('$OpenFirewallFor' | ConvertFrom-Json -ErrorAction Ignore) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
-                    $Global:MinerFirewalls = $null
-                    Remove-Variable "OpenFirewallFor"
+    if ($IsWindows) {
+        try {
+            if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
+                if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
+                    if ($Global:MinerFirewalls -eq $null) {$Global:MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
+                    $OpenFirewallFor = "$(@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Global:MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ConvertTo-Json -Depth 10 -Compress)"
+                    if ($OpenFirewallFor -ne "") {
+                        Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); ('$OpenFirewallFor' | ConvertFrom-Json -ErrorAction Ignore) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
+                        $Global:MinerFirewalls = $null
+                        Remove-Variable "OpenFirewallFor"
+                    }
                 }
             }
-        }
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    }
+
     if ($AllMiners -ne $null) {Remove-Variable "AllMiners"}
 
     #Remove miners with developer fee
@@ -3445,9 +3448,9 @@ function Invoke-Core {
         }
         if ($BestMiner -ne $null) {Remove-Variable "BestMiner"}
 
+        #Remove no longer profitable miners
         $Check_Profitability = $false
         if ($Session.Config.UsePowerPrice -and $MinersNeedingBenchmarkCount -eq 0) {
-            #Remove no longer profitable miners
             if ($Session.Config.CheckProfitability) {
                 $BestMiners = @($BestMiners | Where-Object {$_.Profit -gt $Session.Config.ProfitabilityLevel -or $_.IsExclusiveMiner -or $_.IsLocked})
                 if ($BestMiners2) {$BestMiners2 = @($BestMiners2 | Where {$_.Profit -gt $Session.Config.ProfitabilityLevel -or $_.IsExclusiveMiner -or $_.IsLocked})}
