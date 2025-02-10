@@ -144,13 +144,13 @@ get_cpu_info() {
         for cpu_freq_file in /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq; do
             if [ -f "$cpu_freq_file" ]; then
                 cpu_freq=$(awk '{print $1/1000}' "$cpu_freq_file" 2>/dev/null)
-                cpu_clock_sum=$(echo "$cpu_clock_sum + $cpu_freq" | bc)
+                cpu_clock_sum=$(awk "{print $cpu_clock_sum + $cpu_freq}" 2>/dev/null)
                 cpu_clock_count=$((cpu_clock_count + 1))
             fi
         done
 
         if [ "$cpu_clock_count" -gt 0 ]; then
-            cpu_clock=$(echo "$cpu_clock_sum / $cpu_clock_count" | bc)
+            cpu_clock=$(awk "{print $cpu_clock_sum / $cpu_clock_count}" 2>/dev/null)
         fi
     fi
 
