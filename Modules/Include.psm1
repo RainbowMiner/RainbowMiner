@@ -3935,6 +3935,10 @@ function Get-Device {
 
                         # fix PCIBusId
                         if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
+
+                        # fix Architecture
+                        $Device_OpenCL.Architecture = "$($Device_OpenCL.Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+")"
+
                     } elseif ($Vendor_Name -eq "NVIDIA") {
                         if ($GPUDeviceNameFound) {
                             $SubId       = $GPUDeviceNameFound.SubId
@@ -3945,7 +3949,7 @@ function Get-Device {
 
                     if ($Model -eq "") { #alas! empty
                         if ($Device_OpenCL.Architecture) {
-                            $Model = "$($Device_OpenCL.Architecture -replace ":.+$")"
+                            $Model = $Device_OpenCL.Architecture
                             $Device_Name = "$($Device_Name)$(if ($Device_Name) {" "})$($Model)"
                         } elseif ($InstanceId -and $InstanceId -match "VEN_([0-9A-F]{4}).+DEV_([0-9A-F]{4}).+SUBSYS_([0-9A-F]{4,8})") {
                             try {
@@ -4896,7 +4900,58 @@ function Update-DeviceInformation {
                     }
                 }
                 elseif ($IsLinux) {
-                    if (Get-Command "rocm-smi" -ErrorAction Ignore) {
+
+                    $AMD_Ok = $false
+                    if (Get-Command "sensors" -ErrorAction Ignore) {
+
+                        $sensorsJson = $null
+                        try {
+                            if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
+                                Set-OCDaemon "sensors -j amdgpu-* 2>/dev/null"
+                                $sensorsJson = Invoke-OCDaemon | ConvertFrom-Json -ErrorAction Stop
+                            } else {
+                                $sensorsJson = sensors -j amdgpu-* 2>$null | ConvertFrom-Json -ErrorAction Stop
+                            }
+                            if ($sensorsJson) {
+                                $amdGPUs = @(
+                                    $sensorsJson.PSObject.Properties.Name | Where-Object {$_ -match "^amdgpu-pci-([0-9a-f]{4})$"} | Foreach-Object {
+                                        $gpu = $sensorsJson.$_
+                                        $busHex = $matches[1]
+                                        [PSCustomObject]@{
+                                            BusId       = "$($busHex.Substring(0,2)):$($busHex.Substring(2,2))"
+                                            Name        = $gpu.name
+                                            Clock       = $gpu.gpu_clock_input
+                                            ClockMem    = $gpu.mem_clock_input
+                                            PowerDraw   = $gpu.power1_input
+                                            Temperature = $gpu.temp1_input
+                                            FanSpeed    = $gpu.fan1_input
+                                        }
+                                    } | Sort-Object -Property BusId
+                                )
+
+                                $DeviceId = 0
+                                $amdGPUs | Foreach-Object {
+                                    $gpu = $_
+                                    $Devices | Where-Object {($_.BusId -and ($_.BusId -eq $gpu.BusId)) -or (-not $_.BusId -and ($DeviceId -eq $_.BusId_Vendor_Index))} | Foreach-Object {
+                                        $_.Data.Clock       = [int]$gpu.Clock
+                                        $_.Data.ClockMem    = [int]$gpu.ClockMem
+                                        $_.Data.Temperature = [decimal]$gpu.Temperature
+                                        $_.Data.PowerDraw   = [decimal]$gpu.PowerDraw
+                                        $_.Data.FanSpeed    = [decimal]$gpu.FanSpeed
+                                        $_.Data.Method      = "sensors"
+                                        $AMD_Ok = $true
+                                    }
+                                    $DeviceId++
+                                }
+                            }
+
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+
+                    }
+                    
+                    if (-not $AMD_Ok -and (Get-Command "rocm-smi" -ErrorAction Ignore)) {
                         try {
                             $Rocm = Invoke-Exe -FilePath "rocm-smi" -ArgumentList "-f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
                         } catch {
@@ -4910,10 +4965,10 @@ function Update-DeviceInformation {
                                 $Data = $_.Value
                                 $Card = [int]($_.Name -replace "[^\d]")
                                 $Devices | Where-Object {$_.CardId -eq $Card -or ($_.CardId -eq -1 -and $_.Type_Vendor_Index -eq $DeviceId)} | Foreach-Object {
-                                    $_.Data.Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature" -and $_.Name -notmatch "junction" -and $_.Value -match "[\d\.]+"} | Foreach-Object {[decimal]$_.Value} | Measure-Object -Average).Average
-                                    $_.Data.PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power" -and $_.Value -match "[\d\.]+"} | Select-Object -First 1).Value
-                                    $_.Data.FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%" -and $_.Value -match "[\d\.]+"} | Select-Object -First 1).Value
-                                    $_.Data.Method            = "rocm"
+                                    $_.Data.Temperature = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature" -and $_.Name -notmatch "junction" -and $_.Value -match "[\d\.]+"} | Foreach-Object {[decimal]$_.Value} | Measure-Object -Average).Average
+                                    $_.Data.PowerDraw   = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power" -and $_.Value -match "[\d\.]+"} | Select-Object -First 1).Value
+                                    $_.Data.FanSpeed    = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%" -and $_.Value -match "[\d\.]+"} | Select-Object -First 1).Value
+                                    $_.Data.Method      = "rocm"
                                 }
                                 $DeviceId++
                             }

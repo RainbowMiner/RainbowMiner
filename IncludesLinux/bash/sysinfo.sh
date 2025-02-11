@@ -235,7 +235,7 @@ collect_gpu_data() {
     # AMD GPUs
     if [ "$SHOW_ALL" = true ] || [ "$SHOW_GPU" = true ] || [ "$SHOW_AMD" = true ]; then
         if has_command sensors; then
-            [ -z "$sensors_data" ] && sensors_data=$(LC_ALL=C sensors -j 2>/dev/null)
+            [ -z "$sensors_data" ] && sensors_data=$(LC_ALL=C sensors -j amdgpu-pci-* 2>/dev/null)
             amd_data=$(echo "$sensors_data" | jq -r 'to_entries | map(select(.key | startswith("amdgpu-pci"))) |
             map({(.key | gsub("amdgpu-pci-"; "")): { "PCIe": .key, "vendor": "AMD", "name": .value.name, "power": .value.power1_input, "temp": .value.temp1_input, "fan": .value.fan1_input, "clock": .value.gpu_clock_input, "clockmem": .value.mem_clock_input }}) | add' 2>/dev/null)
             if [ -n "$amd_data" ]; then
