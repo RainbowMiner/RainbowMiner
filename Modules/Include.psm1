@@ -4916,8 +4916,7 @@ function Update-DeviceInformation {
                         $sensorsJson = $null
                         try {
                             if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
-                                Set-OCDaemon "sensors -j amdgpu-* 2>/dev/null"
-                                $sensorsJson = Invoke-OCDaemon | ConvertFrom-Json -ErrorAction Stop
+                                $sensorsJson = Invoke-OCDaemon -Cmd "sensors -j amdgpu-* 2>/dev/null" | ConvertFrom-Json -ErrorAction Stop
                             } else {
                                 $sensorsJson = sensors -j amdgpu-* 2>$null | ConvertFrom-Json -ErrorAction Stop
                             }
@@ -4989,6 +4988,63 @@ function Update-DeviceInformation {
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from AMD"
+        }
+
+        try { #INTEL
+            if ($Vendor -eq 'INTEL') {
+
+                if ($Script:IntelCardsTDP -eq $null) {$Script:IntelCardsTDP = Get-ContentByStreamReader ".\Data\intel-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+
+                $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = $_.Data.Utilization = 0}
+
+                if ($IsWindows) {
+
+                    #$Success = 0
+                    #if (-not $Success) {
+                    #    Write-Log -Level Warn "Could not read power data from INTEL"
+                    #}
+                }
+                elseif ($IsLinux) {
+
+                    $INTEL_Ok = $false
+
+                    Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo.sh" -File | Foreach-Object {
+
+                        $intelJson = $null
+                        try {
+                            if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
+                                $intelJson = Invoke-OCDaemon -Cmd "$($_.FullName) --intel 2>/dev/null" | ConvertFrom-Json -ErrorAction Stop
+                            } else {
+                                $intelJson = Invoke-exe $_.FullName -ArgumentList "--intel" | ConvertFrom-Json -ErrorAction Stop
+                            }
+                            if ($intelJson) {
+                                $DeviceId = 0
+                                $intelGPUs | Foreach-Object {
+                                    $gpu = $_
+                                    $Devices | Where-Object {($_.BusId -and ($_.BusId -eq $gpu.BusId)) -or (-not $_.BusId -and ($DeviceId -eq $_.BusId_Vendor_Index))} | Foreach-Object {
+                                        $_.Data.Clock       = [int]$gpu.Clock
+                                        $_.Data.ClockMem    = [int]$gpu.ClockMem
+                                        $_.Data.Temperature = [decimal]$gpu.Temperature
+                                        $_.Data.PowerDraw   = [decimal]$gpu.PowerDraw
+                                        $_.Data.FanSpeed    = [decimal]$gpu.FanSpeed
+                                        $_.Data.Utilization = [decimal]$gpu.Utilization
+                                        $_.Data.Method      = "sysinfo"
+                                        $INTEL_Ok = $true
+                                    }
+                                    $DeviceId++
+                                }
+                            }
+
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+
+                    }
+                }
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not read power data from INTEL"
         }
 
         try { #NVIDIA        
