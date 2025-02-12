@@ -235,8 +235,8 @@ collect_gpu_data() {
     # AMD GPUs
     if [ "$SHOW_ALL" = true ] || [ "$SHOW_GPU" = true ] || [ "$SHOW_AMD" = true ]; then
         if has_command sensors; then
-            [ -z "$sensors_data" ] && sensors_data=$(LC_ALL=C sensors -j amdgpu-pci-* 2>/dev/null)
-            amd_data=$(echo "$sensors_data" | jq -r 'to_entries | map(select(.key | startswith("amdgpu-pci"))) |
+            [ -z "$sensors_data_amd" ] && sensors_data_amd=$(LC_ALL=C sensors -j amdgpu-pci-* 2>/dev/null)
+            amd_data=$(echo "$sensors_data_amd" | jq -r 'to_entries | map(select(.key | startswith("amdgpu-pci"))) |
             map({(.key | gsub("amdgpu-pci-"; "")): { "PCIe": .key, "vendor": "AMD", "name": .value.name, "power": .value.power1_input, "temp": .value.temp1_input, "fan": .value.fan1_input, "clock": .value.gpu_clock_input, "clockmem": .value.mem_clock_input }}) | add' 2>/dev/null)
             if [ -n "$amd_data" ]; then
                 echo "$amd_data" | while IFS="," read -r bus name power temp fan clock clockmem; do
@@ -255,44 +255,107 @@ collect_gpu_data() {
                 device=$(cat "$card/device/device" 2>/dev/null)
 
                 if [ "$vendor" = "0x8086" ]; then # Intel Vendor ID
-                    name=""
-                    if [ "$VERBOSE" = true ]; then
-                        name="Intel GPU"
-                        if [ -f "$card/device/uevent" ]; then
-                            name=$(grep -m1 "DRIVER=" "$card/device/uevent" | cut -d"=" -f2)
-                        fi
-                        if [ "$name" = "i915" ]; then
-                            name="Intel Integrated Graphics"
-                        elif [ "$name" = "xe" ]; then
-                            name="Intel Arc Graphics"
-                        fi
+                    # Get the driver name
+                    name="Intel GPU"
+                    if [ -f "$card/device/uevent" ]; then
+                        driver_name=$(grep -m1 "DRIVER=" "$card/device/uevent" | cut -d"=" -f2)
+                        case "$driver_name" in
+                            "i915") name="Intel Integrated Graphics" ;;
+                            "xe") name="Intel Arc Graphics" ;;
+                        esac
                     fi
-            
+
+                    # Get the PCI Device ID
+                    if [ -f "$card/device/device" ]; then
+                        device_id=$(cat "$card/device/device" 2>/dev/null | sed 's/^0x//')
+                    else
+                        device_id="unknown"
+                    fi
+
+                    # Match known Intel GPUs (Mapping Device IDs to Model Names)
+                    case "$device_id" in
+                        "56a0") name="Intel Arc A770" ;;
+                        "56a1") name="Intel Arc A750" ;;
+                        "56a2") name="Intel Arc A580" ;;
+                        "56a5") name="Intel Arc A380" ;;
+                        "9a60"|"9a68"|"9a70") name="Intel UHD Graphics 750" ;;
+                        "9bc5") name="Intel UHD Graphics 770" ;;
+                        "9a40"|"9a49") name="Intel Iris Xe Graphics" ;;
+                        "46c0") name="Intel UHD Graphics 730" ;;
+                    esac
+                
+                    # Extract PCIe Bus ID
+                    if [ -f "$card/device/uevent" ]; then
+                        pcie_bus=$(grep -m1 "PCI_SLOT_NAME=" "$card/device/uevent" | cut -d"=" -f2)
+                    else
+                        pcie_bus="null"
+                    fi
+
+                    # Read GPU utilization (Load %)
                     if [ -f "$card/device/gpu_busy_percent" ]; then
                         intel_load=$(cat "$card/device/gpu_busy_percent" 2>/dev/null)
                     else
                         intel_load="null"
                     fi
 
+                    # Read GPU Core Clock Speed (MHz)
                     if [ -f "$card/device/gt_cur_freq_mhz" ]; then
                         intel_clock=$(cat "$card/device/gt_cur_freq_mhz" 2>/dev/null)
                     else
                         intel_clock="null"
                     fi
 
+                    # Read GPU Memory Clock Speed (MHz)
                     if [ -f "$card/device/mem_cur_freq_mhz" ]; then
                         intel_clockmem=$(cat "$card/device/mem_cur_freq_mhz" 2>/dev/null)
                     else
                         intel_clockmem="null"
                     fi
 
-                    if [ -f "$card/device/temp1_input" ]; then
-                        intel_temp=$(awk '{print $1/1000}' "$card/device/temp1_input" 2>/dev/null)
-                    else
-                        intel_temp="null"
+                    # Try reading power, temperature & fan speed from `sensors`
+                    intel_power="null"
+                    intel_temp="null"
+                    intel_fan="null"
+                    if has_command sensors; then
+                        [ -z "$sensors_data_intel" ] && sensors_data_intel=$(LC_ALL=C sensors -j xe-pci-* 2>/dev/null)
+                        intel_power=$(echo "$sensors_data_intel" | jq -r '.["xe-pci-*"].power1_input // "null"' 2>/dev/null)
+                        intel_temp=$(echo "$sensors_data_intel" | jq -r '.["xe-pci-*"].temp1_input // "null"' 2>/dev/null)
+                        intel_fan=$(echo "$sensors_data_intel" | jq -r '.["xe-pci-*"].fan1_input // "null"' 2>/dev/null)
                     fi
 
-                    gpu_data="$gpu_data$gpu_index,null,INTEL,$name,null,$intel_temp,null,$intel_load,$intel_clock,$intel_clockmem\n"
+                    # Try reading power from `/sys/class/powercap`
+                    if [ "$intel_power" = "null" ] && [ -f "/sys/class/powercap/intel-rapl:0/energy_uj" ]; then
+                        energy_uj=$(cat "/sys/class/powercap/intel-rapl:0/energy_uj" 2>/dev/null)
+                        intel_power=$(awk "BEGIN {print $energy_uj / 1000000}")  # Convert µJ to Watts
+                    fi
+
+                    # Estimate power if no direct reading is available
+                    if [ "$intel_power" = "null" ] && [ "$intel_load" != "null" ]; then
+                        case "$name" in
+                            "Intel Arc A770") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 225}") ;;
+                            "Intel Arc A750") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 190}") ;;
+                            "Intel Arc A580") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 175}") ;;
+                            "Intel Arc A380") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 75}") ;;
+                            "Intel UHD Graphics 770") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 15}") ;;
+                            "Intel UHD Graphics 750") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 15}") ;;
+                            "Intel UHD Graphics 730") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 12}") ;;
+                            "Intel Iris Xe Graphics") intel_power=$(awk "BEGIN {print ($intel_load / 100) * 28}") ;;
+                            *) intel_power="null" ;; # Unknown GPU
+                        esac
+                    fi
+
+                    # Read GPU Temperature (Celsius) - Fallbacks if sensors failed
+                    if [ "$intel_temp" = "null" ]; then
+                        if [ -f "$card/device/temp1_input" ]; then
+                            intel_temp=$(awk '{print $1/1000}' "$card/device/temp1_input" 2>/dev/null)
+                        elif [ -f "$card/device/temp2_input" ]; then
+                            intel_temp=$(awk '{print $1/1000}' "$card/device/temp2_input" 2>/dev/null)
+                        elif [ -f "/sys/class/thermal/thermal_zone0/temp" ]; then
+                            intel_temp=$(awk '{print $1/1000}' "/sys/class/thermal/thermal_zone0/temp" 2>/dev/null)
+                        fi
+                    fi
+
+                    gpu_data="$gpu_data$gpu_index,$pcie_bus,INTEL,$name,$intel_power,$intel_temp,$intel_fan,$intel_load,$intel_clock,$intel_clockmem\n"
                     gpu_index=$((gpu_index+1))
                 fi
             done
@@ -327,34 +390,37 @@ collect_gpu_data() {
     printf "$gpu_data"
 }
 
-
 # Merge all GPU data based on OpenCL sorting
 merge_gpu_data() {
     printf "  \"GPUs\": [\n"
+    
     opencl_order=$(get_opencl_gpus 2>/dev/null)
     collected_data=$(collect_gpu_data 2>/dev/null)
     gpu_index=0
     comma=""
 
-    if [ -z "$opencl_order" ]; then
-        # If no OpenCL order, just display all detected GPUs
-        if [ -n "$collected_data" ]; then
+    if [ -n "$opencl_order" ]; then
+        # Convert OpenCL bus IDs to lowercase for consistency
+        echo "$opencl_order" | awk '{print tolower($0)}' | while read opencl_idx gpu_bus; do
             echo "$collected_data" | while IFS="," read index pcie vendor name power temp fan load clock clockmem; do
-                printf "$comma    {\n      \"Index\": $index,\n      \"PCIBusId\": \"$pcie\",\n      \"Vendor\": \"$vendor\",\n      \"Name\": \"$name\",\n      \"PowerDraw\": $power,\n      \"Temperature\": $temp,\n      \"FanSpeed\": $fan,\n      \"Utilization\": $load,\n      \"Clock\": $clock\n      \"ClockMem\": $clockmem\n    }"
-                comma=",\n"
-                gpu_index=$((gpu_index+1))
-            done
-        fi
-    else
-        echo "$opencl_order" | while read opencl_idx gpu_bus; do
-            echo "$collected_data" | while IFS="," read index pcie vendor name power temp fan load clock clockmem; do
+                pcie=$(echo "$pcie" | awk '{print tolower($0)}')  # Normalize to lowercase
+                
                 if [ "$gpu_bus" = "$pcie" ] || [ "$gpu_bus" = "dummy" ]; then
-                    printf "$comma    {\n      \"Index\": $gpu_index,\n      \"PCIBusId\": \"$pcie\",\n      \"Vendor\": \"$vendor\",\n      \"Name\": \"$name\",\n      \"PowerDraw\": $power,\n      \"Temperature\": $temp,\n      \"FanSpeed\": $fan,\n      \"Utilization\": $load,\n      \"Clock\": $clock\n      \"ClockMem\": $clockmem\n    }"
+                    printf "$comma    {\n      \"Index\": $gpu_index,\n      \"BusId\": \"$pcie\",\n      \"Vendor\": \"$vendor\",\n      \"Name\": \"$name\",\n      \"PowerDraw\": $power,\n      \"Temperature\": $temp,\n      \"FanSpeed\": $fan,\n      \"Utilization\": $load,\n      \"Clock\": $clock,\n      \"ClockMem\": $clockmem\n    }"
                     comma=",\n"
                     gpu_index=$((gpu_index+1))
                     break
                 fi
             done
+        done
+    fi
+
+    # If OpenCL sorting failed, fallback to PCIe sorting
+    if [ -z "$comma" ]; then
+        echo "$collected_data" | awk -F"," '{print tolower($2), $0}' | sort | cut -d" " -f2- | while IFS="," read index pcie vendor name power temp fan load clock clockmem; do
+            printf "$comma    {\n      \"Index\": $gpu_index,\n      \"BusId\": \"$pcie\",\n      \"Vendor\": \"$vendor\",\n      \"Name\": \"$name\",\n      \"PowerDraw\": $power,\n      \"Temperature\": $temp,\n      \"FanSpeed\": $fan,\n      \"Utilization\": $load,\n      \"Clock\": $clock,\n      \"ClockMem\": $clockmem\n    }"
+            comma=",\n"
+            gpu_index=$((gpu_index+1))
         done
     fi
 
