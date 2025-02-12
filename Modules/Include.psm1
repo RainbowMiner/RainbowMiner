@@ -272,7 +272,12 @@ function Get-NvidiaArchitecture {
 function Get-AMDComputeCapability {
     [CmdLetBinding()]
     param([string]$Model,[string]$Architecture = "")
-    $Architecture = $Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+"
+
+    if ($Architecture -match "^(gfx\d+)") {
+        $Architecture = $Matches[1]
+    } else {
+        $Architecture = "$($Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+")"
+    }
 
     try {
         if ($Script:AmdArchDB -eq $null) {$Script:AmdArchDB = Get-ContentByStreamReader ".\Data\amdarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
@@ -3937,7 +3942,11 @@ function Get-Device {
                         if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
 
                         # fix Architecture
-                        $Device_OpenCL.Architecture = "$($Device_OpenCL.Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+")"
+                        if ($Device_OpenCL.Architecture -match "^(gfx\d+)") {
+                            $Device_OpenCL.Architecture = $Matches[1]
+                        } else {
+                            $Device_OpenCL.Architecture = "$($Device_OpenCL.Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+")"
+                        }
 
                     } elseif ($Vendor_Name -eq "NVIDIA") {
                         if ($GPUDeviceNameFound) {
