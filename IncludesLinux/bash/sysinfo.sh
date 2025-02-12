@@ -392,13 +392,20 @@ collect_gpu_data() {
 
 # Merge all GPU data based on OpenCL sorting
 merge_gpu_data() {
-    printf "  \"GPUs\": [\n"
-    
-    opencl_order=$(get_opencl_gpus 2>/dev/null)
     collected_data=$(collect_gpu_data 2>/dev/null)
+
+    # If no GPUs were found, return empty array
+    if [ -z "$collected_data" ]; then
+        printf "  \"GPUs\": []"
+        return
+    fi
+
+    opencl_order=$(get_opencl_gpus 2>/dev/null)
     gpu_index=0
     comma=""
 
+    printf "  \"GPUs\": [\n"
+    
     if [ -n "$opencl_order" ]; then
         # Convert OpenCL bus IDs to lowercase for consistency
         echo "$opencl_order" | awk '{print tolower($0)}' | while read opencl_idx gpu_bus; do
