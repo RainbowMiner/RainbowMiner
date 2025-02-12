@@ -155,14 +155,23 @@ get_cpu_info() {
     fi
 
     # Fallback to lscpu if sysfs method fails
-    if [ "$cpu_clock" = "null" ] && has_command lscpu; then
-        [ -z "$cpu_info" ] && cpu_info=$(LC_ALL=C lscpu)
-        cpu_clock=$(echo "$cpu_info" | awk '/CPU MHz:/ {print $3}')
+    if [ "$cpu_clock" = "null" ] || [ -z "$cpu_clock" ]; then
+        if has_command lscpu; then
+            [ -z "$cpu_info" ] && cpu_info=$(LC_ALL=C lscpu)
+            cpu_clock=$(echo "$cpu_info" | awk '/CPU MHz:/ {print $3}' 2>/dev/null)
+        fi
     fi
 
     # Final fallback to /proc/cpuinfo
-    if [ "$cpu_clock" = "null" ] && grep -q "MHz" /proc/cpuinfo; then
-        cpu_clock=$(grep "MHz" /proc/cpuinfo | awk '{print $4}' | head -n1)
+    if [ "$cpu_clock" = "null" ] || [ -z "$cpu_clock" ]; then
+        if grep -q "MHz" /proc/cpuinfo; then
+            cpu_clock=$(grep "MHz" /proc/cpuinfo | awk '{print $4}' | head -n1 2>/dev/null)
+        fi
+    fi
+
+    # If still empty, set it to "null" to avoid invalid JSON
+    if [ -z "$cpu_clock" ] || ! echo "$cpu_clock" | grep -qE '^[0-9]+(\.[0-9]+)?$'; then
+        cpu_clock="null"
     fi
 
     # CPU load calculation
