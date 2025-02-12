@@ -5017,9 +5017,9 @@ function Update-DeviceInformation {
                             } else {
                                 $intelJson = Invoke-exe $_.FullName -ArgumentList "--intel" | ConvertFrom-Json -ErrorAction Stop
                             }
-                            if ($intelJson) {
+                            if ($intelJson.GPUs) {
                                 $DeviceId = 0
-                                $intelGPUs | Foreach-Object {
+                                $intelGPUs.GPUs | Foreach-Object {
                                     $gpu = $_
                                     $Devices | Where-Object {($_.BusId -and ($_.BusId -eq $gpu.BusId)) -or (-not $_.BusId -and ($DeviceId -eq $_.BusId_Vendor_Index))} | Foreach-Object {
                                         $_.Data.Clock       = [int]$gpu.Clock
