@@ -173,7 +173,7 @@
             Currencies=@("BEAM")
         }
         "LuckyPool" = [PSCustomObject]@{
-            Currencies=@("ZANO","XWP")
+            Currencies=@("QUAI","ZANO")
         }
         "LuckPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{EnableHybridSoloMining="0"}
