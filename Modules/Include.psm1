@@ -3947,7 +3947,8 @@ function Get-Device {
                         } else {
                             $Device_OpenCL.Architecture = "$($Device_OpenCL.Architecture -replace ":.+$" -replace "[^A-Za-z0-9]+")"
                         }
-
+                    } elseif ($Vendor_Name -eq "INTEL") {
+                        # nothing to fix yet
                     } elseif ($Vendor_Name -eq "NVIDIA") {
                         if ($GPUDeviceNameFound) {
                             $SubId       = $GPUDeviceNameFound.SubId
@@ -5030,6 +5031,8 @@ function Update-DeviceInformation {
                                         $_.Data.Utilization = [decimal]$gpu.Utilization
                                         $_.Data.Method      = "sysinfo"
                                         $INTEL_Ok = $true
+
+                                        if (-not $_.Data.PowerDraw -and $Script:IntelCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:IntelCardsTDP."$($_.Model_Name)" * ([double]$_.Data.Utilization / 100)}
                                     }
                                     $DeviceId++
                                 }
