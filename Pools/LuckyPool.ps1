@@ -16,108 +16,90 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "NIR";   port = 3377; fee = 0.9; rpc = "nirmata"; region = @("eu")}
-    [PSCustomObject]@{symbol = "XWP";   port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
-    [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano"; region = @("eu")}
-
-    #[PSCustomObject]@{symbol = "BBR";   port = 5577; fee = 0.5; rpc = "bbr"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
-    #[PSCustomObject]@{symbol = "TUBE";  port = 5577; fee = 0.9; rpc = "tube4"; divisor = 40; region = @("eu")}
-    #[PSCustomObject]@{symbol = "VBK";   port = 9501; fee = 1.0; rpc = "veriblock"; region = @("eu")}
-    #[PSCustomObject]@{symbol = "ZELS";  port = 4502; fee = 0.9; rpc = "zelantus"; region = @("eu")}
+    [PSCustomObject]@{symbol = "NIR";   port = 3377; fee = 0.9; rpc = "nirmata";    user = "{wallet}.{worker}.{diff}"; pass="x"}
+    [PSCustomObject]@{symbol = "QUAI";  port = 3333; fee = 0.9; rpc = "quai";       user = "{wallet}={diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "XCC";   port = 4481; fee = 0.9; rpc = "cyberchain"; user = "{wallet}={diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "XE";    port = 3381; fee = 0.9; rpc = "xechain";    user = "{wallet}={diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "XEL";   port = 2666; fee = 0.9; rpc = "xelis";      user = "{wallet}={diff}.{worker}"; pass="x"}
+    [PSCustomObject]@{symbol = "ZANO";  port = 8877; fee = 0.9; rpc = "zano";       user = "{wallet}.{worker}";        pass="{diff}"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Coin          = Get-Coin $_.symbol
     $Pool_Currency      = $_.symbol
-    $Pool_Currency2     = $_.symbol2
     $Pool_Fee           = $_.fee
     $Pool_Port          = $_.port
     $Pool_RpcPath       = $_.rpc
-    $Pool_ScratchPadUrl = $_.scratchpad
-
     $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
-    $Pool_HostPath      = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
     $Pool_Algorithm_Norm = $Pool_Coin.Algo
 
     $Pool_EthProxy = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"ethproxy"} elseif ($Pool_Algorithm_Norm -match $Global:RegexAlgoIsProgPow) {"stratum"} else {$null}
 
     $Pool_Request = [PSCustomObject]@{}
-    $Pool_Ports   = @([PSCustomObject]@{})
 
-    $ok = $true
-    if (-not $InfoOnly) {
-        try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).luckypool.io/api/stats" -tag $Name -timeout 15 -cycletime 120
-            $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "" -mGPU "mid" -mRIG "high"
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
-            $ok = $false
-        }
-        if (-not ($Pool_Ports | Where-Object {$_} | Measure-Object).Count) {$ok = $false}
+    try {
+        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).luckypool.io/api/stats" -tag $Name -timeout 15 -cycletime 120
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
+        $ok = $false
     }
 
-    if ($ok -and -not $InfoOnly) {
+    if ($Pool_Request.config.stratum -and -not $InfoOnly) {
         $Pool_Fee = $Pool_Request.config.fee
 
         $timestamp  = Get-UnixTimestamp
 
         $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
-        $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
-        $Pool_Reward = if ($dayData) {"Day"} else {"Live"}
-        $Pool_Data   = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -addBlockData
+        $Pool_Reward = "Live"
+        $Pool_Data   = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addBlockData
+        $Pool_WTM    = -not $Pool_Data.$Pool_Reward.reward
 
-        $Stat = Set-Stat -Name $Pool_StatFn -Value ($Pool_Data.$Pool_Reward.reward/1e8) -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -HashRate $Pool_Data.$Pool_Reward.hashrate -BlockRate $Pool_Data.BLK -ChangeDetection $dayData -Quiet
+        $Stat = Set-Stat -Name $Pool_StatFn -Value ($Pool_Data.$Pool_Reward.reward/1e8) -Duration $StatSpan -HashRate $Pool_Data.$Pool_Reward.hashrate -BlockRate $Pool_Data.BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    if ($ok -or $InfoOnly) {
-        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '' -asobject
-        foreach ($Pool_Region in $_.region) {
-            $Pool_SSL = $false
-            foreach ($Pool_Port in $Pool_Ports) {
-                if ($Pool_Port) {
-                    [PSCustomObject]@{
-                        Algorithm     = $Pool_Algorithm_Norm
-						Algorithm0    = $Pool_Algorithm_Norm
-                        CoinName      = $Pool_Coin.Name
-                        CoinSymbol    = $Pool_Currency
-                        Currency      = $Pool_Currency
-                        Price         = $Stat.$StatAverage #instead of .Live
-                        StablePrice   = $Stat.$StatAverageStable
-                        MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                        Host          = "$($Pool_HostPath).luckypool.io"
-                        Port          = if ($Pool_Port.CPU) {$Pool_Port.CPU} else {$_.Port}
-                        Ports         = $Pool_Port
-                        User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
-                        Pass          = "$(if ($Pool_Wallet.paymentid) {"$($Pool_Wallet.paymentid)+"}){workername:$Worker}"
-                        Region        = Get-Region $Pool_Region
-                        SSL           = $Pool_SSL
-                        Updated       = $Stat.Updated
-                        PoolFee       = $Pool_Fee
-                        Workers       = $Pool_Data.Workers
-                        Hashrate      = $Stat.HashRate_Live
-                        TSL           = $Pool_Data.TSL
-                        BLK           = $Stat.BlockRate_Average
-                        ScratchPadUrl = if ($Pool_ScratchPadUrl) {$Pool_ScratchPadUrl -replace "#region",$Pool_Region} else {$null}
-                        EthMode       = $Pool_EthProxy
-                        Name          = $Name
-                        Penalty       = 0
-                        PenaltyFactor = 1
-						Disabled      = $false
-						HasMinerExclusions = $false
-                        Price_0       = 0.0
-						Price_Bias    = 0.0
-						Price_Unbias  = 0.0
-                        Wallet        = $Pool_Wallet.wallet
-                        Worker        = "{workername:$Worker}"
-                        Email         = $Email
-                    }
-                }
-                $Pool_SSL = $true
+    if ($Pool_Request.config.stratum -or $InfoOnly) {
+        $Pool_User = $_.user -replace "{wallet}","$($Wallets.$Pool_Currency)" -replace "{worker}","{workername:$Worker}" -replace "{diff}","{diff:.`$difficulty}"
+        $Pool_Pass = $_.pass -replace "{diff}","{diff:.`$difficulty}" 
+        foreach ($Pool_Stratum in $Pool_Request.config.stratum) {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+				Algorithm0    = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin.Name
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
+                Price         = $Stat.$StatAverage #instead of .Live
+                StablePrice   = $Stat.$StatAverageStable
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = "stratum+tcp"
+                Host          = "$(if ($Pool_Stratum.server) {$Pool_Stratum.server} else {$Pool_Stratum})"
+                Port          = $Pool_Port
+                User          = $Pool_User
+                Pass          = $Pool_Pass
+                Region        = Get-Region "$(if ($Pool_Stratum.flag) {$Pool_Stratum.flag} else {"eu"})"
+                SSL           = $false
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_Fee
+                Workers       = $Pool_Data.Workers
+                Hashrate      = $Stat.HashRate_Live
+                TSL           = $Pool_Data.TSL
+                BLK           = $Stat.BlockRate_Average
+                WTM           = $Pool_WTM
+                EthMode       = $Pool_EthProxy
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+				Disabled      = $false
+				HasMinerExclusions = $false
+                Price_0       = 0.0
+				Price_Bias    = 0.0
+				Price_Unbias  = 0.0
+                Wallet        = $Wallets.$Pool_Currency
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
             }
         }
     }
