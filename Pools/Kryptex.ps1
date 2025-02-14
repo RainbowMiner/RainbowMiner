@@ -132,7 +132,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
                 Workers       = $PoolCoin_Request.miners
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
-                BLK           = $Stat.BlockRate_Average
+                BLK           = if ($Pool_BLK -ne $null) {$Stat.BlockRate_Average} else {$null}
                 PaysLive      = $PoolCoin_Request.fee_type -eq "PPS+"
                 WTM           = $true
                 Name          = $Name
