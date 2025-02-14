@@ -33,8 +33,6 @@ catch {
     return
 }
 
-$Pool_Valid_Currencies = @("RVN","BTC","ETH","LTC","BCH","ADA","DOGE","MATIC")
-
 [hashtable]$Pool_RegionsTable = @{}
 
 $Pool_Regions = @("us","eu","asia")
@@ -44,7 +42,15 @@ $Pool_User = $Pool_TLS = $Pool_BLK = $null
 $Pool_AE   = $Pool_Currency
 
 if (-not $InfoOnly) {
-    $Pool_Valid_Currencies | Where-Object {$Pool_Params -match $_} | Foreach-Object {$AECurrency = $_}
+    $Pool_Valid_Currencies = @("RVN","BTC","ETH","LTC","BCH","ADA","DOGE","MATIC")
+    if ($AECurrency -eq "" -and $Params.$Pool_Currency -ne "") {
+        foreach ($Pool_AE in $Pool_Valid_Currencies) {
+            if ($Params.$Pool_Currency -match $Pool_AE) {
+                $AECurrency = $Pool_AE
+                break
+            }
+        }
+    }
     if ($AECurrency -eq "" -or $AECurrency -notin $Pool_Valid_Currencies) {
         foreach ($Pool_AE in $Pool_Valid_Currencies) {
             if ($Wallets.$Pool_AE) {
@@ -74,13 +80,13 @@ if (-not $InfoOnly) {
     $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
     $Pool_TSL        = [int]($timestamp - ($blocks | Select-Object -First 1)/1000)
 
-    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_BLK -Difficulty $Pool_Request.coin.difficulty -ChangeDetection $false -Quiet
+    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Difficulty $Pool_Request.coin.difficulty -ChangeDetection $false -Quiet
     if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
 }
 
 if ($Pool_User -or $InfoOnly) {
+    $Pool_Pass = $Params.$Pool_AE
     $Pool_AE   = $Pool_AE.ToLower()
-    $Pool_Pass = $Pool_Params.Trim()
 
     if ($Pool_AE -ne "rvn") {
         if ($Pool_Pass -notmatch $Pool_AE) {
