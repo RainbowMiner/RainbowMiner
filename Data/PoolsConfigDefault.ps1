@@ -424,6 +424,13 @@
             Currencies=@("RTM")
         }
         "Ravenminer" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AECurrency=""}
+            SetupFields=[PSCustomObject]@{AECurrency = "Enter your RavenMiner autoexchange currency or leave empty for first of RVN,BTC,ETH,LTC,BCH,ADA,DOGE,MATIC"}
+            Currencies=@("RVN")
+        }
+        "RavenminerSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AECurrency=""}
+            SetupFields=[PSCustomObject]@{AECurrency = "Enter your RavenMinerSolo autoexchange currency or leave empty for first of RVN,BTC,ETH,LTC,BCH,ADA,DOGE,MATIC"}
             Currencies=@("RVN")
         }
         "RPlant" = [PSCustomObject]@{
