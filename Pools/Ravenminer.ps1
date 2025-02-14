@@ -99,6 +99,7 @@ if ($Pool_User -or $InfoOnly) {
     $Pool_Mode = if ($Pool_Pass -match "pps") {"pps"} elseif ($Pool_Pass -match "solo") {"solo"} else {"pplns"}
     $Pool_Fee  = $Pool_Request."$($Pool_Mode)_fees"
     $Pool_Solo = $Pool_Mode -eq "solo"
+    $Pool_PPS  = $Pool_Mode -eq "pps"
 
     foreach($Pool_Region in $Pool_Regions) {
         $Pool_SSL = $false
@@ -127,6 +128,7 @@ if ($Pool_User -or $InfoOnly) {
                 BLK           = if (-not $Pool_Solo) {$Stat.BlockRate_Average} else {$null}
                 TSL           = if (-not $Pool_Solo) {$Pool_TSL} else {$null}
                 WTM           = $true
+                PaysLive      = $Pool_PPS
                 Difficulty    = if ($Pool_Solo) {$Stat.Diff_Average} else {$null}
                 SoloMining    = $Pool_Solo
 				ErrorRatio    = $Stat.ErrorRatio
