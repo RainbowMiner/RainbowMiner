@@ -94,6 +94,8 @@ if ($Pool_User -or $InfoOnly) {
         }
     }
 
+    if (-not $Pool_Pass) {$Pool_Pass = "x"}
+
     $Pool_Mode = if ($Pool_Pass -match "pps") {"pps"} elseif ($Pool_Pass -match "solo") {"solo"} else {"pplns"}
     $Pool_Fee  = $Pool_Request."$($Pool_Mode)_fees"
     $Pool_Solo = $Pool_Mode -eq "solo"
