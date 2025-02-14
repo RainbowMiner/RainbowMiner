@@ -66,14 +66,17 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
 
     $Pool_PoolFee = [Double]$PoolCoin_Request.fee * 100
 
+    $Pool_BLK = $Pool_TSL = $null
+
     if (-not $InfoOnly) {
         $timestamp  = Get-UnixTimestamp
         $timestamp24h = $timestamp-86400
 
         $blocks_measure = $PoolCoin_Request.last_blocks_found | Where-Object {$_.date -ge $timestamp24h} | Select-Object -ExpandProperty date | Measure-Object -Minimum -Maximum
-        $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
-
-        $Pool_TSL = $timestamp - ($PoolCoin_Request.last_blocks_found | Select-Object -First 1).date
+        if ($blocks_measure.Count -or $PoolCoin_Request.hashrate -eq 0) {
+            $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+            $Pool_TSL = $timestamp - ($PoolCoin_Request.last_blocks_found | Select-Object -First 1).date
+        }
 
         $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value 0 -Duration $StatSpan -HashRate $PoolCoin_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
@@ -130,7 +133,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
-                PPS           = $PoolCoin_Request.fee_type -eq "PPS+"
+                PaysLive      = $PoolCoin_Request.fee_type -eq "PPS+"
                 WTM           = $true
                 Name          = $Name
                 Penalty       = 0
