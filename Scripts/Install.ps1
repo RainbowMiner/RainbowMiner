@@ -166,9 +166,14 @@ if ($IsWindows) {
     Write-Host "Check/Install Microsoft Visual C++ 2015/2017/2019 .."
     if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
     Expand-WebRequest "https://aka.ms/vs/16/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
+    $StartCmd = "run Start.bat"
+} elseif ($IsLinux) {
+    $StartCmd = if (Get-Command "tmux" -ErrorAction Ignore) {"or start-tmux.sh"}
+                elseif (Get-Command "screen" -ErrorAction Ignore) {"or start-screen.sh"}
+    $StartCmd = "run start.sh$($StartCmd)"
 }
 
-Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh or start-screen.sh"}))" -ForegroundColor Green
+Write-Host "Done! You are now ready to run Rainbowminer ($($StartCmd))" -ForegroundColor Green
 
 if (Test-Path ".\IncludesLinux\linux.updated") {
     Get-ChildItem ".\IncludesLinux\linux.updated" -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
