@@ -176,7 +176,7 @@ $(function() {
             $.each(result, function( ix, name ) {
                 var sel = (name.slice(-1)=='*')? true:false;
                 if (sel) name = name.slice(0,-1);
-                var aesym = (typeof globalconfig.AutoexPools[name] !== "undefined")? ' <span class="crypto-symbol bitcoin-symbol">&#x20BF;</span>':'';
+                var aesym = (typeof globalconfig.AutoexPools[name] !== "undefined")? ' <svg class="crypto-symbol"><use href="#BTC-symbol"/></svg>':'';
                 var opt = '<option value="'+name+'">'+name+aesym+'</option>';
                 if (sel) add1 += opt; else add2 += opt;
             })

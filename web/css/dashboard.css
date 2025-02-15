@@ -308,12 +308,14 @@ pre {
 }
 
 .crypto-symbol {
-    color: #F7931A;
+    width:0.875em;
+    height:0.875em;
     display: inline-block;
     font-size: 0.875em;
     vertical-align: middle;
 }
 
 .bitcoin-symbol {
+    color: #F7931A;
     font-family: Arial, sans-serif;
 }

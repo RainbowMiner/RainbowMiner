@@ -1022,7 +1022,7 @@ $(function() {
             var pools = new Array(), excludepools = new Array()
             $.each(result.Pools, function (key, data) {
                 var checked = result.PoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
-                var aesym = (typeof globalconfig.AutoexPools[key] !== "undefined")? (globalconfig.AutoexPools[key] == "BTC"? ' <span class="crypto-symbol bitcoin-symbol">&#x20BF;</span>':' <svg width="1em" height="1em"><use href="#'+globalconfig.AutoexPools[key]+'-symbol"/></svg>'):'';
+                var aesym = (typeof globalconfig.AutoexPools[key] !== "undefined")? ' <svg class="crypto-symbol"><use href="#'+globalconfig.AutoexPools[key]+'-symbol"/></svg>':'';
                 pools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="form-check-label" for="pool' + key + '">' + key + aesym + '</label></div>')
                 checked = result.ExcludePoolName.some(item => item.toLowerCase() === key.toLowerCase())? " checked":"";
                 excludepools.push('<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="form-check-label" for="excludepool' + key + '">' + key + aesym + '</label></div>')
