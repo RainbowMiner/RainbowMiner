@@ -1043,6 +1043,11 @@ function Invoke-Core {
     $PowerPriceCurrency = if ($Session.Config.OctopusTariffCode -ne '') {"GBP"} else {$Session.Config.PowerPriceCurrency}
 
     if ($CheckConfig) {
+        $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
+        $AutoexPools = [PSCustomObject]@{}
+        $PoolSetup.PSObject.Properties | Where-Object {$_.Value.Autoexchange} | Foreach-Object {
+            $AutoexPools | Add-Member $_.Name $_.Value.Autoexchange
+        }
         $API.Info = ConvertTo-Json ([PSCustomObject]@{
                                 Version                = $ConfirmedVersion.Version
                                 RemoteVersion          = $ConfirmedVersion.RemoteVersion
@@ -1050,6 +1055,7 @@ function Invoke-Core {
                                 WorkerName             = $Session.Config.WorkerName
                                 EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
                                 AlgorithmMap           = (Get-AlgorithmMap)
+                                AutoexPools            = $AutoexPools
                                 OCmode                 = $Session.OCmode
                                 UsePowerPrice          = $Session.Config.UsePowerPrice
                                 PowerPriceCurrency     = $PowerPriceCurrency
@@ -1061,6 +1067,8 @@ function Invoke-Core {
                                 IsServer               = $Session.Config.RunMode -eq "Server"
                             }) -Depth 10
         $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
+        $PoolSetup = $null
+        $AutoexPools = $null
     }
 
     #automatic fork detection

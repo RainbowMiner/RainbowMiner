@@ -296,3 +296,24 @@ pre {
     color: #fff;
     background-color: rgba(255,255,255,.075);
 }
+
+.form-check-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-check-label svg {
+    vertical-align: middle;
+}
+
+.crypto-symbol {
+    color: #F7931A;
+    display: inline-block;
+    font-size: 0.875em;
+    vertical-align: middle;
+}
+
+.bitcoin-symbol {
+    font-family: Arial, sans-serif;
+}

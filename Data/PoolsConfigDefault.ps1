@@ -5,7 +5,7 @@
         "2MinersAE" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency=""}
             SetupFields=[PSCustomObject]@{AECurrency = "Enter your 2MinersAE autoexchange currency"}
-            Autoexchange=$true
+            Autoexchange="BTC"
             Currencies=@("BTC","NANO")
         }
         "2MinersSolo" = [PSCustomObject]@{
@@ -57,6 +57,7 @@
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your C3pool password (eMail or Password)"}
             Currencies=@("XMR")
+            Autoexchange="XMR"
         }
         "CpuPool" = [PSCustomObject]@{
             Currencies=@("CPU","MBC")
@@ -137,7 +138,7 @@
         }
         "Hashcryptos" = [PSCustomObject]@{
             Currencies=@("BTC")
-            Autoexchange=$true
+            Autoexchange="BTC"
             Yiimp=$true
         }
         "Hashpool" = [PSCustomObject]@{
@@ -168,6 +169,7 @@
             Fields=[PSCustomObject]@{Email=""}
             SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address to enable all coins for autoexchange"}
             Currencies=@("KAS","XMR")
+            Autoexchange="BTC"
         }
         "LeafPool" = [PSCustomObject]@{
             Currencies=@("BEAM")
@@ -208,23 +210,13 @@
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=3}
             SetupFields=[PSCustomObject]@{User="Enter your MiningDutch username";API_ID="Enter your MiningDutch account ID";API_Key = "Enter your MiningDutch API key";AECurrency = "Enter your MiningDutch autoexchange currency"}
             Currencies=@()
-            Autoexchange=$true
+            Autoexchange="BTC"
         }
         "MiningDutchCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=3}
             SetupFields=[PSCustomObject]@{User="Enter your MiningDutch username";API_ID="Enter your MiningDutch account ID";API_Key = "Enter your MiningDutch API key";AECurrency = "Enter your MiningDutch autoexchange currency"}
             Currencies=@("GLT")
-        }
-        "MiningPoolHub" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";BalanceCoinSymbol="";Penalty=12}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency";BalanceCoinSymbol="Add all coin symbols, that the balance module should load and list"}
-            Currencies=@()
-            Autoexchange=$true
-        }
-        "MiningPoolHubCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";BalanceCoinSymbol=""}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency";BalanceCoinSymbol="Add all coin symbols, that the balance module should load and list"}
-            Currencies=@()
+            Autoexchange="BTC"
         }
         "MiningRigRentals" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{
@@ -348,7 +340,7 @@
                         UseHost="Force use of a specific host (use eu-de01, eu-ru01, us-central01 ...)"
             }
             Currencies=@()
-            Autoexchange=$true
+            Autoexchange="BTC"
         }
         "MintPond" = [PSCustomObject]@{
             Currencies=@("FIRO","RVN")
@@ -360,6 +352,7 @@
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your MoneroOcean password (eMail or Password)"}
             Currencies=@("XMR")
+            Autoexchange="XMR"
         }
         "Nanopool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Email=""}
@@ -373,7 +366,7 @@
             Fields=[PSCustomObject]@{OrganizationID="";API_Key="";API_Secret="";StatAverage="Minute_5";MaxMarginOfError="0";EnableShowWallets="0"}
             SetupFields=[PSCustomObject]@{OrganizationID="Enter your Nicehash Organization ID (pulls and adds NH balance)";API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)";EnableShowWallets="List your Nicehash wallets (0=no, 1=yes)"}
             Currencies=@("BTC")
-            Autoexchange=$true
+            Autoexchange="BTC"
             BalancesKeepAlive="180d"
         }
         "Pmpmining" = [PSCustomObject]@{
@@ -400,21 +393,21 @@
             Fields=[PSCustomObject]@{User="";AECurrency="BTC";API_Key="";EnableAPIKeyForMiners="0"}
             SetupFields=[PSCustomObject]@{User="Enter your ProHashing username";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
-            Autoexchange=$true
+            Autoexchange="BTC"
             BalancesKeepAlive="90d"
         }
         "ProHashingCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";PPMode="pps";API_Key="";AECurrency="BTC";EnableAPIKeyForMiners="0"}
             SetupFields=[PSCustomObject]@{User="Enter your ProHashing username and select payout coins with CoinSymbol (or use separate wallet symbols with username in it)";PPMode="Enter the payout/mining mode (pps,pplns or solo)";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
-            Autoexchange=$true
+            Autoexchange="BTC"
             BalancesKeepAlive="90d"
         }
         "ProHashingCoinsSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_Key="";AECurrency="BTC";EnableAPIKeyForMiners="0"}
             SetupFields=[PSCustomObject]@{User="Enter your ProHashing username and select payout coins with CoinSymbol (or use separate wallet symbols with username in it)";API_Key="Enter your ProHashing API-Key for balance";AECurrency = "Enter your ProHashing autoexchange currency";EnableAPIKeyForMiners="Add API key to miners in case `"Require API key for miners`" has been enabled at the ProHashing account settings"}
             Currencies=@()
-            Autoexchange=$true
+            Autoexchange="BTC"
             BalancesKeepAlive="90d"
         }
         "RaptoreumZone" = [PSCustomObject]@{
@@ -427,11 +420,13 @@
             Fields=[PSCustomObject]@{AECurrency=""}
             SetupFields=[PSCustomObject]@{AECurrency = "Enter your RavenMiner autoexchange currency or leave empty for first of RVN,BTC,ETH,LTC,BCH,ADA,DOGE,MATIC"}
             Currencies=@("RVN")
+            Autoexchange="RVN"
         }
         "RavenminerSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AECurrency=""}
             SetupFields=[PSCustomObject]@{AECurrency = "Enter your RavenMinerSolo autoexchange currency or leave empty for first of RVN,BTC,ETH,LTC,BCH,ADA,DOGE,MATIC"}
             Currencies=@("RVN")
+            Autoexchange="RVN"
         }
         "RPlant" = [PSCustomObject]@{
             Currencies=@("BTX","NEXA","VKAX")
@@ -464,7 +459,6 @@
             Fields=[PSCustomObject]@{"ETC-PaymentMode"="pplns";API_Key=""}
             SetupFields=[PSCustomObject]@{"ETC-PaymentMode" = "Enter your ETC-setup payment mode (pps, pplns or solo) for proper fee calculation";API_Key = "Enter your ViaBTC API key (adds your balance)"}
             Currencies=@("ETC")
-            Autoexchange=$true
         }
         "Vipor" = [PSCustomObject]@{
             Currencies=@("RXD")
@@ -492,7 +486,7 @@
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
-            Autoexchange=$true
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
@@ -500,6 +494,7 @@
             Fields=[PSCustomObject]@{AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
@@ -507,6 +502,7 @@
             Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
@@ -514,6 +510,7 @@
             Fields=[PSCustomObject]@{AllowZero="1";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
@@ -521,7 +518,7 @@
             Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency="";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
-            Autoexchange=$true
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
@@ -529,7 +526,7 @@
             Fields=[PSCustomObject]@{AllowZero="1";Penalty=12}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
-            Autoexchange=$true
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
@@ -537,7 +534,7 @@
             Fields=[PSCustomObject]@{AECurrency="";Penalty=16}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
-            Autoexchange=$true
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
@@ -545,6 +542,7 @@
             Fields=[PSCustomObject]@{AECurrency="";Penalty=16}
             SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
+            Autoexchange="BTC"
             Yiimp=$true
             BalancesKeepAlive="90d"
         }
