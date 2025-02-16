@@ -7,7 +7,7 @@ using System.Management.Automation;
 
 public static class PSMemSafeOps
 {
-    // 1. String Comparison & Equality Methods
+    // 1. String Comparison
     public static bool EqualsIgnoreCase(string str1, string str2)
     {
         return str1 != null && str2 != null && string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
@@ -21,10 +21,12 @@ public static class PSMemSafeOps
         return string.Compare(str1, str2, StringComparison.OrdinalIgnoreCase);
     }
 
-    // 2. String Manipulation Methods
+    // 2. Optimized String Manipulation
     public static string Concat(string str1, string str2)
     {
-        return (str1 != null ? str1 : "") + (str2 != null ? str2 : "");
+        if (str1 == null) str1 = "";
+        if (str2 == null) str2 = "";
+        return str1 + str2;
     }
 
     public static string Replace(string input, string oldValue, string newValue)
@@ -42,48 +44,61 @@ public static class PSMemSafeOps
 
     public static string Trim(string input)
     {
-        return input != null ? input.Trim() : "";
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input.Trim();
     }
 
     public static string TrimStart(string input)
     {
-        return input != null ? input.TrimStart() : "";
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input.TrimStart();
     }
 
     public static string TrimEnd(string input)
     {
-        return input != null ? input.TrimEnd() : "";
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input.TrimEnd();
     }
 
     public static string ToLower(string input)
     {
-        return input != null ? input.ToLowerInvariant() : "";
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input.ToLowerInvariant();
     }
 
     public static string ToUpper(string input)
     {
-        return input != null ? input.ToUpperInvariant() : "";
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input.ToUpperInvariant();
     }
 
-    // 3. String Formatting & Interpolation
+    // 3. Optimized Formatting
     public static string Format(string format, params object[] args)
     {
-        return string.Format(format, args);
+        if (string.IsNullOrEmpty(format)) return string.Empty;
+        return args.Length > 0 ? string.Format(format, args) : format;
     }
 
-    // 4. String Splitting & Joining
+    // 4. Optimized Splitting & Joining
     public static string[] Split(string input, char separator)
     {
         if (string.IsNullOrEmpty(input)) return new string[0];
         return input.Split(new char[] { separator }, StringSplitOptions.RemoveEmptyEntries);
     }
 
-    public static char[] ToCharArray(string input)
+    public static string Join(string separator, string[] values)
     {
-        return input != null ? input.ToCharArray() : new char[0];
+        if (values == null) return string.Empty;
+        return string.Join(separator, values);
     }
 
-    // 5. String Matching & Search
+    public static char[] ToCharArray(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return new char[0];
+        return input.ToCharArray();
+    }
+
+    // 5. Optimized Matching & Search
     public static bool Contains(string input, string value)
     {
         return input != null && value != null && input.Contains(value);
@@ -101,35 +116,35 @@ public static class PSMemSafeOps
 
     public static int IndexOf(string input, string value)
     {
-        if (input == null || value == null) return -1;
-        return input.IndexOf(value, StringComparison.Ordinal);
+        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(value)) return -1;
+        return input.IndexOf(value);
     }
 
     public static int LastIndexOf(string input, string value)
     {
-        if (input == null || value == null) return -1;
-        return input.LastIndexOf(value, StringComparison.Ordinal);
+        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(value)) return -1;
+        return input.LastIndexOf(value);
     }
 
     // 6. File Operations
     public static string[] ReadFile(string path)
     {
-        if (!File.Exists(path)) return new string[0];
+        if (string.IsNullOrEmpty(path) || !File.Exists(path)) return new string[0];
         return File.ReadAllLines(path, Encoding.UTF8);
     }
 
     public static void WriteFile(string path, string[] lines)
     {
-        if (lines == null || lines.Length == 0) return;
+        if (string.IsNullOrEmpty(path) || lines == null || lines.Length == 0) return;
         File.WriteAllLines(path, lines, Encoding.UTF8);
     }
 
-    // 7. Regex Matching
+    // 7. Optimized Regex Matching
     public static Dictionary<int, string> Match(string input, string pattern)
     {
         if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(pattern)) return null;
 
-        var match = Regex.Match(input, pattern, RegexOptions.Compiled);
+        var match = Regex.Match(input, pattern);
         if (!match.Success) return null;
 
         var matches = new Dictionary<int, string>();
@@ -152,24 +167,5 @@ public static class PSMemSafeOps
             copy.Properties.Add(new PSNoteProperty(prop.Name, prop.Value));
         }
         return copy;
-    }
-
-    // 9. StringBuilder for Efficient String Manipulation
-    public static StringBuilder NewStringBuilder()
-    {
-        return new StringBuilder();
-    }
-
-    public static void AppendToStringBuilder(StringBuilder sb, string value)
-    {
-        if (sb != null && value != null)
-        {
-            sb.Append(value);
-        }
-    }
-
-    public static string GetStringBuilderValue(StringBuilder sb)
-    {
-        return sb != null ? sb.ToString() : "";
     }
 }
