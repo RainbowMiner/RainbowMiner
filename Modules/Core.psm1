@@ -506,8 +506,15 @@ function Start-Core {
                 Write-Host "Re-installing libraries and binaries .."
                 bash -c "./install.sh"
             } else {
-                chmod +x ./IncludesLinux/bash/* > $null
-                chmod +x ./IncludesLinux/bin/* > $null
+                foreach ($Linux_Path in @("bash","bin")) {
+                    $Linux_Path = Join-Path "./IncludesLinux" $Linux_Path
+                    if (Test-Path $Linux_Path) {
+                        $Linux_Path = (Resolve-Path $Linux_Path).Path
+                        (Start-Process "chmod" -ArgumentList "+x",(Join-Path $Linux_Path "*") -PassThru).WaitForExit(1000) > $null
+                    } else {
+                        Write-Log -Level Error "$($Linux_Path) is missing! Please re-install RainbowMiner!"
+                    }
+                }
                 Write-Log -Level Warn "RainbowMiner has updated some linux libraries/binaries. Please run ./install.sh as soon as possible!"
             }
         }
@@ -4946,7 +4953,7 @@ function Invoke-ReportMinerStatus {
             [PSCustomObject]@{
                 Name           = $Miner.BaseName
                 Version        = $Miner.Version
-                Path           = Resolve-Path -Relative $Miner.Path
+                Path           = (Resolve-Path -Relative $Miner.Path).Path
                 Type           = @($Miner.DeviceModel)
                 Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $Miner.GetActiveTime()
                 Algorithm      = @($Miner.BaseAlgorithm)

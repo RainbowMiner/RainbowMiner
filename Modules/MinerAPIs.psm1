@@ -170,7 +170,7 @@ class Miner {
                         if ($Global:IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
                             Get-ChildItem ".\IncludesLinux\bash" -Filter "getports.sh" -File | Foreach-Object {
                                 try {
-                                    & chmod +x "$($_.FullName)" > $null
+                                    (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit() > $null
                                     Invoke-exe $_.FullName -ExpandLines
                                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                             }

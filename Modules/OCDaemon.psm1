@@ -130,7 +130,7 @@ param(
             }
             Set-BashFile -FilePath $FilePath -Cmd $Cmd
             if (Test-Path $FilePath) {
-                (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
+                (Start-Process "chmod" -ArgumentList "+x",$FilePath -PassThru).WaitForExit() > $null
             }
         }
 
@@ -212,7 +212,7 @@ param(
                 }
 
                 if (Test-Path $FilePath) {
-                    (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
+                    (Start-Process "chmod" -ArgumentList "+x",$FilePath -PassThru).WaitForExit() > $null
 
                     if ($CommandTool -eq "tmux") {
                         Invoke-Exe "tmux" -ArgumentList "new-session -d -s $ScreenName" > $null

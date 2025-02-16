@@ -12,7 +12,7 @@ function Initialize-Session {
         } elseif ($IsLinux) {
             try {
                 Get-ChildItem ".\IncludesLinux\bin\libc_version" -File -ErrorAction Stop | Foreach-Object {
-                    & chmod +x "$($_.FullName)" > $null
+                    (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                     $Session.LibCVersion = Get-Version "$(& $_.FullName)"
                 }
             } catch {
@@ -2290,8 +2290,7 @@ function Start-SubProcessInConsole {
         $Executables | Foreach-Object {
             $Exec_Path = Join-Path (Split-Path -Path $FilePath) $_
             if (Test-Path $Exec_Path) {
-                $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $Exec_Path" -PassThru
-                $Chmod_Process.WaitForExit(1000) > $null
+                (Start-Process "chmod" -ArgumentList "+x",$Exec_Path -PassThru).WaitForExit(1000) > $null
             }
         }
     }
@@ -2499,22 +2498,17 @@ function Start-SubProcessInScreen {
 
     if ($Session.Config.EnableDebugMode -and (Test-Path $PIDBash)) {
         Copy-Item -Path $PIDBash -Destination $PIDDebug -ErrorAction Ignore
-        $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru
-        $Chmod_Process.WaitForExit(1000) > $null
+        (Start-Process "chmod" -ArgumentList "+x",$PIDDebug -PassThru).WaitForExit(1000) > $null
     }
 
-    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
-    $Chmod_Process.WaitForExit(1000) > $null
-    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru
-    $Chmod_Process.WaitForExit(1000) > $null
-    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
-    $Chmod_Process.WaitForExit(1000) > $null
+    (Start-Process "chmod" -ArgumentList "+x",$FilePath -PassThru).WaitForExit(1000) > $null
+    (Start-Process "chmod" -ArgumentList "+x",$PIDBash -PassThru).WaitForExit(1000) > $null
+    (Start-Process "chmod" -ArgumentList "+x",$PIDTest -PassThru).WaitForExit(1000) > $null
 
     $Executables | Foreach-Object {
         $Exec_Path = Join-Path (Split-Path -Path $FilePath) $_
         if (Test-Path $Exec_Path) {
-            $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $Exec_Path" -PassThru
-            $Chmod_Process.WaitForExit(1000) > $null
+            (Start-Process "chmod" -ArgumentList "+x",$Exec_Path -PassThru).WaitForExit(1000) > $null
         }
     }
 
@@ -2714,22 +2708,17 @@ function Start-SubProcessInTmux {
 
     if ($Session.Config.EnableDebugMode -and (Test-Path $PIDBash)) {
         Copy-Item -Path $PIDBash -Destination $PIDDebug -ErrorAction Ignore
-        $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDDebug" -PassThru
-        $Chmod_Process.WaitForExit(1000) > $null
+        (Start-Process "chmod" -ArgumentList "+x",$PIDDebug -PassThru).WaitForExit(1000) > $null
     }
 
-    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru
-    $Chmod_Process.WaitForExit(1000) > $null
-    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru
-    $Chmod_Process.WaitForExit(1000) > $null
-    $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru
-    $Chmod_Process.WaitForExit(1000) > $null
+    (Start-Process "chmod" -ArgumentList "+x",$FilePath -PassThru).WaitForExit(1000) > $null
+    (Start-Process "chmod" -ArgumentList "+x",$PIDBash -PassThru).WaitForExit(1000) > $null
+    (Start-Process "chmod" -ArgumentList "+x",$PIDTest -PassThru).WaitForExit(1000) > $null
 
     $Executables | Foreach-Object {
         $Exec_Path = Join-Path (Split-Path -Path $FilePath) $_
         if (Test-Path $Exec_Path) {
-            $Chmod_Process = Start-Process "chmod" -ArgumentList "+x $Exec_Path" -PassThru
-            $Chmod_Process.WaitForExit(1000) > $null
+            (Start-Process "chmod" -ArgumentList "+x",$Exec_Path -PassThru).WaitForExit(1000) > $null
         }
     }
 
@@ -8604,7 +8593,7 @@ function Get-LinuxXAuthority {
     if ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
         Get-ChildItem ".\IncludesLinux\bash" -Filter "getxauth.sh" -File | Foreach-Object {
             try {
-                & chmod +x "$($_.FullName)" > $null
+                (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                 Invoke-exe $_.FullName -ExpandLines | Where-Object {$_ -match "XAUTHORITY=(.+)"} | Foreach-Object {$Matches[1]}
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
@@ -8615,7 +8604,7 @@ function Get-LinuxDisplay {
     if ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
         Get-ChildItem ".\IncludesLinux\bash" -Filter "getdisplay.sh" -File | Foreach-Object {
             try {
-                & chmod +x "$($_.FullName)" > $null
+                (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                 Invoke-exe $_.FullName -ExpandLines | Where-Object {$_ -match "DISPLAY=(.+)"} | Foreach-Object {$Matches[1]}
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
@@ -8796,7 +8785,7 @@ function Initialize-DLLs {
         
     Get-ChildItem -Path $CSFolder -Filter $CSFileName -File | ForEach-Object {
         $CSFile = $_.FullName
-        $DLLFile = "$DLLFolder\$($_.BaseName)_$($PSVersionTable.PSVersion).dll"
+        $DLLFile = Join-Path $DLLFolder "$($_.BaseName)_$($PSVersionTable.PSVersion).dll"
 
         # Check if the DLL needs to be rebuilt
         $NeedsRebuild = $true
@@ -8819,8 +8808,7 @@ function Initialize-DLLs {
                 Add-Type -Path $CSFile -OutputAssembly $DLLFile -ErrorAction Stop
                 Add-Type -Path $DLLFile -ErrorAction Stop
                 if ($IsLinux) {
-                    $Chmod_Process = Start-Process "chmod" -ArgumentList "666 $DLLFile" -PassThru
-                    $Chmod_Process.WaitForExit(1000) > $null
+                    (Start-Process "chmod" -ArgumentList "666",(Resolve-Path $DLLFile).Path -PassThru).WaitForExit(1000) > $null
                 }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -8858,7 +8846,7 @@ function Set-OsFlags {
                 $Global:7zip = $Path_7zz
                 try {
                     Get-ChildItem $Global:7zip -File -ErrorAction Stop | Foreach-Object {
-                        & chmod +x "$($_.FullName)" > $null
+                        (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                     }
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
@@ -9206,7 +9194,7 @@ function Get-SysInfo {
     } elseif ($IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
         Get-ChildItem ".\IncludesLinux\bash" -Filter "sysinfo.sh" -File | Foreach-Object {
             try {
-                & chmod +x "$($_.FullName)" > $null
+                (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                 Invoke-exe $_.FullName -ArgumentList "--cpu --mem --disks" | ConvertFrom-Json -ErrorAction Stop
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
