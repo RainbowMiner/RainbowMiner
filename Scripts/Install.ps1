@@ -30,7 +30,8 @@ if ($IsLinux) {
             Invoke-Exe -FilePath "ln" -ArgumentList "-nfs $(Join-Path $Linux_LibDir $_.Value) $(Join-Path $Linux_LibDir $_.Name)" > $null
         }
     }
-    Remove-Variable "Libs"
+    $Libs = $null
+    Remove-Variable -Name Libs -ErrorAction Ignore
 
     Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
 }

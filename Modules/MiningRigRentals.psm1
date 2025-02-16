@@ -125,7 +125,9 @@ function Update-MiningRigRentalAlgorithmsConfig {
             }
         }
     }
-    if ($AllAlgorithms -ne $null) {Remove-Variable "AllAlgorithms"}
+    
+    $AllAlgorithms = $null
+    Remove-Variable -Name AllAlgorithms -ErrorAction Ignore
 }
 
 function Invoke-MiningRigRentalRequest {

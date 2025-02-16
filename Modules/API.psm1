@@ -99,7 +99,8 @@ Function Stop-APIServer {
     $Global:APIRunspacePool = $null
     $Global:APIHttpListener = $null
 
-    Remove-Variable "API" -Scope Global -Force
+    $Global:API = $null
+    Remove-Variable -Name API -Scope Global -Force -ErrorAction Ignore
 }
 
 function Set-APIConfig {

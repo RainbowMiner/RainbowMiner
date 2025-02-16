@@ -20,7 +20,10 @@ param(
         $OCDcmd | Out-File "$FilePath" -ErrorAction Ignore -Force
         $OCDcmd.Clear()
     }
-    if ($Cmd) {Remove-Variable "OCDcmd"}
+    if ($Cmd) {
+        $OCDCmd = $null
+        Remove-Variable -Name OCDcmd -ErrorAction Ignore
+    }
 }
 
 function Invoke-OCDaemonWithName {
@@ -56,7 +59,10 @@ param(
         Start-Sleep -Seconds 1
         if ($stoptime -lt 30000 -and (Test-Path "/opt/rainbowminer/ocdcmd/$Name.run")) {$stoptime = 30000}
     }
-    Remove-Variable "StopWatch"
+
+    $StopWatch = $null
+    Remove-Variable -Name StopWatch -ErrorAction Ignore
+
     if (Test-Path "/opt/rainbowminer/ocdcmd/$Name.out") {
         if (-not $Quiet) {Get-Content "/opt/rainbowminer/ocdcmd/$Name.out" -Raw}
         Remove-Item "/opt/rainbowminer/ocdcmd/$Name.out" -Force -ErrorAction Ignore

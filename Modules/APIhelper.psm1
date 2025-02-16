@@ -47,59 +47,50 @@ param (
 		}
 
         if($Request.HasEntityBody -and $Request.HttpMethod -in @("POST","PUT")) {
-	        $PostCommand = New-Object IO.StreamReader ($InputStream,$ContentEncoding)
-	        $PostCommand = $PostCommand.ReadToEnd()
-	        $PostCommand = $PostCommand.ToString()
-	
+	        $PostStreamReader = [System.IO.StreamReader]::new($InputStream, $ContentEncoding)
+
+            try {
+	            $PostCommand = $PostStreamReader.ReadToEnd()
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            } finally {
+                $PostStreamReader.Dispose()
+            }
+
 	        if ($PostCommand) {
-		        $PostCommand = $PostCommand -replace('\+'," ")
-		        $PostCommand = $PostCommand -replace("%20"," ")
-		        $PostCommand = $PostCommand -replace("%21","!")
-		        $PostCommand = $PostCommand -replace('%22','"')
-		        $PostCommand = $PostCommand -replace("%23","#")
-		        $PostCommand = $PostCommand -replace("%24","$")
-		        $PostCommand = $PostCommand -replace("%25","%")
-		        $PostCommand = $PostCommand -replace("%27","'")
-		        $PostCommand = $PostCommand -replace("%28","(")
-		        $PostCommand = $PostCommand -replace("%29",")")
-		        $PostCommand = $PostCommand -replace("%2A","*")
-		        $PostCommand = $PostCommand -replace("%2B","+")
-		        $PostCommand = $PostCommand -replace("%2C",",")
-		        $PostCommand = $PostCommand -replace("%2D","-")
-		        $PostCommand = $PostCommand -replace("%2E",".")
-		        $PostCommand = $PostCommand -replace("%2F","/")
-		        $PostCommand = $PostCommand -replace("%3A",":")
-		        $PostCommand = $PostCommand -replace("%3B",";")
-		        $PostCommand = $PostCommand -replace("%3C","<")
-		        $PostCommand = $PostCommand -replace("%3E",">")
-		        $PostCommand = $PostCommand -replace("%3F","?")
-                $PostCommand = $PostCommand -replace("%40","@")
-		        $PostCommand = $PostCommand -replace("%5B","[")
-		        $PostCommand = $PostCommand -replace("%5C","\")
-		        $PostCommand = $PostCommand -replace("%5D","]")
-		        $PostCommand = $PostCommand -replace("%5E","^")
-		        $PostCommand = $PostCommand -replace("%5F","_")
-		        $PostCommand = $PostCommand -replace("%7B","{")
-		        $PostCommand = $PostCommand -replace("%7C","|")
-		        $PostCommand = $PostCommand -replace("%7D","}")
-		        $PostCommand = $PostCommand -replace("%7E","~")
-		        $PostCommand = $PostCommand -replace("%7F","_")
-		        $PostCommand = $PostCommand -replace("%7F%25","%")
-		        $PostCommand = $PostCommand.Split("&")
+                # URL Decode common percent-encoded characters efficiently
+                $decodeMap = @{
+                    '+'  = " "; "%20" = " "; "%21" = "!" ; '%22' = '"'; "%23" = "#"; "%24" = "$"; "%25" = "%"; #"%26" = "&"; later!
+                    "%27" = "'"; "%28" = "("; "%29" = ")"; "%2A" = "*"; "%2B" = "+"; "%2C" = ","; "%2D" = "-"; "%2E" = ".";
+                    "%2F" = "/"; "%3A" = ":"; "%3B" = ";"; "%3C" = "<"; "%3E" = ">"; "%3F" = "?"; "%40" = "@"; #"%3D" = "="; later!
+                    "%5B" = "["; "%5C" = "\"; "%5D" = "]"; "%5E" = "^"; "%5F" = "_"; "%7B" = "{"; "%7C" = "|"; "%7D" = "}";
+                    "%7E" = "~"; "%7F" = "_"; "%7F%25" = "%"
+                }
+
+                # Perform URL decoding in a single pass
+                foreach ($key in $decodeMap.Keys) {
+                    $PostCommand = $PostCommand -replace [regex]::Escape($key), $decodeMap[$key]
+                }
+
+                $decodeMap = $null
+
+                # Split POST Data into key-value pairs
+                $PostCommand = $PostCommand -split "&"
 
 		        foreach ($Post in $PostCommand) {
-			        $PostValue = $Post.Replace("%26","&")
-			        $PostContent = $PostValue.Split("=")
-			        $PostName = $PostContent[0] -replace("%3D","=")
-			        $PostValue = $PostContent[1] -replace("%3D","=")
+			        $PostValue = $Post -replace "%26","&"
+			        $PostContent = $PostValue -split "=", 2
+
+			        $PostName = $PostContent[0] -replace "%3D","="
+			        $PostValue = $PostContent[1] -replace "%3D","="
 
                     if ($PostName -ne "_") {
-			            if ($PostName.EndsWith("[]")) {
-				            $PostName = $PostName.Substring(0,$PostName.Length-2)
+			            if ([PSMemSafeOps]::EndsWithSafe($PostName,"[]")) {
+				            $PostName = [PSMemSafeOps]::SubstringSafe($PostName,0,$PostName.Length-2)
 				            if ($Properties.$Postname -isnot [System.Collections.ArrayList]) {
 					            $Properties | Add-Member $Postname ([System.Collections.ArrayList]@()) -Force
 				            }
-					        $Properties."$PostName".Add($PostValue) > $null
+					        $Properties.$PostName.Add($PostValue) > $null
 			            } else {
 				            $Properties | Add-Member $PostName $PostValue -Force
 			            }

@@ -702,8 +702,9 @@ function Invoke-Core {
                 $Session.Config | Add-Member Scheduler @() -Force
                 $Session.Config | Add-Member Userpools @() -Force
 
-                Remove-Variable "ConfigSetup"
-                Remove-Variable "Parameters"
+                $ConfigSetup = $null
+                $Parameters = $null
+                Remove-Variable -Name ConfigSetup, Parameters -ErrorAction Ignore
 
                 if (-not $Session.Config.WorkerName) {
                     $Session.RunSetup = $true
@@ -1270,7 +1271,9 @@ function Invoke-Core {
                     }
                 }
             }
-            if ($AllAlgorithms -ne $null) {Remove-Variable "AllAlgorithms"}
+
+            $AllAlgorithms = $null
+            Remove-Variable -Name AllAlgorithms -ErrorAction Ignore
         }
     }
 
@@ -1307,7 +1310,8 @@ function Invoke-Core {
                 }
                 $CheckCoins = $true
             }
-            if ($AllCoins -ne $null) {Remove-Variable "AllCoins"}
+            $AllCoins = $null
+            Remove-Variable -Name AllCoins -ErrorAction Ignore
         }
     }
 
@@ -1319,7 +1323,9 @@ function Invoke-Core {
             if (Test-Config "OCProfiles" -Health) {
                 $Session.Config | Add-Member OCProfiles $AllOCProfiles -Force
             }
-            if ($AllOCProfiles -ne $null) {Remove-Variable "AllOCProfiles"}
+
+            $AllOCProfiles = $null
+            Remove-Variable -Name AllOCProfiles -ErrorAction Ignore
         }
     }
 
@@ -1384,7 +1390,9 @@ function Invoke-Core {
                     $Session.Config.Scheduler.Add($_) > $null
                 }
             }
-            if ($AllScheduler -ne $null) {Remove-Variable "AllScheduler"}
+
+            $AllScheduler = $null
+            Remove-Variable -Name AllScheduler -ErrorAction Ignore
         }
     }
 
@@ -1429,7 +1437,9 @@ function Invoke-Core {
                     }
                 }
             }
-            if ($AllDevices -ne $null) {Remove-Variable "AllDevices"}
+
+            $AllDevices = $null
+            Remove-Variable -Name AllDevices -ErrorAction Ignore
         }
     }
 
@@ -1445,7 +1455,8 @@ function Invoke-Core {
                     $CheckGpuGroups = $true
                 }
             }
-            if ($AllGpuGroups -ne $null) {Remove-Variable "AllGpuGroups"}
+            $AllGpuGroups = $null
+            Remove-Variable -Name AllGpuGroups -ErrorAction Ignore
         }
     }
 
@@ -1464,7 +1475,8 @@ function Invoke-Core {
                     $CheckCombos = $true
                 }
             }
-            if ($AllCombos -ne $null) {Remove-Variable "AllCombos"}
+            $AllCombos = $null
+            Remove-Variable -Name AllCombos -ErrorAction Ignore
         }
     }
 
@@ -1497,7 +1509,8 @@ function Invoke-Core {
                 }) -Force
                 $CheckPools = $true
             }
-            if ($UserPoolsConfig -ne $null) {Remove-Variable "UserPoolsConfig"}
+            $UserPoolsConfig = $null
+            Remove-Variable -Name UserPoolsConfig -ErrorAction Ignore
         }
     }
 
@@ -1517,7 +1530,8 @@ function Invoke-Core {
                 $Session.Config | Add-Member Pools $AllPoolsConfig -Force
                 $CheckPools = $true
             }
-            if ($AllPoolsConfig -ne $null) {Remove-Variable "AllPoolsConfig"}
+            $AllPoolsConfig = $null
+            Remove-Variable -Name AllPoolsConfig -ErrorAction Ignore
         }
     }
 
@@ -1926,8 +1940,8 @@ function Invoke-Core {
         Update-DeviceInformation $Global:DeviceCache.DevicesNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
     }
     
-    if ($ConfigBackup -ne $null) {Remove-Variable "ConfigBackup"}
-
+    $ConfigBackup = $null
+    Remove-Variable -Name ConfigBackup -ErrorAction Ignore
 
     if ($IsLinux -and $Global:DeviceCache.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles -and $Session.Config.EnableOCLinuxForcePState -and -not (Get-Process | Where-Object Name -eq "forcePstate") -and (Test-Path ".\IncludesLinux\bin\forcePstate")) {
         Set-OCDaemon "$($Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\IncludesLinux\bin\forcePstate")) &" -OnEmptyAdd $Session.OCDaemonOnEmptyAdd
@@ -1998,7 +2012,8 @@ function Invoke-Core {
                     }
                 }
             }
-            if ($MinersConfig -ne $null) {Remove-Variable "MinersConfig"}
+            $MinersConfig = $null
+            Remove-Variable -Name MinersConfig -ErrorAction Ignore
         }
     }
 
@@ -2109,7 +2124,6 @@ function Invoke-Core {
                         $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
                         Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled
                         $SelectedPoolNames.Add($_) > $null
-                        Remove-Variable "Pool_Parameters"
                     }
                 }
             } else {
@@ -2117,16 +2131,20 @@ function Invoke-Core {
                 $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
                 Get-PoolsContent $_ -Parameters $Pool_Parameters -Disabled $Disabled
                 $SelectedPoolNames.Add($_) > $null
-                Remove-Variable "Pool_Parameters"
             }
+            $Pool_Parameters = $null
+            Remove-Variable -Name Pool_Parameters -ErrorAction Ignore
+
             $TimerPools[$_] = [Math]::Round($StopWatch.Elapsed.TotalSeconds,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
         }
     }
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
-    Remove-Variable "StopWatch"
-    Remove-Variable "TimerPools"
+
+    $StopWatch = $null
+    $TimerPools = $null
+    Remove-Variable -Name StopWatch, TimerPools -ErrorAction Ignore
 
     #Store pools to file
     if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun -and (-not $Session.Updatetracker.PoolsSave -or $Session.Updatetracker.PoolsSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\poolsdata.json"))) {
@@ -2179,7 +2197,8 @@ function Invoke-Core {
     if ($ServerPools -and $ServerPoolNames.Count) {
         $NewPools = @($NewPools) + @($ServerPools)
     }
-    Remove-Variable "SelectedPoolNames"
+    $SelectedPoolNames = $null
+    Remove-Variable -Name SelectedPoolNames -ErrorAction Ignore
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best pools .."}
 
@@ -2259,10 +2278,12 @@ function Invoke-Core {
             )
         )
     })
-    Remove-Variable "Test_Algorithm"
-    Remove-Variable "Test_ExcludeAlgorithm"
-    Remove-Variable "Test_CoinSymbol"
-    Remove-Variable "Test_ExcludeCoinSymbol"
+
+    $Test_Algorithm = $null
+    $Test_ExcludeAlgorithm = $null
+    $Test_CoinSymbol = $null
+    $Test_ExcludeCoinSymbol = $null
+    Remove-Variable -Name Test_Algorithm, Test_ExcludeAlgorithm, Test_CoinSymbol, Test_ExcludeCoinSymbol -ErrorAction Ignore
 
     $AllPools_BeforeWD_Count = $NewPools.Count
 
@@ -2278,7 +2299,8 @@ function Invoke-Core {
         if ($WDRemoveTimers.Count) {
             $Global:WatchdogTimers = @($Global:WatchdogTimers | Where-Object {$_ -notin $WDRemoveTimers})
         }
-        Remove-Variable "WDRemoveTimers"
+        $WDRemoveTimers = $null
+        Remove-Variable -Name WDRemoveTimers -ErrorAction Ignore
     }
 
     #Apply watchdog to pools, only if there is more than one pool selected
@@ -2289,7 +2311,8 @@ function Invoke-Core {
             $Pool.Exclusive -or ($Pool_WatchdogTimers.Count -lt <#stage#>3 -and $Pool_WatchdogTimers.Where({$Pool.Algorithm -contains $_.Algorithm}).Count -lt <#statge#>2)
         })
     }
-    if ($Pool_WatchdogTimers -ne $null) {Remove-Variable "Pool_WatchdogTimers"}
+    $Pool_WatchdogTimers = $null
+    Remove-Variable -Name Pool_WatchdogTimers -ErrorAction Ignore
 
     #Update the active pools
     $Pools = [PSCustomObject]@{}
@@ -2313,7 +2336,9 @@ function Invoke-Core {
             $done = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($done)s) "}
             Write-Log "WhatToMine loaded in $($done)s "
-            Remove-Variable "Pools_WTM"
+
+            $Pools_WTM = $null
+            Remove-Variable -Name Pools_WTM -ErrorAction Ignore
         }
 
         #Decrease compare prices, if out of sync window
@@ -2394,7 +2419,9 @@ function Invoke-Core {
             #    $SortedPools.Where({$_.Algorithm -eq $Algorithm_Name -and -not $_.DisabledDueToCoinSymbolPBM -and -not $_.SSL},'First').ForEach({$Pools | Add-Member $Algorithm_Name $_})
             #}
         }
-        if ($SortedPools -ne $null) {Remove-Variable "SortedPools"}
+        
+        $SortedPools = $null
+        Remove-Variable -Name SortedPools -ErrorAction Ignore
 
         #$NewPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($NewPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {-not $_.PostBlockMining -and (-not $_.CoinSymbol -or $Session.Config.Pools."$($_.Name)".CoinSymbolPBM -inotcontains $_.CoinSymbol)}, {$Pools_PriceCmp["$($_.Name)-$($_.Algorithm0)-$($_.CoinSymbol)"]}, {$_.Region -eq $Session.Config.Region}, {[int](($ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region)) -ge 0)*(100-$ix)}, {$_.SSL -eq $Session.Config.SSL} | Select-Object -First 1)}
         $Pools_OutOfSyncMinutes = 0
@@ -2409,10 +2436,11 @@ function Invoke-Core {
             }
         }
 
-        if ($Pools_Hashrates -ne $null) {Remove-Variable "Pools_Hashrates"}
-        if ($Pools_Running   -ne $null) {Remove-Variable "Pools_Running"}
-        if ($Pools_Benchmarking -ne $null) {Remove-Variable "Pools_Benchmarking"}
-        if ($Pools_PriceCmp  -ne $null) {Remove-Variable "Pools_PriceCmp"}
+        $Pools_Hashrates = $null
+        $Pools_Running   = $null
+        $Pools_Benchmarking = $null
+        $Pools_PriceCmp  = $null
+        Remove-Variable -Name Pools_Hashrates, Pools_Running, Pools_Benchmarking, Pools_PriceCmp -ErrorAction Ignore
 
         $Pools.PSObject.Properties.Name | ForEach-Object {
             $Pool_Price = $Pools.$_.Price
@@ -2510,7 +2538,8 @@ function Invoke-Core {
         $AllMiners = $AllMiners.Where({$MinersNeedSdk -notcontains $_})
         Start-Sleep 2
     }
-    if ($MinersNeedSdk -ne $null) {Remove-Variable "MinersNeedSdk"}
+    $MinersMeedSdk = $null
+    Remove-Variable -Name MinersNeedSdk -ErrorAction Ignore
 
     if ($Session.Config.MiningMode -eq "combo") {
 
@@ -2603,7 +2632,8 @@ function Invoke-Core {
 
     }
 
-    if ($ComboValue -ne $null) {Remove-Variable "ComboValue"}
+    $ComboValue = $null
+    Remove-Variable -Name ComboValue -ErrorAction Ignore
 
     #Handle fastlane benchmarks
     if (-not ($Session.RoundCounter % 50) -and $Session.Config.EnableFastlaneBenchmark) {
@@ -2667,12 +2697,12 @@ function Invoke-Core {
                 Write-Log "Failed to get fastlane benchmark results from api.rbminer.net"
                 if ($Session.RoundCounter -eq 0) {Write-Host "failed" -ForegroundColor Red}
             }
-
-            if ($Response -ne $null) {Remove-Variable "Response"}
-            if ($Request -ne $null)  {Remove-Variable "Request"}
         }
 
-        Remove-Variable "SkipBenchmarksData"
+        $Response = $null
+        $Request = $null
+        $SkipBenchmarksData = $null
+        Remove-Variable -Name Response, Request, SkipBenchmarksData -ErrorAction Ignore
     }
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best miners .."}
@@ -3028,13 +3058,14 @@ function Invoke-Core {
         if (-not $Miner.Penalty) {$Miner.Penalty = 0}
     })
 
-    if ($Miner_CommonCommands_array -ne $null) {Remove-Variable "Miner_CommonCommands_array"}
-    if ($Miner_AlgoNames -ne $null) {Remove-Variable "Miner_AlgoNames"}
-    if ($Miner_Setup -ne $null) {Remove-Variable "Miner_Setup"}
-    if ($Miner_Profits -ne $null) {Remove-Variable "Miner_Profits"}
-    if ($Miner_Profits -ne $null) {Remove-Variable "Miner_Profits_Bias"}
-    if ($Miner_Profits_Unbias -ne $null) {Remove-Variable "Miner_Profits_Unbias"}
-    if ($Miner_Arguments_List -ne $null) {Remove-Variable "Miner_Arguments_List"}
+    $Miner_CommonCommands_array = $null
+    $Miner_AlgoNames = $null
+    $Miner_Setup = $null
+    $Miner_Profits = $null
+    $Miner_Profits_Bias = $null
+    $Miner_Profits_Unbias = $null
+    $Miner_Arguments_List = $null
+    Remove-Variable -Name Miner_CommonCommands_array,Miner_AlgoNames,Miner_Setup,Miner_Profits,Miner_Profits_Bias,Miner_Profits_Unbias,Miner_Arguments_List -ErrorAction Ignore
 
     $Miners_DownloadList    = @()
     $Miners_DownloadListPrq = @()
@@ -3066,9 +3097,12 @@ function Invoke-Core {
     $API.DownloadList      = $Miners_DownloadList + $Miners_DownloadListPrq
     $Miners_Downloading    = $Miners_DownloadList.Count
     $Miners_DownloadingPrq = $Miners_DownloadListPrq.Count
-    if ($AllMiners_VersionCheck -ne $null) {Remove-Variable "AllMiners_VersionCheck"}
-    if ($Miners_DownloadList -ne $null) {Remove-Variable "Miners_DownloadList"}
-    if ($Disabled -ne $null) {Remove-Variable "Disabled"}
+
+    $AllMiners_VersionCheck = $null
+    $Miners_DownloadList = $null
+    $Disabled = $null
+    Remove-Variable -Name AllMiners_VersionCheck, Miners_DownloadList, Disabled -ErrorAction Ignore
+
     #$Global:StatsCache = $null
 
     #Open firewall ports for all miners
@@ -3081,14 +3115,16 @@ function Invoke-Core {
                     if ($OpenFirewallFor -ne "") {
                         Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); ('$OpenFirewallFor' | ConvertFrom-Json -ErrorAction Ignore) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
                         $Global:MinerFirewalls = $null
-                        Remove-Variable "OpenFirewallFor"
+                        $OpenFirewallFor = $null
+                        Remove-Variable -Name OpenFirewallFor -ErrorAction Ignore
                     }
                 }
             }
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
     }
 
-    if ($AllMiners -ne $null) {Remove-Variable "AllMiners"}
+    $AllMiners = $null
+    Remove-Variable -Name AllMiners -ErrorAction Ignore
 
     #Remove miners with developer fee
     if ($Session.Config.ExcludeMinersWithFee) {$Miners = $Miners.Where({($_.DevFee.PSObject.Properties.Value | Foreach-Object {[Double]$_} | Measure-Object -Sum).Sum -eq 0})}
@@ -3146,7 +3182,9 @@ function Invoke-Core {
         $Miner_WatchdogTimers = $Global:WatchdogTimers.Where({$_.MinerName -eq $Miner.Name -and $_.Kicked -lt $WDIntervalTime -and $_.Kicked -gt $WDResetTime})
         $Miner_WatchdogTimers.Count -lt <#stage#>2 -and $Miner_WatchdogTimers.Where({$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm}).Count -lt <#stage#>1 -and ($Session.Config.DisableDualMining -or $Session.Config.EnableDualMiningDuringRentals -or $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or -not $Miner.Pools.PSObject.Properties.Value.Where({$_.Exclusive}).Count)
     })
-    if ($Miner_WatchdogTimers -ne $null) {Remove-Variable "Miner_WatchdogTimers"}
+
+    $Miner_WatchdogTimers = $null
+    Remove-Variable -Name Miner_WatchdogTimers -ErrorAction Ignore
 
     #Give API access to the miners information
     $API.Miners = $Miners
@@ -3387,10 +3425,11 @@ function Invoke-Core {
         }
     })
 
-    if ($Miner -ne $null)        {Remove-Variable "Miner"}
-    if ($ActiveMiner -ne $null)  {Remove-Variable "ActiveMiner"}
-    if ($Miner_DevFee -ne $null) {Remove-Variable "Miner_DevFee"}
-    if ($Miner_Pools -ne $null)  {Remove-Variable "Miner_Pools"}
+    $Miner = $null
+    $ActiveMiner = $null
+    $Miner_DevFee = $null
+    $Miner_Pools = $null
+    Remove-Variable -Name Miner,ActiveMiner,Miner_DevFee,Miner_Pools -ErrorAction Ignore
 
     $ActiveMiners_DeviceNames = @(($Global:ActiveMiners | Where-Object {$_.Enabled}).DeviceName | Select-Object -Unique | Sort-Object)
 
@@ -3438,9 +3477,10 @@ function Invoke-Core {
             }
 
             #Cleanup
-            Remove-Variable "Miners_PBM"
-            Remove-Variable "Miners_PBM_Remove"
-            if ($Miner_PBM  -ne $null) {Remove-Variable "Miner_PBM"}
+            $Miner_PBM = $null
+            $Miners_PBM = $null
+            $Miners_PBM_Remove = $null
+            Remove-Variable -Name Miner_PBM, Miners_PBM, Miners_PBM_Remove -ErrorAction Ignore
         }
         
 
@@ -3454,7 +3494,8 @@ function Invoke-Core {
                 }
             }
         }
-        if ($BestMiner -ne $null) {Remove-Variable "BestMiner"}
+        $BestMiner = $null
+        Remove-Variable -Name BestMiner -ErrorAction Ignore
 
         #Remove no longer profitable miners
         $Check_Profitability = $false
@@ -3513,11 +3554,12 @@ function Invoke-Core {
         }
 
         #Cleanup
-        Remove-Variable "ActiveMiners_Sorted"
-        if ($BestMiners -ne $null) {Remove-Variable "BestMiners"}
-        if ($BestMiners2 -ne $null) {Remove-Variable "BestMiners2"}
-        if ($BestMiners_Combo -ne $null) {Remove-Variable "BestMiners_Combo"}
-        if ($BestMiners_Combo2 -ne $null) {Remove-Variable "BestMiners_Combo2"}
+        $ActiveMiners_Sorted = $null
+        $BestMiners = $null
+        $BestMiners2 = $null
+        $BestMiners_Combo = $null
+        $BestMiners_Combo2 = $null
+        Remove-Variable -Name ActiveMiners_Sorted, BestMiners, BestMiners2, BestMiners_Combo, BestMiners_Combo2 -ErrorAction Ignore
     }
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Starting mining operation .."}
@@ -3580,8 +3622,10 @@ function Invoke-Core {
             @(Get-Process).Where({$_.ProcessName -eq "OhGodAnETHlargementPill-r2" -and -not (Compare-Object $Running_ProcessIds @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual)}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
         }
     }
-    Remove-Variable "Running_ProcessIds"
-    Remove-Variable "Running_MinerPaths"
+
+    $Running_ProcessIds = $null
+    $Running_MinerPaths = $null
+    Remove-Variable -Name Running_ProcessIds, Running_MinerPaths -ErrorAction Ignore
 
     if ($Global:Downloader.HasMoreData) {$Global:Downloader | Receive-Job | Out-Host}
     if ($Global:DownloaderPrq.HasMoreData) {$Global:DownloaderPrq | Receive-Job | Out-Host}
@@ -3654,7 +3698,8 @@ function Invoke-Core {
         }
     })
 
-    if ($Pools -ne $null) {Remove-Variable "Pools"}
+    $Pools = $null
+    Remove-Variable -Name Pools -ErrorAction Ignore
 
     $IsExclusiveRun = $Session.IsExclusiveRun
     $Session.IsExclusiveRun = $Global:ActiveMiners.Where({$_.IsExclusiveMiner -and $_.Status -eq [MinerStatus]::Running}).Count -gt 0
@@ -3824,7 +3869,9 @@ function Invoke-Core {
 
                 [console]::ForegroundColor = $OldForegroundColor
             }
-            if ($MinersNeedingBenchmark -ne $null) {Remove-Variable "MinersNeedingBenchmark"}
+
+            $MinersNeedingBenchmark = $null
+            Remove-Variable -Name MinersNeedingBenchmark -ErrorAction Ignore
         }
         if ($Miners_Downloading -gt 0) {
             Write-Log -Level Warn "Download in progress: $($Miners_Downloading) miner$(if($Miners_Downloading -gt 1){"s"}) left. Command windows might popup during extraction."
@@ -3884,8 +3931,10 @@ function Invoke-Core {
         }
         $BalancesData | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique | Foreach-Object {$Value = $_;$ColumnFormat.Add(@{Name = "$($Value -replace "Value in\s+")"; Expression = [ScriptBlock]::Create("`$(if (`$_.Name -match `"^\*`") {`$ColumnMark -replace `"{value}`",`$_.`"$Value`"} else {`$_.`"$Value`"})"); Align = "right"}) > $null}
         $BalancesData | Format-Table -Wrap -Property $ColumnFormat | Out-Host
-        if ($ColumnFormat -ne $null) {Remove-Variable "ColumnFormat"}
-        if ($BalancesData -ne $null) {Remove-Variable "BalancesData"}
+
+        $ColumnFormat = $null
+        $BalancesData = $null
+        Remove-Variable -Name ColumnFormat, BalancesData -ErrorAction Ignore
     }
 
     #Get worker specific profits without cost
@@ -3923,7 +3972,9 @@ function Invoke-Core {
 
     Write-Host " [$(Get-Date)] Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
-    if ($StatusLine -ne $null) {Remove-Variable "StatusLine"}
+
+    $StatusLine = $null
+    Remove-Variable -Name StatusLine -ErrorAction Ignore
 
     #Check if server is up
     if ($UserConfig.RunMode -eq "Client" -and $UserConfig.ServerName -and $UserConfig.ServerPort) {
@@ -3978,12 +4029,8 @@ function Invoke-Core {
     $Global:AllPools = $NewPools
 
     #Reduce Memory
-    if ($Miner -ne $null)  {Remove-Variable "Miner"}
-    if ($Miner_Table -ne $null) {Remove-Variable "Miner_Table"}
-    if ($Miners -ne $null) {Remove-Variable "Miners"}
-    if ($Pool -ne $null)   {Remove-Variable "Pool"}
-    if ($NewPools -ne $null) {Remove-Variable "NewPools"}
-    if ($ServerPools -ne $null) {Remove-Variable "ServerPools"}
+    $Miner, $Miner_Table, $Miners, $Pool, $NewPools, $ServerPools = $null, $null, $null, $null, $null, $null
+    Remove-Variable -Name Miner, Miner_Table, Miners, Pool, NewPools, ServerPools -ErrorAction Ignore
 
     if ($Error.Count) {
         $Error.Where({$_.Exception.Message}).ForEach({Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Message "$($_.Exception.Message)" -Append -Timestamp})
@@ -4695,7 +4742,8 @@ function Get-Balance {
             $Balance | Add-Member $_ $Earnings.$_ -Force
         }
     }
-    if ($Earnings -ne $null) {Remove-Variable "Earnings"}
+    $Earnings = $null
+    Remove-Variable -Name Earnings -ErrorAction Ignore
     
     $Balances
 }

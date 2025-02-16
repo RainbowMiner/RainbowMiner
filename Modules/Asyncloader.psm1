@@ -59,7 +59,9 @@ function Stop-AsyncLoader {
     }
     $Global:AsyncLoaderListeners.Clear()
 
-    Remove-Variable "AsyncLoader" -Scope Global -Force
+    $Global:AsyncLoader = $null
+
+    Remove-Variable -Name AsyncLoader -Scope Global -Force -ErrorAction Ignore
 }
 
 function Stop-AsyncJob {

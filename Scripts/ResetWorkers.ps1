@@ -11,7 +11,8 @@ if (Test-Path $ConfigFile) {
             } else {
                 $Data = "Failed to send reset signal to api.rbminer.net."
             }
-            if ($Result) {Remove-Variable "Result"}
+            $Result = $null
+            Remove-Variable -Name Result -ErrorAction Ignore
         } else {
             $Data = "No valid MinerStatusKey found in config.txt"
         }

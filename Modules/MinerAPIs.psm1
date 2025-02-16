@@ -866,7 +866,9 @@ class Miner {
                     }
                 }
                 Stop-SubProcess -Job $CmdJob -Title "Miner $($this.Name) ($($CmdInfo))"
-                Remove-Variable "CmdJob"
+
+                $CmdJob = $null
+                Remove-Variable -Name CmdJob -ErrorAction Ignore
             }
         }
 
@@ -1547,7 +1549,9 @@ class Fireice : Miner {
                 }
                 if ($Job) {
                     Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
-                    Remove-Variable "Job"
+
+                    $Job = $null
+                    Remove-Variable -Name Job -ErrorAction Ignore
                 }
             }
 
@@ -3260,7 +3264,9 @@ class Xmrig : Miner {
                 }
                 if ($Job) {
                     Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
-                    Remove-Variable "Job"
+
+                    $Job = $null
+                    Remove-Variable -Name Job -ErrorAction Ignore
                 }
                 if ((Test-Path $ThreadsConfigFile) -and -not ($ThreadsConfig | Measure-Object).Count) {
                     Remove-Item $ThreadsConfigFile -ErrorAction Ignore -Force
@@ -3384,7 +3390,9 @@ class Xmrig3 : Miner {
                 }
                 if ($Job) {
                     Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
-                    Remove-Variable "Job"
+
+                    $Job = $null
+                    Remove-Variable -Name Job -ErrorAction Ignore
                 }
                 if ((Test-Path $ThreadsConfigFile) -and -not ($ThreadsConfig.$Algo | Measure-Object).Count -and -not ($ThreadsConfig.$Algo0 | Measure-Object).Count) {
                     Remove-Item $ThreadsConfigFile -ErrorAction Ignore -Force
@@ -3538,7 +3546,9 @@ class Xmrig6 : Miner {
                 }
                 if ($Job) {
                     Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
-                    Remove-Variable "Job"
+
+                    $Job = $null
+                    Remove-Variable -Name Job -ErrorAction Ignore
                 }
                 if ((Test-Path $ThreadsConfigFile) -and -not ($ThreadsConfig.$Algo | Measure-Object).Count -and -not ($ThreadsConfig.$Algo0 | Measure-Object).Count) {
                     Remove-Item $ThreadsConfigFile -ErrorAction Ignore -Force

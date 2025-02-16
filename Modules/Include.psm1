@@ -1808,9 +1808,7 @@ function Get-PoolsContent {
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
 
         $Content = & {
-                $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
                 & $_.FullName @Parameters
-                $Parameters.Keys | Foreach-Object { Remove-Variable $_ -Force }
         }
 
         foreach($c in @($Content)) {
@@ -1865,7 +1863,7 @@ function Get-PoolsContent {
             if (-not $InfoOnly -and $c.SoloMining -and $c.Difficulty) {
                 $BLKFactor = [double]$DiffFactor / [double]$c.Difficulty
                 foreach ($Model in $Global:DeviceCache.DeviceCombos) {
-                    $d = $c | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+                    $d = [PSMemSafeOps]::CopyObject($c)
                     $d.Algorithm = "$($d.Algorithm0)-$($Model)"
                     $d.Hashrate  = [double]$Global:MinerSpeeds[$d.Algorithm].Hashrate
                     $d.BLK       = $d.Hashrate * $BLKFactor
@@ -1893,9 +1891,7 @@ function Get-MinersContent {
         $Name = $Miner.BaseName
         if ($Parameters.InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($Global:MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
             $Content = & { 
-                    $Parameters.Keys | ForEach-Object { Set-Variable $_ $Parameters.$_ }
                     & $Miner.FullName @Parameters
-                    $Parameters.Keys | ForEach-Object { Remove-Variable $_ -Force }
             }
             foreach($c in @($Content)) {
                 if ($Parameters.InfoOnly) {
@@ -3435,8 +3431,8 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $false)]
         [Switch]$ReadToEnd
     )
-    $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
+    $Response = $Client = $Stream = $tcpStream = $Reader = $Writer = $null
     try {
         if ($Server -match "^http") {
             $Uri = [System.Uri]::New($Server)
@@ -3497,11 +3493,11 @@ function Invoke-TcpRequest {
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "TCP request to $($Server):$($Port) failed: $($_.Exception.Message)"
     }
     finally {
-        if ($Client) {$Client.Close();$Client.Dispose()}
-        if ($Reader) {$Reader.Dispose()}
-        if ($Writer) {$Writer.Dispose()}
-        if ($Stream) {$Stream.Dispose()}
-        if ($tcpStream) {$tcpStream.Dispose()}
+        if ($Reader) {$Reader.Dispose(); $Reader = $null}
+        if ($Writer) {$Writer.Dispose(); $Writer = $null}
+        if ($Stream) {$Stream.Dispose(); $Stream = $null}
+        if ($tcpStream) {$tcpStream.Dispose(); $tcpStream = $null}
+        if ($Client) {$Client.Close(); $Client.Dispose(); $Client = $null}
     }
 
     $Response
@@ -3519,9 +3515,8 @@ function Invoke-TcpRead {
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet
     )
-    $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
-    #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
+    $Response = $Client = $Stream = $Reader = $null
     try {
         $Client = [System.Net.Sockets.TcpClient]::new($Server, $Port)
         $Stream = $Client.GetStream()
@@ -3535,9 +3530,9 @@ function Invoke-TcpRead {
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not read from $($Server):$($Port)"
     }
     finally {
-        if ($Client) {$Client.Close();$Client.Dispose()}
-        if ($Reader) {$Reader.Dispose()}
-        if ($Stream) {$Stream.Dispose()}
+        if ($Reader) {$Reader.Dispose(); $Reader = $null}
+        if ($Stream) {$Stream.Dispose(); $Stream = $null}
+        if ($Client) {$Client.Close(); $Client.Dispose(); $Client = $null}
     }
 
     $Response
@@ -3567,17 +3562,21 @@ function Test-TcpServer {
             }
         }
     }
+
+    $Client = $null
     try {
-        $Client = New-Object system.Net.Sockets.TcpClient -ErrorAction Stop
+        $Client = [System.Net.Sockets.TcpClient]::new()
         $Conn   = $Client.BeginConnect($Server,$Port,$null,$null)
         $Result = $Conn.AsyncWaitHandle.WaitOne($Timeout*1000,$false)
         if ($Result) {$Client.EndConnect($Conn)>$null}
-        $Client.Close()
-        $Client.Dispose()
     } catch {
         if ($Error.Count){if ($Verbose) {Write-Log -Level Warn $Error[0]};$Error.RemoveAt(0)}
         $Result = $false
     }
+    finally {
+        if ($Client) {$Client.Close(); $Client.Dispose(); $Client = $null}
+    }
+
     $Result
 }
 
@@ -3594,9 +3593,6 @@ function Get-MyIP {
 }
 
 function Get-CpuInfo {
-
-    Add-Type -Path .\DotNet\Tools\CPUID.cs
-
     $family = 0
     $model  = 0
     $stepping = 0
@@ -6037,6 +6033,7 @@ function Set-ContentJson {
     )
     $retry = 3
     do {
+        $stream = $null
         try {
             $Exists = $false
             if ([System.IO.File]::Exists($PathToFile)) {
@@ -6047,6 +6044,7 @@ function Set-ContentJson {
                     $stream = [System.IO.File]::Open($PathToFile,'Open','Write')
                     $stream.Close()
                     $stream.Dispose()
+                    $stream = $null
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
@@ -6069,7 +6067,12 @@ function Set-ContentJson {
                 (Get-ChildItem $PathToFile -File).LastWriteTime = Get-Date
             }
             return $true
-        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+        finally {
+            if ($stream) { $stream.Close(); $stream.Dispose(); $stream = $null }
+        }
         $retry--
         Start-Sleep -Seconds 1
     } until ($retry -le 0)
@@ -6658,7 +6661,7 @@ function Set-SchedulerConfigDefault {
         try {
             $Default = Get-ChildItemContent ".\Data\SchedulerConfigDefault.ps1"
             if ($Preset -is [string] -or $Preset -eq $null) {
-                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
+                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=[PSMemSafeOps]::CopyObject($Default);$a.DayOfWeek = "$_";$a})
             }
             $ChangeTag = Get-ContentDataMD5hash($Preset)
 
@@ -6705,7 +6708,7 @@ function Set-UserpoolsConfigDefault {
         try {
             $Default = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
             if ($Preset -is [string] -or $Preset -eq $null) {
-                $Preset = 1..5 | Foreach-Object {$Default | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+                $Preset = 1..5 | Foreach-Object {[PSMemSafeOps]::CopyObject($Default)}
             }
             $ChangeTag = Get-ContentDataMD5hash($Preset)
 
@@ -8335,14 +8338,23 @@ param(
     [String]$s = ""
 )
     if (-not $s) {return ""}
+    $ms = $cs = $sw = $null
     try {
-        $ms = New-Object System.IO.MemoryStream
-        $cs = New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Compress)
-        $sw = New-Object System.IO.StreamWriter($cs)
+        $ms = [System.IO.MemoryStream]::new()
+        $cs = [System.IO.Compression.GZipStream]::new($ms, [System.IO.Compression.CompressionMode]::Compress)
+        $sw = [System.IO.StreamWriter]::new($cs)
         $sw.Write($s)
         $sw.Close()
         [System.Convert]::ToBase64String($ms.ToArray())
-    } catch {if ($Error.Count){$Error.RemoveAt(0)};$s}
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $s
+    }
+    finally {
+        if ($sw) { $sw.Dispose(); $sw = $null }
+        if ($cs) { $cs.Dispose(); $cs = $null }
+        if ($ms) { $ms.Dispose(); $ms = $null }        
+    }
 }
 
 function Get-Unzip {
@@ -8352,6 +8364,7 @@ param(
     [String]$s = ""
 )
     if (-not $s) {return ""}
+    $ms = $sr = $null
     try {
         $data = [System.Convert]::FromBase64String($s)
         $ms = New-Object System.IO.MemoryStream
@@ -8359,8 +8372,15 @@ param(
         $ms.Seek(0,0) | Out-Null
         $sr = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Decompress))
         $sr.ReadToEnd()
-        $sr.Close()
-    } catch {if ($Error.Count){$Error.RemoveAt(0)};$s}
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $s
+    }
+    finally {
+        if ($sr) { $sr.Dispose(); $sr = $null }
+        if ($cs) { $cs.Dispose(); $cs = $null }
+        if ($ms) { $ms.Dispose(); $ms = $null }
+    }
 }
 
 function Get-UrlEncode {
@@ -8764,6 +8784,52 @@ function Test-IsPS7
     $Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))
 }
 
+function Initialize-DLLs {
+    [CmdletBinding()]
+    param (
+        [string]$CSFileName = "*.cs",
+        [string]$CSFolder = ".\DotNet\Tools",
+        [string]$DLLFolder = ".\DotNet\Bin"
+    )
+
+    if (-not (Test-Path $DLLFolder)) {New-Item $DLLFolder -ItemType "directory" -Force > $null}
+        
+    Get-ChildItem -Path $CSFolder -Filter $CSFileName -File | ForEach-Object {
+        $CSFile = $_.FullName
+        $DLLFile = "$DLLFolder\$($_.BaseName)_$($PSVersionTable.PSVersion).dll"
+
+        # Check if the DLL needs to be rebuilt
+        $NeedsRebuild = $true
+        if (Test-Path $DLLFile) {
+            $CSLastWrite = (Get-Item $CSFile).LastWriteTime
+            $DLLLastWrite = (Get-Item $DLLFile).LastWriteTime
+            if ($DLLLastWrite -gt $CSLastWrite) {
+                try {
+                    Add-Type -Path $DLLFile -ErrorAction Stop
+                    $NeedsRebuild = $false
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Cannot load $($DLLFile), will try to rebuild"
+                }
+            }
+        }
+
+        if ($NeedsRebuild) {
+            try {
+                Add-Type -Path $CSFile -OutputAssembly $DLLFile -ErrorAction Stop
+                Add-Type -Path $DLLFile -ErrorAction Stop
+                if ($IsLinux) {
+                    $Chmod_Process = Start-Process "chmod" -ArgumentList "666 $DLLFile" -PassThru
+                    $Chmod_Process.WaitForExit(1000) > $null
+                }
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                Write-Log -Level Error "Error building $($DLLFile): $($_.Exception.Message)"
+            }
+        }
+    }
+}
+
 function Set-OsFlags {
     if ($Global:IsWindows -eq $null) {
         $Global:IsWindows = [System.Environment]::OSVersion.Platform -eq "Win32NT" -or [System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore)
@@ -8814,10 +8880,16 @@ function Set-OsFlags {
     }
 
     if (-not (Test-IsCore)) {
-        Add-Type -Path .\DotNet\Tools\SSL.cs
-
+        Initialize-DLLs -CSFileName "SSL.cs"
         [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName TrustAllCertsPolicy
     }
+
+    if ($IsWindows) {
+        Initialize-DLLs -CSFileName "CPUID.cs"
+        Initialize-DLLs -CSFileName "UserInput.cs"
+    }
+
+    Initialize-DLLs -CSFileName "PSMemSafeOps.cs"
 }
 
 function Get-RandomFileName
@@ -9461,7 +9533,6 @@ function Get-WalletWithPaymentId {
 function Get-LastUserInput {
     try {
         if ($IsWindows) {
-            Add-Type -Path .\DotNet\Tools\UserInput.cs
             [PSCustomObject]@{
                 IdleTime  = [PInvoke.Win32.UserInput]::IdleTime
                 LastInput = [PInvoke.Win32.UserInput]::LastInput
