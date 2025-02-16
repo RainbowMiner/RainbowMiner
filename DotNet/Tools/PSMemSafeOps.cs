@@ -21,22 +21,10 @@ public static class PSMemSafeOps
         return string.Compare(str1, str2, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static int CompareTo(string str1, string str2)
-    {
-        if (str1 == null && str2 == null) return 0;
-        if (str1 == null) return -1;
-        return str1.CompareTo(str2);
-    }
-
     // 2. String Manipulation Methods
-    public static string Concat(params string[] values)
+    public static string Concat(string str1, string str2)
     {
-        return string.Concat(values);
-    }
-
-    public static string Join(string separator, string[] values)
-    {
-        return string.Join(separator, values);
+        return (str1 != null ? str1 : "") + (str2 != null ? str2 : "");
     }
 
     public static string Replace(string input, string oldValue, string newValue)
@@ -54,34 +42,33 @@ public static class PSMemSafeOps
 
     public static string Trim(string input)
     {
-        if (string.IsNullOrEmpty(input)) return input;
-        int start = 0, end = input.Length - 1;
-        while (start <= end && char.IsWhiteSpace(input[start])) start++;
-        while (end >= start && char.IsWhiteSpace(input[end])) end--;
-        return input.Substring(start, end - start + 1);
+        return input != null ? input.Trim() : "";
     }
 
     public static string TrimStart(string input)
     {
-        if (input == null) return string.Empty;
-        return input.TrimStart();
+        return input != null ? input.TrimStart() : "";
     }
 
     public static string TrimEnd(string input)
     {
-        if (input == null) return string.Empty;
-        return input.TrimEnd();
+        return input != null ? input.TrimEnd() : "";
+    }
+
+    public static string ToLower(string input)
+    {
+        return input != null ? input.ToLowerInvariant() : "";
+    }
+
+    public static string ToUpper(string input)
+    {
+        return input != null ? input.ToUpperInvariant() : "";
     }
 
     // 3. String Formatting & Interpolation
     public static string Format(string format, params object[] args)
     {
         return string.Format(format, args);
-    }
-
-    public static string Interpolate(string template, params object[] args)
-    {
-        return string.Format(template, args);
     }
 
     // 4. String Splitting & Joining
@@ -93,7 +80,7 @@ public static class PSMemSafeOps
 
     public static char[] ToCharArray(string input)
     {
-        return string.IsNullOrEmpty(input) ? new char[0] : input.ToCharArray();
+        return input != null ? input.ToCharArray() : new char[0];
     }
 
     // 5. String Matching & Search
@@ -165,5 +152,24 @@ public static class PSMemSafeOps
             copy.Properties.Add(new PSNoteProperty(prop.Name, prop.Value));
         }
         return copy;
+    }
+
+    // 9. StringBuilder for Efficient String Manipulation
+    public static StringBuilder NewStringBuilder()
+    {
+        return new StringBuilder();
+    }
+
+    public static void AppendToStringBuilder(StringBuilder sb, string value)
+    {
+        if (sb != null && value != null)
+        {
+            sb.Append(value);
+        }
+    }
+
+    public static string GetStringBuilderValue(StringBuilder sb)
+    {
+        return sb != null ? sb.ToString() : "";
     }
 }
