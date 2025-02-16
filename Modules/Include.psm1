@@ -8805,6 +8805,9 @@ function Initialize-DLLs {
 
         if ($NeedsRebuild) {
             try {
+                if (Test-Path $DLLFile) {
+                    Remove-Item $DLLFile -Force
+                }
                 Add-Type -Path $CSFile -OutputAssembly $DLLFile -ErrorAction Stop
                 Add-Type -Path $DLLFile -ErrorAction Stop
                 if ($IsLinux) {
