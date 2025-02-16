@@ -654,7 +654,7 @@ function Invoke-Core {
     }
 
     #Load the config    
-    $ConfigBackup = if ($Session.Config -is [object]){$Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json -ErrorAction Ignore}else{$null}
+    $ConfigBackup = if ($Session.Config -is [object]){[PSMemSafeOps]::CopyObject($Session.Config)}else{$null}
     $CheckConfig = $true
     $CheckPools = $false
     $CheckGpuGroups = $false
@@ -1760,7 +1760,7 @@ function Invoke-Core {
     }
 
     if (-not $Session.IsDonationRun -and $Session.UserConfig) {
-        $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+        $Session.Config = $Session.UserConfig
         $Session.UserConfig = $null
         $API.UserConfig = $null
         $Global:AllPools = $null
@@ -1775,8 +1775,10 @@ function Invoke-Core {
             if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
             if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = Get-Unzip 'H4sIAAAAAAAEAL2U227iMBCG3yXXvSBOCIW7QAJogTYUKD2oWk0SJwR8SB0HEqq++9p01S2RKq22q955PJ6Zb36P/WIEgocQZiSTtdEzW60LYw2EYFkYvRcDzTKGxWnpL8dro2e0qjg2zRh7dssyu0MzslHi2JZlDoeh2UmcTtezrL5tdbuGysTFDgsVRfNKmR5IWGcs5ge1hQuZUZD4Z1QKgZlU/gAzIBpDQSwWU6OXACnw64UxxoL/IZm4CxW/gyKH3rNw0mdna1cbhBxSo6i47FTssqaIltVhAwTaUWrtUJrQBO3THesi59hOd0dJreQ/Es64ouPXEQamEe9mNyqBba+852PShtEDtGVWoH76wzpOR5uZlHy+DUpz2J6at/JhxNxw0gd+uXEwuzPjLuZ5O7fHbrDao2pmw3S+va870dj0TZcNF2uaXq3n/4APRXHgIlbeqtGNX0WkjLFLUi4yuaHqyKCMdiA4R93CaLR7lUV4DMVG99pfDtRhK0hWq6W53LGkju0Fuxf+4ZCvfHfuH9cx6pfe19QOCMiEC821R8o3gyqjJZ2BSDN2nfhCcJ241SRV461BM5Zq1gbAqjgZIqQ6TIJ091hAitUyJFh5PKgbHK4/OPFFyjSmqvVGvQcs0oBz8kEZr7rxl3mf302E359XwxCNi4COHMirMZ3QVfUFZUz0Sf0Bz1jxjRC63qKmoe7c+EyUBSf8G5k+DjPt0CaVhxMoifwa0NkI/T2dc8ai51TJo+7r8f3LPfv13l7cRr+45hWf/z1nA/90JsHj0/srP2W9Aop1wZHI2IiT+LSpEmg7+F35VJht4SZLtXoHyN+2n15/AWQQEz05BgAA' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
-            $API.UserConfig = $Session.Config | ConvertTo-Json -Depth 10
-            $Session.UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
+            $Session.UserConfig = $Session.Config
+            $Session.Config = $null
+            $Session.Config = [PSMemSafeOps]::CopyObject($Session.UserConfig)
+            $API.UserConfig = $Session.UserConfig | ConvertTo-Json -Depth 10
             $Session.IsDonationRun = $true
             $Session.AvailPools | ForEach-Object {
                 $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
