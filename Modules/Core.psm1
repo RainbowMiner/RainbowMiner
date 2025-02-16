@@ -509,8 +509,9 @@ function Start-Core {
                 foreach ($Linux_Path in @("bash","bin")) {
                     $Linux_Path = Join-Path "./IncludesLinux" $Linux_Path
                     if (Test-Path $Linux_Path) {
-                        $Linux_Path = (Resolve-Path $Linux_Path).Path
-                        (Start-Process "chmod" -ArgumentList "+x",(Join-Path $Linux_Path "*") -PassThru).WaitForExit(1000) > $null
+                        Get-ChildItem $Linux_Path -Filter "*" -File | Foreach-Object {
+                            (Start-Process "chmod" -ArgumentList "+x", $_.FullName -PassThru).WaitForExit(1000) > $null
+                        }
                     } else {
                         Write-Log -Level Error "$($Linux_Path) is missing! Please re-install RainbowMiner!"
                     }
