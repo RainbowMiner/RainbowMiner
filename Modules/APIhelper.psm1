@@ -55,6 +55,7 @@ param (
                 if ($Error.Count){$Error.RemoveAt(0)}
             } finally {
                 $PostStreamReader.Dispose()
+                $PostStreamReader = $null
             }
 
 	        if ($PostCommand) {

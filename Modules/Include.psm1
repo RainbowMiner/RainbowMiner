@@ -1863,7 +1863,7 @@ function Get-PoolsContent {
             if (-not $InfoOnly -and $c.SoloMining -and $c.Difficulty) {
                 $BLKFactor = [double]$DiffFactor / [double]$c.Difficulty
                 foreach ($Model in $Global:DeviceCache.DeviceCombos) {
-                    $d = [RBMToolBox]::DeepCopy($c)
+                    $d = $c | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore
                     $d.Algorithm = "$($d.Algorithm0)-$($Model)"
                     $d.Hashrate  = [double]$Global:MinerSpeeds[$d.Algorithm].Hashrate
                     $d.BLK       = $d.Hashrate * $BLKFactor
@@ -6650,7 +6650,7 @@ function Set-SchedulerConfigDefault {
         try {
             $Default = Get-ChildItemContent ".\Data\SchedulerConfigDefault.ps1"
             if ($Preset -is [string] -or $Preset -eq $null) {
-                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=[RBMToolBox]::CopyObject($Default);$a.DayOfWeek = "$_";$a})
+                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
             }
             $ChangeTag = Get-ContentDataMD5hash($Preset)
 
@@ -6697,7 +6697,7 @@ function Set-UserpoolsConfigDefault {
         try {
             $Default = Get-ChildItemContent ".\Data\UserpoolsConfigDefault.ps1"
             if ($Preset -is [string] -or $Preset -eq $null) {
-                $Preset = 1..5 | Foreach-Object {[RBMToolBox]::CopyObject($Default)}
+                $Preset = 1..5 | Foreach-Object {$Default | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore}
             }
             $ChangeTag = Get-ContentDataMD5hash($Preset)
 
