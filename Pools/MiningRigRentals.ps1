@@ -781,7 +781,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $RigsToUpdate = @()
     $RigGroupsAdd = @()
     $RigGroupsRemove = @()
-    $RigMinProfit = 0.00001
+    $RigMinProfit = 0.000001
     $RigServer = $null
     $RigCurrentRentals = @{}
     $UniqueRigs_Request = @()
@@ -1164,7 +1164,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
        
                                     if ($IsHandleRig -or (($RigRevenue -lt $RigMaxRevenueFactor*$RigDeviceRevenue24h) -and ($RigRevenue -ge $RigProfitBTCLimit -or $RigMinPrice -lt $SuggestedPrice))) {
 
-                                        #if ($RigType -eq "CPU") {Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid), $($Algorithm_Norm): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"}
+                                        #if ($RigType -eq "CPU" -and $Algorithm_Norm -match "RandomXDAG") {Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid), $($Algorithm_Norm): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"}
 
                                         $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
 
@@ -1192,7 +1192,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         $RigMinHours = if ($RigMinPrice -eq 0 -or -not $MRRConfig.$RigName.EnableAutoAdjustMinHours -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -ge $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Min($MRRConfig.$RigName.MaxMinHours,[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply)))}
                                         $RigMaxHours = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
 
-                                        #if ($RigType -eq "CPU") {Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours), MaxHours=$($RigMaxHours), MaxProfit=$($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24), Create=$((($RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) -and ($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24 -ge $RigMinProfit)))"}
+                                        #if ($RigType -eq "CPU" -and $Algorithm_Norm -match "RandomXDAG") {Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours), MaxHours=$($RigMaxHours), MaxProfit=$($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24), Create=$((($RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) -and ($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24 -ge $RigMinProfit)))"}
 
                                         if ($IsHandleRig -or (($RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) -and ($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24 -ge $RigMinProfit))) {
 
