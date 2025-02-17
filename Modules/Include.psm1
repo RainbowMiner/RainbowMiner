@@ -86,12 +86,12 @@ function Get-LinuxDistroInfo {
         # 3. Try /etc/debian_version (specific to Debian)
         elseif (Test-Path "/etc/debian_version") {
             $distroName = "Debian"
-            $distroVersion = Get-Content "/etc/debian_version" | Out-String
+            $distroVersion = Get-Content "/etc/debian_version" -Raw
         }
 
         # 4. Try /etc/redhat-release (specific to Red Hat-based systems)
         elseif (Test-Path "/etc/redhat-release") {
-            $content = Get-Content "/etc/redhat-release" | Out-String
+            $content = Get-Content "/etc/redhat-release" -Raw
             if ($content -match "(.+)\srelease\s([\d\.]+)") {
                 $distroName = $matches[1].Trim()
                 $distroVersion = $matches[2].Trim()
@@ -100,7 +100,7 @@ function Get-LinuxDistroInfo {
 
         # 5. Fallback to /etc/issue if others are not available
         elseif (Test-Path "/etc/issue") {
-            $content = Get-Content "/etc/issue" | Out-String
+            $content = Get-Content "/etc/issue" -Raw
             if ($content -match "(.+)\s([\d\.]+)") {
                 $distroName = $matches[1].Trim()
                 $distroVersion = $matches[2].Trim()
@@ -8783,6 +8783,8 @@ function Initialize-DLLs {
 
     if (-not (Test-Path $DLLFolder)) {New-Item $DLLFolder -ItemType "directory" -Force > $null}
         
+    $IsNetCore3Plus = $PSVersionTable.PSVersion.Major -ge 7 -and ($IsLinux -or $IsMacOS -or $IsCoreCLR) -and [System.Environment]::Version.Major -ge 3
+
     Get-ChildItem -Path $CSFolder -Filter $CSFileName -File | ForEach-Object {
         $CSFile = $_.FullName
         $DLLFile = Join-Path $DLLFolder "$($_.BaseName)_$($PSVersionTable.PSVersion).dll"
@@ -8808,7 +8810,14 @@ function Initialize-DLLs {
                 if (Test-Path $DLLFile) {
                     Remove-Item $DLLFile -Force
                 }
-                Add-Type -Path $CSFile -OutputAssembly $DLLFile -ErrorAction Stop
+                if ($IsNetCore3Plus) {
+                    $CSCode = Get-Content $CSFile -Raw
+                    $CSCode = "#define NETCOREAPP3_0_OR_GREATER`n" + $CSCode
+                    Add-Type -TypeDefinition $CSCode -OutputAssembly $DLLFile -Language CSharp -ErrorAction Stop
+                    $CSCode = $null
+                } else {
+                    Add-Type -Path $CSFile -OutputAssembly $DLLFile -ErrorAction Stop
+                }
                 Add-Type -Path $DLLFile -ErrorAction Stop
                 if ($IsLinux) {
                     (Start-Process "chmod" -ArgumentList "666",(Resolve-Path $DLLFile).Path -PassThru).WaitForExit(1000) > $null
