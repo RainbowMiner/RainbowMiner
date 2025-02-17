@@ -655,7 +655,7 @@ function Invoke-Core {
     }
 
     #Load the config    
-    $ConfigBackup = if ($Session.Config -is [object]){[PSMemSafeOps]::CopyObject($Session.Config)}else{$null}
+    $ConfigBackup = if ($Session.Config -is [object]){[RBMToolBox]::DeepCopy($Session.Config)}else{$null}
     $CheckConfig = $true
     $CheckPools = $false
     $CheckGpuGroups = $false
@@ -1778,7 +1778,7 @@ function Invoke-Core {
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $Session.UserConfig = $Session.Config
             $Session.Config = $null
-            $Session.Config = [PSMemSafeOps]::CopyObject($Session.UserConfig)
+            $Session.Config = [RBMToolBox]::DeepCopy($Session.UserConfig)
             $API.UserConfig = $Session.UserConfig | ConvertTo-Json -Depth 10
             $Session.IsDonationRun = $true
             $Session.AvailPools | ForEach-Object {

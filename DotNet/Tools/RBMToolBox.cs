@@ -1,11 +1,13 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Reflection;
 
-public static class PSMemSafeOps
+public static class RBMToolBox
 {
 
     public static bool IsNetcoreApp()
@@ -209,7 +211,7 @@ public static class PSMemSafeOps
     }
 
     // 6. File Operations
-    public static object ReadFile(string filePath, bool expandLines, bool throwError)
+    public static object ReadFile(string filePath, bool expandLines = false, bool throwError = false)
     {
 #if NETCOREAPP3_0_OR_GREATER
         try
@@ -306,5 +308,124 @@ public static class PSMemSafeOps
             copy.Properties.Add(new PSNoteProperty(prop.Name, prop.Value));
         }
         return copy;
+    }
+
+    public static PSObject DeepCopy(PSObject inputObject, bool throwError = false)
+    {
+        if (inputObject == null)
+            return null;
+
+        try
+        {
+            if (inputObject.BaseObject is Hashtable)
+            {
+                return new PSObject(DeepCopyHashtable((Hashtable)inputObject.BaseObject));
+            }
+            else if (inputObject.BaseObject is Array)
+            {
+                return new PSObject(DeepCopyArray((Array)inputObject.BaseObject));
+            }
+
+            return DeepCopyUsingReflection(inputObject);
+        }
+        catch (Exception ex)
+        {
+            if (throwError)
+                throw new Exception("Warning: DeepCopy failed " + ex.Message, ex);
+            return null;
+        }
+    }
+
+    private static object DeepCopyGetValue(object value)
+    {
+        if (value == null)
+            return null;
+
+        if (value is string)
+            return value;
+
+        // Recursively deep copy values
+        if (value is PSObject)
+        {
+            value = DeepCopy((PSObject)value);
+        }
+        else if (value is Hashtable)
+        {
+            value = DeepCopyHashtable((Hashtable)value);
+        }
+        else if (value is Array)
+        {
+            value = DeepCopyArray((Array)value);
+        }
+        else if (value.GetType().IsClass)
+        {
+            value = CloneClass(value);
+        }
+        return value;
+    }
+
+    private static Hashtable DeepCopyHashtable(Hashtable original)
+    {
+        Hashtable copy = new Hashtable();
+        foreach (DictionaryEntry entry in original)
+        {
+            object key = entry.Key;
+            copy[key] = DeepCopyGetValue(entry.Value);
+        }
+        return copy;
+    }
+
+    private static Array DeepCopyArray(Array original)
+    {
+        if (original == null)
+            return null;
+
+        Type elementType = original.GetType().GetElementType();
+        int length = original.Length;
+        Array copy = Array.CreateInstance(elementType, length);
+
+        for (int i = 0; i < length; i++)
+        {
+            copy.SetValue(DeepCopyGetValue(original.GetValue(i)), i);
+        }
+
+        return copy;
+    }
+
+    private static PSObject DeepCopyUsingReflection(PSObject inputObject)
+    {
+        PSObject copy = new PSObject();
+        foreach (var property in inputObject.Properties)
+        {
+            copy.Properties.Add(new PSNoteProperty(property.Name, DeepCopyGetValue(property.Value)));
+        }
+
+        return copy;
+    }
+
+    private static object CloneClass(object obj)
+    {
+        Type type = obj.GetType();
+        ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
+
+        if (constructor == null)
+        {
+            return obj; // Skip objects without parameterless constructor
+        }
+
+        object clonedObj = Activator.CreateInstance(type);
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (property.CanRead && property.CanWrite)
+            {
+                object value = property.GetValue(obj);
+                if (value != null && value.GetType().IsClass)
+                {
+                    value = CloneClass(value);
+                }
+                property.SetValue(clonedObj, value);
+            }
+        }
+        return clonedObj;
     }
 }
