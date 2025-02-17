@@ -85,8 +85,8 @@ param (
 			        $PostValue = $PostContent[1] -replace "%3D","="
 
                     if ($PostName -ne "_") {
-			            if ([PSMemSafeOps]::EndsWithSafe($PostName,"[]")) {
-				            $PostName = [PSMemSafeOps]::SubstringSafe($PostName,0,$PostName.Length-2)
+			            if ([PSMemSafeOps]::EndsWith($PostName,"[]")) {
+				            $PostName = [PSMemSafeOps]::Substring($PostName,0,$PostName.Length-2)
 				            if ($Properties.$Postname -isnot [System.Collections.ArrayList]) {
 					            $Properties | Add-Member $Postname ([System.Collections.ArrayList]@()) -Force
 				            }
