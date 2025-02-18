@@ -222,15 +222,15 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/pools" {
-            $Data = if ($API.Pools) {ConvertTo-Json $API.Pools -Depth 10} else {"[]"}
+            $Data = if ($API.Pools) {$API.Pools} else {"[]"}
             Break
         }
         "/allpools" {
-            $Data = if ($API.AllPools) {ConvertTo-Json $API.AllPools -Depth 10} else {"[]"}
+            $Data = if ($API.AllPools) {$API.AllPools} else {"[]"}
             Break
         }
         "/newpools" {
-            $Data = if ($API.NewPools) {ConvertTo-Json $API.NewPools -Depth 10} else {"[]"}
+            $Data = if ($API.NewPools) {$API.NewPools} else {"[]"}
             Break
         }
         "/algorithms" {
@@ -238,11 +238,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/miners" {
-            $Data = if ($API.Miners) {ConvertTo-Json $API.Miners -Depth 10} else {"[]"}
+            $Data = if ($API.Miners) {$API.Miners} else {"[]"}
             Break
         }
         "/fastestminers" {
-            $Data = if ($API.FastestMiners) {ConvertTo-Json $API.FastestMiners -Depth 10} else {"[]"}
+            $Data = if ($API.FastestMiners) {$API.FastestMiners} else {"[]"}
             Break
         }
         "/availminers" {
@@ -267,9 +267,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Foreach-Object {if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo}} | Select-Object)
             $WTMdata_result = [hashtable]@{}
             if ($API.Rates) {$LocalRates = ConvertFrom-Json $API.Rates}
-            $API.FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
-                $Group = $_.Group
-                $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = @(if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo});if (($One = $Group | Where-Object {$_.BaseAlgorithm -in $Algo} | Select-Object -First 1) -and (($OneHR = if ($One.HashRates."$($One.BaseAlgorithm)") {$One.HashRates."$($One.BaseAlgorithm)"} elseif ($One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)") {$One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)"} else {$One.HashRates."$($One.BaseAlgorithm)-GPU"}) -gt 0)) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($OneHR/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
+            if ($API.FastestMiners) {
+                $API_FastestMiners = $API.FastestMiners | ConvertFrom-Json -ErrorAction Ignore
+                $API_FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
+                    $Group = $_.Group
+                    $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = @(if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo});if (($One = $Group | Where-Object {$_.BaseAlgorithm -in $Algo} | Select-Object -First 1) -and (($OneHR = if ($One.HashRates."$($One.BaseAlgorithm)") {$One.HashRates."$($One.BaseAlgorithm)"} elseif ($One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)") {$One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)"} else {$One.HashRates."$($One.BaseAlgorithm)-GPU"}) -gt 0)) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($OneHR/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
+                }
             }
             $Data = ConvertTo-Json $WTMdata_result -Depth 10
 
@@ -375,7 +378,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $PoolSetup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
                         if ($Parameters.PoolName) {
                             if ($Parameters.PoolName -in @("ls","list")) {
-                                $RealConfig = if ($Session.UserConfig) {ConvertFrom-Json $Session.UserConfig} else {$Session.Config}
+                                $RealConfig = if ($Session.UserConfig) {$Session.UserConfig} else {$Session.Config}
                                 $Data = ConvertTo-Json @($ConfigActual.PSObject.Properties.Name | Foreach-Object {"$($_)$(if ($_ -in $RealConfig.PoolName) {"*"})"} | Sort-Object -Unique)
                             } else {
                                 $Data = ConvertTo-Json ([PSCustomObject]@{
@@ -619,7 +622,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/userconfig" {
-            $Data = if ($API.UserConfig) {$API.UserConfig} else {ConvertTo-Json $Session.Config -Depth 10}
+            $Data = if ($Session.UserConfig) {ConvertTo-Json $Session.UserConfig -Depth 10} else {ConvertTo-Json $Session.Config -Depth 10}
             Break
         }
         "/ocprofiles" {
@@ -647,7 +650,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $DebugDate     = Get-Date -Format "yyyy-MM-dd"
             $DebugPath     = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
             $PurgeStrings  = @()
-            $UserConfig    = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
+            $UserConfig    = if ($Session.UserConfig) {$Session.UserConfig | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} else {$null}
             $RunningConfig = $Session.Config | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             @($RunningConfig,$UserConfig) | Where-Object {$_} | Foreach-Object {
                 $CurrentConfig = $_
@@ -701,7 +704,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 Out-File -InputObject $PurgeString -FilePath $NewFile
             }
 
-            if ($API.UserConfig) {
+            if ($Session.UserConfig) {
                 $NewFile = "$DebugPath\userconfig.json"
                 $PurgeString = $UserConfig | ConvertTo-Json -Depth 10
                 $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
@@ -795,19 +798,24 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             "="*80 | Out-File $TestFileName -Append -Encoding utf8
             " " | Out-File $TestFileName -Append -Encoding utf8
 
-            $API.Miners | Where-Object {$_.ListDevices -ne $null} | Select-Object -Unique -Property BaseName,Path,ListDevices,ListPlatforms | Sort-Object -Property BaseName | Where-Object {Test-Path $_.Path} | Foreach-Object {
-                try {
-                    " " | Out-File $TestFileName -Append -Encoding utf8
-                    "[$($_.BaseName)]" | Out-File $TestFileName -Append -Encoding utf8
-                    "-"*80 | Out-File $TestFileName -Append -Encoding utf8
-                    " " | Out-File $TestFileName -Append -Encoding utf8
-                    if ($_.ListPlatforms) {
-                        Invoke-Exe $_.Path -ArgumentList $_.ListPlatforms -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
+            if ($API.Miners) {
+                $API_Miners = $API.Miners | ConvertFrom-Json -ErrorAction Ignore
+                $API_Miners | ConvertFrom | Where-Object {$_.ListDevices -ne $null} | Select-Object -Unique -Property BaseName,Path,ListDevices,ListPlatforms | Sort-Object -Property BaseName | Where-Object {Test-Path $_.Path} | Foreach-Object {
+                    try {
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        "[$($_.BaseName)]" | Out-File $TestFileName -Append -Encoding utf8
+                        "-"*80 | Out-File $TestFileName -Append -Encoding utf8
+                        " " | Out-File $TestFileName -Append -Encoding utf8
+                        if ($_.ListPlatforms) {
+                            Invoke-Exe $_.Path -ArgumentList $_.ListPlatforms -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
+                        }
+                        Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
+                    } catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
                     }
-                    Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
                 }
+                $API_Miners = $null
+                Remove-Variable -Name API_Miners -ErrorAction Ignore
             }
 
             @(".\Data\lscpu.txt", ".\Data\gpu-count.txt", ".\Data\gpu-minerlist.txt", ".\Data\gpu-test.txt", ".\Data\alldevices.json", ".\Data\sysinfo.json") | Where-Object {Test-Path $_} | Foreach-Object {
@@ -1123,49 +1131,55 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             [hashtable]$Miners_List = @{}
             [System.Collections.ArrayList]$Out = @()
                     
-            $API.Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Foreach-Object {
-                if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
-                    $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
-                    $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTimeUtc} else {$null}
-                }
-                [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
-                [String]$SecondAlgo = ''
-                $Speed = @($_.HashRates.$Algo)
-                $Ratio = @($_.Ratios.$Algo)
-                if (($_.HashRates.PSObject.Properties.Name | Measure-Object).Count -gt 1) {
-                    $SecondAlgo = $_.HashRates.PSObject.Properties.Name | Select -Index 1
-                    $Speed += $_.HashRates.$SecondAlgo
-                    $Ratio += $_.Ratios.$SecondAlgo
-                }
+            if ($API.Miners) {
+                $API_Miners = $API.Miners | ConvertFrom-Json -ErrorAction Ignore
+
+                $API_Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Foreach-Object {
+                    if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
+                        $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
+                        $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTimeUtc} else {$null}
+                    }
+                    [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
+                    [String]$SecondAlgo = ''
+                    $Speed = @($_.HashRates.$Algo)
+                    $Ratio = @($_.Ratios.$Algo)
+                    if (($_.HashRates.PSObject.Properties.Name | Measure-Object).Count -gt 1) {
+                        $SecondAlgo = $_.HashRates.PSObject.Properties.Name | Select -Index 1
+                        $Speed += $_.HashRates.$SecondAlgo
+                        $Ratio += $_.Ratios.$SecondAlgo
+                    }
                         
-                $Miners_Key = "$($_.Name)_$($Algo -replace '\-.*$')"
-                if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
-                    $Miners_List[$Miners_Key] = $true
-                    $Miner_Path = Get-ChildItem "Stats\Miners\*-$($Miners_Key)_HashRate.txt" -ErrorAction Ignore
-                    $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
-                    $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTimeUtc -lt $JsonUri_Dates[$_.BaseName]
-                    $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -and $_.DeviceModel -match "-") {$API.DevicesToVendors."$($_.DeviceModel)"} else {$_.DeviceModel}
-                    if ($Miner_DeviceModel -notmatch "-" -or $Miner_Path) {
-                        $Out.Add([PSCustomObject]@{
-                            BaseName = $_.BaseName
-                            Name = $_.Name
-                            Algorithm = $Algo
-                            SecondaryAlgorithm = $SecondAlgo
-                            Speed = $Speed
-                            Ratio = $Ratio
-                            PowerDraw = $_.PowerDraw
-                            Devices     = $Miner_DeviceModel
-                            DeviceModel = $_.DeviceModel
-                            MSIAprofile = $_.MSIAprofile
-                            OCprofile   = $_.OCprofile
-                            Benchmarking = -not $Miner_Path
-                            NeedsBenchmark = $Miner_NeedsBenchmark
-                            BenchmarkFailed = $Miner_Failed
-                            Benchmarked = if ($_.Benchmarked) {$_.Benchmarked.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")} else {$null}
-                            LogFile     = "$(if ($_.LogFile -and (Test-Path (Join-Path ".\Logs" $_.LogFile))) {$_.LogFile})"
-                        })>$null
+                    $Miners_Key = "$($_.Name)_$($Algo -replace '\-.*$')"
+                    if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
+                        $Miners_List[$Miners_Key] = $true
+                        $Miner_Path = Get-ChildItem "Stats\Miners\*-$($Miners_Key)_HashRate.txt" -ErrorAction Ignore
+                        $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
+                        $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTimeUtc -lt $JsonUri_Dates[$_.BaseName]
+                        $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -and $_.DeviceModel -match "-") {$API.DevicesToVendors."$($_.DeviceModel)"} else {$_.DeviceModel}
+                        if ($Miner_DeviceModel -notmatch "-" -or $Miner_Path) {
+                            $Out.Add([PSCustomObject]@{
+                                BaseName = $_.BaseName
+                                Name = $_.Name
+                                Algorithm = $Algo
+                                SecondaryAlgorithm = $SecondAlgo
+                                Speed = $Speed
+                                Ratio = $Ratio
+                                PowerDraw = $_.PowerDraw
+                                Devices     = $Miner_DeviceModel
+                                DeviceModel = $_.DeviceModel
+                                MSIAprofile = $_.MSIAprofile
+                                OCprofile   = $_.OCprofile
+                                Benchmarking = -not $Miner_Path
+                                NeedsBenchmark = $Miner_NeedsBenchmark
+                                BenchmarkFailed = $Miner_Failed
+                                Benchmarked = if ($_.Benchmarked) {$_.Benchmarked.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")} else {$null}
+                                LogFile     = "$(if ($_.LogFile -and (Test-Path (Join-Path ".\Logs" $_.LogFile))) {$_.LogFile})"
+                            })>$null
+                        }
                     }
                 }
+                $API_Miners = $null
+                Remove-Variable -Name API_Miners -ErrorAction Ignore
             }
             $Data = ConvertTo-Json @($Out) -Depth 10
             $Out.Clear()
@@ -1359,7 +1373,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/clients" {
-            $Config = if ($API.UserConfig) {ConvertFrom-Json $API.UserConfig} else {$Session.Config}
+            $Config = if ($Session.UserConfig) {$Session.UserConfig} else {$Session.Config}
             if ($Parameters.include_server -eq "true" -and $Config.RunMode -eq "Server") {
                 $Data = @($APIClients) + @([PSCustomObject]@{workername = $Config.Workername; machinename = $Session.MachineName; machineip = $Session.MyIP; port = $Config.APIPort; timestamp = Get-UnixTimestamp; isserver=$true}) | ConvertTo-Json
             } else {

@@ -112,8 +112,6 @@ function Start-Core {
 
         $Global:PauseMiners = [PauseMiners]::new()
 
-        $Global:AllPools = $null
-
         #Setup session variables
         [hashtable]$Session.ConfigFiles = @{
             Config        = @{Path='';LastWriteTime=0;Healthy=$false}
@@ -168,7 +166,6 @@ function Start-Core {
         $Session.ReportUnclean = $false
         $Session.TimeDiff = 0
         $Session.PhysicalCPUs = 0
-        $Session.UserConfig = $null
         $Session.LastDonated = $null
         $Session.CUDAversion = $false
         $Session.DotNETRuntimeVersion = $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}})
@@ -697,7 +694,7 @@ function Invoke-Core {
                     $val = $Session.DefaultValues[$_]
                     if ($ConfigSetup.$_ -ne $null) {$val = $ConfigSetup.$_}
                     if ($val -is [array]) {$val = $val -join ','}
-                    $Parameters.Add($_ , $val)
+                    $Parameters.Add($_ , $val) > $null
                 }
                 $Session.Config = Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $Parameters
                 $Session.Config | Add-Member Pools ([PSCustomObject]@{}) -Force
@@ -1692,45 +1689,58 @@ function Invoke-Core {
     }
 
     #load server pools
-    [System.Collections.Generic.List[string]]$ServerPoolNames = @()
-    $ServerPools       = $null
     $ServerDonationRun = $false
+    $ServerPoolNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     if (-not $Session.IsDonationRun -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerPools) {
         $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 2
         if ($ServerConnected) {
+
             try {
                 $Request = Invoke-RestMethodAsync "server://allpools" -cycletime 120 -Timeout 20
-                $Pool_WorkerNames = [hashtable]@{}
-                $ServerPools = $Request | Where-Object {$_.Name -and $_.Algorithm -and $_.Name -ne "MiningRigRentals"} | Foreach-Object {
-                    if (-not $ServerDonationRun) {
-                        if (-not $Pool_WorkerNames.ContainsKey($_.Name)) {
-                            if ("$($_.Worker)$($_.User)$($_.Pass)" -match "{workername:mpx}") {$ServerDonationRun = $true}
-                            else {
-                                $Pool_WorkerNames[$_.Name] = "{workername:$(if ($Session.Config.Pools."$($_.Name)".Worker) {$Session.Config.Pools."$($_.Name)".Worker} else {$Session.Config.WorkerName})}"
+                $Pool_WorkerNames = @{}
+    
+                $ServerPools = [System.Collections.Generic.List[object]]::new()
+    
+                foreach ($Pool in $Request) {
+                    if ($Pool.Name -and $Pool.Algorithm -and $Pool.Name -ne "MiningRigRentals") {
+
+                        if (-not $ServerDonationRun) {
+                            if (-not $Pool_WorkerNames.ContainsKey($Pool.Name)) {
+                                if ("$($Pool.Worker)$($Pool.User)$($Pool.Pass)" -match "{workername:mpx}") {
+                                    $ServerDonationRun = $true
+                                } else {
+                                    $Pool_WorkerNames[$Pool.Name] = "{workername:$(if ($Session.Config.Pools."$($Pool.Name)".Worker) {$Session.Config.Pools."$($Pool.Name)".Worker} else {$Session.Config.WorkerName})}"
+                                }
+                            }
+                            $Pool_Worker = $Pool.Worker = $Pool_WorkerNames[$Pool.Name]
+                            $Pool.User = $Pool.User -replace "{workername:.+}",$Pool_Worker
+                            $Pool.Pass = $Pool.Pass -replace "{workername:.+}",$Pool_Worker
+                            if ($Pool.Failover) {
+                                foreach ($Failover in $Pool.Failover) {
+                                    $Failover.User = $Failover.User -replace "{workername:.+}",$Pool_Worker
+                                    $Failover.Pass = $Failover.Pass -replace "{workername:.+}",$Pool_Worker
+                                }
                             }
                         }
-                        $Pool_Worker = $_.Worker = $Pool_WorkerNames[$_.Name]
-                        $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
-                        $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
-                        if ($_.Failover) {
-                            $_.Failover | Foreach-Object {
-                                $_.User = $_.User -replace "{workername:.+}",$Pool_Worker
-                                $_.Pass = $_.Pass -replace "{workername:.+}",$Pool_Worker
-                            }
-                        }
+                        $Pool.Updated = [DateTime]$Pool.Updated
+                        $ServerPools.Add($Pool) > $null
                     }
-                    $_.Updated = [DateTime]$_.Updated
-                    $_
                 }
-                $ServerPools.Name | Select-Object -Unique | Foreach-Object {
-                    $ServerPoolNames.Add($_) > $null
+
+                foreach ($Pool in $ServerPools) {
+                    $ServerPoolNames.Add($Pool.Name) > $null
                 }
+
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                $ServerPools = $null
-                $ServerPoolNames.Clear()
+                if ($Error.Count) { $Error.RemoveAt(0) }
+
                 $ServerDonationRun = $false
+
+                if ($ServerPools) { $ServerPools.Clear() }
+                if ($ServerPoolNames) { $ServerPoolNames.Clear() }
+                $ServerPools = $null
+                Remove-Variable -Name ServerPools
             }
         }
     }
@@ -1763,8 +1773,9 @@ function Invoke-Core {
     if (-not $Session.IsDonationRun -and $Session.UserConfig) {
         $Session.Config = $Session.UserConfig
         $Session.UserConfig = $null
-        $API.UserConfig = $null
+        $Session.Remove("UserConfig")
         $Global:AllPools = $null
+        Remove-Variable -Name AllPools -Scope Global
         $Global:WatchdogTimers = @()
         Update-WatchdogLevels -Reset
         Write-Log "Donation run finished. "
@@ -1778,8 +1789,8 @@ function Invoke-Core {
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $Session.UserConfig = $Session.Config
             $Session.Config = $null
-            $API.UserConfig = $Session.UserConfig | ConvertTo-Json -Depth 10
-            $Session.Config = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
+            $Session.Remove("Config")
+            $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore
             $Session.IsDonationRun = $true
             $Session.AvailPools | ForEach-Object {
                 $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
@@ -1849,6 +1860,7 @@ function Invoke-Core {
             }
 
             $Global:AllPools = $null
+            Remove-Variable -Name AllPools -Scope Global
         }
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($Session.LastDonated.AddHours($DonateDelayHours) - ($Session.Timer.AddMinutes($DonateMinutes))))
@@ -1860,6 +1872,7 @@ function Invoke-Core {
     if ($Global:AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {
         Write-Log "Resetting AllPools data store"
         $Global:AllPools = $null
+        Remove-Variable -Name AllPools -Scope Global
     }
 
     #load device(s) information and device combos
@@ -2118,42 +2131,65 @@ function Invoke-Core {
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Loading pool modules .."}
 
-    [System.Collections.Generic.List[string]]$SelectedPoolNames = @()
-    $NewPools = @()
+    $SelectedPoolNames = [System.Collections.Generic.List[string]]::new()
+    $NewPools          = [System.Collections.Generic.List[object]]::new()
+    $StopWatch         = [System.Diagnostics.StopWatch]::New()
+
     $TimerPools = @{}
-    $StopWatch = [System.Diagnostics.StopWatch]::New()
 
     if (Test-Path "Pools") {
-        $NewPools = $Session.AvailPools + "Userpools" | Where-Object {-not $ServerPools -or $_ -eq "MiningRigRentals"} | Where-Object {($Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)) -or ($_ -eq "Userpools" -and $Session.Config.Userpools)} | Foreach-Object {
-            if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
-            $StopWatch.Restart()
-            if ($_ -eq "Userpools") {
-                $Session.Config.Userpools | Where-Object {$_.Name} | Foreach-Object {$_.Name} | Select-Object -Unique | Sort-Object | Foreach-Object {
-                    if (-not $SelectedPoolNames.Contains($_) -and -not $ServerPoolNames.Contains($_)) {
-                        $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false; Name = $_}
-                        $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
-                        Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled
-                        $SelectedPoolNames.Add($_) > $null
-                    }
-                }
-            } else {
-                $Pool_Parameters = @{StatSpan = $RoundSpan; InfoOnly = $false}
-                $Session.Config.Pools.$_.PSObject.Properties | Foreach-Object {$Pool_Parameters[$_.Name] = $_.Value}
-                Get-PoolsContent $_ -Parameters $Pool_Parameters -Disabled $Disabled
-                $SelectedPoolNames.Add($_) > $null
-            }
-            $Pool_Parameters = $null
-            Remove-Variable -Name Pool_Parameters -ErrorAction Ignore
+        $AvailablePools = $Session.AvailPools + "Userpools"
 
-            $TimerPools[$_] = [Math]::Round($StopWatch.Elapsed.TotalSeconds,3)
-            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
-            Write-Log "$($_) loaded in $($TimerPools[$_])s "
+        foreach ($Pool in $AvailablePools) {
+            if (-not $ServerPools -or $Pool -eq "MiningRigRentals") {
+                if (
+                    ($Session.Config.Pools.$Pool -and 
+                    ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $Pool) -and 
+                    ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $Pool)) -or
+                    ($Pool -eq "Userpools" -and $Session.Config.Userpools)
+                ) {
+                    if ($Session.RoundCounter -eq 0) { Write-Host ".. loading $Pool " -NoNewline }
+                    $StopWatch.Restart()
+
+                    if ($Pool -eq "Userpools") {
+                        foreach ($UserPool in $Session.Config.Userpools) {
+                            if ($UserPool.Name -and -not $SelectedPoolNames.Contains($UserPool.Name) -and -not $ServerPoolNames.Contains($UserPool.Name)) {
+                                $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false; Name = $UserPool.Name }
+                                foreach ($Property in $Session.Config.Pools.$UserPool.Name.PSObject.Properties) {
+                                    $Pool_Parameters[$Property.Name] = $Property.Value
+                                }
+                                $Result = Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled
+                                if ($Result) { 
+                                    if ($Result -is [array]) { $NewPools.AddRange($Result) }
+                                    else { $NewPools.Add($Result) > $null }
+                                }
+                                $SelectedPoolNames.Add($UserPool.Name) > $null
+                            }
+                        }
+                    } else {
+                        $Pool_Parameters = @{ StatSpan = $RoundSpan; InfoOnly = $false }
+                        foreach ($Property in $Session.Config.Pools.$Pool.PSObject.Properties) {
+                            $Pool_Parameters[$Property.Name] = $Property.Value
+                        }
+                        $Result = Get-PoolsContent $Pool -Parameters $Pool_Parameters -Disabled $Disabled
+                        if ($Result) {
+                            if ($Result -is [array]) { $NewPools.AddRange($Result) }
+                            else { $NewPools.Add($Result) > $null }
+                        }
+                        $SelectedPoolNames.Add($Pool) > $null
+                    }
+
+                    $TimerPools[$Pool] = [Math]::Round($StopWatch.Elapsed.TotalSeconds, 3)
+                    if ($Session.RoundCounter -eq 0) { Write-Host "done ($($TimerPools[$Pool])s) " }
+                    Write-Log "$Pool loaded in $($TimerPools[$Pool])s "
+                }
+            }
         }
     }
+
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
 
-    $StopWatch = $null
-    $TimerPools = $null
+    $StopWatch = $TimerPools = $null
     Remove-Variable -Name StopWatch, TimerPools -ErrorAction Ignore
 
     #Store pools to file
@@ -2205,7 +2241,7 @@ function Invoke-Core {
     }
 
     if ($ServerPools -and $ServerPoolNames.Count) {
-        $NewPools = @($NewPools) + @($ServerPools)
+        $NewPools.AddRange($ServerPools)
     }
     $SelectedPoolNames = $null
     Remove-Variable -Name SelectedPoolNames -ErrorAction Ignore
@@ -2216,36 +2252,58 @@ function Invoke-Core {
 
     #This finds any pools that were already in $Global:AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
-    $Test_Algorithm = @($Session.Config.Algorithm | Select-Object)
-    $Test_ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | Select-Object)
-    $Test_CoinSymbol = @($Session.Config.CoinSymbol | Select-Object)
-    $Test_ExcludeCoinSymbol = @($Session.Config.ExcludeCoinSymbol | Select-Object)
-    $Test_PoolName = @($Session.Config.PoolName | Select-Object)
-    $Test_ExcludePoolName = @($Session.Config.ExcludePoolName | Select-Object)
+
+    $Test_Algorithm = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Test_ExcludeAlgorithm = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Test_Coin = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Test_CoinSymbol = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Test_ExcludeCoinSymbol = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Test_PoolName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Test_ExcludePoolName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+    $Test_Algorithm.UnionWith([string[]]@($Session.Config.Algorithm))
+    $Test_ExcludeAlgorithm.UnionWith([string[]]@($Session.Config.ExcludeAlgorithm))
+    $Test_CoinSymbol.UnionWith([string[]]@($Session.Config.CoinSymbol))
+    $Test_ExcludeCoinSymbol.UnionWith([string[]]@($Session.Config.ExcludeCoinSymbol))
+    $Test_PoolName.UnionWith([string[]]@($Session.Config.PoolName))
+    $Test_ExcludePoolName.UnionWith([string[]]@($Session.Config.ExcludePoolName))
 
     if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun -and $Scheduler) {
-        if ($Scheduler.Algorithm.Count) {$Test_Algorithm = @($Test_Algorithm + $Scheduler.Algorithm | Select-Object -Unique)}
-        if ($Scheduler.ExcludeAlgorithm.Count) {$Test_ExcludeAlgorithm = @($Test_ExcludeAlgorithm + $Scheduler.ExcludeAlgorithm | Select-Object -Unique)}
-        if ($Scheduler.CoinSymbol.Count) {$Test_CoinSymbol = @($Test_CoinSymbol + $Scheduler.CoinSymbol | Select-Object -Unique)}
-        if ($Scheduler.ExcludeCoinSymbol.Count) {$Test_ExcludeCoinSymbol = @($Test_ExcludeCoinSymbol + $Scheduler.ExcludeCoinSymbol | Select-Object -Unique)}
-        if ($Scheduler.PoolName.Count) {$Test_PoolName = @($Test_PoolName + $Scheduler.PoolName | Select-Object -Unique)}
-        if ($Scheduler.ExcludePoolName.Count) {$Test_ExcludePoolName = @($Test_ExcludePoolName + $Scheduler.ExcludePoolName | Select-Object -Unique)}
+        if ($Scheduler.Algorithm.Count) { $Test_Algorithm.UnionWith([string[]]@($Scheduler.Algorithm)) }
+        if ($Scheduler.ExcludeAlgorithm.Count) { $Test_ExcludeAlgorithm.UnionWith([string[]]@($Scheduler.ExcludeAlgorithm)) }
+        if ($Scheduler.CoinSymbol.Count) { $Test_CoinSymbol.UnionWith([string[]]@($Scheduler.CoinSymbol)) }
+        if ($Scheduler.ExcludeCoinSymbol.Count) { $Test_ExcludeCoinSymbol.UnionWith([string[]]@($Scheduler.ExcludeCoinSymbol)) }
+        if ($Scheduler.PoolName.Count) { $Test_PoolName.UnionWith([string[]]@($Scheduler.PoolName)) }
+        if ($Scheduler.ExcludePoolName.Count) { $Test_ExcludePoolName.UnionWith([string[]]@($Scheduler.ExcludePoolName)) }
     }
 
-    if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object {$_.SideIndicator -EQ "=>" -and $_.InputObject -ne "MiningRigRentals"} | Select-Object -ExpandProperty InputObject) {
-        Write-Log "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
-        $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
+    if ($Global:AllPools.Count) {
+        if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object {$_.SideIndicator -EQ "=>" -and $_.InputObject -ne "MiningRigRentals"} | Select-Object -ExpandProperty InputObject) {
+            Write-Log "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
+            $ReaddPools = $Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name}
+            if ( $ReaddPools ) {
+                if ($ReaddPools -is [array]) {
+                    $NewPools.AddRange($ReaddPools)
+                } else {
+                    $NewPools.Add($ReaddPools) > $null
+                }
+            }
+            $ReaddPools = $null
+            Remove-Variable -Name ReaddPools -ErrorAction Ignore
+        }
     }
-
+    
     $Global:AllPools = $null #will be set to NewPools later
+    Remove-Variable -Name AllPools -Scope Global
 
     if ($Session.Config.EnableDebugMode) {
-        $API.NewPools = $NewPools
+        $API.NewPools = $NewPools | ConvertTo-Json -Depth 10
     }
 
     $NewPools = $NewPools.Where({
         $Pool_Name = $_.Name
         $Pool_Algo = $_.Algorithm0
+
         $Pool_CheckForUnprofitableAlgo = -not $Session.Config.DisableUnprofitableAlgolist -and -not ($_.Exclusive -and -not $_.Idle)
         if ($_.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($_.CoinSymbol)")}
         (
@@ -2254,23 +2312,22 @@ function Invoke-Core {
         (
             ($ServerPoolNames.Count -and $ServerPoolNames.Contains($Pool_Name)) -or (
                 -not ( (-not $Session.Config.Pools.$Pool_Name) -or
-                    ($Test_PoolName.Count -and $Test_PoolName -inotcontains $Pool_Name) -or
-                    ($Test_ExcludePoolName.Count -and $Test_ExcludePoolName -icontains $Pool_Name) -or
+                    ($Test_PoolName.Count -and -not $Test_PoolName.Contains($Pool_Name)) -or
+                    ($Test_ExcludePoolName.Count -and $Test_ExcludePoolName.Contains($Pool_Name)) -or
                     ($Test_Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                     ($Test_ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                     ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                     ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                    ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Coins -and $UnprofitableAlgos.Coins.Count -and $UnprofitableAlgos.Coins -icontains $_.CoinSymbol) -or
-                    ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -and $UnprofitableAlgos.Pools.$Pool_Name.Coins.Count -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -icontains $_.CoinSymbol) -or
-                    ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and $Session.Config.ExcludeCoin -icontains $_.CoinName) -or
-                    ($Test_CoinSymbol.Count -and $_.CoinSymbol -and $Test_CoinSymbol -inotcontains $_.CoinSymbol) -or
-                    ($Test_ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Test_ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
+                    ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Coins -and $UnprofitableAlgos.Coins.Count -and $UnprofitableAlgos.Coins -contains $_.CoinSymbol) -or
+                    ($Pool_CheckForUnprofitableAlgo -and $_.CoinSymbol -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -and $UnprofitableAlgos.Pools.$Pool_Name.Coins.Count -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -contains $_.CoinSymbol) -or
+                    ($Test_CoinSymbol.Count -and $_.CoinSymbol -and $Test_CoinSymbol -notcontains  $_.CoinSymbol) -or
+                    ($Test_ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Test_ExcludeCoinSymbol.Contains($_.CoinSymbol)) -or
                     ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object $Session.Config.Pools.$Pool_Name.Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                     ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object $Session.Config.Pools.$Pool_Name.ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                    ($_.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and $Session.Config.Pools.$Pool_Name.CoinName -inotcontains $_.CoinName) -or
-                    ($_.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoin -icontains $_.CoinName) -or
-                    ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.CoinSymbol -inotcontains $_.CoinSymbol) -or
-                    ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol -icontains $_.CoinSymbol)
+                    ($_.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and $Session.Config.Pools.$Pool_Name.CoinName -notcontains  $_.CoinName) -or
+                    ($_.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoin -contains  $_.CoinName) -or
+                    ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.CoinSymbol -notcontains  $_.CoinSymbol) -or
+                    ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol -contains  $_.CoinSymbol)
                 ) -and (
                     ($_.Exclusive -and -not $_.Idle) -or -not (
                         ($_.Idle) -or
@@ -2297,7 +2354,7 @@ function Invoke-Core {
 
     $AllPools_BeforeWD_Count = $NewPools.Count
 
-    $API.AllPools   = $NewPools
+    $API.AllPools   = $NewPools | ConvertTo-Json -Depth 10
     $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
 
     #Setup and reset Watchdog
@@ -2315,10 +2372,31 @@ function Invoke-Core {
 
     #Apply watchdog to pools, only if there is more than one pool selected
     if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
-        $NewPools = $NewPools.Where({-not $_.Disabled}).Where({
+
+        $PoolsToRemove = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+        foreach ($WDTimer in $Global:WatchdogTimers) {
+            if ($WDTimer.Kicked -lt $WDIntervalTime -and $WDTimer.Kicked -gt $WDResetTime) {
+                if (-not $PoolsToRemove.Contains($WDTimer.PoolName)) {
+                    $PoolsToRemove.Add($WDTimer.PoolName) > $null
+                }
+            }
+        }
+
+        $NewPools = $NewPools.Where({
             $Pool = $_
-            $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({($_.PoolName -eq $Pool.Name) -and ($_.Kicked -lt $WDIntervalTime) -and ($_.Kicked -gt $WDResetTime)})
-            $Pool.Exclusive -or ($Pool_WatchdogTimers.Count -lt <#stage#>3 -and $Pool_WatchdogTimers.Where({$Pool.Algorithm -contains $_.Algorithm}).Count -lt <#statge#>2)
+            if ($Pool.Disabled) { return $false }
+
+            if ($PoolsToRemove.Contains($Pool.Name)) {
+                if ($Pool.Exclusive) { return $true }
+
+                $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({
+                    ($_.PoolName -eq $Pool.Name) -and ($_.Kicked -lt $WDIntervalTime) -and ($_.Kicked -gt $WDResetTime)
+                })
+
+                return $Pool_WatchdogTimers.Count -lt 3 -and $Pool_WatchdogTimers.Where({ $Pool.Algorithm -contains $_.Algorithm }).Count -lt 2
+            }
+            return $true
         })
     }
     $Pool_WatchdogTimers = $null
@@ -2329,7 +2407,7 @@ function Invoke-Core {
     
     if ($NewPools.Count -gt 0) {
 
-        $Pools_WTM = $NewPools | Where-Object {$_.WTM}
+        $Pools_WTM = $NewPools.Where({$_.WTM})
         if (($Pools_WTM | Measure-Object).Count) {
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading WhatToMine " -NoNewline}
             $start = Get-UnixTimestamp -Milliseconds
@@ -2353,7 +2431,12 @@ function Invoke-Core {
 
         #Decrease compare prices, if out of sync window
         # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
-        $OutOfSyncTimer    = ($NewPools | Select-Object -ExpandProperty Updated | Measure-Object -Maximum).Maximum
+        $OutOfSyncTimer = $null
+        foreach ($Pool in $NewPools) {
+            if ($null -eq $OutOfSyncTimer -or $Pool.Updated -gt $OutOfSyncTimer) {
+                $OutOfSyncTimer = $Pool.Updated
+            }
+        }
         $OutOfSyncTime     = $OutOfSyncTimer.AddMinutes(-$Session.OutofsyncWindow)
         $OutOfSyncDivisor  = [Math]::Log($Session.OutofsyncWindow-$Session.SyncWindow) #precalc for sync decay method
         $OutOfSyncLimit    = 1/($Session.OutofsyncWindow-$Session.SyncWindow)
@@ -2475,7 +2558,7 @@ function Invoke-Core {
     }
 
     #Give API access to the pools information
-    $API.Pools = @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK})
+    $API.Pools = ConvertTo-Json @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK}) -Depth 10
  
     #Load information about the miners
     Write-Log -Level Info "Getting miner information. "
@@ -2487,10 +2570,9 @@ function Invoke-Core {
 
     $Miner_DontCheckForUnprofitableCpuAlgos = -not $Global:DeviceCache.DevicesByTypes.CPU -or $Session.Config.DisableUnprofitableCpuAlgolist -or $Session.Conifg.EnableNeverprofitableAlgos
 
-    $AllMiner_Warnings = @()
-    $AllMiners = @(if (($NewPools | Measure-Object).Count -gt 0 -and (Test-Path "Miners")) {
-
-        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} |
+    $AllMiners = $null
+    if ($NewPools.Count -and (Test-Path "Miners")) {
+        $AllMiners = Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} |
             Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Global:DeviceCache.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
             Where-Object {$Miner_DontCheckForUnprofitableCpuAlgos -or ($_.DeviceModel -ne "CPU") -or ($_.BaseAlgorithm -notin $UnprofitableCpuAlgos)} |
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
@@ -2538,8 +2620,13 @@ function Invoke-Core {
                 }
                 $MinerOk
             }
+    }
 
-    })
+    if (-not $AllMiners) {
+        $AllMiners = @()
+    } elseif ($AllMiners -isnot [array] -and $AllMiners -is [object]) {
+        $AllMiners = @($AllMiners)
+    }
 
     #Check if .NET Core Runtime is installed
     $MinersNeedSdk = $AllMiners.Where({$_.DotNetRuntime -and (Compare-Version $_.DotNetRuntime $Session.Config.DotNETRuntimeVersion) -gt 0})
@@ -2913,7 +3000,7 @@ function Invoke-Core {
         
         if ($AllMiners_VersionCheck[$Miner.BaseName].MVC -and -not $AllMiners_VersionCheck[$Miner.BaseName].Algos.ContainsKey($Miner.DeviceModel)) {
 
-            $Miner_CheckAlgos = @($AllMiners_VersionCheck[$Miner.BaseName].MVC | Foreach-Object {
+            $Miner_CheckAlgos = $AllMiners_VersionCheck[$Miner.BaseName].MVC | Foreach-Object {
                 $Miner_CheckAlgo = $_.Algorithm
                 if ($_.Driver) {
                     $_.Driver | Foreach-Object {
@@ -2927,7 +3014,7 @@ function Invoke-Core {
                     }
                 }
                 $Miner_CheckAlgo
-            } | Select-Object -Unique)
+            } | Select-Object -Unique
                                 
             $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] = if ($Miner_CheckAlgos -notcontains '*') {$Miner_CheckAlgos} else {$null}
 
@@ -3197,7 +3284,7 @@ function Invoke-Core {
     Remove-Variable -Name Miner_WatchdogTimers -ErrorAction Ignore
 
     #Give API access to the miners information
-    $API.Miners = $Miners
+    $API.Miners = $Miners | ConvertTo-Json -Depth 10
 
     #Remove all failed and disabled miners
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
@@ -3264,7 +3351,7 @@ function Invoke-Core {
     }
  
     #Give API access to the fasted miners information
-    $API.FastestMiners = $Miners
+    $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners.Where({$_.HashRates.PSObject.Properties.Value -contains $null})
@@ -4039,8 +4126,9 @@ function Invoke-Core {
     $Global:AllPools = $NewPools
 
     #Reduce Memory
-    $Miner, $Miner_Table, $Miners, $Pool, $NewPools, $ServerPools = $null, $null, $null, $null, $null, $null
-    Remove-Variable -Name Miner, Miner_Table, Miners, Pool, NewPools, ServerPools -ErrorAction Ignore
+    if ($ServerPools) { $ServerPools.Clear() }
+    $Miner = $Miner_Table = $Miners = $Pool = $UserPool = $Pool_Parameters = $AvailablePools = $Result = $NewPools = $ServerPools = $null
+    Remove-Variable -Name Miner, Miner_Table, Miners, Pool, UserPool, Pool_Parameters, AvailablePools, Result, NewPools, ServerPools -ErrorAction Ignore
 
     if ($Error.Count) {
         $Error.Where({$_.Exception.Message}).ForEach({Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Message "$($_.Exception.Message)" -Append -Timestamp})
