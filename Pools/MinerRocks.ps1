@@ -62,7 +62,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
             if ($Pool_Request.config.fee) {$Pool_Fee = [double]$Pool_Request.config.fee}
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }

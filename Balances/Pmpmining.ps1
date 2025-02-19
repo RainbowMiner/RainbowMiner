@@ -12,7 +12,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools" -tag $Name -cycletime 120 -timeout 30
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Info "Pool API ($Name) has failed. "
     return
 }
@@ -46,7 +46,7 @@ $Pool_Request.pools | Where-Object {$Pool_Name = "$($Name)$(if ($_.paymentProces
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
     }
 }

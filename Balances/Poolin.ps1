@@ -24,7 +24,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name."API_$($_.symbol)_PUID" -and $Co
                 try {
                     (Invoke-RestMethodAsync "https://api-prod.poolin.me/api/public/v2/payment/payout-history?puid=$($Config.Pools.$Name."API_$($_.symbol)_PUID")&coin_type=$($_.symbol.ToLower())" -tag $Name -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint -headers @{authorization="Bearer $($Config.Pools.$Name."API_$($_.symbol)_ReadToken")"}).data
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
             }
 			$Divisor = [Decimal]1e9
@@ -43,7 +43,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name."API_$($_.symbol)_PUID" -and $Co
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

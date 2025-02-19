@@ -28,7 +28,7 @@ try {
     $PoolCoins_Request = Invoke-RestMethodAsync "https://zergpool.com/api/currencies" -tag $Name -cycletime 120 -timeout 20
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool currencies API ($Name) has failed. "
 }
 
@@ -56,7 +56,7 @@ $Payout_Currencies | Where-Object {@("BTC", "DASH", "LTC","TRX","USDT") + @($Poo
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

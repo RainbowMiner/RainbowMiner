@@ -24,7 +24,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://pool.deepminerz.com:8071/live_stats" -tag $Name -cycletime 120 -retry 5 -retrywait 250
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

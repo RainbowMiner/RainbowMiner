@@ -22,7 +22,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://pool.kryptex.com/api/v1/rates" -tag $Name -cycletime 120 -retry 5 -retrywait 250
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -59,7 +59,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
         $PoolCoin_Request = Invoke-RestMethodAsync "https://pool.kryptex.com/$($Pool_Rpc)/api/v1/pool/stats" -tag $Name -cycletime 120 -retry 5 -retrywait 250 -delay 200
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool coin API ($Name) for $($Pool_Coin.Symbol) has failed. "
         return
     }
@@ -87,7 +87,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
                 "BTC"
             }
             catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $Pool_Currency
             }
             $Pool_Wallet = $Wallets.$Pool_Currency
@@ -97,7 +97,7 @@ $Pool_Request.crypto.PSObject.Properties.Name | Where-Object {$_ -notin @("BTC",
                 "BTC"
             }
             catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
             $Pool_Wallet = $Email
         }

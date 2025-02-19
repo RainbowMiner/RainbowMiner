@@ -27,7 +27,7 @@ try {
     }
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool Hashrate.no ($Name) has failed. "
 }
 
@@ -80,7 +80,7 @@ try {
     }
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API Minerstat ($Name) has failed. "
 }
 
@@ -136,7 +136,7 @@ try {
     }
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API WTM-main ($Name) has failed. "
 }
 
@@ -229,7 +229,7 @@ try {
     }
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API WTM-calc ($Name) has failed. "
 }
 
@@ -262,7 +262,7 @@ if ($ok) {
             try {
                 $Pool_CoinRequest = Invoke-RestMethodAsync "https://whattomine.com/coins/$($Pool_Request.coins.$_.id).json?hr=1000&p=0&fee=0.0&cost=0.0&hcost=0.0" -tag $Name -cycletime 120
             } catch {
-               if ($Error.Count){$Error.RemoveAt(0)}
+               if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
 
             if ($Pool_CoinRequest -and $Pool_CoinRequest.tag) {

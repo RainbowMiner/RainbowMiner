@@ -16,7 +16,7 @@ try {
     }
     if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
 } catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     $Data = [PSCustomObject]@{ErrorMessage="$($_.Exception.Message)"}
 } finally {
     if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}

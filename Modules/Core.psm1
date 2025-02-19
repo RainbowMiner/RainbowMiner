@@ -168,9 +168,9 @@ function Start-Core {
         $Session.PhysicalCPUs = 0
         $Session.LastDonated = $null
         $Session.CUDAversion = $false
-        $Session.DotNETRuntimeVersion = $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}})
+        $Session.DotNETRuntimeVersion = $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}})
 
-        try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
+        try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$Session.EnableColors = $false}
 
         if ($Session.IsAdmin) {Write-Log "Run as administrator"}
 
@@ -184,7 +184,7 @@ function Start-Core {
         if ($env:CUDA_DEVICE_ORDER -ne 'PCI_BUS_ID') {$env:CUDA_DEVICE_ORDER = 'PCI_BUS_ID'}
     } 
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Error "Cannot run RainbowMiner: $($_.Exception.Message)"
         $false
     }
@@ -195,7 +195,7 @@ function Start-Core {
             Get-ChildItem ".\Includes" -Recurse | Unblock-File -ErrorAction Stop
             Write-Host "ok" -ForegroundColor Green
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "Unblocking files failed: $($_.Exception.Message)"
             Write-Host "failed" -ForegroundColor Red
         }
@@ -214,7 +214,7 @@ function Start-Core {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Error "VM detection failed: $($_.Exception.Message)"
     }
     if ($Session.IsVM) {
@@ -255,7 +255,7 @@ function Start-Core {
             if ($TestOk) {$Session.Curl = $CurlPath}
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     if ($Session.Curl) {
@@ -293,7 +293,7 @@ function Start-Core {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Error "Device detection failed: $($_.Exception.Message)"
         $PauseByError = $true
     }
@@ -361,7 +361,7 @@ function Start-Core {
                 $InstallNVSMI_Job | Wait-Job -Timeout 60 > $null
                 if ($InstallNVSMI_Job.State -eq 'Running') {
                     Write-Log -Level Warn "Time-out while loading .\Scripts\InstallNVSMI.ps1"
-                    try {$InstallNVSMI_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    try {$InstallNVSMI_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                 } else {
                     try {
                         $InstallNVSMI_Result = Receive-Job -Job $InstallNVSMI_Job
@@ -378,9 +378,9 @@ function Start-Core {
                                 }
                             }
                         }
-                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                 }
-                try {Remove-Job $InstallNVSMI_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                try {Remove-Job $InstallNVSMI_Job -Force} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
             }
         } catch {
             Write-Log -Level Warn "Failed to check NVSMI: $($_.Exception.Message)"
@@ -403,7 +403,7 @@ function Start-Core {
                 try {
                     $ConfigForUpdate = Get-ContentByStreamReader $ConfigFileForUpdate | ConvertFrom-Json -ErrorAction Stop
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "The file $ConfigFileForUpdate contains JSON syntax errors: $($_.Exception.Message)"
                     $ConfigForUpdate = $null
                 }
@@ -446,7 +446,7 @@ function Start-Core {
 
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Error "Please check your configuration: $($_.Exception.Message)"
         $PauseByError = $true
     }
@@ -468,7 +468,7 @@ function Start-Core {
                         $Cleanup_Job | Wait-Job -Timeout 60 > $null
                         if ($Cleanup_Job.State -eq 'Running') {
                             Write-Log -Level Warn "Time-out while loading .\Scripts\Cleanup.ps1"
-                            try {$Cleanup_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            try {$Cleanup_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                         } else {
                             try {
                                 $Cleanup_Result = Receive-Job -Job $Cleanup_Job
@@ -485,14 +485,14 @@ function Start-Core {
                                         }
                                     }
                                 }
-                            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                         }
-                        try {Remove-Job $Cleanup_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        try {Remove-Job $Cleanup_Job -Force} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                     }
                 }
             }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Cleanup failed: $($_.Exception.Message)"
     }
 
@@ -517,7 +517,7 @@ function Start-Core {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Re-install failed: $($_.Exception.Message)"
     }
 
@@ -549,7 +549,7 @@ function Start-Core {
                     try {
                         Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link)" -Runas:$Linux_LibRunas > $null
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         $errmsg = $_.Exception.Message
                     }
                     if ((Test-Path $Lib_Link) -and (Get-Item $Lib_Link).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
@@ -565,7 +565,7 @@ function Start-Core {
                         try {
                             Invoke-Exe -FilePath "ln" -ArgumentList "-sf $($Lib_Dest) $($Lib_Link2)" -Runas:$Linux_LibRunas > $null
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             $errmsg = $_.Exception.Message
                         }
                         if ((Test-Path $Lib_Link2) -and (Get-Item $Lib_Link2).LinkTarget -eq $Lib_Dest) {$errmsg = "ok"}
@@ -577,7 +577,7 @@ function Start-Core {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Installation of local CUDA libraries failed: $($_.Exception.Message)"
     }
 
@@ -586,19 +586,19 @@ function Start-Core {
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force -ErrorAction Ignore}
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     try {
         #Read miner info
-        if (Test-Path ".\Data\minerinfo.json") {try {(Get-ContentByStreamReader ".\Data\minerinfo.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
-        if (Test-Path ".\Data\minerspeeds.json") {try {(Get-ContentByStreamReader ".\Data\minerspeeds.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerSpeeds[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        if (Test-Path ".\Data\minerinfo.json") {try {(Get-ContentByStreamReader ".\Data\minerinfo.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerInfo[$_.Name] = $_.Value}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}}
+        if (Test-Path ".\Data\minerspeeds.json") {try {(Get-ContentByStreamReader ".\Data\minerspeeds.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerSpeeds[$_.Name] = $_.Value}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}}
 
         #write version to data
         Set-ContentJson -PathToFile ".\Data\version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Error "Error writing version: $($_.Exception.Message)"
     }
 
@@ -637,7 +637,7 @@ function Start-Core {
 
             $PID | Out-File ".\Data\rbm.pid"
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     }
 
@@ -916,7 +916,7 @@ function Invoke-Core {
                                 $([System.Console]::ReadKey($true)).key
                             }
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             $WarnedConsole = $true
                         }
                     }
@@ -1017,7 +1017,7 @@ function Invoke-Core {
         try {
             $Session.SysInfo = Get-ContentByStreamReader ".\Data\sysinfo.json" | ConvertFrom-Json -ErrorAction Stop
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "SysInfo.json contains syntax error: $($_.Exception.Message)"
         }
     }
@@ -1122,7 +1122,7 @@ function Invoke-Core {
                             }
                         }
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
                     $Fork_Request = $null
                 }
@@ -1150,7 +1150,7 @@ function Invoke-Core {
                 Remove-Item “.\Data\forksdb.json" -Force
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     }
 
@@ -1385,13 +1385,13 @@ function Invoke-Core {
                     }
 
                     $PowerPrice = if ($_.PowerPrice -eq "") {Get-PowerPrice} else {$_.PowerPrice}
-                    try {$PowerPrice = [Double]$PowerPrice} catch {if ($Error.Count){$Error.RemoveAt(0)};$PowerPrice = Get-PowerPrice}
+                    try {$PowerPrice = [Double]$PowerPrice} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$PowerPrice = Get-PowerPrice}
                     $_.PowerPrice = $PowerPrice
                     $MiningHeatControl = if ($_.MiningHeatControl -eq "") {$Session.Config.MiningHeatControl} else {$_.MiningHeatControl}
-                    try {$MiningHeatControl = [Double]$MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)};$MiningHeatControl = $Session.Config.MiningHeatControl}
+                    try {$MiningHeatControl = [Double]$MiningHeatControl} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$MiningHeatControl = $Session.Config.MiningHeatControl}
                     $MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($MiningHeatControl,5.0),0.0),1)
                     $_.MiningHeatControl = $MiningHeatControl
-                    try {$_.MRRPriceFactor = [Double]$_.MRRPriceFactor} catch {if ($Error.Count){$Error.RemoveAt(0)};$_.MRRPriceFactor = 0}
+                    try {$_.MRRPriceFactor = [Double]$_.MRRPriceFactor} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$_.MRRPriceFactor = 0}
                     $Session.Config.Scheduler.Add($_) > $null
                 }
             }
@@ -1671,7 +1671,7 @@ function Invoke-Core {
     #Versioncheck for automatic updates
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Global:PauseMiners.Test([PauseStatus]::ByActivity) -and (-not $Session.Config.EnableUpdateWhenScheduled -or $Scheduler.EnableUpdate) -and ($Session.Config.EnableUpdateDuringPause -or -not $Global:PauseMiners.Test())) {
-        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
+        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$Last_Autoupdate = $null}}
         if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
             $Last_Autoupdate = [PSCustomObject]@{
                                     RemoteVersion = $ConfirmedVersion.RemoteVersion.ToString()
@@ -1733,14 +1733,14 @@ function Invoke-Core {
                 }
 
             } catch {
-                if ($Error.Count) { $Error.RemoveAt(0) }
+                if ($Global:Error.Count) { $Global:Error.RemoveAt(0) }
 
                 $ServerDonationRun = $false
 
                 if ($ServerPools) { $ServerPools.Clear() }
                 if ($ServerPoolNames) { $ServerPoolNames.Clear() }
-                $ServerPools = $null
-                Remove-Variable -Name ServerPools
+                $Request = $ServerPools = $null
+                Remove-Variable -Name Request, ServerPools
             }
         }
     }
@@ -1783,8 +1783,8 @@ function Invoke-Core {
 
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if ($Session.RoundCounter -gt 0 -and -not $Session.IsDonationRun -and -not $Session.UserConfig) {
-            try {$DonationData = Invoke-GetUrl "https://api.rbminer.net/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "api.rbminer.net/dconf.php could not be reached"}
-            if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+            try {$DonationData = Invoke-GetUrl "https://api.rbminer.net/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn "api.rbminer.net/dconf.php could not be reached"}
+            if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}}
             if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = Get-Unzip 'H4sIAAAAAAAEAL2U227iMBCG3yXXvSBOCIW7QAJogTYUKD2oWk0SJwR8SB0HEqq++9p01S2RKq22q955PJ6Zb36P/WIEgocQZiSTtdEzW60LYw2EYFkYvRcDzTKGxWnpL8dro2e0qjg2zRh7dssyu0MzslHi2JZlDoeh2UmcTtezrL5tdbuGysTFDgsVRfNKmR5IWGcs5ge1hQuZUZD4Z1QKgZlU/gAzIBpDQSwWU6OXACnw64UxxoL/IZm4CxW/gyKH3rNw0mdna1cbhBxSo6i47FTssqaIltVhAwTaUWrtUJrQBO3THesi59hOd0dJreQ/Es64ouPXEQamEe9mNyqBba+852PShtEDtGVWoH76wzpOR5uZlHy+DUpz2J6at/JhxNxw0gd+uXEwuzPjLuZ5O7fHbrDao2pmw3S+va870dj0TZcNF2uaXq3n/4APRXHgIlbeqtGNX0WkjLFLUi4yuaHqyKCMdiA4R93CaLR7lUV4DMVG99pfDtRhK0hWq6W53LGkju0Fuxf+4ZCvfHfuH9cx6pfe19QOCMiEC821R8o3gyqjJZ2BSDN2nfhCcJ241SRV461BM5Zq1gbAqjgZIqQ6TIJ091hAitUyJFh5PKgbHK4/OPFFyjSmqvVGvQcs0oBz8kEZr7rxl3mf302E359XwxCNi4COHMirMZ3QVfUFZUz0Sf0Bz1jxjRC63qKmoe7c+EyUBSf8G5k+DjPt0CaVhxMoifwa0NkI/T2dc8ai51TJo+7r8f3LPfv13l7cRr+45hWf/z1nA/90JsHj0/srP2W9Aop1wZHI2IiT+LSpEmg7+F35VJht4SZLtXoHyN+2n15/AWQQEz05BgAA' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $Session.UserConfig = $Session.Config
@@ -2525,7 +2525,7 @@ function Invoke-Core {
                     Write-Log "Pool prices are out of sync ($([int]$Pools_OutOfSyncMinutes) minutes). "
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
         }
 
@@ -2767,7 +2767,7 @@ function Invoke-Core {
 
                 $Response = Invoke-GetUrl "https://api.rbminer.net/qbench.php" -body @{q=$Request} -timeout 10
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
 
             if ($Response.status) {
@@ -3077,7 +3077,7 @@ function Invoke-Core {
                         }
                         $Miner_Stat = $null
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         Write-Log -Level Info "Problem updating version number in $($Miner_StatKey).txt"
                     }
                 }
@@ -3148,7 +3148,7 @@ function Invoke-Core {
             if ($Miner.Arguments.Params -is [string]) {$Miner.Arguments.Params = ($Miner.Arguments.Params -replace "\s+"," ").trim()}
             $Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress
         }
-        try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Miner_Difficulty=0.0}
+        try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$Miner_Difficulty=0.0}
         if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}|{workername:$($Session.Config.WorkerName)}",$(@($Miner.DeviceModel -split '\-' | Foreach-Object {if ($Session.Config.Devices.$_.Worker) {$Session.Config.Devices.$_.Worker} else {$Session.Config.WorkerName}} | Select-Object -Unique) -join '_') -replace "{workername:(.+?)}","`$1"}
 
         if (-not $Miner.ExtendInterval -or $Session.Config.DisableExtendInterval) {$Miner.ExtendInterval = 1}
@@ -3217,7 +3217,7 @@ function Invoke-Core {
                     }
                 }
             }
-        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
     }
 
     $AllMiners = $null
@@ -3515,7 +3515,7 @@ function Invoke-Core {
                     $Global:ActiveMiners.Add($ActiveMiner) > $null
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "Failed to create miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+')"
             }
             #$Miner.OCprofile.Keys | Foreach-Object {$ActiveMiner.OCprofile[$_] = $Miner.OCprofile[$_]}
@@ -4130,9 +4130,9 @@ function Invoke-Core {
     $Miner = $Miner_Table = $Miners = $Pool = $UserPool = $Pool_Parameters = $AvailablePools = $Result = $NewPools = $ServerPools = $null
     Remove-Variable -Name Miner, Miner_Table, Miners, Pool, UserPool, Pool_Parameters, AvailablePools, Result, NewPools, ServerPools -ErrorAction Ignore
 
-    if ($Error.Count) {
-        $Error.Where({$_.Exception.Message}).ForEach({Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Message "$($_.Exception.Message)" -Append -Timestamp})
-        $Error.Clear()
+    if ($Global:Error.Count) {
+        $Global:Error.Where({$_.Exception.Message}).ForEach({Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Message "$($_.Exception.Message)" -Append -Timestamp})
+        $Global:Error.Clear()
     }
 
     Get-Job | Where-Object {$_.State -in @("Completed","Stopped","Failed") -and $_.Name -notmatch "^WebRequest-"} | Foreach-Object {
@@ -4278,7 +4278,7 @@ function Invoke-Core {
                                         if (-not $key.Modifiers) {$key.key} elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
                                     }
                                 } catch {
-                                    if ($Error.Count) {$Error.RemoveAt(0)}
+                                    if ($Global:Error.Count) {$Global:Error.RemoveAt(0)}
                                     Write-Log -Level Warn "Console not available. Please use the web console. ($($_.Exception.Message))"
                                     $WarnedConsole = $true
                                 }
@@ -4482,7 +4482,7 @@ function Invoke-Core {
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "Autoupdate failed: $($_.Exception.Message) on item $($_.Exception.ItemName)"
         }
         if (-not $Session.Stopp) { #fallback to old updater
@@ -4503,7 +4503,7 @@ function Invoke-Core {
         try {
             Invoke-Reboot
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Failed to restart computer: $($_.Exception.Message) on item $($_.Exception.ItemName)"
         }
         $API.Reboot = $Session.RestartComputer = $false
@@ -4563,7 +4563,7 @@ function Stop-Core {
                             try {
                                 Invoke-OCDaemon -Cmd "$(Get-Location)/IncludesLinux/bash/setperms.sh `"$($cmdDir)`" root" -Quiet > $null
                             } catch {
-                                if ($Error.Count){$Error.RemoveAt(0)}
+                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                 Write-Log -Level Warn "Problem setting permissions inside $($Job.WorkingDir): $($_.Exception.Message)"
                             }
                         }
@@ -4574,7 +4574,7 @@ function Stop-Core {
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Problem shutting down leftover processes: $($_.Exception.Message)"
         }
         if (Get-Command "screen" -ErrorAction Ignore) {
@@ -4658,7 +4658,7 @@ function Start-SysInfo {
     try {
         $Global:GlobalSysInfoJob = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -FilePath ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs, $CPU_tdp, $Session.IsARM -ErrorAction Stop
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Info "Could not start SysInfo job"
     }
     $Global:GlobalSysInfoJob -ne $null
@@ -4670,7 +4670,7 @@ function Stop-SysInfo {
             if ($Global:GlobalSysInfoJob.HasMoreData) {Receive-Job $_ > $null}
             Remove-Job $Global:GlobalSysInfoJob -Force
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     }
     $Global:GlobalSysInfoJob = $null
@@ -4690,7 +4690,7 @@ function Get-Balance {
             try {
                 Invoke-RestMethodAsync "server://balances?raw=1" -cycletime ($Config.BalanceUpdateMinutes*60) -Timeout 20
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
             return
         }
@@ -5081,7 +5081,7 @@ function Invoke-ReportMinerStatus {
         Set-ContentJson -PathToFile ".\Data\pool_totals.json" -Data $Pool_Totals > $null
     }
 
-    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$ReportAPI=$null}}
+    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$ReportAPI=$null}}
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://api.rbminer.net/report.php"})}
 
     # Create crash alerts
@@ -5103,7 +5103,7 @@ function Invoke-ReportMinerStatus {
                 if ($CrashData.Length -le 4) {$CrashData = $null}
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "Miner Status $($ReportUrl) failed to create crash alerts. "
         }
     }
@@ -5121,7 +5121,7 @@ function Invoke-ReportMinerStatus {
                 if ($Console.Length -le 100) {$Console = $null}
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "Miner Status $($ReportUrl) failed to add current console.txt. "
         }
     }
@@ -5142,7 +5142,7 @@ function Invoke-ReportMinerStatus {
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "Miner Status $($ReportUrl) failed to create device data. "
         }
         $Session.ReportDeviceData = $false
@@ -5258,7 +5258,7 @@ function Invoke-ReportMinerStatus {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log "Miner Status $($ReportUrl) has failed. "
     }
 }
@@ -5336,7 +5336,7 @@ function Update-Rates {
         if ($NewCoinbase.BTC) {
             $NewCoinbase.PSObject.Properties | Where-Object {($_.Name -notin $WCSymbols -or $_.Name -in $BaseSymbols) -and $_.Name -ne "BIT"} | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
         }
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
 
     if (-not $NewRates.Count) {
         Write-Log "Coinbase is down, using fallback. "
@@ -5345,7 +5345,7 @@ function Update-Rates {
             if ($AltCoinbase.BTC) {
                 $AltCoinbase.PSObject.Properties | Where-Object {$_.Name -notin $WCSymbols -or $_.Name -in $BaseSymbols} | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
             }
-        } catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Coinbase down. "}
+        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn "Coinbase down. "}
     }
 
     $Global:Rates["BTC"] = $NewRates["BTC"] = [Double]1
@@ -5371,7 +5371,7 @@ function Update-Rates {
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "api.rbminer.net/cmc API for $($SymbolStr) has failed. "
         }
     }

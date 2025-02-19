@@ -28,7 +28,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/v1/dashboard" -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

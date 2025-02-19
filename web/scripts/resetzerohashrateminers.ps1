@@ -11,7 +11,7 @@ Get-ChildItem "Stats\Miners" -File | Where-Object {$_.Name -like '*HashRate.txt'
     try {
         $Stats = Get-Content $Filename | ConvertFrom-Json -ErrorAction Stop
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
     if (-not $Stats.Minute) {
         Remove-Item $FileName

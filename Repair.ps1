@@ -20,7 +20,7 @@ if ($Global:IsLinux) {
             default {$PSItem}
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         "amd64"
     }
 
@@ -33,7 +33,7 @@ if ($Global:IsLinux) {
                     & chmod +x "$($_.FullName)" > $null
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
         }
     }
@@ -55,7 +55,7 @@ if (Test-Path ".\Downloads\config.json") {
     try {
         $DownloaderConfig = Get-Content -Raw ".\Downloads\config.json" | ConvertFrom-Json -ErrorAction Ignore
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 }
 if (-not $DownloaderConfig) {
@@ -154,7 +154,7 @@ try {
                             }
                         } while ($IsLocked -and ($RetryLock -gt 0))
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
                     if ($IsLocked) {
                         Write-Host "Failed to update $FileNameTo. Please download manually from Github." -ForegroundColor Yellow
@@ -165,7 +165,7 @@ try {
                 Remove-Item "_update" -Force -Recurse
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Host "Failed to update exe files. Please download manually from Github." -ForegroundColor Yellow
         }
     } else {

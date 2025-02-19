@@ -66,7 +66,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             $ok = $false
         }
         if (-not $ok) {

@@ -16,7 +16,7 @@ function Initialize-Session {
                     $Session.LibCVersion = Get-Version "$(& $_.FullName)"
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
             $Session.LinuxDistroInfo = Get-LinuxDistroInfo
         }
@@ -107,7 +107,7 @@ function Get-LinuxDistroInfo {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     # Return formatted result
@@ -140,7 +140,7 @@ function Get-MinerVersion {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $Version = "1.0"
     }
     if ("$($Version -replace "[^\.]")".Length -gt 3) {
@@ -204,7 +204,7 @@ function Confirm-Version {
             $NextCheck = $NextCheck.AddHours(1)
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Github could not be reached. "
         }
         $Global:GlobalVersion = [PSCustomObject]@{
@@ -263,7 +263,7 @@ function Get-NvidiaArchitecture {
         }
 
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "No architecture found for Nvidia $($Model)/$($ComputeCapability)"
     }
     "Other"
@@ -289,7 +289,7 @@ function Get-AMDComputeCapability {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "No architecture found for AMD $($Model)/$($Architecture)"
     }
         
@@ -315,7 +315,7 @@ function Get-UnprofitableAlgos {
         $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/unprofitable3.json" -cycletime 3600 -Jobkey "unprofitable3"
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Unprofitable algo API failed. "
     }
 
@@ -325,7 +325,7 @@ function Get-UnprofitableAlgos {
         try{
             $Request = Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Unprofitable database is corrupt. "
         }
     }
@@ -339,7 +339,7 @@ function Get-UnprofitableCpuAlgos {
         $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/unprofitable-cpu.json" -cycletime 3600 -Jobkey "unprofitablecpu"
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Unprofitable Cpu algo API failed. "
     }
 
@@ -349,7 +349,7 @@ function Get-UnprofitableCpuAlgos {
         try{
             $Request = Get-ContentByStreamReader ".\Data\unprofitable-cpu.json" | ConvertFrom-Json -ErrorAction Ignore
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Unprofitable Cpu database is corrupt. "
         }
     }
@@ -366,7 +366,7 @@ function Get-CoinSymbol {
             $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Coins API failed. "
         }
         if (-not $Request -or $Request.PSObject.Properties.Name.Count -le 100) {
@@ -412,7 +412,7 @@ function Get-WhatToMineData {
                 $Global:GlobalWTMData = $null
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "WhatToMiner datagrabber failed. "
             return
         }
@@ -471,7 +471,7 @@ function Write-ToFile {
         try {
             $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
             $file = New-Object System.IO.StreamWriter($FilePath, $Append, [System.Text.Encoding]::UTF8)
-        } catch {if ($Error.Count){$Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
+        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
     }
     Process {
         if ($file) {
@@ -489,7 +489,7 @@ function Write-ToFile {
                         $file.WriteLine($Message)
                     }
                 }
-            } catch {if ($Error.Count){$Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
+            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
         }
     }
     End {
@@ -497,7 +497,7 @@ function Write-ToFile {
             try {
                 $file.Close()
                 $file.Dispose()
-            } catch {if ($Error.Count){$Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
+            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$ErrorMessage = "$($_.Exception.Message)"}
         }
         if ($ThrowError -and $ErrorMessage) {throw $ErrorMessage}
     }
@@ -689,7 +689,7 @@ function Set-Total {
             $CsvLine | Export-ToCsvFile $PathCsv
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Could not write to $($PathCsv_Name) "}
     }
 
@@ -705,7 +705,7 @@ function Set-Total {
         $Stat.Power     += $TotalPower
         $Stat.Updated    = $Updated_UTC
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
                     Pool          = $Miner.Pool[0]
@@ -786,7 +786,7 @@ function Set-TotalsAvg {
             }
         }
     } catch {
-        if ($Error.Count) {$Error.RemoveAt(0)}
+        if ($Global:Error.Count) {$Global:Error.RemoveAt(0)}
     }
 
     if ($CurrentDate -gt $FirstDate) {
@@ -808,7 +808,7 @@ function Set-TotalsAvg {
                 if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
                 $_.Value | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$($_.Name)_TotalAvg.txt" -Force
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
         }
     }
@@ -910,7 +910,7 @@ function Set-Balance {
             $Stat.Earnings_Avg = 0
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
                     PoolName = $Balance.Name
@@ -1289,7 +1289,7 @@ function Set-Stat {
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
             $Stat = $null
         }
@@ -1539,7 +1539,7 @@ function Get-StatFromFile {
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             if (Test-Path $Path) {
                 Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is corrupt and will be removed. "
                 Remove-Item -Path $Path -Force -Confirm:$false
@@ -1660,7 +1660,7 @@ function Confirm-ConfigHealth {
         try {
             Get-ContentByStreamReader $File.Path | ConvertFrom-Json -ErrorAction Stop > $null
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "$($Name) configfile $(Split-Path $File.Path -Leaf) has invalid JSON syntax!"
             $Ok = $false
         }
@@ -1685,7 +1685,7 @@ function Get-ChildItemContent {
         if ($Expression -is [String]) {
             if ($Expression -match '(\$|")') {
                 try {$Expression = Invoke-Expression $Expression}
-                catch {if ($Error.Count){$Error.RemoveAt(0)};$Expression = Invoke-Expression "`"$Expression`""}
+                catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$Expression = Invoke-Expression "`"$Expression`""}
             }
         }
         elseif ($Expression -is [PSCustomObject]) {
@@ -1708,7 +1708,7 @@ function Get-ChildItemContent {
             $Content = $null
             try {
                 $Content = Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
             if ($Content -eq $null) {$Content = Get-ContentByStreamReader $_.FullName}
         }
         else {
@@ -1717,7 +1717,7 @@ function Get-ChildItemContent {
                 try {
                     (Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop) | ForEach-Object {Invoke-ExpressionRecursive $_}
                 }
-                catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
             }
             if ($Content -eq $null) {$Content = Get-ContentByStreamReader $_.FullName}
         }
@@ -1760,7 +1760,7 @@ function Get-ContentByStreamReader {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $ErrorString = "$($_.Exception.Message)"
     }
     finally {
@@ -2005,7 +2005,7 @@ filter ConvertTo-TTF {
             else {"$([Math]::Round($Secs.TotalSeconds,1)) s"}
         } else {">10 y"}
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         ">10 y"
     }
 }
@@ -2015,7 +2015,7 @@ function ConvertFrom-Hash {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Hash
     )
-    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
+    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$Num=0}
     switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
         "k" {$Num*1e3;Break}
         "M" {$Num*1e6;Break}
@@ -2034,7 +2034,7 @@ function ConvertFrom-Bytes {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Hash
     )
-    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
+    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$Num=0}
     switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
         "k" {[int64]$Num*1024;Break}
         "M" {[int64]$Num*1048576;Break}
@@ -2053,7 +2053,7 @@ function ConvertFrom-Time {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Time
     )
-    try {$Num = [double]($Time -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
+    try {$Num = [double]($Time -replace "[^0-9`.]")} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$Num=0}
     [int64]$(switch (($Time -replace "[^mhdw]")[0]) {
         "m" {$Num*60;Break}
         "h" {$Num*3600;Break}
@@ -2320,7 +2320,7 @@ function Start-SubProcessInConsole {
                 [User32.WindowManagement]::SetWindowText($Process.mainWindowHandle, $WinTitle) > $null
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not set process window title: $($_.Exception.Message)"
         }
     }
@@ -2844,7 +2844,7 @@ function Set-SubProcessPriority {
                 if ($CPUAffinity) {$Process.ProcessorAffinity = $CPUAffinity}
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             if (-not $Quiet) {Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"}
         }
     }
@@ -2899,7 +2899,7 @@ function Stop-SubProcess {
                         $StopWatch.Restart()
                     }
                     catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         Write-Log -Level Warn "Failed to shutdown process $($Title) via API$(if ($Name) {": $($Name)"})"
                     }
                     $Global:ProgressPreference = $oldProgressPreference
@@ -2926,7 +2926,7 @@ function Stop-SubProcess {
                     #        }
                     #    }
                     #} catch {
-                    #    if ($Error.Count){$Error.RemoveAt(0)}
+                    #    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     #    Write-Log -Level Warn "Problem closing $($Title) PID $($Process.Id): $($_.Exception.Message)"
                     #}
 
@@ -2941,7 +2941,7 @@ function Stop-SubProcess {
                             }
                         }
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         Write-Log "Failed to $(if ($Job.OwnWindow) {"close main window of"} else {"kill"}) $($Title) PID $($Process.Id): $($_.Exception.Message)"
                     }
 
@@ -2997,7 +2997,7 @@ function Stop-SubProcess {
                             }
 
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
                         }
                     } else {
@@ -3097,7 +3097,7 @@ function Stop-SubProcess {
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Problem killing bash $($Job.ScreenCmd) $($Job.ScreenName): $($_.Exception.Message)"
         }
 
@@ -3105,7 +3105,7 @@ function Stop-SubProcess {
             try {
                 Invoke-OCDaemon -Cmd "$(Get-Location)/IncludesLinux/bash/setperms.sh `"$($Job.WorkingDir)`" root" -Quiet > $null
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "Problem setting permissions inside $($Job.WorkingDir): $($_.Exception.Message)"
             }
         }
@@ -3239,7 +3239,7 @@ function Expand-WebRequest {
                                 Remove-Item $_.FullName -Force
                             }
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             Write-Log -Level Warn "Downloader: Could not remove from backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
                         }
                     }
@@ -3249,7 +3249,7 @@ function Expand-WebRequest {
                     try {
                         Remove-Item $_ -Recurse -Force
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         Write-Log -Level Warn "Downloader: Could not to remove backup path $_. Please do this manually, root might be needed ($($_.Exception.Message))"
                     }
                 }
@@ -3265,6 +3265,8 @@ function Expand-WebRequest {
         Get-ChildItem $FileName -File | Foreach-Object {Remove-Item $_}
     }
 }
+
+
 
 function Invoke-Exe {
     [CmdletBinding()]
@@ -3286,12 +3288,16 @@ function Invoke-Exe {
         [Parameter(Mandatory = $false)]
         [Switch]$Runas = $false
         )
+
+    $psi = $null
+    $process = $null
+
     try {
-        if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
+        if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {
+            $WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-Path
+        }
 
         if ($IsWindows -or -not $Runas -or (Test-IsElevated)) {
-            #$out = [RBMTools.process]::exec("$(if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath})",$ArgumentList,$WorkingDirectory,"$(if ($Runas) {"runas"})",[int]$WaitForExit)
-            #if ($ExpandLines) {foreach ($line in $out) {if (-not $ExcludeEmptyLines -or "$line".Trim() -ne ''){"$line" -replace "[`r`n]+"}}} else {$out -join [Environment]::NewLine}
             $psi = [System.Diagnostics.ProcessStartInfo]::New()
             $psi.FileName               = if ($NewFilePath = Resolve-Path $FilePath -ErrorAction Ignore) {$NewFilePath} else {$FilePath}
             $psi.CreateNoWindow         = $true
@@ -3301,9 +3307,11 @@ function Invoke-Exe {
             $psi.Arguments              = $ArgumentList
             $psi.WorkingDirectory       = $WorkingDirectory
             if ($Runas) {$psi.Verb = "runas"}
+
             $process = [System.Diagnostics.Process]::New()
             $process.StartInfo = $psi
             [void]$process.Start()
+
             $out = $process.StandardOutput.ReadToEnd()
             $process.WaitForExit($WaitForExit*1000)>$null
             if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
@@ -3319,12 +3327,10 @@ function Invoke-Exe {
         }
 
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not execute $FilePath $($ArgumentList): $($_.Exception.Message)"
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn "Could not execute $FilePath $($ArgumentList): $($_.Exception.Message)"
     } finally {
-        if ($psi) {
-            $process.Dispose()
-            $process = $null
-        }
+        if ($process) { $process.Dispose(); $process = $null }
+        if ($psi) { $psi = $null }
     }
 }
 
@@ -3385,7 +3391,7 @@ function Invoke-Process {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not start process $FilePath $($ArgumentList): $($_.Exception.Message)"
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn "Could not start process $FilePath $($ArgumentList): $($_.Exception.Message)"
     } finally {
         Remove-Item -Path $stdOutTempFile, $stdErrTempFile -Force -ErrorAction Ignore
         if ($cmd) {
@@ -3478,7 +3484,7 @@ function Invoke-TcpRequest {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "TCP request to $($Server):$($Port) failed: $($_.Exception.Message)"
     }
     finally {
@@ -3515,7 +3521,7 @@ function Invoke-TcpRead {
         $Response = $Reader.ReadToEnd()
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not read from $($Server):$($Port)"
     }
     finally {
@@ -3542,11 +3548,11 @@ function Test-TcpServer {
     elseif ($ConvertToIP) {      
         try {$Server = [ipaddress]$Server}
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             try {
                 $Server = [system.Net.Dns]::GetHostByName($Server).AddressList | Where-Object {$_.IPAddressToString -match "^\d+\.\d+\.\d+\.\d+$"} | select-object -index 0
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 return $false
             }
         }
@@ -3559,7 +3565,7 @@ function Test-TcpServer {
         $Result = $Conn.AsyncWaitHandle.WaitOne($Timeout*1000,$false)
         if ($Result) {$Client.EndConnect($Conn)>$null}
     } catch {
-        if ($Error.Count){if ($Verbose) {Write-Log -Level Warn $Error[0]};$Error.RemoveAt(0)}
+        if ($Global:Error.Count){if ($Verbose) {Write-Log -Level Warn $Error[0]};$Global:Error.RemoveAt(0)}
         $Result = $false
     }
     finally {
@@ -3577,7 +3583,7 @@ function Get-MyIP {
         }
         $IpcResult | Select-Object -First 1
     } elseif ($IsLinux) {
-        try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {if ($Error.Count){$Error.RemoveAt(0)};try {hostname -I | Where-Object {$_ -match "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"} | Foreach-Object {$Matches[1]} | Select-Object -First 1} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};try {hostname -I | Where-Object {$_ -match "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"} | Foreach-Object {$Matches[1]} | Select-Object -First 1} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}}
     }
 }
 
@@ -3755,7 +3761,7 @@ function Get-Device {
                             }
                         }
                     } catch {
-                        if ($Error.Count) { $Error.RemoveAt(0) }
+                        if ($Global:Error.Count) { $Global:Error.RemoveAt(0) }
                         $BusId = $null
                     }
 
@@ -3783,7 +3789,7 @@ function Get-Device {
                 }
             }
             catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "WDDM device detection has failed. "
             }
             $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"})
@@ -3805,19 +3811,19 @@ function Get-Device {
             if ($GetOpenCL_Job) {
                 $GetOpenCL_Job | Wait-Job -Timeout 60 > $null
                 if ($GetOpenCL_Job.State -eq 'Running') {
-                    try {$GetOpenCL_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    try {$GetOpenCL_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                     $ErrorMessage = "Timeout"
                 } else {
                     try {
                         $GetOpenCL_Result = Receive-Job -Job $GetOpenCL_Job
                         $Platform_Devices = $GetOpenCL_Result.Platform_Devices
                         $ErrorMessage     = $GetOpenCL_Result.ErrorMessage
-                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                 }
-                try {Remove-Job $GetOpenCL_Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                try {Remove-Job $GetOpenCL_Job -Force} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             $ErrorMessage = "$($_.Exception.Message)"
         } finally {
             if ($oldLD -ne $null) {$env:LD_LIBRARY_PATH = $oldLD}
@@ -3885,7 +3891,7 @@ function Get-Device {
                                     try {
                                         $data = @(Get-DeviceName "amd" -UseAfterburner $false | Select-Object)
                                         if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\amd-names.json" -Data $data > $null}
-                                    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                                    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                                 }
                                 if (Test-Path ".\Data\amd-names.json") {Get-ContentByStreamReader ".\Data\amd-names.json" | ConvertFrom-Json -ErrorAction Ignore}
                             }
@@ -4095,7 +4101,7 @@ function Get-Device {
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "GPU detection has failed: $($_.Exception.Message)"
         }
 
@@ -4138,7 +4144,7 @@ function Get-Device {
                 }
 
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "OpenCL platform detection failed: $($_.Exception.Message)"
             }
         }
@@ -4204,7 +4210,7 @@ function Get-Device {
                             $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
                             $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
 
 
@@ -4216,12 +4222,12 @@ function Get-Device {
                                 $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
                                 $lscpu.flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                             } catch {
-                                if ($Error.Count){$Error.RemoveAt(0)}
+                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             }
 
                             if (-not $Global:GlobalCPUInfo.Features.Count) {
                                 $chkcpu = @{}
-                                try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                                try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                                 $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
                             }
                         }
@@ -4230,7 +4236,7 @@ function Get-Device {
                         if (-not $Global:GlobalCPUInfo.Model    -and $CIM_CPU[0].Caption -match "Model\s*(\d+)")    {$Global:GlobalCPUInfo.Model    = $Matches[1]}
                         if (-not $Global:GlobalCPUInfo.Stepping -and $CIM_CPU[0].Caption -match "Stepping\s*(\d+)") {$Global:GlobalCPUInfo.Stepping = $Matches[1]}
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
 
                     if (-not $Global:GlobalCPUInfo.Features -or -not $Global:GlobalCPUInfo.Features.Count) {
@@ -4238,7 +4244,7 @@ function Get-Device {
 
                         # Windows has problems to identify the CPU, so use fallback
                         $chkcpu = @{}
-                        try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
 
                         $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
@@ -4265,7 +4271,7 @@ function Get-Device {
                             $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
                             $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
 
                     }
@@ -4276,7 +4282,7 @@ function Get-Device {
                     try {
                         Write-ToFile -FilePath ".\Data\lscpu.txt" -Message "$(Invoke-Exe "lscpu")" -NoCR > $null
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
 
                     $Data = Get-Content "/proc/cpuinfo"
@@ -4335,7 +4341,7 @@ function Get-Device {
                                     }
                                 }
                             } catch {
-                                if ($Error.Count){$Error.RemoveAt(0)}
+                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             }
                         }                
 
@@ -4352,7 +4358,7 @@ function Get-Device {
                                 "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
 
                             } catch {
-                                if ($Error.Count){$Error.RemoveAt(0)}
+                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             }
                         }
 
@@ -4421,7 +4427,7 @@ function Get-Device {
             $Global:GlobalCPUInfo.TDP = $CPU_tdp
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "CIM CPU detection has failed. "
         }
    
@@ -4467,7 +4473,7 @@ function Get-Device {
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "CPU detection has failed. "
         }
     }
@@ -4497,7 +4503,7 @@ function Start-Afterburner {
     try {
         Add-Type -Path ".\Includes\MSIAfterburner.NET.dll"
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log "Failed to load Afterburner interface library"
         $Script:abMonitor = $false
         $Script:abControl = $false
@@ -4507,14 +4513,14 @@ function Start-Afterburner {
     try {
         $Script:abMonitor = New-Object MSI.Afterburner.HardwareMonitor
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log "Failed to create MSI Afterburner Monitor object. Falling back to standard monitoring."
         $Script:abMonitor = $false
     }
     try {
         $Script:abControl = New-Object MSI.Afterburner.ControlMemory
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log "Failed to create MSI Afterburner Control object. Overclocking non-NVIDIA devices will not be available."
         $Script:abControl = $false
     }
@@ -4538,7 +4544,7 @@ function Get-AfterburnerDevices ($Type) {
     try {
         $Script:abControl.ReloadAll()
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
         return
     }
@@ -4616,7 +4622,7 @@ function Get-DeviceName {
         [Bool]$UseAfterburner = $true
     )
     try {
-        $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-ContentByStreamReader ".\Data\$($Vendor.ToLower())-cards.json" | ConvertFrom-Json -ErrorAction Stop}catch{if ($Error.Count){$Error.RemoveAt(0)}}}
+        $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-ContentByStreamReader ".\Data\$($Vendor.ToLower())-cards.json" | ConvertFrom-Json -ErrorAction Stop}catch{if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}}
 
         if ($IsWindows -and $UseAfterburner -and $Script:abMonitor) {
             if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
@@ -4650,7 +4656,7 @@ function Get-DeviceName {
                         $AdlStats = $AdlResult | ConvertFrom-Json -ErrorAction Stop
                     }
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
                         
                 if ($AdlStats -and $AdlStats.Count) {
@@ -4707,7 +4713,7 @@ function Get-DeviceName {
                         }
                     }
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo or `"ocdaemon start`"?"
                 }
             }
@@ -4729,7 +4735,7 @@ function Get-DeviceName {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log "Could not read GPU data for vendor $($Vendor). "
     }
 }
@@ -4884,7 +4890,7 @@ function Update-DeviceInformation {
                             }
 
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
 
                         if ($Global:GlobalGPUMethod.$Method -eq "") {$Global:GlobalGPUMethod.$Method = "fail"}
@@ -4940,7 +4946,7 @@ function Update-DeviceInformation {
                             }
 
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
 
                     }
@@ -4949,7 +4955,7 @@ function Update-DeviceInformation {
                         try {
                             $Rocm = Invoke-Exe -FilePath "rocm-smi" -ArgumentList "-f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
 
                         if ($Rocm) {
@@ -4972,7 +4978,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from AMD"
         }
 
@@ -5024,14 +5030,14 @@ function Update-DeviceInformation {
                             }
 
                         } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
 
                     }
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from INTEL"
         }
 
@@ -5064,7 +5070,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from NVIDIA"
         }
 
@@ -5080,7 +5086,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not calculate GPU maxium values"
         }
     }
@@ -5124,7 +5130,7 @@ function Update-DeviceInformation {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Could not read power data from CPU"
     }
 }
@@ -5391,7 +5397,7 @@ function Get-EthDAGSizes {
             $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/ethdagsizes.json" -cycletime 3600 -Jobkey "ethdagsizes"
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "EthDAGsize API failed. "
         }
     }
@@ -5596,7 +5602,7 @@ function Get-WorldCurrencies {
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Worldcurrencies API failed. "
         }
     }
@@ -5714,7 +5720,7 @@ function Test-TimeSync {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "[Test-TimeSync] W32Time Service is not running and could not be started!"
         return
     }
@@ -5751,7 +5757,7 @@ function Test-TimeSync {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "[Test-TimeSync] No configured nameservers found in registry"
         return
     }
@@ -5770,7 +5776,7 @@ function Test-TimeSync {
         }
     }
     catch { 
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "[Test-TimeSync] Something went wrong"
     }
 
@@ -6057,7 +6063,7 @@ function Set-ContentJson {
             }
             return $true
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
         finally {
             if ($stream) { $stream.Close(); $stream.Dispose(); $stream = $null }
@@ -6109,7 +6115,7 @@ function Set-AlgorithmsConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6149,7 +6155,7 @@ function Set-CoinsConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6185,7 +6191,7 @@ function Set-GpuGroupsConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6283,7 +6289,7 @@ function Set-CombosConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6323,7 +6329,7 @@ function Set-DevicesConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6386,7 +6392,7 @@ function Set-MinersConfigDefault {
                         $MiningMode = $Session.DefaultValues["MiningMode"]
                     }
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "Set-MinersConfigDefault: Problem reading MiningMode from config (assuming combo)"
                     $MiningMode = $null
                 }
@@ -6477,7 +6483,7 @@ function Set-MinersConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6571,7 +6577,7 @@ function Set-PoolsConfigDefault {
             }
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6624,7 +6630,7 @@ function Set-OCProfilesConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6671,7 +6677,7 @@ function Set-SchedulerConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data @($Preset | Select-Object) -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6714,7 +6720,7 @@ function Set-UserpoolsConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data @($Preset | Select-Object) -MD5hash $ChangeTag > $null
         }
         catch{
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -6866,7 +6872,7 @@ function Get-ConfigContent {
                 $Session.ConfigFiles[$ConfigName].Healthy=$true
             }
         }
-        catch {if ($Error.Count){$Error.RemoveAt(0)}; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; if (-not $WorkerName) {$Session.ConfigFiles[$ConfigName].Healthy=$false}}
+        catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; if (-not $WorkerName) {$Session.ConfigFiles[$ConfigName].Healthy=$false}}
     }
 }
 
@@ -6930,14 +6936,14 @@ function Get-ServerConfig {
         $ErrorMessage = ""
         if (-not (Test-Path ".\Data\serverlwt")) {New-Item ".\Data\serverlwt" -ItemType "directory" -ErrorAction Ignore > $null}
         $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($GroupName) {$GroupName} elseif ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
-        $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-ContentByStreamReader $ServerLWTFile | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-ContentByStreamReader $ServerLWTFile | ConvertFrom-Json -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&port=$($APIPort)&version=$($Session.Version)"
         try {
             $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -Timeout 30
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             $ErrorMessage = "$($_.Exception.Message)"
         }
         if ($Result.Status -and $Result.Content) {
@@ -6981,7 +6987,7 @@ function ConvertFrom-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [switch]$ToInt
     )
-    try {$AffinityInt = [System.Numerics.BigInteger]::Parse("0$($Affinity -replace "[^0-9A-Fx]" -replace "^[0x]+")", 'AllowHexSpecifier')}catch{if ($Error.Count){$Error.RemoveAt(0)};$AffinityInt=[bigint]0}
+    try {$AffinityInt = [System.Numerics.BigInteger]::Parse("0$($Affinity -replace "[^0-9A-Fx]" -replace "^[0x]+")", 'AllowHexSpecifier')}catch{if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$AffinityInt=[bigint]0}
     if ($ToInt) {$AffinityInt}
     else {@(for($a=0;$AffinityInt -gt 0;$a++) {if (($AffinityInt -band 1) -eq 1){$a};$AffinityInt=$AffinityInt -shr 1})}
 }
@@ -7224,6 +7230,66 @@ Param(
     $Global:last_memory_usage_byte = $memusagebyte
 }
 
+function Get-VariableUsage {
+    $ExWarningPreference = $WarningPreference
+    $WarningPreference = "SilentlyContinue"
+
+    foreach( $Scope in @("Script","Global") ) {
+        Get-Variable -Scope $Scope | ForEach-Object {
+            $size = 0
+            $type = "Unknown"
+
+            try {
+                # Skip null values
+                if ($_.Value -ne $null) {
+                    $type = $_.Value.GetType().Name
+
+                    if ($_.Value -is [ValueType]) {
+                        $size = [System.Runtime.InteropServices.Marshal]::SizeOf($_.Value)
+                    }
+                    elseif ($_.Value -is [String]) {
+                        $size = ($_.Value.Length * 2)
+                    }
+                    elseif ($_.Value -is [Array] -or $_.Value -is [System.Collections.ICollection]) {
+                        try {
+                            $jsonSize = ($_ | ConvertTo-Json -Depth 3 -Compress) 2>$null
+                            $size = [math]::Min($jsonSize.Length, $_.Value.Count * 500)
+                        } catch {
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
+                            $size = $_.Value.Count * 100
+                        }
+                    }
+                    else {
+                        try {
+                            $jsonSize = ($_ | ConvertTo-Json -Depth 2 -Compress) 2>$null
+                            $size = [math]::Min($jsonSize.Length, 10000)
+                        } catch {
+                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
+                            $size = 1000
+                        }
+                    }
+                }
+            }
+            catch {
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
+                $size = 0
+            }
+
+            [PSCustomObject]@{
+                Name  = "$($Scope):$($_.Name)"
+                Type  = $type
+                Size  = $size
+                Value = $_.Value
+            }
+        } | Sort-Object Size -Descending | Select-Object -First 10
+
+    }
+
+    $WarningPreference = $ExWarningPreference
+
+}
+
+
 function Write-MemoryUsageToLog {
 [cmdletbinding()]
 Param(   
@@ -7239,18 +7305,24 @@ Param(
 }
 
 function Get-MD5Hash {
-[cmdletbinding()]
-Param(   
+[CmdletBinding()]
+Param(
     [Parameter(
         Mandatory = $True,
         Position = 0,
-        ParameterSetName = '',
         ValueFromPipeline = $True)]
-        [string]$value
+    [string]$value
 )
-    $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
-    $utf8 = new-object -TypeName System.Text.UTF8Encoding
-    [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
+
+    $md5 = [System.Security.Cryptography.MD5CryptoServiceProvider]::new()
+    $utf8 = [System.Text.Encoding]::UTF8
+
+    try {
+        [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
+    }
+    finally {
+        $md5.Dispose()  # Ensure cleanup
+    }
 }
 
 function Get-Proxy {
@@ -7276,7 +7348,7 @@ function Get-Proxy {
             try {
                 $CurrentProxy = Get-ContentByStreamReader ".\Data\proxy.json" | ConvertFrom-Json -ErrorAction Stop
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
 
             if ($CurrentProxy.Proxy) {
@@ -7322,7 +7394,7 @@ param(
     try {
         $CurrentProxy = Get-ContentByStreamReader ".\Data\proxy.json" | ConvertFrom-Json -ErrorAction Stop
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
     if (-not $CurrentProxy -or $CurrentProxy.Proxy -ne $ProxyRecord.Proxy -or $CurrentProxy.ProxyUsername -ne $ProxyRecord.ProxyUsername -or $CurrentProxy.Password -ne $ProxyRecord.Password) {
         Set-ContentJson -PathToFile ".\Data\proxy.json" -Data $ProxyRecord > $null
@@ -7365,7 +7437,7 @@ param(
                 $httpHandler = [System.Net.Http.SocketsHttpHandler]::New()
                 $Sockets = $true
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $httpHandler = [System.Net.Http.HttpClientHandler]::New()
             }
 
@@ -7389,7 +7461,7 @@ public class SSLHandler
                         $httpHandler.ServerCertificateCustomValidationCallback = [SSLHandler]::GetSSLHandler()
                     }
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
             }
 
@@ -7572,16 +7644,16 @@ Param(
                     if ($fixbigint) {
                         try {
                             $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
-                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                     }
-                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}; $method = "WEB"}
+                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}; $method = "WEB"}
                 }
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
             } else {
                 $ErrorMessage = "cURL $($Global:LASTEXEEXITCODE) / $(if ($Data -and $Data.Count -gt 1){"HTTP $($Data[-1])"} else {"Timeout after $($timeout)s"})"
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             $ErrorMessage = "$($_.Exception.Message)"
         } finally {
             if ($TmpFile -and (Test-Path $TmpFile)) {
@@ -7607,7 +7679,7 @@ Param(
                 }
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
 
         $StatusCode = $null
@@ -7714,9 +7786,9 @@ Param(
                             if ($fixbigint) {
                                 try {
                                     $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
-                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                             }
-                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                         }
                         if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
                     }
@@ -7727,7 +7799,7 @@ Param(
                     $Result.ErrorMessage = "Call to $($RequestUrl) timed out after $($timeout) secs"
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $Result.ErrorMessage = "$($_.Exception.Message)$(if ($_.Exception.InnerException) {" --> $($_.Exception.InnerException.Message)"})"
             } finally {
                 if($task -ne $null) {
@@ -7809,9 +7881,9 @@ Param(
                             if ($fixbigint) {
                                 try {
                                     $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
-                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                             }
-                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                         }
                         if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
                     }
@@ -7820,7 +7892,7 @@ Param(
                         $Response = $null
                     }
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     $Result.ErrorMessage = "$($_.Exception.Message)"
                 }
             } else {
@@ -7835,7 +7907,7 @@ Param(
                     if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
                     $Result.Status = $true
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     $Result.ErrorMessage = "$($_.Exception.Message)"
                 } finally {
                     if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
@@ -7999,7 +8071,7 @@ Param(
     $delay     = [Math]::Min([Math]::Max($delay,0),5000)
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
-        $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{if ($Error.Count){$Error.RemoveAt(0)}}} else {"server"}
+        $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}} else {"server"}
         $JobData = [PSCustomObject]@{Url=$url;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
     }
 
@@ -8050,7 +8122,7 @@ Param(
                 if ($Quickstart) {
                     if (-not ($Request = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy")) {
                         if (Test-Path ".\Cache\$($Jobkey).asy") {
-                            try {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            try {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                         }
                         $Quickstart = $false
                     }
@@ -8067,7 +8139,7 @@ Param(
                 }
             }
             catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $RequestError = "$($_.Exception.Message)"
             } finally {
                 if ($RequestError) {$RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($RequestError)"}
@@ -8095,7 +8167,7 @@ Param(
                 try {
                     $Request = $Request | ConvertTo-Json -Compress -Depth 10 -ErrorAction Stop
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     $RequestError = "$($_.Exception.Message)"
                 } finally {
                     if ($RequestError) {$RequestError = "JSON problem: $($RequestError)"}
@@ -8118,7 +8190,7 @@ Param(
                     Write-ToFile -FilePath ".\Cache\$($Jobkey).asy" -Message $Request -NoCR -ThrowError
                     $CacheWriteOk = $true
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     $RequestError = "$($_.Exception.Message)"                
                 }
                 $retry--
@@ -8136,7 +8208,7 @@ Param(
         }
 
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
-            try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
         }
 
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
@@ -8157,7 +8229,7 @@ Param(
                     Get-ContentByStreamReader ".\Cache\$($Jobkey).asy"
                 }
             }
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
+            catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
         }
     }
 }
@@ -8188,7 +8260,7 @@ namespace User32
 }
 "@
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Error initializing User32.dll functions"
     }
 }
@@ -8213,7 +8285,7 @@ param(
         if ($state -band 0x20000000)    {"minimized"}
         elseif ($state -band 0x1000000) {"maximized"}
         else                            {"normal"}
-    } catch {if ($Error.Count){$Error.RemoveAt(0)};"maximized"}
+    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};"maximized"}
 }
 
 function Set-WindowStyle {
@@ -8246,7 +8318,7 @@ param(
             $hwnd = [User32.WindowManagement]::FindWindowEx($zero,$zero,$zero,$Title)
         }
         [User32.WindowManagement]::ShowWindowAsync($hwnd, $WindowStates[$Style])>$null        
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
 }
 
 function Get-NtpTime {
@@ -8271,7 +8343,7 @@ param(
         $Socket.Shutdown( 'Both' )
         $Seconds = [BitConverter]::ToUInt32( $NTPData[43..40], 0 )
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not read time from $($NTPServer)"
     }
     finally {
@@ -8336,7 +8408,7 @@ param(
         $sw.Close()
         [System.Convert]::ToBase64String($ms.ToArray())
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $s
     }
     finally {
@@ -8362,7 +8434,7 @@ param(
         $sr = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Decompress))
         $sr.ReadToEnd()
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $s
     }
     finally {
@@ -8394,7 +8466,7 @@ param(
 }
 
 function Get-LastDrun {
-    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-ContentByStreamReader ".\Data\lastdrun.json" | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-ContentByStreamReader ".\Data\lastdrun.json" | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}}
 }
 
 function Set-LastDrun {
@@ -8408,7 +8480,7 @@ param(
 
 function Get-LastStartTime {
     if (Test-Path ".\Data\starttime.json") {
-        try {[DateTime](Get-ContentByStreamReader ".\Data\starttime.json" | ConvertFrom-Json -ErrorAction Stop).starttime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        try {[DateTime](Get-ContentByStreamReader ".\Data\starttime.json" | ConvertFrom-Json -ErrorAction Stop).starttime} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
         Remove-Item ".\Data\starttime.json" -Force -ErrorAction Ignore
     }
 }
@@ -8450,7 +8522,7 @@ param(
                         $Global:AutoexecCommands.Add($Job) >$null
                     }
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "Command could not be started in autoexec.txt: $($Matches[1]) $($Matches[2])"
                 }
             } else {
@@ -8514,7 +8586,7 @@ param(
             Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet -WriteOnly -UseSSL:$UseSSL > $null
             $true
         }
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
 }
 
 function Get-NvidiaSmi {
@@ -8595,7 +8667,7 @@ function Get-LinuxXAuthority {
             try {
                 (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                 Invoke-exe $_.FullName -ExpandLines | Where-Object {$_ -match "XAUTHORITY=(.+)"} | Foreach-Object {$Matches[1]}
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
         }
     }
 }
@@ -8606,7 +8678,7 @@ function Get-LinuxDisplay {
             try {
                 (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                 Invoke-exe $_.FullName -ExpandLines | Where-Object {$_ -match "DISPLAY=(.+)"} | Foreach-Object {$Matches[1]}
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
         }
     }
 }
@@ -8635,7 +8707,7 @@ param(
                 }
             }
         }
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
 }
 
 function Reset-Vega {
@@ -8657,7 +8729,7 @@ param(
             Start-Sleep 1
             Write-Log "Disabled/Enabled device(s) $DeviceId"
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "Failed to disable/enable device(s) $($DeviceId): $($_.Exception.Message)"
         }
     }
@@ -8700,7 +8772,7 @@ function Test-Internet {
                 }
             }
         }
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
 
     $ok -or -not $tested
 }
@@ -8710,7 +8782,7 @@ function Test-IsOnBattery {
         try {
             -not (Get-CimInstance -classname BatteryStatus -namespace "root\wmi" -ErrorAction Stop).PowerOnline
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     })
 }
@@ -8799,7 +8871,7 @@ function Initialize-DLLs {
                     Add-Type -Path $DLLFile -ErrorAction Stop
                     $NeedsRebuild = $false
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "Cannot load $($DLLFile), will try to rebuild"
                 }
             }
@@ -8823,7 +8895,7 @@ function Initialize-DLLs {
                     (Start-Process "chmod" -ArgumentList "666",(Resolve-Path $DLLFile).Path -PassThru).WaitForExit(1000) > $null
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Error "Error building $($DLLFile): $($_.Exception.Message)"
             }
         }
@@ -8848,7 +8920,7 @@ function Set-OsFlags {
                 default {$PSItem}
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             "amd64"
         }
 
@@ -8861,7 +8933,7 @@ function Set-OsFlags {
                         (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                     }
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
             }
         }
@@ -9091,7 +9163,7 @@ function Get-Uptime {
                 $ts = New-TimeSpan -Seconds ([double]((cat /proc/uptime) -split "\s+" | Select-Object -First 1))
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not get system uptime: $($_.Exception.Message)"
             $ts = $null
         }
@@ -9100,7 +9172,7 @@ function Get-Uptime {
         try {
             $ts = (Get-Date).ToUniversalTime() - $Session.StartTime
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not get script uptime: $($_.Exception.Message)"
             $ts = $null
         }
@@ -9143,7 +9215,7 @@ function Get-SysInfo {
                     Invoke-Exe ".\Includes\getcpu\GetCPU.exe" | ConvertFrom-Json -ErrorAction Stop
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
         })
         
@@ -9177,7 +9249,7 @@ function Get-SysInfo {
                 $Index++
             }
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         } finally {
             if ($CIM_CPU -ne $null) {$CIM_CPU.Dispose();$CIM_CPU = $null}
         }
@@ -9186,7 +9258,7 @@ function Get-SysInfo {
             $CPULoad = ($CPUs | Measure-Object -Property Utilization -Average).Average
             $OSData  = Get-CimInstance -Class Win32_OperatingSystem -Property "TotalVisibleMemorySize","FreePhysicalMemory" -ErrorAction Ignore
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
 
         [PSCustomObject]@{
@@ -9208,7 +9280,7 @@ function Get-SysInfo {
             try {
                 (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
                 Invoke-exe $_.FullName -ArgumentList "--cpu --mem --disks" | ConvertFrom-Json -ErrorAction Stop
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
         }
     }
 
@@ -9319,7 +9391,7 @@ param(
                     $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getbinance" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log "Binance server call: $($_.Exception.Message)"
                 }
             }
@@ -9327,7 +9399,7 @@ param(
 
         if (-not $Remote -and $key -and $secret) {
             $timestamp = 0
-            try {$timestamp = (Invoke-GetUrl "$($base)/api/v3/time" -timeout 3).serverTime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            try {$timestamp = (Invoke-GetUrl "$($base)/api/v3/time" -timeout 3).serverTime} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
             if (-not $timestamp) {$timestamp = Get-UnixTimestamp -Milliseconds}
 
             $params["timestamp"] = $timestamp
@@ -9339,7 +9411,7 @@ param(
             try {
                 $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body "$($paramstr)&signature=$(Get-HMACSignature $paramstr $secret)"
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 "Binance API call: $($_.Exception.Message)"
                 Write-Log "Binance API call: $($_.Exception.Message)"
             }
@@ -9409,7 +9481,7 @@ param(
                     $Result = Invoke-GetUrl "http://$($Config.ServerName):$($Config.ServerPort)/getnh" -body $serverbody -user $Config.ServerUser -password $Config.ServerPassword -ForceLocal -Timeout 30
                     if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log "Nicehash server call: $($_.Exception.Message)"
                 }
             }
@@ -9418,7 +9490,7 @@ param(
         if (-not $Remote -and $key -and $secret -and $organizationid) {
             $uuid = [string]([guid]::NewGuid())
             $timestamp = 0
-            try {$timestamp = (Invoke-GetUrl "$($base)/api/v2/time" -timeout 3).serverTime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            try {$timestamp = (Invoke-GetUrl "$($base)/api/v2/time" -timeout 3).serverTime} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
             if (-not $timestamp) {$timestamp = Get-UnixTimestamp -Milliseconds}
 
             $paramstr = "$(($params.Keys | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
@@ -9439,7 +9511,7 @@ param(
 
                 $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log "Nicehash API call: $($_.Exception.Message)"
             }
         }
@@ -9464,7 +9536,7 @@ function Get-PowerPrice {
                     $OctopusRequest.results | Where-Object {(-not $_.valid_from -or $_.valid_from -le $fromto) -and (-not $_.valid_to -or $_.valid_to -gt $fromto)} | Foreach-Object {$PowerPrice = ([double]$_.value_inc_vat) / 100}
                 }
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Info "Octopus tariff code $($Session.Config.OctopusTariffCode) is not in the Octopus database. Sometimes the letter code part is correct, but the date part isn't. Try AGILE-18-02-21 or GO-18-06-12 or SILVER-2017-1"
             }
         } else {
@@ -9487,7 +9559,7 @@ function Invoke-Reboot {
         try {
             Restart-Computer -Force -ErrorAction Stop
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log "Restart-Computer command failed. Falling back to shutdown."
             shutdown /r /f /t 10 /c "RainbowMiner scheduled restart" 2>$null
             if ($LastExitCode -ne 0) {
@@ -9539,7 +9611,7 @@ function Get-LastUserInput {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 }
 
@@ -9561,7 +9633,7 @@ function Send-CtrlC {
             }
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
     $Result
 }

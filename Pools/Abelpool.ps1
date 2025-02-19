@@ -46,7 +46,7 @@ if (-not $InfoOnly) {
         $Pool_Request = Invoke-RestMethodAsync "https://api.abelpool.io/api/v1/home/online/summary" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     if ($Pool_Request.code -eq 200) {

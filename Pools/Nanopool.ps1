@@ -52,7 +52,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             if (-not $Pool_Request.status) {$ok = $false}
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             $ok = $false
         }
         if (-not $ok) {
@@ -67,7 +67,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_RequestLastBlock = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/pool/recentblocks/1" -tag $Name -retry 5 -retrywait 200 -cycletime 120
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Pool second level API ($Name) for $($Pool_Currency) has failed. "
         }
 

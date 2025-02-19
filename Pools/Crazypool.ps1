@@ -54,7 +54,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
         if (-not $ok) {
             Write-Log -Level Warn "Pool API ($Name) has failed for $($Pool_Currency)"

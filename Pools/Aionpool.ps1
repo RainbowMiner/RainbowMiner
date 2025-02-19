@@ -26,7 +26,7 @@ try {
     if ($Pool_Request.pools) {$ok = $true}
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $ok) {
@@ -52,7 +52,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
             $Pool_BlocksRequest = @((Invoke-RestMethodAsync "https://api.aionpool.tech/api/pools/$($Pool_Id)/blocks?pageSize=1000" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120) | Foreach-Object {[PSCustomObject]@{created = Get-Date $_.created;status = $_.status;reward = $_.reward}})
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }
@@ -66,7 +66,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
                 $Pool_PerformanceRequest = @((Invoke-RestMethodAsync "https://api.aionpool.tech/api/pools/$($Pool_Id)/performance" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 3600).stats | Foreach-Object {[PSCustomObject]@{created = Get-Date $_.created;hashrate = $_.poolHashrate}})
             }
             catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Info "Pool performance API ($Name) for $Pool_Currency has failed. "
             }
 

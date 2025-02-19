@@ -20,7 +20,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://pool.sero.cash/api/stats" -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -30,7 +30,7 @@ try {
     $PoolBlocks_Request = Invoke-RestMethodAsync "https://pool.sero.cash/api/blocks" -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool blocks API ($Name) has failed. "
     return
 }

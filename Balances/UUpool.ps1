@@ -11,7 +11,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/uupool.json" -retry 3 -retrywait 200 -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -44,7 +44,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

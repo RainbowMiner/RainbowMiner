@@ -38,7 +38,7 @@ $Payout_Currencies | Where-Object {$_.Name -eq "TON"} | Foreach-Object {
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

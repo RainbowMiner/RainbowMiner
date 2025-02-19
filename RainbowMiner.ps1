@@ -391,7 +391,7 @@ if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyComm
 
 Initialize-Session
 
-$Session.Version         = "4.9.5.5"
+$Session.Version         = "4.9.6.0"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
@@ -440,7 +440,7 @@ if (Test-Path $ConfigFile) {
         $Config_OpenCLPlatformSorting = $Config_Content.OpenCLPlatformSorting
         $Config_DeviceName = $Config_Content.DeviceName
         $Config_ExcludeDeviceName = $Config_Content.ExcludeDeviceName
-    } catch {if ($Error.Count) {$Error.RemoveAt(0)};$LogLevel}
+    } catch {if ($Global:Error.Count) {$Global:Error.RemoveAt(0)};$LogLevel}
     if ($Config_LogLevel -and $Config_LogLevel -ne "`$LogLevel") {$Session.LogLevel = $Config_LogLevel}
     if ($Config_OpenCLPlatformSorting -and $Config_OpenCLPlatformSorting -ne "`$OpenCLPlatformSorting") {
         if ($Config_OpenCLPlatformSorting -is [string]) {

@@ -20,7 +20,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://hiveon.net/api/v1/stats/pool" -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -50,7 +50,7 @@ $Pool_Request.cryptoCurrencies | Where-Object {$Wallets."$($_.name)" -or $InfoOn
                 }
             }
             catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "Pool API ($Name/legacy) has failed. "
             }
         }

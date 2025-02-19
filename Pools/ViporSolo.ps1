@@ -21,7 +21,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://master.vipor.net/api/pools" -tag $Name
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

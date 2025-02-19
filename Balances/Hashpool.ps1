@@ -23,7 +23,7 @@ try {
     if ($PoolCoins_Request.code -eq 0 -and ($PoolCoins_Request.data | Measure-Object).Count) {$ok = $true}
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $ok) {
@@ -61,7 +61,7 @@ $Payout_Currencies | Where-Object {$Pool_Coins.ContainsKey($_.Name) -and (-not $
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

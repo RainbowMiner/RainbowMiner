@@ -21,7 +21,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools" -tag $Name -cycletime 120 -timeout 30
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -59,7 +59,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
             $Pool_BlocksRequest = Invoke-RestMethodAsync "https://api.pmpmining.com/pools/$($_.id)/blocks?page=0&pageSize=50" -tag $Name -timeout 15 -cycletime 120
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
         }
     

@@ -99,7 +99,7 @@ while (-not $AsyncLoader.Stop) {
                     if ($AsyncLoader.Jobs.$Jobkey.Error) {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($AsyncLoader.Jobs.$Jobkey.Error)" -Append -Timestamp}
                 }
                 catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Catch error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" -Append -Timestamp
                 }
                 finally {
@@ -110,7 +110,7 @@ while (-not $AsyncLoader.Stop) {
             }
         }
     }
-    if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Error.Clear()}
+    if ($Global:Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Global:Error.Clear()}
 
     if ($GCStopWatch.Elapsed.TotalSeconds -gt 120) {
         #[System.GC]::Collect()

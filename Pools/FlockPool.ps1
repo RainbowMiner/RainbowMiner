@@ -20,7 +20,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://flockpool.com/api/v1/pool-stats" -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -29,7 +29,7 @@ try {
     $Timestamp24h = (Get-Date).AddHours(-24).ToUniversalTime()
     $PoolBlocks_Request = (Invoke-RestMethodAsync "https://explorer.raptoreum.com/api/getblocks?start=0&length=100&search[value]=&search[regex]=false" -tag $Name -cycletime 120).data | Where-Object {$_.Miner.name -eq "flockpool"} | Foreach-Object {Get-Date $_.Timestamp} | Where-Object {$_ -ge $Timestamp24h}
 } catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Info "Pool Blocks API ($Name) has failed. "
 }
 

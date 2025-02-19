@@ -22,7 +22,7 @@ foreach($PoolExt in @("","Solo")) {
             $Request = Invoke-RestMethodAsync "https://api.thepool.zone/v1/blocx/miner/paymentDetails?address=$($Pool_Wallet)&currency=usd" -cycletime ($Config.BalanceUpdateMinutes*60)
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
 
         if ($Request.error -or -not $Request.result) {

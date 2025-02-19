@@ -33,7 +33,7 @@ $Pool_Users | Foreach-Object {
         $Request = Invoke-RestMethodAsync "https://prohashing.com/api/v1/wallet?apiKey=$($_.API_Key)" -tag $Name -cycletime 120
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     if ($Request.code -ne 200) {

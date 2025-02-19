@@ -19,7 +19,7 @@ try {
     $Request = Invoke-RestMethodAsync "https://api.raptoreum.zone/v1/rzone/miner/paymentDetails?address=$($Config.Pools.$Name.Wallets.RTM)&currency=btc" -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
     return
 }
@@ -36,7 +36,7 @@ $Request_Payments = try {
     }
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 [PSCustomObject]@{

@@ -20,7 +20,7 @@ try {
     }
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -48,7 +48,7 @@ $Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Va
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

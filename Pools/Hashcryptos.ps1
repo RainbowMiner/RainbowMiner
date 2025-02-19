@@ -21,7 +21,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/hashcryptos.json" -retry 3 -retrywait 1000 -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

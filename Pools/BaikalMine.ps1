@@ -27,7 +27,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://baikalmine.com/api/pool/menu/getTopMenu" -tag "BaikalMine" -cycletime 3600 -retry 5 -retrywait 250 | Where {$_.alias -eq $Pool_Type}
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -55,7 +55,7 @@ $Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEa
         $PoolInfo_Request   = Invoke-RestMethodAsync "https://baikalmine.com/api/pool/info/getInfo"  -tag $Name -cycletime 120 -delay 250 -body @{type = $Pool_Type; coin = $_.alias}
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool $($Name): Info API for $($Pool_Currency) has failed. "
         return
     }
@@ -75,7 +75,7 @@ $Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEa
             $PoolStats_Request  = Invoke-RestMethodAsync "https://$($Pool_RPC)/api/stats"  -tag $Name -cycletime 120 -delay 250
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool $($Name): Stats API for $($Pool_Currency) has failed. "
         }
 
@@ -83,7 +83,7 @@ $Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEa
             $PoolBlocks_Request = Invoke-RestMethodAsync "https://$($Pool_RPC)/api/blocks" -tag $Name -cycletime 120 -delay 250
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool $($Name): Blocks API for $($Pool_Currency) has failed. "
         }
 

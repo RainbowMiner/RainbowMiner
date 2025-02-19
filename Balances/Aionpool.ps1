@@ -23,7 +23,7 @@ try {
     if ($Pool_Request.pools) {$ok = $true}
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $ok) {
@@ -55,7 +55,7 @@ $Payout_Currencies | Where-Object {@($Pool_Request.pools | Foreach-Object {$_.co
         }
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

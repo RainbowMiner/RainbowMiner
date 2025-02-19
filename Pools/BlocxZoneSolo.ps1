@@ -28,7 +28,7 @@ try {
     if (-not $Pool_Request.error -and $Pool_Request.result) {$ok = $true}
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $ok) {

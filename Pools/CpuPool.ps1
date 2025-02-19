@@ -20,7 +20,7 @@ try {
     $Pools_BlocksRequest = Invoke-RestMethodAsync "http://cpu-pool.com/api/blocks" -tag $Name -timeout 15 -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool blocks API ($Name) has failed. "
     return
 }
@@ -33,7 +33,7 @@ try {
     }
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

@@ -82,7 +82,7 @@ $Payout_Currencies | Where-Object {$Pools_Data."$($_.Name)" -ne $null -and (-not
             }
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
         }
     }

@@ -45,7 +45,7 @@ try {
     $Coins_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"coins_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool Coins API ($Name) has failed. "
     return
 }
@@ -61,7 +61,7 @@ try {
     $Mining_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"mining_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 3600
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
     return
 }
@@ -100,7 +100,7 @@ if (-not $InfoOnly) {
             $Workers_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($API_Key)" -body '{"method":"workers_list"}' -retry 3 -retrywait 1000 -tag $Name -cycletime 120
         }
         catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
+            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool Workers API ($Name) has failed. "
             return
         }
@@ -140,7 +140,7 @@ if (-not $InfoOnly) {
                         $Switch_Request = Invoke-GetUrl "https://api.gtpool.io/?key=$($API_Key)" -body "{`"method`":`"change_mining`",`"workers`":[`"$($Current_Worker.uniq)`"],`"mining`":`"$($BestCoin_Mining.uniq)`"}"
                     }
                     catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         Write-Log -Level Warn "Pool Change Mining API ($Name) has failed. "
                         return
                     }

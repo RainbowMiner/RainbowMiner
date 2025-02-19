@@ -24,7 +24,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://zergpool.com/api/status" -retry 3 -retrywait 1000 -tag $Name -cycletime 120
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -38,7 +38,7 @@ try {
     $PoolCoins_Request = Invoke-RestMethodAsync "https://zergpool.com/api/currencies" -delay 1000 -tag $Name -cycletime 120 -timeout 20
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool currencies API ($Name) has failed. "
 }
 

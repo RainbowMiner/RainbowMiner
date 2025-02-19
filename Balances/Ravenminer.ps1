@@ -8,8 +8,10 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.ExcludeCoinsymbolBalances.Count -and $Config.ExcludeCoinsymbolBalances -contains "RVN") {return}
 
+$Pool_Valid_Currencies = @("RVN","BTC","ETH","LTC","BCH","ADA","DOGE","MATIC")
+
 $Payout_Wallets = @("","Solo") | Foreach-Object {
-    $Config.Pools."$($Name)$($PoolExt)".Wallets.PSObject.Properties | Where-Object {$_.Value -and $_.Name -in @("RVN","BTC","ETH","LTC","BCH","ADA","DOGE","MATIC")}
+    $Config.Pools."$($Name)$($PoolExt)".Wallets.PSObject.Properties | Where-Object {$_.Value -and $_.Name -in $Pool_Valid_Currencies}
 } | Group-Object -Property Name,Value | Foreach-Object {$_.Group | Select-Object -First 1} | Sort-Object -Property Name,Value
 
 if (-not $Payout_Wallets) {
@@ -25,7 +27,7 @@ $Payout_Wallets | Foreach-Object {
         $Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/v1/wallet/$($_.Value)" -cycletime ($Config.BalanceUpdateMinutes*60)
     }
     catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
         return
     }

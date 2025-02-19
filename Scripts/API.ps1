@@ -292,7 +292,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $Data = Get-ContentByStreamReader $Session.ConfigFiles[$ConfigName].Path -ThrowError
                     $Success = $true
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error reading config file $($Session.ConfigFiles[$ConfigName].Path): $($_.Exception.Message)" -Append -Timestamp
                 }
             }
@@ -323,7 +323,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $ChangeTag = Get-ContentDataMD5hash($ConfigActual)
                     $Success = Set-ContentJson -PathToFile $Session.ConfigFiles[$ConfigName].Path -Data $Data -MD5hash $ChangeTag
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error writing config file $($Session.ConfigFiles[$ConfigName].Path): $($_.Exception.Message)" -Append -Timestamp
                 }
                 $ConfigActual = $ChangeTag = $null
@@ -722,7 +722,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 try {
                     Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
 
                 if ($API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "NVIDIA"}) {
@@ -738,7 +738,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         )
                         Invoke-Exe "nvidia-smi" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
 
                 }
@@ -751,10 +751,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         } | Foreach-Object {"$("{0:X2}:{1:X2}.{2:d}" -f ($Matches[0] -split "," | Foreach-Object {[int]$_})) $(if ($_.AdapterCompatibility -match "Advanced Micro Devices") {"$($Matches[0]) "})$($_.Name)"} | Sort-Object
                     }
                     catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }) | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-Null
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
                
                 if ($API.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq "AMD"}) {
@@ -766,7 +766,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         " " | Out-File $TestFileName -Append -Encoding utf8
                         Invoke-Exe ".\Includes\odvii_$(if ([System.Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
 
                 }
@@ -784,7 +784,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         )
                         Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
 
                 }
@@ -811,7 +811,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         }
                         Invoke-Exe $_.Path -ArgumentList $_.ListDevices -WorkingDirectory $Pwd -ExpandLines | Out-File $TestFileName -Encoding utf8 -Append
                     } catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
                 }
                 $API_Miners = $null
@@ -1305,7 +1305,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     Invoke-Reboot
                     $Data = "Rebooting now!"
                 } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     $Data = if ($IsLinux) {"Rebooting in some moments"} else {"Failed to reboot, sorry!"}
                 }
             } else {
@@ -1499,7 +1499,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
                             $RatesUri = $RatesQry = $SymbolStr = $null
                             Remove-Variable -Name RatesUri, RatesQry, SymbolStr -ErrorAction Ignore
-                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                     }
                     if ($EnableFixBigInt) {
                         $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey -fixbigint $(Get-Yes $Parameters.fixbigint)
@@ -1507,7 +1507,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                     }
                     if ($Result) {$Status = $true}
-                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                 $Data = [PSCustomObject]@{Status=$Status;Content=if ($Result -is [array]) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
 
                 $pbody = $pheaders = $Result = $null
@@ -1561,7 +1561,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
                         $Status = $true
                     }
-                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                 $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
 
                 $Result = $null
@@ -1593,7 +1593,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Result = Invoke-BinanceRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30
                         $Status = $true
                     }
-                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                 $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
 
                 $Result = $null
@@ -1626,7 +1626,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Result = Invoke-NHRequest $Parameters.endpoint $Parameters.key $Parameters.secret $Parameters.orgid -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30
                         $Status = $true
                     }
-                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
                 $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
 
                 $Result = $null
@@ -1736,7 +1736,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         LastReset = "$(([datetime]$_.LastReset).ToString("yyyy-MM-dd HH:mm:ss"))"
                     }
                 }
-            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
             $Data = if ($Data) {ConvertTo-Json $Data -Depth 10} else {"[]"}
             break
         }
@@ -1808,7 +1808,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $ResponseStream.Write($Data)
                 $ResponseStream.Flush()
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             } finally {
                 $ResponseStream.Dispose()
             }
@@ -1817,7 +1817,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Response.OutputStream.Write($Data, 0, $Data.Length)
         }
     } catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
+        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         if ($Session.Config.LogLevel -ne "Silent") {
             Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Response to $($Path) not sent: $($_.Exception.Message)" -Append -Timestamp
         }
@@ -1826,7 +1826,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             try {
                 $Response.Close()
             } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 if ($Session.Config.LogLevel -ne "Silent") {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Close response to $($Path) failed: $($_.Exception.Message)" -Append -Timestamp
                 }
@@ -1834,11 +1834,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
         }
     }
 
-    if ($Error.Count) {
+    if ($Global:Error.Count) {
         if ($Session.Config.LogLevel -ne "Silent") {
             $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error during $($Path): $($_.Exception.Message)" -Append -Timestamp}
         }
-        $Error.Clear()
+        $Global:Error.Clear()
     }
 
     if ($task -ne $null) {

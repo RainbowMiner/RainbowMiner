@@ -20,7 +20,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.raptoreum.zone/v1/rzone/" -tag $Name -cycletime 120 -retry 5 -retrywait 250
 }
 catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
+    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if ($Pool_Request.error -or -not $Pool_Request.result.primary) {
