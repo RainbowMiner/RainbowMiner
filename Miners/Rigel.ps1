@@ -12,13 +12,13 @@ if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return}
 $ManualUri = "https://github.com/rigelminer/rigel/releases"
 $Port = "324{0:d2}"
 $DevFee = 0.7
-$Version = "1.20.1"
+$Version = "1.21.0"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.20.1-rigel/rigel-1.20.1-linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.21.0-rigel/rigel-1.21.0-linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -26,7 +26,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Rigel\rigel.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.20.1-rigel/rigel-1.20.1-win.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.21.0-rigel/rigel-1.21.0-win.zip"
             Cuda = "8.0"
         }
     )
@@ -59,6 +59,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "KawPOW4g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KawPOW
     [PSCustomObject]@{MainAlgorithm = "KawPOW5g";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Algorithm = "kawpow"; Fee = 1.0; ExcludePoolName = "MiningRigRentals"} #KayPOW
     [PSCustomObject]@{MainAlgorithm = "quai";            DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #ProgPowQuai/QUAI
+    [PSCustomObject]@{MainAlgorithm = "progpowz";        DAG = $true; MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #ProgPowZ/ZANO
     [PSCustomObject]@{MainAlgorithm = "sha256ton";                    MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0; PoolName = "Icemining"} #SHA256ton/GRAM+CHAPA
     [PSCustomObject]@{MainAlgorithm = "sha512256d";                   MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 1.0} #SHA512256d/RAD
     [PSCustomObject]@{MainAlgorithm = "xelishashv2";                  MinMemGB = 2; Params = "";                     Vendor = @("NVIDIA"); Fee = 3.0; ExtendInterval = 3} #XelisHashv2/XEL
