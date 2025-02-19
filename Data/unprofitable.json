@@ -32,14 +32,9 @@
     "CURVE"
   ],
   "Pools": {
-    "MiningPoolHub": {
-      "Coins": [
-        "ZCL"
-      ]
-    },
-    "MiningPoolHubCoins": {
-      "Coins": [
-        "ZCL"
+    "Hashcryptos": {
+      "Algorithms": [
+        "Neoscrypt"
       ]
     },
     "unMineable": {
