@@ -641,7 +641,7 @@ function Start-Core {
         }
 
         #Cleanup database
-        @("runningminers.json","activeminers.json","failedminers.json","minersneedingbenchmark.json","pools.json","allpools.json","newpools.json","miners.json","fastestminers.json") | Foreach-Object {
+        @("newpools.json") | Foreach-Object {
             $_
             Get-ChildItem ".\Data" -Filter $_ -File | Foreach-Object { Remove-Item $_.FullName -Force }
         }
@@ -2083,8 +2083,8 @@ function Invoke-Core {
     Write-Log "Updating exchange rates. "
     Update-Rates
 
-    #$API.Rates = ConvertTo-Json $Global:Rates -Depth 10
-    ConvertTo-Json $Global:Rates -Depth 10 | Set-Content ".\Data\rates.json" -ErrorAction Ignore
+    $API.Rates = ConvertTo-Json $Global:Rates -Depth 10
+    #ConvertTo-Json $Global:Rates -Depth 10 | Set-Content ".\Data\rates.json" -ErrorAction Ignore
     $ActualRates = [PSCustomObject]@{}
     $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Global:Rates.$_}
     $API.ActualRates = $ActualRates
@@ -2114,8 +2114,8 @@ function Invoke-Core {
     Get-Stat -Miners -Quiet
     [hashtable]$Disabled      = Get-Stat -Disabled
 
-    #$API.Stats = $Global:StatsCache
-    ConvertTo-Json $Global:StatsCache -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\stats.json" -ErrorAction Ignore
+    $API.Stats = $Global:StatsCache
+    #ConvertTo-Json $Global:StatsCache -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\stats.json" -ErrorAction Ignore
 
     #Validate Minerspeeds
     foreach($Miner_Key in @($Global:MinerSpeeds.Keys)) {
@@ -2234,8 +2234,8 @@ function Invoke-Core {
 
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {
-            #$API.Balances = ConvertTo-Json $BalancesData -Depth 10
-            ConvertTo-Json $BalancesData -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\balances.json" -ErrorAction Ignore
+            $API.Balances = ConvertTo-Json $BalancesData -Depth 10
+            #ConvertTo-Json $BalancesData -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\balances.json" -ErrorAction Ignore
 
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
@@ -2312,7 +2312,7 @@ function Invoke-Core {
     $Global:AllPools = $null #will be set to NewPools later
     Remove-Variable -Name AllPools -Scope Global
 
-    if ($true -or $Session.Config.EnableDebugMode) {
+    if ($Session.Config.EnableDebugMode) {
         #$API.NewPools = $NewPools | ConvertTo-Json -Depth 10
         ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\newpools.json" -ErrorAction Ignore
     }
@@ -2371,10 +2371,32 @@ function Invoke-Core {
 
     $AllPools_BeforeWD_Count = $NewPools.Count
 
-    #$API.AllPools   = $NewPools | ConvertTo-Json -Depth 10
-    ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\allpools.json" -ErrorAction Ignore
+    $API.AllPools   = ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore
+    #ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\allpools.json" -ErrorAction Ignore
     $API.Algorithms = @($NewPools.Algorithm | Sort-Object -Unique) 
 
+
+    #Setup and reset Watchdog
+    $WDIntervalTime = $Session.Timer.AddSeconds( - $Session.WatchdogInterval)
+    $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
+
+    if ($Session.WatchdogReset -gt $Session.WatchdogInterval) {
+        $WDRemoveTimers = $Global:WatchdogTimers.Where({$_.Kicked -le $WDResetTime})
+        if ($WDRemoveTimers.Count) {
+            $Global:WatchdogTimers = @($Global:WatchdogTimers | Where-Object {$_ -notin $WDRemoveTimers})
+        }
+        Remove-Variable "WDRemoveTimers"
+    }
+
+    #Apply watchdog to pools, only if there is more than one pool selected
+    if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
+        $NewPools = $NewPools.Where({-not $_.Disabled}).Where({
+            $Pool = $_
+            $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({($_.PoolName -eq $Pool.Name) -and ($_.Kicked -lt $WDIntervalTime) -and ($_.Kicked -gt $WDResetTime)})
+            $Pool.Exclusive -or ($Pool_WatchdogTimers.Count -lt <#stage#>3 -and $Pool_WatchdogTimers.Where({$Pool.Algorithm -contains $_.Algorithm}).Count -lt <#statge#>2)
+        })
+    }
+    if ($Pool_WatchdogTimers -ne $null) {Remove-Variable "Pool_WatchdogTimers"}
     #Setup and reset Watchdog
     $WDIntervalTime = $Session.Timer.AddSeconds( - $Session.WatchdogInterval)
     $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
@@ -2571,15 +2593,15 @@ function Invoke-Core {
             $Pools.$_.HasMinerExclusions = $Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count
         }
     } else {
-        #$API.AllPools   = $null
-        "[]" > ".\Data\allpools.json"
+        $API.AllPools   = $null
+        #"[]" > ".\Data\allpools.json"
         $API.Algorithms = $null
     }
 
     #Give API access to the pools information
 
-    #$API.Pools = ConvertTo-Json @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK}) -Depth 10
-    ConvertTo-Json @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\pools.json"
+    $API.Pools = ConvertTo-Json @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK}) -Depth 10 -ErrorAction Ignore
+    #ConvertTo-Json @($Pools.PSObject.Properties.Value | Select-Object).Where({-not $_.SoloMining -or $_.BLK}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\pools.json"
  
     #Load information about the miners
     Write-Log -Level Info "Getting miner information. "
@@ -3305,8 +3327,8 @@ function Invoke-Core {
     Remove-Variable -Name Miner_WatchdogTimers -ErrorAction Ignore
 
     #Give API access to the miners information
-    #$API.Miners = $Miners | ConvertTo-Json -Depth 10
-    ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\miners.json" -ErrorAction Ignore
+    $API.Miners = ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore
+    #ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\miners.json" -ErrorAction Ignore
 
     #Remove all failed and disabled miners
     $Miners = $Miners.Where({-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0})
@@ -3373,16 +3395,16 @@ function Invoke-Core {
     }
  
     #Give API access to the fasted miners information
-    #$API.FastestMiners = $Miners | ConvertTo-Json -Depth 10
+    $API.FastestMiners = ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore
 
-    ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\fastestminers.json" -ErrorAction Ignore
+    #ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\fastestminers.json" -ErrorAction Ignore
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners.Where({$_.HashRates.PSObject.Properties.Value -contains $null})
     $MinersNeedingBenchmarkCount = $MinersNeedingBenchmark.Count
-    #$API.MinersNeedingBenchmark = $MinersNeedingBenchmark
+    $API.MinersNeedingBenchmark = ConvertTo-Json $MinersNeedingBenchmark -Depth 2 -WarningAction Ignore -ErrorAction Ignore
 
-    ConvertTo-Json $MinersNeedingBenchmark -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\minersneedingbenchmark.json" -ErrorAction Ignore
+    #ConvertTo-Json $MinersNeedingBenchmark -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\minersneedingbenchmark.json" -ErrorAction Ignore
 
     #Update the active miners
     $Miners.ForEach({
@@ -3837,13 +3859,13 @@ function Invoke-Core {
     $API.WatchdogTimers = $Global:WatchdogTimers.Where({$_})
     $API.CrashCounter   = $Global:CrashCounter.Where({$_})
 
-    #$API.ActiveMiners   = @($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner}) | Select-Object -Property * -ExcludeProperty *Job)
-    #$API.RunningMiners  = $API.ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running})
-    #$API.FailedMiners   = @($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Failed}) | Select-Object -Property * -ExcludeProperty *Job)
+    $API.ActiveMiners   = ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
+    $API.RunningMiners  = ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
+    $API.FailedMiners   = ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Failed}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
 
-    ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\activeminers.json" -ErrorAction Ignore
-    ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\runningminers.json" -ErrorAction Ignore
-    ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Failed}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\failedminers.json" -ErrorAction Ignore
+    #ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\activeminers.json" -ErrorAction Ignore
+    #ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\runningminers.json" -ErrorAction Ignore
+    #ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Failed}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\failedminers.json" -ErrorAction Ignore
 
     #
     #Start output to host
@@ -5338,7 +5360,8 @@ function Update-ActiveMiners {
         }
     })
     if ($MinersFailed) {
-        ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\runningminers.json" -ErrorAction Ignore
+        $API.RunningMiners = ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore 
+        #ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\runningminers.json" -ErrorAction Ignore
     }
     if (-not $Silent) {
         [PSCustomObject]@{
