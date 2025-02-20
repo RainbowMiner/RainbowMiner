@@ -6102,7 +6102,7 @@ function Set-AlgorithmsConfigDefault {
         }
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile="";MinerName="";ExcludeMinerName=""}
             $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1"
             $AllAlgorithms = Get-Algorithms -Values
@@ -6112,11 +6112,16 @@ function Set-AlgorithmsConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Preset = $Sorted = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6140,7 +6145,7 @@ function Set-CoinsConfigDefault {
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinHashrateSolo = "0"; MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
             $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1"
             
@@ -6152,11 +6157,16 @@ function Set-CoinsConfigDefault {
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
                 $Sorted | Add-Member $_ $Preset.$_ -Force
             }
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Preset = $Sorted = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6180,7 +6190,7 @@ function Set-GpuGroupsConfigDefault {
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $GpuNames = Get-Device "amd","intel","nvidia" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
             foreach ($GpuName in $GpuNames) {
                 if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
@@ -6188,11 +6198,16 @@ function Set-GpuGroupsConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Preset = $Sorted = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6216,7 +6231,7 @@ function Set-CombosConfigDefault {
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
             $Sorted = [PSCustomObject]@{}
             Foreach($SubsetType in @("AMD","INTEL","NVIDIA")) {
@@ -6285,12 +6300,16 @@ function Set-CombosConfigDefault {
 
                 $Preset.$SubsetType.PSObject.Properties.Name | Where-Object {$NewSubsetModels -icontains $_} | Sort-Object | Foreach-Object {$Sorted.$SubsetType | Add-Member $_ "$(if (Get-Yes $Preset.$SubsetType.$_) {1} else {0})" -Force}
             }
-            
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Preset = $Sorted = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6314,7 +6333,7 @@ function Set-DevicesConfigDefault {
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker="";EnableLHR=""}
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1"
             $Devices = Get-Device "amd","intel","nvidia","cpu" -IgnoreOpenCL
@@ -6326,11 +6345,16 @@ function Set-DevicesConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Preset = $Sorted = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6352,11 +6376,11 @@ function Set-MinersConfigDefault {
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTimeUtc) {
         $Algo = [hashtable]@{}
         $Done = [PSCustomObject]@{}
-        $ChangeTag = $null
+        $Preset_Copy = $null
         if (Test-Path $PathToFile) {
             $PresetTmp = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
-            $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
+            $Preset_Copy = $PresetTmp | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
             #autofix json array in array for count one
             $PresetTmp.PSObject.Properties.Name | Where-Object {$PresetTmp.$_ -is [array] -and $PresetTmp.$_.Count -eq 1 -and $PresetTmp.$_[0].value -is [array]} | Foreach-Object {$PresetTmp.$_ = $PresetTmp.$_[0].value}
@@ -6480,11 +6504,16 @@ function Set-MinersConfigDefault {
                     $DoneSave | Add-Member $Name @($Done.$Name | Sort-Object MainAlgorithm,SecondaryAlgorithm)
                 }
             }
-            Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
+            if (-not [RBMToolBox]::CompareObject($DoneSave,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $DoneSave > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $PresetTmp = $DoneSave = $Done = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6522,7 +6551,7 @@ function Set-PoolsConfigDefault {
         }
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $Done = [PSCustomObject]@{}
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";MaxTimeToFind="";Region="";SSL="";BalancesKeepAlive=""}
             $Session.PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
@@ -6571,14 +6600,19 @@ function Set-PoolsConfigDefault {
                     }
                     $Done | Add-Member $Pool_Name $Setup_Content
                 }
-                Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null
+                if (-not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
+                    Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
+                }
             } else {
                 Write-Log -Level Error "No pools found!"
             }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name): $($_.Exception.Message)"
+        }
+        finally {
+            $Done = $Pools = $Setup_Currencies = $Preset = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6602,7 +6636,7 @@ function Set-OCProfilesConfigDefault {
         }
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;PriorizeThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*";PreCmd="";PreCmdArguments="";PostCmd="";PostCmdArguments="";LockMemoryClock = "*";LockCoreClock = "*"}
             if ($true -or -not $Preset.PSObject.Properties.Name) {
                 $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1"
@@ -6627,11 +6661,16 @@ function Set-OCProfilesConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Sorted = $Preset = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6658,7 +6697,8 @@ function Set-SchedulerConfigDefault {
             if ($Preset -is [string] -or $Preset -eq $null) {
                 $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
             }
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Done = @($Preset | Select-Object)
+            $Preset_Copy = ConvertTo-Json $Done -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
             if ($Preset -isnot [array] -and $Preset.value -ne $null) {
                 $Preset = $Preset.value
@@ -6673,12 +6713,17 @@ function Set-SchedulerConfigDefault {
                     elseif ($_.DayOfWeek -match "^[0-6]$") {$_.Name = "$([DayOfWeek]$_.DayOfWeek)"}
                 }
             }
-
-            Set-ContentJson -PathToFile $PathToFile -Data @($Preset | Select-Object) -MD5hash $ChangeTag > $null
+            $Done = @($Preset | Select-Object)
+            if (-not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Done = $Preset = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
@@ -6705,7 +6750,8 @@ function Set-UserpoolsConfigDefault {
             if ($Preset -is [string] -or $Preset -eq $null) {
                 $Preset = 1..5 | Foreach-Object {$Default | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore}
             }
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Done = @($Preset | Select-Object)
+            $Preset_Copy = ConvertTo-Json $Done -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
             if ($Preset -isnot [array] -and $Preset.value -ne $null) {
                 $Preset = $Preset.value
@@ -6717,11 +6763,17 @@ function Set-UserpoolsConfigDefault {
                 }
             }
 
-            Set-ContentJson -PathToFile $PathToFile -Data @($Preset | Select-Object) -MD5hash $ChangeTag > $null
+            $Done = @($Preset | Select-Object)
+            if (-not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
+            }
         }
         catch{
             if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
+        }
+        finally {
+            $Done = $Preset = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists

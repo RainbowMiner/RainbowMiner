@@ -4143,10 +4143,23 @@ function Invoke-Core {
             if ($APIClients) {
                 Write-Host " "
                 Write-Host "Clients: " -NoNewLine
-                $APIClients | Foreach-Object {
-                    $lastseen = [Math]::Round((Get-UnixTimestamp)-$_.timestamp,0)
-                    Write-Host "[$($_.workername)@$(if ($_.machinename) {$_.machinename} else {$_.machineip})]" -ForegroundColor "$(if ($lastseen -gt 300) {"Red"} else {"Green"}) " -NoNewline
+                $lookup = @{}
+                $dropsome = $false
+                foreach ($obj in $APIClients) {
+                    $key = "$($obj.workername)|$($obj.machinename)" 
+                    if (-not $lookup.ContainsKey($key) -or $obj.timestamp -gt $lookup[$key].timestamp) {
+                        $lookup[$key] = $obj
+                        $lastseen = [Math]::Round((Get-UnixTimestamp)-$obj.timestamp,0)
+                        Write-Host "[$($obj.workername)@$(if ($obj.machinename) {$obj.machinename} else {$obj.machineip})]" -ForegroundColor "$(if ($lastseen -gt 300) {"Red"} else {"Green"}) " -NoNewline
+                    } else {
+                        $dropsome = $true
+                    }
                 }
+                if ($dropsome) {
+                    $APIClients.Clear()
+                    $APIClients.AddRange($lookup.Values)
+                }
+                $lookup = $null
                 Write-Host " "
             }
         } else {
