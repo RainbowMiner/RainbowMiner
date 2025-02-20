@@ -310,122 +310,95 @@ public static class RBMToolBox
         return copy;
     }
 
-    public static PSObject DeepCopy(PSObject inputObject, bool throwError = false)
+    public static bool ComparePSCustomObjects(PSObject obj1, PSObject obj2)
     {
-        if (inputObject == null)
-            return null;
+        if (obj1 == null || obj2 == null)
+            return obj1 == obj2;  // Both null = true, one null = false
 
-        try
+        HashSet<string> properties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var prop in obj1.Properties) properties.Add(prop.Name);
+        foreach (var prop in obj2.Properties) properties.Add(prop.Name);
+
+        foreach (string prop in properties)
         {
-            if (inputObject.BaseObject is Hashtable)
+            var prop1 = obj1.Properties[prop];
+            var prop2 = obj2.Properties[prop];
+
+            bool hasProp1 = prop1 != null;
+            bool hasProp2 = prop2 != null;
+
+            if (hasProp1 != hasProp2) return false;
+
+            object value1 = hasProp1 ? prop1.Value : null;
+            object value2 = hasProp2 ? prop2.Value : null;
+
+            if (value1 == null && value2 == null) continue;
+            if (value1 == null || value2 == null) return false;
+
+            if (value1.GetType() != value2.GetType()) return false;
+
+            // Fix for PowerShell 5.1: No pattern matching
+            if (value1 is PSObject && value2 is PSObject)
             {
-                return new PSObject(DeepCopyHashtable((Hashtable)inputObject.BaseObject));
+                if (!ComparePSCustomObjects((PSObject)value1, (PSObject)value2)) return false;
             }
-            else if (inputObject.BaseObject is Array)
+            else if (value1 is Hashtable && value2 is Hashtable)
             {
-                return new PSObject(DeepCopyArray((Array)inputObject.BaseObject));
+                if (!CompareHashtables((Hashtable)value1, (Hashtable)value2)) return false;
             }
-
-            return DeepCopyUsingReflection(inputObject);
-        }
-        catch (Exception ex)
-        {
-            if (throwError)
-                throw new Exception("Warning: DeepCopy failed " + ex.Message, ex);
-            return null;
-        }
-    }
-
-    private static object DeepCopyGetValue(object value)
-    {
-        if (value == null)
-            return null;
-
-        if (value is string)
-            return value;
-
-        // Recursively deep copy values
-        if (value is PSObject)
-        {
-            value = DeepCopy((PSObject)value);
-        }
-        else if (value is Hashtable)
-        {
-            value = DeepCopyHashtable((Hashtable)value);
-        }
-        else if (value is Array)
-        {
-            value = DeepCopyArray((Array)value);
-        }
-        else if (value.GetType().IsClass)
-        {
-            value = CloneClass(value);
-        }
-        return value;
-    }
-
-    private static Hashtable DeepCopyHashtable(Hashtable original)
-    {
-        Hashtable copy = new Hashtable();
-        foreach (DictionaryEntry entry in original)
-        {
-            object key = entry.Key;
-            copy[key] = DeepCopyGetValue(entry.Value);
-        }
-        return copy;
-    }
-
-    private static Array DeepCopyArray(Array original)
-    {
-        if (original == null)
-            return null;
-
-        Type elementType = original.GetType().GetElementType();
-        int length = original.Length;
-        Array copy = Array.CreateInstance(elementType, length);
-
-        for (int i = 0; i < length; i++)
-        {
-            copy.SetValue(DeepCopyGetValue(original.GetValue(i)), i);
-        }
-
-        return copy;
-    }
-
-    private static PSObject DeepCopyUsingReflection(PSObject inputObject)
-    {
-        PSObject copy = new PSObject();
-        foreach (var property in inputObject.Properties)
-        {
-            copy.Properties.Add(new PSNoteProperty(property.Name, DeepCopyGetValue(property.Value)));
-        }
-
-        return copy;
-    }
-
-    private static object CloneClass(object obj)
-    {
-        Type type = obj.GetType();
-        ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
-
-        if (constructor == null)
-        {
-            return obj; // Skip objects without parameterless constructor
-        }
-
-        object clonedObj = Activator.CreateInstance(type);
-        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (property.CanRead && property.CanWrite)
+            else if (value1 is Array && value2 is Array)
             {
-                object value = property.GetValue(obj);
-                if (value != null && value.GetType().IsClass)
-                {
-                    value = CloneClass(value);
-                }
-                property.SetValue(clonedObj, value);
+                if (!CompareArrays((Array)value1, (Array)value2)) return false;
+            }
+            else if (!value1.Equals(value2))
+            {
+                return false;
             }
         }
-        return clonedObj;
+
+        return true;
+    }
+
+    private static bool CompareHashtables(Hashtable hash1, Hashtable hash2)
+    {
+        if (hash1.Count != hash2.Count) return false;
+
+        foreach (object key in hash1.Keys)
+        {
+            if (!hash2.ContainsKey(key)) return false;
+            if (!CompareValues(hash1[key], hash2[key])) return false;
+        }
+
+        return true;
+    }
+
+    private static bool CompareArrays(Array arr1, Array arr2)
+    {
+        if (arr1.Length != arr2.Length) return false;
+
+        for (int i = 0; i < arr1.Length; i++)
+        {
+            if (!CompareValues(arr1.GetValue(i), arr2.GetValue(i))) return false;
+        }
+
+        return true;
+    }
+
+    private static bool CompareValues(object val1, object val2)
+    {
+        if (val1 == null && val2 == null) return true;
+        if (val1 == null || val2 == null) return false;
+        if (val1.GetType() != val2.GetType()) return false;
+
+        if (val1 is PSObject && val2 is PSObject)
+            return ComparePSCustomObjects((PSObject)val1, (PSObject)val2);
+
+        if (val1 is Hashtable && val2 is Hashtable)
+            return CompareHashtables((Hashtable)val1, (Hashtable)val2);
+
+        if (val1 is Array && val2 is Array)
+            return CompareArrays((Array)val1, (Array)val2);
+
+        return val1.Equals(val2);
     }
 }
