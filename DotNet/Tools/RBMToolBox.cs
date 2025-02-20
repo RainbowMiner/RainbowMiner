@@ -298,107 +298,336 @@ public static class RBMToolBox
     }
 
     // 8. Object handling
-    public static PSObject CopyObject(PSObject source)
+    public static object CopyObject(object obj)
     {
-        if (source == null) return null;
+        if (obj == null)
+            return null;
 
-        PSObject copy = new PSObject();
-        foreach (var prop in source.Properties)
+        if (obj is ValueType || obj is string)
+            return obj;
+
+#if NETCOREAPP3_0_OR_GREATER
+        if (obj is PSObject psObject)
+            return CopyPSCustomObject(psObject);
+
+        if (obj is Hashtable hashtable)
+            return CopyHashtable(hashtable);
+
+        if (obj is Array array)
+            return CopyArray(array);
+
+        if (obj is ICloneable cloneable)
+            return cloneable.Clone();
+#else
+        if (obj is PSObject)
+            return CopyPSCustomObject((PSObject)obj);
+
+        if (obj is Hashtable)
+            return CopyHashtable((Hashtable)obj);
+
+        if (obj is Array)
+            return CopyArray((Array)obj);
+
+        if (obj is ICloneable)
+            return ((ICloneable)obj).Clone();
+#endif
+        return obj;
+    }
+
+    public static PSObject CopyPSCustomObject(PSObject obj)
+    {
+        PSObject newObj = new PSObject();
+#if NETCOREAPP3_0_OR_GREATER
+        foreach (var prop in obj.Properties)
         {
-            copy.Properties.Add(new PSNoteProperty(prop.Name, prop.Value));
+            object value = CopyObject(prop.Value);
+            newObj.Properties.Add(new PSNoteProperty(prop.Name, value));
         }
-        return copy;
+#else
+        foreach (PSPropertyInfo prop in obj.Properties)
+        {
+            object value = CopyObject(prop.Value);
+            newObj.Properties.Add(new PSNoteProperty(prop.Name, value));
+        }
+#endif
+        //newObj.TypeNames.Clear();
+        return newObj;
+    }
+
+    public static Hashtable CopyHashtable(Hashtable original)
+    {
+        Hashtable clone = new Hashtable();
+        foreach (DictionaryEntry entry in original)
+        {
+            object key = entry.Key;
+            object value = CopyObject(entry.Value);
+            clone[key] = value;
+        }
+        return clone;
+    }
+
+    public static Array CopyArray(Array original)
+    {
+        Type elementType = original.GetType().GetElementType();
+        Array clone = Array.CreateInstance(elementType, original.Length);
+
+        for (int i = 0; i < original.Length; i++)
+        {
+            object value = CopyObject(original.GetValue(i));
+            clone.SetValue(value, i);
+        }
+
+        return clone;
+    }
+
+    private static object TryUnwrapPSObject(object obj, Type targetType)
+    {
+#if NETCOREAPP3_0_OR_GREATER
+        if (obj is PSObject psObj && psObj.BaseObject.GetType() == targetType)
+            return psObj.BaseObject;
+#else
+        if (obj is PSObject)
+        {
+            PSObject psObj = (PSObject)obj;
+            if (psObj.BaseObject.GetType() == targetType)
+                return psObj.BaseObject;
+        }
+#endif
+        return obj;
+    }
+
+    public static bool CompareObject(object obj1, object obj2)
+    {
+        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null || obj2 == null) return false;
+
+        Type type1 = obj1.GetType();
+        Type type2 = obj2.GetType();
+
+        if (type1 != type2)
+        {
+            obj1 = TryUnwrapPSObject(obj1, type2);
+            obj2 = TryUnwrapPSObject(obj2, type1);
+
+            if (obj1.GetType() != obj2.GetType())
+                return false;
+        }
+
+        if (obj1 is ValueType || obj1 is string) return obj1.Equals(obj2);
+#if NETCOREAPP3_0_OR_GREATER
+        if (obj1 is PSObject psObj1 && obj2 is PSObject psObj2) return ComparePSCustomObjects(psObj1, psObj2);
+        if (obj1 is Hashtable hash1 && obj2 is Hashtable hash2) return CompareHashtables(hash1, hash2);
+        if (obj1 is Array arr1 && obj2 is Array arr2) return CompareArrays(arr1, arr2);
+#else
+        if (obj1 is PSObject && obj2 is PSObject) return ComparePSCustomObjects((PSObject)obj1, (PSObject)obj2);
+        if (obj1 is Hashtable && obj2 is Hashtable) return CompareHashtables((Hashtable)obj1, (Hashtable)obj2);
+        if (obj1 is Array && obj2 is Array) return CompareArrays((Array)obj1, (Array)obj2);
+#endif
+        return obj1.Equals(obj2);
     }
 
     public static bool ComparePSCustomObjects(PSObject obj1, PSObject obj2)
     {
-        if (obj1 == null || obj2 == null)
-            return obj1 == obj2;  // Both null = true, one null = false
+        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null || obj2 == null) return false;
 
-        HashSet<string> properties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var prop in obj1.Properties) properties.Add(prop.Name);
-        foreach (var prop in obj2.Properties) properties.Add(prop.Name);
+        var props1 = obj1.Properties;
+        var props2 = obj2.Properties;
 
-        foreach (string prop in properties)
+        int count1 = 0, count2 = 0;
+        var enumerator1 = props1.GetEnumerator();
+        var enumerator2 = props2.GetEnumerator();
+
+        while (enumerator1.MoveNext()) count1++;
+        while (enumerator2.MoveNext()) count2++;
+
+        if (count1 != count2) return false;
+
+        Dictionary<string, PSPropertyInfo> lookup2 = new Dictionary<string, PSPropertyInfo>();
+
+        foreach (var prop in props2)
+            lookup2[prop.Name] = prop;
+
+        foreach (var prop1 in props1)
         {
-            var prop1 = obj1.Properties[prop];
-            var prop2 = obj2.Properties[prop];
-
-            bool hasProp1 = prop1 != null;
-            bool hasProp2 = prop2 != null;
-
-            if (hasProp1 != hasProp2) return false;
-
-            object value1 = hasProp1 ? prop1.Value : null;
-            object value2 = hasProp2 ? prop2.Value : null;
-
-            if (value1 == null && value2 == null) continue;
-            if (value1 == null || value2 == null) return false;
-
-            if (value1.GetType() != value2.GetType()) return false;
-
-            // Fix for PowerShell 5.1: No pattern matching
-            if (value1 is PSObject && value2 is PSObject)
-            {
-                if (!ComparePSCustomObjects((PSObject)value1, (PSObject)value2)) return false;
-            }
-            else if (value1 is Hashtable && value2 is Hashtable)
-            {
-                if (!CompareHashtables((Hashtable)value1, (Hashtable)value2)) return false;
-            }
-            else if (value1 is Array && value2 is Array)
-            {
-                if (!CompareArrays((Array)value1, (Array)value2)) return false;
-            }
-            else if (!value1.Equals(value2))
-            {
+#if NETCOREAPP3_0_OR_GREATER
+            if (!lookup2.TryGetValue(prop1.Name, out var prop2))
                 return false;
-            }
+#else
+            PSPropertyInfo prop2;  // ✅ Fix: Declare before calling TryGetValue
+
+            if (!lookup2.TryGetValue(prop1.Name, out prop2)) // ✅ Fix: Pass declared variable
+                return false;
+#endif
+
+            if (!CompareObject(prop1.Value, prop2.Value))
+                return false;
         }
 
         return true;
     }
 
-    private static bool CompareHashtables(Hashtable hash1, Hashtable hash2)
+    public static bool CompareHashtables(Hashtable hash1, Hashtable hash2)
     {
+        if (hash1 == null && hash2 == null) return true;
+        if (hash1 == null || hash2 == null) return false;
         if (hash1.Count != hash2.Count) return false;
 
         foreach (object key in hash1.Keys)
         {
             if (!hash2.ContainsKey(key)) return false;
-            if (!CompareValues(hash1[key], hash2[key])) return false;
+            if (!CompareObject(hash1[key], hash2[key])) return false;
         }
-
         return true;
     }
 
-    private static bool CompareArrays(Array arr1, Array arr2)
+    public static bool CompareArrays(Array arr1, Array arr2, bool sort = false)
     {
+        if (arr1 == null && arr2 == null) return true;
+        if (arr1 == null || arr2 == null) return false;
+
         if (arr1.Length != arr2.Length) return false;
+
+        if (sort)
+        {
+            arr1 = (object[])arr1.Clone();
+            arr2 = (object[])arr2.Clone();
+            Array.Sort(arr1);
+            Array.Sort(arr2);
+        }
 
         for (int i = 0; i < arr1.Length; i++)
         {
-            if (!CompareValues(arr1.GetValue(i), arr2.GetValue(i))) return false;
+            if (!CompareObject(arr1.GetValue(i), arr2.GetValue(i))) return false;
+        }
+        return true;
+    }
+
+    public static bool CompareObjectIgnoreCase(object obj1, object obj2)
+    {
+        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null || obj2 == null) return false;
+        if (obj1.GetType() != obj2.GetType()) return false;
+        if (obj1 is ValueType || obj1 is string) return CompareValuesIgnoreCase(obj1, obj2);
+#if NETCOREAPP3_0_OR_GREATER
+        if (obj1 is PSObject psObj1 && obj2 is PSObject psObj2) return ComparePSCustomObjectsIgnoreCase(psObj1, psObj2);
+        if (obj1 is Hashtable hash1 && obj2 is Hashtable hash2) return CompareHashtablesIgnoreCase(hash1, hash2);
+        if (obj1 is Array arr1 && obj2 is Array arr2) return CompareArraysIgnoreCase(arr1, arr2);
+#else
+        if (obj1 is PSObject && obj2 is PSObject) return ComparePSCustomObjectsIgnoreCase((PSObject)obj1, (PSObject)obj2);
+        if (obj1 is Hashtable && obj2 is Hashtable) return CompareHashtablesIgnoreCase((Hashtable)obj1, (Hashtable)obj2);
+        if (obj1 is Array && obj2 is Array) return CompareArraysIgnoreCase((Array)obj1, (Array)obj2);
+#endif
+        return obj1.Equals(obj2);
+    }
+
+    public static bool ComparePSCustomObjectsIgnoreCase(PSObject obj1, PSObject obj2)
+    {
+        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null || obj2 == null) return false;
+
+        var props1 = obj1.Properties;
+        var props2 = obj2.Properties;
+
+        int count1 = 0, count2 = 0;
+        var enumerator1 = props1.GetEnumerator();
+        var enumerator2 = props2.GetEnumerator();
+
+        while (enumerator1.MoveNext()) count1++;
+        while (enumerator2.MoveNext()) count2++;
+
+        if (count1 != count2) return false;
+
+        Dictionary<string, PSPropertyInfo> lookup2 = new Dictionary<string, PSPropertyInfo>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var prop in props2)
+            lookup2[prop.Name] = prop;
+
+        foreach (var prop1 in props1)
+        {
+#if NETCOREAPP3_0_OR_GREATER
+            if (!lookup2.TryGetValue(prop1.Name, out var prop2))
+                return false;
+#else
+            PSPropertyInfo prop2;  // ✅ Fix: Declare before calling TryGetValue
+
+            if (!lookup2.TryGetValue(prop1.Name, out prop2)) // ✅ Fix: Pass declared variable
+                return false;
+#endif
+
+            if (!CompareObjectIgnoreCase(prop1.Value, prop2.Value))
+                return false;
         }
 
         return true;
     }
 
-    private static bool CompareValues(object val1, object val2)
+    public static bool CompareHashtablesIgnoreCase(Hashtable hash1, Hashtable hash2)
     {
-        if (val1 == null && val2 == null) return true;
-        if (val1 == null || val2 == null) return false;
-        if (val1.GetType() != val2.GetType()) return false;
+        if (hash1 == null && hash2 == null) return true;
+        if (hash1 == null || hash2 == null) return false;
+        if (hash1.Count != hash2.Count) return false;
 
-        if (val1 is PSObject && val2 is PSObject)
-            return ComparePSCustomObjects((PSObject)val1, (PSObject)val2);
+        Dictionary<string, object> lookup2 = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-        if (val1 is Hashtable && val2 is Hashtable)
-            return CompareHashtables((Hashtable)val1, (Hashtable)val2);
+        foreach (DictionaryEntry entry in hash2)
+            lookup2[entry.Key.ToString()] = entry.Value;
 
-        if (val1 is Array && val2 is Array)
-            return CompareArrays((Array)val1, (Array)val2);
+        foreach (DictionaryEntry entry in hash1)
+        {
+#if NETCOREAPP3_0_OR_GREATER
+            if (!lookup2.TryGetValue(entry.Key.ToString(), out object value2))
+                return false;
+#else
+            object value2;
 
-        return val1.Equals(val2);
+            if (!lookup2.TryGetValue(entry.Key.ToString(), out value2))
+                return false;
+#endif
+
+            if (!CompareObjectIgnoreCase(entry.Value, value2))
+                return false;
+        }
+
+        return true;
+    }
+
+    public static bool CompareArraysIgnoreCase(Array arr1, Array arr2, bool sort = false)
+    {
+        if (arr1 == null && arr2 == null) return true;
+        if (arr1 == null || arr2 == null) return false;
+        if (arr1.Length != arr2.Length) return false;
+
+        if (sort)
+        {
+            arr1 = (object[])arr1.Clone();
+            arr2 = (object[])arr2.Clone();
+            Array.Sort(arr1, StringComparer.OrdinalIgnoreCase);
+            Array.Sort(arr2, StringComparer.OrdinalIgnoreCase);
+        }
+
+        for (int i = 0; i < arr1.Length; i++)
+        {
+            if (!CompareObjectIgnoreCase(arr1.GetValue(i), arr2.GetValue(i))) return false;
+        }
+        return true;
+    }
+
+    public static bool CompareValuesIgnoreCase(object obj1, object obj2)
+    {
+#if NETCOREAPP3_0_OR_GREATER
+        if (obj1 is string str1 && obj2 is string str2)
+        {
+            return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+        }
+#else
+        if (obj1 is string && obj2 is string)
+        {
+            string str1 = (string)obj1;
+            string str2 = (string)obj2;
+            return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+        }
+#endif
+        return obj1.Equals(obj2);
     }
 }

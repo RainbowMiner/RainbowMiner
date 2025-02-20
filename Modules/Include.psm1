@@ -8234,6 +8234,36 @@ Param(
     }
 }
 
+function Copy-PSCustomObject {
+    Param([object]$Object)
+
+    if ($null -eq $Object) { return $null }
+
+    if ($Object -is [ValueType] -or $Object -is [String]) { return $Object }
+
+    if ($Object -is [PSCustomObject]) {
+        $Clone = [PSCustomObject]@{}
+        foreach ($Property in $Object.PSObject.Properties) {
+            $Clone | Add-Member -MemberType NoteProperty -Name $Property.Name -Value (Copy-PSCustomObject $Property.Value)
+        }
+        return $Clone
+    }
+
+    if ($Object -is [Hashtable]) {
+        $Clone = @{}
+        foreach ($Key in $Object.Keys) {
+            $Clone[$Key] = Copy-PSCustomObject $Object[$Key]
+        }
+        return $Clone
+    }
+
+    if ($Object -is [Array]) {
+        return @($Object | ForEach-Object { Copy-PSCustomObject $_ })
+    }
+
+    return $Object
+}
+
 function Compare-PSCustomObject {
     Param (
         [Parameter(Mandatory = $true)][PSCustomObject]$Object1,

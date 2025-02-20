@@ -1247,7 +1247,7 @@ function Invoke-Core {
 
     #Check for algorithms config
     if (Set-ConfigDefault "Algorithms") {
-        if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and -not [RBMToolBox]::ComparePSCustomObjects($Session.Config.Algorithms,$ConfigBackup.Algorithms))) {
+        if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and -not [RBMToolBox]::CompareObject($Session.Config.Algorithms,$ConfigBackup.Algorithms))) {
             if ($Session.RoundCounter -ne 0) {Write-Log "Updating algorithms config data"}
             $AllAlgorithms = Get-ConfigContent "Algorithms" -UpdateLastWriteTime
             if (Test-Config "Algorithms" -Health) {
@@ -1291,7 +1291,7 @@ function Invoke-Core {
     #Check for coins config
     $CheckCoins = $false
     if (Set-ConfigDefault "Coins") {
-        if ($CheckConfig -or -not $Session.Config.Coins -or (Test-Config "Coins" -LastWriteTime) -or ($ConfigBackup.Coins -and -not [RBMToolBox]::ComparePSCustomObjects($Session.Config.Coins,$ConfigBackup.Coins))) {
+        if ($CheckConfig -or -not $Session.Config.Coins -or (Test-Config "Coins" -LastWriteTime) -or ($ConfigBackup.Coins -and -not [RBMToolBox]::CompareObject($Session.Config.Coins,$ConfigBackup.Coins))) {
             if ($Session.RoundCounter -ne 0) {Write-Log "Updating coins config data"}
             $AllCoins = Get-ConfigContent "Coins" -UpdateLastWriteTime
             if (Test-Config "Coins" -Health) {
@@ -1456,7 +1456,7 @@ function Invoke-Core {
 
     #Check for gpugroups config
     if (Set-ConfigDefault "GpuGroups") {
-        if ($CheckConfig -or -not $Session.Config.GpuGroups -or (Test-Config "GpuGroups" -LastWriteTime) -or ($ConfigBackup.GpuGroups -and -not [RBMToolBox]::ComparePSCustomObjects($Session.Config.GpuGroups,$ConfigBackup.GpuGroups))) {
+        if ($CheckConfig -or -not $Session.Config.GpuGroups -or (Test-Config "GpuGroups" -LastWriteTime) -or ($ConfigBackup.GpuGroups -and -not [RBMToolBox]::CompareObject($Session.Config.GpuGroups,$ConfigBackup.GpuGroups))) {
             if ($Session.RoundCounter -ne 0) {Write-Log "Updating gpugroups config data"}
             $AllGpuGroups = Get-ConfigContent "GpuGroups" -UpdateLastWriteTime
             if (Test-Config "GpuGroups" -Health) {
@@ -1473,7 +1473,7 @@ function Invoke-Core {
 
     #Check for combos config
     if (Set-ConfigDefault "Combos") {
-        if ($CheckGpuGroups -or -not $Session.Config.Combos -or (Test-Config "Combos" -LastWriteTime) -or ($ConfigBackup.Combos -and -not [RBMToolBox]::ComparePSCustomObjects($Session.Config.Combos,$ConfigBackup.Combos))) {
+        if ($CheckGpuGroups -or -not $Session.Config.Combos -or (Test-Config "Combos" -LastWriteTime) -or ($ConfigBackup.Combos -and -not [RBMToolBox]::CompareObject($Session.Config.Combos,$ConfigBackup.Combos))) {
             $AllCombos = Get-ConfigContent "Combos" -UpdateLastWriteTime
             if (Test-Config "Combos" -Health) {
                 $Session.Config | Add-Member Combos ([PSCustomObject]@{})  -Force
