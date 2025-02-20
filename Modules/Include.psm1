@@ -8234,6 +8234,63 @@ Param(
     }
 }
 
+function Compare-PSCustomObject {
+    Param (
+        [Parameter(Mandatory = $true)][PSCustomObject]$Object1,
+        [Parameter(Mandatory = $true)][PSCustomObject]$Object2
+    )
+
+    $AllProperties = ($Object1.PSObject.Properties.Name + $Object2.PSObject.Properties.Name) | Select-Object -Unique
+
+    foreach ($Property in $AllProperties) {
+        $HasProperty1 = [bool]$Object1.PSObject.Properties[$Property]
+        $HasProperty2 = [bool]$Object2.PSObject.Properties[$Property]
+
+        if ($HasProperty1 -ne $HasProperty2) { return $false }
+
+        $Value1 = $Object1.PSObject.Properties[$Property].Value
+        $Value2 = $Object2.PSObject.Properties[$Property].Value
+
+        if ($null -eq $Value1 -and $null -eq $Value2) { continue }
+
+        if ($Value1.GetType() -ne $Value2.GetType()) { return $false }
+
+        if ($Value1 -is [PSCustomObject] -and $Value2 -is [PSCustomObject]) {
+            if (-not (Compare-PSCustomObject $Value1 $Value2)) { return $false }
+        }
+        elseif ($Value1 -is [hashtable] -and $Value2 -is [hashtable]) {
+            $Keys1 = $Value1.Keys
+            $Keys2 = $Value2.Keys
+
+            if (Compare-Object $Keys1 $Keys2) { return $false }
+
+            foreach ($Key in $Keys1) {
+                if (-not (Compare-PSCustomObject ([PSCustomObject]@{ Item = $Value1[$Key] }) ([PSCustomObject]@{ Item = $Value2[$Key] }))) {
+                    return $false
+                }
+            }
+        }
+        elseif ($Value1 -is [Array] -and $Value2 -is [Array]) {
+            if ($Value1.Length -ne $Value2.Length) { return $false }
+
+            for ($i = 0; $i -lt $Value1.Length; $i++) {
+                if ($Value1[$i].GetType() -ne $Value2[$i].GetType()) { return $false }
+
+                if ($Value1[$i] -is [PSCustomObject] -and $Value2[$i] -is [PSCustomObject]) {
+                    if (-not (Compare-PSCustomObject $Value1[$i] $Value2[$i])) { return $false }
+                } elseif ($Value1[$i] -ne $Value2[$i]) {
+                    return $false
+                }
+            }
+        }
+        elseif ($Value1 -ne $Value2) {
+            return $false
+        }
+    }
+
+    return $true
+}
+
 function Get-MinerStatusKey {
     $Response = [guid]::NewGuid().ToString()
     Write-Log "Miner Status key created: $Response"
@@ -8880,20 +8937,42 @@ function Initialize-DLLs {
         if ($NeedsRebuild) {
             try {
                 if (Test-Path $DLLFile) {
-                    Remove-Item $DLLFile -Force
+                    try {
+                        Remove-Item $DLLFile -Force -ErrorAction Stop
+                    } catch {
+                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
+                        Write-Log -Level Info "Cannot remove $($DLLFile) for rebuild. Compiling directly into memory."
+                        $DLLFile = $null
+                    }
                 }
+
                 if ($IsNetCore3Plus) {
                     $CSCode = Get-Content $CSFile -Raw
                     $CSCode = "#define NETCOREAPP3_0_OR_GREATER`n" + $CSCode
-                    Add-Type -TypeDefinition $CSCode -OutputAssembly $DLLFile -Language CSharp -ErrorAction Stop
-                    $CSCode = $null
                 } else {
-                    Add-Type -Path $CSFile -OutputAssembly $DLLFile -ErrorAction Stop
+                    $CSCode = Get-Content $CSFile -Raw
                 }
-                Add-Type -Path $DLLFile -ErrorAction Stop
-                if ($IsLinux) {
-                    (Start-Process "chmod" -ArgumentList "666",(Resolve-Path $DLLFile).Path -PassThru).WaitForExit(1000) > $null
+
+                try {
+                    Add-Type -TypeDefinition $CSCode -OutputAssembly $DLLFile -Language CSharp -ErrorAction Stop
+                } catch {
+                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
+                    if (-not $DLLFile) {
+                        throw $_.Exception.Message
+                    }
+                    Write-Log -Level Info "Cannot rebuild $($DLLFile). Compiling directly into memory."
+                    Add-Type -TypeDefinition $CSCode -Language CSharp -ErrorAction Stop
                 }
+
+                $CSCode = $null
+
+                if ($DLLFile) {
+                    Add-Type -Path $DLLFile -ErrorAction Stop
+                    if ($IsLinux) {
+                        (Start-Process "chmod" -ArgumentList "666",(Resolve-Path $DLLFile).Path -PassThru).WaitForExit(1000) > $null
+                    }
+                }
+
             } catch {
                 if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Error "Error building $($DLLFile): $($_.Exception.Message)"

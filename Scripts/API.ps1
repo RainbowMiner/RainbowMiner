@@ -1454,8 +1454,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             }
             $Data = [PSCustomObject]@{Status=$Status;Content=$Result;ExcludeList=$Session.Config.ExcludeServerConfigVars} | ConvertTo-Json -Depth 10
 
-            $Result = $null
-            Remove-Variable -Name Result -ErrorAction Ignore
+            $Result = $GetConfigA = $GetConfigNew = $null
+            Remove-Variable -Name Result, GetConfigA, GetConfigNew -ErrorAction Ignore
             Break
         }
         "/getjob" {
