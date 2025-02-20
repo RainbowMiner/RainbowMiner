@@ -108,7 +108,7 @@ function Start-Core {
         [System.Collections.ArrayList]$Global:ActiveMiners   = @()
         $Global:WatchdogTimers  = @()
         $Global:CrashCounter    = @()
-        $Global:AlgorithmMinerName = @()
+        $Global:AlgorithmMinerName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         $Global:PauseMiners = [PauseMiners]::new()
 
@@ -1252,6 +1252,7 @@ function Invoke-Core {
             $AllAlgorithms = Get-ConfigContent "Algorithms" -UpdateLastWriteTime
             if (Test-Config "Algorithms" -Health) {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
+                $Global:AlgorithmMinerName.Clear()
                 $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
                     $a = $_
                     $Session.Config.Algorithms | Add-Member $a $AllAlgorithms.$a -Force
@@ -1277,7 +1278,7 @@ function Invoke-Core {
                             $Session.Config.Algorithms.$a | Add-Member "$($_.Name)" $_.Value -Force
                         }
                         if ($Session.Config.Algorithms.$a.MinerName.Count -or $Session.Config.Algorithms.$a.ExcludeMinerName.Count) {
-                            $Global:AlgorithmMinerName += $a
+                            $Global:AlgorithmMinerName.Add($a) > $false
                         }
                     }
                 }
@@ -2634,7 +2635,7 @@ function Invoke-Core {
                 if ($Global:AlgorithmMinerName.Count) {
                     foreach ($p in @($BaseAlgo)) {
                         if (
-                                ($Global:AlgorithmMinerName -contains $p) -and (
+                                ($Global:AlgorithmMinerName.Contains($p)) -and (
                                     ($Session.Config.Algorithms.$p.MinerName.Count -and ($Session.Config.Algorithms.$p.MinerName -notcontains $_.BaseName)) -or
                                     ($Session.Config.Algorithms.$p.ExcludeMinerName.Count -and ($Session.Config.Algorithms.$p.ExcludeMinerName -contains $_.BaseName))
                                 )
