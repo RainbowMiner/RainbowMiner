@@ -106,8 +106,8 @@ function Start-Core {
         [hashtable]$Global:MinerSpeeds  = @{}
 
         [System.Collections.ArrayList]$Global:ActiveMiners   = @()
-        $Global:WatchdogTimers  = @()
-        $Global:CrashCounter    = @()
+        $Global:WatchdogTimers  = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $Global:CrashCounter = [System.Collections.Generic.List[PSCustomObject]]::new()
         $Global:AlgorithmMinerName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         $Global:PauseMiners = [PauseMiners]::new()
@@ -926,7 +926,7 @@ function Invoke-Core {
             }
             if ($i -gt $Session.Config.BenchmarkInterval*2) {
                 Update-WatchdogLevels -Reset
-                $Global:WatchdogTimers = @()
+                $Global:WatchdogTimers.Clear()
             }
 
             $StopWatch_Inner.Stop()
@@ -1763,7 +1763,7 @@ function Invoke-Core {
         $Session.Remove("UserConfig")
         $Global:AllPools = $null
         Remove-Variable -Name AllPools -Scope Global
-        $Global:WatchdogTimers = @()
+        $Global:WatchdogTimers.Clear()
         Update-WatchdogLevels -Reset
         Write-Log "Donation run finished. "
     }
@@ -2362,66 +2362,47 @@ function Invoke-Core {
     $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
 
     if ($Session.WatchdogReset -gt $Session.WatchdogInterval) {
-        $WDRemoveTimers = $Global:WatchdogTimers.Where({$_.Kicked -le $WDResetTime})
-        if ($WDRemoveTimers.Count) {
-            $Global:WatchdogTimers = @($Global:WatchdogTimers | Where-Object {$_ -notin $WDRemoveTimers})
-        }
-        Remove-Variable "WDRemoveTimers"
+        $Global:WatchdogTimers.RemoveAll({ param($c) $c.Kicked -le $WDResetTime }) > $null
     }
 
-    #Apply watchdog to pools, only if there is more than one pool selected
-    if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
-        $NewPools = $NewPools.Where({-not $_.Disabled}).Where({
-            $Pool = $_
-            $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({($_.PoolName -eq $Pool.Name) -and ($_.Kicked -lt $WDIntervalTime) -and ($_.Kicked -gt $WDResetTime)})
-            $Pool.Exclusive -or ($Pool_WatchdogTimers.Count -lt <#stage#>3 -and $Pool_WatchdogTimers.Where({$Pool.Algorithm -contains $_.Algorithm}).Count -lt <#statge#>2)
-        })
-    }
-    if ($Pool_WatchdogTimers -ne $null) {Remove-Variable "Pool_WatchdogTimers"}
-    #Setup and reset Watchdog
-    $WDIntervalTime = $Session.Timer.AddSeconds( - $Session.WatchdogInterval)
-    $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
-
-    if ($Session.WatchdogReset -gt $Session.WatchdogInterval) {
-        $WDRemoveTimers = $Global:WatchdogTimers.Where({$_.Kicked -le $WDResetTime})
-        if ($WDRemoveTimers.Count) {
-            $Global:WatchdogTimers = @($Global:WatchdogTimers | Where-Object {$_ -notin $WDRemoveTimers})
-        }
-        $WDRemoveTimers = $null
-        Remove-Variable -Name WDRemoveTimers -ErrorAction Ignore
-    }
-
-    #Apply watchdog to pools, only if there is more than one pool selected
+    # Apply watchdog to pools, only if more than one pool is selected
     if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
 
-        $PoolsToRemove = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        # Create a new list for the filtered pools
+        $FilteredPools = [System.Collections.Generic.List[object]]::new()
 
-        foreach ($WDTimer in $Global:WatchdogTimers) {
-            if ($WDTimer.Kicked -lt $WDIntervalTime -and $WDTimer.Kicked -gt $WDResetTime) {
-                if (-not $PoolsToRemove.Contains($WDTimer.PoolName)) {
-                    $PoolsToRemove.Add($WDTimer.PoolName) > $null
+        foreach ($Pool in $NewPools) {
+            if ($Pool.Disabled) { continue }
+
+            # Get watchdog timers for this pool
+            $Pool_WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
+            foreach ($wdTimer in $Global:WatchdogTimers) {
+                if ($wdTimer.PoolName -eq $Pool.Name -and $wdTimer.Kicked -lt $WDIntervalTime -and $wdTimer.Kicked -gt $WDResetTime) {
+                    $Pool_WatchdogTimers.Add($wdTimer) > $null
                 }
             }
+
+            # Count how many timers match the algorithm
+            $AlgoMatchCount = 0
+            foreach ($wdTimer in $Pool_WatchdogTimers) {
+                if ($Pool.Algorithm -contains $wdTimer.Algorithm) {
+                    $AlgoMatchCount++
+                }
+            }
+
+            # Apply watchdog rules
+            if ($Pool.Exclusive -or ($Pool_WatchdogTimers.Count -lt 3 -and $AlgoMatchCount -lt 2)) {
+                $FilteredPools.Add($Pool) > $null
+            }
         }
 
-        $NewPools = $NewPools.Where({
-            $Pool = $_
-            if ($Pool.Disabled) { return $false }
-
-            if ($PoolsToRemove.Contains($Pool.Name)) {
-                if ($Pool.Exclusive) { return $true }
-
-                $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({
-                    ($_.PoolName -eq $Pool.Name) -and ($_.Kicked -lt $WDIntervalTime) -and ($_.Kicked -gt $WDResetTime)
-                })
-
-                return $Pool_WatchdogTimers.Count -lt 3 -and $Pool_WatchdogTimers.Where({ $Pool.Algorithm -contains $_.Algorithm }).Count -lt 2
-            }
-            return $true
-        })
+        # Replace $NewPools with the filtered list if changed
+        if ($NewPools.Count -ne $FilteredPools.Count) {
+            $NewPools = $FilteredPools
+        }
+        $FilteredPools = $null
+        Remove-Variable -Name FilteredPools -ErrorAction Ignore
     }
-    $Pool_WatchdogTimers = $null
-    Remove-Variable -Name Pool_WatchdogTimers -ErrorAction Ignore
 
     #Update the active pools
     $Pools = [PSCustomObject]@{}
@@ -3294,15 +3275,36 @@ function Invoke-Core {
         }
     }
 
-    #Apply watchdog to miners
-    $Miners = $Miners.Where({
-        $Miner = $_
-        $Miner_WatchdogTimers = $Global:WatchdogTimers.Where({$_.MinerName -eq $Miner.Name -and $_.Kicked -lt $WDIntervalTime -and $_.Kicked -gt $WDResetTime})
-        $Miner_WatchdogTimers.Count -lt <#stage#>2 -and $Miner_WatchdogTimers.Where({$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm}).Count -lt <#stage#>1 -and ($Session.Config.DisableDualMining -or $Session.Config.EnableDualMiningDuringRentals -or $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or -not $Miner.Pools.PSObject.Properties.Value.Where({$_.Exclusive}).Count)
-    })
 
-    $Miner_WatchdogTimers = $null
-    Remove-Variable -Name Miner_WatchdogTimers -ErrorAction Ignore
+    $MinerFilterScript = {
+        param($Miner)
+
+        $Miner_WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+        foreach ($wdTimer in $Global:WatchdogTimers) {
+            if ($wdTimer.MinerName -eq $Miner.Name -and
+                $wdTimer.Kicked -lt $WDIntervalTime -and
+                $wdTimer.Kicked -gt $WDResetTime) {
+                $Miner_WatchdogTimers.Add($wdTimer) > $null
+            }
+        }
+
+        $AlgoMatchCount = 0
+        foreach ($wdTimer in $Miner_WatchdogTimers) {
+            if ($Miner.HashRates.PSObject.Properties.Name -contains $wdTimer.Algorithm) {
+                $AlgoMatchCount++
+            }
+        }
+
+        return ($Miner_WatchdogTimers.Count -lt 2 -and
+                $AlgoMatchCount -lt 1 -and
+                ($Session.Config.DisableDualMining -or
+                 $Session.Config.EnableDualMiningDuringRentals -or
+                 $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or
+                 -not ($Miner.Pools.PSObject.Properties.Value | Where-Object { $_.Exclusive }).Count))
+    }
+
+    $Miners = $Miners.Where($MinerFilterScript)
 
     #Give API access to the miners information
     $API.Miners = ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore
@@ -3696,35 +3698,50 @@ function Invoke-Core {
         }
     })
 
-    #Stop miners in the active list depending on if they are the most profitable
-    $Global:ActiveMiners.Where({(-not $_.Best -or $Session.RestartMiners -or $_.Restart) -and $_.Activated -gt 0 -and $_.Status -eq [MinerStatus]::Running}).ForEach({
-        $Miner = $_
-        Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/'). "
-        $Miner.SetStatus([MinerStatus]::Idle)
-        $Miner.Stopped = $true
-        $Miner.Restart = $false
+    # Stop miners in the active list depending on profitability
+    foreach ($Miner in $Global:ActiveMiners) {
+        if ((-not $Miner.Best -or $Session.RestartMiners -or $Miner.Restart) -and 
+            $Miner.Activated -gt 0 -and 
+            $Miner.Status -eq [MinerStatus]::Running) {
 
-        #Remove watchdog timer
-        if ($Session.Config.Watchdog -and $Global:WatchdogTimers.Count) {
-            $Miner_Name = $Miner.Name
-            $Miner_Index = 0
-            $Miner.Algorithm | ForEach-Object {
-                $Miner_Algorithm = $_
-                $Miner_Pool = $Miner.Pool[$Miner_Index]                
-                if ($WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}) {
-                    if (($WatchdogTimer.Kicked -lt $WDIntervalTime) -and -not $Session.RestartMiners) {
-                        Write-ActivityLog $Miner -Crashed 2
-                        $Miner.SetStatus([MinerStatus]::Failed)
-                        Write-Log -Level Warn "Miner $Miner_Name mining $($Miner_Algorithm) on pool $($Miner_Pool) temporarily disabled. "
+            Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/')."
+            $Miner.SetStatus([MinerStatus]::Idle)
+            $Miner.Stopped = $true
+            $Miner.Restart = $false
+
+            # Remove watchdog timer if enabled
+            if ($Session.Config.Watchdog -and $Global:WatchdogTimers.Count -gt 0) {
+                $Miner_Name = $Miner.Name
+                $Miner_Index = 0
+
+                foreach ($Miner_Algorithm in $Miner.Algorithm) {
+                    $Miner_Pool = $Miner.Pool[$Miner_Index]
+
+                    # Find the corresponding WatchdogTimer
+                    $WatchdogTimer = $Global:WatchdogTimers | Where-Object {
+                        $_.MinerName -eq $Miner_Name -and
+                        $_.PoolName -eq $Miner_Pool -and
+                        $_.Algorithm -eq $Miner_Algorithm
                     }
-                    else {
-                        $Global:WatchdogTimers = @($Global:WatchdogTimers | Where-Object {$_ -ne $WatchdogTimer})
+
+                    if ($WatchdogTimer) {
+                        if (($WatchdogTimer.Kicked -lt $WDIntervalTime) -and -not $Session.RestartMiners) {
+                            Write-ActivityLog $Miner -Crashed 2
+                            $Miner.SetStatus([MinerStatus]::Failed)
+                            Write-Log -Level Warn "Miner $Miner_Name mining $Miner_Algorithm on pool $Miner_Pool temporarily disabled."
+                        } else {
+                            $Global:WatchdogTimers.RemoveAll({ param($w) 
+                                $w.MinerName -eq $Miner_Name -and 
+                                $w.PoolName -eq $Miner_Pool -and 
+                                $w.Algorithm -eq $Miner_Algorithm
+                            }) > $null
+                        }
                     }
+                    $Miner_Index++
                 }
-                $Miner_Index++
             }
         }
-    })
+    }
 
     #Kill maroding miners
     $Running_ProcessIds = @($Global:ActiveMiners | Foreach-Object {$_.GetProcessIds()} | Where-Object {$_} | Select-Object -Unique)
@@ -3753,72 +3770,103 @@ function Invoke-Core {
     if ($Global:DownloaderPrq.HasMoreData) {$Global:DownloaderPrq | Receive-Job | Out-Host}
     if ($Session.Config.Delay -gt 0) {Start-Sleep $Session.Config.Delay} #Wait to prevent BSOD
 
-    $Global:ActiveMiners.Where({$_.Best -EQ $true -and $_.Status -ne [MinerStatus]::Running}).ForEach({
+    # Process Active Miners that should start
+    foreach ($Miner in $Global:ActiveMiners) {
+        if ($Miner.Best -eq $true -and $Miner.Status -ne [MinerStatus]::Running) {
 
-        if ($_.DeviceModel -ne "CPU") {
-            if ($Session.Config.EnableResetVega) {Reset-Vega $_.DeviceName}
+            if ($Miner.DeviceModel -ne "CPU") {
+                if ($Session.Config.EnableResetVega) { Reset-Vega $Miner.DeviceName }
 
-            #Set MSI Afterburner profile
-            if ($MSIAenabled) {
-                $MSIAplannedprofile = $Global:ActiveMiners.Where({$_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0}).ForEach({$_.MSIAprofile}) | Select-Object -Unique
-                if (-not $MSIAplannedprofile.Count) {$MSIAplannedprofile = $Session.Config.MSIAprofile}                
-                else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
-                Start-Process -FilePath "$($Session.Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
-                if ($MSIAplannedprofile -ne $Session.MSIAcurrentprofile) {
-                    Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"                
-                    $Session.MSIAcurrentprofile = $MSIAplannedprofile
-                    Start-Sleep 1
+                # Set MSI Afterburner profile
+                if ($MSIAenabled) {
+                    $MSIAplannedprofile = $Global:ActiveMiners
+                        .Where({ $_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0 })
+                        .ForEach({ $_.MSIAprofile }) | Select-Object -Unique
+
+                    if (-not $MSIAplannedprofile.Count) {
+                        $MSIAplannedprofile = $Session.Config.MSIAprofile
+                    } else {
+                        $MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0
+                    }
+
+                    Start-Process -FilePath "$($Session.Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
+
+                    if ($MSIAplannedprofile -ne $Session.MSIAcurrentprofile) {
+                        Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"
+                        $Session.MSIAcurrentprofile = $MSIAplannedprofile
+                        Start-Sleep 1
+                    }
+                } elseif ($Session.Config.EnableOCprofiles) {
+                    $Miner.SetOCprofile($Session.Config, 500)
+                    if ($IsLinux) { Invoke-OCDaemon -Miner $Miner -Quiet > $null }
                 }
-            } elseif ($Session.Config.EnableOCprofiles) {
-                $_.SetOCprofile($Session.Config,500)
-                if ($IsLinux) {Invoke-OCDaemon -Miner $_ -Quiet > $null}
+
+                $Miner.SetStaticPort($Session.Config.StaticGPUMinerPort)
+            } else {
+                $Miner.SetStaticPort($Session.Config.StaticCPUMinerPort)
             }
 
-            $_.SetStaticPort($Session.Config.StaticGPUMinerPort)
-        } else {
-            $_.SetStaticPort($Session.Config.StaticCPUMinerPort)
-        }
+            # Logging
+            if ($Miner.Speed -contains $null) {
+                Write-Log "Benchmarking miner ($($Miner.Name)): '$($Miner.Path) $($Miner.Arguments)' (Extend Interval $($Miner.ExtendInterval))"
+            } else {
+                Write-Log "Starting miner ($($Miner.Name)): '$($Miner.Path) $($Miner.Arguments)'"
+            }
 
-        if ($_.Speed -contains $null) {
-            Write-Log "Benchmarking miner ($($_.Name)): '$($_.Path) $($_.Arguments)' (Extend Interval $($_.ExtendInterval))"
-        }
-        else {
-            Write-Log "Starting miner ($($_.Name)): '$($_.Path) $($_.Arguments)'"
-        }            
-        $Session.DecayStart = $Session.Timer
+            $Session.DecayStart = $Session.Timer
 
-        $_.SetPriorities(
-            $(if ($_.MiningPriority -ne $null) {$_.MiningPriority} else {$Session.Config.MiningPriorityCPU}),
-            $(if ($_.MiningPriority -ne $null) {$_.MiningPriority} else {$Session.Config.MiningPriorityGPU}),
-            $(if ($_.MiningAffinity -ne $null) {$_.MiningAffinity} elseif ($_.DeviceModel -ne "CPU") {$Session.Config.GPUMiningAffinity})
-        )
+            $Miner.SetPriorities(
+                $(if ($Miner.MiningPriority -ne $null) { $Miner.MiningPriority } else { $Session.Config.MiningPriorityCPU }),
+                $(if ($Miner.MiningPriority -ne $null) { $Miner.MiningPriority } else { $Session.Config.MiningPriorityGPU }),
+                $(if ($Miner.MiningAffinity -ne $null) { $Miner.MiningAffinity } elseif ($Miner.DeviceModel -ne "CPU") { $Session.Config.GPUMiningAffinity })
+            )
 
-        $Session.DecayStart = (Get-Date).ToUniversalTime()
+            $Session.DecayStart = (Get-Date).ToUniversalTime()
 
-        $_.SetStatus([MinerStatus]::Running)
+            $Miner.SetStatus([MinerStatus]::Running)
 
-        #Add watchdog timer
-        if ($Session.Config.Watchdog -and $_.Profit -ne $null) {
-            $Miner_Name = $_.Name
-            $Miner_DeviceModel = $_.DeviceModel
-            $_.Algorithm | Where-Object {-not (Compare-Object @($Miner_Name,$_,$Pools.$_.Name) $Session.Config.ExcludeFromWatchdog -IncludeEqual -ExcludeDifferent)} | ForEach-Object {
-                $Miner_Algorithm = $_
-                $WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
-                if (-not $WatchdogTimer) {
-                    $Global:WatchdogTimers += [PSCustomObject]@{
-                        MinerName = $Miner_Name
-                        DeviceModel= $Miner_DeviceModel
-                        PoolName  = $Pools.$Miner_Algorithm.Name
-                        Algorithm = $Miner_Algorithm
-                        Kicked    = $Session.Timer
+            # Add watchdog timer
+            if ($Session.Config.Watchdog -and $Miner.Profit -ne $null) {
+                $Miner_Name = $Miner.Name
+                $Miner_DeviceModel = $Miner.DeviceModel
+                $TimersToAdd = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+                foreach ($Miner_Algorithm in $Miner.Algorithm) {
+                    $Miner_Pool = $Pools.$Miner_Algorithm.Name
+
+                    if (Compare-Object @($Miner_Name,$Miner_Algorithm,$Miner_Pool) $Session.Config.ExcludeFromWatchdog -IncludeEqual -ExcludeDifferent) {
+                        continue
+                    }
+
+                    # Check if the Watchdog Timer already exists
+                    $WatchdogTimer = $Global:WatchdogTimers.Where({ 
+                        $_.MinerName -eq $Miner_Name -and 
+                        $_.PoolName -eq $Miner_Pool -and 
+                        $_.Algorithm -eq $Miner_Algorithm
+                    })
+
+                    if (-not $WatchdogTimer) {
+                        $TimersToAdd.Add([PSCustomObject]@{
+                            MinerName   = $Miner_Name
+                            DeviceModel = $Miner_DeviceModel
+                            PoolName    = $Miner_Pool
+                            Algorithm   = $Miner_Algorithm
+                            Kicked      = $Session.Timer
+                        }) > $null
+                    } elseif ($WatchdogTimer.Kicked -le $WDResetTime) {
+                        # Update existing Watchdog Timer
+                        $WatchdogTimer.Kicked = $Session.Timer
                     }
                 }
-                elseif ($WatchdogTimer.Kicked -le $WDResetTime) {
-                    $WatchdogTimer.Kicked = $Session.Timer
+
+                # Add all new Watchdog timers at once
+                if ($TimersToAdd.Count -gt 0) {
+                    $Global:WatchdogTimers.AddRange($TimersToAdd) > $null
                 }
+                $TimersToAdd = $null
             }
         }
-    })
+    }
 
     $Pools = $null
     Remove-Variable -Name Pools -ErrorAction Ignore
@@ -3833,8 +3881,8 @@ function Invoke-Core {
     }
 
     #Update API miner information
-    $API.WatchdogTimers = $Global:WatchdogTimers.Where({$_})
-    $API.CrashCounter   = $Global:CrashCounter.Where({$_})
+    $API.WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]$Global:WatchdogTimers
+    $API.CrashCounter   = [System.Collections.Generic.List[PSCustomObject]]$Global:CrashCounter
 
     $API.ActiveMiners   = ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -or $_.Profit -or $_.IsFocusWalletMiner}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
     $API.RunningMiners  = ConvertTo-Json $Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running}).ForEach({$_ | Select-Object -Property * -ExcludeProperty *Job}) -Depth 10 -ErrorAction Ignore
@@ -4030,14 +4078,24 @@ function Invoke-Core {
     ) | Out-Host
 
     if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {
+        $FilteredWatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+        foreach ($wdTimer in $Global:WatchdogTimers) {
+            if ($wdTimer.Kicked -gt $WDResetTime) {
+                $FilteredWatchdogTimers.Add($wdTimer) > $null
+            }
+        }
+
         #Display watchdog timers
-        $Global:WatchdogTimers.Where({$_.Kicked -gt $WDResetTime}) | Format-Table -Wrap (
+        $FilteredWatchdogTimers | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName -replace '\-.*$'}},
             @{Label = "Device"; Expression = {@(Get-DeviceModelName $Global:DeviceCache.Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
             @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.Algorithm}}, 
             @{Label = "Watchdog Timer"; Expression = {"{0:n0} Seconds" -f ($Session.Timer - $_.Kicked | Select-Object -ExpandProperty TotalSeconds)}; Align = 'right'}
         ) | Out-Host
+
+        $FilteredWatchdogTimers = $null
     }
 
     if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {Write-Host "* net power consumption. A base power offset of $(if ($Session.Config.PowerOffsetPercent -gt 0) {"{0:f1}%" -f $Session.Config.PowerOffsetPercent})$(if ($Session.Config.PowerOffset -gt 0) {if ($Session.Config.PowerOffsetPercent -gt 0) {" +"};"{0:d}W" -f [int]$Session.Config.PowerOffset}) is being added to calculate the final profit$(if ($PowerOffset_Watt -gt 0) { " (currently {0:d}W)" -f [int]$PowerOffset_Watt})."; Write-Host " "}
@@ -4432,7 +4490,7 @@ function Invoke-Core {
                 "W" {
                     $API.WatchdogReset = $false
                     Write-Host -NoNewline "[W] pressed - resetting WatchDog."
-                    $Global:WatchdogTimers = @()
+                    $Global:WatchdogTimers.Clear()
                     Update-WatchdogLevels -Reset
                     Write-Log "Watchdog reset."
                     $keyPressed = $true

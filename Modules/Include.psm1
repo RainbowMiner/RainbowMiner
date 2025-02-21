@@ -581,7 +581,7 @@ Function Write-ActivityLog {
         $Now = Get-Date
         if ($Crashed) {
             $Runtime = $Miner.GetRunningTime()
-            $Global:CrashCounter += [PSCustomObject]@{
+            $NewCrash = [PSCustomObject]@{
                 Timestamp      = $Now
                 Start          = $ActiveStart
                 End            = $Miner.GetActiveLast()
@@ -591,8 +591,10 @@ Function Write-ActivityLog {
                 Algorithm      = @($Miner.BaseAlgorithm)
                 Pool           = @($Miner.Pool)
             }
+            $Global:CrashCounter.Add($NewCrash) > $null
         }
-        $Global:CrashCounter = $Global:CrashCounter.Where({$_.Timestamp -gt $Now.AddHours(-1)})
+        $CrashTimeLimit = $Now.AddHours(-1)
+        $Global:CrashCounter.RemoveAll({ param($c) $c.Timestamp -le $CrashTimeLimit }) > $null
 
         $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
 
@@ -8546,11 +8548,34 @@ param(
                     $ArgumentList = "$($Matches[2].Trim())"
                     
                     # find and kill maroding processes
+                    $FileLike = "$(Join-Path $FileDir "*")"
+                    $ArgsLike = "* $($ArgumentList)"
                     if ($IsWindows) {
-                        @(Get-CIMInstance CIM_Process).Where({$_.ExecutablePath -and $_.ExecutablePath -like "$(Join-Path $FileDir "*")" -and $_.ProcessName -like $FileName -and (-not $ArgumentList -or $_.CommandLine -like "* $($ArgumentList)")}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
+                        $processes = Get-CIMInstance CIM_Process | Where-Object {
+                            $_.ExecutablePath -and $_.ExecutablePath -like $FileLike -and 
+                            $_.ProcessName -like $FileName -and 
+                            (-not $ArgumentList -or $_.CommandLine -like $ArgsLike)
+                        }
+                        
+                        foreach($process in $processes) {
+                            Write-Log -Level Warn "Stop-Process $($process.ProcessName) with Id $($process.ProcessId)"
+                            Stop-Process -Id $process.ProcessId -Force -ErrorAction Ignore
+                        }
                     } elseif ($IsLinux) {
-                        @(Get-Process).Where({$_.Path -and $_.Path -like "$(Join-Path $FileDir "*")" -and $_.ProcessName -like $FileName -and (-not $ArgumentList -or $_.CommandLine -like "* $($ArgumentList)")}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+                        $processes = Get-Process | Where-Object {
+                            $_.Path -and 
+                            $_.Path -like $FileLike -and 
+                            $_.ProcessName -like $FileName -and 
+                            (-not $ArgumentList -or $_.CommandLine -like $ArgsLike)
+                        }
+
+                        foreach($process in $processes) {
+                            Write-Log -Level Warn "Stop-Process $($process.ProcessName) with Id $($process.Id)"
+                            if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($process.Id)" -Quiet > $null}
+                            else {Stop-Process -Id $process.Id -Force -ErrorAction Ignore}
+                        }
                     }
+                    $processses = $null
 
                     $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH -WinTitle "$FilePath $ArgumentList".Trim()
                     if ($Job) {
