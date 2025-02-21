@@ -3689,14 +3689,14 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0) {Write-Host "Starting mining operation .."}
 
     #Stop failed miners
-    $Global:ActiveMiners.ForEach({
-        if ($_.GetStatus() -eq [MinerStatus]::RunningFailed) {
-            Write-Log "Stopping crashed miner ($($_.Name)) "
-            $_.CrashCount++
-            Write-ActivityLog $_ -Crashed 1
-            $_.SetStatus([MinerStatus]::Idle)
+    foreach ($Miner in $Global:ActiveMiners) {
+        if ($Miner.GetStatus() -eq [MinerStatus]::RunningFailed) {
+            Write-Log "Stopping crashed miner ($($Miner.Name)) "
+            $Miner.CrashCount++
+            Write-ActivityLog $Miner -Crashed 1
+            $Miner.SetStatus([MinerStatus]::Idle)
         }
-    })
+    }
 
     # Stop miners in the active list depending on profitability
     foreach ($Miner in $Global:ActiveMiners) {
@@ -5014,16 +5014,28 @@ function Set-MinerStats {
                     $Statset++
                 }
 
-                #Update watchdog timer
-                if ($WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) {
+                # Find the WatchdogTimer without using Where-Object
+                $WatchdogTimer = $null
+                foreach ($wdTimer in $Global:WatchdogTimers) {
+                    if ($wdTimer.MinerName -eq $Miner.Name -and 
+                        $wdTimer.PoolName -eq $Miner.Pool[$Miner_Index] -and 
+                        $wdTimer.Algorithm -eq $Miner_Algorithm) {
+                        $WatchdogTimer = $wdTimer
+                        break  # Stop searching once found
+                    }
+                }
+
+                # Update WatchdogTimer if found
+                if ($WatchdogTimer) {
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
                     } elseif ($Miner_Benchmarking -or ($Miner_Speed -and $Miner.Rounds -lt [Math]::Max($Miner.ExtendedInterval,1)-1)) {
                         $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
-                    } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) {
+                    } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds(-$Session.WatchdogInterval)) {
                         $Miner_Failed = $true
                     }
                 }
+
 
                 $Miner_PowerDraw = 0
                 $Miner_Index++

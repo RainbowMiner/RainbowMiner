@@ -464,7 +464,16 @@ class Miner {
 
     [Double]GetMaxRejectedShareRatio([Int]$minShares) {
         $Index = 0
-        return ($this.Algorithm | Foreach-Object {$this.GetRejectedShareRatio($Index,$minShares);$Index++} | Measure-Object -Maximum).Maximum
+        $MaxRatio = 0
+        foreach($Algorithm in $this.Algorithm) {
+            $Ratio = $this.GetRejectedShareRatio($Index,$minShares)
+            if ($Ratio -gt $MaxRatio) {
+                $MaxRatio = $Ratio
+            }
+            $Index++
+        }
+        return $MaxRatio
+        #return ($this.Algorithm | Foreach-Object {$this.GetRejectedShareRatio($Index,$minShares);$Index++} | Measure-Object -Maximum).Maximum
     }
 
     [Double]GetMaxRejectedShareRatio() {
