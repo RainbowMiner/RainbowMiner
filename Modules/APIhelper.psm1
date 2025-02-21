@@ -52,7 +52,6 @@ param (
             try {
 	            $PostCommand = $PostStreamReader.ReadToEnd()
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             } finally {
                 $PostStreamReader.Dispose()
                 $PostStreamReader = $null

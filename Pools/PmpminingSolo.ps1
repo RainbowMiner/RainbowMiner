@@ -21,7 +21,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.pmpmining.com/pools" -tag $Name -cycletime 120 -timeout 30
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

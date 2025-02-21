@@ -21,7 +21,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools" -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -62,7 +61,6 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF70" -and ($Wallets."$($_.co
             $Pool_CoinRequest = Invoke-RestMethodAsync "https://mining4people.com/calcapi/pools/$($_.id)" -retry 3 -retrywait 500 -tag $Name -cycletime 120 -delay 200
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool coin API ($Name) has failed for $($Pool_Currency) "
             return
         }

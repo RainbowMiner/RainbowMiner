@@ -112,12 +112,11 @@ function Get-DeviceDebug {
         }
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Host "OpenCL device detection has failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 
     #CPU detection
-    try {$CPUFeatures = $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {$feat.($matches[1]) = [int]$matches[2]}}; $feat)} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+    try {$CPUFeatures = $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {$feat.($matches[1]) = [int]$matches[2]}}; $feat)} catch {}
     try {
         if (-not (Test-Path Variable:Global:GlobalGetDeviceCacheCIM)) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
         if (-not (Test-Path Variable:CPUFeatures)) {
@@ -130,7 +129,6 @@ function Get-DeviceDebug {
         }
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Host "CIM CPU detection has failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 
@@ -170,7 +168,6 @@ function Get-DeviceDebug {
             $Index++
         }
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Host "CIM CPU detection has failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 
@@ -265,7 +262,6 @@ function Update-DeviceInformationDebug {
                                         try {
                                             if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
                                         } catch {
-                                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                             $AdlResultSplit[$i] = $ibak
                                         }
                                     }
@@ -292,7 +288,6 @@ function Update-DeviceInformationDebug {
                 }
             }
         } catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Host "Could not read power data from AMD: $($_.Exception.Message)" -ForegroundColor Yellow
         }
 
@@ -342,7 +337,6 @@ function Update-DeviceInformationDebug {
                 }
             }
         } catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Host "Could not read power data from NVIDIA: : $($_.Exception.Message)" -ForegroundColor Yellow
         }
     }
@@ -363,7 +357,6 @@ function Update-DeviceInformationDebug {
                 $CPULoadCores = (Get-CimInstance -Query "select Name, PercentProcessorTime from Win32_PerfFormattedData_PerfOS_Processor") | Where-Object Name -ne "_Total" | Select-Object -Property Name,PercentProcessorTime
                 $CPULoadCalc  = ($CPULoadCores | Select-Object -ExpandProperty PercentProcessorTime | Measure-Object -Average -Sum) | Select-Object -Property Average,Sum
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Host "Could not read Get-CimInstance: $($_.Exception.Message)" -ForegroundColor Yellow
             }
 
@@ -397,7 +390,6 @@ function Update-DeviceInformationDebug {
             }
         }
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Host "Could not read power data from CPU: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 }

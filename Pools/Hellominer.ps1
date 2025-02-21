@@ -44,7 +44,6 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Wal
             $Pool_Request = Invoke-RestMethodAsync "https://hellominer.com/api/v1?currency=$Pool_Currency&command=PoolStats" -tag $Name -cycletime 300 -timeout 20 | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate ($Pool_Request.Hashrate * $Pool_Request.HashrateMultiply) -ChangeDetection $false -Quiet

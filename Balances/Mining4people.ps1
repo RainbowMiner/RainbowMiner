@@ -37,7 +37,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://mining4people.com/api/pools" -retry 3 -retrywait 500 -tag $Name -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) in balance module has failed. "
     return
 }
@@ -87,7 +86,6 @@ if ($Payout_Currencies) {
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
         }
     }
@@ -133,7 +131,6 @@ if ($Payout_CurrenciesSolo) {
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
         }
     }

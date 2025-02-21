@@ -18,7 +18,6 @@ try {
     $Request = Invoke-RestMethodAsync "https://api.c3pool.com/miner/$($PoolConfig.XMR)/stats" -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
     return
 }

@@ -22,7 +22,6 @@ if ($Config.Pools.$Name.Wallets.$Pool_Currency) {
         $Request = Invoke-RestMethodAsync "https://pool.deepminerz.com:8071/stats_address?address=$($Config.Pools.$Name.Wallets.DNX)&longpoll=false" -cycletime ($Config.BalanceUpdateMinutes*60)
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
         return
     }
@@ -51,7 +50,6 @@ if ($Config.Pools."$($Name)Solo".Wallets.$Pool_Currency -and $Config.Pools.$Name
         $Request = Invoke-RestMethodAsync "https://pool.deepminerz.com:8071/stats_address?address=$($Config.Pools."$($Name)Solo".Wallets.DNX)&longpoll=false" -cycletime ($Config.BalanceUpdateMinutes*60)
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
         return
     }

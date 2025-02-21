@@ -32,7 +32,6 @@
             Set-ConfigLastWriteTime $ConfigName
         }
         catch{
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
             $Session.ConfigFiles[$ConfigName].Healthy = $false
         }
@@ -76,7 +75,6 @@ function Set-MiningRigRentalAlgorithmsConfigDefault {
             $Session.ConfigFiles[$ConfigName].Healthy = $true
         }
         catch{
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
             $Session.ConfigFiles[$ConfigName].Healthy = $false
         }
@@ -233,7 +231,6 @@ param(
                     if ($GetMrr_Result -ne $null) {$GetMrr_Result = $null}
                     #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Info "MiningRigRental server call: $($_.Exception.Message)"
                 }
             }
@@ -258,7 +255,6 @@ param(
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint) $($body)"
                 $Data = Invoke-GetUrl "$base$endpoint" -useragent $useragent -timeout $Timeout -headers $headers -requestmethod $method -body $body
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $ErrorMessage = "$($_.Exception.Message)"
             }
 
@@ -318,7 +314,6 @@ param(
             }
         }
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Info "MiningRigRental cache cleanup: $($_.Exception.Message)"
     }
 }
@@ -370,7 +365,7 @@ param(
     $tag = "MiningRigRentals"
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
-        $JobHost = try{([System.Uri]$base).Host}catch{if($Global:Error.Count){$Global:Error.RemoveAt(0)};"www.miningrigrentals.com"}
+        $JobHost = try{([System.Uri]$base).Host}catch{;"www.miningrigrentals.com"}
         $JobData = [PSCustomObject]@{endpoint=$endpoint;key=$key;secret=$secret;params=$params;method=$method;base=$base;regex=$regex;regexfld=$regexfld;regexmatch=$regexmatch;forcelocal=[bool]$ForceLocal;raw=[bool]$Raw;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
     }
 
@@ -418,7 +413,6 @@ param(
                 }
             }
             catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $RequestError = "$($_.Exception.Message)"
             } finally {
                 if ($RequestError) {$RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($RequestError)"}
@@ -445,7 +439,6 @@ param(
             try {
                 $Request = $Request | ConvertTo-Json -Compress -Depth 10 -ErrorAction Stop
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $RequestError = "$($_.Exception.Message)"
             } finally {
                 if ($RequestError) {$RequestError = "JSON problem: $($RequestError)"}
@@ -465,7 +458,6 @@ param(
                     Write-ToFile -FilePath ".\Cache\$($Jobkey).asy" -Message $Request -NoCR -ThrowError
                     $CacheWriteOk = $true
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     $RequestError = "$($_.Exception.Message)"                
                 }
                 $retry--
@@ -483,7 +475,7 @@ param(
         }
 
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
-            try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+            try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {}
         }
 
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
@@ -500,7 +492,7 @@ param(
                     $Data
                 }
             }
-            catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
+            catch {;Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
         }
     }
 }
@@ -556,7 +548,6 @@ function Get-MiningRigStat {
     try {
         $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         if (Test-Path $Path) {
             Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is corrupt and will be removed. "
             Remove-Item -Path $Path -Force -Confirm:$false
@@ -594,7 +585,6 @@ function Set-MiningRigStat {
     try {
         $DataSorted | ConvertTo-Json -Depth 10 -ErrorAction Stop | Set-Content $Path
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Could not write MRR stat file for worker $Name"
     }
 }
@@ -622,7 +612,6 @@ function Get-MiningRigRentalStat {
             $RentalError = "obsolete"
         }
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $RentalError = "corrupt"
     }
     if ($RentalError) {
@@ -653,7 +642,6 @@ function Set-MiningRigRentalStat {
     try {
         $Data | ConvertTo-Json -Depth 10 -ErrorAction Stop | Set-Content $Path
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Could not write MRR rental stat file for worker $Name, rental id $($Data.id)"
     }
 }
@@ -678,7 +666,6 @@ param(
             try {
                 $MrrInfo = Get-Content ".\Data\mrrinfo.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $MrrInfo = @()
             }
             $MrrInfo | Foreach-Object {$Global:MRRInfoCache["$($_.rigid)"] = $_}
@@ -778,7 +765,6 @@ function Get-MiningRigRentalAlgos {
         $Pool_Request = Invoke-RestMethodAsync "https://www.miningrigrentals.com/api/v2/info/algos" -tag $Name -cycletime 120
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     if (-not $Pool_Request.success) {
@@ -805,13 +791,11 @@ param(
         $Pool_Request = Invoke-RestMethodAsync "https://www.miningrigrentals.com/api/v2/info/servers" -tag $Name -cycletime 86400
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     try {
         $Servers = Get-Content ".\Data\mrrservers.json" -Raw | ConvertFrom-Json
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "mrrservers.json missing in Data folder! Cannot run MiningRigRentals"
     }
 
@@ -889,13 +873,12 @@ Param(
             Set-ContentJson -PathToFile ".\Data\mrrpoolsall.json" -Data $PoolsData -Compress > $null
         }
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "api.rbminer.net/data/mrrpoolsall.json could not be reached"
     }
     if (-not $PoolsData) {
         try {
             $PoolsData = Get-ContentByStreamReader ".\Data\mrrpoolsall.json" | ConvertFrom-Json -ErrorAction Stop
-        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+        } catch {}
     }
     $PoolsData | Foreach-Object {$_.Algorithm = Get-Algorithm $_.Algorithm}
     $PoolsData

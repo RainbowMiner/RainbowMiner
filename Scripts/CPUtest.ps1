@@ -45,7 +45,6 @@ if ($IsWindows) {
         "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
         "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
         "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     if ($CIM_CPU) {
@@ -66,7 +65,6 @@ if ($IsWindows) {
             "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
             "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
             "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     }
 
@@ -81,7 +79,6 @@ if ($IsWindows) {
         "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
         "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
         "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     " " | Out-File $TestFileName -Append
@@ -95,7 +92,6 @@ if ($IsWindows) {
             "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
             "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
             "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     } else {
         "not started, needs elevated rights" | Out-File $TestFileName -Append
@@ -128,7 +124,6 @@ if ($IsLinux) {
         "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
         "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
         "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     " " | Out-File $TestFileName -Append
@@ -178,7 +173,6 @@ if ($IsLinux) {
                         }
                     }
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
             }                
 
@@ -194,7 +188,6 @@ if ($IsLinux) {
 
                     "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$CPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 }
             }
 
@@ -213,7 +206,6 @@ if ($IsLinux) {
             "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
             "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
             "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     }
 
@@ -232,7 +224,6 @@ if ($IsLinux) {
             "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
             "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
             "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
     }
     $lfnr = 4
@@ -257,7 +248,6 @@ try {
     "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
     "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
     "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 $lfnr++
@@ -275,7 +265,6 @@ try {
     "ERROR: $($_.Exception.Message)" | Out-File $TestFileName -Append
     "$($_.InvocationInfo.PositionMessage)" | Out-File $TestFileName -Append
     "$($_.Exception.StackTrace)" | Out-File $TestFileName -Append
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 $lfnr++

@@ -20,7 +20,6 @@ if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.Organizatio
         $Request = Invoke-NHRequest "/main/api/v2/accounting/account2/BTC/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
     }
 	
@@ -28,7 +27,6 @@ if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.Organizatio
         $RequestUnpaid = Invoke-NHRequest "/main/api/v2/mining/rigs2/" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
     }
 

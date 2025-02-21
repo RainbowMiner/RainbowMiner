@@ -54,7 +54,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User
                 $Pool_Hashrate = $Pool_Hashrate_Request.data.getPoolHashrate
             }
             catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Info "Pool API ($Name) for $Pool_Currency has failed. "
             }
         }

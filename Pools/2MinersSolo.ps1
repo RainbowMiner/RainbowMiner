@@ -27,7 +27,6 @@ try {
     if ($Pool_HostStatus.code -ne $null) {throw}
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -92,7 +91,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
             if ($Pool_Blocks.code -ne $null) {$ok=$false}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             $ok = $false
         }
 
@@ -107,7 +105,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
             if ($Pool_Request.code -ne $null -or $Pool_Request.nodes -eq $null -or -not $Pool_Request.nodes) {$ok=$false}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             $ok = $false
         }
 

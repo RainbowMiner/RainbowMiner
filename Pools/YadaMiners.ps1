@@ -38,7 +38,6 @@ if (-not $InfoOnly) {
         $Pool_Request = Invoke-RestMethodAsync "http://yadaminers.pl/pool-info" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     if ($Pool_Request.pool) {
@@ -58,7 +57,6 @@ if (-not $InfoOnly) {
             $PoolInfo_Request = Invoke-RestMethodAsync "http://yadaminers.pl/market-info" -tag $Name -retry 3 -retrywait 1000 -timeout 15 -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
 
         if ($Pool_BLK -gt 0) {

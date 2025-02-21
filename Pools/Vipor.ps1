@@ -21,7 +21,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://master.vipor.net/api/pools" -tag $Name -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -57,7 +56,6 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
             $Pool_BlocksRequest = Invoke-RestMethodAsync "https://master.vipor.net/api/v2/pools/$($_.id)/blocks?page=0&pageSize=20" -tag $Name -timeout 15 -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
         }
     

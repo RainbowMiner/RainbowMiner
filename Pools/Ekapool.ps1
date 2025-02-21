@@ -21,7 +21,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://ekapool.com/api/pools" -tag $Name -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -64,7 +63,6 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.symbol;$_.paymentPr
             $Pool_BlocksRequest = Invoke-RestMethodAsync "https://ekapool.com/api/pools/$($_.id)/blocks?page=0&pageSize=100" -tag $Name -timeout 15 -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
         }
     
@@ -150,7 +148,6 @@ $OtherCoins | Where-Object {$Pool_Currency = $_.coin;($Wallets.$Pool_Currency -a
         $Pool_LiveStats     = Invoke-RestMethodAsync "https://ekapool.com/$($_.rpc)/stats?_={unixtimestamp_ms}" -tag $Name -timeout 15 -cycletime 120
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool blocks API ($Name) for $Pool_Currency has failed. "
     }
 

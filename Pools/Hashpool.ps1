@@ -24,7 +24,6 @@ try {
     if ($PoolCoins_Request.code -eq 0 -and ($PoolCoins_Request.data | Measure-Object).Count) {$ok = $true}
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $ok) {
@@ -78,7 +77,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "DGBODO","DGB")" -or 
             if ($PoolBlocks_Request.code -ne $null -and $PoolBlocks_Request.code -eq 0) {$ok = $true}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
         if ($ok) {
             $timestamp = Get-UnixTimestamp

@@ -36,7 +36,6 @@
         if (-not $WriteOnly -and $Reader.EndOfStream -eq $False) {$Response = $Reader.ReadLine()}
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
     finally {
         if ($Client) {$Client.Close();$Client.Dispose()}
@@ -86,5 +85,5 @@ param(
             Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -WriteOnly -UseSSL:$UseSSL > $null
             $true
         }
-    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+    } catch {}
 }

@@ -52,7 +52,6 @@ $Pools_Data | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Co
                 }
             }
             catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency)$(if ($_.solo) {" (solo)"}) has failed. "
             }
             $Count++

@@ -23,7 +23,6 @@ do {
                 Set-ContentJson -PathToFile ".\Data\sysinfo.json" -Data $SysInfo -Quiet > $null
             }
         } catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
         $count = 60
     }

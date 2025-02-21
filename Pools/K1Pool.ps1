@@ -20,7 +20,6 @@ try {
     $Pools_Request = Invoke-RestMethodAsync "https://api.rbminer.net/data/k1pool.json" -tag $Name -timeout 30 -cycletime 3600 
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed."
     return
 }
@@ -51,7 +50,6 @@ $Pools_Request | Where-Object {$_.name -notmatch "solo$" -and ($Wallets."$($_.sy
         $Pools_StatsRequest = Invoke-RestMethodAsync "https://k1pool.com/api/blocks/$($_.name)" -tag $Name -timeout 30 -cycletime 120 
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool API ($Name) for pool $($_.name) has failed."
         return
     }

@@ -13,7 +13,6 @@ if ($Config.Pools.$Name.API_Key) {
         $Request = Invoke-RestMethodAsync "https://www.viabtc.net/res/openapi/v1/account" -tag $Name -retry 5 -retrywait 250 -cycletime 3600 -delay 250 -fixbigint -headers @{"X-API-KEY" = $Config.Pools.$Name.API_Key}
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
     }
 

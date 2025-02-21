@@ -40,7 +40,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_Request = Invoke-RestMethodAsync "https://iceberg.ethwmine.com/api/stats" -tag $Name -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) has failed. "
             return
         }
@@ -51,7 +50,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_BlocksRequest = Invoke-RestMethodAsync "https://iceberg.ethwmine.com/api/blocks" -tag $Name -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Pool blocks API ($Name) has failed. "
         }
 

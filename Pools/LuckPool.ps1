@@ -46,7 +46,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_Request = Invoke-RestMethodAsync "https://luckpool.net/$Pool_RpcPath/stats" -tag $Name -timeout 15 -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }

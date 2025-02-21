@@ -120,7 +120,6 @@ $Payout_Currencies | Where-Object {
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Verbose "Pool Balance API ($($Pool_Name)) for $($Pool_Currency) has failed. "
         }
     }

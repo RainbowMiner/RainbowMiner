@@ -27,7 +27,6 @@ try {
     if ($Pool_Request.code -eq 200) {$ok = $true}
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $ok) {
@@ -56,7 +55,6 @@ $Pool_Request.data.accountIds | Foreach-Object {
         }
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) has failed. "
         $ok = $false
     }

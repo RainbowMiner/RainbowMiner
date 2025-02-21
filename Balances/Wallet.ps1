@@ -23,7 +23,6 @@ if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -o
         if ($Request.addresses -eq $null) {$Success = $false}
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $Success=$false
     }
 
@@ -80,7 +79,6 @@ foreach ($Wallet_Data in $Wallets_Data) {
                     ) {$Success = $false}
             }
             catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $Success=$false
             }
 
@@ -182,7 +180,6 @@ if ($Config.Pools.Binance.EnableShowWallets -and $Config.Pools.Binance.API_Key -
         }
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Verbose "Binance Wallet API has failed ($Name) "
     }
 }
@@ -206,7 +203,6 @@ if ($Config.Pools.Nicehash.EnableShowWallets -and $Config.Pools.Nicehash.API_Key
                 $Global:NHWallets[$Config.Pools.Nicehash.BTC] = $Request.externalAddress
             }
             catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
         }
         $ShowBTCWallet = $Global:NHWallets[$Config.Pools.Nicehash.BTC]
@@ -217,7 +213,6 @@ if ($Config.Pools.Nicehash.EnableShowWallets -and $Config.Pools.Nicehash.API_Key
         $Request = (Invoke-NHRequest "/main/api/v2/accounting/accounts2" $Config.Pools.Nicehash.API_Key $Config.Pools.Nicehash.API_Secret $Config.Pools.Nicehash.OrganizationID).currencies | Where-Object {$_.active -and [decimal]$_.totalBalance -and ($ShowBTCWallet -or $_.currency -ne "BTC")}
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Verbose "Nicehash Wallet API has failed ($Name) "
     }
 
@@ -256,7 +251,6 @@ if ($Config.CovalentAPIKey) {
             $Request = Invoke-RestMethodAsync "https://api.covalenthq.com/v1/137/address/$($Wallet_Address)/balances_v2/?key=$($Config.CovalentAPIKey)" -cycletime ($Config.BalanceUpdateMinutes*60) -fixbigint
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Verbose "Covalent API has failed ($Name)"
         }
 

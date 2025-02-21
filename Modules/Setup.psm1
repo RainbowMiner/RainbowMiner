@@ -2066,7 +2066,6 @@ function Start-Setup {
                     $GlobalSetupStep++
                 }
                 catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     if (@("back","<") -icontains $_.Exception.Message) {
                         if ($GlobalSetupStepBack.Count) {$GlobalSetupStep = $GlobalSetupStepBack[$GlobalSetupStepBack.Count-1];$GlobalSetupStepBack.RemoveAt($GlobalSetupStepBack.Count-1)}
                     }
@@ -2298,7 +2297,6 @@ function Start-Setup {
                         $MinerSetupStep++
                     }
                     catch {
-                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         if (@("back","<") -icontains $_.Exception.Message) {
                             if ($MinerSetupStepBack.Count) {$MinerSetupStep = $MinerSetupStepBack[$MinerSetupStepBack.Count-1];$MinerSetupStepBack.RemoveAt($MinerSetupStepBack.Count-1)}
                         }
@@ -2704,7 +2702,6 @@ function Start-Setup {
                                 $PoolSetupStep++
                             }
                             catch {
-                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                 if (@("back","<") -icontains $_.Exception.Message) {
                                     if ($PoolSetupStepBack.Count) {$PoolSetupStep = $PoolSetupStepBack[$PoolSetupStepBack.Count-1];$PoolSetupStepBack.RemoveAt($PoolSetupStepBack.Count-1)}
                                     else {$PoolSetupStepsDone = $true}
@@ -2738,7 +2735,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another pool?")){throw}
                         
-                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$PoolSetupDone = $true}
+                } catch {;$PoolSetupDone = $true}
             } until ($PoolSetupDone)
         }
         elseif ($SetupType -eq "D") {
@@ -2829,7 +2826,6 @@ function Start-Setup {
                                 $DeviceSetupStep++
                             }
                             catch {
-                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                 if (@("back","<") -icontains $_.Exception.Message) {
                                     if ($DeviceSetupStepBack.Count) {$DeviceSetupStep = $DeviceSetupStepBack[$DeviceSetupStepBack.Count-1];$DeviceSetupStepBack.RemoveAt($DeviceSetupStepBack.Count-1)}
                                 }
@@ -2862,7 +2858,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another device?")){throw}
                         
-                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$DeviceSetupDone = $true}
+                } catch {;$DeviceSetupDone = $true}
             } until ($DeviceSetupDone)
         }
         elseif ($SetupType -eq "L") {
@@ -2958,7 +2954,6 @@ function Start-Setup {
                                 $AlgorithmSetupStep++
                             }
                             catch {
-                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                 if (@("back","<") -icontains $_.Exception.Message) {
                                     if ($AlgorithmSetupStepBack.Count) {$AlgorithmSetupStep = $AlgorithmSetupStepBack[$AlgorithmSetupStepBack.Count-1];$AlgorithmSetupStepBack.RemoveAt($AlgorithmSetupStepBack.Count-1)}
                                 }
@@ -2991,7 +2986,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another algorithm?")){throw}
                         
-                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$AlgorithmSetupDone = $true}
+                } catch {;$AlgorithmSetupDone = $true}
             } until ($AlgorithmSetupDone)
         }
         elseif ($SetupType -eq "I") {
@@ -3163,7 +3158,6 @@ function Start-Setup {
                                 $CoinSetupStep++
                             }
                             catch {
-                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                 if (@("back","<") -icontains $_.Exception.Message) {
                                     if ($CoinSetupStepBack.Count) {$CoinSetupStep = $CoinSetupStepBack[$CoinSetupStepBack.Count-1];$CoinSetupStepBack.RemoveAt($CoinSetupStepBack.Count-1)}
                                 }
@@ -3196,7 +3190,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another coin?")){throw}
                         
-                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$CoinSetupDone = $true}
+                } catch {;$CoinSetupDone = $true}
             } until ($CoinSetupDone)
         }
         elseif ($SetupType -eq "O") {
@@ -3375,7 +3369,6 @@ function Start-Setup {
                                 $OCProfileSetupStep++
                             }
                             catch {
-                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                 if (@("back","<") -icontains $_.Exception.Message) {
                                     if ($OCProfileSetupStepBack.Count) {$OCProfileSetupStep = $OCProfileSetupStepBack[$OCProfileSetupStepBack.Count-1];$OCProfileSetupStepBack.RemoveAt($OCProfileSetupStepBack.Count-1)}
                                 }
@@ -3408,7 +3401,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another profile?")){throw}
                         
-                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};$OCProfileSetupDone = $true}
+                } catch {;$OCProfileSetupDone = $true}
             } until ($OCProfileSetupDone)
         }
         elseif ($SetupType -eq "H") {
@@ -3539,7 +3532,7 @@ function Start-Setup {
                                         $Schedule.MiningHeatControl = Read-HostString -Prompt "Adjust heat vs. profit (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat, $(if ($Schedule.MiningHeatControl -ne '') {"enter 'clear'"} else {"leave empty"}) for global default)" -Default $Schedule.MiningHeatControl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         if ($Schedule.MiningHeatControl -ne "") {
                                             $Schedule.MiningHeatControl = $Schedule.MiningHeatControl -replace ",","."
-                                            try {$mhc = [double]$Schedule.MiningHeatControl} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                                            try {$mhc = [double]$Schedule.MiningHeatControl} catch {}
                                             if ($mhc -eq $null -or $mhc -lt 0 -or $mhc -gt 5) {Write-Host "Invalid value, please enter a number between 0..5 in steps of 0.1 or leave empty" -ForegroundColor Red;$mhc = $null}
                                             else {$Schedule.MiningHeatControl = "$([Math]::Round($mhc,1))"}
                                         } else {$mhc = ""}
@@ -3617,7 +3610,6 @@ function Start-Setup {
                             $SchedulerSetupStep++
                         }
                         catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             if (@("back","<") -icontains $_.Exception.Message) {
                                 if ($SchedulerSetupStepBack.Count) {$SchedulerSetupStep = $SchedulerSetupStepBack[$SchedulerSetupStepBack.Count-1];$SchedulerSetupStepBack.RemoveAt($SchedulerSetupStepBack.Count-1)}
                             }
@@ -3644,7 +3636,6 @@ function Start-Setup {
                     } until ($SchedulerSetupStepsDone)
                         
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     if ($Index -eq -1 -or @("back","<") -inotcontains $_.Exception.Message) {$SchedulerSetupDone = $true}
                 }
             } until ($SchedulerSetupDone)
@@ -3762,7 +3753,6 @@ function Start-Setup {
                                         try {
                                             $Result = Invoke-MiningRigRentalRequest "/rig/$(($Valid_Rigs | Select-Object -ExpandProperty id | Sort-Object) -join ";")" $Pool_Config.API_Key $Pool_Config.API_Secret -method "DELETE" -Timeout 60
                                         } catch {
-                                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                             Write-Log -Level Warn "Unable to delete MRR: $($_.Exception.Message)"
                                         }
                                         Write-Host " "
@@ -3776,7 +3766,6 @@ function Start-Setup {
                             $MRRSetupStep++
                         }
                         catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             if (@("back","<") -icontains $_.Exception.Message) {
                                 if ($MRRSetupStepBack.Count) {$MRRSetupStep = $MRRSetupStepBack[$MRRSetupStepBack.Count-1];$MRRSetupStepBack.RemoveAt($MRRSetupStepBack.Count-1)}
                             }
@@ -3803,7 +3792,6 @@ function Start-Setup {
                     } until ($MRRSetupStepsDone)
                         
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     if ($Index -eq -1 -or @("back","<") -inotcontains $_.Exception.Message) {$MRRSetupDone = $true}
                 }
 

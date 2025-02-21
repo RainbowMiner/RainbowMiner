@@ -46,7 +46,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_Ports   = if ($_.endpoint) {Get-PoolPortsFromRequest $Pool_Request -mCPU "" -mGPU "(multi|high|GPU)" -mRIG "(cloud|very high|nicehash)"} else {$null}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }

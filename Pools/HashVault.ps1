@@ -59,7 +59,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             #$Pool_Ports = @([PSCustomObject]@{CPU=80;GPU=3333;RIG=3333},[PSCustomObject]@{CPU=80;GPU=3333;RIG=3333})
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed."
             $ok = $false
         }

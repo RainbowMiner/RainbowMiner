@@ -43,7 +43,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
             $Pool_Request = $null
         }
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     if (-not $InfoOnly) {

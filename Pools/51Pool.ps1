@@ -30,7 +30,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://51pool.online/api" -tag $Name -cycletime 120 -retry 5 -retrywait 250
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $Pool_Request.status) {
@@ -45,7 +44,6 @@ try {
     $PoolBlocks_Request = Invoke-RestMethodAsync "https://51pool.online/api/blocks" -tag $Name -cycletime 120 -retry 5 -retrywait 250
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $PoolBlocks_Request -or $PoolBlocks_Request -isnot [array]) {
@@ -60,14 +58,12 @@ if (-not $InfoOnly) {
         $NetPer_Request = Invoke-RestMethodAsync "https://explorer.epiccash.com/epic_explorer/v1/blockchain_block/blockminedchart?Interval=1%20week&FromDate=&ToDate=" -tag $Name -cycletime 3600 -retry 5 -retrywait 250
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 
     try {
         $NetBlock_Request = Invoke-RestMethodAsync "https://explorer.epiccash.com/epic_explorer/v1/blockchain_block/latesblockdetails" -tag $Name -cycletime 120 -retry 5 -retrywait 250
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 }
 

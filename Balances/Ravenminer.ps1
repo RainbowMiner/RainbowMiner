@@ -27,7 +27,6 @@ $Payout_Wallets | Foreach-Object {
         $Request = Invoke-RestMethodAsync "https://www.ravenminer.com/api/v1/wallet/$($_.Value)" -cycletime ($Config.BalanceUpdateMinutes*60)
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
         return
     }

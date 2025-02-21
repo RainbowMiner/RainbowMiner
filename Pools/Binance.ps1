@@ -33,7 +33,6 @@ try {
     $Pools_Request = Invoke-RestMethodAsync "https://pool.binance.com/mining-api/v1/public/pool/index" -tag $Name -timeout 15 -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

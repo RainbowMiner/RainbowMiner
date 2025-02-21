@@ -152,7 +152,7 @@ class Miner {
         if (-not $this.StartPort) {$this.StartPort = $this.Port}
 
         if (-not $this.Job.XJob) {
-            if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
+            if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {;Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
 
             $Miner_Port = if ($this.StaticPort) {$this.StaticPort} else {$this.StartPort}
 
@@ -164,7 +164,6 @@ class Miner {
                     $ipProperties = [Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()
                     @($ipProperties.GetActiveTcpListeners().Port) + @($ipProperties.GetActiveTcpConnections().LocalEndPoint.Port) | Where-Object {$_} | Sort-Object -Unique
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 
                     try {
                         if ($Global:IsLinux -and (Test-Path ".\IncludesLinux\bash")) {
@@ -172,7 +171,7 @@ class Miner {
                                 try {
                                     (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit() > $null
                                     Invoke-exe $_.FullName -ExpandLines
-                                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                                } catch {}
                             }
                         } elseif ($Global:IsWindows) {
                             if (Get-Command "Get-NetTCPConnection" -ErrorAction Ignore) {
@@ -183,7 +182,6 @@ class Miner {
                         }
                     } catch {
                         Write-Log -Level Warn "Auto-Port failed for $($this.Name): $($_.Exception.Message)"
-                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     }
                 }
 
@@ -269,7 +267,7 @@ class Miner {
             $this.WrapperJob = $null
         }
 
-        if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
+        if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {;Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
     }
 
     hidden StartMiningPreProcess() {
@@ -719,7 +717,6 @@ class Miner {
                     $Script:abMonitor.ReloadAll()
                     $Script:abControl.ReloadAll()
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
                     return
                 }
@@ -839,10 +836,10 @@ class Miner {
                     $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor | Select-Object -ExpandProperty Index | Foreach-Object {
                         if ($DeviceId -in $this.Profiles.$DeviceModel.Index) {
                             $GpuEntry = $Script:abControl.GpuEntries[$_]
-                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$Script:abControl.GpuEntries[$_].PowerLimitCur)}}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$Script:abControl.GpuEntries[$_].ThermalLimitCur)}}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$Script:abControl.GpuEntries[$_].CoreClockBoostCur)}}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$Script:abControl.GpuEntries[$_].MemoryClockBoostCur)}}} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$Script:abControl.GpuEntries[$_].PowerLimitCur)}}} catch {;Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$Script:abControl.GpuEntries[$_].ThermalLimitCur)}}} catch {;Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$Script:abControl.GpuEntries[$_].CoreClockBoostCur)}}} catch {;Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$Script:abControl.GpuEntries[$_].MemoryClockBoostCur)}}} catch {;Write-Log -Level Warn $_.Exception.Message}
                             if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
                         }
                         $DeviceId++
@@ -890,7 +887,6 @@ class Miner {
                 $applied | Foreach-Object {Write-Log -Level Info $_}
                 if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "Failed to apply OC for $($this.Name))!"
                 $applied | Foreach-Object {Write-Log -Level Info "$($_ -replace "OC set","OC NOT set")"}
             }
@@ -924,7 +920,6 @@ class BMiner : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status/solver" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -934,7 +929,6 @@ class BMiner : Miner {
             $Data | Add-member stratums $Data2.stratums
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
 
         $Index = 0
@@ -983,7 +977,6 @@ class BzMiner : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/status" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1044,7 +1037,6 @@ class Cast : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1085,7 +1077,6 @@ class Ccminer : Miner {
             $Data = $Response -split ";" | ConvertFrom-StringData -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1130,7 +1121,6 @@ class Claymore : Miner {
             if (-not $Data -or -not $Data.result -or -not $Data.result[2]) {throw}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1194,7 +1184,6 @@ class CryptoDredge : Miner {
             $Data = $Response -split ";" | ConvertFrom-StringData -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1234,7 +1223,6 @@ class Dstm : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1319,7 +1307,6 @@ class Eminer : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/stats" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1359,7 +1346,6 @@ class EnemyZ : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary?gpuinfo=1" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1411,7 +1397,6 @@ class Ethminer : Miner {
             if (-not $Data -or -not $Data.result) {throw}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1522,7 +1507,6 @@ class Fireice : Miner {
                 try {
                     Get-Content $HwConfigFile -Raw | ConvertFrom-Json -ErrorAction Stop
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "Bad json file found ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) - creating a new one"
                     Remove-Item $HwConfigFile -ErrorAction Ignore -Force
                 }
@@ -1573,7 +1557,6 @@ class Fireice : Miner {
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
@@ -1596,7 +1579,6 @@ class Fireice : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1641,7 +1623,6 @@ class Gminer : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1744,7 +1725,6 @@ class GrinPro : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/status" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1813,7 +1793,6 @@ class Jceminer : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1858,7 +1837,6 @@ class Lol : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1905,7 +1883,6 @@ class Luk : Miner {
             if ($Response -match 'LOG:') {$Data = $Response -replace 'LOG:' | ConvertFrom-StringData}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -1946,7 +1923,6 @@ class MiniZ : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2038,7 +2014,6 @@ class Nanominer : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stats" -Timeout $Timeout
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2117,7 +2092,6 @@ class NBminer : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v1/status" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2181,7 +2155,6 @@ class Nheq : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2219,7 +2192,6 @@ class NoncerPro : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2256,7 +2228,6 @@ class Nqminer : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2295,7 +2266,6 @@ class OneZeroMiner : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2342,7 +2312,6 @@ class Prospector : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api/v0/hashrates" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2382,7 +2351,6 @@ class RH : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2468,7 +2436,6 @@ class Rigel : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/stat" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2674,7 +2641,6 @@ class SrbMiner : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2716,7 +2682,6 @@ class SrbMinerMulti : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2867,7 +2832,6 @@ class TBMiner : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -2963,7 +2927,6 @@ class Trex : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/summary" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -3078,7 +3041,6 @@ class WildRig : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -3134,7 +3096,6 @@ class Xgminer : Miner {
             $Data = $Response.Substring($Response.IndexOf("{"), $Response.LastIndexOf("}") - $Response.IndexOf("{") + 1) -replace " ", "_" | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -3175,7 +3136,6 @@ class Xgminer : Miner {
                     $Data = $Response.Substring($Response.IndexOf("{"), $Response.LastIndexOf("}") - $Response.IndexOf("{") + 1) -replace " ", "_" | ConvertFrom-Json -ErrorAction Stop
                 }
                 catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Info "Failed to connect to miner $($this.Name), second algorithm $($this.Algorithm[1]). "
                     return
                 }
@@ -3288,12 +3248,11 @@ class Xmrig : Miner {
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
                 }
                 else {
-                    Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})$(if ($Global:Error.Count){"[Error: '$($Error[0])'].";$Global:Error.RemoveAt(0)})"
+                    Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})"
                 }                
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
@@ -3316,7 +3275,6 @@ class Xmrig : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -3439,12 +3397,11 @@ class Xmrig3 : Miner {
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
                 }
                 else {
-                    Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})$(if ($Global:Error.Count){"[Error: '$($Error[0])'].";$Global:Error.RemoveAt(0)})"
+                    Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})"
                 }                
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
@@ -3467,7 +3424,6 @@ class Xmrig3 : Miner {
             $Data = Invoke-GetUrl "http://$($Server):$($this.Port)/api.json" -Timeout $Timeout -ForceHttpClient
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }
@@ -3602,7 +3558,7 @@ class Xmrig6 : Miner {
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
                 }
                 else {
-                    Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})$(if ($Global:Error.Count){"[Error: '$($Error[0])'].";$Global:Error.RemoveAt(0)})"
+                    Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})"
                 }                
             }
 
@@ -3618,7 +3574,6 @@ class Xmrig6 : Miner {
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
@@ -3653,7 +3608,6 @@ class Xmrig6 : Miner {
             }
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to connect to miner $($this.Name). "
             return
         }

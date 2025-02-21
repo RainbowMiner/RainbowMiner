@@ -15,7 +15,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.gtpool.io/?key=$($Config.Pools.$Name.API_Key)" -body '{"method":"coins_reward"}' -retry 3 -retrywait 1000 -tag $Name -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) in balance module has failed. "
     return
 }

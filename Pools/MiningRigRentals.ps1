@@ -217,7 +217,6 @@ if ($AllRigs_Request) {
             Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
         } catch {
             Write-Log -Level Warn "$($Name): Error in config file $($_.Name)"
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         }
         [PSCustomObject]@{
             rental_id = [int]($_.Name -replace "[^\d]")
@@ -362,7 +361,6 @@ if ($AllRigs_Request) {
                         try {
                             $Rental_Options | ConvertTo-Json -Depth 10 | Set-Content ".\Config\mrr-$($Rental_Id).config.txt"
                          } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             $Rental_Options = $null
                         }
                     }
@@ -380,7 +378,6 @@ if ($AllRigs_Request) {
                                 Write-Log "$($Name): Force status update for rental #$($_.rental_id) on $($Worker1)"
                             }
                         } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
 
                         try {
@@ -389,7 +386,6 @@ if ($AllRigs_Request) {
                                 Set-MiningRigRentalStat $Worker1 $Rental_Result
                             }
                         } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             Write-Log -Level Warn "$($Name): Status update for rental #$($_.rental_id) went wrong: $($_.Exception.Message)"
                             $Rental_Result = $Rental_Result_Saved
                         }
@@ -407,7 +403,7 @@ if ($AllRigs_Request) {
                                 $Rental_AvgHashrate = [double]$Rental_Result.hashrate.average.hash * (ConvertFrom-Hash "1$($Rental_Result.hashrate.average.type)")
                             }
                         }
-                    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                    } catch {}
 
                     if ($StartMessage -ne "" -and -not $Pool_RigStatus.startmessagesent) {
                         try {
@@ -440,7 +436,6 @@ if ($AllRigs_Request) {
 
                             Set-MiningRigRentalStatus $Pool_RigId -Status "startmessagesent" > $null
                         } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             Write-Log -Level Warn "$($Name): Unable to handle start message for rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
@@ -456,7 +451,6 @@ if ($AllRigs_Request) {
 
                             Set-MiningRigRentalStatus $Pool_RigId -Status "poolofflinemessagesent" > $null
                         } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             Write-Log -Level Warn "$($Name): Unable to handle pool offline message for rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
@@ -518,7 +512,6 @@ if ($AllRigs_Request) {
                                     Set-MiningRigRentalStatus $Pool_RigId -Status "extended" > $null
                                 }
                             } catch {
-                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                 Write-Log -Level Warn "$($Name): Unable to get rental #$($_.rental_id): $($_.Exception.Message)"
                             }
                         } elseif (([double]$_.status.hours -gt 0.25) -and $Pool_RigStatus.extended) {
@@ -541,7 +534,6 @@ if ($AllRigs_Request) {
 
                             Set-MiningRigRentalStatus $Pool_RigId -Status "extensionmessagesent" > $null
                         } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             Write-Log -Level Warn "$($Name): Unable to handle extension message for rental #$($_.rental_id): $($_.Exception.Message)"
                         }
                     }
@@ -600,7 +592,6 @@ if ($AllRigs_Request) {
 
                                             Set-MiningRigRentalStatus $Pool_RigId -Status "diffmessagesent" > $null
                                         } catch {
-                                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                             Write-Log -Level Warn "$($Name): Unable to handle diff message for rental #$($_.rental_id): $($_.Exception.Message)"
                                         }
 
@@ -612,7 +603,7 @@ if ($AllRigs_Request) {
                                 Set-MiningRigRentalStatus $Pool_RigId -Status "diffisok" > $null
                             }
 
-                        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                        } catch {}
 
                     }
 
@@ -628,7 +619,7 @@ if ($AllRigs_Request) {
 
                             Write-Log -Level Warn "$($Name): cannot reach MRR, manually disable rental #$($Rental_Result.id) on $($Worker1) that ended $($Rental_Result.end)."
                         }
-                    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                    } catch {}
     
                     $Pool_RigStatus = $null
                 }
@@ -667,7 +658,7 @@ if ($AllRigs_Request) {
                         [PSCustomObject]@{
                             Algorithm     = $Pool_Algorithm_Norm_With_Model
 					        Algorithm0    = $Pool_Algorithm_Norm
-                            CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{if ($Global:Error.Count){$Global:Error.RemoveAt(0)};"$($_.status.hours)h"}} else {""}
+                            CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{;"$($_.status.hours)h"}} else {""}
                             CoinSymbol    = $Pool_CoinSymbol
                             Currency      = $Pool_Currency
                             Price         = $Pool_Price
@@ -736,7 +727,6 @@ if ($AllRigs_Request) {
             try {
                 Remove-Item $_.fullname -Force -ErrorAction Ignore
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
         }
         $Rental_Options_Current = $null
@@ -753,7 +743,6 @@ if ($AllRigs_Request) {
                 }
             }
         } catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}    
         }
 
         if (-not $MRR_Job) {
@@ -796,7 +785,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             $OrphanedRigs_Request = @(Invoke-MiningRigRentalRequest "/rig/mine" $API_Key $API_Secret).Where({$_.description -notmatch "\[[\w\-]+\]"})
             Write-Log -Level Info "$($Name): Recovery mode enabled - $($OrphanedRigs_Request.Count) orphaned rig$(if ($OrphanedRigs_Request.Count -gt 1) {"s"}) found"
         } catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "$($Name): Couldn't get orphaned rigs"
         }
     }
@@ -820,7 +808,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 $val = if ($MRRConfig.$RigName.$fld -ne $null -and $MRRConfig.$RigName.$fld -ne "") {Get-Yes $MRRConfig.$RigName.$fld} else {Get-Variable $fld -ValueOnly -ErrorAction Ignore}
                 $MRRConfig.$RigName | Add-Member $fld $val -Force
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Error in parameter `"$fld`" in pools.config.txt or mrr.config.txt"
             }
         }
@@ -834,7 +821,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 $val = "$($val)" -replace ",","." -replace "[^0-9\.\-]+"
                 $MRRConfig.$RigName | Add-Member $fld ([Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {"$($val[0])$($val.Substring(1) -replace "[^0-9\.]")"})) -Force
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Error in parameter `"$fld`" in pools.config.txt or mrr.config.txt"
             }
         }
@@ -850,7 +836,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 }
                 $MRRConfig.$RigName | Add-Member $fld $val -Force
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Error in parameter `"$fld`" in pools.config.txt or mrr.config.txt"
             }
         }
@@ -862,7 +847,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 $val = "$($val)".Trim()
                 $MRRConfig.$RigName | Add-Member $fld $val -Force
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Error in parameter `"$fld`" in pools.config.txt or mrr.config.txt"
             }
         }
@@ -907,7 +891,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                 Write-Log -Level Info "$($Name): Extended rental #$($Rental_Result_Current.id) for $(Get-MiningRigRentalAlgorithm $Rental_Result_Current.rig.type) on $($RigName) for $ExtendBy bonus-hours."
                             }
                         } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                             Write-Log -Level Warn "$($Name): Unable to extend rental #$($Rental_Result_Current.id) $(Get-MiningRigRentalAlgorithm $_.rig.type) on $($RigName) for $ExtendBy bonus-hours: $($_.Exception.Message)"
                         }
                     }
@@ -925,7 +908,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         try {
             $MRRRigControl_Data = Get-Content ".\Data\mrrcontrol.json" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         } catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "$($Name): mrrcontrol database is corrupt and will be reset. "
             $MRRRigControl_Data = $null
         }
@@ -992,7 +974,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             try {
                 (Invoke-MiningRigRentalRequest "/rig/$(@($AllRigs_Request | Select-Object -ExpandProperty id) -join ";")/pool" $API_Key $API_Secret -Timeout 60) | Foreach-Object {$RigPools[[int]$_.rigid] = $_.pools}
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Unable to get pools: $($_.Exception.Message)"
             }
         }
@@ -1213,7 +1194,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                     }
                                                     Write-Log -Level Info "$($Name): $(if ($Result.id) {"Successfully created"} else {"Failed to create"}) rig group $($RigGroupName)"
                                                 } catch {
-                                                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                                     Write-Log -Level Warn "$($Name): Unable to create rig group $($RigGroupName): $($_.Exception.Message)"
                                                 }
                                             }
@@ -1328,7 +1308,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                                     }
                                                                     Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to add"}) pools of rig #$($Result.id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                                 } catch {
-                                                                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                                                     Write-Log -Level Warn "$($Name): Unable to add pools to $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
                                                                 }
                                                             }
@@ -1336,7 +1315,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             Write-Log -Level Warn "$($Name): Unable to create $($Algorithm_Norm) rig for $($RigName)"
                                                         }
                                                     } catch {
-                                                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                                         Write-Log -Level Warn "$($Name): Unable to create $($Algorithm_Norm) rig for $($RigName): $($_.Exception.Message)"
                                                     }
                                                     $RigCreated++
@@ -1390,7 +1368,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                                     try {
                                                                         $Result = Invoke-MiningRigRentalRequest "/rig/$($RigPools_Id)" $API_Key $API_Secret -params $CreateRig -method "PUT" -Timeout 60
                                                                     } catch {
-                                                                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                                                         Write-Log -Level Warn "$($Name): Unable to update rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                                     }
                                                                     $RigCreated++
@@ -1425,7 +1402,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                                 }
                                                                 Write-Log -Level Info "$($Name): $(if ($Result.success) {"Update"} else {"Unable to update"}) pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                             } catch {
-                                                                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                                                 Write-Log -Level Warn "$($Name): Unable to update pools of rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                             }                                                        
                                                         }
@@ -1440,7 +1416,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                                     }
                                                                     Write-Log -Level Info "$($Name): $(if ($Result.success) {"Delete"} else {"Unable to delete"}) pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($RigPool.Host)"
                                                                 } catch {
-                                                                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                                                                     Write-Log -Level Warn "$($Name): Unable to delete pool $(1 + $_.priority) from rig #$($RigPools_Id) $($Algorithm_Norm) [$($RigName)]: $($_.Exception.Message)"
                                                                 }
                                                             #}
@@ -1454,7 +1429,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             })
                         }
                     } catch {
-                        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         Write-Log -Level Warn "$($Name): Unable to $($RigRunMode) rigs for $($RigName): $($_.Exception.Message)"
                     }
                 }
@@ -1467,7 +1441,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
             try {
                 $Result = Invoke-MiningRigRentalRequest "/rig/batch" $API_Key $API_Secret -params @{"rigs"=$RigsToUpdate} -method "PUT" -Timeout 60
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Log -Level Warn "$($Name): Unable to update: $($_.Exception.Message)"
             }
         }
@@ -1481,7 +1454,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                     $Result = Invoke-MiningRigRentalRequest "/riggroup/$($_.Name)/remove/$($_.Group.rigid -join ';')" $API_Key $API_Secret -method "POST" -Timeout 60
                     Write-Log -Level Info "$($Name): $(if ($Result.success) {"Successfully removed"} else {"Failed to remove"}) rigs $($_.Group.rigid -join ',') from group $($RigGroupName): $($_.Exception.Message)"
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "$($Name): Unable to remove rigs from group $($RigGroupName): $($_.Exception.Message)"
                 }
             }
@@ -1502,7 +1474,6 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         Write-Log -Level Info "$($Name): Failed to add rig$(if ($FailedToAdd.Count -gt 1) {"s"}) $($FailedToAdd -join ',') to group $($RigGroupName)"
                     }
                 } catch {
-                    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                     Write-Log -Level Warn "$($Name): Unable to add rigs to group $($RigGroupName): $($_.Exception.Message)"
                 }
             }
@@ -1536,7 +1507,6 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
             $Pool_Request_Nicehash = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag "Nicehash" -timeout 20
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API (Nicehash) has failed. "
         }
 

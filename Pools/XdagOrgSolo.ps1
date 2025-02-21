@@ -34,7 +34,6 @@ try {
     }
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     $Pool_Id = $null
 }
 

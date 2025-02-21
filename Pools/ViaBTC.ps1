@@ -48,7 +48,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 $Pool_StateRequest = $Pool_StateRequest.data | Where-Object {$_.coin -eq $Pool_Currency}
             }
             catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $ok = $false
             }
         }
@@ -59,7 +58,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 if ($Pool_BlocksRequest.message -ne "OK") {$ok=$false}
             }
             catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 $ok = $false
             }
         }

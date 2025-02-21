@@ -34,5 +34,4 @@ try {
     }
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }

@@ -146,7 +146,7 @@ function Send-APIServerUdp {
             $UdpClient.Send($byteBuffer, $byteBuffer.length, [system.net.IPAddress]::Broadcast, $Port)
         }
         $true
-    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+    } catch {}
 }
 
 function Test-APIServer {

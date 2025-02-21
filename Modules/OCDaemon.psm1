@@ -79,7 +79,7 @@ function Initialize-OCDaemon {
             if (Test-Path "/opt/rainbowminer/ocdcmd") {
                 Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($Session.OCDaemonPrefix)*" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
             }
-        } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+        } catch {}
     }
 }
 

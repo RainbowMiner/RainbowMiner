@@ -75,7 +75,13 @@ do {
         $Process.CloseMainWindow()>$null
     }
     if ($Global:Error.Count) {
-        $Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}
+        $logDate = Get-Date -Format "yyyy-MM-dd"
+        $errPath = Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt"
+        foreach ($err in $Global:Error) {
+            if ($err.Exception.Message) {
+                Write-ToFile -FilePath $errPath -Message "Error during $($FilePath) $($Argumentlist): $($err.Exception.Message)" -Append -Timestamp
+            }
+        }
         $Global:Error.Clear()
     }
 }

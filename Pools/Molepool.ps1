@@ -45,7 +45,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).molepool.com/api/stats" -tag $Name -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
             return
         }
@@ -56,7 +55,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_BlocksRequest = Invoke-RestMethodAsync "https://$($Pool_RpcPath).molepool.com/api/blocks" -tag $Name -cycletime 120
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Pool blocks API ($Name) for $Pool_Currency has failed. "
         }
 

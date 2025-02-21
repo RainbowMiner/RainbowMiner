@@ -25,7 +25,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://supportxmr.com/api/pool/stats" -tag $Name -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if (-not $Pool_Request.pool_statistics) {
@@ -42,7 +41,6 @@ try {
     $Pool_BlocksRequest = Invoke-RestMethodAsync "https://supportxmr.com/api/pool/blocks?limit=100" -tag $Name -cycletime 120 | Where-Object {$_.ts -ge $Timestamp24} | Select-Object -ExpandProperty ts | Measure-Object -Minimum -Maximum
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Info "Pool Currency API ($Name) has failed. "
 }
 

@@ -26,7 +26,6 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
             try {
                 $Request = $Request -replace '"workers":{".+}}','"workers":{ }' -replace '"charts":{".+]]}','"charts":{ }' | ConvertFrom-Json -ErrorAction Ignore
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             }
         }
         if (-not $Request.stats -or -not $coinUnits) {
@@ -49,7 +48,6 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         }
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
     }
 }

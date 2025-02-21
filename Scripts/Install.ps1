@@ -65,7 +65,6 @@ if ($IsWindows) {
         } | Foreach-Object {"$("{0:X2}:{1:X2}.{2:d}" -f ($Matches[0] -split "," | Foreach-Object {[int]$_})) $(if ($_.AdapterCompatibility -match "Advanced Micro Devices") {"$($Matches[0]) "})$($_.Name)"} | Sort-Object
     }
     catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }) | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-Null
 }
 
@@ -126,7 +125,7 @@ if ($IsWindows -and $GNVIDIA) {
             $InstallNVSMI_Job | Wait-Job -Timeout 60 > $null
             if ($InstallNVSMI_Job.State -eq 'Running') {
                 Write-Host "WARNING: Time-out while loading .\Scripts\InstallNVSMI.ps1" -ForegroundColor Yellow
-                try {$InstallNVSMI_Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                try {$InstallNVSMI_Job | Stop-Job -PassThru | Receive-Job > $null} catch {}
             } else {
                 try {
                     $InstallNVSMI_Result = Receive-Job -Job $InstallNVSMI_Job
@@ -141,9 +140,9 @@ if ($IsWindows -and $GNVIDIA) {
                             }
                         }
                     }
-                } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                } catch {}
             }
-            try {Remove-Job $InstallNVSMI_Job -Force} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+            try {Remove-Job $InstallNVSMI_Job -Force} catch {}
         }
     } catch {
         Write-Host "WARNING: Failed to check NVSMI: $($_.Exception.Message)"

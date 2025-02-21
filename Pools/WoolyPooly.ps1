@@ -24,7 +24,6 @@ try {
     $Pools_Request = Invoke-RestMethodAsync "https://api.woolypooly.com/api/stats" -tag $Name -timeout 15 -cycletime 120 -delay 250
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
     return
 }
@@ -85,7 +84,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
             $Pool_BlocksRequest = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/blocks" -tag $Name -timeout 20 -cycletime 120 -delay 250).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Pool blocks API ($Name) for $Pool_Currency has failed. "
         }
 
@@ -94,7 +92,6 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
             $Pool_StatsRequest  = (Invoke-RestMethodAsync "https://api.woolypooly.com/api/$($Pool_RpcPath)/stats?simple=false" -tag $Name -timeout 20 -cycletime 3600 -delay 250).modes | Where-Object {$_.payoutScheme -eq $Pool_PayoutScheme}
         }
         catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Info "Pool stats API ($Name) for $Pool_Currency has failed. "
         }
 

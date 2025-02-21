@@ -77,7 +77,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly
                 $Pool_Workers = [int]($Matches[1] -replace "[,\s]+")
             }
         } catch {
-            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
             Write-Log -Level Warn "Pool API ($Name) for $($_.symbol) has failed. "        
         }
     }

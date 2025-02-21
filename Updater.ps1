@@ -33,7 +33,6 @@ if (Test-Path ".\Downloads\config.json") {
     try {
         $DownloaderConfig = Get-Content ".\Downloads\config.json" -Raw | ConvertFrom-Json -ErrorAction Ignore
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
     }
 }
 if (-not $DownloaderConfig) {
@@ -122,7 +121,6 @@ try {
                                 }
                             } while ($IsLocked -and ($RetryLock -gt 0))
                         } catch {
-                            if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                         }
                         if ($IsLocked) {
                             Write-Host "Failed to update $FileNameTo. Please download manually from Github." -ForegroundColor Yellow
@@ -133,7 +131,6 @@ try {
                     Remove-Item "_update" -Force -Recurse
                 }
             } catch {
-                if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
                 Write-Host "Failed to update exe files. Please download manually from Github." -ForegroundColor Yellow
             }
         } else {

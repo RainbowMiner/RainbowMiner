@@ -29,7 +29,6 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://prohashing.com/api/v1/status" -tag $Name -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if ($Pool_Request.code -ne 200) {
@@ -41,7 +40,6 @@ try {
     $PoolCoins_Request = Invoke-RestMethodAsync "https://prohashing.com/api/v1/currencies" -tag $Name -cycletime 120
 }
 catch {
-    if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
 }
 
 if ($PoolCoins_Request.code -ne 200) {

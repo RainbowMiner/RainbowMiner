@@ -56,9 +56,9 @@ if ($IsCore) {
                 if ($fixbigint) {
                     try {
                         $Result.Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Result.Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
-                    } catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                    } catch {}
                 }
-                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {if ($Global:Error.Count){$Global:Error.RemoveAt(0)}}
+                try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
             }
             if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
         }
@@ -67,7 +67,6 @@ if ($IsCore) {
             $Response = $null
         }
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $Result.ErrorMessage = "$($_.Exception.Message)"
     }
 } else {
@@ -82,7 +81,6 @@ if ($IsCore) {
         if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
         $Result.Status = $true
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $Result.ErrorMessage = "$($_.Exception.Message)"
     } finally {
         if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}

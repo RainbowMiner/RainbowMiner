@@ -140,8 +140,16 @@ do {
             }
         }
     }
-    if ($Global:Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
-    $Global:Error.Clear()
+    if ($Global:Error.Count) {
+        $logDate = Get-Date -Format "yyyy-MM-dd"
+        $errPath = Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt"
+        foreach ($err in $Global:Error) {
+            if ($err.Exception.Message) {
+                Write-ToFile -FilePath $errPath -Message "Error during $($FilePath): $($err.Exception.Message)" -Append -Timestamp
+            }
+        }
+        $Global:Error.Clear()
+    }
 }
 while (-not $Done -and $Process.HasExited -eq $false)
 

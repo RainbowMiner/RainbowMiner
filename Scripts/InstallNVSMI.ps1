@@ -18,7 +18,6 @@ if (-not $NV_Version) {
             [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All)
         } | Select-Object)
     } catch {
-        if ($Global:Error.Count){$Global:Error.RemoveAt(0)}
         $data = @(Get-DeviceName "nvidia" -UseAfterburner $false | Select-Object)
     }
     if (($data | Measure-Object).Count) {
