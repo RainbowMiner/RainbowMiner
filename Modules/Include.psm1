@@ -3510,9 +3510,7 @@ function Test-TcpServer {
         [Parameter(Mandatory = $false)]
         [Int]$Timeout = 1, #seconds,
         [Parameter(Mandatory = $false)]
-        [Switch]$ConvertToIP,
-        [Parameter(Mandatory = $false)]
-        [Switch]$Verbose
+        [Switch]$ConvertToIP
     )
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     elseif ($ConvertToIP) {      
