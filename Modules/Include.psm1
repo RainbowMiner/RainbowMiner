@@ -1805,11 +1805,10 @@ function Get-PoolsContent {
 
     $DiffFactor = 86400 / [Math]::Pow(2,32)
 
-    Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
+    $script = Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore
 
-        $Content = & {
-                & $_.FullName @Parameters
-        }
+    if ($script) {
+        $Content = & $script.FullName @Parameters
 
         foreach($c in @($Content)) {
             if ($PoolName -ne "WhatToMine") {
@@ -1887,24 +1886,24 @@ function Get-MinersContent {
 
     if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
-    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$Parameters.InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$Parameters.InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | Select-Object)) {
-        $Name = $Miner.BaseName
-        if ($Parameters.InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($Global:MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
-            $Content = & { 
-                    & $Miner.FullName @Parameters
-            }
+    $scriptFiles = @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$Parameters.InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$Parameters.InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | Select-Object)
+    
+    foreach($script in $scriptFiles) {
+        $scriptName = $script.BaseName
+        if ($Parameters.InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($Global:MinerInfo.$scriptName | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
+            $Content = & $script.FullName @Parameters
             foreach($c in @($Content)) {
                 if ($Parameters.InfoOnly) {
                     $c | Add-Member -NotePropertyMembers @{
-                        Name     = if ($c.Name) {$c.Name} else {$Name}
-                        BaseName = $Name
+                        Name     = if ($c.Name) {$c.Name} else {$scriptName}
+                        BaseName = $scriptName
                     } -Force -PassThru
                 } elseif ($c.PowerDraw -eq 0) {
                     $c.PowerDraw = $Global:StatsCache."$($c.Name)_$($c.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
                     if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$c.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
                     $c
                 } else {
-                    Write-Log -Level Warn "Miner module $($Name) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
+                    Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
                 }
             }
         }
