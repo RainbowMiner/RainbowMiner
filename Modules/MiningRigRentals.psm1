@@ -826,26 +826,39 @@ param(
     [String[]]$workers
 )
     $regex = "\[($($workers -join '|'))\]"
-    if ($Session.Config.RunMode -eq "Server") {
-        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime 60 | Where-Object {$_.description -match $regex}
-    } else {
-        Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime 60 -regexfld "description" -regex $regex -regexmatch $true
+    try {
+        if ($Session.Config.RunMode -eq "Server") {
+            Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime 60 | Where-Object {$_.description -match $regex}
+        } else {
+            Invoke-MiningRigRentalRequestAsync "/rig/mine" $key $secret -cycletime 60 -regexfld "description" -regex $regex -regexmatch $true
+        }
+    } catch {
+        Write-Log -Level Warn "MiningRigRentals: /rig/mine request failed: $($_.Exception.Message)"
     }
 }
 
 function Get-MiningRigRentalsRigID {
-[cmdletbinding()]
+[CmdletBinding()]
 Param(   
     [Parameter(
         Mandatory = $True,   
         Position = 0,   
-        ParameterSetName = '',   
-        ValueFromPipeline = $True)]   
-        [string]$worker
+        ValueFromPipeline = $True
+    )]   
+    [string]$worker
 )
-    $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
-    $utf8 = new-object -TypeName System.Text.UTF8Encoding
-    $idstr = [convert]::ToBase64String($md5.ComputeHash($utf8.GetBytes($worker))) -replace "[^a-z0-9]"
+
+    $utf8 = [System.Text.Encoding]::UTF8
+    $idstr = $null
+
+    try {
+        $md5 = [System.Security.Cryptography.MD5CryptoServiceProvider]::new()
+        $idstr = [convert]::ToBase64String($md5.ComputeHash($utf8.GetBytes($worker))) -replace "[^a-z0-9]"
+    }
+    finally {
+        if ($md5) { $md5.Dispose() }
+    }
+
     "$($idstr.substring(0,2))$($idstr.substring($idstr.Length-2,2))"
 }
 
@@ -873,7 +886,7 @@ Param(
             Set-ContentJson -PathToFile ".\Data\mrrpoolsall.json" -Data $PoolsData -Compress > $null
         }
     } catch {
-        Write-Log -Level Warn "api.rbminer.net/data/mrrpoolsall.json could not be reached"
+        Write-Log -Level Warn "MiningRigRentals: api.rbminer.net/data/mrrpoolsall.json could not be reached"
     }
     if (-not $PoolsData) {
         try {

@@ -8182,7 +8182,10 @@ Param(
                     Get-ContentByStreamReader ".\Cache\$($Jobkey).asy"
                 }
             }
-            catch {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
+            catch {
+                Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore
+                throw "Job $Jobkey contains clutter."
+            }
         }
     }
 }
