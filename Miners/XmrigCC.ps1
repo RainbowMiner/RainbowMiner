@@ -204,7 +204,7 @@ if ($IsLinux) {
 
     $Path    = ".\Bin\ANY-XmrigCC\xmrigDaemon.exe"
     $CudaLib = "xmrig-cuda.dll"
-    $Executables = $null
+    $Executables = @("xmrigMiner.exe")
 }
 
 if ($Uri -eq $null) {return}

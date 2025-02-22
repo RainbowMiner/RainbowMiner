@@ -459,7 +459,7 @@ function Write-ToFile {
         try {
             $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
             $file = New-Object System.IO.StreamWriter($FilePath, $Append, [System.Text.Encoding]::UTF8)
-        } catch {;$ErrorMessage = "$($_.Exception.Message)"}
+        } catch {$ErrorMessage = "$($_.Exception.Message)"}
     }
     Process {
         if ($file) {
@@ -477,7 +477,7 @@ function Write-ToFile {
                         $file.WriteLine($Message)
                     }
                 }
-            } catch {;$ErrorMessage = "$($_.Exception.Message)"}
+            } catch {$ErrorMessage = "$($_.Exception.Message)"}
         }
     }
     End {
@@ -485,7 +485,7 @@ function Write-ToFile {
             try {
                 $file.Close()
                 $file.Dispose()
-            } catch {;$ErrorMessage = "$($_.Exception.Message)"}
+            } catch {$ErrorMessage = "$($_.Exception.Message)"}
         }
         if ($ThrowError -and $ErrorMessage) {throw $ErrorMessage}
     }
@@ -1667,7 +1667,7 @@ function Get-ChildItemContent {
         if ($Expression -is [String]) {
             if ($Expression -match '(\$|")') {
                 try {$Expression = Invoke-Expression $Expression}
-                catch {;$Expression = Invoke-Expression "`"$Expression`""}
+                catch {$Expression = Invoke-Expression "`"$Expression`""}
             }
         }
         elseif ($Expression -is [PSCustomObject]) {
@@ -1994,7 +1994,7 @@ function ConvertFrom-Hash {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Hash
     )
-    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {;$Num=0}
+    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {$Num=0}
     switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
         "k" {$Num*1e3;Break}
         "M" {$Num*1e6;Break}
@@ -2013,7 +2013,7 @@ function ConvertFrom-Bytes {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Hash
     )
-    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {;$Num=0}
+    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {$Num=0}
     switch (($Hash -replace "[^kMGHTPEZY]")[0]) {
         "k" {[int64]$Num*1024;Break}
         "M" {[int64]$Num*1048576;Break}
@@ -2032,7 +2032,7 @@ function ConvertFrom-Time {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Time
     )
-    try {$Num = [double]($Time -replace "[^0-9`.]")} catch {;$Num=0}
+    try {$Num = [double]($Time -replace "[^0-9`.]")} catch {$Num=0}
     [int64]$(switch (($Time -replace "[^mhdw]")[0]) {
         "m" {$Num*60;Break}
         "h" {$Num*3600;Break}
@@ -3296,8 +3296,7 @@ function Invoke-Exe {
             if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
         }
 
-    } catch {
-        ;Write-Log -Level Warn "Could not execute $FilePath $($ArgumentList): $($_.Exception.Message)"
+    } catch {Write-Log -Level Warn "Could not execute $FilePath $($ArgumentList): $($_.Exception.Message)"
     } finally {
         if ($process) { $process.Dispose(); $process = $null }
         if ($psi) { $psi = $null }
@@ -3360,8 +3359,7 @@ function Invoke-Process {
                 if ($ExpandLines) {foreach ($line in @($cmdOutput -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$cmdOutput}
             }
         }
-    } catch {
-        ;Write-Log -Level Warn "Could not start process $FilePath $($ArgumentList): $($_.Exception.Message)"
+    } catch {Write-Log -Level Warn "Could not start process $FilePath $($ArgumentList): $($_.Exception.Message)"
     } finally {
         Remove-Item -Path $stdOutTempFile, $stdErrTempFile -Force -ErrorAction Ignore
         if ($cmd) {
@@ -3549,7 +3547,7 @@ function Get-MyIP {
         }
         $IpcResult | Select-Object -First 1
     } elseif ($IsLinux) {
-        try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {;try {hostname -I | Where-Object {$_ -match "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"} | Foreach-Object {$Matches[1]} | Select-Object -First 1} catch {}}
+        try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {try {hostname -I | Where-Object {$_ -match "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"} | Foreach-Object {$Matches[1]} | Select-Object -First 1} catch {}}
     }
 }
 
@@ -6843,7 +6841,7 @@ function Get-ConfigContent {
                 $Session.ConfigFiles[$ConfigName].Healthy=$true
             }
         }
-        catch {; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; if (-not $WorkerName) {$Session.ConfigFiles[$ConfigName].Healthy=$false}}
+        catch { Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; if (-not $WorkerName) {$Session.ConfigFiles[$ConfigName].Healthy=$false}}
     }
 }
 
@@ -6957,7 +6955,7 @@ function ConvertFrom-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [switch]$ToInt
     )
-    try {$AffinityInt = [System.Numerics.BigInteger]::Parse("0$($Affinity -replace "[^0-9A-Fx]" -replace "^[0x]+")", 'AllowHexSpecifier')}catch{;$AffinityInt=[bigint]0}
+    try {$AffinityInt = [System.Numerics.BigInteger]::Parse("0$($Affinity -replace "[^0-9A-Fx]" -replace "^[0x]+")", 'AllowHexSpecifier')}catch{$AffinityInt=[bigint]0}
     if ($ToInt) {$AffinityInt}
     else {@(for($a=0;$AffinityInt -gt 0;$a++) {if (($AffinityInt -band 1) -eq 1){$a};$AffinityInt=$AffinityInt -shr 1})}
 }
@@ -7609,7 +7607,7 @@ Param(
                             $Data = ([regex]"(?si):\s*(\d{19,})[`r`n,\s\]\}]").Replace($Data,{param($m) $m.Groups[0].Value -replace $m.Groups[1].Value,"$([double]$m.Groups[1].Value)"})
                         } catch {}
                     }
-                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch {; $method = "WEB"}
+                    try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch { $method = "WEB"}
                 }
                 if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
             } else {
@@ -8184,7 +8182,7 @@ Param(
                     Get-ContentByStreamReader ".\Cache\$($Jobkey).asy"
                 }
             }
-            catch {;Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
+            catch {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
         }
     }
 }
@@ -8326,7 +8324,7 @@ param(
         if ($state -band 0x20000000)    {"minimized"}
         elseif ($state -band 0x1000000) {"maximized"}
         else                            {"normal"}
-    } catch {;"maximized"}
+    } catch {"maximized"}
 }
 
 function Set-WindowStyle {

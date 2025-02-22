@@ -2735,7 +2735,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another pool?")){throw}
                         
-                } catch {;$PoolSetupDone = $true}
+                } catch {$PoolSetupDone = $true}
             } until ($PoolSetupDone)
         }
         elseif ($SetupType -eq "D") {
@@ -2858,7 +2858,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another device?")){throw}
                         
-                } catch {;$DeviceSetupDone = $true}
+                } catch {$DeviceSetupDone = $true}
             } until ($DeviceSetupDone)
         }
         elseif ($SetupType -eq "L") {
@@ -2986,7 +2986,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another algorithm?")){throw}
                         
-                } catch {;$AlgorithmSetupDone = $true}
+                } catch {$AlgorithmSetupDone = $true}
             } until ($AlgorithmSetupDone)
         }
         elseif ($SetupType -eq "I") {
@@ -3190,7 +3190,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another coin?")){throw}
                         
-                } catch {;$CoinSetupDone = $true}
+                } catch {$CoinSetupDone = $true}
             } until ($CoinSetupDone)
         }
         elseif ($SetupType -eq "O") {
@@ -3401,7 +3401,7 @@ function Start-Setup {
                     Write-Host " "
                     if (-not (Read-HostBool "Edit another profile?")){throw}
                         
-                } catch {;$OCProfileSetupDone = $true}
+                } catch {$OCProfileSetupDone = $true}
             } until ($OCProfileSetupDone)
         }
         elseif ($SetupType -eq "H") {

@@ -170,7 +170,7 @@ function Start-Core {
         $Session.CUDAversion = $false
         $Session.DotNETRuntimeVersion = $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {})
 
-        try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {;$Session.EnableColors = $false}
+        try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
 
         if ($Session.IsAdmin) {Write-Log "Run as administrator"}
 
@@ -1373,13 +1373,13 @@ function Invoke-Core {
                     }
 
                     $PowerPrice = if ($_.PowerPrice -eq "") {Get-PowerPrice} else {$_.PowerPrice}
-                    try {$PowerPrice = [Double]$PowerPrice} catch {;$PowerPrice = Get-PowerPrice}
+                    try {$PowerPrice = [Double]$PowerPrice} catch {$PowerPrice = Get-PowerPrice}
                     $_.PowerPrice = $PowerPrice
                     $MiningHeatControl = if ($_.MiningHeatControl -eq "") {$Session.Config.MiningHeatControl} else {$_.MiningHeatControl}
-                    try {$MiningHeatControl = [Double]$MiningHeatControl} catch {;$MiningHeatControl = $Session.Config.MiningHeatControl}
+                    try {$MiningHeatControl = [Double]$MiningHeatControl} catch {$MiningHeatControl = $Session.Config.MiningHeatControl}
                     $MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($MiningHeatControl,5.0),0.0),1)
                     $_.MiningHeatControl = $MiningHeatControl
-                    try {$_.MRRPriceFactor = [Double]$_.MRRPriceFactor} catch {;$_.MRRPriceFactor = 0}
+                    try {$_.MRRPriceFactor = [Double]$_.MRRPriceFactor} catch {$_.MRRPriceFactor = 0}
                     $Session.Config.Scheduler.Add($_) > $null
                 }
             }
@@ -1659,7 +1659,7 @@ function Invoke-Core {
     #Versioncheck for automatic updates
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun -and -not $Global:PauseMiners.Test([PauseStatus]::ByActivity) -and (-not $Session.Config.EnableUpdateWhenScheduled -or $Scheduler.EnableUpdate) -and ($Session.Config.EnableUpdateDuringPause -or -not $Global:PauseMiners.Test())) {
-        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {;$Last_Autoupdate = $null}}
+        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {$Last_Autoupdate = $null}}
         if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
             $Last_Autoupdate = [PSCustomObject]@{
                                     RemoteVersion = $ConfirmedVersion.RemoteVersion.ToString()
@@ -1770,7 +1770,7 @@ function Invoke-Core {
 
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if ($Session.RoundCounter -gt 0 -and -not $Session.IsDonationRun -and -not $Session.UserConfig) {
-            try {$DonationData = Invoke-GetUrl "https://api.rbminer.net/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {;Write-Log -Level Warn "api.rbminer.net/dconf.php could not be reached"}
+            try {$DonationData = Invoke-GetUrl "https://api.rbminer.net/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {Write-Log -Level Warn "api.rbminer.net/dconf.php could not be reached"}
             if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {}}
             if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = Get-Unzip 'H4sIAAAAAAAEAL2U227iMBCG3yXXvSBOCIW7QAJogTYUKD2oWk0SJwR8SB0HEqq++9p01S2RKq22q955PJ6Zb36P/WIEgocQZiSTtdEzW60LYw2EYFkYvRcDzTKGxWnpL8dro2e0qjg2zRh7dssyu0MzslHi2JZlDoeh2UmcTtezrL5tdbuGysTFDgsVRfNKmR5IWGcs5ge1hQuZUZD4Z1QKgZlU/gAzIBpDQSwWU6OXACnw64UxxoL/IZm4CxW/gyKH3rNw0mdna1cbhBxSo6i47FTssqaIltVhAwTaUWrtUJrQBO3THesi59hOd0dJreQ/Es64ouPXEQamEe9mNyqBba+852PShtEDtGVWoH76wzpOR5uZlHy+DUpz2J6at/JhxNxw0gd+uXEwuzPjLuZ5O7fHbrDao2pmw3S+va870dj0TZcNF2uaXq3n/4APRXHgIlbeqtGNX0WkjLFLUi4yuaHqyKCMdiA4R93CaLR7lUV4DMVG99pfDtRhK0hWq6W53LGkju0Fuxf+4ZCvfHfuH9cx6pfe19QOCMiEC821R8o3gyqjJZ2BSDN2nfhCcJ241SRV461BM5Zq1gbAqjgZIqQ6TIJ091hAitUyJFh5PKgbHK4/OPFFyjSmqvVGvQcs0oBz8kEZr7rxl3mf302E359XwxCNi4COHMirMZ3QVfUFZUz0Sf0Bz1jxjRC63qKmoe7c+EyUBSf8G5k+DjPt0CaVhxMoifwa0NkI/T2dc8ai51TJo+7r8f3LPfv13l7cRr+45hWf/z1nA/90JsHj0/srP2W9Aop1wZHI2IiT+LSpEmg7+F35VJht4SZLtXoHyN+2n15/AWQQEz05BgAA' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
@@ -3150,7 +3150,7 @@ function Invoke-Core {
             if ($Miner.Arguments.Params -is [string]) {$Miner.Arguments.Params = ($Miner.Arguments.Params -replace "\s+"," ").trim()}
             $Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress
         }
-        try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {;$Miner_Difficulty=0.0}
+        try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {$Miner_Difficulty=0.0}
         if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}|{workername:$($Session.Config.WorkerName)}",$(@($Miner.DeviceModel -split '\-' | Foreach-Object {if ($Session.Config.Devices.$_.Worker) {$Session.Config.Devices.$_.Worker} else {$Session.Config.WorkerName}} | Select-Object -Unique) -join '_') -replace "{workername:(.+?)}","`$1"}
 
         if (-not $Miner.ExtendInterval -or $Session.Config.DisableExtendInterval) {$Miner.ExtendInterval = 1}
@@ -3744,8 +3744,24 @@ function Invoke-Core {
     }
 
     #Kill maroding miners
-    $Running_ProcessIds = @($Global:ActiveMiners | Foreach-Object {$_.GetProcessIds()} | Where-Object {$_} | Select-Object -Unique)
-    $Running_MinerPaths = @($Global:ActiveMiners | Foreach-Object {Split-Path -Leaf $_.Path} | Select-Object -Unique)
+    $Running_ProcessIds = [System.Collections.Generic.HashSet[int]]::new()
+    foreach ($Miner in $Global:ActiveMiners) {
+        foreach ($ProcessId in $Miner.GetProcessIds()) {
+            if ($ProcessId) { $Running_ProcessIds.Add($ProcessId) > $null }
+        }
+    }
+
+    $Running_MinerPaths = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($Miner in $Global:ActiveMiners) {
+        $MinerPath = Split-Path -Leaf $Miner.Path
+        if ($MinerPath) { $Running_MinerPaths.Add($MinerPath) > $null }
+        if ($Miner.Executables) {
+            foreach ($Exe in @($Miner.Executables)) {  # Ensure it's treated as an array
+                if ($Exe) { $Running_MinerPaths.Add($Exe) > $null }
+            }
+        }
+    }
+
     if ($IsWindows) {
         @(Get-CIMInstance CIM_Process).Where({$_.ExecutablePath -and $_.ExecutablePath -like "$(Get-Location)\Bin\*" -and $Running_ProcessIds -notcontains $_.ProcessId -and $Running_MinerPaths -icontains $_.ProcessName}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
     } elseif ($IsLinux) {
@@ -3762,8 +3778,7 @@ function Invoke-Core {
         }
     }
 
-    $Running_ProcessIds = $null
-    $Running_MinerPaths = $null
+    $Running_ProcessIds = $Running_MinerPaths = $null
     Remove-Variable -Name Running_ProcessIds, Running_MinerPaths -ErrorAction Ignore
 
     if ($Global:Downloader.HasMoreData) {$Global:Downloader | Receive-Job | Out-Host}
@@ -5190,7 +5205,7 @@ function Invoke-ReportMinerStatus {
         Set-ContentJson -PathToFile ".\Data\pool_totals.json" -Data $Pool_Totals > $null
     }
 
-    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {;$ReportAPI=$null}}
+    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://api.rbminer.net/report.php"})}
 
     # Create crash alerts
@@ -5451,7 +5466,7 @@ function Update-Rates {
             if ($AltCoinbase.BTC) {
                 $AltCoinbase.PSObject.Properties | Where-Object {$_.Name -notin $WCSymbols -or $_.Name -in $BaseSymbols} | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}
             }
-        } catch {;Write-Log -Level Warn "Coinbase down. "}
+        } catch {Write-Log -Level Warn "Coinbase down. "}
     }
 
     $Global:Rates["BTC"] = $NewRates["BTC"] = [Double]1
