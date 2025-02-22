@@ -298,119 +298,38 @@ public static class RBMToolBox
     }
 
     // 8. Object handling
-    public static object CopyObject(object obj)
-    {
-        if (obj == null)
-            return null;
-
-        if (obj is ValueType || obj is string)
-            return obj;
-
-#if NETCOREAPP3_0_OR_GREATER
-        if (obj is PSObject psObject)
-            return CopyPSCustomObject(psObject);
-
-        if (obj is Hashtable hashtable)
-            return CopyHashtable(hashtable);
-
-        if (obj is Array array)
-            return CopyArray(array);
-
-        if (obj is ICloneable cloneable)
-            return cloneable.Clone();
-#else
-        if (obj is PSObject)
-            return CopyPSCustomObject((PSObject)obj);
-
-        if (obj is Hashtable)
-            return CopyHashtable((Hashtable)obj);
-
-        if (obj is Array)
-            return CopyArray((Array)obj);
-
-        if (obj is ICloneable)
-            return ((ICloneable)obj).Clone();
-#endif
-        return obj;
-    }
-
-    public static PSObject CopyPSCustomObject(PSObject obj)
-    {
-        PSObject newObj = new PSObject();
-#if NETCOREAPP3_0_OR_GREATER
-        foreach (var prop in obj.Properties)
-        {
-            object value = CopyObject(prop.Value);
-            newObj.Properties.Add(new PSNoteProperty(prop.Name, value));
-        }
-#else
-        foreach (PSPropertyInfo prop in obj.Properties)
-        {
-            object value = CopyObject(prop.Value);
-            newObj.Properties.Add(new PSNoteProperty(prop.Name, value));
-        }
-#endif
-        //newObj.TypeNames.Clear();
-        return newObj;
-    }
-
-    public static Hashtable CopyHashtable(Hashtable original)
-    {
-        Hashtable clone = new Hashtable();
-        foreach (DictionaryEntry entry in original)
-        {
-            object key = entry.Key;
-            object value = CopyObject(entry.Value);
-            clone[key] = value;
-        }
-        return clone;
-    }
-
-    public static Array CopyArray(Array original)
-    {
-        Type elementType = original.GetType().GetElementType();
-        Array clone = Array.CreateInstance(elementType, original.Length);
-
-        for (int i = 0; i < original.Length; i++)
-        {
-            object value = CopyObject(original.GetValue(i));
-            clone.SetValue(value, i);
-        }
-
-        return clone;
-    }
-
-    private static object TryUnwrapPSObject(object obj, Type targetType)
-    {
-#if NETCOREAPP3_0_OR_GREATER
-        if (obj is PSObject psObj && psObj.BaseObject.GetType() == targetType)
-            return psObj.BaseObject;
-#else
-        if (obj is PSObject)
-        {
-            PSObject psObj = (PSObject)obj;
-            if (psObj.BaseObject.GetType() == targetType)
-                return psObj.BaseObject;
-        }
-#endif
-        return obj;
-    }
-
     public static bool CompareObject(object obj1, object obj2)
     {
         if (obj1 == null && obj2 == null) return true;
         if (obj1 == null || obj2 == null) return false;
 
+        obj1 = UnwrapPSObject(obj1);
+        obj2 = UnwrapPSObject(obj2);
+
         Type type1 = obj1.GetType();
         Type type2 = obj2.GetType();
 
+        if (obj1 is ValueType && obj2 is ValueType && !(obj1 is bool) && !(obj1 is char) && !(obj1 is DateTime))
+        {
+            return Convert.ToDecimal(obj1).Equals(Convert.ToDecimal(obj2));
+        }
+
         if (type1 != type2)
         {
-            obj1 = TryUnwrapPSObject(obj1, type2);
-            obj2 = TryUnwrapPSObject(obj2, type1);
+#if NETCOREAPP3_0_OR_GREATER
+            if (obj1 is PSObject psObj && obj2 is Hashtable hash)
+                return ComparePSObjectToHashtable(psObj, hash);
 
-            if (obj1.GetType() != obj2.GetType())
-                return false;
+            if (obj2 is PSObject psObjOther && obj1 is Hashtable hashOther)
+                return ComparePSObjectToHashtable(psObjOther, hashOther);
+#else
+            if (obj1 is PSObject && obj2 is Hashtable)
+                return ComparePSObjectToHashtable((PSObject)obj1, (Hashtable)obj2);
+
+            if (obj2 is PSObject && obj1 is Hashtable)
+                return ComparePSObjectToHashtable((PSObject)obj2, (Hashtable)obj1);
+#endif
+            return false;
         }
 
         if (obj1 is ValueType || obj1 is string) return obj1.Equals(obj2);
@@ -424,6 +343,64 @@ public static class RBMToolBox
         if (obj1 is Array && obj2 is Array) return CompareArrays((Array)obj1, (Array)obj2);
 #endif
         return obj1.Equals(obj2);
+    }
+
+    private static object UnwrapPSObject(object obj)
+    {
+#if NETCOREAPP3_0_OR_GREATER
+        if (obj is PSObject psObj)
+        {
+            object baseObj = psObj.BaseObject;
+
+            if (baseObj is PSCustomObject)
+                return obj;
+
+            if (baseObj == null || baseObj is ValueType || baseObj is string || baseObj is DBNull || baseObj is Hashtable)
+                return baseObj;
+
+            return obj;
+        }
+#else
+        if (obj is PSObject)
+        {
+            object baseObj = ((PSObject)obj).BaseObject;
+
+            if (baseObj is PSCustomObject)
+                return obj;
+
+            if (baseObj == null || baseObj is ValueType || baseObj is string || baseObj is DBNull || baseObj is Hashtable)
+                return baseObj;
+
+            return obj;
+        }
+#endif
+        return obj;
+    }
+
+    public static bool ComparePSObjectToHashtable(PSObject psObj, Hashtable hash)
+    {
+        if (psObj == null || hash == null) return false;
+
+        var properties = psObj.Properties;
+
+        // Count properties manually (since .Count is unavailable)
+        int propCount = 0;
+        var enumerator = properties.GetEnumerator();
+        while (enumerator.MoveNext()) propCount++;
+
+        // Quick check: If number of properties doesn't match number of hashtable keys, return false
+        if (propCount != hash.Count) return false;
+
+        foreach (var prop in properties)
+        {
+            if (!hash.ContainsKey(prop.Name))
+                return false;
+
+            if (!CompareObject(prop.Value, hash[prop.Name]))
+                return false;
+        }
+
+        return true;
     }
 
     public static bool ComparePSCustomObjects(PSObject obj1, PSObject obj2)
@@ -454,9 +431,9 @@ public static class RBMToolBox
             if (!lookup2.TryGetValue(prop1.Name, out var prop2))
                 return false;
 #else
-            PSPropertyInfo prop2;  // ✅ Fix: Declare before calling TryGetValue
+            PSPropertyInfo prop2;
 
-            if (!lookup2.TryGetValue(prop1.Name, out prop2)) // ✅ Fix: Pass declared variable
+            if (!lookup2.TryGetValue(prop1.Name, out prop2))
                 return false;
 #endif
 
@@ -507,7 +484,36 @@ public static class RBMToolBox
     {
         if (obj1 == null && obj2 == null) return true;
         if (obj1 == null || obj2 == null) return false;
-        if (obj1.GetType() != obj2.GetType()) return false;
+
+        obj1 = UnwrapPSObject(obj1);
+        obj2 = UnwrapPSObject(obj2);
+
+        Type type1 = obj1.GetType();
+        Type type2 = obj2.GetType();
+
+        if (obj1 is ValueType && obj2 is ValueType && !(obj1 is bool) && !(obj1 is char) && !(obj1 is DateTime))
+        {
+            return Convert.ToDecimal(obj1).Equals(Convert.ToDecimal(obj2));
+        }
+
+        if (type1 != type2)
+        {
+#if NETCOREAPP3_0_OR_GREATER
+            if (obj1 is PSObject psObj && obj2 is Hashtable hash)
+                return ComparePSObjectToHashtableIgnoreCase(psObj, hash);
+
+            if (obj2 is PSObject psObjOther && obj1 is Hashtable hashOther)
+                return ComparePSObjectToHashtableIgnoreCase(psObjOther, hashOther);
+#else
+            if (obj1 is PSObject && obj2 is Hashtable)
+                return ComparePSObjectToHashtableIgnoreCase((PSObject)obj1, (Hashtable)obj2);
+
+            if (obj2 is PSObject && obj1 is Hashtable)
+                return ComparePSObjectToHashtableIgnoreCase((PSObject)obj2, (Hashtable)obj1);
+#endif
+            return false;
+        }
+
         if (obj1 is ValueType || obj1 is string) return CompareValuesIgnoreCase(obj1, obj2);
 #if NETCOREAPP3_0_OR_GREATER
         if (obj1 is PSObject psObj1 && obj2 is PSObject psObj2) return ComparePSCustomObjectsIgnoreCase(psObj1, psObj2);
@@ -519,6 +525,48 @@ public static class RBMToolBox
         if (obj1 is Array && obj2 is Array) return CompareArraysIgnoreCase((Array)obj1, (Array)obj2);
 #endif
         return obj1.Equals(obj2);
+    }
+
+
+    public static bool ComparePSObjectToHashtableIgnoreCase(PSObject psObj, Hashtable hash)
+    {
+        if (psObj == null || hash == null) return false;
+
+        var properties = psObj.Properties;
+
+        // Count properties manually (since .Count is unavailable)
+        int propCount = 0;
+        var enumerator = properties.GetEnumerator();
+        while (enumerator.MoveNext()) propCount++;
+
+        // Quick check: If number of properties doesn't match number of hashtable keys, return false
+        if (propCount != hash.Count) return false;
+
+        Dictionary<string, object> lookupHash = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (DictionaryEntry entry in hash)
+        {
+            if (entry.Key != null)
+                lookupHash[entry.Key.ToString()] = entry.Value;
+        }
+
+        foreach (var prop in properties)
+        {
+#if NETCOREAPP3_0_OR_GREATER
+            if (!lookupHash.TryGetValue(prop.Name, out object hashValue))
+                return false;
+#else
+            object hashValue;
+
+            if (!lookupHash.TryGetValue(prop.Name, out hashValue))
+                return false;
+#endif
+
+            if (!CompareObjectIgnoreCase(prop.Value, hashValue))
+                return false;
+        }
+
+        return true;
     }
 
     public static bool ComparePSCustomObjectsIgnoreCase(PSObject obj1, PSObject obj2)
@@ -549,9 +597,9 @@ public static class RBMToolBox
             if (!lookup2.TryGetValue(prop1.Name, out var prop2))
                 return false;
 #else
-            PSPropertyInfo prop2;  // ✅ Fix: Declare before calling TryGetValue
+            PSPropertyInfo prop2;
 
-            if (!lookup2.TryGetValue(prop1.Name, out prop2)) // ✅ Fix: Pass declared variable
+            if (!lookup2.TryGetValue(prop1.Name, out prop2))
                 return false;
 #endif
 
@@ -571,7 +619,10 @@ public static class RBMToolBox
         Dictionary<string, object> lookup2 = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
         foreach (DictionaryEntry entry in hash2)
-            lookup2[entry.Key.ToString()] = entry.Value;
+        {
+            if (entry.Key != null)
+                lookup2[entry.Key.ToString()] = entry.Value;
+        }
 
         foreach (DictionaryEntry entry in hash1)
         {
@@ -629,5 +680,22 @@ public static class RBMToolBox
         }
 #endif
         return obj1.Equals(obj2);
+    }
+
+    // Private functions
+    private static object TryUnwrapPSObject(object obj, Type targetType)
+    {
+#if NETCOREAPP3_0_OR_GREATER
+        if (obj is PSObject psObj && psObj.BaseObject.GetType() == targetType)
+            return psObj.BaseObject;
+#else
+        if (obj is PSObject)
+        {
+            PSObject psObj = (PSObject)obj;
+            if (psObj.BaseObject.GetType() == targetType)
+                return psObj.BaseObject;
+        }
+#endif
+        return obj;
     }
 }
