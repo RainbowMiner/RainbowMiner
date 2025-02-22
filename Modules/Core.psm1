@@ -2362,7 +2362,7 @@ function Invoke-Core {
     $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
 
     if ($Session.WatchdogReset -gt $Session.WatchdogInterval) {
-        $Global:WatchdogTimers.RemoveAll({ param($c) $c.Kicked -le $WDResetTime }) > $null
+        $Global:WatchdogTimers.RemoveAll({ param($c) $c.Kicked -le $WDResetTime -and $c.Active -le $WDIntervalTime }) > $null
     }
 
     # Apply watchdog to pools, only if more than one pool is selected
@@ -3867,10 +3867,12 @@ function Invoke-Core {
                             PoolName    = $Miner_Pool
                             Algorithm   = $Miner_Algorithm
                             Kicked      = $Session.Timer
+                            Active      = $Session.Timer
                         }) > $null
                     } elseif ($WatchdogTimer.Kicked -le $WDResetTime) {
                         # Update existing Watchdog Timer
                         $WatchdogTimer.Kicked = $Session.Timer
+                        $WatchdogTimer.Active = $Session.Timer
                     }
                 }
 
@@ -5042,15 +5044,16 @@ function Set-MinerStats {
 
                 # Update WatchdogTimer if found
                 if ($WatchdogTimer) {
+                    $wdTime = (Get-Date).ToUniversalTime()
+                    $WatchdogTimer.Active = $wdTime
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
                     } elseif ($Miner_Benchmarking -or ($Miner_Speed -and $Miner.Rounds -lt [Math]::Max($Miner.ExtendedInterval,1)-1)) {
-                        $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
+                        $WatchdogTimer.Kicked = $wdTime
                     } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds(-$Session.WatchdogInterval)) {
                         $Miner_Failed = $true
                     }
                 }
-
 
                 $Miner_PowerDraw = 0
                 $Miner_Index++
