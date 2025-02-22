@@ -90,6 +90,7 @@ class Miner {
     [String[]]$Executables
     [DateTime]$StartTime = [DateTime]::MinValue
     [DateTime]$ActiveLast = [DateTime]::MinValue
+    [DateTime]$AccessLast = [DateTime]::MinValue
     [TimeSpan]$RunningTime = [TimeSpan]::Zero
     [MinerStatus]$Status = [MinerStatus]::Idle
     $Profiles

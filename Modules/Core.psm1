@@ -105,7 +105,7 @@ function Start-Core {
         [hashtable]$Global:MinerInfo    = @{}
         [hashtable]$Global:MinerSpeeds  = @{}
 
-        [System.Collections.ArrayList]$Global:ActiveMiners   = @()
+        $Global:ActiveMiners = [System.Collections.ArrayList]::new()
         $Global:WatchdogTimers  = [System.Collections.Generic.List[PSCustomObject]]::new()
         $Global:CrashCounter = [System.Collections.Generic.List[PSCustomObject]]::new()
         $Global:AlgorithmMinerName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -665,6 +665,27 @@ function Invoke-Core {
         Get-NimqHashrates -Silent
         Get-Regions -Silent
         Get-Regions2 -Silent
+
+        #cleanup Active Miners
+        #$activeTime = (Get-Date).AddHours(-12)
+        #$Global:ActiveMiners.RemoveAll({ param($m) $m.AccessLast -and $m.AccessLast -lt $activeTime }) > $null
+
+        #cleanup cache
+        try {
+            $bindingType = [System.Management.Automation.PSObject].Assembly.GetType("System.Management.Automation.Language.PSInvokeMemberBinder")
+            if ($bindingType) {
+                $cacheField = $bindingType.GetField("s_binderCache", "NonPublic, Static")
+                if ($cacheField) {
+                    $cache = $cacheField.GetValue($null)
+                    if ($cache -is [object] -and $cache.PSObject.Methods["Clear"]) {
+                        $cache.Clear()
+                        Write-Log -Level Info "Cache cleared :)"
+                    }
+                }
+            }
+        } catch {
+            Write-Log -Level Info "Cache clear failed :("
+        }
     }
 
     #Update databases every round
@@ -3316,6 +3337,8 @@ function Invoke-Core {
     #Remove miners with 0 Watt
     if ($Session.Config.DisableZeroWattMiners) {$Miners = $Miners.Where({-not $_.PowerDraw -and -not ($_.HashRates.PSObject.Properties.Value -contains $null)})}
 
+    Write-Log "Reset active miners."
+
     #Reset the active miners
     $Global:ActiveMiners.ForEach({
         $_.Profit = 0
@@ -3386,16 +3409,25 @@ function Invoke-Core {
 
     #ConvertTo-Json $MinersNeedingBenchmark -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\minersneedingbenchmark.json" -ErrorAction Ignore
 
+    Write-Log "Update active miners."
+
     #Update the active miners
     $Miners.ForEach({
         $Miner = $_
-        $ActiveMiner = $Global:ActiveMiners.Where({
-            $_.Name -eq $Miner.Name -and
-            $_.Path -eq $Miner.Path -and
-            $_.Arguments -eq $Miner.Arguments -and
-            $_.API -eq $Miner.API -and
-            (Compare-Object $_.Algorithm ($Miner.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
-        },'First')
+
+        $ActiveMiner = $null
+        foreach ($m in $Global:ActiveMiners) {
+            if (
+                $m.Name -eq $Miner.Name -and
+                $m.Path -eq $Miner.Path -and
+                $m.Arguments -eq $Miner.Arguments -and
+                $m.API -eq $Miner.API -and
+                (Compare-Object $m.Algorithm ($Miner.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
+            ) {
+                $ActiveMiner = $m
+                break
+            }
+        }
 
         $FirstAlgoName            = "$($Miner.HashRates.PSObject.Properties.Name | Select-Object -First 1)"
 
@@ -3418,8 +3450,9 @@ function Invoke-Core {
         if ($Miner_MaxRejectedShareRatio -lt 0) {$Miner_MaxRejectedShareRatio = 0}
         elseif ($Miner_MaxRejectedShareRatio -gt 1) {$Miner_MaxRejectedShareRatio = 1}
 
-        if ($ActiveMiner.Count) {
-            $ActiveMiner = $ActiveMiner[0]
+        $accessNow = (Get-Date).ToUniversalTime()
+
+        if ($ActiveMiner) {
             $ActiveMiner.Version            = $Miner.Version
             $ActiveMiner.Profit             = $Miner.Profit
             $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
@@ -3463,6 +3496,7 @@ function Invoke-Core {
             $ActiveMiner.Executables        = $Miner.Executables
             $ActiveMiner.SetLDLIBRARYPATH   = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
             $ActiveMiner.ShareCheck         = [int]$Miner.ShareCheck
+            $ActiveMiner.AccessLast         = $accessNow
 
             #$Miner.HashRates.PSObject.Properties.Name | Foreach-Object {
             #    $ActiveMiner.DevFee.$_ = $Miner.DevFee.$_
@@ -3538,6 +3572,7 @@ function Invoke-Core {
                     SetLDLIBRARYPATH     = $Miner.SetLDLIBRARYPATH -eq $null -or $Miner.SetLDLIBRARYPATH
                     ShareCheck           = [int]$Miner.ShareCheck
                     ExcludePoolName      = $Miner.ExcludePoolName
+                    AccessLast           = $accessNow
                 }
                 if ($ActiveMiner) {
                     $Global:ActiveMiners.Add($ActiveMiner) > $null
