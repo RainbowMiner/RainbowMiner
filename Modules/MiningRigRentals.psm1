@@ -289,7 +289,7 @@ param(
         }
     } elseif ($Global:MRRCache.ContainsKey($JobKey)) {
         $Global:MRRCache[$JobKey] = $null
-        $Global:MRRCache.Remove($JobKey)
+        [void]$Global:MRRCache.Remove($JobKey)
     }
 
     if ($Result -ne $null) {
@@ -308,7 +308,7 @@ param(
                 $RemoveKeys | Foreach-Object {
                     if ($Global:MRRCache.ContainsKey($_)) {
                         $Global:MRRCache[$_] = $null
-                        $Global:MRRCache.Remove($_)
+                        [void]$Global:MRRCache.Remove($_)
                     }
                 }
             }
@@ -733,7 +733,7 @@ param(
     if ($Session.MRRStatus -eq $null) {[hashtable]$Session.MRRStatus = @{}}
     $RigKey = "$RigId"
     if ($Stop) {
-        if ($Session.MRRStatus.ContainsKey($RigKey)) {$Session.MRRStatus.Remove($RigKey)}
+        if ($Session.MRRStatus.ContainsKey($RigKey)) {[void]$Session.MRRStatus.Remove($RigKey)}
     } else {
         $time = (Get-Date).ToUniversalTime()
         if ($SecondsUntilOffline -lt 180) {$SecondsUntilOffline = 180}

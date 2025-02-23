@@ -151,7 +151,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
             $Pool_SSL_0    = $Pool_SSL -or ($Pool_Port -ge 10000)
             $Pool_Protocol = if ($Pool_SSL_0) {"stratum+ssl"} else {"stratum+tcp"}
             if (-not $Pool_Hosts.Contains("$($_.host)$($Pool_SSL_0)")) {
-                $Pool_Hosts.Add("$($_.host)$($Pool_SSL_0)")
+                [void]$Pool_Hosts.Add("$($_.host)$($Pool_SSL_0)")
                 [PSCustomObject]@{
                     Algorithm          = $Pool_Algorithm_Norm
                     Algorithm0         = $Pool_Algorithm_Norm

@@ -266,7 +266,7 @@ function Start-Setup {
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","apiallowips","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
                 "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","apithreads","apilockconfig","apimaxloginattemps","apiblockloginattemptstime","apiallowips","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverpools","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enablefastlanebenchmark","fastlanebenchmarktypecpu","fastlanebenchmarktypegpu","enablefastlanebenchmarkmissing","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","minerstatusmaxcrashesperhour","diskmingb","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","autobenchmarkmode","profitspikeprotection","poolname","autoaddcoins","minername","excludeminername","preferminername","preferminermargin","algorithm","excludealgorithm","enablealgorithmvariants","disableunprofitablealgolist","disableunprofitablecpualgolist","enableneverprofitablealgos","excludecoinsymbol","excludecoin","disabledualmining","enabledualminingduringrentals","disablezerowattminers","excludeminerswithfee","enablecheckminingconflict","enableethashzombiemode","enableminerstosavedag","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardintel1","devicenamewizardintel2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","enableautoadjustaffinity","cpuminingaffinity","gpuminingaffinity","staticcpuminerport","staticgpuminerport","pooldatawindow","enableerrorratio","maxerrorratio","poolstataverage","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","minerfaulttolerancegpu","minerfaulttolerancecpu","defaultpoolregion","uistyle","uisorting","uiprofitcolumns","uifullbenchmarklist","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","excludecoinsymbolbalances","showwalletbalances","walletbalances","enableminingheatcontrol","miningheatcontrol","maxactivitydays","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","excludefromwatchdog","enableocprofiles","enableocvoltage","enableoclinuxsetallpstates","enableoclinuxforcepstate","ocresetinterval","enableocfullreset","enablelinuxheadless","linuxdisplay","linuxxauthority","linuxminerterminal","enableminersasroot","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","proxyusername","proxypassword","covalentapikey","enablecurl","delay","interval","benchmarkinterval","maxcrashesduringbenchmark","minimumminingintervals","disableextendinterval","switchingprevention","poolswitchinghysteresis","minerswitchinghysteresis","maxrejectedshareratio","maxallowedluck","maxtimesincelastblock","mincombooversingleratio","enablefastswitching","forcestableprice","disablemsiamonitor","disableapi","disableasyncloader","disableinternetcheck","usetimesync","websitesforonlinecheck","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","poweroffsetpercent","powercputdp","octopustariffcode","fixedcostperday","usepowerprice","checkprofitability","profitabilitylevel","quickstart","startpaused","enableupdateduringpause","enableupdatewhenscheduled","enablepauseonactivity","resumeoninactivityseconds","enablepauseonbattery","loglevel","maxlogfiledays","maxdownloadfiledays","maxcachefiledays","enableminerbackups","enablekeepdownloads","enablerestartcomputer","restartcomputerhours","restartrbmtimespan","restartrbmmemory","openclplatformsorting","enabledebugmode","enableverboseasyncloader","ssl","donate")) > $null}
             }
-            $GlobalSetupSteps.Add("save") > $null
+            [void]$GlobalSetupSteps.Add("save")
 
             if (-not $IsInitialSetup) {
                 Clear-Host
@@ -2047,12 +2047,12 @@ function Start-Setup {
                             $PoolsActual  | ConvertTo-Json -Depth 10 | Out-File $ConfigFiles["Pools"].Path -Encoding utf8
 
                             if ($IsInitialSetup) {
-                                $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") > $null
+                                [void]$SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ")
                                 if (-not $SetupOnly) {
-                                    $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next few minutes, RainbowMiner will download all miner programs. Please be patient and let it run. There will be some popup windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null
+                                    [void]$SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next few minutes, RainbowMiner will download all miner programs. Please be patient and let it run. There will be some popup windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation")
                                 }
                             } else {
-                                $SetupMessage.Add("Changes written to configuration. ") > $null
+                                [void]$SetupMessage.Add("Changes written to configuration. ")
                             }
 
                             $IsInitialSetup = $false
@@ -2062,7 +2062,7 @@ function Start-Setup {
                             Write-Log -Level Error "Unknown setup command `"$($GlobalSetupSteps[$GlobalSetupStep])`". You should never reach here. Please open an issue on github.com"
                         }
                     }
-                    if ($GlobalSetupStepStore) {$GlobalSetupStepBack.Add($GlobalSetupStep) > $null}
+                    if ($GlobalSetupStepStore) {[void]$GlobalSetupStepBack.Add($GlobalSetupStep)}
                     $GlobalSetupStep++
                 }
                 catch {
@@ -2077,7 +2077,7 @@ function Start-Setup {
                         $ReReadConfig = -not $SetupOnly -or -not $IsInitialSetup
                     }
                     else {
-                        if ($GlobalSetupStepStore) {$GlobalSetupStepBack.Add($GlobalSetupStep) > $null}
+                        if ($GlobalSetupStepStore) {[void]$GlobalSetupStepBack.Add($GlobalSetupStep)}
                         $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                             "^Goto\s+(.+)$" {$Matches[1]}
                                             "^done$"  {"save"}
@@ -2113,7 +2113,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
                 $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","hashadjust","hash2adjust","disable","tuning","intensity","affinity","threads","sharecheck")) > $null
-                $MinerSetupSteps.Add("save") > $null                         
+                [void]$MinerSetupSteps.Add("save")
 
                 do { 
                     try {
@@ -2293,7 +2293,7 @@ function Start-Setup {
                                 $MinerSetupStepsDone = $true                                                  
                             }
                         }
-                        if ($MinerSetupStepStore) {$MinerSetupStepBack.Add($MinerSetupStep) > $null}                                                
+                        if ($MinerSetupStepStore) {[void]$MinerSetupStepBack.Add($MinerSetupStep)}
                         $MinerSetupStep++
                     }
                     catch {
@@ -2307,7 +2307,7 @@ function Start-Setup {
                             $MinerSetupStepsDone = $true                                               
                         }
                         else {
-                            if ($MinerSetupStepStore) {$MinerSetupStepBack.Add($MinerSetupStep) > $null}
+                            if ($MinerSetupStepStore) {[void]$MinerSetupStepBack.Add($MinerSetupStep)}
                             $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                 "^Goto\s+(.+)$" {$Matches[1]}
                                                 "^done$"  {"save"}
@@ -2379,13 +2379,13 @@ function Start-Setup {
                         $Pool_Avail_CoinName = @($Pool | Foreach-Object {@($_.CoinName | Select-Object) -join ','} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
                         $Pool_Avail_CoinSymbol = @($Pool | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ','} | Select-Object -Unique | Sort-Object)
 
-                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
+                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {[void]$PoolSetupSteps.Add("currency")}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
-                        $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
+                        $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;[void]$PoolSetupSteps.Add($k)}
                         $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage","stataveragestable","maxmarginoferror","switchinghysteresis","maxallowedluck","maxtimesincelastblock","maxtimetofind","region","ssl","balanceskeepalive")) > $null
                         if ($IsYiimpPool) {$PoolSetupSteps.AddRange(@("datawindow")) > $null}
-                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0 -and $Pool_Name -notmatch "miningpoolhub") {$PoolSetupSteps.Add("focuswallet") > $null}
-                        $PoolSetupSteps.Add("save") > $null                                        
+                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0 -and $Pool_Name -notmatch "miningpoolhub") {[void]$PoolSetupSteps.Add("focuswallet")}
+                        [void]$PoolSetupSteps.Add("save")
 
                         $PoolsSetup.$Pool_Name.Fields.PSObject.Properties.Name | Select-Object | Foreach-Object {                                                                                
                             if (-not [bool]$PoolConfig.PSObject.Properties[$_]) {$PoolConfig | Add-Member $_ ($PoolsSetup.$Pool_Name.Fields.$_) -Force}
@@ -2490,8 +2490,8 @@ function Start-Setup {
                                                     $v = $v.Trim()
                                                     if (@("back","<") -inotcontains $v) {
                                                         if (@("del","delete","remove","clear","rem") -icontains $v) {
-                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains $PoolEditCurrency) {$PoolConfig.PSObject.Properties.Remove($PoolEditCurrency)}
-                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains "$($PoolEditCurrency)-Params") {$PoolConfig.PSObject.Properties.Remove("$($PoolEditCurrency)-Params")}
+                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains $PoolEditCurrency) {[void]$PoolConfig.PSObject.Properties.Remove($PoolEditCurrency)}
+                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains "$($PoolEditCurrency)-Params") {[void]$PoolConfig.PSObject.Properties.Remove("$($PoolEditCurrency)-Params")}
                                                         } else {
                                                             if (@("def","default","wallet","standard") -icontains $v) {$v = "`$$(if ($PoolEditCurrency -eq "BTC") {"Wallet"} else {$PoolEditCurrency})"}
                                                             $PoolConfig | Add-Member $PoolEditCurrency $v -Force
@@ -2698,7 +2698,7 @@ function Start-Setup {
                                         $PoolSetupStepsDone = $true                                                  
                                     }
                                 }
-                                if ($PoolSetupStepStore) {$PoolSetupStepBack.Add($PoolSetupStep) > $null}                                                
+                                if ($PoolSetupStepStore) {[void]$PoolSetupStepBack.Add($PoolSetupStep)}
                                 $PoolSetupStep++
                             }
                             catch {
@@ -2713,7 +2713,7 @@ function Start-Setup {
                                     $PoolSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    if ($PoolSetupStepStore) {$PoolSetupStepBack.Add($PoolSetupStep) > $null}
+                                    if ($PoolSetupStepStore) {[void]$PoolSetupStepBack.Add($PoolSetupStep)}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -2768,7 +2768,7 @@ function Start-Setup {
                         $DeviceConfig = $DevicesActual.$Device_Name.PSObject.Copy()
 
                         $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining","defaultocprofile","poweradjust","enablelhr")) > $null
-                        $DeviceSetupSteps.Add("save") > $null
+                        [void]$DeviceSetupSteps.Add("save")
                                         
                         do {
                             $DeviceSetupStepStore = $true
@@ -2822,7 +2822,7 @@ function Start-Setup {
                                         $DeviceSetupStepsDone = $true
                                     }
                                 }
-                                if ($DeviceSetupStepStore) {$DeviceSetupStepBack.Add($DeviceSetupStep) > $null}
+                                if ($DeviceSetupStepStore) {[void]$DeviceSetupStepBack.Add($DeviceSetupStep)}
                                 $DeviceSetupStep++
                             }
                             catch {
@@ -2836,7 +2836,7 @@ function Start-Setup {
                                     $DeviceSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    if ($DeviceSetupStepStore) {$DeviceSetupStepBack.Add($DeviceSetupStep) > $null}
+                                    if ($DeviceSetupStepStore) {[void]$DeviceSetupStepBack.Add($DeviceSetupStep)}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -2893,7 +2893,7 @@ function Start-Setup {
                         foreach($SetupName in $AlgorithmsDefault.PSObject.Properties.Name) {if ($AlgorithmConfig.$SetupName -eq $null){$AlgorithmConfig | Add-Member $SetupName $AlgorithmsDefault.$SetupName -Force}}
 
                         $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","ocprofile","msiaprofile")) > $null
-                        $AlgorithmSetupSteps.Add("save") > $null
+                        [void]$AlgorithmSetupSteps.Add("save")
 
                         do {
                             $AlgorithmSetupStepStore = $true
@@ -2950,7 +2950,7 @@ function Start-Setup {
                                         $AlgorithmSetupStepsDone = $true
                                     }
                                 }
-                                if ($AlgorithmSetupStepStore) {$AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null}
+                                if ($AlgorithmSetupStepStore) {[void]$AlgorithmSetupStepBack.Add($AlgorithmSetupStep)}
                                 $AlgorithmSetupStep++
                             }
                             catch {
@@ -2964,7 +2964,7 @@ function Start-Setup {
                                     $AlgorithmSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    if ($AlgorithmSetupStepStore) {$AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null}
+                                    if ($AlgorithmSetupStepStore) {[void]$AlgorithmSetupStepBack.Add($AlgorithmSetupStep)}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -3072,7 +3072,7 @@ function Start-Setup {
                         $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$_ -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
 
                         $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","minprofitpercent","wallet","enableautopool","comment","pools")) > $null
-                        $CoinSetupSteps.Add("save") > $null
+                        [void]$CoinSetupSteps.Add("save")
                                         
                         do {
                             $CoinSetupStepStore = $true
@@ -3154,7 +3154,7 @@ function Start-Setup {
                                         $CoinSetupStepsDone = $true
                                     }
                                 }
-                                if ($CoinSetupStepStore) {$CoinSetupStepBack.Add($CoinSetupStep) > $null}
+                                if ($CoinSetupStepStore) {[void]$CoinSetupStepBack.Add($CoinSetupStep)}
                                 $CoinSetupStep++
                             }
                             catch {
@@ -3168,7 +3168,7 @@ function Start-Setup {
                                     $CoinSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    if ($CoinSetupStepStore) {$CoinSetupStepBack.Add($CoinSetupStep) > $null}
+                                    if ($CoinSetupStepStore) {[void]$CoinSetupStepBack.Add($CoinSetupStep)}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -3291,8 +3291,8 @@ function Start-Setup {
                         $OCProfileConfig = $OCProfilesActual.$OCProfile_Name.PSObject.Copy()
 
                         $OCProfileSetupSteps.AddRange(@("powerlimit","thermallimit","priorizethermallimit","coreclockboost","memoryclockboost","lockcoreclock","lockmemoryclock")) > $null
-                        if (Get-Yes $ConfigActual.EnableOCVoltage) {$OCProfileSetupSteps.Add("lockvoltagepoint") >$null}
-                        $OCProfileSetupSteps.Add("save") > $null
+                        if (Get-Yes $ConfigActual.EnableOCVoltage) {[void]$OCProfileSetupSteps.Add("lockvoltagepoint")}
+                        [void]$OCProfileSetupSteps.Add("save")
                                         
                         do {
                             $OCProfileSetupStepStore = $true
@@ -3365,7 +3365,7 @@ function Start-Setup {
                                         $OCProfileSetupStepsDone = $true
                                     }
                                 }
-                                if ($OCProfileSetupStepStore) {$OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null}
+                                if ($OCProfileSetupStepStore) {[void]$OCProfileSetupStepBack.Add($OCProfileSetupStep)}
                                 $OCProfileSetupStep++
                             }
                             catch {
@@ -3379,7 +3379,7 @@ function Start-Setup {
                                     $OCProfileSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    if ($OCProfileSetupStepStore) {$OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null}
+                                    if ($OCProfileSetupStepStore) {[void]$OCProfileSetupStepBack.Add($OCProfileSetupStep)}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -3485,7 +3485,7 @@ function Start-Setup {
                     if ($Scheduler_Action -ne "d") {
                         $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableupdate","enableminingheatcontrol","miningheatcontrol","pauserentals","mrrpricefactor","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","poolname","excludepoolname")) > $null
                     }
-                    $SchedulerSetupSteps.Add("save") > $null
+                    [void]$SchedulerSetupSteps.Add("save")
 
                     do {
                         $SchedulerSetupStepStore = $true
@@ -3606,7 +3606,7 @@ function Start-Setup {
                                     $SchedulerSetupStepsDone = $true
                                 }
                             }
-                            if ($SchedulerSetupStepStore) {$SchedulerSetupStepBack.Add($SchedulerSetupStep) > $null}
+                            if ($SchedulerSetupStepStore) {[void]$SchedulerSetupStepBack.Add($SchedulerSetupStep)}
                             $SchedulerSetupStep++
                         }
                         catch {
@@ -3620,7 +3620,7 @@ function Start-Setup {
                                 $SchedulerSetupStepsDone = $true                                               
                             }
                             else {
-                                if ($SchedulerSetupStepStore) {$SchedulerSetupStepBack.Add($SchedulerSetupStep) > $null}
+                                if ($SchedulerSetupStepStore) {[void]$SchedulerSetupStepBack.Add($SchedulerSetupStep)}
                                 $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                     "^Goto\s+(.+)$" {$Matches[1]}
                                                     "^done$"  {"save"}
@@ -3714,7 +3714,7 @@ function Start-Setup {
                         Write-Host " "
                         $MRRSetupSteps.AddRange(@("workername","algorithm","rigid")) > $null
                     }
-                    $MRRSetupSteps.Add("save") > $null
+                    [void]$MRRSetupSteps.Add("save")
 
                     $MRR_Delete_WorkerName = @()
                     $MRR_Delete_Algorithms = @()
@@ -3762,7 +3762,7 @@ function Start-Setup {
                                     $MRRSetupStepsDone = $true
                                 }
                             }
-                            if ($MRRSetupStepStore) {$MRRSetupStepBack.Add($MRRSetupStep) > $null}
+                            if ($MRRSetupStepStore) {[void]$MRRSetupStepBack.Add($MRRSetupStep)}
                             $MRRSetupStep++
                         }
                         catch {
@@ -3776,7 +3776,7 @@ function Start-Setup {
                                 $MRRSetupStepsDone = $true                                               
                             }
                             else {
-                                if ($MRRSetupStepStore) {$MRRSetupStepBack.Add($MRRSetupStep) > $null}
+                                if ($MRRSetupStepStore) {[void]$MRRSetupStepBack.Add($MRRSetupStep)}
                                 $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                     "^Goto\s+(.+)$" {$Matches[1]}
                                                     "^done$"  {"save"}

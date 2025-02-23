@@ -41,10 +41,10 @@ Param(
     $newPS = [PowerShell]::Create().AddScript($AsyncloaderScript).AddParameters(@{'CurrentPwd'=$PWD})
     $newPS.Runspace = $newRunspace
 
-    $Global:AsyncLoaderListeners.Add([PSCustomObject]@{
+    [void]$Global:AsyncLoaderListeners.Add([PSCustomObject]@{
         Runspace   = $newPS.BeginInvoke()
 		PowerShell = $newPS 
-    }) > $null
+    })
 }
 
 function Stop-AsyncLoader {
@@ -54,7 +54,7 @@ function Stop-AsyncLoader {
     if ($Global:AsyncLoaderListeners) {
         foreach ($Listener in $Global:AsyncLoaderListeners.ToArray()) {
 			$Listener.PowerShell.Dispose()
-			$Global:AsyncLoaderListeners.Remove($Listener)
+			[void]$Global:AsyncLoaderListeners.Remove($Listener)
 		}
     }
     $Global:AsyncLoaderListeners.Clear()

@@ -21,7 +21,7 @@ try {
 
         if (($Global:IsLinux -and $PlatformVendor -eq "AMD") -or $AllPlatforms -inotcontains "$($_.Name) $($_.Version)") {
 
-            $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
+            [void]$AllPlatforms.Add("$($_.Name) $($_.Version)")
             $Device_Index = 0
             [PSCustomObject]@{
                 PlatformId=$PlatformId

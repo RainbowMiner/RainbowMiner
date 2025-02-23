@@ -704,7 +704,7 @@ if ($AllRigs_Request) {
                     if ($MRR_Pings -eq $null) {
                         [System.Collections.ArrayList]$MRR_Pings = @()
                     }
-                    $MRR_Pings.Add([PSCustomObject]@{
+                    [void]$MRR_Pings.Add([PSCustomObject]@{
                                         Data = @{
                                             Server = $Pool_Rig.server
                                             Port   = $Pool_Rig.port
@@ -716,7 +716,7 @@ if ($AllRigs_Request) {
                                             SSL    = [bool]$SSL
                                         }
                                         Failover = @($Pool_Failover | Select-Object -ExpandProperty name)
-                    }) > $null
+                    })
                 }
             }
         }

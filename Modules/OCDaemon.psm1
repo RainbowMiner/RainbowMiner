@@ -11,7 +11,7 @@ param(
 
     if ($Cmd) {
         [System.Collections.ArrayList]$OCDcmd = @()
-        $Cmd | Foreach-Object {$OCDcmd.Add($_) > $null}
+        $Cmd | Foreach-Object {[void]$OCDcmd.Add($_)}
     } else {
         $OCDcmd = $Global:GlobalOCD
     }
@@ -96,8 +96,8 @@ param(
     $OnEmptyAdd
 )
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
-    if ($OnEmptyAdd -and -not $Global:GlobalOCD.Count) {$OnEmptyAdd | Foreach-Object {$Global:GlobalOCD.Add($_) > $null}}
-    $Global:GlobalOCD.Add($Cmd) > $null
+    if ($OnEmptyAdd -and -not $Global:GlobalOCD.Count) {$OnEmptyAdd | Foreach-Object {[void]$Global:GlobalOCD.Add($_)}
+    [void]$Global:GlobalOCD.Add($Cmd)
 }
 
 

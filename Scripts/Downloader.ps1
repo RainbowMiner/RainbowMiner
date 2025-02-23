@@ -17,7 +17,7 @@ try {
     $RunningMiners_Request = Invoke-RestMethod "http://localhost:$($LocalAPIport)/runningminers" -UseBasicParsing -ErrorAction Stop
     if ($RunningMiners_Request -isnot [array]) {
         if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
-            $RunningMiners_Paths.Add($RunningMiners_Request.Path) > $null
+            [void]$RunningMiners_Paths.Add($RunningMiners_Request.Path)
         }
     }
     else {

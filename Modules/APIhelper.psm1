@@ -90,7 +90,7 @@ param (
 				            if ($Properties.$Postname -isnot [System.Collections.ArrayList]) {
 					            $Properties | Add-Member $Postname ([System.Collections.ArrayList]@()) -Force
 				            }
-					        $Properties.$PostName.Add($PostValue) > $null
+					        [void]$Properties.$PostName.Add($PostValue)
 			            } else {
 				            $Properties | Add-Member $PostName $PostValue -Force
 			            }

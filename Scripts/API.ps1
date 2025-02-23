@@ -33,9 +33,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
     if ($API.Stop) {Break}
 
     $Response = $Context.Response
-	$Response.Headers.Add("Accept-Encoding","gzip");
-	$Response.Headers.Add("Server","RainbowMiner API on $($API.MachineName) [$($ThreadID)]");
-	$Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
+	[void]$Response.Headers.Add("Accept-Encoding","gzip");
+	[void]$Response.Headers.Add("Server","RainbowMiner API on $($API.MachineName) [$($ThreadID)]");
+	[void]$Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
 
     $Request         = $Context.Request
 	$InputStream     = $Request.InputStream
@@ -76,7 +76,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     if ($APIAccessDB[$RemoteIP].BlockedUntil -ne $null -and ($APIAccessDB[$RemoteIP].BlockedUntil -ge $AuthNow)) {
                         $IsAuth = $false
                     } else {
-                        $APIAccessDB.Remove($RemoteIP)
+                        [void]$APIAccessDB.Remove($RemoteIP)
                     }
                 }
             } else {
@@ -342,7 +342,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $val = $Session.DefaultValues[$_]
                     if ($ConfigSetup.$_ -ne $null) {$val = $ConfigSetup.$_}
                     if ($val -is [array]) {$val = $val -join ','}
-                    $ConfigParameters.Add($_ , $val)
+                    [void]$ConfigParameters.Add($_ , $val)
                 }
                 $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters) -Depth 10
 
@@ -525,7 +525,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     if ($CoinSymbol_Real) {
                         if ($CoinSymbol -ne "NewCoin" -and $Parameters."$($CoinSymbol)--RemoveCoin") {
                             if ($ConfigActual.$CoinSymbol) {
-                                $ConfigActual.PSObject.Properties.Remove($CoinSymbol)
+                                [void]$ConfigActual.PSObject.Properties.Remove($CoinSymbol)
                                 $ConfigChanged++
                             }
                         } else {
@@ -675,10 +675,10 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     }
                 }
                 if ($PurgeUnique.Count) {
-                    $PurgeStringsUnique.Add(@($PurgeUnique)) > $null
+                    [void]$PurgeStringsUnique.Add(@($PurgeUnique))
                     $PurgeStrings = @(Compare-Object $PurgeStrings $PurgeUnique | Where-Object SideIndicator -eq "<=" | Foreach-Object {$_.InputObject} | Select-Object)
                 } else {
-                    $PurgeStringsUnique.Add(@($PurgeStrings)) > $null
+                    [void]$PurgeStringsUnique.Add(@($PurgeStrings))
                     $PurgeStrings = $null
                 }
             }
@@ -1048,8 +1048,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
                 if ($Parameters.add_total) {
                     $Balances | Where-Object {$_.Name -notmatch "^\*"} | Foreach-Object {
-                        if ($_.Last_Earnings -ne $null) {$_.PSObject.Properties.Remove("Last_Earnings")}
-                        if ($_.Payouts -ne $null) {$_.PSObject.Properties.Remove("Payouts")}
+                        if ($_.Last_Earnings -ne $null) {[void]$_.PSObject.Properties.Remove("Last_Earnings")}
+                        if ($_.Payouts -ne $null) {[void]$_.PSObject.Properties.Remove("Payouts")}
                     }
                 }
                 $Balances | Where-Object {$_.Started} | Foreach-Object {$_.Started = ([DateTime]$_.Started).ToString("yyyy-MM-dd HH:mm:ss")}
@@ -1147,7 +1147,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTimeUtc -lt $JsonUri_Dates[$_.BaseName]
                         $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -and $_.DeviceModel -match "-") {$API.DevicesToVendors."$($_.DeviceModel)"} else {$_.DeviceModel}
                         if ($Miner_DeviceModel -notmatch "-" -or $Miner_Path) {
-                            $Out.Add([PSCustomObject]@{
+                            [void]$Out.Add([PSCustomObject]@{
                                 BaseName = $_.BaseName
                                 Name = $_.Name
                                 Algorithm = $Algo
@@ -1164,7 +1164,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                 BenchmarkFailed = $Miner_Failed
                                 Benchmarked = if ($_.Benchmarked) {$_.Benchmarked.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")} else {$null}
                                 LogFile     = "$(if ($_.LogFile -and (Test-Path (Join-Path ".\Logs" $_.LogFile))) {$_.LogFile})"
-                            })>$null
+                            })
                         }
                     }
                 }
@@ -1420,7 +1420,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Client.port      = $Parameters.port 
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
+                    else {[void]$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp})}
                 }
                 $Result = [PSCustomObject]@{}
                 $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
@@ -1458,7 +1458,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Client.port      = $Parameters.port; 
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
+                    else {[void]$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp})}
                 }
                 $Result = $null
                 try {
@@ -1482,7 +1482,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         try {
                             $RatesUri = [System.Uri]$Parameters.url
                             $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
-                            Compare-Object $Session.GetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GetTicker.Add($_.InputObject.ToUpper()) > $null}
+                            Compare-Object $Session.GetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {[void]$Session.GetTicker.Add($_.InputObject.ToUpper())}
                             $SymbolStr = "$(($Session.GetTicker | Sort-Object) -join ',')".ToUpper()
                             $Parameters.url = "https://api.rbminer.net/cmc.php?symbols=$($SymbolStr)"
 
@@ -1514,7 +1514,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Client.port      = $Parameters.port; 
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
+                    else {[void]$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp})}
                 }
                 $Result = $null
                 try {
@@ -1568,7 +1568,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Client.port      = $Parameters.port
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
+                    else {[void]$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp})}
                 }
                 $Result = $null
                 try {
@@ -1600,7 +1600,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Client.port      = $Parameters.port
                         $Client.timestamp = Get-UnixTimestamp
                     }
-                    else {$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp}) > $null}
+                    else {[void]$APIClients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; port = $Parameters.port; timestamp = Get-UnixTimestamp})}
                 }
                 $Result = $null
                 try {
@@ -1651,7 +1651,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Pool_Request | Foreach-Object {
                     $Algo  = Get-MiningRigRentalAlgorithm $_.name
                     $Speed = [Double]$StatsCPU[$Algo] + [Double]$StatsGPU[$Algo]
-                    $Mrr_Data.Add([PSCustomObject]@{
+                    [void]$Mrr_Data.Add([PSCustomObject]@{
                         Algorithm = $Algo
                         Title     = $_.display
                         SuggPrice = $_.suggested_price.amount
@@ -1662,7 +1662,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         RigsAvail = $_.stats.available.rigs
                         RigsRented= $_.stats.rented.rigs
                         HashRate  = $Speed
-                    }) > $null
+                    })
                 }
             }
             $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
@@ -1703,7 +1703,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         if ($Pool_Data = $Pool_Request | Where-Object {$_.name -eq $Rig.type}) {
                             $Algo  = Get-MiningRigRentalAlgorithm $_.type
                             $Speed = [Double]$StatsCPU[$Algo] + [Double]$StatsGPU[$Algo]
-                            $Mrr_Data.Add([PSCustomObject]@{
+                            [void]$Mrr_Data.Add([PSCustomObject]@{
                                 Algorithm = $Algo
                                 Title     = $Pool_Data.display
                                 SuggPrice = $Pool_Data.suggested_price.amount
@@ -1722,7 +1722,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                 MaxHours  = $Rig.maxhours
                                 HashRate  = $Speed
                                 HashRateAdv = $Rig.hashrate.advertised.hash * (Get-MiningRigRentalsDivisor $Rig.hashrate.advertised.type)
-                            }) > $null
+                            })
                         }
                     }
                 }
@@ -1801,7 +1801,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
     try {
         if ($ContentFileName -ne "") {
-            $Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")
+            [void]$Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")
         }
 
         $Response.ContentType = $ContentType

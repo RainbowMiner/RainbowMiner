@@ -502,7 +502,7 @@ try {
             $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             if ($ConfigActual.EthPillEnalbeMTP -ne $null) {
                 $ConfigActual | Add-Member EthPillEnableMTP $($ConfigActual.EthPillEnalbeMTP -replace "Enalbe","Enable") -Force
-                $ConfigActual.PSObject.Properties.Remove("EthPillEnalbeMTP")
+                [void]$ConfigActual.PSObject.Properties.Remove("EthPillEnalbeMTP")
                 $Changes++;
             }
             if ($Changes) {       
@@ -806,9 +806,9 @@ try {
                 if ($PoolsActual.MiningRigRentals.EnableAutoCreate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoCreate = "0";$Changes++}
                 if ($PoolsActual.MiningRigRentals.EnableAutoUpdate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoUpdate = "0";$Changes++}
                 if ($PoolsActual.MiningRigRentals.PriceFactor -ne $null) {$PoolsActual.MiningRigRentals.PriceFactor = "2.0";$Changes++}
-                if ($PoolsActual.MiningRigRentals.EnablePriceUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnablePriceUpdates");$Changes++}
-                if ($PoolsActual.MiningRigRentals.EnableHashrateUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableHashrateUpdates");$Changes++}
-                if ($PoolsActual.MiningRigRentals.EnableRentalHoursUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableRentalHoursUpdates");$Changes++}
+                if ($PoolsActual.MiningRigRentals.EnablePriceUpdates -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnablePriceUpdates");$Changes++}
+                if ($PoolsActual.MiningRigRentals.EnableHashrateUpdates -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableHashrateUpdates");$Changes++}
+                if ($PoolsActual.MiningRigRentals.EnableRentalHoursUpdates -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableRentalHoursUpdates");$Changes++}
                 if ($Changes) {
                     Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
                     $ChangesTotal += $Changes
@@ -829,7 +829,7 @@ try {
                     $PoolsActual.MiningRigRentals.Description = "$($PoolsActual.MiningRigRentals.Description -replace "%workername%","[%workername%]")"
                     $Changes++
                 }
-                if ($PoolsActual.MiningRigRentals.PriceOffset -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceOffset");$Changes++}
+                if ($PoolsActual.MiningRigRentals.PriceOffset -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceOffset");$Changes++}
                 if ($Changes) {
                     Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
                     $ChangesTotal += $Changes
@@ -878,9 +878,9 @@ try {
                         if ($PoolsActual.MiningRigRentals.EnableAutoCreate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoCreate = "0";$Changes++}
                         if ($PoolsActual.MiningRigRentals.EnableAutoUpdate -ne $null) {$PoolsActual.MiningRigRentals.EnableAutoUpdate = "0";$Changes++}
                         if ($PoolsActual.MiningRigRentals.PriceFactor -ne $null) {$PoolsActual.MiningRigRentals.PriceFactor = "2.0";$Changes++}
-                        if ($PoolsActual.MiningRigRentals.EnablePriceUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnablePriceUpdates");$Changes++}
-                        if ($PoolsActual.MiningRigRentals.EnableHashrateUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableHashrateUpdates");$Changes++}
-                        if ($PoolsActual.MiningRigRentals.EnableRentalHoursUpdates -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableRentalHoursUpdates");$Changes++}
+                        if ($PoolsActual.MiningRigRentals.EnablePriceUpdates -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnablePriceUpdates");$Changes++}
+                        if ($PoolsActual.MiningRigRentals.EnableHashrateUpdates -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableHashrateUpdates");$Changes++}
+                        if ($PoolsActual.MiningRigRentals.EnableRentalHoursUpdates -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("EnableRentalHoursUpdates");$Changes++}
                         if ($PoolsActual.MiningRigRentals.Title -ne $null -and $PoolsActual.MiningRigRentals.Title -notmatch "%rigid%") {
                             $PoolsActual.MiningRigRentals.Title = "$($PoolsActual.MiningRigRentals.Title) with RainbowMiner rig %rigid%"
                             $Changes++
@@ -889,7 +889,7 @@ try {
                             $PoolsActual.MiningRigRentals.Description = "$($PoolsActual.MiningRigRentals.Description -replace "%workername%","[%workername%]")"
                             $Changes++
                         }
-                        if ($PoolsActual.MiningRigRentals.PriceOffset -ne $null) {$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceOffset");$Changes++}
+                        if ($PoolsActual.MiningRigRentals.PriceOffset -ne $null) {[void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceOffset");$Changes++}
                         if ($PoolsActual.MiningRigRentals.Title -ne $null -and $PoolsActual.MiningRigRentals.Title -match "%algorithm%" -and $PoolsActual.MiningRigRentals.Title -notmatch "%(algorithmex|coininfo|display)%") {
                             $PoolsActual.MiningRigRentals.Title = $PoolsActual.MiningRigRentals.Title -replace "%algorithm%","%algorithmex%"
                             $Changes++
@@ -966,7 +966,7 @@ try {
                 $Changes = 0
                 if ($PoolsActual.MiningRigRentals.PriceFactorDecayHours -ne $null) {
                     $hh = [int]$PoolsActual.MiningRigRentals.PriceFactorDecayHours
-                    $PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceFactorDecayHours")
+                    [void]$PoolsActual.MiningRigRentals.PSObject.Properties.Remove("PriceFactorDecayHours")
                     if ($hh -gt 0 -and ($PoolsActual.MiningRigRentals.PriceFactorDecayTime -eq $null)) {
                         $PoolsActual | Add-Member PriceFactorDecayTime "$($hh)h" -Force
                         $Changes++
@@ -984,7 +984,7 @@ try {
                 $MRRActual.PSObject.Properties.Name | Foreach-Object {
                     if ($MRRActual.$_.PriceFactorDecayHours -ne $null) {
                         $hh = "$($MRRActual.$_.PriceFactorDecayHours)".Trim()
-                        $MRRActual.$_.PSObject.Properties.Remove("PriceFactorDecayHours")
+                        [void]$MRRActual.$_.PSObject.Properties.Remove("PriceFactorDecayHours")
                         if ($hh -ne "" -and ($MRRActual.$_.PriceFactorDecayTime -eq $null)) {
                             $hh = [int]$hh
                             $MRRActual.$_ | Add-Member PriceFactorDecayTime "$($hh)h" -Force
@@ -1256,7 +1256,7 @@ try {
                     if ([bool]$PoolsActual.PSObject.Properties["ZelLabs"]) {
                         $ZelCopy = $PoolsActual.ZelLabs | ConvertTo-Json -Depth 10 | ConvertFrom-Json
                         $PoolsActual | Add-Member FluxPools $ZelCopy -Force
-                        $PoolsActual.PSObject.Properties.Remove("ZelLabs")
+                        [void]$PoolsActual.PSObject.Properties.Remove("ZelLabs")
                         $Changes++
                     }
 
@@ -1265,7 +1265,7 @@ try {
                         if ([bool]$PoolsActual.PSObject.Properties[$PoolToChange]) {
                             @([PSCustomObject]@{from="ZEL";to="FLUX"},[PSCustomObject]@{from="ZEL-Params";to="FLUX-Params"},[PSCustomObject]@{from="XZC";to="FIRO"},[PSCustomObject]@{from="XZC-Params";to="FIRO-Params"}) | Where-Object {[bool]$ZelCopy.PSObject.Properties[$_.from]} | Foreach-Object {
                                 $PoolsActual.$PoolToChange | Add-Member "$($_.to)" $PoolsActual.$PoolToChange."$($_.from)" -Force
-                                $PoolsActual.$PoolToChange.PSObject.Properties.Remove($_.from)
+                                [void]$PoolsActual.$PoolToChange.PSObject.Properties.Remove($_.from)
                             }
                             $Changes++
                         }
@@ -1420,17 +1420,17 @@ try {
                         $MRREnable = $MRRAllowExtensions = $MRRPriceModifierPercent = ""
                         if ([bool]$AlgorithmsConfigActual.$_.PSObject.Properties["MRREnable"]) {
                             $MRREnable = "$($AlgorithmsConfigActual.$_.MRREnable)"
-                            $AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRREnable")
+                            [void]$AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRREnable")
                             $Changes_Algorithms++
                         }
                         if ([bool]$AlgorithmsConfigActual.$_.PSObject.Properties["MRRAllowExtensions"]) {
                             $MRRAllowExtensions = "$($AlgorithmsConfigActual.$_.MRRAllowExtensions)"
-                            $AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRRAllowExtensions")
+                            [void]$AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRRAllowExtensions")
                             $Changes_Algorithms++
                         }
                         if ([bool]$AlgorithmsConfigActual.$_.PSObject.Properties["MRRPriceModifierPercent"]) {
                             $MRRPriceModifierPercent = "$($AlgorithmsConfigActual.$_.MRRPriceModifierPercent)"
-                            $AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRRPriceModifierPercent")
+                            [void]$AlgorithmsConfigActual.$_.PSObject.Properties.Remove("MRRPriceModifierPercent")
                             $Changes_Algorithms++
                         }
                         if ($MRRAllowExtensions -ne "" -or $MRRPriceModifierPercent -ne "" -or $MRREnable -eq "0") {
@@ -1505,11 +1505,11 @@ try {
                 $Changes_Removal = 0
                 if ([bool]$PoolsActual.PSObject.Properties["ProHashingCoins"]) {
                     if ([bool]$PoolsActual.ProHashingCoins.PSObject.Properties["BTC"]) {
-                        $PoolsActual.ProHashingCoins.PSObject.Properties.Remove("BTC")
+                        [void]$PoolsActual.ProHashingCoins.PSObject.Properties.Remove("BTC")
                         $Changes_Removal++
                     }
                     if ([bool]$PoolsActual.ProHashingCoins.PSObject.Properties["BTC-Params"]) {
-                        $PoolsActual.ProHashingCoins.PSObject.Properties.Remove("BTC-Params")
+                        [void]$PoolsActual.ProHashingCoins.PSObject.Properties.Remove("BTC-Params")
                         $Changes_Removal++
                     }
                 }
@@ -1526,13 +1526,13 @@ try {
                 $Changes_Removal = 0
                 if ([bool]$PoolsActual.PSObject.Properties["ProHashingCoins"]) {
                     if ([bool]$PoolsActual.ProHashingCoins.PSObject.Properties["AECurrency"]) {
-                        $PoolsActual.ProHashingCoins.PSObject.Properties.Remove("AECurrency")
+                        [void]$PoolsActual.ProHashingCoins.PSObject.Properties.Remove("AECurrency")
                         $Changes_Removal++
                     }
                 }
                 if ([bool]$PoolsActual.PSObject.Properties["ProHashingCoinsSolo"]) {
                     if ([bool]$PoolsActual.ProHashingCoinsSolo.PSObject.Properties["AECurrency"]) {
-                        $PoolsActual.ProHashingCoinsSolo.PSObject.Properties.Remove("AECurrency")
+                        [void]$PoolsActual.ProHashingCoinsSolo.PSObject.Properties.Remove("AECurrency")
                         $Changes_Removal++
                     }
                 }
@@ -1902,7 +1902,7 @@ try {
                 $Changes = 0
                 foreach ($rapi in @("API_ID","API_Key","User")) {
                     $PoolsDefault.Content.PSObject.Properties.Name | Where-Object {$PoolsActual.$_ -and $PoolsActual.$_.PSObject.Properties.Name -icontains $rapi} | Where-Object {-not $PoolsDefault.Content.$_.Fields -or $PoolsDefault.Content.$_.Fields.PSObject.Properties.Name -inotcontains $rapi} | Foreach-Object {
-                        $PoolsActual.$_.PSObject.Properties.Remove($rapi)
+                        [void]$PoolsActual.$_.PSObject.Properties.Remove($rapi)
                         $Changes++
                     }
                 }

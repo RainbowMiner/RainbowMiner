@@ -60,7 +60,7 @@ if ($IsCore) {
                 }
                 try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
             }
-            if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+            if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
         }
 
         if ($Response) {
@@ -78,7 +78,7 @@ if ($IsCore) {
         } else {
             $Result.Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body).Content
         }
-        if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+        if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
         $Result.Status = $true
     } catch {
         $Result.ErrorMessage = "$($_.Exception.Message)"

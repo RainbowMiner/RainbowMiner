@@ -394,7 +394,7 @@ function Get-WhatToMineData {
                 $WtmFactors = Get-ContentByStreamReader ".\Data\wtmfactors.json" | ConvertFrom-Json -ErrorAction Ignore
                 if ($WtmFactors) {
                     $WtmFactors.PSObject.Properties.Name | Where-Object {@($WtmKeys.algo) -inotcontains $_} | Foreach-Object {
-                        $WtmKeys.Add([PSCustomObject]@{algo = $_;factor = $WtmFactors.$_}) > $null
+                        [void]$WtmKeys.Add([PSCustomObject]@{algo = $_;factor = $WtmFactors.$_})
                     }
                 }
                 Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
@@ -591,7 +591,7 @@ Function Write-ActivityLog {
                 Algorithm      = @($Miner.BaseAlgorithm)
                 Pool           = @($Miner.Pool)
             }
-            $Global:CrashCounter.Add($NewCrash) > $null
+            [void]$Global:CrashCounter.Add($NewCrash)
         }
         $CrashTimeLimit = $Now.AddHours(-1)
         $Global:CrashCounter.RemoveAll({ param($c) $c.Timestamp -le $CrashTimeLimit }) > $null
@@ -1531,7 +1531,7 @@ function Get-StatFromFile {
         }
         if ($RemoveKey) {
             if ($Global:StatsCache.ContainsKey($Name)) {
-                $Global:StatsCache.Remove($Name)
+                [void]$Global:StatsCache.Remove($Name)
             }
         }
     }
@@ -1604,13 +1604,13 @@ function Get-Stat {
         $Check = ""
 
         [System.Collections.Generic.List[string]]$MatchArray = @()
-        if ($Miners)    {$MatchArray.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true; $Check = "Minute"}
-        if ($Disabled)  {$MatchArray.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
-        if ($Pools)     {$MatchArray.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true; $Check = "Minute"}
-        if ($Poolstats) {$MatchArray.Add("Poolstats") > $null;$Path = "Stats\Pools"}
-        if ($Totals)    {$MatchArray.Add("Total") > $null;$Path = "Stats\Totals"}
-        if ($TotalAvgs) {$MatchArray.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
-        if ($Balances)  {$MatchArray.Add("Balance") > $null;$Path = "Stats\Balances"}
+        if ($Miners)    {[void]$MatchArray.Add("Hashrate");$Path = "Stats\Miners";$Cached = $true; $Check = "Minute"}
+        if ($Disabled)  {[void]$MatchArray.Add("Hashrate|Profit");$Path = "Stats\Disabled"}
+        if ($Pools)     {[void]$MatchArray.Add("Profit");$Path = "Stats\Pools"; $Cached = $true; $Check = "Minute"}
+        if ($Poolstats) {[void]$MatchArray.Add("Poolstats");$Path = "Stats\Pools"}
+        if ($Totals)    {[void]$MatchArray.Add("Total");$Path = "Stats\Totals"}
+        if ($TotalAvgs) {[void]$MatchArray.Add("TotalAvg");$Path = "Stats\Totals"}
+        if ($Balances)  {[void]$MatchArray.Add("Balance");$Path = "Stats\Balances"}
         if (-not $Path -or $All -or $MatchArray.Count -gt 1) {$Path = "Stats"; $Cached = $false}
 
         $MatchStr = if ($MatchArray.Count -gt 1) {$MatchArray -join "|"} else {$MatchArray}
@@ -1629,7 +1629,7 @@ function Get-Stat {
         }
         if ($Cached) {
             $RemoveKeys = (Compare-Object @($NewStats.Keys | Select-Object) @($Global:StatsCache.Keys | Where {$_ -match "_$MatchStr$"} | Select-Object)) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
-            $RemoveKeys | Foreach-Object {$Global:StatsCache.Remove($_)}
+            $RemoveKeys | Foreach-Object {[void]$Global:StatsCache.Remove($_)}
         }
         if (-not $Quiet) {$NewStats}
     }
@@ -2380,9 +2380,9 @@ function Start-SubProcessInScreen {
     Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
 
     [System.Collections.Generic.List[string]]$Stuff = @()
-    $Stuff.Add("export DISPLAY=:0") > $null
-    $Stuff.Add("cd /") > $null
-    $Stuff.Add("cd '$WorkingDirectory'") > $null
+    [void]$Stuff.Add("export DISPLAY=:0")
+    [void]$Stuff.Add("cd /")
+    [void]$Stuff.Add("cd '$WorkingDirectory'")
 
     $StuffEnv = Switch ($Vendor) {
         "AMD" {
@@ -2420,39 +2420,39 @@ function Start-SubProcessInScreen {
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$StuffEnv[$matches[1]]=$matches[2]}
 
     $StuffEnv.GetEnumerator() | Foreach-Object {
-        $Stuff.Add("export $($_.Name)=$($_.Value)") > $null
+        [void]$Stuff.Add("export $($_.Name)=$($_.Value)")
     }
 
     if ($SetLDLIBRARYPATH) {
-        $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+        [void]$Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})")
     }
 
     [System.Collections.Generic.List[string]]$Test  = @()
-    $Stuff | Foreach-Object {$Test.Add($_) > $null}
-    $Test.Add("$FilePath $TestArgumentList") > $null
+    $Stuff | Foreach-Object {[void]$Test.Add($_)}
+    [void]$Test.Add("$FilePath $TestArgumentList")
 
     if ($StartStopDaemon) {
-        $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
+        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList")
     } else {
-        $Stuff.Add("$FilePath $ArgumentList") > $null
+        [void]$Stuff.Add("$FilePath $ArgumentList")
     }
 
     [System.Collections.Generic.List[string]]$Cmd = @()
-    $Cmd.Add("screen -ls `"$ScreenName`" |  grep '[0-9].$ScreenName' | (") > $null
-    $Cmd.Add("  IFS=`$(printf '\t');") > $null
-    $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
-    $Cmd.Add("  while read -r name stuff; do") > $null
-    $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
-    $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
-    $Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1") > $null
-    $Cmd.Add("    sleep .1 >/dev/null 2>&1") > $null
-    $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
-    $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
-    $Cmd.Add("  done") > $null
-    $Cmd.Add(")") > $null
-    $Cmd.Add("screen -wipe >/dev/null 2>&1") > $null
-    $Cmd.Add("screen -S $($ScreenName) -d -m") > $null
-    $Cmd.Add("sleep .1") > $null
+    [void]$Cmd.Add("screen -ls `"$ScreenName`" |  grep '[0-9].$ScreenName' | (")
+    [void]$Cmd.Add("  IFS=`$(printf '\t');")
+    [void]$Cmd.Add("  sed `"s/^`$IFS//`" |")
+    [void]$Cmd.Add("  while read -r name stuff; do")
+    [void]$Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1")
+    [void]$Cmd.Add("    sleep .1 >/dev/null 2>&1")
+    [void]$Cmd.Add("    screen -S `"`$name`" -X stuff `^C >/dev/null 2>&1")
+    [void]$Cmd.Add("    sleep .1 >/dev/null 2>&1")
+    [void]$Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1")
+    [void]$Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1")
+    [void]$Cmd.Add("  done")
+    [void]$Cmd.Add(")")
+    [void]$Cmd.Add("screen -wipe >/dev/null 2>&1")
+    [void]$Cmd.Add("screen -S $($ScreenName) -d -m")
+    [void]$Cmd.Add("sleep .1")
 
     $StringChunkSize = 500
 
@@ -2461,13 +2461,13 @@ function Start-SubProcessInScreen {
         while ($str) {
             $substr = $str.substring(0,[Math]::Min($str.length,$StringChunkSize))
             if ($str.length -gt $substr.length) {
-                $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$($substr -replace '"','\"')`"") > $null
+                [void]$Cmd.Add("screen -S $($ScreenName) -X stuff $`"$($substr -replace '"','\"')`"")
                 $str = $str.substring($substr.length)
             } else {
-                $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$($substr -replace '"','\"')\n`"") > $null
+                [void]$Cmd.Add("screen -S $($ScreenName) -X stuff $`"$($substr -replace '"','\"')\n`"")
                 $str = ""
             }
-            $Cmd.Add("sleep .1") > $null
+            [void]$Cmd.Add("sleep .1")
         }
     }
 
@@ -2591,9 +2591,9 @@ function Start-SubProcessInTmux {
     Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
 
     [System.Collections.Generic.List[string]]$Stuff = @()
-    $Stuff.Add("export DISPLAY=:0") > $null
-    $Stuff.Add("cd /") > $null
-    $Stuff.Add("cd '$WorkingDirectory'") > $null
+    [void]$Stuff.Add("export DISPLAY=:0")
+    [void]$Stuff.Add("cd /")
+    [void]$Stuff.Add("cd '$WorkingDirectory'")
 
     $StuffEnv = Switch ($Vendor) {
         "AMD" {
@@ -2631,39 +2631,39 @@ function Start-SubProcessInTmux {
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$StuffEnv[$matches[1]]=$matches[2]}
 
     $StuffEnv.GetEnumerator() | Foreach-Object {
-        $Stuff.Add("export $($_.Name)=$($_.Value)") > $null
+        [void]$Stuff.Add("export $($_.Name)=$($_.Value)")
     }
 
     if ($SetLDLIBRARYPATH) {
-        $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+        [void]$Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})")
     }
 
     [System.Collections.Generic.List[string]]$Test  = @()
-    $Stuff | Foreach-Object {$Test.Add($_) > $null}
-    $Test.Add("$FilePath $TestArgumentList") > $null
+    $Stuff | Foreach-Object {[void]$Test.Add($_)}
+    [void]$Test.Add("$FilePath $TestArgumentList")
 
     if ($StartStopDaemon) {
-        $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
+        [void]$Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList")
     } else {
-        $Stuff.Add("$FilePath $ArgumentList") > $null
+        [void]$Stuff.Add("$FilePath $ArgumentList")
     }
 
     [System.Collections.Generic.List[string]]$Cmd = @()
 
-    $Cmd.Add("if tmux has-session 2>/dev/null; then") > $null
-    $Cmd.Add("  tmux list-sessions -F '#{session_name}' | grep '$ScreenName' | (") > $null
-    $Cmd.Add("    while read -r name; do") > $null
-    $Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
-    $Cmd.Add("      sleep 0.1") > $null
-    $Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1") > $null
-    $Cmd.Add("      sleep 0.1") > $null
-    $Cmd.Add("      tmux kill-session -t `"`$name`" >/dev/null 2>&1") > $null
-    $Cmd.Add("    done") > $null
-    $Cmd.Add("  )") > $null
-    $Cmd.Add("fi") > $null
+    [void]$Cmd.Add("if tmux has-session 2>/dev/null; then")
+    [void]$Cmd.Add("  tmux list-sessions -F '#{session_name}' | grep '$ScreenName' | (")
+    [void]$Cmd.Add("    while read -r name; do")
+    [void]$Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1")
+    [void]$Cmd.Add("      sleep 0.1")
+    [void]$Cmd.Add("      tmux send-keys -t `"`$name`" C-c >/dev/null 2>&1")
+    [void]$Cmd.Add("      sleep 0.1")
+    [void]$Cmd.Add("      tmux kill-session -t `"`$name`" >/dev/null 2>&1")
+    [void]$Cmd.Add("    done")
+    [void]$Cmd.Add("  )")
+    [void]$Cmd.Add("fi")
 
-    $Cmd.Add("tmux new-session -d -s $($ScreenName)") > $null
-    $Cmd.Add("sleep 0.1") > $null
+    [void]$Cmd.Add("tmux new-session -d -s $($ScreenName)")
+    [void]$Cmd.Add("sleep 0.1")
 
     $StringChunkSize = 2000
     $Stuff | ForEach-Object {
@@ -2671,13 +2671,13 @@ function Start-SubProcessInTmux {
         while ($str) {
             $substr = $str.Substring(0, [Math]::Min($str.Length, $StringChunkSize))
             if ($str.Length -gt $substr.Length) {
-                $Cmd.Add("tmux send-keys -t $($ScreenName) $`"$($substr -replace '\"', '\"')`"") > $null
+                [void]$Cmd.Add("tmux send-keys -t $($ScreenName) $`"$($substr -replace '\"', '\"')`"")
                 $str = $str.Substring($substr.Length)
             } else {
-                $Cmd.Add("tmux send-keys -t $($ScreenName) $`"$($substr -replace '\"', '\"')`" C-m") > $null
+                [void]$Cmd.Add("tmux send-keys -t $($ScreenName) $`"$($substr -replace '\"', '\"')`" C-m")
                 $str = ""
             }
-            $Cmd.Add("sleep 0.1") > $null
+            [void]$Cmd.Add("sleep 0.1")
         }
     }
 
@@ -4003,13 +4003,13 @@ function Get-Device {
                         $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
                         if ($AmdModelsEx -notcontains $Device.Model) {
                             $AmdGb = $Device.OpenCL.GlobalMemSizeGB
-                            if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx.Add($Device.Model) > $null}
+                            if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {[void]$AmdModelsEx.Add($Device.Model)}
                             else {$AmdModels[$Device.Model]=$AmdGb}
                         }
                         if ($Vendor_Name -in @("NVIDIA","AMD")) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
                         if ($Device_OpenCL.PCIBusId -match "([A-F0-9]+:[A-F0-9]+)$") {
                             $Device.BusId = $Matches[1]
-                            if ($PCIBusIds.Contains($Device.BusId)) {$Device = $null} else {$PCIBusIds.Add($Device.BusId)>$null}
+                            if ($PCIBusIds.Contains($Device.BusId)) {$Device = $null} else {[void]$PCIBusIds.Add($Device.BusId)}
                         }
 
                         if ($Device) {
@@ -6319,7 +6319,7 @@ function Set-MinersConfigDefault {
                             $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                             $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
                             $k = "$m-$s"
-                            if (-not $MinerCheck.Contains($k)) {$cmd.MainAlgorithm=$m;$cmd.SecondaryAlgorithm=$s;$cmd;$MinerCheck.Add($k)>$null}
+                            if (-not $MinerCheck.Contains($k)) {$cmd.MainAlgorithm=$m;$cmd.SecondaryAlgorithm=$s;$cmd;[void]$MinerCheck.Add($k)}
                         }) -Force
                 }
             }
@@ -6353,7 +6353,7 @@ function Set-MinersConfigDefault {
                     $Devices = @($AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
                     [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
                     if ($SetupDevices.Count -gt 1 -and $MiningMode -eq "combo") {
-                        Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}
+                        Get-DeviceSubsets $Devices | Foreach-Object {[void]$SetupDevices.Add($_.Model -join '-')}
                     }
                 }
                 
@@ -6375,7 +6375,7 @@ function Set-MinersConfigDefault {
                                     } else {
                                         [PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params="";MSIAprofile="";OCprofile="";Difficulty="";Penalty="";HashAdjust="";Disable="0";Tuning="0";ShareCheck=""}
                                     }
-                                    $MinerCheck.Add($k)>$null
+                                    [void]$MinerCheck.Add($k)
                                 }
                             }
                         )
@@ -7141,7 +7141,7 @@ function Get-YiiMPValue {
 function Get-DeviceSubsets($Device) {
     $Models = @($Device | Select-Object Model,Model_Name -Unique)
     if ($Models.Count) {
-        [System.Collections.Generic.List[string]]$a = @();0..$($Models.Count-1) | Foreach-Object {$a.Add('{0:x}' -f $_) > $null}
+        [System.Collections.Generic.List[string]]$a = @();0..$($Models.Count-1) | Foreach-Object {[void]$a.Add('{0:x}' -f $_)}
         @(Get-Subsets $a | Where-Object {$_.Length -gt 1} | Foreach-Object{
             [PSCustomObject[]]$x = @($_.ToCharArray() | Foreach-Object {$Models[[int]"0x$_"]}) | Sort-Object -Property Model
             [PSCustomObject]@{
@@ -7175,7 +7175,7 @@ function Get-Subsets($a){
             }
         }
         #stick subset into an array
-        $l.Add(-join $out) > $null
+        [void]$l.Add(-join $out)
     }
     #group the subsets by length, iterate through them and sort
     $l | Group-Object -Property Length | %{$_.Group | sort}
@@ -7609,7 +7609,7 @@ Param(
                     }
                     try {$Data = ConvertFrom-Json $Data -ErrorAction Stop} catch { $method = "WEB"}
                 }
-                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+                if ($Data -and $Data.unlocked -ne $null) {[void]$Data.PSObject.Properties.Remove("unlocked")}
             } else {
                 $ErrorMessage = "cURL $($Global:LASTEXEEXITCODE) / $(if ($Data -and $Data.Count -gt 1){"HTTP $($Data[-1])"} else {"Timeout after $($timeout)s"})"
             }
@@ -7668,8 +7668,8 @@ Param(
 
                 $content.Method = $requestmethod
                 $content.RequestUri = $requesturl
-                $headers_local.GetEnumerator() | Foreach-Object {$content.Headers.Add($_.Key,$_.Value)}
-                $content.Headers.Add('User-Agent', $userAgent)
+                $headers_local.GetEnumerator() | Foreach-Object {[void]$content.Headers.Add($_.Key,$_.Value)}
+                [void]$content.Headers.Add('User-Agent', $userAgent)
 
                 if ($body) {
                     if ($body -is [hashtable]) {
@@ -7679,18 +7679,18 @@ Param(
                             $body.GetEnumerator() | Foreach-Object {
                                 if ($_.Value -is [object] -and $_.Value.FullName) {
                                     $fs = [System.IO.FileStream]::New($_.Value, [System.IO.FileMode]::Open)
-                                    $fs_array.Add($fs)
-                                    $content.Content.Add([System.Net.Http.StreamContent]::New($fs),$_.Name,(Split-Path $_.Value -Leaf))
+                                    [void]$fs_array.Add($fs)
+                                    [void]$content.Content.Add([System.Net.Http.StreamContent]::New($fs),$_.Name,(Split-Path $_.Value -Leaf))
                                     if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = "@$($_.Value.FullName)"}
                                 } else {
-                                    $content.Content.Add([System.Net.Http.StringContent]::New($_.Value),$_.Name)
+                                    [void]$content.Content.Add([System.Net.Http.StringContent]::New($_.Value),$_.Name)
                                     if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = $_.Value}
                                 }
                             }
                         } else {
                             $body_local = [System.Collections.Generic.Dictionary[string,string]]::New()
                             $body.GetEnumerator() | Foreach-Object {
-                                $body_local.Add([string]$_.Name,[string]$_.Value)
+                                [void]$body_local.Add([string]$_.Name,[string]$_.Value)
                                 if ($Session.LogLevel -eq "Debug") {$fx[$_.Name] = $_.Value}
                             }
                             $content.Content = [System.Net.Http.FormUrlEncodedContent]::new($body_local)
@@ -7749,7 +7749,7 @@ Param(
                             }
                             try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
                         }
-                        if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                        if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
                     }
 
                 } else {
@@ -7843,7 +7843,7 @@ Param(
                             }
                             try {$Result.Data = ConvertFrom-Json $Result.Data -ErrorAction Stop} catch {}
                         }
-                        if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                        if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
                     }
 
                     if ($Response) {
@@ -7861,7 +7861,7 @@ Param(
                     } else {
                         $Result.Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials).Content
                     }
-                    if ($Result.Data -and $Result.Data.unlocked -ne $null) {$Result.Data.PSObject.Properties.Remove("unlocked")}
+                    if ($Result.Data -and $Result.Data.unlocked -ne $null) {[void]$Result.Data.PSObject.Properties.Remove("unlocked")}
                     $Result.Status = $true
                 } catch {
                     $Result.ErrorMessage = "$($_.Exception.Message)"
@@ -8493,13 +8493,13 @@ param(
 )
     [System.Collections.Generic.List[string]]$Uri2 = @()
     while ($Uri -match "^(.*?)({[^}]+})(.*?)$") {
-        if ($Matches[1].Length) {$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Matches[1])) > $null}
+        if ($Matches[1].Length) {[void]$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Matches[1]))}
         $Tmp=$Matches[2]
         $Uri=$Matches[3]
         if ($Tmp -match "^{(\w+):(.*?)}$") {$Tmp = "{$($Matches[1]):$([System.Web.HttpUtility]::UrlEncode($($Matches[2] -replace "\$","*dollar*")) -replace "\*dollar\*","$")}"}
-        $Uri2.Add($Tmp) > $null
+        [void]$Uri2.Add($Tmp)
     }
-    if ($Uri.Length) {$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Uri)) > $null}
+    if ($Uri.Length) {[void]$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Uri))}
     $Uri = $Uri2 -join ''
     if ($ConvertDot) {$Uri -replace "\.","%2e"} else {$Uri}
 }
@@ -8581,7 +8581,7 @@ param(
                         $Job | Add-Member FilePath $FilePath -Force
                         $Job | Add-Member Arguments $ArgumentList -Force
                         Write-Log "Autoexec command started: $FilePath $ArgumentList"
-                        $Global:AutoexecCommands.Add($Job) >$null
+                        [void]$Global:AutoexecCommands.Add($Job)
                     }
                 } catch {
                     Write-Log -Level Warn "Command could not be started in autoexec.txt: $($Matches[1]) $($Matches[2])"

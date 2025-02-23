@@ -33,11 +33,11 @@
     # Setup the global HTTP listener
     $Global:APIHttpListener = New-Object System.Net.HttpListener
     if ($API.RemoteAPI) {
-        $Global:APIHttpListener.Prefixes.Add("http://+:$($API.APIport)/")
+        [void]$Global:APIHttpListener.Prefixes.Add("http://+:$($API.APIport)/")
         # Require authentication when listening remotely
         $Global:APIHttpListener.AuthenticationSchemes = if ($API.APIauth) {[System.Net.AuthenticationSchemes]::Basic} else {[System.Net.AuthenticationSchemes]::Anonymous}
     } else {
-        $Global:APIHttpListener.Prefixes.Add("http://localhost:$($API.APIport)/")
+        [void]$Global:APIHttpListener.Prefixes.Add("http://localhost:$($API.APIport)/")
     }
     $Global:APIHttpListener.Start()
 
@@ -48,13 +48,13 @@
 
     # Setup runspacepool to launch the API webserver in separate threads
     $APIVars = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
-    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
-    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
-    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
-    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
-    $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIAccessDB', $APIAccessDB, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIAccessDB', $APIAccessDB, $null))
     if (Initialize-HttpClient) {
-        $APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new("GlobalHttpClient", $Global:GlobalHttpClient, $null))
+        [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new("GlobalHttpClient", $Global:GlobalHttpClient, $null))
     }
 
     $MinThreads = 1
@@ -70,10 +70,10 @@
         $newPS = [PowerShell]::Create().AddScript($APIScript).AddParameters(@{'ThreadID'=$ThreadID;'APIHttpListener'=$Global:APIHttpListener;'CurrentPwd'=$PWD})
         $newPS.RunspacePool = $Global:APIRunspacePool
 
-        $Global:APIListeners.Add([PSCustomObject]@{
+        [void]$Global:APIListeners.Add([PSCustomObject]@{
             Runspace   = $newPS.BeginInvoke()
 		    PowerShell = $newPS 
-        }) > $null
+        })
     }
     Write-Log -Level Info "Started $($MaxThreads) API threads on port $($API.APIport)"
 }
@@ -85,7 +85,7 @@ Function Stop-APIServer {
     if ($Global:APIListeners) {
         foreach ($Listener in $Global:APIListeners.ToArray()) {
 			$Listener.PowerShell.Dispose()
-			$Global:APIListeners.Remove($Listener)
+			[void]$Global:APIListeners.Remove($Listener)
 		}
     }
     $Global:APIListeners.Clear()

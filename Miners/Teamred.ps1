@@ -183,20 +183,20 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
                 [System.Collections.Generic.List[string]]$AdditionalParams = @("--watchdog_disabled")
                 if ($Pools.$MainAlgorithm_Norm.Host -match "bsod" -and $MainAlgorithm_Norm_0 -eq "x16rt") {
-                    $AdditionalParams.Add("--no_ntime_roll")
+                    [void]$AdditionalParams.Add("--no_ntime_roll")
                 }
                 if ($IsLinux -and $MainAlgorithm_Norm_0 -match "^cn") {
-                    $AdditionalParams.Add("--allow_large_alloc")
+                    [void]$AdditionalParams.Add("--allow_large_alloc")
                 }
                 if ($_.MainAlgorithm -eq "nimiq") {
                     $Pool_User = $Pools.$MainAlgorithm_Norm.Wallet
                     $Pool_Protocol = "stratum+tcp"
-                    $AdditionalParams.Add("--nimiq_worker=$($Pools.$MainAlgorithm_Norm.Worker)")
+                    [void]$AdditionalParams.Add("--nimiq_worker=$($Pools.$MainAlgorithm_Norm.Worker)")
                     #if ($Pools.$MainAlgorithm_Norm_0.Name -match "Icemining") {
                     #    $Pool_Host = $Pool_Host -replace "^nimiq","nimiq-trm"
                     #}
                 } elseif ($IsVerthash) {
-                    $AdditionalParams.Add("--verthash_file='$($DatFile)'")
+                    [void]$AdditionalParams.Add("--verthash_file='$($DatFile)'")
                 }
 
                 if ($SecondAlgorithm_Norm_0) {

@@ -14,7 +14,7 @@ try {
         $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
         $Global:ProgressPreference = $oldProgressPreference
     }
-    if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+    if ($Data -and $Data.unlocked -ne $null) {[void]$Data.PSObject.Properties.Remove("unlocked")}
 } catch {
     $Data = [PSCustomObject]@{ErrorMessage="$($_.Exception.Message)"}
 } finally {
