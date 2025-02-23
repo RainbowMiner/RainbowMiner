@@ -2335,17 +2335,17 @@ function Invoke-Core {
                 -not ( (-not $Session.Config.Pools.$Pool_Name) -or
                     ($Test_PoolName.Count -and -not $Test_PoolName.Contains($Pool_Name)) -or
                     ($Test_ExcludePoolName.Count -and $Test_ExcludePoolName.Contains($Pool_Name)) -or
-                    ($Test_Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                    ($Test_ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                    ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                    ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms.Count -and (Compare-Object $UnprofitableAlgos.Pools.$Pool_Name.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                    ($Test_Algorithm.Count -and -not [RBMToolBox]::IsIntersect($Test_Algorithm,$Pool_Algo)) -or
+                    ($Test_ExcludeAlgorithm.Count -and [RBMToolBox]::IsIntersect($Test_ExcludeAlgorithm,$Pool_Algo)) -or
+                    ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and [RBMToolBox]::IsIntersect($UnprofitableAlgos.Algorithms,$Pool_Algo)) -or
+                    ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms.Count -and [RBMToolBox]::IsIntersect($UnprofitableAlgos.Pools.$Pool_Name.Algorithms,$Pool_Algo)) -or
                     ($Pool_CheckForUnprofitableAlgo -and $Pool_CoinSymbol -and $UnprofitableAlgos.Coins -and $UnprofitableAlgos.Coins.Count -and $UnprofitableAlgos.Coins -contains $Pool_CoinSymbol) -or
                     ($Pool_CheckForUnprofitableAlgo -and $Pool_CoinSymbol -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -and $UnprofitableAlgos.Pools.$Pool_Name.Coins.Count -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -contains $Pool_CoinSymbol) -or
                     ($Test_CoinSymbol.Count -and $Pool_CoinSymbol -and -not $Test_CoinSymbol.Contains($Pool_CoinSymbol)) -or
                     ($Test_ExcludeCoin.Count -and $Pool_CoinName -and $Test_ExcludeCoin.Contains($Pool_CoinName)) -or
                     ($Test_ExcludeCoinSymbol.Count -and $Pool_CoinSymbol -and $Test_ExcludeCoinSymbol.Contains($Pool_CoinSymbol)) -or
-                    ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object $Session.Config.Pools.$Pool_Name.Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                    ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object $Session.Config.Pools.$Pool_Name.ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                    ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not [RBMToolBox]::IsIntersect($Session.Config.Pools.$Pool_Name.Algorithm,$Pool_Algo)) -or
+                    ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and [RBMToolBox]::IsIntersect($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm,$Pool_Algo)) -or
                     ($Pool_CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and $Session.Config.Pools.$Pool_Name.CoinName -notcontains  $Pool_CoinName) -or
                     ($Pool_CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoin -contains  $Pool_CoinName) -or
                     ($Pool_CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.CoinSymbol -notcontains  $Pool_CoinSymbol) -or
@@ -2632,8 +2632,8 @@ function Invoke-Core {
                             $Session.Config.Devices.$p -and
                             (
                                 ($Session.Config.Devices.$p.DisableDualMining -and $_.HashRates.PSObject.Properties.Name.Count -gt 1) -or
-                                ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.Algorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
-                                ($Session.Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.ExcludeAlgorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -or
+                                ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and -not [RBMToolBox]::IsIntersect($Session.Config.Devices.$p.Algorithm,$BaseAlgo)) -or
+                                ($Session.Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and [RBMToolBox]::IsIntersect($Session.Config.Devices.$p.ExcludeAlgorithm,$BaseAlgo)) -or
                                 ($Session.Config.Devices.$p.MinerName.Count -gt 0 -and ($Session.Config.Devices.$p.MinerName -inotcontains $_.Basename)) -or
                                 ($Session.Config.Devices.$p.ExcludeMinerName.Count -gt 0 -and ($Session.Config.Devices.$p.ExcludeMinerName -icontains $_.Basename))
                             )
@@ -3053,7 +3053,7 @@ function Invoke-Core {
 
             if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and (($Global:StatsCache[$Miner_StatKey].Version -ne $null -and $Global:StatsCache[$Miner_StatKey].Version -ne $AllMiners_VersionCheck[$Miner.BaseName].Version) -or ($Global:StatsCache[$Miner_StatKey].Version -eq $null -and $Global:StatsCache[$Miner_StatKey].Updated -lt $AllMiners_VersionCheck[$Miner.BaseName].Date))) {
             
-                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] -or (Compare-Object $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] $Miner_BaseAlgorithm -IncludeEqual -ExcludeDifferent)) {
+                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] -or [RBMToolBox]::IsIntersect($AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel],$Miner_BaseAlgorithm)) {
 
                     $Global:StatsCache.Remove($Miner_StatKey)
 
@@ -3437,7 +3437,7 @@ function Invoke-Core {
         $Miner_IsExclusiveMiner   = $false
         $Miner_Pools = $Miner.Pools.PSObject.Properties.Value
         $Miner_Pools | Foreach-Object {
-            $Miner_IsFocusWalletMiner = $Miner_IsFocusWalletMiner -or ($Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Name)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent))
+            $Miner_IsFocusWalletMiner = $Miner_IsFocusWalletMiner -or ($Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and [RBMToolBox]::IsIntersect($Session.Config.Pools."$($_.Name)".FocusWallet,$_.Currency))
             $Miner_IsExclusiveMiner   = $Miner_IsExclusiveMiner -or $_.Exclusive
         }
 
@@ -3800,7 +3800,7 @@ function Invoke-Core {
     if ($IsWindows) {
         @(Get-CIMInstance CIM_Process).Where({$_.ExecutablePath -and $_.ExecutablePath -like "$(Get-Location)\Bin\*" -and $Running_ProcessIds -notcontains $_.ProcessId -and $Running_MinerPaths -icontains $_.ProcessName}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
     } elseif ($IsLinux) {
-        @(Get-Process).Where({$_.Path -and $_.Path -like "$(Get-Location)/Bin/*" -and -not (Compare-Object $Running_ProcessIds @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual) -and $Running_MinerPaths -icontains $_.ProcessName}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+        @(Get-Process).Where({$_.Path -and $_.Path -like "$(Get-Location)/Bin/*" -and -not [RBMToolBox]::IsIntersect($Running_ProcessIds,@($_.Id,$_.Parent.Id)) -and $Running_MinerPaths -icontains $_.ProcessName}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
 
     #Kill maroding EthPills
@@ -3809,7 +3809,7 @@ function Invoke-Core {
         if ($IsWindows) {
             @(Get-CIMInstance CIM_Process).Where({$_.ProcessName -eq "OhGodAnETHlargementPill-r2.exe" -and $Running_ProcessIds -notcontains $_.ProcessId}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
         } elseif ($IsLinux) {
-            @(Get-Process).Where({$_.ProcessName -eq "OhGodAnETHlargementPill-r2" -and -not (Compare-Object $Running_ProcessIds @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual)}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+            @(Get-Process).Where({$_.ProcessName -eq "OhGodAnETHlargementPill-r2" -and -not [RBMToolBox]::IsIntersect($Running_ProcessIds,@($_.Id,$_.Parent.Id))}) | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
         }
     }
 
@@ -3884,7 +3884,7 @@ function Invoke-Core {
                 foreach ($Miner_Algorithm in $Miner.Algorithm) {
                     $Miner_Pool = $Pools.$Miner_Algorithm.Name
 
-                    if (Compare-Object @($Miner_Name,$Miner_Algorithm,$Miner_Pool) $Session.Config.ExcludeFromWatchdog -IncludeEqual -ExcludeDifferent) {
+                    if ([RBMToolBox]::IsIntersect(@($Miner_Name,$Miner_Algorithm,$Miner_Pool),$Session.Config.ExcludeFromWatchdog)) {
                         continue
                     }
 

@@ -345,38 +345,6 @@ public static class RBMToolBox
         return obj1.Equals(obj2);
     }
 
-    private static object UnwrapPSObject(object obj)
-    {
-#if NETCOREAPP3_0_OR_GREATER
-        if (obj is PSObject psObj)
-        {
-            object baseObj = psObj.BaseObject;
-
-            if (baseObj is PSCustomObject)
-                return obj;
-
-            if (baseObj == null || baseObj is ValueType || baseObj is string || baseObj is DBNull || baseObj is Hashtable)
-                return baseObj;
-
-            return obj;
-        }
-#else
-        if (obj is PSObject)
-        {
-            object baseObj = ((PSObject)obj).BaseObject;
-
-            if (baseObj is PSCustomObject)
-                return obj;
-
-            if (baseObj == null || baseObj is ValueType || baseObj is string || baseObj is DBNull || baseObj is Hashtable)
-                return baseObj;
-
-            return obj;
-        }
-#endif
-        return obj;
-    }
-
     public static bool ComparePSObjectToHashtable(PSObject psObj, Hashtable hash)
     {
         if (psObj == null || hash == null) return false;
@@ -682,20 +650,78 @@ public static class RBMToolBox
         return obj1.Equals(obj2);
     }
 
+    public static bool IsIntersect(object obj1, object obj2)
+    {
+        obj1 = UnwrapPSObject(obj1);
+        obj2 = UnwrapPSObject(obj2);
+
+        object[] array1 = ConvertToValueTypeOrStringArray(obj1);
+        object[] array2 = ConvertToValueTypeOrStringArray(obj2);
+
+        HashSet<object> set1 = new HashSet<object>(array1);
+        foreach (var value in array2)
+        {
+            if (set1.Contains(value))
+                return true;
+        }
+
+        return false;
+    }
+
     // Private functions
-    private static object TryUnwrapPSObject(object obj, Type targetType)
+    private static object UnwrapPSObject(object obj)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        if (obj is PSObject psObj && psObj.BaseObject.GetType() == targetType)
-            return psObj.BaseObject;
+        if (obj is PSObject psObj)
+        {
+            object baseObj = psObj.BaseObject;
+
+            if (baseObj is PSCustomObject)
+                return obj;
+
+            if (baseObj == null || baseObj is ValueType || baseObj is string || baseObj is DBNull || baseObj is Hashtable)
+                return baseObj;
+
+            return obj;
+        }
 #else
         if (obj is PSObject)
         {
-            PSObject psObj = (PSObject)obj;
-            if (psObj.BaseObject.GetType() == targetType)
-                return psObj.BaseObject;
+            object baseObj = ((PSObject)obj).BaseObject;
+
+            if (baseObj is PSCustomObject)
+                return obj;
+
+            if (baseObj == null || baseObj is ValueType || baseObj is string || baseObj is DBNull || baseObj is Hashtable)
+                return baseObj;
+
+            return obj;
         }
 #endif
         return obj;
     }
+
+    private static object[] ConvertToValueTypeOrStringArray(object obj)
+    {
+        // If it's already an array, convert it manually to an object array
+        if (obj is Array arr && arr.Length > 0)
+        {
+            object[] result = new object[arr.Length];
+            for (int i = 0; i < arr.Length; i++)
+                result[i] = UnwrapPSObject(arr.GetValue(i));
+            return result;
+        }
+
+        // If it's a string, treat it as an array of one string
+        if (obj is string str)
+            return new object[] { str };
+
+        // If it's a single ValueType, treat it as an array of one
+        if (obj is ValueType)
+            return new object[] { obj };
+
+        return Array.Empty<object>(); // If not ValueType or string, return empty array
+    }
+
+
 }

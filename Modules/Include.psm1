@@ -1867,11 +1867,11 @@ function Get-MinersContent {
 
     if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
-    $scriptFiles = @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$Parameters.InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$Parameters.InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | Select-Object)
+    $scriptFiles = @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$Parameters.InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or [RBMToolBox]::IsIntersect($Session.Config.MinerName,$_.BaseName)} | Where-Object {$Parameters.InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or -not [RBMToolBox]::IsIntersect($Session.Config.ExcludeMinerName,$_.BaseName)} | Select-Object)
     
     foreach($script in $scriptFiles) {
         $scriptName = $script.BaseName
-        if ($Parameters.InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($Global:MinerInfo.$scriptName | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
+        if ($Parameters.InfoOnly -or [RBMToolBox]::IsIntersect(@($Global:DeviceCache.DevicesToVendors.Values | Select-Object),@($Global:MinerInfo.$scriptName | Select-Object))) {
             $Content = & $script.FullName @Parameters
             foreach($c in @($Content)) {
                 if ($Parameters.InfoOnly) {
@@ -5469,7 +5469,7 @@ function Get-PoolsInfo {
             if ($AsObjects) {
                 $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
             } else {
-                $Global:GlobalPoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
+                $Global:GlobalPoolsInfo.PSObject.Properties | Where-Object {[RBMToolBox]::IsIntersect($_.Value.$Name,$Values)} | Select-Object -ExpandProperty Name | Sort-Object
             }
         } else {
             $Global:GlobalPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
@@ -6203,7 +6203,7 @@ function Set-CombosConfigDefault {
                         $Subset = $_.Model
                         $SubsetModel= $Subset -join '-'
                         if ($Preset.$SubsetType.$SubsetModel -eq $null) {
-                            $SubsetDefault = -not $GpuGroups.Count -or ($FullGpuGroups | Where-Object {$SubsetModel -match $_} | Measure-Object).Count -or -not (Compare-Object $GpuGroups $_.Model -ExcludeDifferent -IncludeEqual | Measure-Object).Count
+                            $SubsetDefault = -not $GpuGroups.Count -or ($FullGpuGroups | Where-Object {$SubsetModel -match $_} | Measure-Object).Count -or -not [RBMToolBox]::IsIntersect($GpuGroups,$_.Model)
                             if ($SubsetDefault -and $GpuCount -gt 3) {
                                 if (($FullCombosByCategory.GetEnumerator() | Where-Object {(Compare-Object $Subset $_.Value -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq $_.Value.Count} | Foreach-Object {$_.Value.Count} | Measure-Object -Sum).Sum -ne $Subset.Count) {
                                     $SubsetDefault = "0"
