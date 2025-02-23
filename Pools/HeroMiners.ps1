@@ -15,7 +15,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_AllRegions = @("de","es","fi","ru","ca","us","us2","us3","mx","br","kz","hk","kr","in","sg","tr","au")
+$Pool_AllRegions = @("de","fr","es","fi","ru","ca","us","us2","us3","mx","br","kz","hk","kr","in","sg","tr","au")
 
 #new es
 
@@ -133,7 +133,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
             $Pool_SoloMining = $false
             $Pool_Workers    = [int]$Pool_Request.pool.workers
             $Pool_Hashrate   = [decimal]$Pool_Request.pool.hashrate
-            $blocks          = $Pool_Request.pool.blocks | Where-Object {$_ -match "^[0-9a-fx]+:.*?(\d{10}):" -and ($Matches[1] -ge $timestamp24h)} | Foreach-Object {$Matches[1]}
+            $blocks          = $Pool_Request.pool.blocks | Where-Object {$_ -match "^[^:]*:.*?(\d{10}):" -and ($Matches[1] -ge $timestamp24h)} | Foreach-Object {$Matches[1]}
             $blocks_measure  = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
             $Pool_BLK        = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
             $Pool_TSL        = [int]($timestamp - ([decimal]$PooL_Request.pool.stats.lastBlockFound/1000))
