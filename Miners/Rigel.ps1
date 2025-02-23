@@ -215,7 +215,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
                 } elseif ($MainAlgorithm_0 -eq "ethash") {
                     if ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "OCTA")      {$CoinParams = " --coin octa"}
                     elseif ($Pools.$MainAlgorithm_Norm.CoinSymbol -eq "XPB")   {$CoinParams = " --coin xpb"}
-                } elseif ($MainAlgorithm_Norm -eq "BlocxAutolykos2") {
+                } elseif ($MainAlgorithm0 -eq "BlocxAutolykos2") {
                     $CoinParams = " --coin blocx"
                 }
 
