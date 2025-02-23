@@ -83,7 +83,7 @@ if (-not $InfoOnly) {
     $ExcludeWorkerName_Array = @($ExcludeWorkerName -split "[,; ]+" | Where-Object {$_} | Select-Object -Unique)
 
     if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
-        $Workers = $Workers.Where({($UseWorkerName_Array.Count -eq 0 -or $UseWorkerName_Array -contains $_) -and ($ExcludeWorkerName_Array.Count -eq 0 -or $ExcludeWorkerName_Array -notcontains $_)})
+        $Workers = @($Workers | Where-Object {($UseWorkerName_Array.Count -eq 0 -or $UseWorkerName_Array -contains $_) -and ($ExcludeWorkerName_Array.Count -eq 0 -or $ExcludeWorkerName_Array -notcontains $_)})
     }
 
     if (-not $Workers.Count) {return}
