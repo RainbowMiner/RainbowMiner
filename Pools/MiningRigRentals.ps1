@@ -119,7 +119,7 @@ $ExtensionMessage = "$ExtensionMessage".Trim()
 $PoolOfflineMessage = "$PoolOfflineMessage".Trim()
 
 if ($UseWorkerName_Array.Count -or $ExcludeWorkerName_Array.Count) {
-    $Workers = $Workers.Where({($UseWorkerName_Array.Count -eq 0 -or $UseWorkerName_Array -contains $_) -and ($ExcludeWorkerName_Array.Count -eq 0 -or $ExcludeWorkerName_Array -notcontains $_)})
+    $Workers = @($Workers | Where-Object {($UseWorkerName_Array.Count -eq 0 -or $UseWorkerName_Array -contains $_) -and ($ExcludeWorkerName_Array.Count -eq 0 -or $ExcludeWorkerName_Array -notcontains $_)})
 }
 
 if (-not $Workers.Count) {return}
@@ -129,8 +129,10 @@ $AllRigs_Request   = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -
 Set-MiningRigRentalConfigDefault -Workers $Workers > $null
 
 if ($API.MinersNeedingBenchmark) {
-    $Devices_Benchmarking = @($API.MinersNeedingBenchmark.ForEach("DeviceName") | Select-Object -Unique)
+    $MinersNeedingBenchmark = $API.MinersNeedingBenchmark | ConvertFrom-Json -ErrorAction Ignore
+    $Devices_Benchmarking = @($MinersNeedingBenchmark.DeviceName | Select-Object -Unique)
 } else {
+    $MinersNeedingBenchmark = $null
     $Devices_Benchmarking = @()
 }
 if ($Session.MRRBenchmarkStatus -eq $null) {$Session.MRRBenchmarkStatus = @{}}
@@ -195,14 +197,14 @@ if ($AllRigs_Request) {
         $Rigs_DeviceModels = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $Worker1} | Select-Object -ExpandProperty Name | Select-Object -Unique)
 
         if ($Session.Config.MiningMode -eq "Legacy") {
-            $Rigs_Devices = @($Global:DeviceCache.DevicesByTypes.AMD + $Global:DeviceCache.DevicesByTypes.NVIDIA + $Global:DeviceCache.DevicesByTypes.CPU | Sort-Object Index)
+            $Rigs_Devices = @($Global:DeviceCache.DevicesByTypes.AMD + $Global:DeviceCache.DevicesByTypes.INTEL + $Global:DeviceCache.DevicesByTypes.NVIDIA + $Global:DeviceCache.DevicesByTypes.CPU | Sort-Object Index)
         } else {
             $Rigs_Devices = $Global:DeviceCache.Devices
         }
 
-        $Rigs_Devices = $Rigs_Devices.Where({($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)})
-        $Workers_Devices[$Worker1] = @($Rigs_Devices.Foreach("Name") | Select-Object -Unique)
-        $Workers_Models[$Worker1]  = @($Rigs_Devices.Foreach("Model") | Select-Object -Unique)
+        $Rigs_Devices = @($Rigs_Devices | Where-Object {($Worker1 -eq $Worker -and $_.Type -eq "Gpu") -or ($Worker1 -ne $Worker -and $_.Model -in $Rigs_DeviceModels)})
+        $Workers_Devices[$Worker1] = @($Rigs_Devices.Name | Select-Object -Unique)
+        $Workers_Models[$Worker1]  = @($Rigs_Devices.Model | Select-Object -Unique)
 
         if (($Rigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Measure-Object).Count) {
             $Devices_Rented = @($Devices_Rented + $Workers_Devices[$Worker1] | Select-Object -Unique | Sort-Object)
@@ -265,7 +267,7 @@ if ($AllRigs_Request) {
                     $DeviceAlgorithm        = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
                     $DeviceExcludeAlgorithm = @($Workers_Models[$Worker1] | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
-                    $ActiveAlgorithms       = @($Global:ActiveMiners.Where({$_.Enabled -and ($_.DeviceModel -in $Workers_Models[$Worker1]) -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)}).Foreach({"$($_.Algorithm[0])" -replace "-.+$"}) | Select-Object -Unique)
+                    $ActiveAlgorithms       = @($Global:ActiveMiners | Where-Object {$_.Enabled -and ($_.DeviceModel -in $Workers_Models[$Worker1]) -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)} | Foreach-Object {"$($_.Algorithm[0])" -replace "-.+$"} | Select-Object -Unique)
 
                     $Rigs_Request | Select-Object id,type | Foreach-Object {
                         $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
@@ -547,7 +549,12 @@ if ($AllRigs_Request) {
                             $Pool_Diff = ($Threads_Result.threads | Select-Object -First 1).difficulty.share -as [double]
                             $Threads_Result = $null
                             if (-not $Pool_Diff) {
-                                $Pool_Diff = ($Global:ActiveMiners.Where({$_.Status -eq [MinerStatus]::Running -and $_.Pool -contains "MiningRigRentals" -and $_.Algorithm -contains $Pool_Algorithm_Norm_With_Model}).ForEach({$_.GetDifficulty($Pool_Algorithm_Norm_With_Model)}) | Select-Object -First 1) -as [double]
+                                foreach ( $Miner in $Global:ActiveMiners ) {
+                                    if ($Miner.Status -eq [MinerStatus]::Running -and $Miner.Pool -contains "MiningRigRentals" -and $Miner.Algorithm -contains $Pool_Algorithm_Norm_With_Model) {
+                                        $Pool_Diff = [double]$Miner.GetDifficulty($Pool_Algorithm_Norm_With_Model)
+                                        break
+                                    }
+                                }
                             }
                             if ($Pool_Diff) {
                                 if ($MRRConfig -eq $null) {
@@ -776,13 +783,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     $UniqueRigs_Request = @()
 
     if ($AllRigs_Request) {
-        $UniqueRigs_Request = $AllRigs_Request.Where({(([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1})
+        $UniqueRigs_Request = $AllRigs_Request | Where-Object {(([regex]"\[[\w\-]+\]").Matches($_.description).Value | Select-Object -Unique | Measure-Object).Count -eq 1}
     }
 
     if ($EnableRecoveryMode) {
         Write-Log -Level Warn "$($Name): Recovery mode is enabled! Please disable it after all your rigs have been recovered."
         try {
-            $OrphanedRigs_Request = @(Invoke-MiningRigRentalRequest "/rig/mine" $API_Key $API_Secret).Where({$_.description -notmatch "\[[\w\-]+\]"})
+            $OrphanedRigs_Request = @(Invoke-MiningRigRentalRequest "/rig/mine" $API_Key $API_Secret | Where-Object {$_.description -notmatch "\[[\w\-]+\]"})
             Write-Log -Level Info "$($Name): Recovery mode enabled - $($OrphanedRigs_Request.Count) orphaned rig$(if ($OrphanedRigs_Request.Count -gt 1) {"s"}) found"
         } catch {
             Write-Log -Level Warn "$($Name): Couldn't get orphaned rigs"
@@ -869,7 +876,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 2. Auto extend rented rigs, if bonus applicable
     #
 
-    $RentalIDs = @($UniqueRigs_Request.Where({$_.status.status -eq "rented" -or $_.status.rented}).rental_id | Select-Object)
+    $RentalIDs = @($UniqueRigs_Request | Where-Object {$_.status.status -eq "rented" -or $_.status.rented} | Select-Object -ExpandProperty rental_id)
     
     if ($RentalIDs) {
         $Rental_Result = Invoke-MiningRigRentalRequest "/rental/$($RentalIDs -join ";")" $API_Key $API_Secret -method "GET" -Timeout 60
@@ -961,13 +968,13 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
     # 4. Auto create/update rigs
     #
 
-    $Pool_Request = [PSCustomObject]@{}
+    $Pool_Request = @(Get-MiningRigRentalAlgos | Where-Object {$_.name -ne "sha256"})
 
-    if ($Pool_Request = (Get-MiningRigRentalAlgos).Where({$_.name -ne "sha256"})) {
+    if ($Pool_Request.Count -gt 0) {
 
         $MaxAPICalls = 40
 
-        $RigGPUModels = $Session.Config.DeviceModel.Where({$_ -ne "CPU"})
+        $RigGPUModels = @($Session.Config.DeviceModel | Where-Object {$_ -ne "CPU"})
 
         $RigPools = [hashtable]@{}
         if ($AllRigs_Request) {
@@ -999,8 +1006,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 if (($RigRunMode -eq "create" -and $MRRConfig.$RigName.EnableAutoCreate) -or ($RigRunMode -eq "update" -and $MRRConfig.$RigName.EnableAutoUpdate)) {
                     try {
                         $RigModels           = @($Session.Config.Devices.PSObject.Properties | Where-Object {$_.Value.Worker -eq $RigName} | Foreach-Object {$_.Name} | Select-Object -Unique)
-                        $RigDevice           = $Global:DeviceCache.Devices.Where({($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
-                        $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice.Foreach("Name") | Sort-Object -Unique) -join "-")"
+                        $RigDevice           = @($Global:DeviceCache.Devices | Where-Object {($_.Model -notmatch "-" -and (($RigName -eq $Worker -and $_.Type -eq "Gpu") -or ($RigName -ne $Worker -and $_.Model -in $RigModels)))})
+                        $RigDeviceStat       = Get-Stat -Name "Profit-$(@($RigDevice.Name | Sort-Object -Unique) -join "-")"
                         $RigDeviceRevenue24h = $RigDeviceStat."$($MRRConfig.$RigName.ProfitAverageTime)"
                         $RigDevicePowerDraw  = $RigDeviceStat.PowerDraw_Average
 
@@ -1014,8 +1021,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             $RigDeviceRam = [Math]::Round($RigDeviceRam,3)
                         }
 
-                        if (-not $API.MinersNeedingBenchmark) {$CurrentlyBenchmarking = @()}
-                        else {$CurrentlyBenchmarking = @($API.MinersNeedingBenchmark | Foreach-Object {[PSCustomObject]@{Algorithm="$($_.HashRates.PSObject.Properties.Name | Select-Object -First 1)" -replace "-$($_.DeviceModel)";DeviceModel=$_.DeviceModel}} | Where-Object {$_.Algorithm -notmatch "-"} | Group-Object -Property Algorithm,DeviceModel | Foreach-Object {$_.Group | Select-Object -First 1})}
+                        if (-not $MinersNeedingBenchmark) {$CurrentlyBenchmarking = @()}
+                        else {$CurrentlyBenchmarking = @($MinersNeedingBenchmark | Foreach-Object {[PSCustomObject]@{Algorithm="$($_.HashRates.PSObject.Properties.Name | Select-Object -First 1)" -replace "-$($_.DeviceModel)";DeviceModel=$_.DeviceModel}} | Where-Object {$_.Algorithm -notmatch "-"} | Group-Object -Property Algorithm,DeviceModel | Foreach-Object {$_.Group | Select-Object -First 1})}
 
                         if ($MRRConfig.$RigName.AutoCreateMinProfitBTC -lt 0) {
                             $MRRConfig.$RigName.AutoCreateMinProfitBTC = if ($RigType -eq "CPU") {$MRRConfig.$RigName.AutoCreateMinCPUProfitBTC} else {0}
@@ -1032,7 +1039,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                         if ($RigDeviceRevenue24h -and $RigDeviceStat.Duration) {
                             if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
                             $RigModels         = @($RigDevice.Foreach("Model") | Sort-Object -Unique)
-                            $RigAlreadyCreated = @($UniqueRigs_Request.Where({$_.description -match "\[$RigName\]"}))
+                            $RigAlreadyCreated = @($UniqueRigs_Request | Where-Object {$_.description -match "\[$RigName\]"})
                             $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
                             $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
 
@@ -1047,7 +1054,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             $DeviceAlgorithm        = @($RigModels | Where-Object {$Session.Config.Devices.$_.Algorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.Algorithm} | Select-Object -Unique)
                             $DeviceExcludeAlgorithm = @($RigModels | Where-Object {$Session.Config.Devices.$_.ExcludeAlgorithm.Count} | Foreach-Object {$Session.Config.Devices.$_.ExcludeAlgorithm} | Select-Object -Unique)
 
-                            $Pool_Request.Where({($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)}).Foreach({
+                            $Pool_Request | Where-Object {($RigRunMode -eq "create" -and $RigAlreadyCreated.type -notcontains $_.name) -or ($RigRunMode -eq "update" -and $RigAlreadyCreated.type -contains $_.name)} | Foreach-Object {
 
                                 $RigMRRid     = $_.name
 
@@ -1068,23 +1075,25 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         ($Session.Config.Pools.$Name.ExcludeAlgorithm.Count -and $Session.Config.Pools.$Name.ExcludeAlgorithm -icontains $Algorithm_Norm) -or
                                         ($DeviceAlgorithm.Count -and $DeviceAlgorithm -inotcontains $Algorithm_Norm) -or
                                         ($DeviceExcludeAlgorithm.Count -and $DeviceExcludeAlgorithm -icontains $Algorithm_Norm)
-                                    ) -and (-not $CurrentlyBenchmarking.Count -or -not $CurrentlyBenchmarking.Where({$_.Algorithm -eq $Algorithm_Norm -and $RigModels -contains $_.DeviceModel}).Count)) {
+                                    ) -and (-not $CurrentlyBenchmarking.Count -or -not ($CurrentlyBenchmarking | Where-Object {$_.Algorithm -eq $Algorithm_Norm -and $RigModels -contains $_.DeviceModel}))) {
                                     foreach ($Model in $RigModels) {
                                         $RigPowerAdd   = 0
                                         $RigSpeedAdd   = 0
                                         $RigRevenueAdd = 0
                                         $RigIsMRRPool  = $false
-                                        $Global:ActiveMiners.Where({$_.Enabled -and $_.Speed -ne $null -and "$($_.BaseAlgorithm[0])" -eq $Algorithm_Norm -and $_.DeviceModel -eq $Model -and (-not $_.ExcludePoolName -or $_.ExcludePoolName -notmatch $Name)}).Foreach({
-                                            $ThisSpeed = $_.Speed[0] * (1 - $_.DevFee."$($_.Algorithm[0])" / 100)
-                                            if ($ThisSpeed -gt $RigSpeedAdd) {
-                                                $RigIsMRRPool  = $_.Pool -contains "MiningRigRentals"
-                                                $ThisProfit    = if ($RigIsMRRPool) {$SuggestedPrice * $ThisSpeed} else {$_.Profit}
-                                                $RigPowerAdd   = $_.PowerDraw
-                                                $RigSpeedAdd   = $ThisSpeed
-                                                $RigRevenueAdd = $ThisProfit + $(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})
+                                        foreach ( $Miner in $Global:ActiveMiners ) {
+                                            if ($Miner.Enabled -and $Miner.Speed -ne $null -and "$($Miner.BaseAlgorithm[0])" -eq $Algorithm_Norm -and $Miner.DeviceModel -eq $Model -and (-not $Miner.ExcludePoolName -or $Miner.ExcludePoolName -notmatch $Name)) {
+                                                $ThisSpeed = $Miner.Speed[0] * (1 - $Miner.DevFee."$($Miner.Algorithm[0])" / 100)
+                                                if ($ThisSpeed -gt $RigSpeedAdd) {
+                                                    $RigIsMRRPool  = $Miner.Pool -contains "MiningRigRentals"
+                                                    $ThisProfit    = if ($RigIsMRRPool) {$SuggestedPrice * $ThisSpeed} else {$Miner.Profit}
+                                                    $RigPowerAdd   = $Miner.PowerDraw
+                                                    $RigSpeedAdd   = $ThisSpeed
+                                                    $RigRevenueAdd = $ThisProfit + $(if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {$Miner.Profit_Cost})
 
+                                                }
                                             }
-                                        })
+                                        }
                                         $RigPower   += $RigPowerAdd
                                         $RigSpeed   += $RigSpeedAdd
                                         $RigRevenue += $RigRevenueAdd
@@ -1102,9 +1111,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                         } else {
                                             $RigPower   = $RigDevicePowerDraw
                                             $RigRevenue = 0
-                                            $RigAlreadyCreated.Where({$_.type -eq $RigMRRid -and $_.price.BTC.autoprice}).Foreach({
-                                                $RigSpeed = [double]$_.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($_.hashrate.advertised.type)")
-                                            })
+                                            foreach ( $cRig in $RigAlreadyCreated ) {
+                                                if ($cRig.type -eq $RigMRRid -and $cRig.price.BTC.autoprice) {
+                                                    $RigSpeed = [double]$cRig.hashrate.advertised.hash * $(ConvertFrom-Hash "1$($cRig.hashrate.advertised.type)")
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -1200,7 +1211,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                             $RigGroupId = if ($Session.MRRRigGroups.$RigGroupName) {[int]$Session.MRRRigGroups.$RigGroupName} else {0}
                                     
-                                            if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + $Session.Config.DefaultPoolRegion.Where({$_ -ne $Session.Config.Region}) | Select-Object)}
+                                            if (-not $RigServer) {$RigServer = Get-MiningRigRentalServers -Region @(@($Session.Config.Region) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -ne $Session.Config.Region}) | Select-Object)}
                                             $CreateRig = if ($RigRunMode -eq "create") {
                                                 @{
                                                     type          = $RigMRRid
@@ -1324,7 +1335,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                             } elseif ($RigRunMode -eq "update") {
 
-                                                $RigAlreadyCreated.Where({$_.type -eq $RigMRRid}).Foreach({
+                                                $RigAlreadyCreated | Where-Object {$_.type -eq $RigMRRid} | Foreach-Object {
 
                                                     $RigPools_Id = [int]$_.id
 
@@ -1421,12 +1432,12 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                                             #}
                                                         }
                                                     }
-                                                })
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            })
+                            }
                         }
                     } catch {
                         Write-Log -Level Warn "$($Name): Unable to $($RigRunMode) rigs for $($RigName): $($_.Exception.Message)"
@@ -1512,42 +1523,44 @@ if ($EnableAutoBenchmark -and $Global:AllPools) {
 
         $InactiveNicehashAlgorithms = @($Pool_Request_Nicehash.miningAlgorithms | Where-Object {[double]$_.paying -le 0 -or [double]$_.speed -le 0} | ForEach-Object {Get-Algorithm $_.algorithm} | Select-Object)
        
-        $ActiveAlgorithms = @($Global:AllPools.Where({$_.Name -ne "MiningRigRentals" -and $_.Algorithm0}).Foreach("Algorithm0") | Select-Object -Unique)
+        $ActiveAlgorithms = @($Global:AllPools | Where-Object {$_.Name -ne "MiningRigRentals" -and $_.Algorithm0} | Select-Object -ExpandProperty Algorithm0 -Unique)
 
-        $PoolsData.Where({$_.Algorithm -notin $ActiveAlgorithms -and ($_.Pool -ne "Nicehash" -or $_.Algorithm -notin $InactiveNicehashAlgorithms)}).Foreach({
-            [PSCustomObject]@{
-                Algorithm     = $_.Algorithm
-			    Algorithm0    = $_.Algorithm
-                CoinName      = $_.CoinName
-                CoinSymbol    = $_.CoinSymbol
-                Currency      = $_.Currency
-                Price         = 1E-100
-                StablePrice   = 1E-100
-                MarginOfError = 0
-                Protocol      = $_.Protocol
-                Host          = $_.Host
-                Port          = $_.Port
-                User          = $_.User
-                Pass          = $_.Pass
-                Region        = $_.Region
-                SSL           = $_.SSL
-                SSLSelfSigned = $_.SSLSelfSigned
-                BenchmarkOnly = $true
-                Updated       = (Get-Date).ToUniversalTime()
-                PoolFee       = 0
-                EthMode       = $_.EthMode
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-			    Disabled      = $false
-			    HasMinerExclusions = $false
-                Price_0       = 0.0
-			    Price_Bias    = 0.0
-			    Price_Unbias  = 0.0
-                Wallet        = $_.Wallet
-                Worker        = $_.Worker
-                Email         = ""
+        foreach ( $Pool in $PoolsData ) {
+            if ($Pool.Algorithm -notin $ActiveAlgorithms -and ($Pool.Pool -ne "Nicehash" -or $Pool.Algorithm -notin $InactiveNicehashAlgorithms)) {
+                [PSCustomObject]@{
+                    Algorithm     = $Pool.Algorithm
+			        Algorithm0    = $Pool.Algorithm
+                    CoinName      = $Pool.CoinName
+                    CoinSymbol    = $Pool.CoinSymbol
+                    Currency      = $Pool.Currency
+                    Price         = 1E-100
+                    StablePrice   = 1E-100
+                    MarginOfError = 0
+                    Protocol      = $Pool.Protocol
+                    Host          = $Pool.Host
+                    Port          = $Pool.Port
+                    User          = $Pool.User
+                    Pass          = $Pool.Pass
+                    Region        = $Pool.Region
+                    SSL           = $Pool.SSL
+                    SSLSelfSigned = $Pool.SSLSelfSigned
+                    BenchmarkOnly = $true
+                    Updated       = (Get-Date).ToUniversalTime()
+                    PoolFee       = 0
+                    EthMode       = $Pool.EthMode
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+			        Disabled      = $false
+			        HasMinerExclusions = $false
+                    Price_0       = 0.0
+			        Price_Bias    = 0.0
+			        Price_Unbias  = 0.0
+                    Wallet        = $Pool.Wallet
+                    Worker        = $Pool.Worker
+                    Email         = ""
+                }
             }
-        })
+        }
     }
 }
