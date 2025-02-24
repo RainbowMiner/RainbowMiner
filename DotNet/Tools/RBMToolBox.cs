@@ -702,51 +702,116 @@ public static class RBMToolBox
 
     // 9. Math functions
 #if NETCOREAPP3_0_OR_GREATER
+    // Round
     public static double Round(double value, int digits) => Math.Round(value, digits);
+    public static decimal Round(decimal value, int digits) => Math.Round(value, digits);
+
+    // Min
     public static double Min(double a, double b) => Math.Min(a, b);
+    public static decimal Min(decimal a, decimal b) => Math.Min(a, b);
+
+    // Max
     public static double Max(double a, double b) => Math.Max(a, b);
+    public static decimal Max(decimal a, decimal b) => Math.Max(a, b);
+
+    // Abs
     public static double Abs(double value) => Math.Abs(value);
+    public static decimal Abs(decimal value) => Math.Abs(value);
+
+    // Pow
     public static double Pow(double a, double b) => Math.Pow(a, b);
+    public static decimal Pow(decimal a, decimal b) => (decimal)Math.Pow((double)a, (double)b);
+
+    // Log (Natural and Base)
     public static double Log(double value) => Math.Log(value);
+    public static double Log(double value, double baseValue) => Math.Log(value) / Math.Log(baseValue);
+    public static decimal Log(decimal value) => (decimal)Math.Log((double)value);
+    public static decimal Log(decimal value, decimal baseValue) => (decimal)(Math.Log((double)value) / Math.Log((double)baseValue));
+
+    // Exp (Exponent)
+    public static double Exp(double value) => Math.Exp(value);
+    public static decimal Exp(decimal value) => (decimal)Math.Exp((double)value);
+
+    // Truncate
+    public static double Truncate(double value) => Math.Truncate(value);
+    public static decimal Truncate(decimal value) => Math.Truncate(value);
+
+    // Log10 (Base 10 logarithm)
+    public static double Log10(double value) => Math.Log10(value);
+    public static decimal Log10(decimal value) => (decimal)Math.Log10((double)value);
+
+    // Sqrt (Square Root)
+    public static double Sqrt(double value) => Math.Sqrt(value);
+    public static decimal Sqrt(decimal value) => (decimal)Math.Sqrt((double)value);
+
+    // Sign
+    public static int Sign(double value) => Math.Sign(value);
+    public static int Sign(decimal value) => Math.Sign(value);
+
+    // Ceiling
+    public static double Ceiling(double value) => Math.Ceiling(value);
+    public static decimal Ceiling(decimal value) => Math.Ceiling(value);
+
+    // Floor
     public static double Floor(double value) => Math.Floor(value);
+    public static decimal Floor(decimal value) => Math.Floor(value);
 #else
-    public static double Round(double value, int digits)
-    {
-        return Math.Round(value, digits, MidpointRounding.AwayFromZero);
-    }
+    // Round
+    public static double Round(double value, int digits) { return Math.Round(value, digits); }
+    public static decimal Round(decimal value, int digits) { return Math.Round(value, digits); }
 
-    public static double Min(double a, double b)
-    {
-        return a < b ? a : b;
-    }
+    // Min
+    public static double Min(double a, double b) { return Math.Min(a, b); }
+    public static decimal Min(decimal a, decimal b) { return Math.Min(a, b); }
 
-    public static double Max(double a, double b)
-    {
-        return a > b ? a : b;
-    }
+    // Max
+    public static double Max(double a, double b) { return Math.Max(a, b); }
+    public static decimal Max(decimal a, decimal b) { return Math.Max(a, b); }
 
-    public static double Abs(double value)
-    {
-        return (value < 0) ? -value : value;
-    }
+    // Abs
+    public static double Abs(double value) { return Math.Abs(value); }
+    public static decimal Abs(decimal value) { return Math.Abs(value); }
 
-    public static double Pow(double a, double b)
-    {
-        return Math.Pow(a, b);
-    }
+    // Pow
+    public static double Pow(double a, double b) { return Math.Pow(a, b); }
+    public static decimal Pow(decimal a, decimal b) { return (decimal)Math.Pow((double)a, (double)b); }
 
-    public static double Log(double value)
-    {
-        return (value > 0) ? Math.Log(value) : double.NaN;
-    }
+    // Log (Natural and Base)
+    public static double Log(double value) { return Math.Log(value); }
+    public static double Log(double value, double baseValue) { return Math.Log(value) / Math.Log(baseValue); }
+    public static decimal Log(decimal value) { return (decimal)Math.Log((double)value); }
+    public static decimal Log(decimal value, decimal baseValue) { return (decimal)(Math.Log((double)value) / Math.Log((double)baseValue)); }
 
-    public static double Floor(double value)
-    {
-        return Math.Floor(value);
-    }
+    // Exp (Exponent)
+    public static double Exp(double value) { return Math.Exp(value); }
+    public static decimal Exp(decimal value) { return (decimal)Math.Exp((double)value); }
+
+    // Truncate
+    public static double Truncate(double value) { return Math.Truncate(value); }
+    public static decimal Truncate(decimal value) { return Math.Truncate(value); }
+
+    // Log10 (Base 10 logarithm)
+    public static double Log10(double value) { return Math.Log10(value); }
+    public static decimal Log10(decimal value) { return (decimal)Math.Log10((double)value); }
+
+    // Sqrt (Square Root)
+    public static double Sqrt(double value) { return Math.Sqrt(value); }
+    public static decimal Sqrt(decimal value) { return (decimal)Math.Sqrt((double)value); }
+
+    // Sign
+    public static int Sign(double value) { return Math.Sign(value); }
+    public static int Sign(decimal value) { return Math.Sign(value); }
+
+    // Ceiling
+    public static double Ceiling(double value) { return Math.Ceiling(value); }
+    public static decimal Ceiling(decimal value) { return Math.Ceiling(value); }
+
+    // Floor
+    public static double Floor(double value) { return Math.Floor(value); }
+    public static decimal Floor(decimal value) { return Math.Floor(value); }
 #endif
 
-    private static object[] ConvertToValueTypeOrStringArray(object obj)
+private static object[] ConvertToValueTypeOrStringArray(object obj)
     {
 #if NETCOREAPP3_0_OR_GREATER
         // If it's already an array, convert it manually to an object array
