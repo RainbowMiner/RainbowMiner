@@ -67,9 +67,12 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
     $Pool_CoinSymbol = $_
     $Pool_CoinName   = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_Algorithm  = $PoolCoins_Request.$Pool_CoinSymbol.algo
-    $Pool_Host       = "$($Pool_Algorithm).mine.zergpool.com"
-    $Pool_PoolFee    = if ($Pool_Request.$Pool_Algorithm) {[Math]::Min($Pool_Fee,$Pool_Request.$Pool_Algorithm.fees)} else {$Pool_Fee}
+    $Pool_Host       = "$($Pool_Algorithm).mine.zergpool.com"    
     $Pool_Currency   = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
+    $Pool_PoolFee    = $Pool_Fee
+    if ($Pool_Request.$Pool_Algorithm -and $Pool_Request.$Pool_Algorithm.fees -lt $Pool_PoolFee) {
+        $Pool_PoolFee = $Pool_Request.$Pool_Algorithm.fees
+    }
 
     if ($Pool_Algorithm -in @("ethash","kawpow")) {
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol

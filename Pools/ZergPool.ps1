@@ -86,7 +86,9 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
     $Pool_Host       = "$($Pool_Algorithm).mine.zergpool.com"
     $Pool_CoinName   = $Pool_Coins.$Pool_Algorithm.Name
     $Pool_CoinSymbol = $Pool_Coins.$Pool_Algorithm.Symbol
-    $Pool_PoolFee    = [Math]::Min($Pool_Fee,[Double]$Pool_Request.$_.fees)
+    if ($Pool_Fee -lt $Pool_PoolFee) {
+        $Pool_PoolFee = $Pool_Fee
+    }
 
     if ($Pool_CoinName -and -not $Pool_CoinSymbol) {$Pool_CoinSymbol = Get-CoinSymbol $Pool_CoinName}
 

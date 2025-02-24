@@ -76,7 +76,7 @@ $Pool_Request.coins | Where-Object {$Wallets."$($_.name)" -or $InfoOnly} | ForEa
             Write-Log -Level Warn "Pool $($Name): Stats API for $($Pool_Currency) has failed. "
         }
 
-        $difficulty = ($PoolStats_Request.nodes | Where-Object name -eq "main").difficulty / [Math]::Pow(2,32)
+        $difficulty = ($PoolStats_Request.nodes | Where-Object name -eq "main").difficulty / 4294967296 #2^32
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Difficulty $difficulty -Quiet
     }

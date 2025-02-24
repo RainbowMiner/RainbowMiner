@@ -86,7 +86,9 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
     $Pool_Host       = "$($Pool_Algorithm).mine.zergpool.com"
     $Pool_CoinName   = $Pool_Coins.$Pool_Algorithm.Name
     $Pool_CoinSymbol = $Pool_Coins.$Pool_Algorithm.Symbol
-    $Pool_PoolFee    = [Math]::Min($Pool_Fee,[Double]$Pool_Request.$_.fees)
+    if ($Pool_Fee -lt $Pool_PoolFee) {
+        $Pool_PoolFee = $Pool_Fee
+    }
 
     if ($Pool_CoinName -and -not $Pool_CoinSymbol) {$Pool_CoinSymbol = Get-CoinSymbol $Pool_CoinName}
 
@@ -111,9 +113,9 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
 
     $Pool_Diff = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Foreach-Object {
         if ([double]$_.network_hashrate -gt [double]$_.hashrate -or [int]$_."24h_blocks" -eq 0) {
-            [double]$_.network_hashrate * $_.blocktime / [Math]::Pow(2,32)
+            [double]$_.network_hashrate * $_.blocktime / 4294967296 #2^32
         } else {
-            [double]$_.hashrate * 86400 / $_."24h_blocks" / [Math]::Pow(2,32)
+            [double]$_.hashrate * 86400 / $_."24h_blocks" / 4294967296 #2^32
         }
     } | Measure-Object -Average).Average
 

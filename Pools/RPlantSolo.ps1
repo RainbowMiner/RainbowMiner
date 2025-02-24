@@ -54,7 +54,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {$_.info.solo -and (
     $Pool_Profit         = 0
 
     if (-not $InfoOnly) {
-        $Pool_Profit = if ($_.marketStats.btc -and $_.d) {86400 / [Math]::Pow(2,32) / $_.d * $_.r * $_.marketStats.btc} else {0}
+        $Pool_Profit = if ($_.marketStats.btc -and $_.d) {86400 / 4294967296 / $_.d * $_.r * $_.marketStats.btc} else {0}
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CurrencyXlat)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -Difficulty $_.d -Quiet
     }
 

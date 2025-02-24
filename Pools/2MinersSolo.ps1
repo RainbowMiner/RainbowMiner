@@ -124,7 +124,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
         $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
         $node           = $Pool_Request.nodes | Select-Object -First 1
-        $difficulty     = [double]$node.networkhashps * $node.avgBlockTime / [Math]::Pow(2,32)
+        $difficulty     = [double]$node.networkhashps * $node.avgBlockTime / 4294967296 #2^32
 
         if ($_.cycles) {
             $addName         = $Pool_Algorithm_Norm -replace "[^\d]"

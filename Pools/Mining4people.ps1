@@ -76,7 +76,7 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF" -and ($Wallets."$($_.coin
 
     if (-not $InfoOnly) {
         $hashrate      = $_.poolHashrate
-        $avgTime       = if ($_.poolHashrate -gt 0) {$Pool_CoinRequest.networkStats.networkDifficulty * [Math]::Pow(2,32) / $hashrate} else {0}
+        $avgTime       = if ($_.poolHashrate -gt 0) {$Pool_CoinRequest.networkStats.networkDifficulty * 4294967296 / $hashrate} else {0}
         $Pool_BLK      = [int]$(if ($avgTime -gt 0) {86400/$avgTime})
         $lastBlocktime = if ($Pool_CoinRequest.lastPoolBlockTime) {([datetime]$Pool_CoinRequest.lastPoolBlockTime).ToUniversalTime()} else {[datetime]"1970-01-01T00:00:00"}
         $Pool_TSL      = ((Get-Date).ToUniversalTime() - $lastBlocktime).TotalSeconds - [int]$Session.TimeDiff

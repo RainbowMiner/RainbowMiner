@@ -65,7 +65,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
 
     $Pool_EthProxy  = if ($Pool_Algorithm_Norm -match $Global:RegexAlgoHasEthproxy) {"qtminer"} else {$null}
 
-    $Pool_Diff = [double]$Pools_Request.$Pool_RpcPath.netHashrate * $Pools_Request.$Pool_RpcPath.blockTime / [Math]::Pow(2,32)
+    $Pool_Diff = [double]$Pools_Request.$Pool_RpcPath.netHashrate * $Pools_Request.$Pool_RpcPath.blockTime / 4294967296 #2^32
 
     $Pool_Request = [PSCustomObject]@{}
 

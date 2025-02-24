@@ -69,8 +69,11 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
     $Pool_CoinName   = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_Algorithm  = $PoolCoins_Request.$Pool_CoinSymbol.algo
     $Pool_Host       = "$($Pool_Algorithm).mine.zergpool.com"
-    $Pool_PoolFee    = if ($Pool_Request.$Pool_Algorithm) {[Math]::Min($Pool_Fee,$Pool_Request.$Pool_Algorithm.fees)} else {$Pool_Fee}
     $Pool_Currency   = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
+    $Pool_PoolFee    = $Pool_Fee
+    if ($Pool_Request.$Pool_Algorithm -and $Pool_Request.$Pool_Algorithm.fees -lt $Pool_PoolFee) {
+        $Pool_PoolFee = $Pool_Request.$Pool_Algorithm.fees
+    }
 
     if ($Pool_Algorithm -in @("ethash","kawpow")) {
         $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm -CoinSymbol $Pool_CoinSymbol
@@ -91,9 +94,9 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$PoolCoins_Request.$
     }
 
     $Pool_Diff = if ([double]$PoolCoins_Request.$Pool_CoinSymbol.network_hashrate -gt [double]$PoolCoins_Request.$Pool_CoinSymbol.hashrate -or [int]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -eq 0) {
-        [double]$PoolCoins_Request.$Pool_CoinSymbol.network_hashrate * $PoolCoins_Request.$Pool_CoinSymbol.blocktime / [Math]::Pow(2,32)
+        [double]$PoolCoins_Request.$Pool_CoinSymbol.network_hashrate * $PoolCoins_Request.$Pool_CoinSymbol.blocktime / 4294967296 #2^32
     } else {
-        [double]$PoolCoins_Request.$Pool_CoinSymbol.hashrate * 86400 / $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" / [Math]::Pow(2,32)
+        [double]$PoolCoins_Request.$Pool_CoinSymbol.hashrate * 86400 / $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" / 4294967296 #2^32
     }
 
     if (-not $InfoOnly) {
