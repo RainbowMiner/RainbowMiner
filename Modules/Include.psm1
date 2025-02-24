@@ -548,18 +548,38 @@ Function Write-Log {
                 }
 
         if (-not $NoLog) {
-            # Get mutex named RBMWriteLog. Mutexes are shared across all threads and processes.
-            # This lets us ensure only one thread is trying to write to the file at a time.
-            $mutex = New-Object System.Threading.Mutex($false, "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)")
-            # Attempt to aquire mutex, waiting up to 2 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
-            if ($mutex.WaitOne(2000)) {
-                #$proc = Get-Process -id $PID
-                #Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
-                "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $LevelText $Message" | Out-File $filename -Append -Encoding utf8
-                $mutex.ReleaseMutex()
+            if ($Session.Debug) {
+                $grow = Test-CacheGrow -Name @("Where","min","ContainsKey","Substring","Foreach","Append","Contains","split","Replace","Pow","Insert","IndexOf","(Log","Floor","EndsWith","IsNullOrEmpty","IsNullOrWhiteSpace")
+                $grow_out = @()
+                foreach ( $item in $grow ) {
+                    $grow_out += "$($item.Name) $(if ($item.Diff -ge 0) {"+"})$($item.Diff)"
+                }
+                if ($grow_out.Count) {
+                    $Message += " " + ($grow_out -join ", ")
+                }
             }
-            else {
-                Write-Error -Message "Log file is locked, unable to write message to $FileName."
+            # Generate a unique mutex name for the log directory
+            $mutexName = "RBM" + (Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)
+            $mutex = [System.Threading.Mutex]::new($false, $mutexName)
+            try {
+                # Attempt to acquire the mutex, waiting up to 2 seconds
+                if ($mutex.WaitOne(2000)) {
+                    try {
+                        "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $LevelText $Message" | Out-File $filename -Append -Encoding utf8
+                    }
+                    finally {
+                        $mutex.ReleaseMutex()
+                    }
+                }
+                else {
+                    Write-Error "Log file is locked, unable to write message to $FileName."
+                }
+            }
+            catch {
+                Write-Error "Error acquiring mutex: $($_.Exception.Message)"
+            }
+            finally {
+                $mutex.Dispose()
             }
         }
     }
@@ -8905,6 +8925,68 @@ function Test-IsCore
 function Test-IsPS7
 {
     $Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))
+}
+
+function Test-CacheGrow {
+    [CmdletBinding()]
+    param(
+      [Parameter(Mandatory = $False)]
+      [String]$Title = "",
+      [Parameter(Mandatory = $False)]
+      [String[]]$Name = @("Where")
+    )
+
+    if ($Session.Debug -and $Title -ne "") {
+        Write-Log $Title
+        return
+    }
+
+    if ($Global:CacheCount -eq $null) {
+        $Global:CacheCount = @{}
+    }
+
+    $bindingType = [System.Management.Automation.PSObject].Assembly.GetType("System.Management.Automation.Language.PSInvokeMemberBinder")
+    if ($bindingType) {
+        $cacheField = $bindingType.GetField("s_binderCache", [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Static)
+        if ($cacheField) {
+            $cache = $cacheField.GetValue($null)
+            if ($cache) {
+                $currentCount = @{}
+                foreach ($key in $cache.Keys) {
+                    $cacheName = $cache[$key].Name
+                    if ($cacheName -in $Name) {
+                        if ($currentCount.ContainsKey($cacheName)) {
+                            $currentCount[$cacheName]++
+                        } else {
+                            $currentCount[$cacheName]=1
+                        }
+                    }
+                }
+
+                foreach ($key in $currentCount.Keys) {
+                    if ( $Global:CacheCount.ContainsKey($Key) ) {
+                        if ( $currentCount[$key] -gt $Global:CacheCount[$key] ) {
+                            $diff = $currentCount[$key] - $Global:CacheCount[$key]
+                            if ($Title -ne "") {
+                                if (-not $Session.Debug) {
+                                    Write-Log "$($Title) CACHE $($key) increased $(if ($diff -ge 0) {"+"})$($diff)"
+                                }
+                            } else {
+                                [PSCustomObject]@{
+                                    Name = $key
+                                    Count = $currentCount[$key]
+                                    OldCount = $Global:CacheCount[$key]
+                                    Diff = $diff
+                                }
+                            }
+                        }
+                    } else {
+                        $Global:CacheCount[$key] = $currentCount[$key]
+                    }
+                }
+            }
+        }
+    }
 }
 
 function Initialize-DLLs {

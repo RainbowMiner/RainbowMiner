@@ -2635,57 +2635,97 @@ function Invoke-Core {
 
     $AllMiners = $null
     if ($NewPools.Count -and (Test-Path "Miners")) {
+
         $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} |
-            Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Global:DeviceCache.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
-            Where-Object {$Miner_DontCheckForUnprofitableCpuAlgos -or ($_.DeviceModel -ne "CPU") -or ($_.BaseAlgorithm -notin $UnprofitableCpuAlgos)} |
-            Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
-            Where-Object {-not (Compare-Object $Global:DeviceCache.DevicesNames $_.DeviceName | Where-Object SideIndicator -EQ "=>")} |
-            Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)".Disable} |
-            Where-Object {$Miner_Name = $_.BaseName
-                            -not ($_.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
-                                $Pool_Name = $Pools.$_.Name
-                                ($Session.Config.Pools.$Pool_Name.MinerName.Count -and $Session.Config.Pools.$Pool_Name.MinerName -inotcontains $Miner_Name) -or
-                                ($Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -icontains $Miner_Name)
-                            })
-            } |
-            Where-Object {
-                $MinerOk = $true
-                $BaseAlgo = $_.BaseAlgorithm -split '-'
-                if ($Global:AlgorithmMinerName.Count) {
-                    foreach ($p in @($BaseAlgo)) {
-                        if (
-                                ($Global:AlgorithmMinerName.Contains($p)) -and (
-                                    ($Session.Config.Algorithms.$p.MinerName.Count -and ($Session.Config.Algorithms.$p.MinerName -notcontains $_.BaseName)) -or
-                                    ($Session.Config.Algorithms.$p.ExcludeMinerName.Count -and ($Session.Config.Algorithms.$p.ExcludeMinerName -contains $_.BaseName))
-                                )
-                        ) {
-                            $MinerOk = $false
-                            break
-                        }
-                    }
-                }
-                if ($MinerOk) {
-                    foreach ($p in @($_.DeviceModel -split '-')) {
-                        if ($Session.Config.Miners."$($_.BaseName)-$($p)-$($_.BaseAlgorithm)".Disable -or 
-                            $Session.Config.Devices.$p -and
-                            (
-                                ($Session.Config.Devices.$p.DisableDualMining -and $_.HashRates.PSObject.Properties.Name.Count -gt 1) -or
-                                ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and -not [RBMToolBox]::IsIntersect($Session.Config.Devices.$p.Algorithm,$BaseAlgo)) -or
-                                ($Session.Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and [RBMToolBox]::IsIntersect($Session.Config.Devices.$p.ExcludeAlgorithm,$BaseAlgo)) -or
-                                ($Session.Config.Devices.$p.MinerName.Count -gt 0 -and ($Session.Config.Devices.$p.MinerName -inotcontains $_.Basename)) -or
-                                ($Session.Config.Devices.$p.ExcludeMinerName.Count -gt 0 -and ($Session.Config.Devices.$p.ExcludeMinerName -icontains $_.Basename))
-                            )
-                        ) {
-                            $MinerOk=$false
-                            break
-                        }
-                    }
-                }
-                $MinerOk
-            } | Foreach-Object {
-                [void]$AllMiners.Add($_)
+        $MinersContent = Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false}
+
+        foreach ($Miner in $MinersContent) {
+
+            $Miner_Name = $Miner.BaseName
+
+            # Skip miners with missing DeviceName or mismatched DeviceModel
+            if (-not $Miner.DeviceName -or ($Miner.DeviceModel -match '-' -and (Compare-Object $Miner.DeviceName $Global:DeviceCache.DeviceNames."$($Miner.DeviceModel)"))) {
+                continue
             }
+
+            # Skip unprofitable CPU algorithms
+            if (-not $Miner_DontCheckForUnprofitableCpuAlgos -and $Miner.DeviceModel -eq "CPU" -and $Miner.BaseAlgorithm -in $UnprofitableCpuAlgos) {
+                continue
+            }
+
+            # Skip dual algo miners if disabled
+            if ($Session.Config.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) {
+                continue
+            }
+
+            # Skip miners missing required devices
+            if (Compare-Object $Global:DeviceCache.DevicesNames $Miner.DeviceName | Where-Object SideIndicator -EQ "=>") {
+                continue
+            }
+
+            # Skip disabled miners
+            if ($Session.Config.Miners."$($Miner_Name)-$($Miner.DeviceModel)-$($Miner.BaseAlgorithm)".Disable) {
+                continue
+            }
+
+            # Skip miners excluded by pools
+            $ExcludeMiner = $false
+            foreach ($Algo in $Miner.HashRates.PSObject.Properties.Name) {
+                if ($Pools.$Algo.HasMinerExclusions) {
+                    $Pool_Name = $Pools.$Algo.Name
+                    if (($Session.Config.Pools.$Pool_Name.MinerName.Count -and $Session.Config.Pools.$Pool_Name.MinerName -notcontains $Miner_Name) -or
+                        ($Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -contains $Miner_Name)) {
+                        $ExcludeMiner = $true
+                        break
+                    }
+                }
+            }
+            if ($ExcludeMiner) {
+                continue
+            }
+
+            # Skip miners excluded by algorithm configurations
+            $BaseAlgos = $Miner.BaseAlgorithm -split '-'
+            $MinerOk = $true
+            if ($Global:AlgorithmMinerName.Count) {
+                foreach ($Algo in $BaseAlgos) {
+                    if ($Global:AlgorithmMinerName.Contains($Algo) -and (
+                        ($Session.Config.Algorithms.$Algo.MinerName.Count -and $Session.Config.Algorithms.$Algo.MinerName -notcontains $Miner_Name) -or
+                        ($Session.Config.Algorithms.$Algo.ExcludeMinerName.Count -and $Session.Config.Algorithms.$Algo.ExcludeMinerName -contains $Miner_Name))) {
+                        $MinerOk = $false
+                        break
+                    }
+                }
+            }
+            if (-not $MinerOk) {
+                continue
+            }
+
+            # Skip miners based on device model exclusions
+            foreach ($Device in $Miner.DeviceModel -split '-') {
+                if ($Session.Config.Miners."$($Miner_Name)-$Device-$($Miner.BaseAlgorithm)".Disable) {
+                    $MinerOk = $false
+                    break
+                }
+
+                if ($Session.Config.Devices.$Device) {
+                    $DeviceConfig = $Session.Config.Devices.$Device
+                    if (($DeviceConfig.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) -or
+                        ($DeviceConfig.Algorithm.Count -gt 0 -and -not [RBMToolBox]::IsIntersect($DeviceConfig.Algorithm, $BaseAlgos)) -or
+                        ($DeviceConfig.ExcludeAlgorithm.Count -gt 0 -and [RBMToolBox]::IsIntersect($DeviceConfig.ExcludeAlgorithm, $BaseAlgos)) -or
+                        ($DeviceConfig.MinerName.Count -gt 0 -and $DeviceConfig.MinerName -notcontains $Miner_Name) -or
+                        ($DeviceConfig.ExcludeMinerName.Count -gt 0 -and $DeviceConfig.ExcludeMinerName -contains $Miner_Name)) {
+                        $MinerOk = $false
+                        break
+                    }
+                }
+            }
+
+            if ($MinerOk) {
+                # Finally, add the miner to the list
+                [void]$AllMiners.Add($Miner)
+            }
+        }
     }
 
     if (-not $AllMiners) {
