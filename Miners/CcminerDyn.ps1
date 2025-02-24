@@ -41,9 +41,9 @@ if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersi
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
     $Miner_Model = $_.Model
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
-    $Commands.ForEach({
+    $Commands | ForEach-Object {
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -80,5 +80,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    })
+    }
 }

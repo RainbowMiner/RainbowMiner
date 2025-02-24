@@ -48,12 +48,12 @@ if ($InfoOnly) {
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
     $Miner_Model = $_.Model
-    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
     $Miner_PlatformId = $Miner_Device | Select-Object -ExpandProperty PlatformId -Unique
     if ($Miner_PlatformId -isnot [int]) {return}
 
-    $Commands.ForEach({
+    $Commands | Foreach-Object {
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -91,5 +91,5 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    })
+    }
 }

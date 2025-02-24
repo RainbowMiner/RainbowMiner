@@ -77,7 +77,7 @@ if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
 foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
 		switch($_.Vendor) {
 			"NVIDIA" {$Miner_Deviceparams = "--cu-devices"; $Miner_DeviceIndex = "Type_Vendor_Index"}
@@ -86,13 +86,13 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 			Default {$Miner_Deviceparams = "";$Miner_DeviceIndex = "Type_Index"}
 		}
 
-        $Commands.ForEach({
+        $Commands | ForEach-Object {
             $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
             $CoinSymbol = if ($Pools.$Algorithm_Norm_0.CoinSymbol) {$Pools.$Algorithm_Norm_0.CoinSymbol} else {"VTC"}
 
-            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
@@ -134,6 +134,6 @@ foreach ($Miner_Vendor in @("AMD","INTEL","NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

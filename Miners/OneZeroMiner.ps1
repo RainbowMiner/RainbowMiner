@@ -49,7 +49,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $First = $true
         $Miner_Model = $_.Model
-        $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+        $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
         $ZilParams = if ($Miner_Vendor -eq "NVIDIA" -and $Session.Config.Pools.CrazyPool.EnableOneZeroMinerDual -and $Pools.ZilliqaCP) {
             if ($ZilWallet = $Pools.ZilliqaCP.Wallet) {
@@ -59,7 +59,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         $DisableCommand = if ($Miner_Vendor -eq "NVIDIA") {"--disable-amd"} else {"--disable-nvidia"}
 
-        $Commands.Where({$Miner_Vendor -in $_.Vendor}).ForEach({
+        $Commands | Where-Object {$Miner_Vendor -in $_.Vendor} | ForEach-Object {
 
             $Algorithm_0 = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
             $Algorithm_Norm_0 = Get-Algorithm $Algorithm_0
@@ -98,6 +98,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

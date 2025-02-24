@@ -67,7 +67,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $First = $true
         $Miner_Model = $_.Model
-        $Miner_Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+        $Miner_Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
         $Device_Params = if (($Device_Ids | Measure-Object).Count -eq 1) {
             "-no-cpu -cpu-chips 0"
@@ -78,7 +78,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
         $Device_Type = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 
-        $Commands.ForEach({
+        $Commands | ForEach-Object {
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -117,6 +117,6 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

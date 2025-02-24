@@ -129,9 +129,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
 
             $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
@@ -141,7 +141,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             if ($_.CUDAArch -ne $null -and $_.Vendor -eq "NVIDIA") {
                 $CUDAArch = $CUDAArch_Types."$($_.CUDAArch)"
-                if (-not $Miner_Device.Where({$_.OpenCL.Architecture -in $CUDAArch})) {
+                if (-not ($Miner_Device | Where-Object {$_.OpenCL.Architecture -in $CUDAArch})) {
                     #no mining, if not at least one GPU is available
                     $Miner_Device = $null
                 }
@@ -157,7 +157,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGb -and $Session.Config.EnableEthashZombieMode) {
                     $MinMemGB = $_.MinMemGb
                 }
-                $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+                $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
                 if ($Miner_Device -and $Pools.$MainAlgorithm_Norm.Host -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
@@ -308,6 +308,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
                 }
             }
-        })
+        }
     }
 }

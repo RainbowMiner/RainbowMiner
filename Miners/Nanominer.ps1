@@ -88,9 +88,9 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {
 foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and ($Miner_Vendor -ne "CPU" -or -not $_.CPUFeatures -or ($Global:GlobalCPUInfo.Features -and -not (Compare-Object @($Global:GlobalCPUInfo.Features.Keys) $_.CPUFeatures | Where-Object SideIndicator -eq "=>" | Measure-Object).Count))}).ForEach({
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and ($Miner_Vendor -ne "CPU" -or -not $_.CPUFeatures -or ($Global:GlobalCPUInfo.Features -and -not (Compare-Object @($Global:GlobalCPUInfo.Features.Keys) $_.CPUFeatures | Where-Object SideIndicator -eq "=>" | Measure-Object).Count))} | ForEach-Object {
             $First = $true
 
             $MainAlgorithm_0   = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
@@ -116,7 +116,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 if ($_.ZombieMode -and -not $_.NoMemCalcCheck -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
                     $MinMemGB = $_.MinMemGB
                 }
-                $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (($MainAlgorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and ($Miner_Vendor -ne "NVIDIA" -or $Cuda11 -or $_.Model -notmatch "^RTX[345]0") -and (Test-VRAM $_ $MinMemGb))})
+                $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (($MainAlgorithm_Norm_0 -ne "Cuckaroo30" -or $_.Model -eq "RX57016GB") -and ($Miner_Vendor -ne "NVIDIA" -or $Cuda11 -or $_.Model -notmatch "^RTX[345]0") -and (Test-VRAM $_ $MinMemGb))}
 
                 if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.Coins -or ($Pools.$MainAlgorithm_Norm.CoinSymbol -and $_.Coins -icontains $Pools.$MainAlgorithm_Norm.CoinSymbol)) -and (-not $Pools.$MainAlgorithm_Norm.SSL -or -not $Pools.$MainAlgorithm_Norm.SSLSelfSigned)) {
                     if ($First) {
@@ -307,6 +307,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     }
                 }
             }
-        })
+        }
     }
 }

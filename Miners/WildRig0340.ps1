@@ -60,14 +60,14 @@ $WatchdogParams = "$(if ($Session.Config.RebootOnGPUFailure -and $Session.Config
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
         $DeviceParams = Switch ($Miner_Vendor) {
             "AMD"    {"--opencl-platforms amd"}
             "NVIDIA" {"--opencl-platforms nvidia"}
         }
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or (Compare-Version $Version $_.Version) -ge 0)}).ForEach({
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or (Compare-Version $Version $_.Version) -ge 0)} | ForEach-Object {
             $First = $True
 
             $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
@@ -77,7 +77,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
                 $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-                $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+                $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
                 $Params = "$($WatchdogParams)$(if ($Pools.$Algorithm_Norm.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm.CoinSymbol.ToLower()).bin "})$($_.Params)"
 
 			    if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols)) {
@@ -118,6 +118,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

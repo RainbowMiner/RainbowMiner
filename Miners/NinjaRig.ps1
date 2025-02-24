@@ -48,11 +48,11 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
-        $Commands.ForEach({
+        $Commands | Foreach-Object {
             $First = $true
-            $Miner_Device = $Device.Where({$_.Model -eq "CPU" -or (Test-VRAM $_ $MinMemGb)})
+            $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -111,6 +111,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

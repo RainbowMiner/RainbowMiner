@@ -52,11 +52,11 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model -and ($Miner_Vendor -ne "NVIDIA" -or -not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)})
+        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model -and ($Miner_Vendor -ne "NVIDIA" -or -not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)}
 
         if (-not $Device) {return}
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or [version]$_.Version -le [version]$Version)}).ForEach({
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or [version]$_.Version -le [version]$Version)} | ForEach-Object {
             $First = $true
             
             $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
@@ -75,7 +75,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
 
                 $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-                $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+                $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 			    if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.CoinSymbol -or $_.CoinSymbol -icontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol -or $_.ExcludeCoinSymbol -inotcontains $Pools.$MainAlgorithm_Norm.CoinSymbol) -and (-not $SecondAlgorithm_Norm -or ($Pools.$SecondAlgorithm_Norm.Host -and (-not $_.ExcludePoolName2 -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $_.ExcludePoolName2) -and (-not $_.CoinSymbol2 -or $_.CoinSymbol2 -icontains $Pools.$SecondAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol2 -or $_.ExcludeCoinSymbol2 -inotcontains $Pools.$SecondAlgorithm_Norm.CoinSymbol)))) {
                     if ($First) {
@@ -149,6 +149,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     }
 			    }
 		    }
-        })
+        }
     }
 }

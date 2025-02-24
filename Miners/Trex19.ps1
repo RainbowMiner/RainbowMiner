@@ -118,11 +118,11 @@ if (-not $Cuda) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model -and (-not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model -and (-not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)}
 
     if (-not $Device) {return}
 
-    $Commands.ForEach({
+    $Commands | ForEach-Object {
         $First = $True
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
@@ -136,7 +136,7 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
                 $MinMemGB = $_.MinMemGB
             }
             $Miner_IsGtx = $_.IsGtx
-            $Miner_Device = $Device.Where({($IsGtx -or -not $Miner_IsGtx -or $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")) -and (Test-VRAM $_ $MinMemGB)})
+            $Miner_Device = $Device | Where-Object {($IsGtx -or -not $Miner_IsGtx -or $_.OpenCL.Architecture -notin @("Other","Pascal","Turing")) -and (Test-VRAM $_ $MinMemGB)}
 
             if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                 if ($First) {
@@ -181,5 +181,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    })
+    }
 }

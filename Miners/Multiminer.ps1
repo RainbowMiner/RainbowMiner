@@ -46,18 +46,18 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
         $Miner_Vendor = $_.Vendor
-        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
         $DeviceIndex = if ($Miner_Vendor -eq "AMD") {"Type_Index"} else {"Type_Vendor_Index"}
 
-        $Commands.Where({$Miner_Vendor -in $_.Vendor}).ForEach({
+        $Commands | Where-Object {$Miner_Vendor -in $_.Vendor} | ForEach-Object {
             $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
             $Blocksize = 32*$_.Blocksize/0.865/1MB
 
             $MinMemGB = $_.MinMemGB        
-            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
@@ -93,6 +93,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

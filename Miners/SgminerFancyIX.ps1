@@ -69,18 +69,18 @@ foreach ($Miner_Vendor in @("AMD","INTEL")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Select-Object Vendor, Model -Unique | ForEach-Object {
         $First = $true
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
         $Miner_PlatformId = $Device | Select-Object -ExpandProperty PlatformId -Unique
         if ($Miner_PlatformId -isnot [int]) {return}
 
-        $Commands.ForEach({
+        $Commands | ForEach-Object {
 
             $MainAlgorithm = $_.MainAlgorithm -replace "_navi$"
 
             $Algorithm_Norm_0 = Get-Algorithm $MainAlgorithm
 
-            $Miner_Device = $Device.Where({($_.Model -ne "gfx1010" -and $_.Model -notmatch "^RX[56]\d00" -and $MainAlgorithm -eq $_.MainAlgorithm) -or (($_.Model -eq "gfx1010" -or $_.Model -match "^RX[56]\d00") -and $MainAlgorithm -ne $_.MainAlgorithm)})
+            $Miner_Device = $Device | Where-Object {($_.Model -ne "gfx1010" -and $_.Model -notmatch "^RX[56]\d00" -and $MainAlgorithm -eq $_.MainAlgorithm) -or (($_.Model -eq "gfx1010" -or $_.Model -match "^RX[56]\d00") -and $MainAlgorithm -ne $_.MainAlgorithm)}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
@@ -117,6 +117,6 @@ foreach ($Miner_Vendor in @("AMD","INTEL")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

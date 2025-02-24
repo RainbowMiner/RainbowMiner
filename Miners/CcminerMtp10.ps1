@@ -81,14 +81,14 @@ if ($IsLinux) {$Path += $Cuda -replace "\."}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
-    $Commands.ForEach({
+    $Commands | ForEach-Object {
         $First = $true
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $MinMemGB = $_.MinMemGB
-        $Miner_Device = $Device.Where({(Test-VRAM $_ $MinMemGB) -and $_.OpenCL.Architecture -in @("Other","Pascal","Turing")})
+        $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and $_.OpenCL.Architecture -in @("Other","Pascal","Turing")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if (-not $Pools.$Algorithm_Norm.SSL -and $Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Miner_Device | Measure-Object).Count -le 6 -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
@@ -125,5 +125,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    })
+    }
 }

@@ -66,14 +66,14 @@ if (-not $Cuda) {return}
 
 $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model -and (-not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model -and (-not $_.OpenCL.DeviceCapability -or (Compare-Version $_.OpenCL.DeviceCapability $DeviceCapability) -ge 0)}
 
     if (-not $Device) {return}
 
-    $Commands.ForEach({
+    $Commands | ForEach-Object {
         $First = $true
 
-        $Miner_Device = $Device.Where({$_.OpenCL.Architecture -in @("Other","Pascal","Turing")})
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.Architecture -in @("Other","Pascal","Turing")}
 
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
@@ -114,5 +114,5 @@ $Global:DeviceCache.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique 
 				}
 			}
 		}
-    })
+    }
 }

@@ -119,11 +119,11 @@ if (-not (Test-Path $DatFile) -or (Get-Item $DatFile).length -lt 1.19GB) {
 
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
     $Miner_PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
-    $Commands.ForEach({
+    $Commands | ForEach-Object {
         $First = $True
 
         $MainAlgorithm = if ($_.MainAlgorithmXlat) {$_.MainAlgorithmXlat} else {$_.MainAlgorithm}
@@ -143,8 +143,8 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
             if ($_.DAG -and $MainAlgorithm_Norm_0 -match $Global:RegexAlgoIsEthash -and $MinMemGB -gt $_.MinMemGB -and $Session.Config.EnableEthashZombieMode) {
                 $MinMemGB = $_.MinMemGB
             }
-            $Miner_Device = $Device.Where({(Test-VRAM $_ $MinMemGB) -and (-not $Miner_ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $Miner_ExcludeCompute) -and (-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute)})
-            $Miner_Device_Dual = if ($SecondAlgorithm_Norm_0) {$Miner_Device.Where({-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute})}
+            $Miner_Device = $Device | Where-Object {(Test-VRAM $_ $MinMemGB) -and (-not $Miner_ExcludeCompute -or $_.OpenCL.DeviceCapability -notin $Miner_ExcludeCompute) -and (-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute)}
+            $Miner_Device_Dual = if ($SecondAlgorithm_Norm_0) {$Miner_Device | Where-Object {-not $Miner_Compute -or $_.OpenCL.DeviceCapability -in $Miner_Compute}}
 
             if ($SecondAlgorithm_Norm_0 -and $Miner_Compute -and (-not ($Miner_Device_Dual | Measure-Object).Count)) {
                 $Miner_Device = $null
@@ -300,5 +300,5 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
                 }
 			}
 		}
-    })
+    }
 }

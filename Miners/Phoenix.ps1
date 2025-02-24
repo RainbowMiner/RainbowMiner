@@ -86,7 +86,7 @@ if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVers
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
 		switch($_.Vendor) {
 			"NVIDIA" {$Miner_Deviceparams = "-nvidia -nvdo 1"}
@@ -94,7 +94,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			Default {$Miner_Deviceparams = ""}
 		}
 
-		$Commands.Where({$_.Vendor -icontains $Miner_Vendor}).ForEach({
+		$Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $First = $true
 			$Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -102,7 +102,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
 			    $MinMemGB = Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
-                $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+                $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 				if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
@@ -159,6 +159,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					}
 				}
 			}
-		})
+		}
 	}
 }

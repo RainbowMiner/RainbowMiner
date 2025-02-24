@@ -306,7 +306,7 @@ if ($UriCuda -and $CudaLib) {
 foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
         $Miner_PlatformId = $null
         if ($Miner_Vendor -in @("AMD","INTEL")) {
@@ -314,7 +314,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
             if ($Miner_PlatformId -isnot [int]) {return}
         }
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev") -and ($IsWindows -or $_.MainAlgorithm -ne "astrobwt/v2")}).ForEach({
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and ($_.Vendor -ne "NVIDIA" -or $_.MainAlgorithm -ne "rx/grft" -or $Uri -match "\ddev") -and ($IsWindows -or $_.MainAlgorithm -ne "astrobwt/v2")} | ForEach-Object {
             $First = $True
 
             $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
@@ -329,7 +329,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 			    if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
                 $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-                $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGb)})
+                $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or (Test-VRAM $_ $MinMemGb)}
 
 			    if ($Miner_Device -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName)) {
                     if ($First) {
@@ -434,6 +434,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

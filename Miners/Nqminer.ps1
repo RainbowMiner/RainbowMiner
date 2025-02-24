@@ -48,14 +48,14 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $First = $true
         $Miner_Model = $_.Model
-        $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+        $Miner_Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
         $DeviceParams = Switch ($Miner_Vendor) {
             "AMD"    {"-t opencl"}
             "NVIDIA" {"-t cuda"}
         }
 
-        $Commands.ForEach({
+        $Commands | ForEach-Object {
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -93,6 +93,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }

@@ -106,9 +106,9 @@ if ($InfoOnly) {
 
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
-    $Commands.ForEach({
+    $Commands | ForEach-Object {
         $First = $true
         $Algorithm = $_.MainAlgorithm
         $Algorithm_Norm_0 = Get-Algorithm "cryptonight$($Algorithm)"
@@ -116,7 +116,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
         $MinMemGb = $_.MinMemGb
         $Params = $_.Params
         
-        $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+        $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)","$($Algorithm_Norm_0)-GPU")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
@@ -180,5 +180,5 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    })
+    }
 }

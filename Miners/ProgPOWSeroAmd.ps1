@@ -38,12 +38,12 @@ if ($InfoOnly) {
 $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
     $Miner_Model = $_.Model
-    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)".Where({$_.Model -eq $Miner_Model})
+    $Device = $Global:DeviceCache.DevicesByTypes."$($_.Vendor)" | Where-Object {$_.Model -eq $Miner_Model}
 
     $Miner_PlatformId = $Device | Select-Object -ExpandProperty PlatformId -Unique
     if ($Miner_PlatformId -isnot [int]) {return}
 
-    $Commands.ForEach({
+    $Commands | ForEach-Object {
 
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
@@ -52,7 +52,7 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 
             $CoinSymbol = if ($Pools.$Algorithm_Norm.CoinSymbol) {$Pools.$Algorithm_Norm.CoinSymbol} else {"SERO"}
             $MinMemGB = Get-EthDAGSize -CoinSymbol $CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb
-            $Miner_Device = $Device.Where({Test-VRAM $_ $MinMemGB})
+            $Miner_Device = $Device | Where-Object {Test-VRAM $_ $MinMemGB}
 
 			if ($Miner_Device) {
                 if ($First) {
@@ -94,5 +94,5 @@ $Global:DeviceCache.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | F
 				}
 			}
 		}
-    })
+    }
 }

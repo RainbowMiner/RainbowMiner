@@ -208,7 +208,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model}
 
         $ZilParams    = ""
 
@@ -230,7 +230,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
         $Pool_Port_Index = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and $Device.Count}).ForEach({
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and $Device.Count} | ForEach-Object {
             $First = $true
 
             $MainAlgorithm = $_.MainAlgorithm
@@ -253,7 +253,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 }
                 "AMD" {
                     $DeviceParams = " --disable-cpu --disable-gpu-nvidia --disable-gpu-intel"
-                    $Compute = $ValidCompute_AMD.Where({-not $_.ExcludeCompute -or $_ -notin $_.ExcludeCompute})
+                    $Compute = $ValidCompute_AMD | Where-Object {-not $_.ExcludeCompute -or $_ -notin $_.ExcludeCompute}
                     $Compute_Param = "DeviceCapability"
                 }
                 "INTEL" {
@@ -262,7 +262,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 }
                 "NVIDIA" {
                     $DeviceParams = " --disable-cpu --disable-gpu-amd --disable-gpu-intel"
-                    $Compute = $ValidCompute_NVIDIA.Where({-not $_.ExcludeCompute -or $_ -notin $_.ExcludeCompute})
+                    $Compute = $ValidCompute_NVIDIA | Where-Object {-not $_.ExcludeCompute -or $_ -notin $_.ExcludeCompute}
                     $Compute_Param = "Architecture"
                 }
             }
@@ -278,7 +278,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                 if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
 
                 $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$MainAlgorithm_Norm.CoinSymbol -Algorithm $MainAlgorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}        
-                $Miner_Device = $Device.Where({($Miner_Vendor -eq "CPU" -and (-not $_.CpuFeatures -or ($_.CpuFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_} | Measure-Object).Count -eq $_.CpuFeatures.Count)) -or ((-not $MinMemGB -or (Test-VRAM $_ $MinMemGB)) -and (-not $Compute -or $_.OpenCL.$Compute_Param -in $Compute))})
+                $Miner_Device = $Device | Where-Object {($Miner_Vendor -eq "CPU" -and (-not $_.CpuFeatures -or ($_.CpuFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_} | Measure-Object).Count -eq $_.CpuFeatures.Count)) -or ((-not $MinMemGB -or (Test-VRAM $_ $MinMemGB)) -and (-not $Compute -or $_.OpenCL.$Compute_Param -in $Compute))}
 
 			    if ($Miner_Device -and (-not $_.CoinSymbols -or $Pools.$MainAlgorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$MainAlgorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.PoolsConfigDefault."$($Pools.$MainAlgorithm_Norm_0.Name)".Yiimp)) {
                     if ($First) {
@@ -404,6 +404,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     }
 			    }
 		    }
-        })
+        }
     }
 }

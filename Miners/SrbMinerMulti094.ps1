@@ -95,9 +95,9 @@ foreach ($Miner_Vendor in @("AMD")) {
 
     $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Model = $_.Model
-        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor.Where({$_.Model -eq $Miner_Model -and ($Miner_Vendor -eq "CPU" -or $_.OpenCL.DeviceCapability -in $ValidCompute)})
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Model -eq $Miner_Model -and ($Miner_Vendor -eq "CPU" -or $_.OpenCL.DeviceCapability -in $ValidCompute)}
 
-        $Commands.Where({$_.Vendor -icontains $Miner_Vendor -and $Device.Count}).ForEach({
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and $Device.Count} | ForEach-Object {
             $First = $true
             $Algorithm = $_.MainAlgorithm
             $Algorithm_Norm_0 = Get-Algorithm $Algorithm
@@ -121,7 +121,7 @@ foreach ($Miner_Vendor in @("AMD")) {
                 if (-not $Pools.$Algorithm_Norm.Host) {continue}
 
                 $MinMemGB = if ($_.DAG) {Get-EthDAGSize -CoinSymbol $Pools.$Algorithm_Norm.CoinSymbol -Algorithm $Algorithm_Norm_0 -Minimum $_.MinMemGb} else {$_.MinMemGb}
-                $Miner_Device = $Device.Where({$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)})
+                $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 			    if ($Miner_Device -and (-not $_.CoinSymbols -or $Pools.$Algorithm_Norm.CoinSymbol -in $_.CoinSymbols) -and (-not $_.ExcludePoolName -or $Pools.$Algorithm_Norm.Host -notmatch $_.ExcludePoolName) -and (-not $_.ExcludeYiimp -or -not $Session.PoolsConfigDefault."$($Pools.$Algorithm_Norm.Name)".Yiimp)) {
                     if ($First) {
@@ -179,6 +179,6 @@ foreach ($Miner_Vendor in @("AMD")) {
 				    }
 			    }
 		    }
-        })
+        }
     }
 }
