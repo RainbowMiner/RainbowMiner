@@ -58,14 +58,60 @@ public static class RBMToolBox
 #endif
     }
 
+    public static string ReplaceMulti(string input, string[] oldValues, string[] newValues)
+    {
+        if (string.IsNullOrEmpty(input) || oldValues == null || newValues == null)
+            return input;
+
+        if (oldValues.Length != newValues.Length)
+            throw new ArgumentException("oldValues and newValues must have the same length.");
+
+#if NETCOREAPP3_0_OR_GREATER
+        for (int i = 0; i < oldValues.Length; i++)
+        {
+            input = input.Replace(oldValues[i], newValues[i]);
+        }
+#else
+        for (int i = 0; i < oldValues.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(oldValues[i]))
+                input = input.Replace(oldValues[i], newValues[i]);
+        }
+#endif
+        return input;
+    }
+
     public static string ReplaceRegex(string input, string pattern, string replacement)
     {
 #if NETCOREAPP3_0_OR_GREATER
-    return string.IsNullOrEmpty(input) ? input : System.Text.RegularExpressions.Regex.Replace(input, pattern, replacement);
+        return string.IsNullOrEmpty(input) ? input : System.Text.RegularExpressions.Regex.Replace(input, pattern, replacement);
 #else
         if (string.IsNullOrEmpty(input)) return input;
         return System.Text.RegularExpressions.Regex.Replace(input, pattern, replacement);
 #endif
+    }
+
+    public static string ReplaceRegexMulti(string input, string[] patterns, string[] replacements)
+    {
+        if (string.IsNullOrEmpty(input) || patterns == null || replacements == null)
+            return input;
+
+        if (patterns.Length != replacements.Length)
+            throw new ArgumentException("patterns and replacements must have the same length.");
+
+#if NETCOREAPP3_0_OR_GREATER
+        for (int i = 0; i < patterns.Length; i++)
+        {
+            input = Regex.Replace(input, patterns[i], replacements[i]);
+        }
+#else
+        for (int i = 0; i < patterns.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(patterns[i]))
+                input = Regex.Replace(input, patterns[i], replacements[i]);
+        }
+#endif
+        return input;
     }
 
     public static string Substring(string input, int start, int length)
