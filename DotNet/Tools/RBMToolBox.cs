@@ -58,6 +58,16 @@ public static class RBMToolBox
 #endif
     }
 
+    public static string ReplaceRegex(string input, string pattern, string replacement)
+    {
+#if NETCOREAPP3_0_OR_GREATER
+    return string.IsNullOrEmpty(input) ? input : System.Text.RegularExpressions.Regex.Replace(input, pattern, replacement);
+#else
+        if (string.IsNullOrEmpty(input)) return input;
+        return System.Text.RegularExpressions.Regex.Replace(input, pattern, replacement);
+#endif
+    }
+
     public static string Substring(string input, int start, int length)
     {
 #if NETCOREAPP3_0_OR_GREATER
@@ -131,14 +141,35 @@ public static class RBMToolBox
     }
 
     // 4. Optimized Splitting & Joining
-    public static string[] Split(string input, char separator)
+    public static string[] Split(string input, string[] separators, bool removeemptyentries = true)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        return input?.Split(new char[] { separator }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
+    return input?.Split(separators, removeemptyentries? StringSplitOptions.RemoveEmptyEntries:StringSplitOptions.None) ?? new string[0];
 #else
         if (string.IsNullOrEmpty(input)) return new string[0];
-        return input.Split(new char[] { separator }, StringSplitOptions.RemoveEmptyEntries);
+        return input.Split(separators, removeemptyentries? StringSplitOptions.RemoveEmptyEntries:StringSplitOptions.None);
 #endif
+    }
+
+    public static string[] SplitRegex(string input, string pattern, bool removeEmptyEntries = true)
+    {
+        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(pattern))
+            return new string[0];
+
+        string[] result = Regex.Split(input, pattern);
+
+        if (removeEmptyEntries)
+        {
+            List<string> filtered = new List<string>();
+            foreach (string item in result)
+            {
+                if (!string.IsNullOrEmpty(item))
+                    filtered.Add(item);
+            }
+            return filtered.ToArray();
+        }
+
+        return result;
     }
 
     public static string Join(string separator, string[] values)
