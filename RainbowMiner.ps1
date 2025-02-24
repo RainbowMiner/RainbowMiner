@@ -526,6 +526,10 @@ if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
 
             Write-Log (Get-MemoryUsage -forceFullCollection).MemText
         }
+
+        if ($Session.Debug) {
+            $Session.Stopp = $true
+        }
     }
 
     Stop-Core

@@ -2299,7 +2299,9 @@ function Start-SubProcessInConsole {
                 [User32.WindowManagement]::SetWindowText($Process.mainWindowHandle, $WinTitle) > $null
             }
         } catch {
-            Write-Log -Level Warn "Could not set process window title: $($_.Exception.Message)"
+            if (-not $Quiet) {
+                Write-Log -Level Warn "Could not set process window title: $($_.Exception.Message)"
+            }
         }
     }
     
@@ -6668,6 +6670,7 @@ function Set-UserpoolsConfigDefault {
             if ($Preset -is [string] -or $Preset -eq $null) {
                 $Preset = 1..5 | Foreach-Object {$Default | ConvertTo-Json -Depth 10 | ConvertFrom-Json -ErrorAction Ignore}
             }
+
             $Done = @($Preset | Select-Object)
             $Preset_Copy = ConvertTo-Json $Done -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
 
@@ -8576,7 +8579,7 @@ param(
                     }
                     $processses = $null
 
-                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH -WinTitle "$FilePath $ArgumentList".Trim()
+                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH -WinTitle "$FilePath $ArgumentList".Trim() -Quiet
                     if ($Job) {
                         $Job | Add-Member FilePath $FilePath -Force
                         $Job | Add-Member Arguments $ArgumentList -Force
