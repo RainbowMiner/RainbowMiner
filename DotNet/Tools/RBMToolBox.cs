@@ -141,14 +141,16 @@ public static class RBMToolBox
     }
 
     // 4. Optimized Splitting & Joining
-    public static string[] Split(string input, string[] separators, bool removeemptyentries = true)
+    public static string[] Split(string input, string[] separators, int limit = 0, bool removeEmptyEntries = true)
     {
-#if NETCOREAPP3_0_OR_GREATER
-    return input?.Split(separators, removeemptyentries? StringSplitOptions.RemoveEmptyEntries:StringSplitOptions.None) ?? new string[0];
-#else
-        if (string.IsNullOrEmpty(input)) return new string[0];
-        return input.Split(separators, removeemptyentries? StringSplitOptions.RemoveEmptyEntries:StringSplitOptions.None);
-#endif
+        if (string.IsNullOrEmpty(input) || separators == null || separators.Length == 0)
+            return new string[0];
+
+        StringSplitOptions options = removeEmptyEntries ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None;
+
+        string[] result = limit > 0 ? input.Split(separators, limit, options) : input.Split(separators, options);
+
+        return result;
     }
 
     public static string[] SplitRegex(string input, string pattern, bool removeEmptyEntries = true)
