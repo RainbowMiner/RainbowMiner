@@ -61,8 +61,6 @@ param(
     }
 
     $StopWatch = $null
-    Remove-Variable -Name StopWatch -ErrorAction Ignore
-
     if (Test-Path "/opt/rainbowminer/ocdcmd/$Name.out") {
         if (-not $Quiet) {Get-Content "/opt/rainbowminer/ocdcmd/$Name.out" -Raw}
         Remove-Item "/opt/rainbowminer/ocdcmd/$Name.out" -Force -ErrorAction Ignore
@@ -96,7 +94,7 @@ param(
     $OnEmptyAdd
 )
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
-    if ($OnEmptyAdd -and -not $Global:GlobalOCD.Count) {$OnEmptyAdd | Foreach-Object {[void]$Global:GlobalOCD.Add($_)}
+    if ($OnEmptyAdd -and -not $Global:GlobalOCD.Count) {$OnEmptyAdd | Foreach-Object {[void]$Global:GlobalOCD.Add($_)}}
     [void]$Global:GlobalOCD.Add($Cmd)
 }
 
