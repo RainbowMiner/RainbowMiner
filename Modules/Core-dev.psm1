@@ -303,7 +303,7 @@ function Start-Core {
 
     if ($IsWindows -and ($Session.MineOnCPU -ne $false -or $Session.MineOnGPU -ne $false)) {
         $GpuMemSizeMB = if ($Session.MineOnGPU -eq $false) {0} else {(($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -in @("AMD","INTEL","NVIDIA")}).OpenCL.GlobalMemSizeGB | Measure-Object -Sum).Sum*1100}
-        $CpuMemSizeMB = if ($Session.MineOnCPU -eq $false) {0} else {[Math]::Max(0,32-(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum/1GB)*1100}
+        $CpuMemSizeMB = if ($Session.MineOnCPU -eq $false) {0} else {[RBMToolBox]::Max(0,32-(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).Sum/1GB)*1100}
         try {
             Write-Host "Checking Windows pagefile/virtual memory .. " -NoNewline
 
@@ -830,11 +830,11 @@ function Invoke-Core {
         $Session.Config.UIsorting = if ($Session.Config.UIsorting -like "p*") {"profit"} else {"biased"}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
         $Session.Config.OpenCLPlatformSorting = @($Session.Config.OpenCLPlatformSorting | ForEach-Object {$_.ToUpper()} | Where-Object {$_ -in @("AMD","INTEL","NVIDIA")})
-        $Session.Config.MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min([double]($Session.Config.MiningHeatControl -replace ",","." -replace "[^\d\.]+"),5.0),0.0),1)
-        $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.PoolSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
-        $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.MinerSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
-        $Session.Config.MaxErrorRatio = [Math]::Max([double]($Session.Config.MaxErrorRatio -replace ",","." -replace "[^\d\.\-]+"),1.0)
-        $Session.Config.PreferMinerMargin = [Math]::Max([Math]::Min([double]($Session.Config.PreferMinerMargin -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
+        $Session.Config.MiningHeatControl = [RBMToolBox]::Round([RBMToolBox]::Max([RBMToolBox]::Min([double]($Session.Config.MiningHeatControl -replace ",","." -replace "[^\d\.]+"),5.0),0.0),1)
+        $Session.Config.PoolSwitchingHysteresis = [RBMToolBox]::Max([RBMToolBox]::Min([double]($Session.Config.PoolSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
+        $Session.Config.MinerSwitchingHysteresis = [RBMToolBox]::Max([RBMToolBox]::Min([double]($Session.Config.MinerSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
+        $Session.Config.MaxErrorRatio = [RBMToolBox]::Max([double]($Session.Config.MaxErrorRatio -replace ",","." -replace "[^\d\.\-]+"),1.0)
+        $Session.Config.PreferMinerMargin = [RBMToolBox]::Max([RBMToolBox]::Min([double]($Session.Config.PreferMinerMargin -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         $Session.Config.PoolStatAverageStable =  Get-StatAverage $Session.Config.PoolStatAverageStable -Default "Week"
         $Session.Config.MaxTimeSinceLastBlock = ConvertFrom-Time $Session.Config.MaxTimeSinceLastBlock
@@ -894,12 +894,12 @@ function Invoke-Core {
                 Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "Parameter CPUMiningAffinity (config.txt) is empty or contains errors. Falling back to $(Get-CPUAffinity $CPUThreads -ToHex)"
             }
             if ($Session.Config.EnableAutoAdjustAffinity -and $Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
-                $CPUThreads = ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2)))
+                $CPUThreads = ($Global:GlobalCPUInfo.Threads - [RBMToolBox]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2)))
                 $CPUAffinityInt = Get-CPUAffinity $CPUThreads -ToInt
                 Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "All threads selected for CPU mining! This will overload your system, auto-adjusting affinity to $(Get-CPUAffinity $CPUThreads -ToHex))"
             }
             $Session.Config.CPUMiningAffinity = "0x$(([bigint]$CPUAffinityInt).ToString("x") -replace "^0")"
-            $Session.Config.CPUMiningThreads  = [Math]::Max(@(ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity).Count,1)
+            $Session.Config.CPUMiningThreads  = [RBMToolBox]::Max(@(ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity).Count,1)
         }
     }
 
@@ -978,7 +978,7 @@ function Invoke-Core {
     if (-not $Session.Updatetracker.TimeDiff -or $Session.Updatetracker.TimeDiff -lt (Get-Date).AddMinutes(-60)) {
         $Session.Updatetracker.TimeDiff = Get-Date
         $TimeDiff = ((Get-Date)-(Get-NtpTime)).TotalSeconds
-        $Session.TimeDiff = [Math]::Sign($TimeDiff)*[Math]::Floor([Math]::Abs($TimeDiff))
+        $Session.TimeDiff = [RBMToolBox]::Sign($TimeDiff)*[RBMToolBox]::Floor([RBMToolBox]::Abs($TimeDiff))
     }
 
     #Start/stop services
@@ -1268,7 +1268,7 @@ function Invoke-Core {
                     #$Algo_MRRPriceModifierPercent = "$($Session.Config.Algorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
                     $Algo_MaxTimeToFind           = (ConvertFrom-Time $Session.Config.Algorithms.$a.MaxTimeToFind)
                     ([ordered]@{
-                        Penalty                 = ([Math]::Round([double]($Session.Config.Algorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
+                        Penalty                 = ([RBMToolBox]::Round([double]($Session.Config.Algorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
                         MinHashrate             = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrate)
                         MinHashrateSolo         = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrateSolo)
                         MinWorkers              = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinWorkers)
@@ -1277,7 +1277,7 @@ function Invoke-Core {
                         MinBLKRate              = $(if ($Algo_MaxTimeToFind) {86400/$Algo_MaxTimeToFind} else {0})
                         #MRREnable               = $(if ($Session.Config.Algorithms.$a.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRREnable} else {$true})
                         #MRRAllowExtensions      = $(if ($Session.Config.Algorithms.$a.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRRAllowExtensions} else {$null})
-                        #MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
+                        #MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[RBMToolBox]::Max(-30,[RBMToolBox]::Min(30,[RBMToolBox]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
                         MinerName               = @(if ($Session.Config.Algorithms.$a.MinerName){[regex]::split("$($Session.Config.Algorithms.$a.MinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
                         ExcludeMinerName        = @(if ($Session.Config.Algorithms.$a.ExcludeMinerName){[regex]::split("$($Session.Config.Algorithms.$a.ExcludeMinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
                     }).GetEnumerator() | Foreach-Object {
@@ -1311,7 +1311,7 @@ function Invoke-Core {
                     $Session.Config.Coins | Add-Member $c $AllCoins.$c -Force
                     $Coin_MaxTimeToFind = (ConvertFrom-Time $Session.Config.Coins.$c.MaxTimeToFind)
                     ([ordered]@{
-                        Penalty          = ([Math]::Round([double]($Session.Config.Coins.$c.Penalty -replace "[^\d\.\-]+"),2))
+                        Penalty          = ([RBMToolBox]::Round([double]($Session.Config.Coins.$c.Penalty -replace "[^\d\.\-]+"),2))
                         MinHashrate      = (ConvertFrom-Hash $Session.Config.Coins.$c.MinHashrate)
                         MinHashrateSolo  = (ConvertFrom-Hash $Session.Config.Coins.$c.MinHashrateSolo)
                         MinWorkers       = (ConvertFrom-Hash $Session.Config.Coins.$c.MinWorkers)
@@ -1405,7 +1405,7 @@ function Invoke-Core {
                     $_.PowerPrice = $PowerPrice
                     $MiningHeatControl = if ($_.MiningHeatControl -eq "") {$Session.Config.MiningHeatControl} else {$_.MiningHeatControl}
                     try {$MiningHeatControl = [Double]$MiningHeatControl} catch {$MiningHeatControl = $Session.Config.MiningHeatControl}
-                    $MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($MiningHeatControl,5.0),0.0),1)
+                    $MiningHeatControl = [RBMToolBox]::Round([RBMToolBox]::Max([RBMToolBox]::Min($MiningHeatControl,5.0),0.0),1)
                     $_.MiningHeatControl = $MiningHeatControl
                     try {$_.MRRPriceFactor = [Double]$_.MRRPriceFactor} catch {$_.MRRPriceFactor = 0}
                     [void]$Session.Config.Scheduler.Add($_)
@@ -1615,12 +1615,12 @@ function Invoke-Core {
 
             ([ordered]@{
                 DataWindow            = "$(Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)"
-                Penalty               = ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2))
-                MaxMarginOfError      = ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2))
-                SwitchingHysteresis   = $(if ($Pool_SwHyst) {[Math]::Max([Math]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null})
+                Penalty               = ([RBMToolBox]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2))
+                MaxMarginOfError      = ([RBMToolBox]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2))
+                SwitchingHysteresis   = $(if ($Pool_SwHyst) {[RBMToolBox]::Max([RBMToolBox]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null})
                 StatAverage           = (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage)
                 StatAverageStable     = (Get-StatAverage $Session.Config.Pools.$p.StatAverageStable -Default $Session.Config.PoolStatAverageStable)
-                MaxAllowedLuck        = $(if ($Pool_MaxAllowedLuck) {[Math]::Max([double]$Pool_MaxAllowedLuck,0.0)} else {$null})
+                MaxAllowedLuck        = $(if ($Pool_MaxAllowedLuck) {[RBMToolBox]::Max([double]$Pool_MaxAllowedLuck,0.0)} else {$null})
                 MaxTimeSinceLastBlock = $(if ($Pool_MaxTimeSinceLastBlock) {ConvertFrom-Time $Pool_MaxTimeSinceLastBlock} else {$null})
                 MaxTimeToFind         = $Pool_MaxTimeToFind
                 Region                = $(if ($Session.Config.Pools.$p.Region) {Get-Region $Session.Config.Pools.$p.Region} else {$null})
@@ -1835,8 +1835,8 @@ function Invoke-Core {
                 $Session.Config.Pools.$p | Add-Member Wallets $c -Force
                 $Session.Config.Pools.$p | Add-Member Params $cparams -Force
                 $Session.Config.Pools.$p | Add-Member DataWindow "$(Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow)" -Force
-                $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
-                $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]100}} else {[Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)}) -Force
+                $Session.Config.Pools.$p | Add-Member Penalty ([RBMToolBox]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
+                $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]100}} else {[RBMToolBox]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)}) -Force
                 $Session.Config.Pools.$p | Add-Member SSL ([int]$Session.Config.Pools.$p.SSL) -Force
 
                 if ($Session.Config.EnableAlgorithmVariants) {
@@ -2199,7 +2199,7 @@ function Invoke-Core {
                         [void]$SelectedPoolNames.Add($Pool)
                     }
 
-                    $TimerPools[$Pool] = [Math]::Round($StopWatch.Elapsed.TotalSeconds, 3)
+                    $TimerPools[$Pool] = [RBMToolBox]::Round($StopWatch.Elapsed.TotalSeconds, 3)
                     if ($Session.RoundCounter -eq 0) { Write-Host "done ($($TimerPools[$Pool])s) " }
                     Write-Log "$Pool loaded in $($TimerPools[$Pool])s "
                 }
@@ -2474,7 +2474,7 @@ function Invoke-Core {
                 }
             }
 
-            $done = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start) / 1000, 3)
+            $done = [RBMToolBox]::Round(((Get-UnixTimestamp -Milliseconds) - $start) / 1000, 3)
             if ($Session.RoundCounter -eq 0) { Write-Host "done ($($done)s) " }
             Write-Log "WhatToMine loaded in $($done)s "
         }
@@ -2488,7 +2488,7 @@ function Invoke-Core {
             }
         }
         $OutOfSyncTime     = $OutOfSyncTimer.AddMinutes(-$Session.OutofsyncWindow)
-        $OutOfSyncDivisor  = [Math]::Log($Session.OutofsyncWindow-$Session.SyncWindow) #precalc for sync decay method
+        $OutOfSyncDivisor  = [RBMToolBox]::Log($Session.OutofsyncWindow-$Session.SyncWindow) #precalc for sync decay method
         $OutOfSyncLimit    = 1/($Session.OutofsyncWindow-$Session.SyncWindow)
 
         $PoolSwitchingHysteresis = 1 + $Session.Config.PoolSwitchingHysteresis/100
@@ -2524,7 +2524,7 @@ function Invoke-Core {
             }
         }
 
-        $Session.DecayFact = [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod) / ([Math]::Max($Session.Config.SwitchingPrevention,1)))
+        $Session.DecayFact = [RBMToolBox]::Min($Session.Config.SwitchingPrevention,1) * [RBMToolBox]::Pow($Session.DecayBase, [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod) / ([RBMToolBox]::Max($Session.Config.SwitchingPrevention,1)))
 
         Write-Log "Calculating pool compare prices. "
         foreach ($Pool in $NewPools) {
@@ -2539,11 +2539,11 @@ function Invoke-Core {
                         $Price_Cmp = 0
                         $Pool | Add-Member DisabledDueToCoinSymbolPBM $true -Force
                     } else {
-                        $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pool.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
+                        $Price_Cmp *= [RBMToolBox]::Min(([RBMToolBox]::Log([RBMToolBox]::Max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pool.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                         if (-not ($Session.Config.EnableFastSwitching -or $Session.SkipSwitchingPrevention)) {
                             if ($Pool_Rounds -eq $null) {
                                 if ($Session.Config.Pools."$($Pool.Name)".MaxMarginOfError) {
-                                    $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($Pool.MarginOfError,$Session.Config.Pools."$($Pool.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * $PoolAccuracyWeight
+                                    $Price_Cmp *= 1-([RBMToolBox]::Floor(([RBMToolBox]::Min($Pool.MarginOfError,$Session.Config.Pools."$($Pool.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * $PoolAccuracyWeight
                                 }
                             } elseif ($Session.Config.Pools."$($Pool.Name)".SwitchingHysteresis -ne $null) {
                                 $Price_Cmp *= 1 + ($Session.Config.Pools."$($Pool.Name)".SwitchingHysteresis/100)
@@ -2552,7 +2552,7 @@ function Invoke-Core {
                             }
                         }
                         if (-not $Pool.SoloMining -and $Pool.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
-                            $Price_Cmp *= 1 - (1 - [Math]::Pow($Pool.Hashrate/$Pools_Hashrates["$($Pool.Algorithm0)-$($Pool.CoinSymbol)"],$HashrateWeightStrength)) * $HashrateWeight
+                            $Price_Cmp *= 1 - (1 - [RBMToolBox]::Pow($Pool.Hashrate/$Pools_Hashrates["$($Pool.Algorithm0)-$($Pool.CoinSymbol)"],$HashrateWeightStrength)) * $HashrateWeight
                         }
                     }
                 }
@@ -2596,10 +2596,10 @@ function Invoke-Core {
             $Pool_Price = $Pools.$_.Price
             $Pool_Name  = $Pools.$_.Name
             if (-not $Pools.$_.Exclusive) {
-                $Pool_Price *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
+                $Pool_Price *= [RBMToolBox]::Min(([RBMToolBox]::Log([RBMToolBox]::Max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                 $Pool_Price_Bias = $Pool_Price
                 if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools.$Pool_Name.MaxMarginOfError) {
-                    $Pool_Price_Bias *= 1-([Math]::Floor(([Math]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$Pool_Name.MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00)
+                    $Pool_Price_Bias *= 1-([RBMToolBox]::Floor(([RBMToolBox]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$Pool_Name.MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00)
                 }
             } else {
                 $Pool_Price_Bias = $Pool_Price
@@ -3040,7 +3040,7 @@ function Invoke-Core {
         foreach($p in @($Miner.DeviceModel -split '-')) {$Miner.OCprofile[$p] = ""}
 
         $Miner_FaultTolerance = if ($Miner_IsCPU) {$MinerFaultToleranceCPU} else {$MinerFaultToleranceGPU}
-        $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[Math]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
+        $Miner.FaultTolerance = if ($Miner.FaultTolerance) {[RBMToolBox]::Max($Miner.FaultTolerance,$Miner_FaultTolerance)} else {$Miner_FaultTolerance}
 
         if ($Session.Config.Miners) {
             $Miner_CommonCommands = $Miner_Arguments = $Miner_Difficulty = ''
@@ -3458,7 +3458,7 @@ function Invoke-Core {
                         [void]$Global:MinerSpeeds.Remove($Miner_Key)
                     }
                 } else {
-                    $Miner_Hashrate = [Math]::Round($Miner_Hashrate,2)
+                    $Miner_Hashrate = [RBMToolBox]::Round($Miner_Hashrate,2)
                     if (-not $Global:MinerSpeeds.ContainsKey($Miner_Key)) {
                         $Global:MinerSpeeds[$Miner_Key] = [PSCustomObject]@{Hashrate=$Miner_Hashrate;Names=$Miner_Names;Miner=$Miner_Miner}
                     } else {
@@ -4238,7 +4238,7 @@ function Invoke-Core {
         $Session.ConsoleCapture = $true
     }
 
-    if ([Math]::Abs($Session.TimeDiff) -gt 60) {
+    if ([RBMToolBox]::Abs($Session.TimeDiff) -gt 60) {
         Write-Host " "
         Write-Log -Level Warn "This rig's system time is off by $($Session.TimeDiff) seconds. Please adjust and restart RainbowMiner!"
         Write-Host " "
@@ -4307,7 +4307,7 @@ function Invoke-Core {
         }
 
         $Miners_Count = 0
-        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel -and ($_.HashRates.PSObject.Properties.Value -gt 0 -or $_.Profit -eq $null)} | Sort-Object @{Expression = {if ($Session.Benchmarking -and $Session.Config.UIsorting -ne "profit") {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.Benchmarking -or $Session.Config.UIsorting -eq "profit") {$_.Profit}}; Descending = $true}, @{Expression = {if ($Session.Benchmarking -and $Session.Config.UIsorting -eq "profit") {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.IsExclusiveRun -or $Session.IsDonationRun -or $Session.IsServerDonationRun -or $MinersNeedingBenchmarkCount -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Where-Object {$Miners_Count -lt [Math]::Min($LimitMiners,5) -or ($Session.Config.UIstyle -ne "full" -and $_.HashRates.PSObject.Properties.Value -gt 0) -or ($_.Profit+$(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})) -ge $Miner_ProfitMin -or $_.Profit -eq $null;$Miners_Count++} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
+        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel -and ($_.HashRates.PSObject.Properties.Value -gt 0 -or $_.Profit -eq $null)} | Sort-Object @{Expression = {if ($Session.Benchmarking -and $Session.Config.UIsorting -ne "profit") {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.Benchmarking -or $Session.Config.UIsorting -eq "profit") {$_.Profit}}; Descending = $true}, @{Expression = {if ($Session.Benchmarking -and $Session.Config.UIsorting -eq "profit") {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.IsExclusiveRun -or $Session.IsDonationRun -or $Session.IsServerDonationRun -or $MinersNeedingBenchmarkCount -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Where-Object {$Miners_Count -lt [RBMToolBox]::Min($LimitMiners,5) -or ($Session.Config.UIstyle -ne "full" -and $_.HashRates.PSObject.Properties.Value -gt 0) -or ($_.Profit+$(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})) -ge $Miner_ProfitMin -or $_.Profit -eq $null;$Miners_Count++} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
     }
 
     if ($Session.RestartMiners) {
@@ -4356,7 +4356,7 @@ function Invoke-Core {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmarkCount) miner$(if ($MinersNeedingBenchmarkCount -gt 1){'s'}) left, interval is set to $($Session.Config.BenchmarkInterval) seconds."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
             if ($Session.Config.UIFullBenchmarkList -or $MinersNeedingBenchmarkWithEI -gt 0) {
-                $BenchmarkMinutes = [Math]::Ceiling($Session.Config.BenchmarkInterval/60)
+                $BenchmarkMinutes = [RBMToolBox]::Ceiling($Session.Config.BenchmarkInterval/60)
                 Write-Host " "
                 Write-Host "Please be patient!" -BackgroundColor Yellow -ForegroundColor Black
                 if ($MinersNeedingBenchmarkWithEI -gt 0) {
@@ -4502,7 +4502,7 @@ function Invoke-Core {
             $CurrentProfitWithoutCostTotal_Out = $CurrentProfitWithoutCostTotal
             $CurrentProfit_Offset = 2
             if ($Miner_Currency -eq "BTC" -and $CurrentProfitWithoutCostTotal -ne 0) {
-                switch ([math]::truncate([math]::log([math]::Abs($CurrentProfitWithoutCostTotal), 1000))) {
+                switch ([RBMToolBox]::Truncate([RBMToolBox]::Log([RBMToolBox]::Abs($CurrentProfitWithoutCostTotal), 1000))) {
                     -1 {$Miner_Currency_Out = "mBTC";$CurrentProfitTotal_Out*=1e3;$CurrentProfitWithoutCostTotal_Out*=1e3;$CurrentProfit_Offset = 5;Break}
                     -2 {$Miner_Currency_Out = "µBTC";$CurrentProfitTotal_Out*=1e6;$CurrentProfitWithoutCostTotal_Out*=1e6;$CurrentProfit_Offset = 8;Break}
                     -3 {$Miner_Currency_Out = "sat"; $CurrentProfitTotal_Out*=1e8;$CurrentProfitWithoutCostTotal_Out*=1e8;$CurrentProfit_Offset = 10;Break}
@@ -4514,13 +4514,13 @@ function Invoke-Core {
 
     $API.CurrentProfit = $CurrentProfitTotal
     $API.CurrentPower = [PSCustomObject]@{
-        CPU = [Math]::Round($CurrentPowerDrawCPU,2)
-        GPU = [Math]::Round($CurrentPowerDrawGPU,2)
+        CPU = [RBMToolBox]::Round($CurrentPowerDrawCPU,2)
+        GPU = [RBMToolBox]::Round($CurrentPowerDrawGPU,2)
         Offset = 0
     }
-    $API.CurrentPower.Offset = [Math]::Round(($API.CurrentPower.CPU + $API.CurrentPower.GPU) * ($Session.Config.PowerOffsetPercent/100) + $Session.Config.PowerOffset,2)
+    $API.CurrentPower.Offset = [RBMToolBox]::Round(($API.CurrentPower.CPU + $API.CurrentPower.GPU) * ($Session.Config.PowerOffsetPercent/100) + $Session.Config.PowerOffset,2)
 
-    if ($Session.Config.UsePowerPrice) {[void]$StatusLine.Add("E-Price = $($Session.Config.PowerPriceCurrency) $([Math]::Round($Session.CurrentPowerPrice,3))")}
+    if ($Session.Config.UsePowerPrice) {[void]$StatusLine.Add("E-Price = $($Session.Config.PowerPriceCurrency) $([RBMToolBox]::Round($Session.CurrentPowerPrice,3))")}
 
     Write-Host " [$(Get-Date)] Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
@@ -4551,7 +4551,7 @@ function Invoke-Core {
                     $key = "$($obj.workername)|$($obj.machinename)" 
                     if (-not $lookup.ContainsKey($key) -or $obj.timestamp -gt $lookup[$key].timestamp) {
                         $lookup[$key] = $obj
-                        $lastseen = [Math]::Round((Get-UnixTimestamp)-$obj.timestamp,0)
+                        $lastseen = [RBMToolBox]::Round((Get-UnixTimestamp)-$obj.timestamp,0)
                         Write-Host "[$($obj.workername)@$(if ($obj.machinename) {$obj.machinename} else {$obj.machineip})]" -ForegroundColor "$(if ($lastseen -gt 300) {"Red"} else {"Green"}) " -NoNewline
                     } else {
                         $dropsome = $true
@@ -4630,9 +4630,9 @@ function Invoke-Core {
     $Session.SkipSwitchingPrevention = $Session.Stopp = $Session.RestartComputer = $keyPressed = $false
 
     #Dynamically adapt current interval
-    $NextIntervalPreset = if ($Running) {$Session.Config."$(if ($Session.Benchmarking -or $Session.IsBenchmarkingRun) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}
+    $NextIntervalPreset = if ($Running) {$Session.Config."$(if ($Session.Benchmarking -or $Session.IsBenchmarkingRun) {"Benchmark"})Interval"} else {[RBMToolBox]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}
     if (($Session.IsDonationRun -or $Session.IsServerDonationRun) -and $NextIntervalPreset -gt $DonateMinutes*60) {$NextIntervalPreset = $DonateMinutes*60}
-    $NextInterval = [Math]::Max($NextIntervalPreset,$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-20)).TotalSeconds)
+    $NextInterval = [RBMToolBox]::Max($NextIntervalPreset,$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-20)).TotalSeconds)
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
@@ -4679,7 +4679,7 @@ function Invoke-Core {
                 $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             } elseif ($MinersUpdateStatus.MinersFailed -and -not $SomeMinersFailed) {
                 if (-not $Session.Benchmarking -and -not $Session.IsBenchmarkingRun) {
-                    $NextRoundEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$Session.RoundStart).TotalSeconds))
+                    $NextRoundEnd = $Session.Timer.AddSeconds([RBMToolBox]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$Session.RoundStart).TotalSeconds))
                     if ($NextRoundEnd -lt $RoundEnd) {$RoundEnd = $NextRoundEnd}
                 }
                 $SomeMinersFailed = $true
@@ -5299,7 +5299,7 @@ function Get-Balance {
 
     $Balances | Foreach-Object {
         $Balance = $_
-        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \(|Pending \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($n = if ($Balance.$_ -ge 10 -and $Digits[$Matches[2]] -eq 8) {[Math]::Min([Math]::Ceiling([Math]::Log10($Balance.$_)),8)} else {1};$Digits[$Matches[2]]-$n+1)}" -f $Balance.$_}
+        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \(|Pending \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($n = if ($Balance.$_ -ge 10 -and $Digits[$Matches[2]] -eq 8) {[RBMToolBox]::Min([RBMToolBox]::Ceiling([RBMToolBox]::Log10($Balance.$_)),8)} else {1};$Digits[$Matches[2]]-$n+1)}" -f $Balance.$_}
     }
 
     $Balances_DateTime = Get-Date
@@ -5403,7 +5403,7 @@ function Set-MinerStats {
                     $WatchdogTimer.Active = $wdTime
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
-                    } elseif ($Miner_Benchmarking -or ($Miner_Speed -and $Miner.Rounds -lt [Math]::Max($Miner.ExtendedInterval,1)-1)) {
+                    } elseif ($Miner_Benchmarking -or ($Miner_Speed -and $Miner.Rounds -lt [RBMToolBox]::Max($Miner.ExtendedInterval,1)-1)) {
                         $WatchdogTimer.Kicked = $wdTime
                     } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds(-$Session.WatchdogInterval)) {
                         $Miner_Failed = $true
@@ -5581,8 +5581,8 @@ function Invoke-ReportMinerStatus {
         }
     ) -Depth 10 -Compress
     
-    $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
-    $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
+    $Profit = [RBMToolBox]::Round($Profit, 8) | ConvertTo-Json
+    $PowerDraw = [RBMToolBox]::Round($PowerDraw, 2) | ConvertTo-Json
 
     $Pool_Totals = if ($Session.ReportTotals) {
         Set-TotalsAvg -CleanupOnly
@@ -5734,7 +5734,7 @@ function Invoke-ReportMinerStatus {
                     $Earnings_Avg = 0.0
                     $Earnings_1d  = 0.0
                     $LastSeen_Min = (Get-UnixTimestamp) - 300
-                    $OtherWorkers | Where-Object {$LastSeen_Min -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
+                    $OtherWorkers | Where-Object {$LastSeen_Min -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [RBMToolBox]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [RBMToolBox]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
                     $API.RemoteMiners = $OtherWorkers
                     $API.RemoteMinersProfit = $Profit
                     $API.RemoteMinersEarnings_Avg = $Earnings_Avg
@@ -5865,7 +5865,7 @@ function Update-Rates {
         elseif ($Session.GetTicker -inotcontains $_.InputObject) {[void]$Session.GetTicker.Add($_.InputObject.ToUpper())}
     }
 
-    Compare-Object @($WCSymbols) @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
+    Compare-Object @($WCSymbols) @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [RBMToolBox]::Round($Global:Rates[$_],3)}
 
     if ($Session.GetTicker.Count -gt 0) {
         try {
@@ -5895,7 +5895,7 @@ function Update-WatchdogLevels {
         [Int]$Interval = 0
     )
     if ($Interval -lt $Session.Config.BenchmarkInterval) {$Interval = $Session.Config.BenchmarkInterval}
-    if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
+    if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [RBMToolBox]::Max($Session.CurrentInterval,$Interval)}
     $Session.WatchdogInterval    = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
     $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
 }
