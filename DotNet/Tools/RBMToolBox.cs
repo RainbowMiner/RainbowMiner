@@ -9,7 +9,6 @@ using System.Reflection;
 
 public static class RBMToolBox
 {
-
     public static bool IsNetcoreApp()
     {
 #if NETCOREAPP3_0_OR_GREATER
@@ -701,8 +700,55 @@ public static class RBMToolBox
         return obj;
     }
 
+    // 9. Math functions
+#if NETCOREAPP3_0_OR_GREATER
+    public static double Round(double value, int digits) => Math.Round(value, digits);
+    public static double Min(double a, double b) => Math.Min(a, b);
+    public static double Max(double a, double b) => Math.Max(a, b);
+    public static double Abs(double value) => Math.Abs(value);
+    public static double Pow(double a, double b) => Math.Pow(a, b);
+    public static double Log(double value) => Math.Log(value);
+    public static double Floor(double value) => Math.Floor(value);
+#else
+    public static double Round(double value, int digits)
+    {
+        return Math.Round(value, digits, MidpointRounding.AwayFromZero);
+    }
+
+    public static double Min(double a, double b)
+    {
+        return a < b ? a : b;
+    }
+
+    public static double Max(double a, double b)
+    {
+        return a > b ? a : b;
+    }
+
+    public static double Abs(double value)
+    {
+        return (value < 0) ? -value : value;
+    }
+
+    public static double Pow(double a, double b)
+    {
+        return Math.Pow(a, b);
+    }
+
+    public static double Log(double value)
+    {
+        return (value > 0) ? Math.Log(value) : double.NaN;
+    }
+
+    public static double Floor(double value)
+    {
+        return Math.Floor(value);
+    }
+#endif
+
     private static object[] ConvertToValueTypeOrStringArray(object obj)
     {
+#if NETCOREAPP3_0_OR_GREATER
         // If it's already an array, convert it manually to an object array
         if (obj is Array arr && arr.Length > 0)
         {
@@ -721,7 +767,33 @@ public static class RBMToolBox
             return new object[] { obj };
 
         return Array.Empty<object>(); // If not ValueType or string, return empty array
-    }
+#else
+        // Handle null values
+        if (obj == null)
+            return new object[0]; // Instead of Array.Empty<object>(), which is PS7+
 
+        // If it's already an array, convert it manually to an object array
+        Array arr = obj as Array;
+        if (arr != null && arr.Length > 0)
+        {
+            object[] result = new object[arr.Length];
+            for (int i = 0; i < arr.Length; i++)
+            {
+                result[i] = UnwrapPSObject(arr.GetValue(i));
+            }
+            return result;
+        }
+
+        // If it's a string, treat it as an array of one string
+        if (obj is string)
+            return new object[] { obj };
+
+        // If it's a ValueType (like int, double, bool), treat it as an array of one
+        if (obj is ValueType)
+            return new object[] { obj };
+
+        return new object[0]; // Return empty array if none of the conditions match
+#endif
+    }
 
 }
