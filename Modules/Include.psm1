@@ -158,7 +158,7 @@ function Compare-Version {
     param($Version1,$Version2,[int]$revs = -1)
     $ver1 = ($Version1 -Split '-' -Replace "[^0-9.]")[0] -split '\.'
     $ver2 = ($Version2 -Split '-' -Replace "[^0-9.]")[0] -split '\.'
-    $max = [Math]::min($ver1.Count,$ver2.Count)
+    $max = [RBMToolBox]::Min($ver1.Count,$ver2.Count)
     if ($revs -gt 0 -and $revs -lt $max) {$max = $revs}
 
     for($i=0;$i -lt $max;$i++) {
@@ -228,7 +228,7 @@ function Confirm-Cuda {
    if (-not $RequiredVersion) {return $true}
     $ver1 = $ActualVersion -split '\.'
     $ver2 = $RequiredVersion -split '\.'
-    $max = [Math]::min($ver1.Count,$ver2.Count)
+    $max = [RBMToolBox]::Min($ver1.Count,$ver2.Count)
 
     for($i=0;$i -lt $max;$i++) {
         if ([int]$ver1[$i] -lt [int]$ver2[$i]) {if ($Warning -ne "") {Write-Log "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};return $false}
@@ -549,7 +549,7 @@ Function Write-Log {
 
         if (-not $NoLog) {
             if ($Session.Debug) {
-                $grow = Test-CacheGrow -Name @("Where","min","ContainsKey","Substring","Foreach","Append","Contains","split","Replace","Pow","Insert","IndexOf","(Log","Floor","EndsWith","IsNullOrEmpty","IsNullOrWhiteSpace")
+                $grow = Test-CacheGrow
                 $grow_out = @()
                 foreach ( $item in $grow ) {
                     $grow_out += "$($item.Name) $(if ($item.Diff -ge 0) {"+"})$($item.Diff)"
@@ -685,13 +685,13 @@ function Set-Total {
                 PoolName    = "$($Miner.Pool | Select-Object -First 1)"
                 Algorithm   = "$($Miner.BaseAlgorithm | Select-Object -First 1)"
                 Currency    = "$($Miner.Currency -join '+')"
-                Rate        = [Math]::Round($Global:Rates.USD,2)
-                Profit      = [Math]::Round($TotalProfit*1e8,4)
-                ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)
-                Cost        = [Math]::Round($TotalCost*1e8,4)
-                Power       = [Math]::Round($TotalPower,3)
+                Rate        = [RBMToolBox]::Round($Global:Rates.USD,2)
+                Profit      = [RBMToolBox]::Round($TotalProfit*1e8,4)
+                ProfitApi   = [RBMToolBox]::Round($TotalProfitApi*1e8,4)
+                Cost        = [RBMToolBox]::Round($TotalCost*1e8,4)
+                Power       = [RBMToolBox]::Round($TotalPower,3)
                 Penalty     = $Penalty
-                Duration    = [Math]::Round($Duration.TotalMinutes,3)
+                Duration    = [RBMToolBox]::Round($Duration.TotalMinutes,3)
                 Donation    = "$(if ($Miner.Donator) {"1"} else {"0"})"
             }
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
@@ -1142,8 +1142,8 @@ function Set-Stat {
             if ($FaultDetection) {
                 if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
                 if ($FaultTolerance -lt 1) {
-                    $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100), 0.9))
-                    $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + [Math]::Max($Stat.Failed * 3,10)/100), 2))
+                    $ToleranceMin = $Stat.Week * (1 - [RBMToolBox]::Min([RBMToolBox]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100), 0.9))
+                    $ToleranceMax = $Stat.Week * (1 + [RBMToolBox]::Min([RBMToolBox]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + [RBMToolBox]::Max($Stat.Failed * 3,10)/100), 2))
                 } elseif ($Stat.Hour -gt 0) {
                     if ($FaultTolerance -lt 2) {$FaultTolerance = 2}
                     $ToleranceMin = $Stat.Hour / $FaultTolerance
@@ -1185,35 +1185,35 @@ function Set-Stat {
                 }
 
             } else {
-                $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
-                $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
-                $Span_Minute_10 = [Math]::Min(($Duration.TotalMinutes / 10) / [Math]::Min(($Stat.Duration.TotalMinutes / 10), 1), 1)
-                $Span_Hour = [Math]::Min($Duration.TotalHours / [Math]::Min($Stat.Duration.TotalHours, 1), 1)
-                $Span_Day = [Math]::Min($Duration.TotalDays / [Math]::Min($Stat.Duration.TotalDays, 1), 1)
-                $Span_ThreeDay = [Math]::Min(($Duration.TotalDays / 3) / [Math]::Min(($Stat.Duration.TotalDays / 3), 1), 1)
-                $Span_Week = [Math]::Min(($Duration.TotalDays / 7) / [Math]::Min(($Stat.Duration.TotalDays / 7), 1), 1)
+                $Span_Minute = [RBMToolBox]::Min($Duration.TotalMinutes / [RBMToolBox]::Min($Stat.Duration.TotalMinutes, 1), 1)
+                $Span_Minute_5 = [RBMToolBox]::Min(($Duration.TotalMinutes / 5) / [RBMToolBox]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
+                $Span_Minute_10 = [RBMToolBox]::Min(($Duration.TotalMinutes / 10) / [RBMToolBox]::Min(($Stat.Duration.TotalMinutes / 10), 1), 1)
+                $Span_Hour = [RBMToolBox]::Min($Duration.TotalHours / [RBMToolBox]::Min($Stat.Duration.TotalHours, 1), 1)
+                $Span_Day = [RBMToolBox]::Min($Duration.TotalDays / [RBMToolBox]::Min($Stat.Duration.TotalDays, 1), 1)
+                $Span_ThreeDay = [RBMToolBox]::Min(($Duration.TotalDays / 3) / [RBMToolBox]::Min(($Stat.Duration.TotalDays / 3), 1), 1)
+                $Span_Week = [RBMToolBox]::Min(($Duration.TotalDays / 7) / [RBMToolBox]::Min(($Stat.Duration.TotalDays / 7), 1), 1)
 
                 $Stat = Switch ($Mode) {
                     "Miners" {
                         [PSCustomObject]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([RBMToolBox]::Abs($Value - $Stat.Minute) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
                             Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([RBMToolBox]::Abs($Value - $Stat.Minute_5) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
                             Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([RBMToolBox]::Abs($Value - $Stat.Minute_10) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
                             Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([RBMToolBox]::Abs($Value - $Stat.Hour) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
                             Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([RBMToolBox]::Abs($Value - $Stat.Day) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
                             ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([RBMToolBox]::Abs($Value - $Stat.ThreeDay) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
                             Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([RBMToolBox]::Abs($Value - $Stat.Week) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
-                            Failed = [Math]::Max($Stat.Failed-1,0)
+                            Failed = [RBMToolBox]::Max($Stat.Failed-1,0)
 
                             # Miners part
                             PowerDraw_Live     = $PowerDraw
@@ -1225,7 +1225,7 @@ function Set-Stat {
                             Version            = $Version
                             LogFile            = $LogFile
                             IsFL               = $false
-                            #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
+                            #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[RBMToolBox]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                         }
                         Break
                     }
@@ -1233,22 +1233,22 @@ function Set-Stat {
                         [PSCustomObject]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([RBMToolBox]::Abs($Value - $Stat.Minute) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
                             Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([RBMToolBox]::Abs($Value - $Stat.Minute_5) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
                             Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([RBMToolBox]::Abs($Value - $Stat.Minute_10) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
                             Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([RBMToolBox]::Abs($Value - $Stat.Hour) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
                             Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([RBMToolBox]::Abs($Value - $Stat.Day) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
                             ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([RBMToolBox]::Abs($Value - $Stat.ThreeDay) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
                             Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([RBMToolBox]::Abs($Value - $Stat.Week) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
-                            Failed = [Math]::Max($Stat.Failed-1,0)
+                            Failed = [RBMToolBox]::Max($Stat.Failed-1,0)
 
                             # Pools part
                             HashRate_Live      = $HashRate
@@ -1267,22 +1267,22 @@ function Set-Stat {
                         [PSCustomObject]@{
                             Live = $Value
                             Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([RBMToolBox]::Abs($Value - $Stat.Minute) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
                             Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([RBMToolBox]::Abs($Value - $Stat.Minute_5) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
                             Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([RBMToolBox]::Abs($Value - $Stat.Minute_10) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
                             Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([RBMToolBox]::Abs($Value - $Stat.Hour) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
                             Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([RBMToolBox]::Abs($Value - $Stat.Day) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
                             ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([RBMToolBox]::Abs($Value - $Stat.ThreeDay) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
                             Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([RBMToolBox]::Abs($Value - $Stat.Week) / [RBMToolBox]::Max([RBMToolBox]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
                             Duration = $Stat.Duration + $Duration
                             Updated = $Updated
-                            Failed = [Math]::Max($Stat.Failed-1,0)
+                            Failed = [RBMToolBox]::Max($Stat.Failed-1,0)
 
                             # Profit part
                             PowerDraw_Live     = $PowerDraw
@@ -1400,7 +1400,7 @@ function Set-Stat {
     }
 
     if ($Mode -eq "Pools") {
-        $Stat.ErrorRatio = [Math]::Min(1+$(if ($Stat.Estimate24h_Week) {($Stat.Actual24h_Week/$Stat.Estimate24h_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays/7*(2 - $Stat.Duration.TotalDays/7)} else {1})}),[Math]::Max($Stat.Duration.TotalDays,1))
+        $Stat.ErrorRatio = [RBMToolBox]::Min(1+$(if ($Stat.Estimate24h_Week) {($Stat.Actual24h_Week/$Stat.Estimate24h_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays/7*(2 - $Stat.Duration.TotalDays/7)} else {1})}),[RBMToolBox]::Max($Stat.Duration.TotalDays,1))
         if ($Session.Config.MaxErrorRatio -and $Stat.ErrorRatio -gt $Session.Config.MaxErrorRatio) {
             $Stat.ErrorRatio = $Session.Config.MaxErrorRatio
         }
@@ -1804,7 +1804,7 @@ function Get-PoolsContent {
 
     $UsePoolName = if ($Parameters.Name) {$Parameters.Name} else {$PoolName}
 
-    $DiffFactor = 86400 / [Math]::Pow(2,32)
+    $DiffFactor = 86400 / 4294967296 #[RBMToolBox]::Pow(2,32)
 
     $script = Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore
 
@@ -1832,19 +1832,19 @@ function Get-PoolsContent {
                             if ($Pool_MaxAllowedLuck -gt 0) {
                                 $Luck = if ($c.BLK -gt 0) {$c.TSL * $c.BLK / 86400} else {1}
                                 if ($Luck -gt $Pool_MaxAllowedLuck) {
-                                    $Penalty += [Math]::Exp([Math]::Min($Luck - $Pool_MaxAllowedLuck,0.385)*12)-1
+                                    $Penalty += [RBMToolBox]::Exp([RBMToolBox]::Min($Luck - $Pool_MaxAllowedLuck,0.385)*12)-1
                                 }
                             }
                         }
                         # check for MaxTimeSinceLastBlock
                         $Pool_MaxTimeSinceLastBlock = if ($Parameters.MaxTimeSinceLastBlock -ne $null) {$Parameters.MaxTimeSinceLastBlock} else {$Session.Config.MaxTimeSinceLastBlock}
                         if ($Pool_MaxTimeSinceLastBlock -gt 0 -and $c.TSL -gt $Pool_MaxTimeSinceLastBlock) {
-                            $Penalty += [Math]::Exp([Math]::Min($c.TSL - $Pool_MaxTimeSinceLastBlock,554)/120)-1
+                            $Penalty += [RBMToolBox]::Exp([RBMToolBox]::Min($c.TSL - $Pool_MaxTimeSinceLastBlock,554)/120)-1
                         }
                     }
                 }
 
-                $Pool_Factor = [Math]::Max(1-$Penalty/100,0)
+                $Pool_Factor = [RBMToolBox]::Max(1-$Penalty/100,0)
 
                 if ($EnableErrorRatio -and $c.ErrorRatio) {$Pool_Factor *= $c.ErrorRatio}
 
@@ -1968,7 +1968,7 @@ filter ConvertTo-Float {
     $Num = $_ -as [double]
 
     if ($Num -eq $null) {0} else {
-        switch ([math]::floor([math]::log($Num, 1e3))) {
+        switch ([RBMToolBox]::Floor([RBMToolBox]::Log($Num, 1e3))) {
             "-Infinity" {"0  ";Break}
             -2 {"{0:n2} µ" -f ($Num * 1e6);Break}
             -1 {"{0:n2} m" -f ($Num * 1e3);Break}
@@ -1998,11 +1998,11 @@ filter ConvertTo-TTF {
                 elseif ($Secs.Days -gt 182) {">6 mo"}
                 elseif ($Secs.Days -gt 30) {">1 mo"}
                 elseif ($Secs.Days -gt 7) {">1 w"}
-                else {"$([Math]::Round($Secs.TotalDays,1)) d"}
+                else {"$([RBMToolBox]::Round($Secs.TotalDays,1)) d"}
             }
-            elseif ($Secs.Hours -gt 0) {"$([Math]::Round($Secs.TotalHours,1)) h"}
-            elseif ($Secs.Minutes -gt 0) {"$([Math]::Round($Secs.TotalMinutes,1)) m"}
-            else {"$([Math]::Round($Secs.TotalSeconds,1)) s"}
+            elseif ($Secs.Hours -gt 0) {"$([RBMToolBox]::Round($Secs.TotalHours,1)) h"}
+            elseif ($Secs.Minutes -gt 0) {"$([RBMToolBox]::Round($Secs.TotalMinutes,1)) m"}
+            else {"$([RBMToolBox]::Round($Secs.TotalSeconds,1)) s"}
         } else {">10 y"}
     } catch {
         ">10 y"
@@ -2076,7 +2076,7 @@ function ConvertTo-LocalCurrency {
         [Int]$Offset = 2
     )
 
-    ($Number * $BTCRate).ToString("N$([math]::max([math]::min([math]::truncate(10 - $Offset - [math]::log10($BTCRate)),9),0))")
+    ($Number * $BTCRate).ToString("N$([RBMToolBox]::Max([RBMToolBox]::Min([RBMToolBox]::Truncate(10 - $Offset - [RBMToolBox]::Log10($BTCRate)),9),0))")
 }
 
 function ConvertTo-BTC {
@@ -2090,7 +2090,7 @@ function ConvertTo-BTC {
 
     $Currency = "BTC"
     if ($Number -ne 0) {
-        switch ([math]::truncate([math]::log([math]::Abs($Number), 1000))) {
+        switch ([RBMToolBox]::Truncate([RBMToolBox]::Log([RBMToolBox]::Abs($Number), 1000))) {
             -1 {$Currency = "mBTC";$Number*=1e3;$Offset = 5;Break}
             -2 {$Currency = "µBTC";$Number*=1e6;$Offset = 8;Break}
             -3 {$Currency = "sat"; $Number*=1e8;$Offset = 10;Break}
@@ -2114,15 +2114,15 @@ function Get-Combination {
     $Combination = [PSCustomObject]@{}
 
     for ($i = 0; $i -lt $Value.Count; $i++) {
-        $Combination | Add-Member @{[Math]::Pow(2, $i) = $Value[$i]}
+        $Combination | Add-Member @{[RBMToolBox]::Pow(2, $i) = $Value[$i]}
     }
 
     $Combination_Keys = $Combination | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
 
     for ($i = $SizeMin; $i -le $SizeMax; $i++) {
-        $x = [Math]::Pow(2, $i) - 1
+        $x = [RBMToolBox]::Pow(2, $i) - 1
 
-        while ($x -le [Math]::Pow(2, $Value.Count) - 1) {
+        while ($x -le [RBMToolBox]::Pow(2, $Value.Count) - 1) {
             [PSCustomObject]@{Combination = $Combination_Keys | Where-Object {$_ -band $x} | ForEach-Object {$Combination.$_}}
             $smallest = ($x -band - $x)
             $ripple = $x + $smallest
@@ -2481,7 +2481,7 @@ function Start-SubProcessInScreen {
     $Stuff | Foreach-Object {
         $str = $_
         while ($str) {
-            $substr = $str.substring(0,[Math]::Min($str.length,$StringChunkSize))
+            $substr = $str.substring(0,[RBMToolBox]::Min($str.length,$StringChunkSize))
             if ($str.length -gt $substr.length) {
                 [void]$Cmd.Add("screen -S $($ScreenName) -X stuff $`"$($substr -replace '"','\"')`"")
                 $str = $str.substring($substr.length)
@@ -2691,7 +2691,7 @@ function Start-SubProcessInTmux {
     $Stuff | ForEach-Object {
         $str = $_
         while ($str) {
-            $substr = $str.Substring(0, [Math]::Min($str.Length, $StringChunkSize))
+            $substr = $str.Substring(0, [RBMToolBox]::Min($str.Length, $StringChunkSize))
             if ($str.Length -gt $substr.Length) {
                 [void]$Cmd.Add("tmux send-keys -t $($ScreenName) $`"$($substr -replace '\"', '\"')`"")
                 $str = $str.Substring($substr.Length)
@@ -4819,8 +4819,8 @@ function Update-DeviceInformation {
                                         $DeviceId = 0
 
                                         $AdlStats | Foreach-Object {
-                                            $CPstateMax = [Math]::max([int]($_."Core P_States")-1,0)
-                                            $MPstateMax = [Math]::max([int]($_."Memory P_States")-1,0)
+                                            $CPstateMax = [RBMToolBox]::Max([int]($_."Core P_States")-1,0)
+                                            $MPstateMax = [RBMToolBox]::Max([int]($_."Memory P_States")-1,0)
                                             $PCIBusId   = "$($_."Bus Id" -replace "\..+$")"
 
                                             $Data = [PSCustomObject]@{
@@ -5022,7 +5022,7 @@ function Update-DeviceInformation {
                         $_.Data.PowerDefaultLimit = $smi.power_default_limit
                         $_.Data.Method            = "smi"
 
-                        if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
+                        if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [RBMToolBox]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
                         if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
                     }
                     $DeviceId++
@@ -5034,13 +5034,13 @@ function Update-DeviceInformation {
 
         try {
             $Devices | Foreach-Object {
-                if ($_.Data.Clock -ne $null)       {$_.DataMax.Clock    = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)}
-                if ($_.Data.ClockMem -ne $null)    {$_.DataMax.ClockMem = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)}
-                if ($_.Data.Temperature -ne $null) {$_.DataMax.Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)}
-                if ($_.Data.FanSpeed -ne $null)    {$_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)}
+                if ($_.Data.Clock -ne $null)       {$_.DataMax.Clock    = [RBMToolBox]::Max([int]$_.DataMax.Clock,$_.Data.Clock)}
+                if ($_.Data.ClockMem -ne $null)    {$_.DataMax.ClockMem = [RBMToolBox]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)}
+                if ($_.Data.Temperature -ne $null) {$_.DataMax.Temperature = [RBMToolBox]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)}
+                if ($_.Data.FanSpeed -ne $null)    {$_.DataMax.FanSpeed    = [RBMToolBox]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)}
                 if ($_.Data.PowerDraw -ne $null)   {
                     $_.Data.PowerDraw    *= ($PowerAdjust[$_.Model] / 100)
-                    $_.DataMax.PowerDraw  = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                    $_.DataMax.PowerDraw  = [RBMToolBox]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
                 }
             }
         } catch {
@@ -5070,7 +5070,7 @@ function Update-DeviceInformation {
             }
             elseif ($IsLinux) {
                 $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-                    [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
+                    [int]$Utilization = [RBMToolBox]::Min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Clock) {$Session.SysInfo.Cpus[0].Clock} else {$Global:GlobalCPUInfo.MaxClockSpeed})
                     $_.Data.Utilization = [int]$Utilization
@@ -5080,10 +5080,10 @@ function Update-DeviceInformation {
                 }
             }
             $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-                $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                $_.DataMax.Utilization = [Math]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
-                $_.DataMax.PowerDraw   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                $_.DataMax.Clock       = [RBMToolBox]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                $_.DataMax.Utilization = [RBMToolBox]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
+                $_.DataMax.PowerDraw   = [RBMToolBox]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                $_.DataMax.Temperature = [RBMToolBox]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
             }
         }
     } catch {
@@ -5594,7 +5594,7 @@ function Get-Sigma {
     if ($data -and $data.count -gt 1) {
         $mean  = ($data | measure-object -Average).Average
         $bias  = $data.Count-1.5+1/(8*($data.Count-1))
-        [Math]::Sqrt(($data | Foreach-Object {[Math]::Pow(($_ - $mean),2)} | Measure-Object -Sum).Sum/$bias)
+        [RBMToolBox]::Sqrt(($data | Foreach-Object {[RBMToolBox]::Pow(($_ - $mean),2)} | Measure-Object -Sum).Sum/$bias)
     } else {0}
 }
 
@@ -7012,8 +7012,8 @@ function Get-CPUAffinity {
     elseif ($ToInt) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads)}
     else {
         @(if ($Threads -and $Threads -ne $Global:GlobalCPUInfo.RealCores.Count) {
-            $a = $r = 0; $b = [Math]::max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));
-            for($i=0;$i -lt [Math]::min($Threads,$Global:GlobalCPUInfo.Threads);$i++) {$a;$c=($a+$b)%$Global:GlobalCPUInfo.Threads;if ($c -lt $a) {$r++;$a=$c+$r}else{$a=$c}}
+            $a = $r = 0; $b = [RBMToolBox]::Max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));
+            for($i=0;$i -lt [RBMToolBox]::Min($Threads,$Global:GlobalCPUInfo.Threads);$i++) {$a;$c=($a+$b)%$Global:GlobalCPUInfo.Threads;if ($c -lt $a) {$r++;$a=$c+$r}else{$a=$c}}
         } else {$Global:GlobalCPUInfo.RealCores}) | Sort-Object
     }
 }
@@ -7183,7 +7183,7 @@ function Get-Subsets($a){
     #create an array to store output
     [System.Collections.ArrayList]$l = @()
     #for any set of length n the maximum number of subsets is 2^n
-    for ($i = 0; $i -lt [Math]::Pow(2,$a.Length); $i++)
+    for ($i = 0; $i -lt [RBMToolBox]::Pow(2,$a.Length); $i++)
     { 
         #temporary array to hold output
         [string[]]$out = New-Object string[] $a.length
@@ -7244,7 +7244,7 @@ function Get-VariableUsage {
                     elseif ($_.Value -is [Array] -or $_.Value -is [System.Collections.ICollection]) {
                         try {
                             $jsonSize = ($_ | ConvertTo-Json -Depth 3 -Compress) 2>$null
-                            $size = [math]::Min($jsonSize.Length, $_.Value.Count * 500)
+                            $size = [RBMToolBox]::Min($jsonSize.Length, $_.Value.Count * 500)
                         } catch {
                             $size = $_.Value.Count * 100
                         }
@@ -7252,7 +7252,7 @@ function Get-VariableUsage {
                     else {
                         try {
                             $jsonSize = ($_ | ConvertTo-Json -Depth 2 -Compress) 2>$null
-                            $size = [math]::Min($jsonSize.Length, 10000)
+                            $size = [RBMToolBox]::Min($jsonSize.Length, 10000)
                         } catch {
                             $size = 1000
                         }
@@ -8045,9 +8045,9 @@ Param(
 
     $IsNewJob   = -not $AsyncLoader.Jobs.$Jobkey
 
-    $retry     = [Math]::Min([Math]::Max($retry,0),5)
-    $retrywait = [Math]::Min([Math]::Max($retrywait,0),5000)
-    $delay     = [Math]::Min([Math]::Max($delay,0),5000)
+    $retry     = [RBMToolBox]::Min([RBMToolBox]::Max($retry,0),5)
+    $retrywait = [RBMToolBox]::Min([RBMToolBox]::Max($retrywait,0),5000)
+    $delay     = [RBMToolBox]::Min([RBMToolBox]::Max($delay,0),5000)
 
     if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
         $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{}} else {"server"}
@@ -8129,7 +8129,7 @@ Param(
             if ($retry -gt 0) {
                 if (-not $RequestError) {$retry = 0}
                 else {
-                    $RetryWait_Time = [Math]::Min($AsyncLoader.Jobs.$Jobkey.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
+                    $RetryWait_Time = [RBMToolBox]::Min($AsyncLoader.Jobs.$Jobkey.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
                     if ($RetryWait_Time -gt 50) {
                         Start-Sleep -Milliseconds $RetryWait_Time
                     }
@@ -8444,7 +8444,7 @@ param(
     [Parameter(Mandatory = $False)]
     [Switch]$Milliseconds = $false
 )
-    [Math]::Floor((($DateTime - $Session.UnixEpoch).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
+    [RBMToolBox]::Floor((($DateTime - $Session.UnixEpoch).TotalSeconds - [int]$Session.TimeDiff)*$(if ($Milliseconds) {1000} else {1}))
 }
 
 function Get-UnixToUTC {
@@ -8782,10 +8782,10 @@ param(
         Invoke-NvidiaSmi "index","power.default_limit","power.min_limit","power.max_limit","power.limit" -Arguments "-i $($Device -join ',')" | Where-Object {$_.index -match "^\d+$"} | Foreach-Object {
             $index = $Device.IndexOf([int]$_.index)
             if ($index -ge 0) {
-                $PLim = [Math]::Round([double]($_.power_default_limit -replace '[^\d,\.]')*($PowerLimitPercent[[Math]::Min($index,$PowerLimitPercent.Count)]/100),2)
-                $PCur = [Math]::Round([double]($_.power_limit -replace '[^\d,\.]'))
-                if ($lim = [int]($_.power_min_limit -replace '[^\d,\.]')) {$PLim = [Math]::max($PLim, $lim)}
-                if ($lim = [int]($_.power_max_limit -replace '[^\d,\.]')) {$PLim = [Math]::min($PLim, $lim)}
+                $PLim = [RBMToolBox]::Round([double]($_.power_default_limit -replace '[^\d,\.]')*($PowerLimitPercent[[RBMToolBox]::Min($index,$PowerLimitPercent.Count)]/100),2)
+                $PCur = [RBMToolBox]::Round([double]($_.power_limit -replace '[^\d,\.]'))
+                if ($lim = [int]($_.power_min_limit -replace '[^\d,\.]')) {$PLim = [RBMToolBox]::Max($PLim, $lim)}
+                if ($lim = [int]($_.power_max_limit -replace '[^\d,\.]')) {$PLim = [RBMToolBox]::Min($PLim, $lim)}
                 if ($PLim -ne $PCur) {
                     Invoke-NvidiaSmi -Arguments "-i $($_.index)","-pl $($Plim.ToString("0.00", [System.Globalization.CultureInfo]::InvariantCulture))" -Runas > $null
                 }
@@ -8933,12 +8933,16 @@ function Test-CacheGrow {
       [Parameter(Mandatory = $False)]
       [String]$Title = "",
       [Parameter(Mandatory = $False)]
-      [String[]]$Name = @("Where")
+      [String[]]$Name
     )
 
     if ($Session.Debug -and $Title -ne "") {
         Write-Log $Title
         return
+    }
+
+    if ($Name.Count -eq 0) {
+        $Name = @("Where","min","ContainsKey","Substring","Foreach","Append","Contains","split","Replace","Pow","Insert","IndexOf","Log","Floor","EndsWith","IsNullOrEmpty","IsNullOrWhiteSpace")
     }
 
     if ($Global:CacheCount -eq $null) {
@@ -8980,9 +8984,8 @@ function Test-CacheGrow {
                                 }
                             }
                         }
-                    } else {
-                        $Global:CacheCount[$key] = $currentCount[$key]
                     }
+                    $Global:CacheCount[$key] = $currentCount[$key]
                 }
             }
         }
@@ -9421,9 +9424,9 @@ function Get-SysInfo {
             Cpus    = $CPUs
             Gpus    = $null
             Memory  = [PSCustomObject]@{
-                TotalGB = [decimal][Math]::Round($OSData.TotalVisibleMemorySize/1MB,1)
-                UsedGB  = [decimal][Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
-                UsedPercent = if ($OSData.TotalVisibleMemorySize -gt 0) {[Math]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/$OSData.TotalVisibleMemorySize * 100,2)} else {0}
+                TotalGB = [decimal][RBMToolBox]::Round($OSData.TotalVisibleMemorySize/1MB,1)
+                UsedGB  = [decimal][RBMToolBox]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/1MB,1)
+                UsedPercent = if ($OSData.TotalVisibleMemorySize -gt 0) {[RBMToolBox]::Round(($OSData.TotalVisibleMemorySize - $OSData.FreePhysicalMemory)/$OSData.TotalVisibleMemorySize * 100,2)} else {0}
             }
             Disks   = $null
         }
@@ -9454,10 +9457,10 @@ function Get-SysInfo {
                     [PSCustomObject]@{ 
                         Drive = $_.Root -replace "\\$"
                         Name = $_.Name
-                        TotalGB = [decimal][Math]::Round($total/1GB,1)
-                        FreeGB  = [decimal][Math]::Round($_.Free/1GB,1)
-                        UsedGB  = [decimal][Math]::Round($_.Used/1GB,1)
-                        UsedPercent = if ($total -gt 0) {[decimal][Math]::Round($_.Used/$total * 100,2)} else {0}
+                        TotalGB = [decimal][RBMToolBox]::Round($total/1GB,1)
+                        FreeGB  = [decimal][RBMToolBox]::Round($_.Free/1GB,1)
+                        UsedGB  = [decimal][RBMToolBox]::Round($_.Used/1GB,1)
+                        UsedPercent = if ($total -gt 0) {[decimal][RBMToolBox]::Round($_.Used/$total * 100,2)} else {0}
                         IsCurrent = "$($_.Root)$($_.CurrentLocation)" -eq "$(Pwd)"
                     }
                 })

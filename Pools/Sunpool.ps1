@@ -56,7 +56,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or ($_.altsymbol -and $Wall
     if ($ok -and -not $InfoOnly) {
         $Pool_Fee = $Pool_Request.feePercent
 
-        $Pool_TSL = [Math]::Round(($Pool_Request.timestampMilliSeconds - ($Pool_Request.lastBlocksFound.timestampMilliseconds | Measure-Object -Maximum).Maximum)/1000)
+        $Pool_TSL = [RBMToolBox]::Round(($Pool_Request.timestampMilliSeconds - ($Pool_Request.lastBlocksFound.timestampMilliseconds | Measure-Object -Maximum).Maximum)/1000)
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_Request.blocksFound24H -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}

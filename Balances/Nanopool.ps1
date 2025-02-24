@@ -28,7 +28,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         if (-not $Request.status) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned $($Request.error). "
         } else {
-            $Balance = [Math]::Max([Decimal]$Request.data.userParams.balance,0)
+            $Balance = [RBMToolBox]::Max([Decimal]$Request.data.userParams.balance,0)
             $Pending = [Decimal]$Request.data.userParams.balance_uncomfirmed
 			$Payouts = @(try {Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.rpc)/payments/$($Pool_Wallet.wallet)/0/50" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200 | Where-Object status | Select-Object -ExpandProperty data} catch {})
             [PSCustomObject]@{

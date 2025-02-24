@@ -69,7 +69,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Wallets.
 
             $Pool_SoloMining = $true
             $Pool_Diff       = if ($_.cycles -and [bool]$Pool_Request.network.PSObject.Properties["hashrate"]) {[double]$Pool_Request.network.hashrate."$($_.cycles)" * $blkTime} else {[double]$Pool_Request.network.difficulty * $(if ($_.cycles) {$_.cycles} else {1})}
-            $Pool_Diff      *= $diffFactor / [Math]::Pow(2,32)
+            $Pool_Diff      *= $diffFactor / 4294967296 #2^32
 
             $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value 0 -Duration $StatSpan -Difficulty $Pool_Diff -ChangeDetection $false -Quiet
         } else {

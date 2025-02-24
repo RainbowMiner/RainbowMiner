@@ -282,7 +282,7 @@ if ($AllRigs_Request) {
                             )) {$Valid_Rigs += $_.id}
                     }
                 } else {
-                    Write-Log -Level Warn "$($Name): Wait $([Math]::Round(($PauseBetweenRentals_Seconds - $NotRentedSince_Seconds)/60,1)) minutes for $($Worker1) rigs to be re-enabled."
+                    Write-Log -Level Warn "$($Name): Wait $([RBMToolBox]::Round(($PauseBetweenRentals_Seconds - $NotRentedSince_Seconds)/60,1)) minutes for $($Worker1) rigs to be re-enabled."
                 }
             }
 
@@ -369,7 +369,7 @@ if ($AllRigs_Request) {
 
                     try {
 
-                        $Rental_Result_CacheTime  = [Math]::Max([double]$_.status.hours*3600 - 5*[Math]::Max($Session.CurrentInterval,$Session.Config.Interval),0)
+                        $Rental_Result_CacheTime  = [RBMToolBox]::Max([double]$_.status.hours*3600 - 5*[RBMToolBox]::Max($Session.CurrentInterval,$Session.Config.Interval),0)
                         $Rental_Result_Force      = ($EnableAutoExtend -and $Rental_CheckForAutoExtend) -or $Rental_CheckForExtensionMessage -or -not $Rental_Result_CacheTime
 
                         $Rental_Result_Saved = Get-MiningRigRentalStat $Worker1 $_.rental_id
@@ -425,8 +425,8 @@ if ($AllRigs_Request) {
                                     "Algorithm"   = $Pool_Algorithm_Norm_Mapped
                                     "Coin"        = $Pool_CoinSymbol
                                     "Type"        = $Pool_Algorithm
-                                    "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
-                                    "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
+                                    "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[RBMToolBox]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
+                                    "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[RBMToolBox]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
                                     "MinDiffFmt"  = "$($Optimal_Difficulty.min | ConvertTo-Float)" -replace " "
                                     "MaxDiffFmt"  = "$($Optimal_Difficulty.max | ConvertTo-Float)" -replace " "
                                 }
@@ -489,17 +489,17 @@ if ($AllRigs_Request) {
                                             if ($AutoBonusExtendTimes_Value -le 0) {$AutoBonusExtendTimes_Value = 1000}
 
                                             if ($AutoBonusExtendForHours_Value -gt 0 -and $AutoBonusExtendByHours_Value -gt 0) {
-                                                $Rental_ExtendedBonus = [Math]::Min([Math]::Floor([double]$Rental_Result.length/$AutoBonusExtendForHours_Value),$AutoBonusExtendTimes_Value) * $AutoBonusExtendByHours_Value
+                                                $Rental_ExtendedBonus = [RBMToolBox]::Min([RBMToolBox]::Floor([double]$Rental_Result.length/$AutoBonusExtendForHours_Value),$AutoBonusExtendTimes_Value) * $AutoBonusExtendByHours_Value
                                                 if ($Rental_ExtendedBonus -gt $Rental_Extended) {
                                                     $Rental_ExtendedBonus = 0
                                                 }
                                             }
                                         }
 
-                                        $ExtendBy = [Math]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value - $Rental_Extended + $Rental_ExtendedBonus,$ExtendBy)
+                                        $ExtendBy = [RBMToolBox]::Min([double]$Rental_Result.length * $AutoExtendMaximumPercent_Value - $Rental_Extended + $Rental_ExtendedBonus,$ExtendBy)
                                     }
 
-                                    $ExtendBy = [Math]::Round($ExtendBy,2)
+                                    $ExtendBy = [RBMToolBox]::Round($ExtendBy,2)
 
                                     if ($ExtendBy -ge (1/6)) {
                                         $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$Pool_RigId/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
@@ -528,7 +528,7 @@ if ($AllRigs_Request) {
                             $Rental_RigProfit   = ([double]$_.hashrate.advertised.hash * (ConvertFrom-Hash "1$($_.hashrate.advertised.type)")) * ([double]$_.price.BTC.price / (ConvertFrom-Hash "1$($_.price.type)"))
 
                             $ExtMessage_Result = $null
-                            if (($Rental_AdvProfit - [Math]::Abs($Rental_AdvProfit - $Rental_AvgProfit)) -ge $Rental_RigProfit) {
+                            if (($Rental_AdvProfit - [RBMToolBox]::Abs($Rental_AdvProfit - $Rental_AvgProfit)) -ge $Rental_RigProfit) {
                                 $ExtMessage_Result = Invoke-MiningRigRentalRequest "/rental/$($_.rental_id)/message" $API_Key $API_Secret -params @{"message"=$ExtensionMessage} -method "PUT" -Timeout 60
                             }
 
@@ -585,9 +585,9 @@ if ($AllRigs_Request) {
                                                 "Algorithm"   = $Pool_Algorithm_Norm_Mapped
                                                 "Coin"        = $Pool_CoinSymbol
                                                 "Type"        = $Pool_Algorithm
-                                                "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[Math]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
-                                                "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[Math]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
-                                                "CurrentDiff" = if ($Pool_Diff -ge 10) {[Math]::Round($Pool_Diff,0)} else {$Pool_Diff}
+                                                "MinDiff"     = if ($Optimal_Difficulty.min -gt 10) {[RBMToolBox]::Round($Optimal_Difficulty.min,0)} else {$Optimal_Difficulty.min}
+                                                "MaxDiff"     = if ($Optimal_Difficulty.max -gt 10) {[RBMToolBox]::Round($Optimal_Difficulty.max,0)} else {$Optimal_Difficulty.max}
+                                                "CurrentDiff" = if ($Pool_Diff -ge 10) {[RBMToolBox]::Round($Pool_Diff,0)} else {$Pool_Diff}
                                                 "MinDiffFmt"     = "$($Optimal_Difficulty.min | ConvertTo-Float)" -replace " "
                                                 "MaxDiffFmt"     = "$($Optimal_Difficulty.max | ConvertTo-Float)" -replace " "
                                                 "CurrentDiffFmt" = "$($Pool_Diff | ConvertTo-Float)" -replace " "
@@ -665,7 +665,7 @@ if ($AllRigs_Request) {
                         [PSCustomObject]@{
                             Algorithm     = $Pool_Algorithm_Norm_With_Model
 					        Algorithm0    = $Pool_Algorithm_Norm
-                            CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
+                            CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [RBMToolBox]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
                             CoinSymbol    = $Pool_CoinSymbol
                             Currency      = $Pool_Currency
                             Price         = $Pool_Price
@@ -864,7 +864,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         if ($MRRConfig.$RigName.MaxMinHours -lt 3) {$MRRConfig.$RigName.MaxMinHours = 3}
         if ($MRRConfig.$RigName.AutoCreateMaxMinHours -lt 3) {$MRRConfig.$RigName.AutoCreateMaxMinHours = 3}
         if ($MRRConfig.$RigName.ProfitAverageTime -notin @("Minute","Minute_5","Minute_10","Hour","Day","ThreeDay","Week")) {$MRRConfig.$RigName.ProfitAverageTime = "Day"}
-        $MRRConfig.$RigName.PriceFactorDecayTime = [Math]::Max((ConvertFrom-Time "$($MRRConfig.$RigName.PriceFactorDecayTime)"),$UpdateInterval_Seconds) / 3600
+        $MRRConfig.$RigName.PriceFactorDecayTime = [RBMToolBox]::Max((ConvertFrom-Time "$($MRRConfig.$RigName.PriceFactorDecayTime)"),$UpdateInterval_Seconds) / 3600
     }
 
     if (Set-MiningRigRentalAlgorithmsConfigDefault -Force) {
@@ -890,7 +890,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 $RigCurrentRentals[$RigName] = $Rental_Result_Current
 
                 if ($MRRConfig.$RigName.AutoBonusExtendForHours -and $MRRConfig.$RigName.AutoBonusExtendByHours) {
-                    $ExtendBy = [Math]::Min([Math]::Floor([double]$Rental_Result_Current.length/$MRRConfig.$RigName.AutoBonusExtendForHours),$MRRConfig.$RigName.AutoBonusExtendTimes) * $MRRConfig.$RigName.AutoBonusExtendByHours - [double]$Rental_Result_Current.extended
+                    $ExtendBy = [RBMToolBox]::Min([RBMToolBox]::Floor([double]$Rental_Result_Current.length/$MRRConfig.$RigName.AutoBonusExtendForHours),$MRRConfig.$RigName.AutoBonusExtendTimes) * $MRRConfig.$RigName.AutoBonusExtendByHours - [double]$Rental_Result_Current.extended
                     if ($ExtendBy -gt 0) {
                         try {                    
                             $Extend_Result = Invoke-MiningRigRentalRequest "/rig/$($Rental_Result_Current.rig.id)/extend" $API_Key $API_Secret -params @{"hours"=$ExtendBy} -method "PUT" -Timeout 60
@@ -930,8 +930,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
         if (-not $RigCurrentRentals.ContainsKey($RigName)) {
             $MRRRigControl_Data | Where-Object {$_.Name -eq $RigName} | Foreach-Object {
                 $RigUpdated = [DateTime]$_.LastReset
-                if ($MRRConfig.$RigName.PriceFactorDecayTime -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and ($TimeC = [Math]::Floor(($RigNow - $RigUpdated).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)) -gt 0) {
-                    $RigPriceFactor *= [Math]::Pow(1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100,$TimeC)
+                if ($MRRConfig.$RigName.PriceFactorDecayTime -gt 0 -and $MRRConfig.$RigName.PriceFactorDecayPercent -gt 0 -and ($TimeC = [RBMToolBox]::Floor(($RigNow - $RigUpdated).TotalHours / $MRRConfig.$RigName.PriceFactorDecayTime)) -gt 0) {
+                    $RigPriceFactor *= [RBMToolBox]::Pow(1 - $MRRConfig.$RigName.PriceFactorDecayPercent/100,$TimeC)
                 }
             }
         }
@@ -945,16 +945,16 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                 $Algo_DecayTime      = if ($_.Value.PriceFactorDecayTime -ne $Null) {$_.Value.PriceFactorDecayTime} else {$MRRConfig.$RigName.PriceFactorDecayTime}
                 $Algo_DecayPercent   = if ($_.Value.PriceFactorDecayPercent -ne $Null) {$_.Value.PriceFactorDecayPercent} else {$MRRConfig.$RigName.PriceFactorDecayPercent}
 
-                if ($Algo_DecayTime -gt 0 -and $Algo_DecayPercent -gt 0 -and ($TimeC = [Math]::Floor(($RigNow - $RigUpdated).TotalHours / $Algo_DecayTime)) -gt 0) {
-                    $Algo_PriceFactor *= [Math]::Pow(1 - $Algo_DecayPercent/100,$TimeC)
+                if ($Algo_DecayTime -gt 0 -and $Algo_DecayPercent -gt 0 -and ($TimeC = [RBMToolBox]::Floor(($RigNow - $RigUpdated).TotalHours / $Algo_DecayTime)) -gt 0) {
+                    $Algo_PriceFactor *= [RBMToolBox]::Pow(1 - $Algo_DecayPercent/100,$TimeC)
                 }
             }
-            $RigAlgos | Add-Member $Algo ([Math]::Round([Math]::Max($Algo_PriceFactor,$Algo_PriceFactorMin),3)) -Force
+            $RigAlgos | Add-Member $Algo ([RBMToolBox]::Round([RBMToolBox]::Max($Algo_PriceFactor,$Algo_PriceFactorMin),3)) -Force
         }
 
         [PSCustomObject]@{
             Name         = $RigName
-            PriceFactor  = [Math]::Round([Math]::Max($RigPriceFactor,$MRRConfig.$RigName.PriceFactorMin),3)
+            PriceFactor  = [RBMToolBox]::Round([RBMToolBox]::Max($RigPriceFactor,$MRRConfig.$RigName.PriceFactorMin),3)
             LastReset    = $RigUpdated
             Algorithms   = $RigAlgos
         }
@@ -1018,7 +1018,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             if ($IsWindows -and $Session.IsWin10 -and -not $Session.Config.EnableEthashZombieMode) {
                                 $RigDeviceRam *= 0.8652
                             }
-                            $RigDeviceRam = [Math]::Round($RigDeviceRam,3)
+                            $RigDeviceRam = [RBMToolBox]::Round($RigDeviceRam,3)
                         }
 
                         if (-not $MinersNeedingBenchmark) {$CurrentlyBenchmarking = @()}
@@ -1040,8 +1040,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                             if ($RigDeviceStat.Duration -lt [timespan]::FromHours(3)) {throw "your rig must run for at least 3 hours be accurate"}
                             $RigModels         = @($RigDevice.Foreach("Model") | Sort-Object -Unique)
                             $RigAlreadyCreated = @($UniqueRigs_Request | Where-Object {$_.description -match "\[$RigName\]"})
-                            $RigProfitBTCLimit = [Math]::Max($RigDeviceRevenue24h * [Math]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
-                            $RigModifier       = [Math]::Max(-30,[Math]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
+                            $RigProfitBTCLimit = [RBMToolBox]::Max($RigDeviceRevenue24h * [RBMToolBox]::Min($MRRConfig.$RigName.AutoCreateMinProfitPercent,100)/100,$MRRConfig.$RigName.AutoCreateMinProfitBTC)
+                            $RigModifier       = [RBMToolBox]::Max(-30,[RBMToolBox]::Min(30,$MRRConfig.$RigName.AutoPriceModifierPercent))
 
                             $RigPriceFactor    = if ($Session.MRRPriceFactor) {$Session.MRRPriceFactor} else {$MRRConfig.$RigName.PriceFactor}
 
@@ -1136,11 +1136,11 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                     if ($RigCurrentRentals.ContainsKey($RigName) -and $RigCurrentRentals[$RigName].rig.type -eq $RigMRRid) {
                                         $RigSpeed_Rental  = [double]$RigCurrentRentals[$RigName].hashrate.advertised.hash * $(ConvertFrom-Hash "1$($RigCurrentRentals[$RigName].hashrate.advertised.type)")
                                         if ($RigSpeed_Rental -gt 0) {
-                                            $RigSpeed_Current = [Math]::Min($RigSpeed_Rental,$RigSpeed)
+                                            $RigSpeed_Current = [RBMToolBox]::Min($RigSpeed_Rental,$RigSpeed)
                                         }
                                     }
 
-                                    $RigMinPrice    = [Math]::Max($RigDeviceRevenue24h * $RigPriceFactor_Algorithm + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed_Current
+                                    $RigMinPrice    = [RBMToolBox]::Max($RigDeviceRevenue24h * $RigPriceFactor_Algorithm + $RigPowerDiff,$RigDeviceRevenue24h) / $RigSpeed_Current
                                     $RigPrice       = if ($MRRConfig.$RigName.PriceBTC -gt 0) {$MRRConfig.$RigName.PriceBTC / $RigSpeed_Current} else {$RigMinPrice}
 
                                     if ($RigCurrentRentals.ContainsKey($RigName) -and $RigCurrentRentals[$RigName].rig.type -eq $RigMRRid) {
@@ -1158,7 +1158,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                         #if ($RigType -eq "CPU" -and $Algorithm_Norm -match "RandomXDAG") {Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid), $($Algorithm_Norm): Profit=$($RigRevenue) > $($RigProfitBTCLimit) $(if ($RigRevenue -gt $RigProfitBTCLimit) {"YES!!"} else {"no   "}), MinPrice=$($RigMinPrice) / $($RigMinPriceNew) => $($RigDevicePowerDraw) vs. $($RigPower), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours)"}
 
-                                        $RigMinPrice = [Math]::Max($RigPrice,$RigMinPrice)
+                                        $RigMinPrice = [RBMToolBox]::Max($RigPrice,$RigMinPrice)
 
                                         $PriceDivisor = 0
                                         while($PriceDivisor -lt $RigDivisors.Count -and $RigMinPrice -lt 1e-3) {
@@ -1166,8 +1166,8 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $RigPrice    *= 1000
                                             $PriceDivisor++
                                         }
-                                        $RigMinPrice = [Decimal][Math]::Round($RigMinPrice,12)
-                                        $RigPrice    = [Decimal][Math]::Round($RigPrice,12)
+                                        $RigMinPrice = [Decimal][RBMToolBox]::Round($RigMinPrice,12)
+                                        $RigPrice    = [Decimal][RBMToolBox]::Round($RigPrice,12)
 
                                         $HashDivisor = 0
                                         while ($HashDivisor -lt $RigDivisors.Count -and $RigSpeed -gt 1000) {
@@ -1175,14 +1175,14 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
                                             $HashDivisor++
                                         }
 
-                                        if ($RigSpeed -lt 1) {$RigSpeed = [Math]::Floor($RigSpeed*100)/100}
-                                        elseif ($RigSpeed -lt 100) {$RigSpeed = [Math]::Floor($RigSpeed*10)/10}
-                                        else {$RigSpeed = [Math]::Floor($RigSpeed)}
+                                        if ($RigSpeed -lt 1) {$RigSpeed = [RBMToolBox]::Floor($RigSpeed*100)/100}
+                                        elseif ($RigSpeed -lt 100) {$RigSpeed = [RBMToolBox]::Floor($RigSpeed*10)/10}
+                                        else {$RigSpeed = [RBMToolBox]::Floor($RigSpeed)}
 
                                         $Multiply = $RigDivisors[$HashDivisor].value / $RigDivisors[$PriceDivisor].value
 
-                                        $RigMinHours = if ($RigMinPrice -eq 0 -or -not $MRRConfig.$RigName.EnableAutoAdjustMinHours -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -ge $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[Math]::Min($MRRConfig.$RigName.MaxMinHours,[Math]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply)))}
-                                        $RigMaxHours = [Math]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
+                                        $RigMinHours = if ($RigMinPrice -eq 0 -or -not $MRRConfig.$RigName.EnableAutoAdjustMinHours -or ($RigMinPrice * $RigSpeed * $MRRConfig.$RigName.MinHours * $Multiply / 24 -ge $RigMinProfit)) {$MRRConfig.$RigName.MinHours} else {[RBMToolBox]::Min($MRRConfig.$RigName.MaxMinHours,[RBMToolBox]::Ceiling($RigMinProfit*24/($RigMinPrice*$RigSpeed*$Multiply)))}
+                                        $RigMaxHours = [RBMToolBox]::Max($MRRConfig.$RigName.MinHours,$MRRConfig.$RigName.MaxHours)
 
                                         #if ($RigType -eq "CPU" -and $Algorithm_Norm -match "RandomXDAG") {Write-Log -Level Warn "$($Name): $RigRunMode $RigName $($RigMRRid): Multiply=$($Multiply), MinPrice=$($RigMinPrice), Sugg=$($SuggestedPrice), Speed=$($RigSpeed), MinHours=$($RigMinHours), MaxHours=$($RigMaxHours), MaxProfit=$($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24), Create=$((($RigMinHours -le $MRRConfig.$RigName.AutoCreateMaxMinHours) -and ($RigMinPrice * $RigSpeed * $RigMaxHours * $Multiply / 24 -ge $RigMinProfit)))"}
 
@@ -1355,7 +1355,7 @@ if (-not $InfoOnly -and (-not $API.DownloadList -or -not $API.DownloadList.Count
 
                                                         if ( (-not $RigMinPriceCurrent) -or
                                                              ([decimal]($RigSpeed*$RigDivisors[$HashDivisor].value) -ne [decimal]$RigHashCurrent) -or
-                                                             ([Math]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
+                                                             ([RBMToolBox]::Abs($RigMinPrice / $RigDivisors[$PriceDivisor].value / $RigMinPriceCurrent - 1) -gt ($MRRConfig.$RigName.AutoUpdateMinPriceChangePercent / 100)) -or
                                                              ([int]$_.minhours -ne $CreateRig.minhours) -or
                                                              ([int]$_.maxhours -ne $CreateRig.maxhours) -or
                                                              ([int]$_.ndevices -ne $CreateRig.ndevices) -or 

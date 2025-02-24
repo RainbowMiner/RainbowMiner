@@ -58,8 +58,8 @@
     }
 
     $MinThreads = 1
-    $MaxThreads = if ($Session.Config.APIthreads) {$Session.Config.APIthreads} elseif ($API.IsServer) {$MinThreads = 2;[Math]::Min($Global:GlobalCPUInfo.Threads,8)} else {[Math]::Min($Global:GlobalCPUInfo.Cores,2)}
-    $MaxThreads = [Math]::Max($MinThreads,$MaxThreads)
+    $MaxThreads = if ($Session.Config.APIthreads) {$Session.Config.APIthreads} elseif ($API.IsServer) {$MinThreads = 2;[RBMToolBox]::Min($Global:GlobalCPUInfo.Threads,8)} else {[RBMToolBox]::Min($Global:GlobalCPUInfo.Cores,2)}
+    $MaxThreads = [RBMToolBox]::Max($MinThreads,$MaxThreads)
 
     $Global:APIRunspacePool = [RunspaceFactory]::CreateRunspacePool(1, $MaxThreads, $APIVars, $Host)
     $Global:APIRunspacePool.Open()

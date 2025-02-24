@@ -272,7 +272,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $API_FastestMiners = ConvertFrom-Json $API.FastestMiners -ErrorAction Ignore
                 $API_FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                     $Group = $_.Group
-                    $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = @(if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo});if (($One = $Group | Where-Object {$_.BaseAlgorithm -in $Algo} | Select-Object -First 1) -and (($OneHR = if ($One.HashRates."$($One.BaseAlgorithm)") {$One.HashRates."$($One.BaseAlgorithm)"} elseif ($One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)") {$One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)"} else {$One.HashRates."$($One.BaseAlgorithm)-GPU"}) -gt 0)) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($OneHR/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
+                    $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = @(if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo});if (($One = $Group | Where-Object {$_.BaseAlgorithm -in $Algo} | Select-Object -First 1) -and (($OneHR = if ($One.HashRates."$($One.BaseAlgorithm)") {$One.HashRates."$($One.BaseAlgorithm)"} elseif ($One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)") {$One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)"} else {$One.HashRates."$($One.BaseAlgorithm)-GPU"}) -gt 0)) {"$($_.id)=true&factor[$($_.id)_hr]=$([RBMToolBox]::Round($OneHR/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[RBMToolBox]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
                 }
             }
             $Data = ConvertTo-Json $WTMdata_result -Depth 10
@@ -1181,7 +1181,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/activity" {
-            $LimitDays = (Get-Date).ToUniversalTime().AddDays(-[Math]::Max(1,[Math]::Min(7,[int]$Session.Config.MaxActivityDays)))
+            $LimitDays = (Get-Date).ToUniversalTime().AddDays(-[RBMToolBox]::Max(1,[RBMToolBox]::Min(7,[int]$Session.Config.MaxActivityDays)))
             $Activities = Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Foreach-Object {"[$(Get-ContentByStreamReader $_){`"ActiveStart`":`"0001-01-01 00:00:00`"}]" | ConvertFrom-Json -ErrorAction Ignore | Foreach-Object {$_}} | Where-Object ActiveStart -ne "0001-01-01 00:00:00" | Group-Object ActiveStart,Name,Device | Foreach-Object {
                 $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
                 $AvgPowerDraw  = ($_.Group | Measure-Object PowerDraw -Average).Average
@@ -1263,8 +1263,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $Earnings_1d  = [decimal]$API.Earnings_1d
             if ($API.RemoteMiners) {
                 $Profit += [decimal]$API.RemoteMinersProfit
-                $Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$API.RemoteMinersEarnings_Avg)
-                $Earnings_1d  = [Math]::Max($Earnings_1d,[decimal]$API.RemoteMinersEarnings_1d)
+                $Earnings_Avg = [RBMToolBox]::Max($Earnings_Avg,[decimal]$API.RemoteMinersEarnings_Avg)
+                $Earnings_1d  = [RBMToolBox]::Max($Earnings_1d,[decimal]$API.RemoteMinersEarnings_1d)
             }
             $Timer = Get-UpTime
             $Uptime= [PSCustomObject]@{
