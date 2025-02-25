@@ -9,7 +9,7 @@ using System.Reflection;
 
 public static class RBMToolBox
 {
-    public static bool IsNetcoreApp()
+    public static object IsNetcoreApp()
     {
 #if NETCOREAPP3_0_OR_GREATER
         return true;
@@ -19,21 +19,21 @@ public static class RBMToolBox
     }
 
     // 1. String Comparison
-    public static bool EqualsIgnoreCase(string str1, string str2)
+    public static object EqualsIgnoreCase(string str1, string str2)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        return MemoryExtensions.Equals(str1.AsSpan(), str2.AsSpan(), StringComparison.OrdinalIgnoreCase);
+        return (object)MemoryExtensions.Equals(str1.AsSpan(), str2.AsSpan(), StringComparison.OrdinalIgnoreCase);
 #else
-        return str1 != null && str2 != null && string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+        return (object)(str1 != null && str2 != null && string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase));
 #endif
     }
 
-    public static int CompareIgnoreCase(string str1, string str2)
+    public static object CompareIgnoreCase(string str1, string str2)
     {
-        if (str1 == null && str2 == null) return 0;
-        if (str1 == null) return -1;
-        if (str2 == null) return 1;
-        return string.Compare(str1, str2, StringComparison.OrdinalIgnoreCase);
+        if (str1 == null && str2 == null) return (object)0;
+        if (str1 == null) return (object)-1;
+        if (str2 == null) return (object)1;
+        return (object)string.Compare(str1, str2, StringComparison.OrdinalIgnoreCase);
     }
 
     // 2. Optimized String Manipulation
@@ -241,52 +241,122 @@ public static class RBMToolBox
     }
 
     // 5. Optimized Matching & Search
-    public static bool Contains(string input, string value)
+    public static object Contains(string input, string value)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        return input?.Contains(value) ?? false;
+        return (object)(input?.Contains(value) ?? false);
 #else
-        return input != null && value != null && input.Contains(value);
+        return (object)(input != null && value != null && input.Contains(value));
 #endif
     }
 
-    public static bool StartsWith(string input, string value)
+    public static object StartsWith(string input, string value)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        return input?.StartsWith(value) ?? false;
+        return (object)(input?.StartsWith(value) ?? false);
 #else
-        return input != null && value != null && input.StartsWith(value);
+        return (object)(input != null && value != null && input.StartsWith(value));
 #endif
     }
 
-    public static bool EndsWith(string input, string value)
+    public static object EndsWith(string input, string value)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        return input?.EndsWith(value) ?? false;
+        return (object)(input?.EndsWith(value) ?? false);
 #else
-        return input != null && value != null && input.EndsWith(value);
+        return (object)(input != null && value != null && input.EndsWith(value));
 #endif
     }
 
-    public static int IndexOf(string input, string value)
+    public static object IndexOf(string input, string value)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        return input?.IndexOf(value) ?? -1;
+        return (object)(input?.IndexOf(value) ?? -1);
 #else
-        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(value)) return -1;
-        return input.IndexOf(value);
+        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(value)) return (object)-1;
+        return (object)input.IndexOf(value);
 #endif
     }
 
-    public static int LastIndexOf(string input, string value)
+    public static object LastIndexOf(string input, string value)
     {
 #if NETCOREAPP3_0_OR_GREATER
-        return input?.LastIndexOf(value) ?? -1;
+        return (object)(input?.LastIndexOf(value) ?? -1);
 #else
-        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(value)) return -1;
-        return input.LastIndexOf(value);
+        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(value)) return (object)-1;
+        return (object)input.LastIndexOf(value);
 #endif
     }
+
+    public static object CountChar(string input, char find)
+    {
+#if NETCOREAPP3_0_OR_GREATER
+    if (string.IsNullOrEmpty(input))
+        return (object)0;
+
+    int count = 0;
+    ReadOnlySpan<char> span = input.AsSpan();
+    for (int i = 0; i < span.Length; i++)
+    {
+        if (span[i] == find)
+            count++;
+    }
+    return (object)count;
+#else
+        if (string.IsNullOrEmpty(input))
+            return (object)0;
+
+        int count = 0;
+        foreach (char c in input)
+        {
+            if (c == find)
+                count++;
+        }
+        return (object)count;
+#endif
+    }
+
+    public static object CountString(string input, string find)
+    {
+#if NETCOREAPP3_0_OR_GREATER
+    if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(find))
+        return (object)0;
+
+    int count = 0;
+    int index = 0;
+    ReadOnlySpan<char> span = input;
+
+    while (true)
+    {
+        int foundIndex = span.Slice(index).IndexOf(find);
+        if (foundIndex == -1)
+            break;
+
+        index += foundIndex + find.Length; // Correctly move index forward
+        count++;
+
+        if (index >= span.Length)
+            break;
+    }
+
+    return (object)count;
+#else
+        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(find))
+            return (object)0;
+
+        int count = 0;
+        int index = 0;
+
+        while ((index = input.IndexOf(find, index, StringComparison.Ordinal)) != -1)
+        {
+            count++;
+            index += find.Length;
+        }
+
+        return (object)count;
+#endif
+    }
+
 
     // 6. File Operations
     public static object ReadFile(string filePath, bool expandLines = false, bool throwError = false)
@@ -376,7 +446,7 @@ public static class RBMToolBox
     }
 
     // 8. Object handling
-    public static bool CompareObject(object obj1, object obj2)
+    public static object CompareObject(object obj1, object obj2)
     {
         if (obj1 == null && obj2 == null) return true;
         if (obj1 == null || obj2 == null) return false;
@@ -423,7 +493,7 @@ public static class RBMToolBox
         return obj1.Equals(obj2);
     }
 
-    public static bool ComparePSObjectToHashtable(PSObject psObj, Hashtable hash)
+    public static object ComparePSObjectToHashtable(PSObject psObj, Hashtable hash)
     {
         if (psObj == null || hash == null) return false;
 
@@ -442,14 +512,14 @@ public static class RBMToolBox
             if (!hash.ContainsKey(prop.Name))
                 return false;
 
-            if (!CompareObject(prop.Value, hash[prop.Name]))
+            if (!(bool)CompareObject(prop.Value, hash[prop.Name]))
                 return false;
         }
 
         return true;
     }
 
-    public static bool ComparePSCustomObjects(PSObject obj1, PSObject obj2)
+    public static object ComparePSCustomObjects(PSObject obj1, PSObject obj2)
     {
         if (obj1 == null && obj2 == null) return true;
         if (obj1 == null || obj2 == null) return false;
@@ -483,14 +553,14 @@ public static class RBMToolBox
                 return false;
 #endif
 
-            if (!CompareObject(prop1.Value, prop2.Value))
+            if (!(bool)CompareObject(prop1.Value, prop2.Value))
                 return false;
         }
 
         return true;
     }
 
-    public static bool CompareHashtables(Hashtable hash1, Hashtable hash2)
+    public static object CompareHashtables(Hashtable hash1, Hashtable hash2)
     {
         if (hash1 == null && hash2 == null) return true;
         if (hash1 == null || hash2 == null) return false;
@@ -499,12 +569,12 @@ public static class RBMToolBox
         foreach (object key in hash1.Keys)
         {
             if (!hash2.ContainsKey(key)) return false;
-            if (!CompareObject(hash1[key], hash2[key])) return false;
+            if (!(bool)CompareObject(hash1[key], hash2[key])) return false;
         }
         return true;
     }
 
-    public static bool CompareArrays(Array arr1, Array arr2, bool sort = false)
+    public static object CompareArrays(Array arr1, Array arr2, bool sort = false)
     {
         if (arr1 == null && arr2 == null) return true;
         if (arr1 == null || arr2 == null) return false;
@@ -521,12 +591,12 @@ public static class RBMToolBox
 
         for (int i = 0; i < arr1.Length; i++)
         {
-            if (!CompareObject(arr1.GetValue(i), arr2.GetValue(i))) return false;
+            if (!(bool)CompareObject(arr1.GetValue(i), arr2.GetValue(i))) return false;
         }
         return true;
     }
 
-    public static bool CompareObjectIgnoreCase(object obj1, object obj2)
+    public static object CompareObjectIgnoreCase(object obj1, object obj2)
     {
         if (obj1 == null && obj2 == null) return true;
         if (obj1 == null || obj2 == null) return false;
@@ -574,7 +644,7 @@ public static class RBMToolBox
     }
 
 
-    public static bool ComparePSObjectToHashtableIgnoreCase(PSObject psObj, Hashtable hash)
+    public static object ComparePSObjectToHashtableIgnoreCase(PSObject psObj, Hashtable hash)
     {
         if (psObj == null || hash == null) return false;
 
@@ -608,14 +678,14 @@ public static class RBMToolBox
                 return false;
 #endif
 
-            if (!CompareObjectIgnoreCase(prop.Value, hashValue))
+            if (!(bool)CompareObjectIgnoreCase(prop.Value, hashValue))
                 return false;
         }
 
         return true;
     }
 
-    public static bool ComparePSCustomObjectsIgnoreCase(PSObject obj1, PSObject obj2)
+    public static object ComparePSCustomObjectsIgnoreCase(PSObject obj1, PSObject obj2)
     {
         if (obj1 == null && obj2 == null) return true;
         if (obj1 == null || obj2 == null) return false;
@@ -649,14 +719,14 @@ public static class RBMToolBox
                 return false;
 #endif
 
-            if (!CompareObjectIgnoreCase(prop1.Value, prop2.Value))
+            if (!(bool)CompareObjectIgnoreCase(prop1.Value, prop2.Value))
                 return false;
         }
 
         return true;
     }
 
-    public static bool CompareHashtablesIgnoreCase(Hashtable hash1, Hashtable hash2)
+    public static object CompareHashtablesIgnoreCase(Hashtable hash1, Hashtable hash2)
     {
         if (hash1 == null && hash2 == null) return true;
         if (hash1 == null || hash2 == null) return false;
@@ -682,14 +752,14 @@ public static class RBMToolBox
                 return false;
 #endif
 
-            if (!CompareObjectIgnoreCase(entry.Value, value2))
+            if (!(bool)CompareObjectIgnoreCase(entry.Value, value2))
                 return false;
         }
 
         return true;
     }
 
-    public static bool CompareArraysIgnoreCase(Array arr1, Array arr2, bool sort = false)
+    public static object CompareArraysIgnoreCase(Array arr1, Array arr2, bool sort = false)
     {
         if (arr1 == null && arr2 == null) return true;
         if (arr1 == null || arr2 == null) return false;
@@ -705,12 +775,12 @@ public static class RBMToolBox
 
         for (int i = 0; i < arr1.Length; i++)
         {
-            if (!CompareObjectIgnoreCase(arr1.GetValue(i), arr2.GetValue(i))) return false;
+            if (!(bool)CompareObjectIgnoreCase(arr1.GetValue(i), arr2.GetValue(i))) return false;
         }
         return true;
     }
 
-    public static bool CompareValuesIgnoreCase(object obj1, object obj2)
+    public static object CompareValuesIgnoreCase(object obj1, object obj2)
     {
 #if NETCOREAPP3_0_OR_GREATER
         if (obj1 is string str1 && obj2 is string str2)
@@ -728,7 +798,7 @@ public static class RBMToolBox
         return obj1.Equals(obj2);
     }
 
-    public static bool IsIntersect(object obj1, object obj2)
+    public static object IsIntersect(object obj1, object obj2)
     {
         obj1 = UnwrapPSObject(obj1);
         obj2 = UnwrapPSObject(obj2);
@@ -745,6 +815,118 @@ public static class RBMToolBox
 
         return false;
     }
+
+    // 9. Math functions
+#if NETCOREAPP3_0_OR_GREATER
+    // Round
+    public static object Round(double value, int digits) => (object)Math.Round(value, digits);
+    public static object Round(decimal value, int digits) => (object)Math.Round(value, digits);
+
+    // Min
+    public static object Min(double a, double b) => (object)Math.Min(a, b);
+    public static object Min(decimal a, decimal b) => (object)Math.Min(a, b);
+
+    // Max
+    public static object Max(double a, double b) => (object)Math.Max(a, b);
+    public static object Max(decimal a, decimal b) => (object)Math.Max(a, b);
+
+    // Abs
+    public static object Abs(double value) => (object)Math.Abs(value);
+    public static object Abs(decimal value) => (object)Math.Abs(value);
+
+    // Pow
+    public static object Pow(double a, double b) => (object)Math.Pow(a, b);
+    public static object Pow(decimal a, decimal b) => (object)(decimal)Math.Pow((double)a, (double)b);
+
+    // Log (Natural and Base)
+    public static object Log(double value) => (object)Math.Log(value);
+    public static object Log(double value, double baseValue) => (object)(Math.Log(value) / Math.Log(baseValue));
+    public static object Log(decimal value) => (object)(decimal)Math.Log((double)value);
+    public static object Log(decimal value, decimal baseValue) => (object)(decimal)(Math.Log((double)value) / Math.Log((double)baseValue));
+
+    // Exp (Exponent)
+    public static object Exp(double value) => (object)Math.Exp(value);
+    public static object Exp(decimal value) => (object)(decimal)Math.Exp((double)value);
+
+    // Truncate
+    public static object Truncate(double value) => (object)Math.Truncate(value);
+    public static object Truncate(decimal value) => (object)Math.Truncate(value);
+
+    // Log10 (Base 10 logarithm)
+    public static object Log10(double value) => (object)Math.Log10(value);
+    public static object Log10(decimal value) => (object)(decimal)Math.Log10((double)value);
+
+    // Sqrt (Square Root)
+    public static object Sqrt(double value) => (object)Math.Sqrt(value);
+    public static object Sqrt(decimal value) => (object)(decimal)Math.Sqrt((double)value);
+
+    // Sign
+    public static object Sign(double value) => (object)Math.Sign(value);
+    public static object Sign(decimal value) => (object)Math.Sign(value);
+
+    // Ceiling
+    public static object Ceiling(double value) => (object)Math.Ceiling(value);
+    public static object Ceiling(decimal value) => (object)Math.Ceiling(value);
+
+    // Floor
+    public static object Floor(double value) => (object)Math.Floor(value);
+    public static object Floor(decimal value) => (object)Math.Floor(value);
+#else
+    // Round
+    public static object Round(double value, int digits) { return (object)Math.Round(value, digits); }
+    public static object Round(decimal value, int digits) { return (object)Math.Round(value, digits); }
+
+    // Min
+    public static object Min(double a, double b) { return (object)Math.Min(a, b); }
+    public static object Min(decimal a, decimal b) { return (object)Math.Min(a, b); }
+
+    // Max
+    public static object Max(double a, double b) { return (object)Math.Max(a, b); }
+    public static object Max(decimal a, decimal b) { return (object)Math.Max(a, b); }
+
+    // Abs
+    public static object Abs(double value) { return (object)Math.Abs(value); }
+    public static object Abs(decimal value) { return (object)Math.Abs(value); }
+
+    // Pow
+    public static object Pow(double a, double b) { return (object)Math.Pow(a, b); }
+    public static object Pow(decimal a, decimal b) { return (object)(decimal)Math.Pow((double)a, (double)b); }
+
+    // Log (Natural and Base)
+    public static object Log(double value) { return (object)Math.Log(value); }
+    public static object Log(double value, double baseValue) { return (object)(Math.Log(value) / Math.Log(baseValue)); }
+    public static object Log(decimal value) { return (object)(decimal)Math.Log((double)value); }
+    public static object Log(decimal value, decimal baseValue) { return (object)(decimal)(Math.Log((double)value) / Math.Log((double)baseValue)); }
+
+    // Exp (Exponent)
+    public static object Exp(double value) { return (object)Math.Exp(value); }
+    public static object Exp(decimal value) { return (object)(decimal)Math.Exp((double)value); }
+
+    // Truncate
+    public static object Truncate(double value) { return (object)Math.Truncate(value); }
+    public static object Truncate(decimal value) { return (object)Math.Truncate(value); }
+
+    // Log10 (Base 10 logarithm)
+    public static object Log10(double value) { return (object)Math.Log10(value); }
+    public static object Log10(decimal value) { return (object)(decimal)Math.Log10((double)value); }
+
+    // Sqrt (Square Root)
+    public static object Sqrt(double value) { return (object)Math.Sqrt(value); }
+    public static object Sqrt(decimal value) { return (object)(decimal)Math.Sqrt((double)value); }
+
+    // Sign
+    public static object Sign(double value) { return (object)Math.Sign(value); }
+    public static object Sign(decimal value) { return (object)Math.Sign(value); }
+
+    // Ceiling
+    public static object Ceiling(double value) { return (object)Math.Ceiling(value); }
+    public static object Ceiling(decimal value) { return (object)Math.Ceiling(value); }
+
+    // Floor
+    public static object Floor(double value) { return (object)Math.Floor(value); }
+    public static object Floor(decimal value) { return (object)Math.Floor(value); }
+#endif
+
 
     // Private functions
     private static object UnwrapPSObject(object obj)
@@ -779,118 +961,7 @@ public static class RBMToolBox
         return obj;
     }
 
-    // 9. Math functions
-#if NETCOREAPP3_0_OR_GREATER
-    // Round
-    public static double Round(double value, int digits) => Math.Round(value, digits);
-    public static decimal Round(decimal value, int digits) => Math.Round(value, digits);
-
-    // Min
-    public static double Min(double a, double b) => Math.Min(a, b);
-    public static decimal Min(decimal a, decimal b) => Math.Min(a, b);
-
-    // Max
-    public static double Max(double a, double b) => Math.Max(a, b);
-    public static decimal Max(decimal a, decimal b) => Math.Max(a, b);
-
-    // Abs
-    public static double Abs(double value) => Math.Abs(value);
-    public static decimal Abs(decimal value) => Math.Abs(value);
-
-    // Pow
-    public static double Pow(double a, double b) => Math.Pow(a, b);
-    public static decimal Pow(decimal a, decimal b) => (decimal)Math.Pow((double)a, (double)b);
-
-    // Log (Natural and Base)
-    public static double Log(double value) => Math.Log(value);
-    public static double Log(double value, double baseValue) => Math.Log(value) / Math.Log(baseValue);
-    public static decimal Log(decimal value) => (decimal)Math.Log((double)value);
-    public static decimal Log(decimal value, decimal baseValue) => (decimal)(Math.Log((double)value) / Math.Log((double)baseValue));
-
-    // Exp (Exponent)
-    public static double Exp(double value) => Math.Exp(value);
-    public static decimal Exp(decimal value) => (decimal)Math.Exp((double)value);
-
-    // Truncate
-    public static double Truncate(double value) => Math.Truncate(value);
-    public static decimal Truncate(decimal value) => Math.Truncate(value);
-
-    // Log10 (Base 10 logarithm)
-    public static double Log10(double value) => Math.Log10(value);
-    public static decimal Log10(decimal value) => (decimal)Math.Log10((double)value);
-
-    // Sqrt (Square Root)
-    public static double Sqrt(double value) => Math.Sqrt(value);
-    public static decimal Sqrt(decimal value) => (decimal)Math.Sqrt((double)value);
-
-    // Sign
-    public static int Sign(double value) => Math.Sign(value);
-    public static int Sign(decimal value) => Math.Sign(value);
-
-    // Ceiling
-    public static double Ceiling(double value) => Math.Ceiling(value);
-    public static decimal Ceiling(decimal value) => Math.Ceiling(value);
-
-    // Floor
-    public static double Floor(double value) => Math.Floor(value);
-    public static decimal Floor(decimal value) => Math.Floor(value);
-#else
-    // Round
-    public static double Round(double value, int digits) { return Math.Round(value, digits); }
-    public static decimal Round(decimal value, int digits) { return Math.Round(value, digits); }
-
-    // Min
-    public static double Min(double a, double b) { return Math.Min(a, b); }
-    public static decimal Min(decimal a, decimal b) { return Math.Min(a, b); }
-
-    // Max
-    public static double Max(double a, double b) { return Math.Max(a, b); }
-    public static decimal Max(decimal a, decimal b) { return Math.Max(a, b); }
-
-    // Abs
-    public static double Abs(double value) { return Math.Abs(value); }
-    public static decimal Abs(decimal value) { return Math.Abs(value); }
-
-    // Pow
-    public static double Pow(double a, double b) { return Math.Pow(a, b); }
-    public static decimal Pow(decimal a, decimal b) { return (decimal)Math.Pow((double)a, (double)b); }
-
-    // Log (Natural and Base)
-    public static double Log(double value) { return Math.Log(value); }
-    public static double Log(double value, double baseValue) { return Math.Log(value) / Math.Log(baseValue); }
-    public static decimal Log(decimal value) { return (decimal)Math.Log((double)value); }
-    public static decimal Log(decimal value, decimal baseValue) { return (decimal)(Math.Log((double)value) / Math.Log((double)baseValue)); }
-
-    // Exp (Exponent)
-    public static double Exp(double value) { return Math.Exp(value); }
-    public static decimal Exp(decimal value) { return (decimal)Math.Exp((double)value); }
-
-    // Truncate
-    public static double Truncate(double value) { return Math.Truncate(value); }
-    public static decimal Truncate(decimal value) { return Math.Truncate(value); }
-
-    // Log10 (Base 10 logarithm)
-    public static double Log10(double value) { return Math.Log10(value); }
-    public static decimal Log10(decimal value) { return (decimal)Math.Log10((double)value); }
-
-    // Sqrt (Square Root)
-    public static double Sqrt(double value) { return Math.Sqrt(value); }
-    public static decimal Sqrt(decimal value) { return (decimal)Math.Sqrt((double)value); }
-
-    // Sign
-    public static int Sign(double value) { return Math.Sign(value); }
-    public static int Sign(decimal value) { return Math.Sign(value); }
-
-    // Ceiling
-    public static double Ceiling(double value) { return Math.Ceiling(value); }
-    public static decimal Ceiling(decimal value) { return Math.Ceiling(value); }
-
-    // Floor
-    public static double Floor(double value) { return Math.Floor(value); }
-    public static decimal Floor(decimal value) { return Math.Floor(value); }
-#endif
-
-private static object[] ConvertToValueTypeOrStringArray(object obj)
+    private static object[] ConvertToValueTypeOrStringArray(object obj)
     {
 #if NETCOREAPP3_0_OR_GREATER
         // If it's already an array, convert it manually to an object array
