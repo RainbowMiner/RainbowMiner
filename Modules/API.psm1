@@ -1,7 +1,7 @@
 ﻿Function Start-APIServer {
 
     # Create a global synchronized hashtable that all threads can access to pass data between the main script and API
-    $Global:API = [hashtable]::Synchronized(@{})
+    $Global:API = [System.Collections.Hashtable]::Synchronized(@{})
 
     # Initialize firewall and prefix
     if ($Session.IsAdmin -and $Session.Config.APIport) {Initialize-APIServer -Port $Session.Config.APIport}
@@ -44,11 +44,13 @@
     # Setup additional, global variables for server handling
     $Global:APIClients   = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
     $Global:APIListeners = [System.Collections.ArrayList]@()
-    $Global:APIAccessDB  = [hashtable]::Synchronized(@{})
+    $Global:APIAccessDB  = [System.Collections.Hashtable]::Synchronized(@{})
 
     # Setup runspacepool to launch the API webserver in separate threads
     $APIVars = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
     [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Rates', $Global:Rates, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('StatsCache', $Global:StatsCache, $null))
     [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
     [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
     [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
@@ -58,8 +60,8 @@
     }
 
     $MinThreads = 1
-    $MaxThreads = if ($Session.Config.APIthreads) {$Session.Config.APIthreads} elseif ($API.IsServer) {$MinThreads = 2;[RBMToolBox]::Min($Global:GlobalCPUInfo.Threads,8)} else {[RBMToolBox]::Min($Global:GlobalCPUInfo.Cores,2)}
-    $MaxThreads = [RBMToolBox]::Max($MinThreads,$MaxThreads)
+    $MaxThreads = if ($Session.Config.APIthreads) {$Session.Config.APIthreads} elseif ($API.IsServer) {$MinThreads = 2;[Math]::Min($Global:GlobalCPUInfo.Threads,8)} else {[Math]::Min($Global:GlobalCPUInfo.Cores,2)}
+    $MaxThreads = [Math]::Max($MinThreads,$MaxThreads)
 
     $Global:APIRunspacePool = [RunspaceFactory]::CreateRunspacePool(1, $MaxThreads, $APIVars, $Host)
     $Global:APIRunspacePool.Open()

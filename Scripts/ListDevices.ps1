@@ -328,7 +328,7 @@ function Update-DeviceInformationDebug {
                                 PowerDefaultLimit = if ($SMIresultSplit[11] -eq "-") {$null} else {[int]$SMIresultSplit[11]}
                                 Method            = "smi"
                             }
-                            if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([RBMToolBox]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
+                            if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([Math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
                             if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
                             $_ | Add-Member Data $Data -Force
                         }
@@ -400,8 +400,8 @@ Update-DeviceInformationDebug @(Get-DeviceDebug @("cpu","gpu") | Select-Object -
 
 @(Get-DeviceDebug @("cpu") | Format-Table -Wrap -Property Name,
                                 @{Name="Thread";   Expression={$_.CPU_Thread};                               Alignment="Center"},
-                                @{Name="Clock";    Expression={"$([RBMToolBox]::Round($_.Data.Clock/1000,3))GHz"}; Alignment="Center"},
-                                @{Name="CacheL3";  Expression={"$([RBMToolBox]::Round($_.Data.CacheL3/1024,3))GB"}; Alignment="Center"},
+                                @{Name="Clock";    Expression={"$([Math]::Round($_.Data.Clock/1000,3))GHz"}; Alignment="Center"},
+                                @{Name="CacheL3";  Expression={"$([Math]::Round($_.Data.CacheL3/1024,3))GB"}; Alignment="Center"},
                                 @{Name="Method";   Expression={$_.Data.Method};                  Alignment="Center"},
                                 @{Name="Load";     Expression={"$($_.Data.Utilization)%"};                   Alignment="Center"},
                                 @{Name="Power";    Expression={"$($_.Data.PowerDraw)W"};                     Alignment="Center"},
@@ -414,10 +414,10 @@ Update-DeviceInformationDebug @(Get-DeviceDebug @("cpu","gpu") | Select-Object -
 @(Get-DeviceDebug @("gpu") | Format-Table -Property Name,Vendor,Model,
                                 @{Name="Driver";    Expression={$_.OpenCL.DriverVersion};                                                                                  Alignment="Right"},
                                 @{Name="CL/CUDA";   Expression={if ($_.OpenCL.Platform.Version -match "CUDA") {$_.OpenCL.Platform.Version -replace "^.*CUDA\s+"}else{$_.OpenCL.Platform.Version -replace "^.*OpenCL\s+"}}; Alignment="Right"},
-                                @{Name="Mem";       Expression={$(if ($_.OpenCL.GlobalMemSize -ne $null) {"$([RBMToolBox]::Round($_.OpenCL.GlobalMemSize/1gb,3))GB"}else{"-"})}; Alignment="Right"},
+                                @{Name="Mem";       Expression={$(if ($_.OpenCL.GlobalMemSize -ne $null) {"$([Math]::Round($_.OpenCL.GlobalMemSize/1gb,3))GB"}else{"-"})}; Alignment="Right"},
                                 @{Name="PS";        Expression={$(if ($_.Data.Pstate -ne $null) {$_.Data.Pstate}else{"-"})};                                               Alignment="Right"},
-                                @{Name="Gpu Clock"; Expression={$(if ($_.Data.Clock -ne $null) {"$([RBMToolBox]::Round($_.Data.Clock/1000,3))GHz"}else{"-"})};                   Alignment="Right"},
-                                @{Name="Mem Clock"; Expression={$(if ($_.Data.ClockMem -ne $null) {"$([RBMToolBox]::Round($_.Data.ClockMem/1000,3))GHz"}else{"-"})};             Alignment="Right"},
+                                @{Name="Gpu Clock"; Expression={$(if ($_.Data.Clock -ne $null) {"$([Math]::Round($_.Data.Clock/1000,3))GHz"}else{"-"})};                   Alignment="Right"},
+                                @{Name="Mem Clock"; Expression={$(if ($_.Data.ClockMem -ne $null) {"$([Math]::Round($_.Data.ClockMem/1000,3))GHz"}else{"-"})};             Alignment="Right"},
                                 @{Name="Temp";      Expression={$(if ($_.Data.Temperature -ne $null) {"$($_.Data.Temperature)°C"}else{"-"})};                              Alignment="Right"},
                                 @{Name="Fan%";      Expression={$(if ($_.Data.FanSpeed -ne $null) {"$($_.Data.FanSpeed)%"}else{"-"})};                                     Alignment="Right"},
                                 @{Name="Gpu%";      Expression={$(if ($_.Data.Utilization -ne $null) {"$($_.Data.Utilization)%"}else{"-"})};                               Alignment="Right"},

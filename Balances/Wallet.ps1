@@ -264,7 +264,7 @@ if ($Config.CovalentAPIKey) {
             $Wallet_Symbol = $_.contract_ticker_symbol
             if (($Session.Config.Coins."$($Wallet_Symbol)") -and (-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $Wallet_Symbol)) {
 
-                $Wallet_Balance = $_.balance / [RBMToolBox]::Pow(10,$_.contract_decimals)
+                $Wallet_Balance = $_.balance / [Math]::Pow(10,$_.contract_decimals)
 
                 [PSCustomObject]@{
                         Caption     = "$Name $($Wallet_Symbol) $($Wallet_Address)"

@@ -104,14 +104,14 @@ function Update-MiningRigRentalAlgorithmsConfig {
             foreach ($Algo_Param in @("PriceModifierPercent","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceFactorDecayTime","PriceRiseExtensionPercent")) {
                 if ($Algo_Param -match "Time$") {
                     $val = "$($Session.Config.MRRAlgorithms.$a.$Algo_Param)".Trim()
-                    $Algo_Params[$Algo_Param] = if ($val -ne "") {[RBMToolBox]::Max((ConvertFrom-Time "$($val)"),$UpdateInterval) / 3600} else {$null}
+                    $Algo_Params[$Algo_Param] = if ($val -ne "") {[Math]::Max((ConvertFrom-Time "$($val)"),$UpdateInterval) / 3600} else {$null}
                 } else {
                     $val = "$($Session.Config.MRRAlgorithms.$a.$Algo_Param -replace ",","." -replace "[^\d\.\-]+")"
                     $Algo_Params[$Algo_Param] = if ($val -ne "") {[Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {$val[0] + "$($val.Substring(1) -replace "[^0-9\.]")"})} else {$null}
                 }
             }
             if ($Algo_Params["PriceModifierPercent"] -ne $Null) {
-                $Algo_Params["PriceModifierPercent"] = [RBMToolBox]::Max(-30,[RBMToolBox]::Min(30,[RBMToolBox]::Round($Algo_Params["PriceModifierPercent"],2)))
+                $Algo_Params["PriceModifierPercent"] = [Math]::Max(-30,[Math]::Min(30,[Math]::Round($Algo_Params["PriceModifierPercent"],2)))
             }
                 
             $Algo_Params.GetEnumerator() | Foreach-Object {
@@ -304,7 +304,7 @@ param(
         if ($Global:MRRCacheLastCleanup -eq $null -or $Global:MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
             $Global:MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
             $CacheKeys = $Global:MRRCache.Keys
-            if ($RemoveKeys = $CacheKeys | Where-Object {$_ -ne $JobKey -and $Global:MRRCache.$_.last -lt (Get-Date).AddSeconds(-[RBMToolBox]::Max(3600,$Global:MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
+            if ($RemoveKeys = $CacheKeys | Where-Object {$_ -ne $JobKey -and $Global:MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Global:MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
                 $RemoveKeys | Foreach-Object {
                     if ($Global:MRRCache.ContainsKey($_)) {
                         $Global:MRRCache[$_] = $null
@@ -424,7 +424,7 @@ param(
             if ($retry -gt 0) {
                 if (-not $RequestError) {$retry = 0}
                 else {
-                     $RetryWait_Time = [RBMToolBox]::Min($AsyncLoader.Jobs.$Jobkey.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
+                     $RetryWait_Time = [Math]::Min($AsyncLoader.Jobs.$Jobkey.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
                     if ($RetryWait_Time -gt 50) {
                         Start-Sleep -Milliseconds $RetryWait_Time
                     }

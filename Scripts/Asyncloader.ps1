@@ -83,7 +83,7 @@ while (-not $AsyncLoader.Stop) {
                         $JobHost  = $Job.Host
                         if ($JobHost) {
                             if ($AsyncLoader.HostDelays.$JobHost -and $Hosts_LastCall.$JobHost) {
-                                $JobDelay = [RBMToolBox]::Min([RBMToolBox]::Max([RBMToolBox]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0),0),5000)
+                                $JobDelay = [Math]::Min([Math]::Max([Math]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0),0),5000)
                                 if ($JobDelay -and $IsVerbose) {
                                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($JobDelay) milliseconds" -Append -Timestamp
                                 }
@@ -128,7 +128,7 @@ while (-not $AsyncLoader.Stop) {
         $GCStopWatch.Restart()
     }
 
-    $Delta = [RBMToolBox]::Min([RBMToolBox]::Max($AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds,1),30)
+    $Delta = [Math]::Min([Math]::Max($AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds,1),30)
 
     if ($IsVerbose) {
         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "End cycle $(if ($Delta -gt 0) {"(wait $Delta s)"})" -Append -Timestamp

@@ -187,7 +187,7 @@ class Miner {
                 }
 
                 if ($PortsInUse) {
-                    $portmax = [RBMToolBox]::Min($this.Port+9999,65535)
+                    $portmax = [Math]::Min($this.Port+9999,65535)
                     while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
                     if ($this.Port -gt $portmax) {$this.Port=$Miner_Port}
                 }
@@ -451,7 +451,7 @@ class Miner {
         $this.Stratum[$Index].Rejected = $Rejected
         $this.Stratum[$Index].Stale = $Stale
         if ($Accepted + $Rejected) {
-            $this.RejectedShareRatio[$Index] = [RBMToolBox]::Round($Rejected / ($Accepted + $Rejected),4)
+            $this.RejectedShareRatio[$Index] = [Math]::Round($Rejected / ($Accepted + $Rejected),4)
         }
     }
 
@@ -590,7 +590,7 @@ class Miner {
 
     CleanupMinerData() {
         if ($this.Data.Count -gt $this.MinSamples) {
-            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[RBMToolBox]::Max($this.ExtendInterval,1)*2)
+            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::Max($this.ExtendInterval,1)*2)
             $i=0; While ($this.Data[$i].Date -lt $DataMinTime -and ($this.Data.Count - $i) -gt $this.MinSamples) {$i++}
             if ($i -gt 0) {$this.Data = $this.Data | Select-Object -Skip $i}
         }
@@ -601,7 +601,7 @@ class Miner {
     }
 
     [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm[0]) {
-        $Intervals  = [RBMToolBox]::Max($this.ExtendInterval,1)
+        $Intervals  = [Math]::Max($this.ExtendInterval,1)
         $Timeframe  = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
         return ($this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe} | Foreach-Object {
             $Diff = $_.Difficulty.$Algorithm
@@ -625,11 +625,11 @@ class Miner {
             $HashRates_Devices = @("Device")
         }
 
-        $Intervals = [RBMToolBox]::Max($this.ExtendInterval,1)
+        $Intervals = [Math]::Max($this.ExtendInterval,1)
         $Timeframe = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
         $HashData  = $this.Data | Where-Object {$_.HashRate -and ($_.HashRate.$Algorithm -or $_.HashRate."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe}
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.075}
-        $MinHashRate = 1-[RBMToolBox]::Min($MaxVariance/2,0.1)
+        $MinHashRate = 1-[Math]::Min($MaxVariance/2,0.1)
 
         $HashRates_Count = $HashRates_Average = $HashRates_Variance = 0
 
@@ -657,7 +657,7 @@ class Miner {
             $HashRates_Count    = ($HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum).Minimum
             $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average).Average * $HashRates_Averages.Keys.Count
             $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_} | Measure-Object -Maximum).Maximum / $HashRates_Average} else {1}
-            Write-Log -Level Info "$($this.Name): GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([RBMToolBox]::Round($HashRates_Average,2)), var:$([RBMToolBox]::Round($HashRates_Variance,3)*100)"
+            Write-Log -Level Info "$($this.Name): GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
         }
 
         $this.Variance[$this.Algorithm.IndexOf($Algorithm)] = $HashRates_Variance
@@ -671,11 +671,11 @@ class Miner {
     }
 
     [Bool]IsBenchmarking() {
-        return $this.New -and $this.Benchmarked -lt ($this.MaxBenchmarkRounds + [RBMToolBox]::Max($this.ExtendInterval,1) - 1)
+        return $this.New -and $this.Benchmarked -lt ($this.MaxBenchmarkRounds + [Math]::Max($this.ExtendInterval,1) - 1)
     }
 
     [Int64]GetPowerDraw() {
-        $TimeFrame = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * [RBMToolBox]::Max($this.ExtendInterval,1))
+        $TimeFrame = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * [Math]::Max($this.ExtendInterval,1))
         return ($this.Data | Where-Object {$_.PowerDraw -and $_.Date -ge $TimeFrame} | Select-Object -ExpandProperty PowerDraw | Measure-Object -Average).Average
     }
 
@@ -811,9 +811,9 @@ class Miner {
             if ($DeviceVendor -eq "NVIDIA") {
 
                 foreach($DeviceId in $this.Profiles.$DeviceModel.Index) {
-                    if ($Profile.PowerLimit -gt 0) {$val=[RBMToolBox]::Max([RBMToolBox]::Min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {[void]$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)")};$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$val)}}
+                    if ($Profile.PowerLimit -gt 0) {$val=[Math]::Max([Math]::Min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {[void]$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)")};$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$val)}}
                     if (-not $Global:IsLinux) {
-                        if ($Profile.ThermalLimit -gt 0) {$val=[RBMToolBox]::Max([RBMToolBox]::Min($Profile.ThermalLimit,95),50);[void]$NvCmd.Add("-setTempTarget:$($DeviceId),$(if (Get-Yes $Profile.PriorizeThermalLimit) {"1"} else {"0"}),$($val)");$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$val);$this.SetOCprofileValue($DeviceModel,"PriorizeThermalLimit",(Get-Yes $Profile.PriorizeThermalLimit))}}
+                        if ($Profile.ThermalLimit -gt 0) {$val=[Math]::Max([Math]::Min($Profile.ThermalLimit,95),50);[void]$NvCmd.Add("-setTempTarget:$($DeviceId),$(if (Get-Yes $Profile.PriorizeThermalLimit) {"1"} else {"0"}),$($val)");$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$val);$this.SetOCprofileValue($DeviceModel,"PriorizeThermalLimit",(Get-Yes $Profile.PriorizeThermalLimit))}}
                         if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;[void]$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)");$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"LockVoltagePoint",$val)}}
                     } else {
                         [void]$NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'")
@@ -837,7 +837,7 @@ class Miner {
             } elseif ($DeviceVendor -eq "AMD" -and $Global:IsLinux) {
 
                 foreach($CardId in $this.Profiles.$DeviceModel.CardId) {
-                    #if ($Profile.PowerLimit -gt 0) {$val=[RBMToolBox]::Max([RBMToolBox]::Min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {[void]$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)")};$applied_any=$true}
+                    #if ($Profile.PowerLimit -gt 0) {$val=[Math]::Max([Math]::Min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {[void]$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)")};$applied_any=$true}
                 }
             
             } elseif ($Pattern.$DeviceVendor -ne $null) {
@@ -846,10 +846,10 @@ class Miner {
                     $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$DeviceVendor | Select-Object -ExpandProperty Index | Foreach-Object {
                         if ($DeviceId -in $this.Profiles.$DeviceModel.Index) {
                             $GpuEntry = $Script:abControl.GpuEntries[$_]
-                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [RBMToolBox]::Max([RBMToolBox]::Min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$Script:abControl.GpuEntries[$_].PowerLimitCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [RBMToolBox]::Max([RBMToolBox]::Min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$Script:abControl.GpuEntries[$_].ThermalLimitCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [RBMToolBox]::Max([RBMToolBox]::Min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$Script:abControl.GpuEntries[$_].CoreClockBoostCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [RBMToolBox]::Max([RBMToolBox]::Min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$Script:abControl.GpuEntries[$_].MemoryClockBoostCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [Math]::Max([Math]::Min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"PowerLimit",$Script:abControl.GpuEntries[$_].PowerLimitCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [Math]::Max([Math]::Min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"ThermalLimit",$Script:abControl.GpuEntries[$_].ThermalLimitCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [Math]::Max([Math]::Min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"CoreClockBoost",$Script:abControl.GpuEntries[$_].CoreClockBoostCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [Math]::Max([Math]::Min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin);$applied_any=$true;if ($Config) {$this.SetOCprofileValue($DeviceModel,"MemoryClockBoost",$Script:abControl.GpuEntries[$_].MemoryClockBoostCur)}}} catch {Write-Log -Level Warn $_.Exception.Message}
                             if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
                         }
                         $DeviceId++
@@ -3388,7 +3388,7 @@ class Xmrig3 : Miner {
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
                             $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
-                            $ThreadsCount = [RBMToolBox]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
+                            $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
                             if ($AffThreads.Count -lt $ThreadsCount) {
                                 $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
                             }
@@ -3545,7 +3545,7 @@ class Xmrig6 : Miner {
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
                             $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
-                            $ThreadsCount = [RBMToolBox]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
+                            $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
                             if ($AffThreads.Count -lt $ThreadsCount) {
                                 $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
                             }

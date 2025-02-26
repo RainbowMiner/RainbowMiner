@@ -10,7 +10,7 @@ Param(
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" > $null}
 
-    $Global:AsyncLoader = [hashtable]::Synchronized(@{})
+    $Global:AsyncLoader = [System.Collections.Hashtable]::Synchronized(@{})
 
     $AsyncLoader.Stop       = $false
     $AsyncLoader.Pause      = $true

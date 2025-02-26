@@ -46,7 +46,7 @@ $Payout_Currencies | Where-Object {$Pool_Coins -contains $_.Name -and (-not $Con
             if (-not $Request.address) {
                 Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
             } else {
-                $Divisor = [RBMToolBox]::Pow(10,$Pools_Request.tbs.$Pool_Name.info.div2)
+                $Divisor = [Math]::Pow(10,$Pools_Request.tbs.$Pool_Name.info.div2)
                 [PSCustomObject]@{
                     Caption     = "$($Name) ($($Pool_Currency))"
 				    BaseName    = $Name

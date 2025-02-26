@@ -97,7 +97,7 @@ if ($SaveDAG = $Session.Config.EnableMinersToSaveDAG) {
         $SaveDAGPath = Join-Path (Split-Path $Path) "DAGs"
 
         if (Test-Path $SaveDAGPath) {
-            $SaveDAGUsed = [Decimal][RBMToolBox]::Round((Get-ChildItem $SaveDAGPath -File -Filter "*.dag" | Foreach-Object {$_.Length} | Measure-Object -Sum).Sum / 1GB,1)
+            $SaveDAGUsed = [Decimal][Math]::Round((Get-ChildItem $SaveDAGPath -File -Filter "*.dag" | Foreach-Object {$_.Length} | Measure-Object -Sum).Sum / 1GB,1)
         }
         if ($_.FreeGB -lt (100 - $SaveDAGUsed)) {$SaveDAG = $false}
     }

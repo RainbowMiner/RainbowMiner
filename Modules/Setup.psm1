@@ -1336,7 +1336,7 @@ function Start-Setup {
                         }
                         "enableheatmyflat" {
                             $Config.EnableHeatMyFlat = Read-HostDouble -Prompt "Prioritize heat over profit to heat my flat. Set intensity from 0 to 10, (0 to disable, 5 is a good point to start)" -Default $Config.EnableHeatMyFlat -Min 0 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                            $Config.EnableHeatMyFlat = [RBMToolBox]::Round($Config.EnableHeatMyFlat,1)
+                            $Config.EnableHeatMyFlat = [Math]::Round($Config.EnableHeatMyFlat,1)
                         }
                         "enableminingheatcontrol" {
                             $Config.EnableMiningHeatControl = Read-HostBool -Prompt "Enable mining heat control" -Default $Config.EnableMiningHeatControl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1344,7 +1344,7 @@ function Start-Setup {
                         "miningheatcontrol" {
                             if (Get-Yes $Config.EnableMiningHeatControl) {
                                 $Config.MiningHeatControl = Read-HostDouble -Prompt "Adjust heat vs. profit (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat)" -Default $Config.MiningHeatControl -Min 0 -Max 5 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                $Config.MiningHeatControl = "$([RBMToolBox]::Round($Config.MiningHeatControl,1))"
+                                $Config.MiningHeatControl = "$([Math]::Round($Config.MiningHeatControl,1))"
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1794,7 +1794,7 @@ function Start-Setup {
                             $Config.CovalentAPIKey = Read-HostString -Prompt "Enter Covalent API key, if needed ($(if ($Config.CovalentAPIKey) {"enter 'clear'"} else {"leave empty"}) to disable)" -Default $Config.CovalentAPIKey -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "donate" {
-                            $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([RBMToolBox]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "ssl" {
                             $Config.SSL = Read-HostInt -Prompt "Configure SSL usage: 0=prefer non-SSL over SSL, 1=prefel SSL over non-SSL, 2=use SSL pools only" -Default $Config.SSL -Min 0 -Max 2 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -3534,7 +3534,7 @@ function Start-Setup {
                                             $Schedule.MiningHeatControl = $Schedule.MiningHeatControl -replace ",","."
                                             try {$mhc = [double]$Schedule.MiningHeatControl} catch {}
                                             if ($mhc -eq $null -or $mhc -lt 0 -or $mhc -gt 5) {Write-Host "Invalid value, please enter a number between 0..5 in steps of 0.1 or leave empty" -ForegroundColor Red;$mhc = $null}
-                                            else {$Schedule.MiningHeatControl = "$([RBMToolBox]::Round($mhc,1))"}
+                                            else {$Schedule.MiningHeatControl = "$([Math]::Round($mhc,1))"}
                                         } else {$mhc = ""}
                                     }
                                 }
