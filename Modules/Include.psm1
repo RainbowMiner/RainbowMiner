@@ -1806,15 +1806,12 @@ function Get-PoolsContent {
 
     $DiffFactor = 86400 / 4294967296 #[Math]::Pow(2,32)
 
-    $script = Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore
-
-    if ($script) {
-        $Content = & $script.FullName @Parameters
-
-        foreach($c in @($Content)) {
+    Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | Foreach-Object {
+        & $_.FullName @Parameters | Foreach-Object {
+            $c = $_
             if ($PoolName -ne "WhatToMine") {
                 if (-not $Parameters.InfoOnly -and $Parameters.Region -and ($c.Region -ne $Parameters.Region)) {
-                    continue
+                    return
                 }
                 $Penalty = [Double]$Parameters.Penalty
                 if (-not $Parameters.InfoOnly) {
@@ -1887,25 +1884,31 @@ function Get-MinersContent {
 
     if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
-    $scriptFiles = @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$Parameters.InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or [RBMToolBox]::IsIntersect($Session.Config.MinerName,$_.BaseName)} | Where-Object {$Parameters.InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or -not [RBMToolBox]::IsIntersect($Session.Config.ExcludeMinerName,$_.BaseName)} | Select-Object)
+    $possibleDevices = @($Global:DeviceCache.DevicesToVendors.Values | Select-Object -Unique)
     
-    foreach($script in $scriptFiles) {
-        $scriptName = $script.BaseName
-        if ($Parameters.InfoOnly -or [RBMToolBox]::IsIntersect(@($Global:DeviceCache.DevicesToVendors.Values | Select-Object),@($Global:MinerInfo.$scriptName | Select-Object))) {
-            $Content = & $script.FullName @Parameters
-            foreach($c in @($Content)) {
-                if ($Parameters.InfoOnly) {
-                    $c | Add-Member -NotePropertyMembers @{
-                        Name     = if ($c.Name) {$c.Name} else {$scriptName}
-                        BaseName = $scriptName
-                    } -Force -PassThru
-                } elseif ($c.PowerDraw -eq 0) {
-                    $c.PowerDraw = $Global:StatsCache."$($c.Name)_$($c.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
-                    if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -contains $c.DeviceModel) {$c.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
-                    $c
-                } else {
-                    Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
-                }
+    Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {
+        $scriptName = $_.BaseName
+        $Parameters.InfoOnly -or (
+            [RBMToolBox]::IsIntersect($possibleDevices,@($Global:MinerInfo.$scriptName)) -and
+            ($Session.Config.MinerName.Count -eq 0 -or [RBMToolBox]::IsIntersect($Session.Config.MinerName,$_.BaseName)) -and
+            ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not [RBMToolBox]::IsIntersect($Session.Config.ExcludeMinerName,$_.BaseName))
+        )
+    } | Foreach-Object { 
+        $scriptPath = $_.FullName
+        $scriptName = $_.BaseName        
+
+        & $scriptPath @Parameters | Foreach-Object {
+            if ($Parameters.InfoOnly) {
+                $_ | Add-Member -NotePropertyMembers @{
+                    Name     = if ($_.Name) {$_.Name} else {$scriptName}
+                    BaseName = $scriptName
+                } -Force -PassThru
+            } elseif ($_.PowerDraw -eq 0) {
+                $_.PowerDraw = $Global:StatsCache."$($_.Name)_$($_.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
+                if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -contains $_.DeviceModel) {$_.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($_.DeviceModel)"}
+                $_
+            } else {
+                Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
             }
         }
     }
@@ -1922,18 +1925,18 @@ function Get-BalancesContent {
         Config  = $Config
     }
 
-    $UsePools = Get-ChildItem "Pools" -File -ErrorAction Ignore | Select-Object -ExpandProperty BaseName | Where-Object {($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName -eq 0 -or $Config.ExcludePoolName -inotcontains $_)}
-    foreach($Balance in @(Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {$UsePools -match "^$($_.BaseName)`(AE|Coins|CoinsSolo|CoinsParty|Party|PPS|Solo`)?$" -or $Config.ShowPoolBalancesExcludedPools -or $_.BaseName -eq "Wallet"})) {
-        $Name = $Balance.BaseName
+    $possiblePools = Get-ChildItem "Pools" -File -ErrorAction Ignore | Select-Object -ExpandProperty BaseName | Where-Object {($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName -eq 0 -or $Config.ExcludePoolName -inotcontains $_)}
+
+    Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {
+        $possiblePools -match "^$($_.BaseName)`(AE|Coins|CoinsSolo|CoinsParty|Party|PPS|Solo`)?$" -or $Config.ShowPoolBalancesExcludedPools -or $_.BaseName -eq "Wallet"
+    } | Foreach-Object {
+        $Name = $_.BaseName
         if (-not $Config.ShowPoolBalancesExcludedPools -and $Name -ne "Wallet") {
-            $Parameters["UsePools"] = $UsePools -match "^$($Name)`(AE|Coins|CoinsSolo|CoinsParty|Party|PPS|Solo`)?$"
+            $Parameters["UsePools"] = $possiblePools -match "^$($_.BaseName)`(AE|Coins|CoinsSolo|CoinsParty|Party|PPS|Solo`)?$"
         } else {
             $Parameters["UsePools"] = $null
         }
-        $Content = & $Balance.FullName @Parameters
-        foreach($c in @($Content)) {
-            $c | Add-Member Name "$(if ($c.Name) {$c.Name} else {$Name})$(if ($c.Info) {$c.Info})" -Force -PassThru
-        }
+        & $_.FullName @Parameters
     }
 }
 
@@ -8078,55 +8081,64 @@ Param(
 
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(Get-HashtableAsJson $body)$(Get-HashtableAsJson $headers)";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
-    $IsNewJob   = -not $AsyncLoader.Jobs.$Jobkey
+    $Job = $null
+    $useAsyncLoader = Test-Path Variable:Global:Asyncloader
+
+    if ($useAsyncLoader) {
+        [void]$AsyncLoader.Jobs.TryGetValue($Jobkey, [ref]$Job)
+    }
 
     $retry     = [Math]::Min([Math]::Max($retry,0),5)
     $retrywait = [Math]::Min([Math]::Max($retrywait,0),5000)
     $delay     = [Math]::Min([Math]::Max($delay,0),5000)
 
-    if (-not (Test-Path Variable:Global:Asyncloader) -or $IsNewJob) {
+    if (-not $Job) {
         $JobHost = if ($url -notmatch "^server://") {try{([System.Uri]$url).Host}catch{}} else {"server"}
         $JobData = [PSCustomObject]@{Url=$url;Host=$JobHost;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();LastCacheWrite=$null;LastFailRetry=$null;LastFailCount=0;CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Delay=$delay;Tag=$tag;Timeout=$timeout;FixBigInt=$fixbigint;Index=0}
     }
 
-    if (-not (Test-Path Variable:Global:Asyncloader)) {
+    if (-not $useAsyncLoader) {
         if ($delay) {Start-Sleep -Milliseconds $delay}
         Invoke-GetUrl -JobData $JobData -JobKey $JobKey -ForceLocal:$($JobHost -in @("localhost","127.0.0.1"))
         $JobData.LastCacheWrite = (Get-Date).ToUniversalTime()
         return
     }
 
-    if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $AsyncLoader.Jobs.$Jobkey.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
+    if ($StaticJobKey -and $url -and $Job -and ($Job.Url -ne $url -or (Get-HashtableAsJson $Job.Body) -ne (Get-HashtableAsJson $body) -or (Get-HashtableAsJson $Job.Headers) -ne (Get-HashtableAsJson $headers))) {$force = $true;$Job.Url = $url;$Job.Body = $body;$Job.Headers = $headers}
 
     if ($JobHost) {
-        if (($JobHost -eq "rbminer.net" -or $JobHost -eq "api.rbminer.net") -and $AsyncLoader.HostDelays.$JobHost -eq $null) {$AsyncLoader.HostDelays.$JobHost = 200}
-        if ($AsyncLoader.HostDelays.$JobHost -eq $null -or $delay -gt $AsyncLoader.HostDelays.$JobHost) {
-            $AsyncLoader.HostDelays.$JobHost = $delay
+        $HostDelay = $null
+        if (($JobHost -eq "rbminer.net" -or $JobHost -eq "api.rbminer.net") -and -not $AsyncLoader.HostDelays.TryGetValue($JobHost, [ref]$HostDelay)) {
+            [void]$AsyncLoader.HostDelays.TryAdd($JobHost, 200)
         }
 
-        if ($AsyncLoader.HostTags.$JobHost -eq $null) {
-            $AsyncLoader.HostTags.$JobHost = @($tag)
-        } elseif ($AsyncLoader.HostTags.$JobHost -notcontains $tag) {
-            $AsyncLoader.HostTags.$JobHost += $tag
+        if ($AsyncLoader.HostDelays.TryGetValue($JobHost, [ref]$HostDelay) -and $delay -gt $HostDelay) {
+            [void]$AsyncLoader.HostDelays.AddOrUpdate($JobHost, $delay, { param($key, $oldValue) $delay })
         }
+
+        [void]$AsyncLoader.HostTags.AddOrUpdate($JobHost, @($tag), { param($key, $oldValue) 
+            $result = @($oldValue)
+            if ($result -notcontains $tag) { $result += $tag }
+            return $result
+        })
     }
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
-    if ($force -or $IsNewJob -or $AsyncLoader.Jobs.$Jobkey.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy")) {
+    if ($force -or -not $Job -or $Job.Paused -or -not (Test-Path ".\Cache\$($Jobkey).asy")) {
         $Quickstart = $false
-        if ($IsNewJob) {
+        if (-not $Job) {
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -and (Test-Path ".\Cache\$($Jobkey).asy")
-            $AsyncLoader.Jobs.$Jobkey = $JobData
-            $AsyncLoader.Jobs.$Jobkey.Index = $AsyncLoader.Jobs.Count
-            #Write-Log "New job $($Jobkey): $($JobData.Url)" 
+            $JobData.Index = $AsyncLoader.Jobs.Count + 1
+            [void]$AsyncLoader.Jobs.TryAdd($Jobkey, $JobData)
+            [void]$AsyncLoader.Jobs.TryGetValue($Jobkey, [ref]$Job)
         } else {
-            $AsyncLoader.Jobs.$Jobkey.Running=$true
-            $AsyncLoader.Jobs.$JobKey.LastRequest=(Get-Date).ToUniversalTime()
-            $AsyncLoader.Jobs.$Jobkey.Paused=$false
+            $Job.Running = $true
+            $Job.LastRequest=(Get-Date).ToUniversalTime()
+            $Job.Paused=$false
         }
 
-        $retry = $AsyncLoader.Jobs.$Jobkey.Retry + 1
+        $retry = $Job.Retry + 1
 
         $StopWatch = [System.Diagnostics.Stopwatch]::New()
         do {
@@ -8143,11 +8155,11 @@ Param(
                 }
                 if (-not $Quickstart) {
                     if ($delay -gt 0) {Start-Sleep -Milliseconds $delay}
-                    $Request = Invoke-GetUrl -JobData $AsyncLoader.Jobs.$Jobkey -JobKey $JobKey
+                    $Request = Invoke-GetUrl -JobData $Job -JobKey $JobKey
                 }
                 if ($Request) {
-                    $AsyncLoader.Jobs.$Jobkey.Success++
-                    $AsyncLoader.Jobs.$Jobkey.Prefail=0
+                    $Job.Success++
+                    $Job.Prefail=0
                 } else {
                     $RequestError = "Empty request"
                 }
@@ -8155,16 +8167,16 @@ Param(
             catch {
                 $RequestError = "$($_.Exception.Message)"
             } finally {
-                if ($RequestError) {$RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($RequestError)"}
+                if ($RequestError) {$RequestError = "Problem fetching $($Job.Url) using $($Job.Method): $($RequestError)"}
             }
 
-            if (-not $Quickstart) {$AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()}
+            if (-not $Quickstart) {$Job.LastRequest=(Get-Date).ToUniversalTime()}
 
             $retry--
             if ($retry -gt 0) {
                 if (-not $RequestError) {$retry = 0}
                 else {
-                    $RetryWait_Time = [Math]::Min($AsyncLoader.Jobs.$Jobkey.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
+                    $RetryWait_Time = [Math]::Min($Job.RetryWait - $StopWatch.ElapsedMilliseconds,5000)
                     if ($RetryWait_Time -gt 50) {
                         Start-Sleep -Milliseconds $RetryWait_Time
                     }
@@ -8176,7 +8188,7 @@ Param(
         $StopWatch = $null
 
         if (-not $Quickstart -and -not $RequestError -and $Request) {
-            if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
+            if ($Job.Method -eq "REST") {
                 try {
                     $Request = $Request | ConvertTo-Json -Compress -Depth 10 -ErrorAction Stop
                 } catch {
@@ -8190,8 +8202,8 @@ Param(
         $CacheWriteOk = $false
 
         if ($RequestError -or -not $Request) {
-            $AsyncLoader.Jobs.$Jobkey.Prefail++
-            if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
+            $Job.Prefail++
+            if ($Job.Prefail -gt 5) {$Job.Fail++;$Job.Prefail=0}            
         } elseif ($Quickstart) {
             $CacheWriteOk = $true
         } else {
@@ -8215,21 +8227,21 @@ Param(
         }
 
         if ($CacheWriteOk) {
-            $AsyncLoader.Jobs.$Jobkey.LastCacheWrite=(Get-Date).ToUniversalTime()
+            $Job.LastCacheWrite=(Get-Date).ToUniversalTime()
         }
 
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {
             try {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null} catch {}
         }
 
-        $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
-        $AsyncLoader.Jobs.$Jobkey.Running = $false
+        $Job.Error = $RequestError
+        $Job.Running = $false
     }
     if (-not $quiet) {
-        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0 -and -not (Test-Path ".\Cache\$($Jobkey).asy")) {throw $AsyncLoader.Jobs.$Jobkey.Error}
+        if ($Job.Error -and $Job.Prefail -eq 0 -and -not (Test-Path ".\Cache\$($Jobkey).asy")) {throw $Job.Error}
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
-                if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
+                if ($Job.Method -eq "REST") {
                     if (Test-IsPS7) {
                         Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
                     } else {

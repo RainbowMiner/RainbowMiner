@@ -2,7 +2,9 @@
 
 Set-Location $CurrentPwd
 
-if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\AsyncLoader_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
+if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {
+    Start-Transcript ".\Logs\AsyncLoader_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
+}
 
 $ProgressPreference = "SilentlyContinue"
 
@@ -13,20 +15,15 @@ Import-Module ".\Modules\PauseMiners.psm1"
 Set-OsFlags
 
 $Cycle = -1
-
 $StopWatch = [System.Diagnostics.StopWatch]::New()
-
 $GCStopWatch = [System.Diagnostics.StopWatch]::New()
 $GCStopWatch.Start()
 
 $AsyncLoader_Paused = $AsyncLoader.Pause
-
 $Hosts_LastCall = [hashtable]@{}
 
 while (-not $AsyncLoader.Stop) {
-
     $IsVerbose = $Session.Config.EnableVerboseAsyncloader
-
     $StopWatch.Restart()
     $Cycle++
     $AsyncLoader.Timestamp = (Get-Date).ToUniversalTime()
@@ -36,12 +33,19 @@ while (-not $AsyncLoader.Stop) {
     }
 
     if (-not $AsyncLoader.Pause -and $AsyncLoader.Jobs.Count) {
-
-        $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)
+        $JobKeys = @($AsyncLoader.Jobs.Keys | Sort-Object {
+            $Job = $null
+            if ($AsyncLoader.Jobs.TryGetValue($_, [ref]$Job)) { $Job.Index } else { [int]::MaxValue }
+        } | Select-Object)
 
         foreach ($JobKey in $JobKeys) {
-
-            $Job = $AsyncLoader.Jobs.$JobKey
+            $Job = $null
+            if (-not $AsyncLoader.Jobs.TryGetValue($JobKey, [ref]$Job)) {
+                if ($IsVerbose) {
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Job $JobKey is no longer in the dictionary" -Append -Timestamp
+                }
+                continue
+            }
 
             if ($AsyncLoader.Pause -or -not $Job -or $Job.Running -or $Job.Paused) {
                 if ($IsVerbose) {
@@ -50,10 +54,9 @@ while (-not $AsyncLoader.Stop) {
                 continue
             }
 
-            if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
+            if ($Job.CycleTime -le 0) { $Job.CycleTime = $AsyncLoader.Interval }
 
             $JobFailRetry = $false
-
             $Now = (Get-Date).ToUniversalTime()
 
             if (-not $Job.LastCacheWrite -or (($Job.LastCacheWrite -lt $Job.LastRequest) -and ($Job.LastCacheWrite -lt $Now.AddSeconds(-600-$Job.CycleTime)))) {
@@ -81,12 +84,12 @@ while (-not $AsyncLoader.Stop) {
                     } else {
                         $JobDelay = 0
                         $JobHost  = $Job.Host
-                        if ($JobHost) {
-                            if ($AsyncLoader.HostDelays.$JobHost -and $Hosts_LastCall.$JobHost) {
-                                $JobDelay = [Math]::Min([Math]::Max([Math]::Round($AsyncLoader.HostDelays.$JobHost - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0),0),5000)
-                                if ($JobDelay -and $IsVerbose) {
-                                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($JobDelay) milliseconds" -Append -Timestamp
-                                }
+                        $HostDelayValue = $null
+
+                        if ($JobHost -and $AsyncLoader.HostDelays.TryGetValue($JobHost, [ref]$HostDelayValue) -and $Hosts_LastCall.$JobHost) {
+                            $JobDelay = [Math]::Min([Math]::Max([Math]::Round($HostDelayValue - ((Get-Date).ToUniversalTime() - $Hosts_LastCall.$JobHost).TotalMilliseconds,0),0),5000)
+                            if ($JobDelay -and $IsVerbose) {
+                                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Delay for $($JobDelay) milliseconds" -Append -Timestamp
                             }
                         }
 

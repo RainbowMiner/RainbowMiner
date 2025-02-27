@@ -2181,10 +2181,7 @@ function Invoke-Core {
                                 foreach ($Property in $Session.Config.Pools.$UserPool_Name.PSObject.Properties) {
                                     $Pool_Parameters[$Property.Name] = $Property.Value
                                 }
-                                $Result = @(Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled)
-                                if ($Result.Count -gt 0) { 
-                                    $NewPools.AddRange([PSCustomObject[]]$Result)
-                                }
+                                Get-PoolsContent "Userpools" -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_) }
                                 [void]$SelectedPoolNames.Add($UserPool_Name)
                             }
                         }
@@ -2193,10 +2190,7 @@ function Invoke-Core {
                         foreach ($Property in $Session.Config.Pools.$Pool.PSObject.Properties) {
                             $Pool_Parameters[$Property.Name] = $Property.Value
                         }
-                        $Result = @(Get-PoolsContent $Pool -Parameters $Pool_Parameters -Disabled $Disabled)
-                        if ($Result.Count -gt 0) {  
-                            $NewPools.AddRange([PSCustomObject[]]$Result)  
-                        }
+                        Get-PoolsContent $Pool -Parameters $Pool_Parameters -Disabled $Disabled | Foreach-Object { [void]$NewPools.Add($_)  }
                         [void]$SelectedPoolNames.Add($Pool)
                     }
 
@@ -2310,12 +2304,9 @@ function Invoke-Core {
 
         if ($PoolsToBeReaddedSet.Count) {
             Write-Log "Re-Adding currently failed pools: $($PoolsToBeReaddedSet -join ", ")"
-            $ReaddPools = @($Global:AllPools | Where-Object { $PoolsToBeReaddedSet.Contains($_.Name) })
-
-            if ($ReaddPools.Count -gt 0) {
-                $NewPools.AddRange([PSCustomObject[]]$ReaddPools)
+            foreach ( $Pool in $Global:AllPools ) {
+                if ( $PoolsToBeReaddedSet.Contains($_.Name) ) { [void]$NewPools.Add($_) }
             }
-            $ReaddPools = $null
         }
         $PoolsToBeReaddedSet = $null
     }
@@ -2328,10 +2319,8 @@ function Invoke-Core {
         ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\newpools.json" -ErrorAction Ignore
     }
 
-    # Create a new filtered list
-    $FilteredPools = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $NewPools = foreach ( $Pool in $NewPools ) {
 
-    foreach ($Pool in $NewPools) {
         $Pool_Name = $Pool.Name
         $Pool_Algo = $Pool.Algorithm0
         $Pool_CoinSymbol = $Pool.CoinSymbol
@@ -2379,13 +2368,14 @@ function Invoke-Core {
                 )
             )
         ) {
-            [void]$FilteredPools.Add($Pool)
+            $Pool
         }
     }
 
-    $NewPools = $FilteredPools
-
     $AllPools_BeforeWD_Count = $NewPools.Count
+
+    if (-not $NewPools) { $NewPools = @() }
+    elseif ($NewPools.Count -eq 1) { $NewPools = @($NewPools) }
 
     $API.AllPools   = ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore
     #ConvertTo-Json $NewPools -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\allpools.json" -ErrorAction Ignore
@@ -2400,40 +2390,15 @@ function Invoke-Core {
         $Global:WatchdogTimers.RemoveAll({ param($c) $c.Kicked -le $WDResetTime -and $c.Active -le $WDIntervalTime }) > $null
     }
 
-    # Apply watchdog to pools, only if more than one pool is selected
+    # Apply watchdog filtering only if multiple pools are selected
     if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
-
-        # Create a new list for the filtered pools
-        $FilteredPools = [System.Collections.Generic.List[PSCustomObject]]::new()
-
-        foreach ($Pool in $NewPools) {
+        $NewPools = foreach ( $Pool in $NewPools ) {
             if ($Pool.Disabled) { continue }
-
-            # Get watchdog timers for this pool
-            $Pool_WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
-            foreach ($wdTimer in $Global:WatchdogTimers) {
-                if ($wdTimer.PoolName -eq $Pool.Name -and $wdTimer.Kicked -lt $WDIntervalTime -and $wdTimer.Kicked -gt $WDResetTime) {
-                    [void]$Pool_WatchdogTimers.Add($wdTimer)
-                }
+            if (-not $Pool.Exclusive) {
+                $Pool_WatchdogTimers = $Global:WatchdogTimers.Where({$_.PoolName -eq $Pool.Name -and $_.Kicked -lt $WDIntervalTime -and $_.Kicked -gt $WDResetTime})
+                if ($Pool_WatchdogTimers.Count -ge 3 -or $Pool_WatchdogTimers.Where({$_.Algorithm -in $Pool.Algorithm }).Count -ge 2 ) { continue }
             }
-
-            # Count how many timers match the algorithm
-            $AlgoMatchCount = 0
-            foreach ($wdTimer in $Pool_WatchdogTimers) {
-                if ($Pool.Algorithm -contains $wdTimer.Algorithm) {
-                    $AlgoMatchCount++
-                }
-            }
-
-            # Apply watchdog rules
-            if ($Pool.Exclusive -or ($Pool_WatchdogTimers.Count -lt 3 -and $AlgoMatchCount -lt 2)) {
-                [void]$FilteredPools.Add($Pool)
-            }
-        }
-
-        # Replace $NewPools with the filtered list if changed
-        if ($NewPools.Count -ne $FilteredPools.Count) {
-            $NewPools = $FilteredPools
+            $Pool
         }
     }
 
@@ -2442,11 +2407,7 @@ function Invoke-Core {
     
     if ($NewPools.Count -gt 0) {
 
-        $Pools_WTM = [System.Collections.Generic.List[PSCustomObject]]::new()
-
-        foreach ($Pool in $NewPools) {
-            if ($Pool.WTM) { [void]$Pools_WTM.Add($Pool) }
-        }
+        $Pools_WTM = $NewPools.Where({$_.WTM})
 
         if ($Pools_WTM.Count -gt 0) {
             if ($Session.RoundCounter -eq 0) { Write-Host ".. loading WhatToMine " -NoNewline }
@@ -2507,11 +2468,7 @@ function Invoke-Core {
 
         $ActiveRunningMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
 
-        foreach ($Miner in $Global:ActiveMiners) {
-            if ($Miner.Status -eq [MinerStatus]::Running) {
-                [void]$ActiveRunningMiners.Add($Miner)
-            }
-        }
+        $Global:ActiveMiners | Where-Object { $_.Status -eq [MinerStatus]::Running } | Foreach-Object { [void]$ActiveRunningMiners.Add($_) }
 
         foreach ($Miner in $ActiveRunningMiners) {
             for ($i = 0; $i -lt $Miner.Pool.Count; $i++) {
@@ -2528,7 +2485,7 @@ function Invoke-Core {
         $Session.DecayFact = [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod) / ([Math]::Max($Session.Config.SwitchingPrevention,1)))
 
         Write-Log "Calculating pool compare prices. "
-        foreach ($Pool in $NewPools) {
+        foreach ( $Pool in $NewPools ) {
             $Pool_Ix = "$($Pool.Name)-$($Pool.Algorithm0)-$($Pool.CoinSymbol)"
             if ($Pools_PriceCmp[$Pool_Ix] -eq $null) {
                 $Price_Cmp = $Pool."$(if (-not $Session.Config.EnableFastSwitching -and ($Session.Config.ForceStablePrice -or -not $Pool.PaysLive)) {"Stable"})Price"
@@ -2616,14 +2573,18 @@ function Invoke-Core {
     }
 
     #Give API access to the pools information
-    $FilteredPools = [System.Collections.Generic.List[PSCustomObject]]::new()
-    foreach ($Pool in $Pools.PSObject.Properties.Value) {
+    $FilteredPools = foreach ($Pool in $Pools.PSObject.Properties.Value) {
         if (-not $Pool.SoloMining -or $Pool.BLK) {
-            [void]$FilteredPools.Add($Pool)
+            $Pool
         }
     }
+    if (-not $FilteredPools) { $FilteredPools = @() }
+    elseif ($FilteredPools.Count -eq 1) { $FilteredPools = @($FilteredPools) }
+
     $API.Pools = ConvertTo-Json $FilteredPools -Depth 10 -ErrorAction Ignore
  
+    $FilteredPools = $null
+
     #Load information about the miners
     Write-Log -Level Info "Getting miner information. "
 
@@ -2637,37 +2598,25 @@ function Invoke-Core {
     $AllMiners = $null
     if ($NewPools.Count -and (Test-Path "Miners")) {
 
-        $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-        $MinersContent = Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false}
-
-        foreach ($Miner in $MinersContent) {
+        $AllMiners = Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} | Where-Object {
+            $Miner = $_
 
             $Miner_Name = $Miner.BaseName
 
             # Skip miners with missing DeviceName or mismatched DeviceModel
-            if (-not $Miner.DeviceName -or ($Miner.DeviceModel -match '-' -and (Compare-Object $Miner.DeviceName $Global:DeviceCache.DeviceNames."$($Miner.DeviceModel)"))) {
-                continue
-            }
+            if (-not $Miner.DeviceName -or ($Miner.DeviceModel -match '-' -and (Compare-Object $Miner.DeviceName $Global:DeviceCache.DeviceNames."$($Miner.DeviceModel)"))) { return }
 
             # Skip unprofitable CPU algorithms
-            if (-not $Miner_DontCheckForUnprofitableCpuAlgos -and $Miner.DeviceModel -eq "CPU" -and $Miner.BaseAlgorithm -in $UnprofitableCpuAlgos) {
-                continue
-            }
+            if (-not $Miner_DontCheckForUnprofitableCpuAlgos -and $Miner.DeviceModel -eq "CPU" -and $Miner.BaseAlgorithm -in $UnprofitableCpuAlgos) { return }
 
             # Skip dual algo miners if disabled
-            if ($Session.Config.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) {
-                continue
-            }
+            if ($Session.Config.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) { return }
 
             # Skip miners missing required devices
-            if (Compare-Object $Global:DeviceCache.DevicesNames $Miner.DeviceName | Where-Object SideIndicator -EQ "=>") {
-                continue
-            }
+            if (Compare-Object $Global:DeviceCache.DevicesNames $Miner.DeviceName | Where-Object SideIndicator -EQ "=>") { return }
 
             # Skip disabled miners
-            if ($Session.Config.Miners."$($Miner_Name)-$($Miner.DeviceModel)-$($Miner.BaseAlgorithm)".Disable) {
-                continue
-            }
+            if ($Session.Config.Miners."$($Miner_Name)-$($Miner.DeviceModel)-$($Miner.BaseAlgorithm)".Disable) { return }
 
             # Skip miners excluded by pools
             $ExcludeMiner = $false
@@ -2681,9 +2630,7 @@ function Invoke-Core {
                     }
                 }
             }
-            if ($ExcludeMiner) {
-                continue
-            }
+            if ($ExcludeMiner) { return }
 
             # Skip miners excluded by algorithm configurations
             $BaseAlgos = $Miner.BaseAlgorithm -split '-'
@@ -2698,9 +2645,7 @@ function Invoke-Core {
                     }
                 }
             }
-            if (-not $MinerOk) {
-                continue
-            }
+            if (-not $MinerOk) { return }
 
             # Skip miners based on device model exclusions
             foreach ($Device in $Miner.DeviceModel -split '-') {
@@ -2722,35 +2667,29 @@ function Invoke-Core {
                 }
             }
 
-            if ($MinerOk) {
-                # Finally, add the miner to the list
-                [void]$AllMiners.Add($Miner)
-            }
+            $MinerOk
         }
     }
 
     if (-not $AllMiners) {
-        $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $AllMiners = @()
     }
 
     #Check if .NET Core Runtime is installed
-    $MinersNeedSdk = [System.Collections.Generic.List[PSCustomObject]]::new()
-    foreach ($Miner in $AllMiners) {
+    $MinersNeedSdk = foreach ($Miner in $AllMiners) {
         if ($Miner.DotNetRuntime -and (Compare-Version $Miner.DotNetRuntime $Session.Config.DotNETRuntimeVersion) -gt 0) {
-            [void]$MinersNeedSdk.Add($Miner)
+            $Miner
         }
     }
     if ($MinersNeedSdk.Count -gt 0) {
         foreach ($Miner in $MinersNeedSdk) {
             Write-Log -Level Warn "$($Miner.BaseName) requires .NET Core Runtime (min. version $($Miner.DotNetRuntime)) to be installed! Find the installer here: https://dotnet.microsoft.com/download"
         }
-        $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-        foreach ($Miner in $AllMiners) {
+        $AllMiners = foreach ($Miner in $AllMiners) {
             if (-not $MinersNeedSdk.Contains($Miner)) {
-                [void]$FilteredMiners.Add($Miner)
+                $Miner
             }
         }
-        $AllMiners = $FilteredMiners
         Start-Sleep 2
     }
 
@@ -2793,20 +2732,17 @@ function Invoke-Core {
 
             # Benchmarking is still ongoing (2/2) - remove device combos
 
-            $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-            foreach ($Miner in $AllMiners) {
+            $AllMiners = foreach ($Miner in $AllMiners) {
                 if ($Miner.DeviceModel -eq "CPU" -or $Miner.DeviceModel -notmatch '-') {
-                    [void]$FilteredMiners.Add($Miner)
+                    $Miner
                 }
             }
-            $AllMiners = $FilteredMiners
 
         } else {
 
             # Remove device combos, where the parameter-preset is different and there does not exist an own definition
 
-            $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-            foreach ($Miner in $AllMiners) {
+            $AllMiners = foreach ($Miner in $AllMiners) {
                 if ($Miner.DeviceModel -eq "CPU" -or
                     $Miner.DeviceModel -notmatch '-' -or 
                     ($null -ne $Session.Config.Miners.PSObject.Properties["$($Miner.BaseName)-$($Miner.DeviceModel)-$($Miner.BaseAlgorithm)"]) -or 
@@ -2820,10 +2756,9 @@ function Invoke-Core {
                         } | Select-Object -Unique | Measure-Object
                     ).Count -le 1) {
 
-                    [void]$FilteredMiners.Add($Miner)
+                    $Miner
                 }
             }
-            $AllMiners = $FilteredMiners
 
             Write-Log "Gather mining statistics for fresh combos"
 
@@ -2863,16 +2798,14 @@ function Invoke-Core {
 
         # avoid benchmarks of combo miners
 
-        $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-        foreach ( $Miner in $AllMiners ) {
+        $AllMiners = foreach ( $Miner in $AllMiners ) {
             if ($Miner.DeviceModel -eq "CPU" -or
                 $Miner.DeviceModel -notmatch '-' -or
                 $Miner.HashRates.PSObject.Properties.Value -notcontains $null) {
 
-                [void]$FilteredMiners.Add($Miner)
+                $Miner
             }
         }
-        $AllMiners = $FilteredMiners
 
         Write-Log -Level Info "End add missing combos"
         ConvertTo-Json $AllMiners -Depth 10 | Set-Content ".\Cache\allminers.json"
@@ -2988,13 +2921,11 @@ function Invoke-Core {
 
     #Remove all miners, that need benchmarks during donation run
     if ($Session.IsDonationRun -or $Session.IsServerDonationRun) {
-        $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-        foreach ($Miner in $AllMiners) {
+        $AllMiners = foreach ($Miner in $AllMiners) {
             if ($Miner.HashRates.PSObject.Properties.Value -notcontains $null) {
-                [void]$FilteredMiners.Add($Miner)
+                $Miner
             }
         }
-        $AllMiners = $FilteredMiners
     }
 
     Write-Log "Calculating profit for each miner. "
@@ -3363,11 +3294,9 @@ function Invoke-Core {
     $Miners_DownloadListPrq = @()
     $Miners_DownloadMsgPrq  = $null
 
-    $Miners = [System.Collections.Generic.List[PSCustomObject]]::new()
-
-    foreach ($Miner in $AllMiners) {
+    $Miners = foreach ($Miner in $AllMiners) {
         if ((Test-Path $Miner.Path) -and ((-not $Miner.PrerequisitePath) -or (Test-Path $Miner.PrerequisitePath)) -and $AllMiners_VersionCheck[$Miner.BaseName].Ok) {
-            [void]$Miners.Add($Miner)
+            $Miner
         }
     }
 
@@ -3424,17 +3353,15 @@ function Invoke-Core {
 
     #Remove miners with developer fee
     if ($Session.Config.ExcludeMinersWithFee) {
-        $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-        foreach ($Miner in $Miners) {
+        $Miners = foreach ($Miner in $Miners) {
             $TotalDevFee = 0
             foreach ($Fee in $Miner.DevFee.PSObject.Properties.Value) {
                 $TotalDevFee += [Double]$Fee
             }
             if ($TotalDevFee -eq 0) {
-                [void]$FilteredMiners.Add($Miner)
+                $Miner
             }
         }
-        $Miners = $FilteredMiners
     }
 
     $Miners_BeforeWD_Count = ($Miners | Measure-Object).Count
@@ -3483,39 +3410,16 @@ function Invoke-Core {
         }
     }
 
-    $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
 
-    foreach ($Miner in $Miners) {
-        $Miner_WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
-
-        foreach ($wdTimer in $Global:WatchdogTimers) {
-            if ($wdTimer.MinerName -eq $Miner.Name -and
-                $wdTimer.Kicked -lt $WDIntervalTime -and
-                $wdTimer.Kicked -gt $WDResetTime) {
-                [void]$Miner_WatchdogTimers.Add($wdTimer)
-            }
-        }
-
-        $AlgoMatchCount = 0
-        foreach ($wdTimer in $Miner_WatchdogTimers) {
-            if ($Miner.HashRates.PSObject.Properties.Name -contains $wdTimer.Algorithm) {
-                $AlgoMatchCount++
-            }
-        }
-
-        if (
-            $Miner_WatchdogTimers.Count -lt 2 -and
-            $AlgoMatchCount -lt 1 -and
-            ($Session.Config.DisableDualMining -or
-             $Session.Config.EnableDualMiningDuringRentals -or
-             $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or
-             -not ($Miner.Pools.PSObject.Properties.Value | Where-Object { $_.Exclusive }).Count)
-        ) {
-            [void]$FilteredMiners.Add($Miner)
-        }
+    $Miners = foreach ( $Miner in $Miners ) {
+        if (-not ($Session.Config.DisableDualMining -or $Session.Config.EnableDualMiningDuringRentals -or $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or -not $Miner.Pools.PSObject.Properties.Value.Where({$_.Exclusive}).Count)) { continue }
+        $Miner_WatchdogTimers = $Global:WatchdogTimers.Where({$_.MinerName -eq $Miner.Name -and $_.Kicked -lt $WDIntervalTime -and $_.Kicked -gt $WDResetTime})
+        if ( $Miner_WatchdogTimers.Count -ge 2 -or $Miner_WatchdogTimers.Where({$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm}).Count -ge 1 ) { continue }
+        $Miner
     }
 
-    $Miners = $FilteredMiners
+    if (-not $Miners) { $Miners = @() }
+    elseif ($Miners.Count -eq 1) {$Miners = @($Miners)}
 
     #Give API access to the miners information
     $API.Miners = ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore
@@ -3524,19 +3428,14 @@ function Invoke-Core {
     }
 
     #Remove all failed and disabled miners
-    $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-
-    foreach ($Miner in $Miners) {
+    $Miners = foreach ($Miner in $Miners) {
         if (-not $Miner.Disabled -and $Miner.HashRates.PSObject.Properties.Value -notcontains 0) {
-
             #Optionally remove miners with 0 Watt
             if (-not $Session.Config.DisableZeroWattMiners -or ($Miner.PowerDraw -and -not ($Miner.HashRates.PSObject.Properties.Value -contains $null))) {
-                [void]$FilteredMiners.Add($Miner)
+                $Miner
             }
         }
     }
-
-    $Miners = $FilteredMiners
 
     Write-Log "Reset active miners."
 
@@ -3616,27 +3515,26 @@ function Invoke-Core {
 
     # Use only the fastest miner per algo and device index
     if ($Session.Config.FastestMinerOnly) {
-        $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-
         $GroupedMiners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {[double]$_.Profit_Bias - $_.Profit_Cost_Bias}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}
 
         # Filter the fastest miner per group
-        foreach ($Group in $GroupedMiners) {
+        $Miners = foreach ($Group in $GroupedMiners) {
             if ($Group.Group.Count -eq 1) {
-                [void]$FilteredMiners.Add($Group.Group[0])
+                $Group.Group[0]
             } else {
                 $BaseName = $Group.Group[0].BaseName
                 foreach ($Miner in $Group.Group) {
                     if ($Miner.BaseName -eq $BaseName) {
-                        [void]$FilteredMiners.Add($Miner)
+                        $Miner
                     }
                 }
             }
         }
-
-        $Miners = $FilteredMiners
     }
  
+    if (-not $Miners) { $Miners = @() }
+    elseif ($Miners.Count -eq 1) {$Miners = @($Miners)}
+
     #Give API access to the fasted miners information
     $API.FastestMiners = ConvertTo-Json $Miners -Depth 10 -ErrorAction Ignore
     if ($Session.Debug) {
@@ -3644,15 +3542,17 @@ function Invoke-Core {
     }
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
-    $MinersNeedingBenchmark = [System.Collections.Generic.List[PSCustomObject]]::new()
-
-    foreach ( $Miner in $Miners ) {
+    $MinersNeedingBenchmark = foreach ( $Miner in $Miners ) {
         if ($Miner.HashRates.PSObject.Properties.Value -contains $null) {
-            [void]$MinersNeedingBenchmark.Add($Miner)
+            $Miner
         }
     }
 
+    if (-not $MinersNeedingBenchmark) { $MinersNeedingBenchmark = @() }
+    elseif ($MinersNeedingBenchmark.Count -eq 1) { $MinersNeedingBenchmark = @($MinersNeedingBenchmark) }
+
     $MinersNeedingBenchmarkCount = $MinersNeedingBenchmark.Count
+    
     $API.MinersNeedingBenchmark = ConvertTo-Json $MinersNeedingBenchmark -Depth 2 -WarningAction Ignore -ErrorAction Ignore
     if ($Session.Debug) {
         $API.MinersNeedingBenchmark | Set-Content ".\Cache\minersneedingbenchmark.json"
@@ -4397,8 +4297,7 @@ function Invoke-Core {
     }
 
     #Display active miners list
-    $FilteredMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
-    foreach ($Miner in $Global:ActiveMiners) {
+    $FilteredMiners = foreach ($Miner in $Global:ActiveMiners) {
         if (
             $Miner.Activated -gt 0 -and
             (
@@ -4410,7 +4309,7 @@ function Invoke-Core {
                 )
             )
         ) {
-            [void]$FilteredMiners.Add($Miner)
+            $Miner
         }
     }
 
@@ -4426,6 +4325,8 @@ function Invoke-Core {
         @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = { "{0:d}W" -f [int]$_.PowerDraw }},
         @{Label = "Command"; Expression = { "$($_.Path.TrimStart((Convert-Path ".\"))) $($_.GetArguments())" }}
     ) | Out-Host
+
+    $FilteredMiners = $null
 
     if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {
         $FilteredWatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
