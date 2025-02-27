@@ -31,8 +31,8 @@ if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -o
         return
     }
 
-    $Info = " $($_.address.Substring(0,3))..$($_.address.Substring($_.address.Length-3,3))"
     $Request.addresses | Sort-Object {$_.address} | Foreach-Object {
+        $Info = " $($_.address.Substring(0,3))..$($_.address.Substring($_.address.Length-3,3))"
         [PSCustomObject]@{
                 Caption     = "$($Name) BTC ($($_.address))"
 		        BaseName    = $Name
@@ -135,10 +135,12 @@ foreach ($Wallet_Data in $Wallets_Data) {
 
             $Wallet_Balance = [decimal]$(if ("$($Wallet_Balance)".Trim() -match "^[0-9\.]+$") {$Wallet_Balance})
 
+            $Info = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3))"
             [PSCustomObject]@{
                     Caption     = "$Name $Wallet_Symbol ($Wallet_Address)"
 		            BaseName    = $Name
-                    Info        = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3))"
+                    Name        = $Name + $Info
+                    Info        = $Info
                     Currency    = $Wallet_Symbol
                     Balance     = $Wallet_Balance / $Wallet_Data.divisor
                     Pending     = 0
@@ -171,6 +173,7 @@ if ($Config.Pools.Binance.EnableShowWallets -and $Config.Pools.Binance.API_Key -
             [PSCustomObject]@{
                     Caption     = "$Name $($_.asset) (Binance)"
 		            BaseName    = $Name
+                    Name        = $Name + $Title
                     Info        = $Title
                     Currency    = $Asset
                     Balance     = $Total_Free
@@ -218,11 +221,12 @@ if ($Config.Pools.Nicehash.EnableShowWallets -and $Config.Pools.Nicehash.API_Key
         Write-Log -Level Verbose "Nicehash Wallet API has failed ($Name) "
     }
 
+    $Info = " Nicehash"
     $Request | Foreach-Object {
         [PSCustomObject]@{
                 Caption     = "$Name $($_.currency) (Nicehash)"
-		        BaseName    = $Name
-                Info        = " Nicehash"
+		        BaseName    = $Name + $Info
+                Info        = $Info
                 Currency    = $_.currency
                 Balance     = [decimal]$_.totalBalance
                 Pending     = [decimal]$_.pending
@@ -268,10 +272,11 @@ if ($Config.CovalentAPIKey) {
 
                 $Wallet_Balance = $_.balance / [Math]::Pow(10,$_.contract_decimals)
 
+                $Info = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3)) Polygon"
                 [PSCustomObject]@{
                         Caption     = "$Name $($Wallet_Symbol) $($Wallet_Address)"
-                        BaseName    = $Name
-                        Info        = " $($Wallet_Info.Substring(0,3))..$($Wallet_Info.Substring($Wallet_Info.Length-3,3)) Polygon"
+                        BaseName    = $Name + $Info
+                        Info        = $Info
                         Currency    = $_.contract_ticker_symbol
                         Balance     = $Wallet_Balance
                         Pending     = 0
