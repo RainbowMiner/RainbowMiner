@@ -40,10 +40,13 @@ $Pool_Users | Foreach-Object {
         return
     }
 
-     $Request.data.balances.PSObject.Properties | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Name} | Foreach-Object {
+    $Info =  "$(if (($Pool_Users | Measure-Object).Count -gt 1) {$Pool_User})"
+    $Request.data.balances.PSObject.Properties | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Name} | Foreach-Object {
         [PSCustomObject]@{
             Caption     = "$($Name) $($Pool_User) ($($_.Name))"
-            Info        = "$(if (($Pool_Users | Measure-Object).Count -gt 1) {$Pool_User})"
+            BaseName    = $Name
+            Name        = $Name + $Info
+            Info        = $Info
             Currency    = $_.Name
             Balance     = [decimal]$_.Value.balance
             Pending     = 0

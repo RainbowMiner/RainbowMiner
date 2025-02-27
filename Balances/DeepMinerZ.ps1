@@ -31,6 +31,7 @@ if ($Config.Pools.$Name.Wallets.$Pool_Currency) {
         [PSCustomObject]@{
                 Caption     = "$($Name) (DNX)"
 		        BaseName    = $Name
+                Name        = $Name
                 Currency    = "DNX"
                 Balance     = $Pool_Balance
                 Pending     = 0
@@ -59,6 +60,7 @@ if ($Config.Pools."$($Name)Solo".Wallets.$Pool_Currency -and $Config.Pools.$Name
         [PSCustomObject]@{
                 Caption     = "$($Name)Solo (DNX)"
 		        BaseName    = $Name
+                Name        = $Name
                 Currency    = "DNX"
                 Balance     = $Pool_Balance
                 Pending     = 0

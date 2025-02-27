@@ -32,6 +32,7 @@ foreach($PoolExt in @("","Solo")) {
         [PSCustomObject]@{
                 Caption     = "$($Name) ($($Pool_Currency))"
 		        BaseName    = $Name
+                Name        = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.result.immatureBalance
                 Pending     = [Decimal]0

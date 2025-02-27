@@ -27,6 +27,7 @@ $Pool_Request | Where-Object {$Pool_Name = "$($Name)$(if ($_.name -match "solo$"
         [PSCustomObject]@{
             Caption     = "$($Pool_Name) ($Pool_Currency)"
 			BaseName    = $Pool_Name
+            Name        = $Name
             Currency    = $Pool_Currency
             Balance     = [Decimal]$Request.miner.pendingBalance
             Pending     = [Decimal]$Request.miner.immatureBalance

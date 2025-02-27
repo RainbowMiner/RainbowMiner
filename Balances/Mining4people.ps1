@@ -74,6 +74,7 @@ if ($Payout_Currencies) {
                 [PSCustomObject]@{
                     Caption     = "$($Name) ($($Currency))"
 				    BaseName    = $Name
+                    Name        = $Name
                     Currency    = $Currency
                     Balance     = [Decimal]$Request.result.pendingBalance
                     Pending     = [Decimal]$Request.result.estimatedBalance
@@ -118,7 +119,9 @@ if ($Payout_CurrenciesSolo) {
             } else {
                 [PSCustomObject]@{
                     Caption     = "$($Name)Solo ($($Currency))"
-				    BaseName    = "$($Name)Solo"
+				    BaseName    = $Name
+                    Name        = $Name + "Solo"
+                    Info        = "Solo"
                     Currency    = $Currency
                     Balance     = [Decimal]$Request.result.pendingBalance
                     Pending     = [Decimal]$Request.result.estimatedBalance

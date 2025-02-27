@@ -39,6 +39,7 @@ $Payout_Wallets | Foreach-Object {
     [PSCustomObject]@{
             Caption     = "$($Name) ($($_.Name))"
 		    BaseName    = $Name
+            Name        = $Name
             Currency    = "RVN"
             Balance     = [Decimal]$Request.balance.cleared
             Pending     = [Decimal]$Request.balance.pending

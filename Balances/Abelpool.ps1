@@ -64,6 +64,7 @@ if ($ok) {
     [PSCustomObject]@{
         Caption     = "$($Name) ($($Pool_Currency))"
 		BaseName    = $Name
+        Name        = $Name
         Currency    = $Pool_Currency
         Balance     = $Pool_Balance
         Pending     = $Pool_Pending

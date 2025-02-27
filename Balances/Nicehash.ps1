@@ -35,6 +35,7 @@ if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.Organizatio
         [PSCustomObject]@{
             Caption     = "$($Name) ($($Request.currency))"
             BaseName    = $Name
+            Name        = $Name
             Currency    = $Request.currency
             Balance     = [Decimal]$Request.available
             Pending     = [Decimal]$RequestUnpaid.unpaidAmount

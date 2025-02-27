@@ -28,6 +28,7 @@ $Payout_Currencies | Where-Object {$_.Name -eq "TON"} | Foreach-Object {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $_.Name
                 Balance     = [Decimal]$Request.balance / 1e9
                 Pending     = [Decimal]0

@@ -31,6 +31,7 @@ try {
     [PSCustomObject]@{
         Caption     = "$($Name) ($($Payout_Currency))"
 		BaseName    = $Name
+        Name        = $Name
         Currency    = $Payout_Currency
         Balance     = [Decimal]0
         Pending     = [Decimal]0

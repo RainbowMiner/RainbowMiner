@@ -28,6 +28,7 @@ $Pool_Request.data | Where-Object {$Currency = $_.coin;(-not $Config.ExcludeCoin
     [PSCustomObject]@{
         Caption     = "$($Name) ($($Currency))"
 		BaseName    = $Name
+        Name        = $Name
         Currency    = $Currency
         Balance     = [Decimal]$_.balance / 1e8
         Pending     = [Decimal]$_.balanceImmature / 1e8

@@ -30,6 +30,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
 [PSCustomObject]@{
     Caption     = "$($Name) (XMR)"
 	BaseName    = $Name
+    Name        = $Name
     Currency    = "XMR"
     Balance     = [Decimal]$Request.amtDue/1e12
     Pending     = [Decimal]0

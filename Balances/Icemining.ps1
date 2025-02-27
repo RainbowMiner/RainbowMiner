@@ -36,6 +36,7 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Fo
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $_.Name
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold

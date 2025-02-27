@@ -49,6 +49,7 @@ $Payout_Currencies | Where-Object {$Pool_Coins.ContainsKey($_.Name) -and (-not $
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Pool_Currency))"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.data.balance
                 Pending     = 0

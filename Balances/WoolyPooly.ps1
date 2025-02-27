@@ -69,6 +69,7 @@ $Payout_Currencies | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count 
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
 			    BaseName    = $Name
+                Name        = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.stats.balance
                 Pending     = [Decimal]$Request.stats.immature_balance

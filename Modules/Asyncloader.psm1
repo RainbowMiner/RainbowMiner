@@ -11,16 +11,15 @@ Param(
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" > $null}
 
     $Global:AsyncLoader = [System.Collections.Hashtable]::Synchronized(@{})
-
     $AsyncLoader.Stop       = $false
     $AsyncLoader.Pause      = $true
-    $AsyncLoader.Jobs       = [hashtable]@{}
-    $AsyncLoader.HostDelays = [hashtable]@{}
-    $AsyncLoader.HostTags   = [hashtable]@{}
+    $AsyncLoader.Jobs       = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
+    $AsyncLoader.HostDelays = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
+    $AsyncLoader.HostTags   = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = $Quickstart
-    $AsyncLoader.Debug      = $Session.LogLevel -eq "Debug"
+    $AsyncLoader.Debug      = ($Session.LogLevel -eq "Debug")
     $AsyncLoader.Timestamp  = $null
 
     # Setup additional, global variables for server handling
@@ -34,7 +33,6 @@ Param(
     if (Initialize-HttpClient) {
         $newRunspace.SessionStateProxy.SetVariable("GlobalHttpClient", $Global:GlobalHttpClient)
     }
-    $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
 
     $AsyncloaderScript = [ScriptBlock]::Create((Get-Content ".\Scripts\Asyncloader.ps1" -Raw))
 

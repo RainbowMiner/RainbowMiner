@@ -23,6 +23,7 @@ if ($Config.Pools.$Name.API_Key) {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.coin))"
                 BaseName    = $Name
+                Name        = $Name
                 Currency    = $_.coin
                 Balance     = [Decimal]$_.amount
                 Pending     = 0

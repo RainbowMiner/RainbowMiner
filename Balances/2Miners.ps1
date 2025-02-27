@@ -109,6 +109,7 @@ $Payout_Currencies | Where-Object {
                     Caption     = "$($Pool_Name) ($Pool_Currency)"
 				    BaseName    = $Pool_Name
                     Info        = $Pool_Info
+                    Name        = $Name + $Pool_Info
                     Currency    = $Pool_Currency
                     Balance     = [Decimal]$Request.stats.balance / $Divisor
                     Pending     = [Decimal]$Request.stats.immature / $Divisor

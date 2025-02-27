@@ -16,6 +16,7 @@ $Count = 0
         [PSCustomObject]@{
             Caption     = "$($Name) ($($_))"
 			BaseName    = $Name
+            Name        = $Name
             Currency    = $_
             Balance     = [Decimal]$Request.totalUnpaid
             Pending     = 0

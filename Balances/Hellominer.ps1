@@ -27,6 +27,7 @@ $Pools_Data | Where-Object {$Pool_Currency = "$($_.symbol -replace "\d+$")";$Con
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.Balance
                 Pending     = [Decimal]0

@@ -21,6 +21,7 @@ $Request.PSObject.Properties.Name | Where-Object {(-not $Config.ExcludeCoinsymbo
     [PSCustomObject]@{
         Caption     = "$($Name) ($($_))"
 		BaseName    = $Name
+        Name        = $Name
         Currency    = $_
         Balance     = [Decimal]$Request.$_.confirmed
         Pending     = [Decimal]$Request.$_.unconfirmed

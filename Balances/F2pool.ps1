@@ -64,6 +64,7 @@ $Payout_Currencies | Where-Object {$Pools_Data."$($_.Name)" -ne $null -and (-not
                 [PSCustomObject]@{
                     Caption     = "$($Name) ($($_ -replace "/.+$"))"
 					BaseName    = $Name
+                    Name        = $Name
                     Currency    = $Currency.Name
                     Balance     = [Decimal]$Request.balance
                     Pending     = [Decimal]0

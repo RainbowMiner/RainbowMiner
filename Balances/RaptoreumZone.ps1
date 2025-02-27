@@ -40,6 +40,7 @@ catch {
 [PSCustomObject]@{
         Caption     = "$($Name) (RTM)"
 		BaseName    = $Name
+        Name        = $Name
         Currency    = "RTM"
         Balance     = [Decimal]$Request.result.totalBalance - [Decimal]$Request.result.immatureBalance
         Pending     = [Decimal]$Request.result.immatureBalance

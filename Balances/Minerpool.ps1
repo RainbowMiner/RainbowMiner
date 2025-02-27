@@ -60,6 +60,7 @@ $Pools_Data | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Co
         [PSCustomObject]@{
             Caption     = "$($Name) ($Pool_Currency)"
 		    BaseName    = $Name
+            Name        = $Name
             Currency    = $Pool_Currency
             Balance     = [Decimal]$Wallet_Balance
             Pending     = [Decimal]$Wallet_Immature

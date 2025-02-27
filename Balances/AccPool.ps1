@@ -27,6 +27,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Config.Pools.$Name.Walle
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.result.earnings.balance
                 Pending     = [Decimal]$Request.result.earnings.unconfirmed

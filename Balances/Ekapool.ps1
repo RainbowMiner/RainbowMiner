@@ -35,6 +35,7 @@ $Pool_Request.pools | Where-Object {$Pool_Name = "$($Name)$(if ($_.paymentProces
         [PSCustomObject]@{
             Caption     = "$($Pool_Name) ($Pool_Currency)"
 			BaseName    = $Pool_Name
+            Name        = $Name
             Currency    = $Pool_Currency
             Balance     = [Decimal]$Request.pendingBalance
             Pending     = 0

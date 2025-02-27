@@ -33,6 +33,7 @@ $Pools_Data | Where-Object {($Config.Pools.$Name.Wallets."$($_.symbol)" -or $Con
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
                 BaseName    = $Name
+                Name        = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.data.getWallet.pendingBalance
                 Pending     = 0

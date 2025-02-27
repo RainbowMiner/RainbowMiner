@@ -33,6 +33,7 @@ $Payout_Currencies | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count 
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"
+                Name        = $Name
 				BaseName    = $Name
                 Currency    = $Request.currency
                 Balance     = [Decimal]$Request.balance

@@ -31,11 +31,13 @@ if (($Wallets | Measure-Object).Count -and (-not $Config.WalletBalances.Count -o
         return
     }
 
+    $Info = " $($_.address.Substring(0,3))..$($_.address.Substring($_.address.Length-3,3))"
     $Request.addresses | Sort-Object {$_.address} | Foreach-Object {
         [PSCustomObject]@{
                 Caption     = "$($Name) BTC ($($_.address))"
 		        BaseName    = $Name
-                Info        = " $($_.address.Substring(0,3))..$($_.address.Substring($_.address.Length-3,3))"
+                Name        = $Name + $Info
+                Info        = $Info
                 Currency    = "BTC"
                 Balance     = [Decimal]$_.final_balance / 1e8
                 Pending     = 0

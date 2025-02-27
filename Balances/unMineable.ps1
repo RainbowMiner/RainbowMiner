@@ -38,6 +38,7 @@ $Pool_CoinsRequest.coins | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbo
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.data.pending_balance
                 Pending     = 0

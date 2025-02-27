@@ -42,6 +42,7 @@ $Payout_Currencies | Where-Object {@("BTC", "DASH", "LTC","TRX","USDT") + @($Poo
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $Request.currency
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold

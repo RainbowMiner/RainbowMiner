@@ -30,6 +30,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name."API_$($_.symbol)_PUID" -and $Co
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.symbol))"
 				BaseName    = $Name
+                Name        = $Name
                 Currency    = $_.symbol
                 Balance     = [Decimal]$Request.data.balance/$Divisor
                 Pending     = [Decimal]0
