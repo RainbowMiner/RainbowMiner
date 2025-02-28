@@ -520,12 +520,6 @@ if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
 
         if (-not $Session.Stopp) {
             Write-Log "Starting next run..."
-
-            [System.GC]::Collect()
-            [System.GC]::WaitForPendingFinalizers()
-            [System.GC]::Collect()
-
-            Write-Log (Get-MemoryUsage -forceFullCollection).MemText
         }
 
         if ($Session.Debug) {
