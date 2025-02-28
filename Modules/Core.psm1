@@ -2470,7 +2470,7 @@ function Invoke-Core {
 
         foreach ($Miner in $ActiveRunningMiners) {
             for ($i = 0; $i -lt $Miner.Pool.Count; $i++) {
-                $Pool_Ix = "$($Miner.Pool[$i])-$($Miner.BaseAlgorithm[$i])-$($Miner.CoinSymbol[$i])"
+                $Pool_Ix = "$($Miner.Pool | Select-Object -Index $i)-$($Miner.BaseAlgorithm | Select-Object -Index $i)-$($Miner.CoinSymbol | Select-Object -Index $i)"
 
                 if (-not $Pools_Running.ContainsKey($Pool_Ix) -or $Pools_Running[$Pool_Ix] -gt $Miner.Rounds) {
                     $Pools_Running[$Pool_Ix] = $Miner.Rounds
