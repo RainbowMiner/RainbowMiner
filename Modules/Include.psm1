@@ -6057,7 +6057,9 @@ function Set-AlgorithmsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Algorithms"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTimeUtc) {
+
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTimeUtc
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6074,7 +6076,7 @@ function Set-AlgorithmsConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
             }
         }
@@ -6099,7 +6101,9 @@ function Set-CoinsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Coins"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTimeUtc) {
+
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTimeUtc
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6118,7 +6122,7 @@ function Set-CoinsConfigDefault {
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
                 $Sorted | Add-Member $_ $Preset.$_ -Force
             }
-            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
             }
         }
@@ -6143,7 +6147,9 @@ function Set-GpuGroupsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})GpuGroups"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile)) {
+
+    $ForceWrite = -not (Test-Path $PathToFile)
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6158,7 +6164,7 @@ function Set-GpuGroupsConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
             }
         }
@@ -6183,7 +6189,9 @@ function Set-CombosConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Combos"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile)) {
+
+    $ForceWrite = -not (Test-Path $PathToFile)
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6259,7 +6267,7 @@ function Set-CombosConfigDefault {
 
                 $Preset.$SubsetType.PSObject.Properties.Name | Where-Object {$NewSubsetModels -icontains $_} | Sort-Object | Foreach-Object {$Sorted.$SubsetType | Add-Member $_ "$(if (Get-Yes $Preset.$SubsetType.$_) {1} else {0})" -Force}
             }
-            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
             }
         }
@@ -6284,7 +6292,9 @@ function Set-DevicesConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Devices"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTimeUtc) {
+
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTimeUtc
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6303,7 +6313,7 @@ function Set-DevicesConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
             }
         }
@@ -6330,7 +6340,9 @@ function Set-MinersConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Miners"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTimeUtc) {
+
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTimeUtc
+    if ($Force -or $ForceWrite) {
         $Algo = [hashtable]@{}
         $Done = [PSCustomObject]@{}
         $Preset_Copy = $null
@@ -6460,7 +6472,7 @@ function Set-MinersConfigDefault {
                     $DoneSave | Add-Member $Name @($Done.$Name | Sort-Object MainAlgorithm,SecondaryAlgorithm)
                 }
             }
-            if (-not [RBMToolBox]::CompareObject($DoneSave,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($DoneSave,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $DoneSave > $null
             }
         }
@@ -6499,7 +6511,8 @@ function Set-PoolsConfigDefault {
         }
     }
 
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTimeUtc -or $UserpoolsUpdated) {
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTimeUtc -or $UserpoolsUpdated
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6555,7 +6568,7 @@ function Set-PoolsConfigDefault {
                     }
                     $Done | Add-Member $Pool_Name $Setup_Content
                 }
-                if (-not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
+                if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
                     Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
                 }
             } else {
@@ -6583,7 +6596,9 @@ function Set-OCProfilesConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})OCProfiles"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTimeUtc) {
+
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTimeUtc
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6615,7 +6630,7 @@ function Set-OCProfilesConfigDefault {
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
-            if (-not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
             }
         }
@@ -6640,7 +6655,9 @@ function Set-SchedulerConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Scheduler"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile)) {
+
+    $ForceWrite = -not (Test-Path $PathToFile)
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6667,7 +6684,7 @@ function Set-SchedulerConfigDefault {
                 }
             }
             $Done = @($Preset | Select-Object)
-            if (-not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
             }
         }
@@ -6692,7 +6709,9 @@ function Set-UserpoolsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})Userpools"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile)) {
+
+    $ForceWrite = -not (Test-Path $PathToFile)
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
@@ -6717,7 +6736,7 @@ function Set-UserpoolsConfigDefault {
             }
 
             $Done = @($Preset | Select-Object)
-            if (-not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Done,$Preset_Copy)) {
                 Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
             }
         }
