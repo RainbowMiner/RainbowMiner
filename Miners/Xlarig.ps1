@@ -42,7 +42,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("CPU")
+        Type      = @("CPU","ARMCPU")
         Name      = $Name
         Path      = $Path
         Port      = $Port

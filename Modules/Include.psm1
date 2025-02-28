@@ -1885,6 +1885,9 @@ function Get-MinersContent {
     if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
     $possibleDevices = @($Global:DeviceCache.DevicesToVendors.Values | Select-Object -Unique)
+    if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
+        for($i=0; $i -lt $possibleDevice.Count; $i++) { $possibleDevice[$i] = "ARM" + $possibleDevice[$i] }
+    }
     
     Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {
         $scriptName = $_.BaseName

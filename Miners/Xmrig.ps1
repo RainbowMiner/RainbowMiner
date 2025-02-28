@@ -256,7 +256,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("AMD","CPU","INTEL","NVIDIA")
+        Type      = @("AMD","CPU","INTEL","NVIDIA","ARMCPU")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
