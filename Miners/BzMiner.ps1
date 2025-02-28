@@ -16,14 +16,14 @@ $ManualUri = "https://github.com/bzminer/bzminer/releases"
 $Port = "332{0:d2}"
 $DevFee = 0.5
 $Cuda = "11.2"
-$Version = "22.0.0"
+$Version = "23.0.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BzMiner\bzminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.0.0-bzminer/bzminer_v22.0.0_linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.0.2-bzminer/bzminer_v23.0.2_linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-BzMiner\bzminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.0.0-bzminer/bzminer_v22.0.0_windows.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v23.0.2-bzminer/bzminer_v23.0.2_windows.zip"
 }
 
 $ExcludePoolName = "prohashing|miningrigrentals"
