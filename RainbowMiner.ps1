@@ -391,7 +391,7 @@ if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyComm
 
 Initialize-Session
 
-$Session.Version         = "4.9.6.1"
+$Session.Version         = "4.9.7.0"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
@@ -421,6 +421,7 @@ if ($IsWindows) {
 
 Import-Module .\Modules\API.psm1
 Import-Module .\Modules\Asyncloader.psm1
+#Import-Module .\Modules\MiningRigRentals.psm1
 Import-Module .\Modules\Core.psm1
 if ($IsLinux) {
     Import-Module .\Modules\OCDaemon.psm1
