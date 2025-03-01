@@ -1,7 +1,6 @@
 using module ..\Modules\Include.psm1
-#using module ..\Modules\PauseMiners.psm1
-#using module ..\Modules\MiningRigRentals.psm1
-#using module ..\Modules\MinerAPIs.psm1
+using module ..\Modules\PauseMiners.psm1
+using module ..\Modules\MinerAPIs.psm1
 
 param(
     [String]$Name,
