@@ -1,10 +1,11 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     $Config
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Currency = "DNX"
 
@@ -74,4 +75,3 @@ if ($Config.Pools."$($Name)Solo".Wallets.$Pool_Currency -and $Config.Pools.$Name
         Write-Log -Level Info "Pool Balance API ($Name) returned nothing. "
     }
 }
-

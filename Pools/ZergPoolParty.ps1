@@ -1,6 +1,7 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     [PSCustomObject]$Wallets,
     [PSCustomObject]$Params,
     [alias("WorkerName")]
@@ -16,7 +17,7 @@ param(
     [String]$Region = ""
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if (-not $PartyPassword -and -not $InfoOnly) {return}
 

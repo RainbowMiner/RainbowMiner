@@ -1,6 +1,7 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     [PSCustomObject]$Wallets,
     [PSCustomObject]$Params,
     [alias("WorkerName")]
@@ -11,7 +12,6 @@ param(
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10",
     [String]$StatAverageStable = "Week",
-    [String]$Name = "",
     [String]$Password = ""
 )
 

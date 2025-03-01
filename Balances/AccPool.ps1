@@ -1,10 +1,11 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     $Config
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol="KAS";  region=@("eu","ca","us","ru","hk","arg"); host="acc-pool.pw"; web="kaspa.acc-pool.pw"; port=@(16061,16062); fee=0.8}

@@ -1,10 +1,11 @@
 using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     $Config
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($Config.Pools.$Name.API_Key) {
 

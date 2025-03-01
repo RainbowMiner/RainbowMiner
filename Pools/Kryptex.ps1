@@ -1,6 +1,7 @@
 using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     [PSCustomObject]$Wallets,
     [PSCustomObject]$Params,
     [alias("WorkerName")]
@@ -14,7 +15,7 @@ param(
     [String]$Email
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Request = [PSCustomObject]@{}
 

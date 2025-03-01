@@ -524,6 +524,9 @@ Function Write-Log {
             }
             'Info' {
                 $LevelText = 'INFO:'
+                if ($Session.Debug) {
+                    $Color = "DarkGray"
+                }
                 Break
             }
             'Verbose' {
@@ -1806,8 +1809,15 @@ function Get-PoolsContent {
 
     $DiffFactor = 86400 / 4294967296 #[Math]::Pow(2,32)
 
+    $ParametersHaveName = $Parameters.ContainsKey("Name")
+
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | Foreach-Object {
-        & $_.FullName @Parameters | Foreach-Object {
+        $scriptPath = $_.FullName
+        $scriptName = $_.BaseName
+
+        if (-not $ParametersHaveName) { $Parameters["Name"] = $scriptName }
+
+        & $scriptPath @Parameters | Foreach-Object {
             $c = $_
             if ($PoolName -ne "WhatToMine") {
                 if (-not $Parameters.InfoOnly -and $Parameters.Region -and ($c.Region -ne $Parameters.Region)) {
@@ -1898,7 +1908,9 @@ function Get-MinersContent {
         )
     } | Foreach-Object { 
         $scriptPath = $_.FullName
-        $scriptName = $_.BaseName        
+        $scriptName = $_.BaseName
+        
+        $Parameters["Name"] = $scriptName
 
         & $scriptPath @Parameters | Foreach-Object {
             if ($Parameters.InfoOnly) {
@@ -1933,13 +1945,18 @@ function Get-BalancesContent {
     Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {
         $possiblePools -match "^$($_.BaseName)`(AE|Coins|CoinsSolo|CoinsParty|Party|PPS|Solo`)?$" -or $Config.ShowPoolBalancesExcludedPools -or $_.BaseName -eq "Wallet"
     } | Foreach-Object {
-        $Name = $_.BaseName
-        if (-not $Config.ShowPoolBalancesExcludedPools -and $Name -ne "Wallet") {
-            $Parameters["UsePools"] = $possiblePools -match "^$($_.BaseName)`(AE|Coins|CoinsSolo|CoinsParty|Party|PPS|Solo`)?$"
+        $scriptPath = $_.FullName
+        $scriptName = $_.BaseName
+
+        if (-not $Config.ShowPoolBalancesExcludedPools -and $scriptName -ne "Wallet") {
+            $Parameters["UsePools"] = $possiblePools -match "^$($scriptName)`(AE|Coins|CoinsSolo|CoinsParty|Party|PPS|Solo`)?$"
         } else {
             $Parameters["UsePools"] = $null
         }
-        & $_.FullName @Parameters
+
+        $Parameters["Name"] = $scriptName
+
+        & $scriptPath @Parameters
     }
 }
 
@@ -3719,7 +3736,7 @@ function Get-Device {
     }
 
     if (-not (Test-Path Variable:Global:GlobalCachedDevices) -or $Refresh) {
-        $Global:GlobalCachedDevices = @()
+        $Global:GlobalCachedDevices = [System.Collections.ArrayList]@()
 
         $PlatformId = 0
         $Index = 0
@@ -4058,7 +4075,7 @@ function Get-Device {
                                 $Device.IsLHR = $Model -match "^RTX30[1-8]0" -and $Device.SubId -notin @("2204","2206","2484","2486")
                             }
 
-                            $Global:GlobalCachedDevices += $Device
+                            [void]$Global:GlobalCachedDevices.Add($Device)
                             $Index++
                         }
                     }
@@ -4122,18 +4139,29 @@ function Get-Device {
 
                 $Index = 0
                 $Need_Sort = $false
-                $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
-                    if ($_.Index -ne $Index) {
+
+                # Sort the original list in place using Sort()
+                $Global:GlobalCachedDevices.Sort([System.Collections.Generic.Comparer[object]]::Create({
+                    param ($a, $b)
+                    $PlatformComparison = $OpenCL_Platforms.IndexOf($a.Platform_Vendor) - $OpenCL_Platforms.IndexOf($b.Platform_Vendor)
+                    if ($PlatformComparison -ne 0) {
+                        return $PlatformComparison
+                    }
+                    return $a.Index - $b.Index
+                }))
+
+                # Adjust indices without creating a new list
+                foreach ($Device in $Global:GlobalCachedDevices) {
+                    if ($Device.Index -ne $Index) {
                         $Need_Sort = $true
-                        $_.Index = $Index
-                        $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
+                        $Device.Index = $Index
+                        $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Index).ToUpper()
                     }
                     $Index++
                 }
 
                 if ($Need_Sort) {
                     Write-Log "OpenCL platforms have changed from initial run. Resorting indices."
-                    $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
                 }
 
             } catch {
@@ -4452,7 +4480,7 @@ function Get-Device {
                 }
 
                 $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
-                $Global:GlobalCachedDevices += $Device
+                [void]$Global:GlobalCachedDevices.Add($Device)
                 $Index++
             }
         }
@@ -6362,6 +6390,7 @@ function Set-MinersConfigDefault {
                     $Preset | Add-Member $Name @(
                         [System.Collections.ArrayList]$MinerCheck = @()
                         foreach($cmd in $PresetTmp.$Name) {
+                            if (-not $cmd.MainAlgorithm) { continue }
                             $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                             $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
                             $k = "$m-$s"

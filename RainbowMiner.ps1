@@ -421,7 +421,7 @@ if ($IsWindows) {
 
 Import-Module .\Modules\API.psm1
 Import-Module .\Modules\Asyncloader.psm1
-#Import-Module .\Modules\MiningRigRentals.psm1
+Import-Module .\Modules\MiningRigRentals.psm1
 Import-Module .\Modules\Core.psm1
 if ($IsLinux) {
     Import-Module .\Modules\OCDaemon.psm1

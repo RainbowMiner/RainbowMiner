@@ -1,6 +1,7 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     [PSCustomObject]$Wallets,
     [PSCustomObject]$Params,
     [alias("WorkerName")]
@@ -17,7 +18,7 @@ param(
 #https://communication.woolypooly.com/api/conversion/getcurrencies
 #https://api.woolypooly.com/api/eth-1/blocks
 #https://api.woolypooly.com/api/cfx-1/stats
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Request       = [PSCustomObject]@{}
 try {

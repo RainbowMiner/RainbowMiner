@@ -1,9 +1,10 @@
-﻿using module ..\Modules\Include.psm1
-using module ..\Modules\PauseMiners.psm1
-using module ..\Modules\MiningRigRentals.psm1
-using module ..\Modules\MinerAPIs.psm1
+using module ..\Modules\Include.psm1
+#using module ..\Modules\PauseMiners.psm1
+#using module ..\Modules\MiningRigRentals.psm1
+#using module ..\Modules\MinerAPIs.psm1
 
 param(
+    [String]$Name,
     [PSCustomObject]$Wallets,
     [PSCustomObject]$Params,
     [alias("WorkerName")]
@@ -75,7 +76,7 @@ param(
     [String]$UseHost = ""
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Fee = 3
 

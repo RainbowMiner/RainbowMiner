@@ -1,6 +1,7 @@
 using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     [PSCustomObject]$Wallets,
     [PSCustomObject]$Params,
     [alias("WorkerName")]
@@ -15,7 +16,7 @@ param(
     [String]$Password
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Currency = "EPIC"
 $Pool_Protocol = "stratum+tcp"
@@ -145,5 +146,3 @@ foreach ($Pool_Algorithm in @("randomx", "progpow", "cuckoo")) {
         }
     }
 }
-
-

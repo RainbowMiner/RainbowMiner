@@ -1,6 +1,7 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     $Pools,
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false,
@@ -8,7 +9,7 @@ param(
     [String]$StatAverageStable = "Week"
 )
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 [hashtable]$Pool_Algorithms = @{}
 

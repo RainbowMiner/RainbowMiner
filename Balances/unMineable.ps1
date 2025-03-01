@@ -1,11 +1,12 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     $Config
 )
 
 #https://api.unminable.com/v3/stats/0xaaD1d2972f99A99248464cdb075B28697d4d8EEd?tz=1&coin=ETH
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_CoinsRequest = [PSCustomObject]@{}
 

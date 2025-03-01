@@ -1,6 +1,7 @@
-﻿using module ..\Modules\Include.psm1
+using module ..\Modules\Include.psm1
 
 param(
+    [String]$Name,
     $Config
 )
 
@@ -9,7 +10,7 @@ if (-not $Config.Pools.$Name.API_Key -or -not $Config.Pools.$Name.User) {
     return
 }
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+# $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ARRR";    port = 700; fee = 5.0; rpc = "arrr"}
