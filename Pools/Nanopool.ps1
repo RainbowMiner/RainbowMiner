@@ -72,7 +72,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_TSL = (Get-UnixTimestamp) - $(if ($Pool_RequestLastBlock.status -eq "True" -and ($Pool_RequestLastBlock.data | Measure-Object).Count -eq 1) {$Pool_RequestLastBlock.data[0].date})
 
         if ($ok) {
-            $Pool_ExpectedEarning = $(if ($Global:VarCache.Rates.$Pool_Currency) {[double]$Pool_Request.data.day.coins / $Global:VarCache.Rates.$Pool_Currency} else {[double]$Pool_Request.data.day.bitcoins}) / $_.divisor / 1000
+            $Pool_ExpectedEarning = $(if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.data.day.coins / $Global:Rates.$Pool_Currency} else {[double]$Pool_Request.data.day.bitcoins}) / $_.divisor / 1000
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -Hashrate ([double]$Pool_RequestHashrate.data * $_.divisor) -BlockRate $Pool_RequestBlocks.data.count -ChangeDetection $true -Quiet
             if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }

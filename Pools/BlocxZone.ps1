@@ -77,7 +77,7 @@ if (-not $InfoOnly) {
     #try {
     #    $Pool_NetRequest = Invoke-RestMethodAsync "https://api.thepool.zone/v1/blocx/network/stats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
     #    if (-not $Pool_NetRequest.error -and $Pool_NetRequest.result) {
-    #        $btcPrice       = if ($Global:VarCache.Rates.$Pool_Currency) {1/[double]$Global:VarCache.Rates.$Pool_Currency} else {0}
+    #        $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
     #        $btcRewardLive  = if ($Pool_NetRequest.result.networkHashrate) {$btcPrice * $blocks_reward * 1440 / $Pool_NetRequest.result.networkHashrate} else {0}
     #    }
     #}

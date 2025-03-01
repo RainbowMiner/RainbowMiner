@@ -108,10 +108,10 @@ $Pools_Data | ForEach-Object {
         $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
         $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
         $reward         = $(if ($blocks) {($blocks | Where-Object {$_.reward -gt 0}| Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
-        $btcPrice       = if ($Global:VarCache.Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:VarCache.Rates."$($Pool_Coin.Symbol)"} else {0}
+        $btcPrice       = if ($Global:Rates."$($Pool_Coin.Symbol)") {1/[double]$Global:Rates."$($Pool_Coin.Symbol)"} else {0}
 
-        if ($ResetIfZero = -not $btcPrice -and -not $Global:VarCache.Rates.ContainsKey($Pool_Coin.Symbol)) {
-            $Global:VarCache.Rates[$Pool_Coin.Symbol] = 0
+        if ($ResetIfZero = -not $btcPrice -and -not $Global:Rates.ContainsKey($Pool_Coin.Symbol)) {
+            $Global:Rates[$Pool_Coin.Symbol] = 0
         }
 
         if ($_.cycles) {

@@ -53,7 +53,7 @@ $Pools_Request.tbs.PSObject.Properties.Value | Where-Object {(($Wallets."$($_.sy
 
     if (-not $InfoOnly) {
         $reward = if ($PoolsCurrencies_Request.$Pool_Currency.hashrate) {$PoolsCurrencies_Request.$Pool_Currency."24h_blocks" * $PoolsCurrencies_Request.$Pool_Currency.reward / $PoolsCurrencies_Request.$Pool_Currency.hashrate} else {0}
-        $btcPrice = if ($Global:VarCache.Rates.USD -and $_.marketStats.usd) {[double]$_.marketStats.usd/[double]$Global:VarCache.Rates.USD} elseif ($Global:VarCache.Rates."$($Pool_CurrencyXlat)") {1/[double]$Global:VarCache.Rates."$($Pool_CurrencyXlat)"} else {0}
+        $btcPrice = if ($Global:Rates.USD -and $_.marketStats.usd) {[double]$_.marketStats.usd/[double]$Global:Rates.USD} elseif ($Global:Rates."$($Pool_CurrencyXlat)") {1/[double]$Global:Rates."$($Pool_CurrencyXlat)"} else {0}
         $Pool_Profit = $reward * $btcPrice
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CurrencyXlat)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$PoolsCurrencies_Request.$Pool_Currency.hashrate) -BlockRate ([double]$PoolsCurrencies_Request.$Pool_Currency."24h_blocks") -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}

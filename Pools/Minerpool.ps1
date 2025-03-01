@@ -65,7 +65,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol;$Wallets.$Pool_Currency -
         $Pool_TSL      = [int]$Pool_Request.lbfSeconds
         $Pool_BLK      = [int]$Pool_Request.poolStats.last24hBlocks
 
-        $Pool_Price    = if ($Global:VarCache.Rates.$Pool_Currency) {[double]$Pool_Request.poolStats."$($_.rewards)" / $Global:VarCache.Rates.$Pool_Currency * 24} else {0}
+        $Pool_Price    = if ($Global:Rates.$Pool_Currency) {[double]$Pool_Request.poolStats."$($_.rewards)" / $Global:Rates.$Pool_Currency * 24} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value $Pool_Price -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
 

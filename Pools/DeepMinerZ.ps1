@@ -71,8 +71,8 @@ if (-not $InfoOnly) {
 
     $Pool_Profit    = 0
 
-    if ($Global:VarCache.Rates.ContainsKey($Pool_Currency) -and $Global:VarCache.Rates[$Pool_Currency]) {
-        $Pool_Profit = (86400 / $Pool_Request.network.difficulty) * $blocks_reward / $Global:VarCache.Rates[$Pool_Currency]
+    if ($Global:Rates.ContainsKey($Pool_Currency) -and $Global:Rates[$Pool_Currency]) {
+        $Pool_Profit = (86400 / $Pool_Request.network.difficulty) * $blocks_reward / $Global:Rates[$Pool_Currency]
     }
 
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Profit -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_BLK -Quiet

@@ -4,7 +4,7 @@ function Initialize-Session {
     Set-OsFlags
 
     if (-not (Test-Path Variable:Global:Session)) {
-        $Global:Session                 = [System.Collections.Hashtable]::Synchronized(@{})
+        $Global:Session = [hashtable]::Synchronized(@{})
 
         if ($IsWindows) {
             $Session.WindowsVersion = [System.Environment]::OSVersion.Version
@@ -173,7 +173,7 @@ function Confirm-Version {
     param($RBMVersion, [Switch]$Force = $false, [Switch]$Silent = $false)
 
     $Name = "RainbowMiner"
-    if ($Force -or -not $Global:VarCache.ContainsKey("Version") -or (Get-Date).ToUniversalTime() -ge $Global:VarCache.Version.NextCheck) {
+    if ($Force -or -not (Test-Path Variable:Global:GlobalVersion) -or (Get-Date).ToUniversalTime() -ge $Global:GlobalVersion.NextCheck) {
 
         $RBMVersion = $Version = Get-Version($RBMVersion)
         $Uri = ""
@@ -203,7 +203,7 @@ function Confirm-Version {
         catch {
             Write-Log -Level Warn "Github could not be reached. "
         }
-        $Global:VarCache.Version = [PSCustomObject]@{
+        $Global:GlobalVersion = [PSCustomObject]@{
             Version = $RBMVersion
             RemoteVersion = $Version
             DownloadURI = $Uri
@@ -213,13 +213,13 @@ function Confirm-Version {
     }
 
     if (-not $Silent) {
-        if ($Global:VarCache.Version.RemoteVersion -gt $Global:VarCache.Version.Version) {
-            Write-Log -Level Warn "$Name is out of date: lastest release version v$($Global:VarCache.Version.RemoteVersion) is available."
-        } elseif ($Global:VarCache.Version.RemoteVersion -lt $Global:VarCache.Version.Version) {
+        if ($Global:GlobalVersion.RemoteVersion -gt $Global:GlobalVersion.Version) {
+            Write-Log -Level Warn "$Name is out of date: lastest release version v$($Global:GlobalVersion.RemoteVersion) is available."
+        } elseif ($Global:GlobalVersion.RemoteVersion -lt $Global:GlobalVersion.Version) {
             Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
         }
     }
-    $Global:VarCache.Version
+    $Global:GlobalVersion
 }
 
 function Confirm-Cuda {
@@ -243,15 +243,15 @@ function Get-NvidiaArchitecture {
     $ComputeCapability = $ComputeCapability -replace "[^\d\.]"
 
     try {
-        if ($Global:VarCache.NvidiaArchDB -eq $null) {$Global:VarCache.NvidiaArchDB = Get-ContentByStreamReader ".\Data\nvidiaarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
+        if ($Script:NvidiaArchDB -eq $null) {$Script:NvidiaArchDB = Get-ContentByStreamReader ".\Data\nvidiaarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-        foreach($Arch in $Global:VarCache.NvidiaArchDB.PSObject.Properties) {
+        foreach($Arch in $Script:NvidiaArchDB.PSObject.Properties) {
             if ($ComputeCapability -in $Arch.Value.Compute) {
                 return $Arch.Name
             }
         }
 
-        foreach($Arch in $Global:VarCache.NvidiaArchDB.PSObject.Properties) {
+        foreach($Arch in $Script:NvidiaArchDB.PSObject.Properties) {
             $Model_Match = $Arch.Value.Model -join "|"
             if ($Model -match $Model_Match) {
                 return $Arch.Name
@@ -275,9 +275,9 @@ function Get-AMDComputeCapability {
     }
 
     try {
-        if ($Global:VarCache.AmdArchDB -eq $null) {$Global:VarCache.AmdArchDB = Get-ContentByStreamReader ".\Data\amdarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
+        if ($Script:AmdArchDB -eq $null) {$Script:AmdArchDB = Get-ContentByStreamReader ".\Data\amdarchdb.json" | ConvertFrom-Json -ErrorAction Ignore}
 
-        foreach($Arch in $Global:VarCache.AmdArchDB.PSObject.Properties) {
+        foreach($Arch in $Script:AmdArchDB.PSObject.Properties) {
             $Arch_Match = $Arch.Value -join "|"
             if ($Model -match $Arch_Match -or $Architecture -match $Arch_Match) {
                 return $Arch.Name
@@ -292,13 +292,13 @@ function Get-AMDComputeCapability {
 
 function Get-PoolPayoutCurrencies {
     param($Pool)
-    if (-not $Global:VarCache.ContainsKey("PoolFields")) {
+    if (-not (Test-Path Variable:Global:GlobalPoolFields)) {
         if (-not $Session.PoolsConfigDefault) {$Session.PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"}
-        $Global:VarCache.PoolFields = @($Session.PoolsConfigDefault.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","AllowZero","EnableAutoCoin","EnablePostBlockMining","CoinSymbolPBM","DataWindow","StatAverage","StatAverageStable","MaxMarginOfError","SwitchingHysteresis","MaxAllowedLuck","MaxTimeSinceLastBlock","MaxTimeToFind","Region","SSL","BalancesKeepAlive","Wallets","DefaultMinerSwitchCoinSymbol","ETH-Paymentmode","MiningMode") | Sort-Object -Unique
+        $Global:GlobalPoolFields = @($Session.PoolsConfigDefault.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","AllowZero","EnableAutoCoin","EnablePostBlockMining","CoinSymbolPBM","DataWindow","StatAverage","StatAverageStable","MaxMarginOfError","SwitchingHysteresis","MaxAllowedLuck","MaxTimeSinceLastBlock","MaxTimeToFind","Region","SSL","BalancesKeepAlive","Wallets","DefaultMinerSwitchCoinSymbol","ETH-Paymentmode","MiningMode") | Sort-Object -Unique
     }
     if ($Pool) {
         $Payout_Currencies = [PSCustomObject]@{}
-        $Pool.PSObject.Properties | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:VarCache.PoolFields -notcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+        $Pool.PSObject.Properties | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:GlobalPoolFields -notcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
         $Payout_Currencies
     }
 }
@@ -313,7 +313,7 @@ function Get-UnprofitableAlgos {
     }
 
     if ($Request.Algorithms -and $Request.Algorithms.Count -gt 10) {
-        Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Request -MD5hash $Global:VarCache.UnprofitableAlgosHash > $null
+        Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Request -MD5hash $Global:GlobalUnprofitableAlgosHash > $null
     } elseif (Test-Path ".\Data\unprofitable.json") {
         try{
             $Request = Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore
@@ -321,7 +321,7 @@ function Get-UnprofitableAlgos {
             Write-Log -Level Warn "Unprofitable database is corrupt. "
         }
     }
-    $Global:VarCache.UnprofitableAlgosHash = Get-ContentDataMD5hash $Request
+    $Global:GlobalUnprofitableAlgosHash = Get-ContentDataMD5hash $Request
     $Request
 }
 
@@ -335,7 +335,7 @@ function Get-UnprofitableCpuAlgos {
     }
 
     if ($Request -and $Request.Count -gt 10) {
-        Set-ContentJson -PathToFile ".\Data\unprofitable-cpu.json" -Data $Request -MD5hash $Global:VarCache.UnprofitableCpuAlgosHash > $null
+        Set-ContentJson -PathToFile ".\Data\unprofitable-cpu.json" -Data $Request -MD5hash $Global:GlobalUnprofitableCpuAlgosHash > $null
     } elseif (Test-Path ".\Data\unprofitable.json") {
         try{
             $Request = Get-ContentByStreamReader ".\Data\unprofitable-cpu.json" | ConvertFrom-Json -ErrorAction Ignore
@@ -343,7 +343,7 @@ function Get-UnprofitableCpuAlgos {
             Write-Log -Level Warn "Unprofitable Cpu database is corrupt. "
         }
     }
-    $Global:VarCache.UnprofitableCpuAlgosHash = Get-ContentDataMD5hash $Request
+    $Global:GlobalUnprofitableCpuAlgosHash = Get-ContentDataMD5hash $Request
     $Request
 }
 
@@ -351,7 +351,7 @@ function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)
     
-    if (-not $Global:VarCache.ContainsKey("CoinNames") -or -not $Global:VarCache.CoinNames.Count) {
+    if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
             $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
@@ -363,15 +363,15 @@ function Get-CoinSymbol {
             if (Test-Path "Data\coins.json") {try {$Request = Get-ContentByStreamReader "Data\coins.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
         } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
-        $Global:VarCache.CoinNames = [System.Collections.Hashtable]::Synchronized(@{})
-        $Request.PSObject.Properties | Foreach-Object {$Global:VarCache.CoinNames[$_.Name] = $_.Value}
+        [hashtable]$Global:GlobalCoinNames = @{}
+        $Request.PSObject.Properties | Foreach-Object {$Global:GlobalCoinNames[$_.Name] = $_.Value}
     }
     if (-not $Silent) {
         if ($Reverse) {
             $CoinName = $CoinName.ToUpper()
-            (Get-Culture).TextInfo.ToTitleCase("$($Global:VarCache.CoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
+            (Get-Culture).TextInfo.ToTitleCase("$($Global:GlobalCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
         } else {
-            $Global:VarCache.CoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
+            $Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
     }
 }
@@ -398,7 +398,7 @@ function Get-WhatToMineData {
                     }
                 }
                 Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
-                $Global:VarCache.WTMData = $null
+                $Global:GlobalWTMData = $null
             }
         } catch {
             Write-Log "WhatToMiner datagrabber failed. "
@@ -406,11 +406,11 @@ function Get-WhatToMineData {
         }
     }
 
-    if (-not $Global:VarCache.ContainsKey("WTMData") -or $Global:VarCache.WTMData -eq $null) {
-        $Global:VarCache.WTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
+    if (-not (Test-Path Variable:Global:GlobalWTMData) -or $Global:GlobalWTMData -eq $null) {
+        $Global:GlobalWTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
     }
 
-    if (-not $Silent) {$Global:VarCache.WTMData}
+    if (-not $Silent) {$Global:GlobalWTMData}
 }
 
 function Get-WhatToMineUrl {
@@ -431,8 +431,8 @@ function Get-WhatToMineFactor {
         [int]$Factor = 10
     )
     if ($Algo) {
-        if (-not $Global:VarCache.ContainsKey("WTMData") -or $Global:VarCache.WTMData -eq $null) {Get-WhatToMineData -Silent}
-        $Global:VarCache.WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
+        if (-not (Test-Path Variable:Global:GlobalWTMData) -or $Global:GlobalWTMData -eq $null) {Get-WhatToMineData -Silent}
+        $Global:GlobalWTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
     }
 }
 
@@ -524,9 +524,6 @@ Function Write-Log {
             }
             'Info' {
                 $LevelText = 'INFO:'
-                if ($Session.Debug) {
-                    $Color = "DarkGray"
-                }
                 Break
             }
             'Verbose' {
@@ -688,7 +685,7 @@ function Set-Total {
                 PoolName    = "$($Miner.Pool | Select-Object -First 1)"
                 Algorithm   = "$($Miner.BaseAlgorithm | Select-Object -First 1)"
                 Currency    = "$($Miner.Currency -join '+')"
-                Rate        = [Math]::Round($Global:VarCache.Rates.USD,2)
+                Rate        = [Math]::Round($Global:Rates.USD,2)
                 Profit      = [Math]::Round($TotalProfit*1e8,4)
                 ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)
                 Cost        = [Math]::Round($TotalCost*1e8,4)
@@ -879,7 +876,7 @@ function Set-Balance {
 
             $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
 
-            $Rate = [Decimal]$Global:VarCache.Rates."$($Balance.Currency)"
+            $Rate = [Decimal]$Global:Rates."$($Balance.Currency)"
             if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
             
             $CsvLine = [PSCustomObject]@{
@@ -1888,7 +1885,7 @@ function Get-MinersContent {
     if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
 
     $possibleDevices = @($Global:DeviceCache.DevicesToVendors.Values | Select-Object -Unique)
-    if ($Global:VarCache.CPUInfo.Vendor -eq "ARM" -or $Global:VarCache.CPUInfo.Features.ARM) {
+    if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
         for($i=0; $i -lt $possibleDevice.Count; $i++) { $possibleDevice[$i] = "ARM" + $possibleDevice[$i] }
     }
     
@@ -3721,8 +3718,8 @@ function Get-Device {
         }
     }
 
-    if (-not $Global:VarCache.ContainsKey("CachedDevices") -or $Refresh) {
-        $Global:VarCache.CachedDevices = [System.Collections.ArrayList]@()
+    if (-not (Test-Path Variable:Global:GlobalCachedDevices) -or $Refresh) {
+        $Global:GlobalCachedDevices = @()
 
         $PlatformId = 0
         $Index = 0
@@ -3746,7 +3743,7 @@ function Get-Device {
         
         if ($IsWindows) {
             #Get WDDM data               
-            $Global:VarCache.WDDM_Devices = try {
+            $Global:WDDM_Devices = try {
                 Get-CimInstance CIM_VideoController | ForEach-Object {
                     $BusId = $null
                     try {
@@ -3790,7 +3787,7 @@ function Get-Device {
             catch {
                 Write-Log -Level Warn "WDDM device detection has failed. "
             }
-            $Global:VarCache.WDDM_Devices = @($Global:VarCache.WDDM_Devices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"})
+            $Global:WDDM_Devices = @($Global:WDDM_Devices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"})
         } else {
 
             $ldconfig = Invoke-Exe "ldconfig" -ArgumentList "-p"
@@ -4050,7 +4047,7 @@ function Get-Device {
 
                         if ($Device) {
                             if ($IsWindows) {
-                                $Global:VarCache.WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
+                                $Global:WDDM_Devices | Where-Object {$_.Vendor -eq $Vendor_Name} | Select-Object -Index $Device.Type_Vendor_Index | Foreach-Object {
                                     if ($_.BusId -ne $null -and $Device.BusId -eq $null) {$Device.BusId = $_.BusId}
                                     if ($_.InstanceId -and $Device.InstanceId -eq "")    {$Device.InstanceId = $_.InstanceId}
                                     if ($_.SubId -and $Device.SubId -eq "")              {$Device.SubId = $_.SubId}
@@ -4061,7 +4058,7 @@ function Get-Device {
                                 $Device.IsLHR = $Model -match "^RTX30[1-8]0" -and $Device.SubId -notin @("2204","2206","2484","2486")
                             }
 
-                            [void]$Global:VarCache.CachedDevices.Add($Device)
+                            $Global:GlobalCachedDevices += $Device
                             $Index++
                         }
                     }
@@ -4089,7 +4086,7 @@ function Get-Device {
 
             $AmdModelsEx | Foreach-Object {
                 $Model = $_
-                $Global:VarCache.CachedDevices | Where-Object Model -eq $Model | Foreach-Object {
+                $Global:GlobalCachedDevices | Where-Object Model -eq $Model | Foreach-Object {
                     $AmdGb = "$($_.OpenCL.GlobalMemSizeGB)GB"
                     $_.Model = "$($_.Model)$AmdGb"
                     $_.Model_Base = "$($_.Model_Base)$AmdGb"
@@ -4125,30 +4122,18 @@ function Get-Device {
 
                 $Index = 0
                 $Need_Sort = $false
-
-                # Sort the original list in place using Sort()
-                $Global:VarCache.CachedDevices.Sort([System.Collections.Generic.Comparer[object]]::Create({
-                    param ($a, $b)
-                    $PlatformComparison = $OpenCL_Platforms.IndexOf($a.Platform_Vendor) - $OpenCL_Platforms.IndexOf($b.Platform_Vendor)
-                    if ($PlatformComparison -ne 0) {
-                        return $PlatformComparison
-                    }
-                    return $a.Index - $b.Index
-                }))
-
-                # Adjust indices without creating a new list
-                foreach ($Device in $Global:VarCache.CachedDevices) {
-                    if ($Device.Index -ne $Index) {
+                $Global:GlobalCachedDevices | Sort-Object {$OpenCL_Platforms.IndexOf($_.Platform_Vendor)},Index | Foreach-Object {
+                    if ($_.Index -ne $Index) {
                         $Need_Sort = $true
-                        $Device.Index = $Index
-                        $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Index).ToUpper()
+                        $_.Index = $Index
+                        $_.Name = ("{0}#{1:d2}" -f $_.Type, $Index).ToUpper()
                     }
                     $Index++
                 }
 
-                # Log only if sorting was needed
                 if ($Need_Sort) {
                     Write-Log "OpenCL platforms have changed from initial run. Resorting indices."
+                    $Global:GlobalCachedDevices = @($Global:GlobalCachedDevices | Sort-Object Index | Select-Object)
                 }
 
             } catch {
@@ -4164,7 +4149,7 @@ function Get-Device {
         $BusId_Type_Mineable_Index = @{}
         $BusId_Vendor_Index = @{}
 
-        $Global:VarCache.CachedDevices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | Foreach-Object {
+        $Global:GlobalCachedDevices | Sort-Object {[int]"0x0$($_.BusId -replace "[^0-9A-F]+")"},Index | Foreach-Object {
             $_.BusId_Index               = $BusId_Index++
             $_.BusId_Type_Index          = [int]$BusId_Type_Index."$($_.Type)"
             $_.BusId_Type_Codec_Index    = [int]$BusId_Type_Codec_Index."$($_.Type)"."$($_.Codec)"
@@ -4189,97 +4174,97 @@ function Get-Device {
 
         #CPU detection
         try {
-            if ($Refresh -or -not $Global:VarCache.ContainsKey("CPUInfo")) {
+            if ($Refresh -or -not (Test-Path Variable:Global:GlobalCPUInfo)) {
 
-                $Global:VarCache.CPUInfo = [PSCustomObject]@{}
+                $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
                 if ($IsWindows) {
                     try {
                         $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
-                        $Global:VarCache.CPUInfo | Add-Member Name          "$($CIM_CPU[0].Name)".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Manufacturer  "$($CIM_CPU[0].Manufacturer)".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
-                        $Global:VarCache.CPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
-                        $Global:VarCache.CPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
-                        $Global:VarCache.CPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
-                        $Global:VarCache.CPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
-                        $Global:VarCache.CPUInfo | Add-Member TDP           0
-                        $Global:VarCache.CPUInfo | Add-Member Family        0
-                        $Global:VarCache.CPUInfo | Add-Member Model         0
-                        $Global:VarCache.CPUInfo | Add-Member Stepping      0
-                        $Global:VarCache.CPUInfo | Add-Member Architecture  ""
-                        $Global:VarCache.CPUInfo | Add-Member Features      @{}
+                        $Global:GlobalCPUInfo | Add-Member Name          "$($CIM_CPU[0].Name)".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  "$($CIM_CPU[0].Manufacturer)".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
+                        $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
+                        $Global:GlobalCPUInfo | Add-Member TDP           0
+                        $Global:GlobalCPUInfo | Add-Member Family        0
+                        $Global:GlobalCPUInfo | Add-Member Model         0
+                        $Global:GlobalCPUInfo | Add-Member Stepping      0
+                        $Global:GlobalCPUInfo | Add-Member Architecture  ""
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         try {
                             $lscpu = Get-CpuInfo
-                            $Global:VarCache.CPUInfo.Family   = $lscpu.family
-                            $Global:VarCache.CPUInfo.Model    = $lscpu.model
-                            $Global:VarCache.CPUInfo.Stepping = $lscpu.stepping
-                            $lscpu.features | Foreach-Object {$Global:VarCache.CPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                            $Global:GlobalCPUInfo.Family   = $lscpu.family
+                            $Global:GlobalCPUInfo.Model    = $lscpu.model
+                            $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
+                            $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                         } catch {
                         }
 
 
-                        if (-not $Global:VarCache.CPUInfo.Features.Count) {
+                        if (-not $Global:GlobalCPUInfo.Features.Count) {
                             try {
                                 $lscpu = Invoke-Exe ".\Includes\list_cpu_features.exe" -ArgumentList "--json" -WorkingDirectory $Pwd | ConvertFrom-Json -ErrorAction Stop
-                                $Global:VarCache.CPUInfo.Family   = $lscpu.family
-                                $Global:VarCache.CPUInfo.Model    = $lscpu.model
-                                $Global:VarCache.CPUInfo.Stepping = $lscpu.stepping
-                                $lscpu.flags | Foreach-Object {$Global:VarCache.CPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                                $Global:GlobalCPUInfo.Family   = $lscpu.family
+                                $Global:GlobalCPUInfo.Model    = $lscpu.model
+                                $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
+                                $lscpu.flags | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                             } catch {
                             }
 
-                            if (-not $Global:VarCache.CPUInfo.Features.Count) {
+                            if (-not $Global:GlobalCPUInfo.Features.Count) {
                                 $chkcpu = @{}
                                 try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {}
-                                $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:VarCache.CPUInfo.Features.$_ = $true}
+                                $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
                             }
                         }
 
-                        if (-not $Global:VarCache.CPUInfo.Family   -and $CIM_CPU[0].Caption -match "Family\s*(\d+)")   {$Global:VarCache.CPUInfo.Family   = $Matches[1]}
-                        if (-not $Global:VarCache.CPUInfo.Model    -and $CIM_CPU[0].Caption -match "Model\s*(\d+)")    {$Global:VarCache.CPUInfo.Model    = $Matches[1]}
-                        if (-not $Global:VarCache.CPUInfo.Stepping -and $CIM_CPU[0].Caption -match "Stepping\s*(\d+)") {$Global:VarCache.CPUInfo.Stepping = $Matches[1]}
+                        if (-not $Global:GlobalCPUInfo.Family   -and $CIM_CPU[0].Caption -match "Family\s*(\d+)")   {$Global:GlobalCPUInfo.Family   = $Matches[1]}
+                        if (-not $Global:GlobalCPUInfo.Model    -and $CIM_CPU[0].Caption -match "Model\s*(\d+)")    {$Global:GlobalCPUInfo.Model    = $Matches[1]}
+                        if (-not $Global:GlobalCPUInfo.Stepping -and $CIM_CPU[0].Caption -match "Stepping\s*(\d+)") {$Global:GlobalCPUInfo.Stepping = $Matches[1]}
                     } catch {
                     }
 
-                    if (-not $Global:VarCache.CPUInfo.Features -or -not $Global:VarCache.CPUInfo.Features.Count) {
+                    if (-not $Global:GlobalCPUInfo.Features -or -not $Global:GlobalCPUInfo.Features.Count) {
                         Write-Log -Level Info "CIM CPU detection has failed. Trying alternative."
 
                         # Windows has problems to identify the CPU, so use fallback
                         $chkcpu = @{}
                         try {([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {}
 
-                        $Global:VarCache.CPUInfo = [PSCustomObject]@{}
+                        $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
-                        $Global:VarCache.CPUInfo | Add-Member Name          "$($chkcpu.cpu_name)".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Manufacturer  "$($chkcpu.cpu_vendor)".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Cores         ([int]$chkcpu.cores)
-                        $Global:VarCache.CPUInfo | Add-Member Threads       ([int]$chkcpu.threads)
-                        $Global:VarCache.CPUInfo | Add-Member PhysicalCPUs  ([int]$chkcpu.physical_cpus)
-                        $Global:VarCache.CPUInfo | Add-Member L3CacheSize   ([int]$chkcpu.l3)
-                        $Global:VarCache.CPUInfo | Add-Member MaxClockSpeed ([int]$chkcpu.cpu_speed)
-                        $Global:VarCache.CPUInfo | Add-Member TDP           0
-                        $Global:VarCache.CPUInfo | Add-Member Family        0
-                        $Global:VarCache.CPUInfo | Add-Member Model         0
-                        $Global:VarCache.CPUInfo | Add-Member Stepping      0
-                        $Global:VarCache.CPUInfo | Add-Member Architecture  ""
-                        $Global:VarCache.CPUInfo | Add-Member Features      @{}
+                        $Global:GlobalCPUInfo | Add-Member Name          "$($chkcpu.cpu_name)".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  "$($chkcpu.cpu_vendor)".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]$chkcpu.cores)
+                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]$chkcpu.threads)
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ([int]$chkcpu.physical_cpus)
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]$chkcpu.l3)
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]$chkcpu.cpu_speed)
+                        $Global:GlobalCPUInfo | Add-Member TDP           0
+                        $Global:GlobalCPUInfo | Add-Member Family        0
+                        $Global:GlobalCPUInfo | Add-Member Model         0
+                        $Global:GlobalCPUInfo | Add-Member Stepping      0
+                        $Global:GlobalCPUInfo | Add-Member Architecture  ""
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
 
-                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:VarCache.CPUInfo.Features.$_ = $true}
+                        $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
 
                         try {
                             $lscpu = Get-CpuInfo
-                            $Global:VarCache.CPUInfo.Family   = $lscpu.family
-                            $Global:VarCache.CPUInfo.Model    = $lscpu.model
-                            $Global:VarCache.CPUInfo.Stepping = $lscpu.stepping
-                            $lscpu.features | Foreach-Object {$Global:VarCache.CPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
+                            $Global:GlobalCPUInfo.Family   = $lscpu.family
+                            $Global:GlobalCPUInfo.Model    = $lscpu.model
+                            $Global:GlobalCPUInfo.Stepping = $lscpu.stepping
+                            $lscpu.features | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]")" = $true}
                         } catch {
                         }
 
                     }
 
-                    $Global:VarCache.CPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
+                    $Global:GlobalCPUInfo.Features."$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"})" = $true
 
                 } elseif ($IsLinux) {
                     try {
@@ -4289,34 +4274,34 @@ function Get-Device {
 
                     $Data = Get-Content "/proc/cpuinfo"
                     if ($Data) {
-                        $Global:VarCache.CPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Manufacturer  "$((($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Cores         ([int]"$((($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:VarCache.CPUInfo | Add-Member Threads       ([int]"$((($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:VarCache.CPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
-                        $Global:VarCache.CPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
-                        $Global:VarCache.CPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
-                        $Global:VarCache.CPUInfo | Add-Member TDP           0
-                        $Global:VarCache.CPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Architecture  "$((($Data | Where-Object {$_ -match 'CPU architecture'}  | Select-Object -First 1) -split ":")[1])".Trim()
-                        $Global:VarCache.CPUInfo | Add-Member Features      @{}
+                        $Global:GlobalCPUInfo | Add-Member Name          "$((($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Manufacturer  "$((($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Cores         ([int]"$((($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member Threads       ([int]"$((($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Select-Object -Unique | Measure-Object).Count
+                        $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int](ConvertFrom-Bytes "$((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1])".Trim())/1024)
+                        $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int]"$((($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1])".Trim())
+                        $Global:GlobalCPUInfo | Add-Member TDP           0
+                        $Global:GlobalCPUInfo | Add-Member Family        "$((($Data | Where-Object {$_ -match 'cpu family'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Model         "$((($Data | Where-Object {$_ -match 'model\s*:'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Stepping      "$((($Data | Where-Object {$_ -match 'stepping'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Architecture  "$((($Data | Where-Object {$_ -match 'CPU architecture'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                        $Global:GlobalCPUInfo | Add-Member Features      @{}
 
                         $Processors = ($Data | Where-Object {$fld = $_ -split ":";$fld.Count -gt 1 -and $fld[0].Trim() -eq "processor" -and $fld[1].Trim() -match "^[0-9]+$"} | Measure-Object).Count
 
-                        if (-not $Global:VarCache.CPUInfo.PhysicalCPUs) {$Global:VarCache.CPUInfo.PhysicalCPUs = 1}
-                        if (-not $Global:VarCache.CPUInfo.Cores)   {$Global:VarCache.CPUInfo.Cores = 1}
-                        if (-not $Global:VarCache.CPUInfo.Threads) {$Global:VarCache.CPUInfo.Threads = 1}
+                        if (-not $Global:GlobalCPUInfo.PhysicalCPUs) {$Global:GlobalCPUInfo.PhysicalCPUs = 1}
+                        if (-not $Global:GlobalCPUInfo.Cores)   {$Global:GlobalCPUInfo.Cores = 1}
+                        if (-not $Global:GlobalCPUInfo.Threads) {$Global:GlobalCPUInfo.Threads = 1}
 
                         @("Family","Model","Stepping","Architecture") | Foreach-Object {
-                            if ($Global:VarCache.CPUInfo.$_ -match "^[0-9a-fx]+$") {$Global:VarCache.CPUInfo.$_ = [int]$Global:VarCache.CPUInfo.$_}
+                            if ($Global:GlobalCPUInfo.$_ -match "^[0-9a-fx]+$") {$Global:GlobalCPUInfo.$_ = [int]$Global:GlobalCPUInfo.$_}
                         }
 
-                        "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:VarCache.CPUInfo.Features.$ft = $true}}
-                        "$((($Data | Where-Object {$_ -like "Features*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:VarCache.CPUInfo.Features.$ft = $true}}
+                        "$((($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
+                        "$((($Data | Where-Object {$_ -like "Features*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$ft = "$($_ -replace "[^a-z0-9]+")";if ($ft -ne "") {$Global:GlobalCPUInfo.Features.$ft = $true}}
 
-                        if (-not $Global:VarCache.CPUInfo.Name -or -not $Global:VarCache.CPUInfo.Manufacturer) {
+                        if (-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer) {
                             try {
                                 $CPUimpl = [int]"$((($Data | Where-Object {$_ -match 'CPU implementer'} | Select-Object -First 1) -split ":")[1])".Trim()
                                 if ($CPUimpl -gt 0) {
@@ -4324,8 +4309,8 @@ function Get-Device {
                                     $CPUvariant = @($Data | Where-Object {$_ -match "CPU variant"} | Foreach-Object {[int]"$(($_ -split ":")[1])".Trim()}) | Select-Object -Unique
                                     $ArmDB = Get-Content ".\Data\armdb.json" | ConvertFrom-Json -ErrorAction Stop
                                     if ($ArmDB.implementers.$CPUimpl -ne $null) {
-                                        $Global:VarCache.CPUInfo.Manufacturer = $ArmDB.implementers.$CPUimpl
-                                        $Global:VarCache.CPUInfo.Name = "Unknown"
+                                        $Global:GlobalCPUInfo.Manufacturer = $ArmDB.implementers.$CPUimpl
+                                        $Global:GlobalCPUInfo.Name = "Unknown"
 
                                         if ($CPUpart.Length -gt 0) {
                                             $CPUName = @()
@@ -4336,8 +4321,8 @@ function Get-Device {
                                                 elseif ($ArmDB.parts.$CPUimpl.$part -ne $null) {$CPUName += $ArmDB.parts.$CPUimpl.$part}
                                             }
                                             if ($CPUName.Length -gt 0) {
-                                                $Global:VarCache.CPUInfo.Name = $CPUName -join "/"
-                                                $Global:VarCache.CPUInfo.Features.ARM = $true
+                                                $Global:GlobalCPUInfo.Name = $CPUName -join "/"
+                                                $Global:GlobalCPUInfo.Features.ARM = $true
                                             }
                                         }
                                     }
@@ -4346,55 +4331,55 @@ function Get-Device {
                             }
                         }                
 
-                        if ((-not $Global:VarCache.CPUInfo.Name -or -not $Global:VarCache.CPUInfo.Manufacturer -or -not $Processors) -and (Test-Path ".\Data\lscpu.txt")) {
+                        if ((-not $Global:GlobalCPUInfo.Name -or -not $Global:GlobalCPUInfo.Manufacturer -or -not $Processors) -and (Test-Path ".\Data\lscpu.txt")) {
                             try {
                                 $lscpu = (Get-Content ".\Data\lscpu.txt") -split "[\r\n]+"
                                 $CPUName = @($lscpu | Where-Object {$_ -match 'model name'} | Foreach-Object {"$(($_ -split ":")[1].Trim())"}) | Select-Object -Unique
-                                $Global:VarCache.CPUInfo.Name = $CPUName -join "/"
-                                $Global:VarCache.CPUInfo.Manufacturer = "$((($lscpu | Where-Object {$_ -match 'vendor id'}  | Select-Object -First 1) -split ":")[1])".Trim()
+                                $Global:GlobalCPUInfo.Name = $CPUName -join "/"
+                                $Global:GlobalCPUInfo.Manufacturer = "$((($lscpu | Where-Object {$_ -match 'vendor id'}  | Select-Object -First 1) -split ":")[1])".Trim()
                                 if (-not $Processors) {
                                     $Processors = [int]"$((($lscpu | Where-Object {$_ -match '^CPU\(s\)'}  | Select-Object -First 1) -split ":")[1])".Trim()
                                 }
 
-                                "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:VarCache.CPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
+                                "$((($lscpu | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1])".Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
 
                             } catch {
                             }
                         }
 
-                        if ($Global:VarCache.CPUInfo.PhysicalCPUs -gt 1) {
-                            $Global:VarCache.CPUInfo.Cores   *= $Global:VarCache.CPUInfo.PhysicalCPUs
-                            $Global:VarCache.CPUInfo.Threads *= $Global:VarCache.CPUInfo.PhysicalCPUs
-                            $Global:VarCache.CPUInfo.PhysicalCPUs = 1
+                        if ($Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
+                            $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
+                            $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
+                            $Global:GlobalCPUInfo.PhysicalCPUs = 1
                         }
 
                         #adapt to virtual CPUs and ARM
-                        if ($Processors -gt $Global:VarCache.CPUInfo.Threads -and $Global:VarCache.CPUInfo.Threads -eq 1) {
-                            $Global:VarCache.CPUInfo.Cores   = $Processors
-                            $Global:VarCache.CPUInfo.Threads = $Processors
+                        if ($Processors -gt $Global:GlobalCPUInfo.Threads -and $Global:GlobalCPUInfo.Threads -eq 1) {
+                            $Global:GlobalCPUInfo.Cores   = $Processors
+                            $Global:GlobalCPUInfo.Threads = $Processors
                         }
                     }
                 }
 
-                $Global:VarCache.CPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:VarCache.CPUInfo.Manufacturer)") {
+                $Global:GlobalCPUInfo | Add-Member Vendor $(Switch -Regex ("$($Global:GlobalCPUInfo.Manufacturer)") {
                             "(AMD|Advanced Micro Devices)" {"AMD"}
                             "Hygon" {"HYGON"}
                             "Intel" {"INTEL"}
-                            default {"$($Global:VarCache.CPUInfo.Manufacturer)".ToUpper() -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
+                            default {"$($Global:GlobalCPUInfo.Manufacturer)".ToUpper() -replace '\(R\)|\(TM\)|\(C\)' -replace '[^A-Z0-9]'}
                         })
 
-                if (-not $Global:VarCache.CPUInfo.Vendor) {$Global:VarCache.CPUInfo.Vendor = "OTHER"}
+                if (-not $Global:GlobalCPUInfo.Vendor) {$Global:GlobalCPUInfo.Vendor = "OTHER"}
 
-                if ($Global:VarCache.CPUInfo.Vendor -eq "ARM") {$Global:VarCache.CPUInfo.Features.ARM = $true}
+                if ($Global:GlobalCPUInfo.Vendor -eq "ARM") {$Global:GlobalCPUInfo.Features.ARM = $true}
 
-                if ($Global:VarCache.CPUInfo.Features.avx512f -and $Global:VarCache.CPUInfo.Features.avx512vl -and $Global:VarCache.CPUInfo.Features.avx512dq -and $Global:VarCache.CPUInfo.Features.avx512bw) {$Global:VarCache.CPUInfo.Features.avx512 = $true}
-                if ($Global:VarCache.CPUInfo.Features.aesni) {$Global:VarCache.CPUInfo.Features.aes = $true}
-                if ($Global:VarCache.CPUInfo.Features.shani) {$Global:VarCache.CPUInfo.Features.sha = $true}
+                if ($Global:GlobalCPUInfo.Features.avx512f -and $Global:GlobalCPUInfo.Features.avx512vl -and $Global:GlobalCPUInfo.Features.avx512dq -and $Global:GlobalCPUInfo.Features.avx512bw) {$Global:GlobalCPUInfo.Features.avx512 = $true}
+                if ($Global:GlobalCPUInfo.Features.aesni) {$Global:GlobalCPUInfo.Features.aes = $true}
+                if ($Global:GlobalCPUInfo.Features.shani) {$Global:GlobalCPUInfo.Features.sha = $true}
 
-                if ($Global:VarCache.CPUInfo.Vendor -eq "AMD" -or $Global:VarCache.CPUInfo.Vendor -eq "HYGON") {
-                    $zen = Switch ($Global:VarCache.CPUInfo.Family) {
+                if ($Global:GlobalCPUInfo.Vendor -eq "AMD" -or $Global:GlobalCPUInfo.Vendor -eq "HYGON") {
+                    $zen = Switch ($Global:GlobalCPUInfo.Family) {
                         0x17 {
-                            Switch ($Global:VarCache.CPUInfo.Model) {
+                            Switch ($Global:GlobalCPUInfo.Model) {
                                 {$_ -in @(0x01,0x11,0x18,0x20)} {"zen";break}
                                 {$_ -eq 0x08} {"zenplus";break}
                                 {$_ -in @(0x31,0x47,0x60,0x68,0x71,0x90,0x98)} {"zen2";break}
@@ -4404,40 +4389,40 @@ function Get-Device {
                         0x18 {"zen";break}
                         0x19 {"zen3";break}
                     }
-                    $f = $Global:VarCache.CPUInfo.Features
+                    $f = $Global:GlobalCPUInfo.Features
                     if (-not $zen) {
                         $zen = if ($f.avx2 -and $f.sha -and $f.vaes) {"zen3"} elseif ($f.avx2 -and $f.sha -and $f.aes) {"zen"}
                     }
                     if ($zen) {
-                        if ($f.avx2 -and $f.sha -and (($zen -eq "zen3" -and $f.vaes) -or ($zen -ne "zen3" -and $f.aes))) {$Global:VarCache.CPUInfo.Features."is$($zen)" = $true}
+                        if ($f.avx2 -and $f.sha -and (($zen -eq "zen3" -and $f.vaes) -or ($zen -ne "zen3" -and $f.aes))) {$Global:GlobalCPUInfo.Features."is$($zen)" = $true}
                     }
                 }
 
-                $Global:VarCache.CPUInfo | Add-Member RealCores ([int[]](0..($Global:VarCache.CPUInfo.Threads - 1))) -Force
-                if ($Global:VarCache.CPUInfo.Threads -gt $Global:VarCache.CPUInfo.Cores) {$Global:VarCache.CPUInfo.RealCores = $Global:VarCache.CPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:VarCache.CPUInfo.Threads/$Global:VarCache.CPUInfo.Cores))}}
+                $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
+                if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
             }
-            $Global:VarCache.CPUInfo | Add-Member IsRyzen ($Global:VarCache.CPUInfo.Features.iszen -or $Global:VarCache.CPUInfo.Features.iszenplus -or $Global:VarCache.CPUInfo.Features.iszen2 -or $Global:VarCache.CPUInfo.Features.iszen3 -or $Global:VarCache.CPUInfo.Features.iszen4)
+            $Global:GlobalCPUInfo | Add-Member IsRyzen ($Global:GlobalCPUInfo.Features.iszen -or $Global:GlobalCPUInfo.Features.iszenplus -or $Global:GlobalCPUInfo.Features.iszen2 -or $Global:GlobalCPUInfo.Features.iszen3 -or $Global:GlobalCPUInfo.Features.iszen4)
 
-            if ($Global:VarCache.CpuTDP -eq $null) {$Global:VarCache.CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+            if ($Script:CpuTDP -eq $null) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             
-            $CpuName = $Global:VarCache.CPUInfo.Name.Trim()
-            if ($Global:VarCache.CPUInfo.Vendor -eq "ARM" -or $Global:VarCache.CPUInfo.Features.ARM) {$CPU_tdp = 8}
-            elseif (-not ($CPU_tdp = $Global:VarCache.CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Global:VarCache.CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+            $CpuName = $Global:GlobalCPUInfo.Name.Trim()
+            if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {$CPU_tdp = 8}
+            elseif (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
-            $Global:VarCache.CPUInfo.TDP = $CPU_tdp
+            $Global:GlobalCPUInfo.TDP = $CPU_tdp
         }
         catch {
             Write-Log -Level Warn "CIM CPU detection has failed. "
         }
    
         try {
-            for ($CPUIndex=0;$CPUIndex -lt $Global:VarCache.CPUInfo.PhysicalCPUs;$CPUIndex++) {
+            for ($CPUIndex=0;$CPUIndex -lt $Global:GlobalCPUInfo.PhysicalCPUs;$CPUIndex++) {
                 # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
                 $Device = [PSCustomObject]@{
                     Name = ""
                     Index = [Int]$Index
-                    Vendor = $Global:VarCache.CPUInfo.Vendor
-                    Vendor_Name = $Global:VarCache.CPUInfo.Manufacturer
+                    Vendor = $Global:GlobalCPUInfo.Vendor
+                    Vendor_Name = $Global:GlobalCPUInfo.Manufacturer
                     Type_PlatformId_Index = $CPUIndex
                     Type_Vendor_Index = $CPUIndex
                     Type = "Cpu"
@@ -4446,12 +4431,12 @@ function Get-Device {
                     Type_Codec_Index = $CPUIndex
                     Model = "CPU"
                     Model_Base = "CPU"
-                    Model_Name = $Global:VarCache.CPUInfo.Name
-                    Features = $Global:VarCache.CPUInfo.Features.Keys
+                    Model_Name = $Global:GlobalCPUInfo.Name
+                    Features = $Global:GlobalCPUInfo.Features.Keys
                     Data = [PSCustomObject]@{
-                                Cores       = [int]($Global:VarCache.CPUInfo.Cores / $Global:VarCache.CPUInfo.PhysicalCPUs)
-                                Threads     = [int]($Global:VarCache.CPUInfo.Threads / $Global:VarCache.CPUInfo.PhysicalCPUs)
-                                CacheL3     = $Global:VarCache.CPUInfo.L3CacheSize
+                                Cores       = [int]($Global:GlobalCPUInfo.Cores / $Global:GlobalCPUInfo.PhysicalCPUs)
+                                Threads     = [int]($Global:GlobalCPUInfo.Threads / $Global:GlobalCPUInfo.PhysicalCPUs)
+                                CacheL3     = $Global:GlobalCPUInfo.L3CacheSize
                                 Clock       = 0
                                 Utilization = 0
                                 PowerDraw   = 0
@@ -4467,7 +4452,7 @@ function Get-Device {
                 }
 
                 $Device.Name = ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper()
-                [void]$Global:VarCache.CachedDevices.Add($Device)
+                $Global:GlobalCachedDevices += $Device
                 $Index++
             }
         }
@@ -4476,7 +4461,7 @@ function Get-Device {
         }
     }
 
-    $Global:VarCache.CachedDevices | Foreach-Object {
+    $Global:GlobalCachedDevices | Foreach-Object {
         $Device = $_
         if (
             ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
@@ -4493,7 +4478,7 @@ function Get-DevicePowerDraw {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @()
     )
-    (($Global:VarCache.CachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
+    (($Global:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
 }
 
 function Start-Afterburner {
@@ -4744,24 +4729,24 @@ function Update-DeviceInformation {
     $abReload = $true
 
     $PowerAdjust = @{}
-    $Global:VarCache.CachedDevices | Foreach-Object {
+    $Global:GlobalCachedDevices | Foreach-Object {
         $Model = $_.Model
         $PowerAdjust[$Model] = 100
         if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
     }
 
-    if (-not $Global:VarCache.ContainsKey("GPUMethod")) {
-        $Global:VarCache.GPUMethod = [System.Collections.Hashtable]::Synchronized(@{})
+    if (-not (Test-Path "Variable:Global:GlobalGPUMethod")) {
+        $Global:GlobalGPUMethod = @{}
     }
 
-    $Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
+    $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
 
         try { #AMD
             if ($Vendor -eq 'AMD') {
 
-                if ($Global:VarCache.AmdCardsTDP -eq $null) {$Global:VarCache.AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                if ($Script:AmdCardsTDP -eq $null) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                 $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = 0}
 
@@ -4771,9 +4756,9 @@ function Update-DeviceInformation {
 
                     foreach ($Method in @("Afterburner","odvii8")) {
 
-                        if (-not $Global:VarCache.GPUMethod.ContainsKey($Method)) {$Global:VarCache.GPUMethod.$Method = ""}
+                        if (-not $Global:GlobalGPUMethod.ContainsKey($Method)) {$Global:GlobalGPUMethod.$Method = ""}
 
-                        if ($Global:VarCache.GPUMethod.$Method -eq "fail") {Continue}
+                        if ($Global:GlobalGPUMethod.$Method -eq "fail") {Continue}
                         if ($Method -eq "Afterburner" -and -not ($UseAfterburner -and $Script:abMonitor -and $Script:abControl)) {Continue}
 
                         try {
@@ -4806,7 +4791,7 @@ function Update-DeviceInformation {
                                             ClockMem    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
                                             FanSpeed    = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
                                             Temperature = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                                            PowerDraw   = $Global:VarCache.AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
+                                            PowerDraw   = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
                                         }
 
                                         $Devices | Where-Object {($_.BusId -and $PCIBusId -and ($_.BusId -eq $PCIBusId)) -or ((-not $_.BusId -or -not $PCIBusId) -and ($_.BusId_Type_Vendor_Index -eq $DeviceId))} | Foreach-Object {
@@ -4823,7 +4808,7 @@ function Update-DeviceInformation {
                                         $DeviceId++
                                     }
                                     if ($DeviceId) {
-                                        $Global:VarCache.GPUMethod.$Method = "ok"
+                                        $Global:GlobalGPUMethod.$Method = "ok"
                                         $Success++
                                     }
                                 }
@@ -4872,7 +4857,7 @@ function Update-DeviceInformation {
                                             $DeviceId++
                                         }
                                         if ($DeviceId) {
-                                            $Global:VarCache.GPUMethod.$Method = "ok"
+                                            $Global:GlobalGPUMethod.$Method = "ok"
                                             $Success++
                                         }
                                     }
@@ -4883,7 +4868,7 @@ function Update-DeviceInformation {
                         } catch {
                         }
 
-                        if ($Global:VarCache.GPUMethod.$Method -eq "") {$Global:VarCache.GPUMethod.$Method = "fail"}
+                        if ($Global:GlobalGPUMethod.$Method -eq "") {$Global:GlobalGPUMethod.$Method = "fail"}
                     }
 
                     if (-not $Success) {
@@ -4972,7 +4957,7 @@ function Update-DeviceInformation {
         try { #INTEL
             if ($Vendor -eq 'INTEL') {
 
-                if ($Global:VarCache.IntelCardsTDP -eq $null) {$Global:VarCache.IntelCardsTDP = Get-ContentByStreamReader ".\Data\intel-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                if ($Script:IntelCardsTDP -eq $null) {$Script:IntelCardsTDP = Get-ContentByStreamReader ".\Data\intel-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                 $Devices | Foreach-Object {$_.Data.Method = "";$_.Data.Clock = $_.Data.ClockMem = $_.Data.FanSpeed = $_.Data.Temperature = $_.Data.PowerDraw = $_.Data.Utilization = 0}
 
@@ -5010,7 +4995,7 @@ function Update-DeviceInformation {
                                         $_.Data.Method      = "sysinfo"
                                         $INTEL_Ok = $true
 
-                                        if (-not $_.Data.PowerDraw -and $Global:VarCache.IntelCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Global:VarCache.IntelCardsTDP."$($_.Model_Name)" * ([double]$_.Data.Utilization / 100)}
+                                        if (-not $_.Data.PowerDraw -and $Script:IntelCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:IntelCardsTDP."$($_.Model_Name)" * ([double]$_.Data.Utilization / 100)}
                                     }
                                     $DeviceId++
                                 }
@@ -5030,7 +5015,7 @@ function Update-DeviceInformation {
             if ($Vendor -eq 'NVIDIA') {
                 #NVIDIA
                 $DeviceId = 0
-                if ($Global:VarCache.NvidiaCardsTDP -eq $null) {$Global:VarCache.NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                if ($Script:NvidiaCardsTDP -eq $null) {$Script:NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                 Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" -CheckForErrors | ForEach-Object {
                     $Smi = $_
@@ -5049,7 +5034,7 @@ function Update-DeviceInformation {
                         $_.Data.Method            = "smi"
 
                         if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [Math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
-                        if (-not $_.Data.PowerDraw -and $Global:VarCache.NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Global:VarCache.NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
+                        if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
                     }
                     $DeviceId++
                 }
@@ -5076,13 +5061,13 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            $CPU_tdp = if ($Session.Config.PowerCPUtdp) {$Session.Config.PowerCPUtdp} else {$Global:VarCache.CPUInfo.TDP}
+            $CPU_tdp = if ($Session.Config.PowerCPUtdp) {$Session.Config.PowerCPUtdp} else {$Global:GlobalCPUInfo.TDP}
 
             if (-not $Session.SysInfo.Cpus) {$Session.SysInfo = Get-SysInfo -IsARM $Session.IsARM -CPUtdp $CPU_tdp}
 
             if ($IsWindows) {
-                $CPU_count = ($Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
-                $Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+                $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
 
                     $Session.SysInfo.Cpus | Select-Object -Index $Device.Type_Index | Foreach-Object {
@@ -5095,17 +5080,17 @@ function Update-DeviceInformation {
                 }
             }
             elseif ($IsLinux) {
-                $Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-                    [int]$Utilization = [Math]::Min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:VarCache.CPUInfo.Threads), 100)
+                $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                    [int]$Utilization = [Math]::Min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
-                    $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Clock) {$Session.SysInfo.Cpus[0].Clock} else {$Global:VarCache.CPUInfo.MaxClockSpeed})
+                    $_.Data.Clock       = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Clock) {$Session.SysInfo.Cpus[0].Clock} else {$Global:GlobalCPUInfo.MaxClockSpeed})
                     $_.Data.Utilization = [int]$Utilization
                     $_.Data.PowerDraw   = [int]($CPU_tdp * $Utilization / 100)
                     $_.Data.Temperature = [int]$(if ($Session.SysInfo.Cpus -and $Session.SysInfo.Cpus[0].Temperature) {$Session.SysInfo.Cpus[0].Temperature} else {0})
                     $_.Data.Method      = "tdp"
                 }
             }
-            $Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+            $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
                 $_.DataMax.Utilization = [Math]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
                 $_.DataMax.PowerDraw   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
@@ -5148,10 +5133,10 @@ function Get-Algorithm {
     if ($Algorithm -eq '*') {$Algorithm}
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if (-not $Global:VarCache.ContainsKey("Algorithms")) {Get-Algorithms -Silent}
+        if (-not (Test-Path Variable:Global:GlobalAlgorithms)) {Get-Algorithms -Silent}
         $Algorithm = $Algorithm -replace "[^a-z0-9]+"
-        if ($Global:VarCache.Algorithms.ContainsKey($Algorithm)) {
-            $Algorithm = $Global:VarCache.Algorithms[$Algorithm]
+        if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {
+            $Algorithm = $Global:GlobalAlgorithms[$Algorithm]
             if ($CoinSymbol -ne "" -and $Algorithm -in @("Ethash","KawPOW") -and ($DAGSize = Get-EthDAGSize -CoinSymbol $CoinSymbol -Minimum 1) -le 5) {
                 if ($DAGSize -le 2) {$Algorithm = "$($Algorithm)2g"}
                 elseif ($DAGSize -le 3) {$Algorithm = "$($Algorithm)3g"}
@@ -5180,10 +5165,10 @@ function Get-Coin {
     if ($CoinSymbol -eq '*') {$CoinSymbol}
     elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
     else {
-        if (-not $Global:VarCache.ContainsKey("CoinsDB")) {Get-CoinsDB -Silent}
+        if (-not (Test-Path Variable:Global:GlobalCoinsDB)) {Get-CoinsDB -Silent}
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
-        $Coin = if ($Global:VarCache.CoinsDB.ContainsKey($CoinSymbol)) {$Global:VarCache.CoinsDB[$CoinSymbol]}
-                elseif ($Algorithm -ne "" -and $Global:VarCache.CoinsDB.ContainsKey("$CoinSymbol-$Algorithm")) {$Global:VarCache.CoinsDB["$CoinSymbol-$Algorithm"]}
+        $Coin = if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
+                elseif ($Algorithm -ne "" -and $Global:GlobalCoinsDB.ContainsKey("$CoinSymbol-$Algorithm")) {$Global:GlobalCoinsDB["$CoinSymbol-$Algorithm"]}
         if ($Coin.Algo -in @("Ethash","KawPOW")) {$Coin.Algo = Get-Algorithm $Coin.Algo -CoinSymbol $CoinSymbol}
         $Coin
     }
@@ -5199,8 +5184,8 @@ function Get-HttpStatusCode {
             Mandatory = $false)]
         [String]$Code = ""
     )
-    if (-not $Global:VarCache.ContainsKey("HttpStatusCodes")) {Get-HttpStatusCodes -Silent}
-    $Global:VarCache.HttpStatusCodes | Where StatusCode -eq $Code
+    if (-not (Test-Path Variable:Global:GlobalHttpStatusCodes)) {Get-HttpStatusCodes -Silent}
+    $Global:GlobalHttpStatusCodes | Where StatusCode -eq $Code
 }
 
 function Get-MappedAlgorithm {
@@ -5210,8 +5195,8 @@ function Get-MappedAlgorithm {
         $Algorithm
     )
     if (-not $Session.Config.EnableAlgorithmMapping) {return $Algorithm}
-    if (-not $Global:VarCache.ContainsKey("AlgorithmMap")) {Get-AlgorithmMap -Silent}
-    $Algorithm | Foreach-Object {if ($Global:VarCache.AlgorithmMap.ContainsKey($_)) {$Global:VarCache.AlgorithmMap[$_]} else {$_}}
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap)) {Get-AlgorithmMap -Silent}
+    $Algorithm | Foreach-Object {if ($Global:GlobalAlgorithmMap.ContainsKey($_)) {$Global:GlobalAlgorithmMap[$_]} else {$_}}
 }
 
 function Get-AlgorithmMap {
@@ -5220,13 +5205,13 @@ function Get-AlgorithmMap {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not $Global:VarCache.ContainsKey("AlgorithmMap") -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc -gt $Global:VarCache.AlgorithmMapTimeStamp) {
-        $Global:VarCache.AlgorithmMap = [System.Collections.Hashtable]::Synchronized(@{})
-        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:VarCache.AlgorithmMap[$_.Name]=$_.Value}
-        $Global:VarCache.AlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc -gt $Global:GlobalAlgorithmMapTimeStamp) {
+        [hashtable]$Global:GlobalAlgorithmMap = @{}
+        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
+        $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
-        $Global:VarCache.AlgorithmMap
+        $Global:GlobalAlgorithmMap
     }
 }
 
@@ -5236,12 +5221,12 @@ function Get-AlgoVariants {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not $Global:VarCache.ContainsKey("AlgoVariants") -or (Get-ChildItem "Data\algovariantsdb.json").LastWriteTimeUtc -gt $Global:VarCache.AlgoVariantsTimeStamp) {
-        $Global:VarCache.AlgoVariants = Get-ContentByStreamReader "Data\algovariantsdb.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:VarCache.AlgoVariantsTimeStamp = (Get-ChildItem "Data\algovariantsdb.json").LastWriteTimeUtc
+    if (-not (Test-Path Variable:Global:GlobalAlgoVariants) -or (Get-ChildItem "Data\algovariantsdb.json").LastWriteTimeUtc -gt $Global:GlobalAlgoVariantsTimeStamp) {
+        $Global:GlobalAlgoVariants = Get-ContentByStreamReader "Data\algovariantsdb.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalAlgoVariantsTimeStamp = (Get-ChildItem "Data\algovariantsdb.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
-        $Global:VarCache.AlgoVariants
+        $Global:GlobalAlgoVariants
     }
 }
 
@@ -5253,8 +5238,8 @@ function Get-EquihashCoinPers {
         [Parameter(Mandatory = $false)]
         [String]$Default = "auto"
     )
-    if (-not $Global:VarCache.ContainsKey("EquihashCoins")) {Get-EquihashCoins -Silent}
-    if ($Coin -and $Global:VarCache.EquihashCoins.ContainsKey($Coin)) {$Global:VarCache.EquihashCoins[$Coin]} else {$Default}
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {Get-EquihashCoins -Silent}
+    if ($Coin -and $Global:GlobalEquihashCoins.ContainsKey($Coin)) {$Global:GlobalEquihashCoins[$Coin]} else {$Default}
 }
 
 function Get-EthDAGSize {
@@ -5267,9 +5252,9 @@ function Get-EthDAGSize {
         [Parameter(Mandatory = $false)]
         [Double]$Minimum = 1
     )
-    if (-not $Global:VarCache.ContainsKey("EthDAGSizes")) {Get-EthDAGSizes -Silent}
-    if     ($CoinSymbol -and $Global:VarCache.EthDAGSizes.$CoinSymbol -ne $null)          {$Global:VarCache.EthDAGSizes.$CoinSymbol} 
-    elseif ($Algorithm -and $Global:VarCache.Algorithms2EthDagSizes.$Algorithm -ne $null) {$Global:VarCache.Algorithms2EthDagSizes.$Algorithm}
+    if (-not (Test-Path Variable:Global:GlobalEthDAGSizes)) {Get-EthDAGSizes -Silent}
+    if     ($CoinSymbol -and $Global:GlobalEthDAGSizes.$CoinSymbol -ne $null)          {$Global:GlobalEthDAGSizes.$CoinSymbol} 
+    elseif ($Algorithm -and $Global:GlobalAlgorithms2EthDagSizes.$Algorithm -ne $null) {$Global:GlobalAlgorithms2EthDagSizes.$Algorithm}
     else   {$Minimum}
 }
 
@@ -5281,8 +5266,8 @@ function Get-NimqHashrate {
         [Parameter(Mandatory = $false)]
         [Int]$Default = 100
     )
-    if (-not $Global:VarCache.ContainsKey("NimqHashrates")) {Get-NimqHashrates -Silent}
-    if ($GPU -and $Global:VarCache.NimqHashrates.ContainsKey($GPU)) {$Global:VarCache.NimqHashrates[$GPU]} else {$Default}
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {Get-NimqHashrates -Silent}
+    if ($GPU -and $Global:GlobalNimqHashrates.ContainsKey($GPU)) {$Global:GlobalNimqHashrates[$GPU]} else {$Default}
 }
 
 function Get-Region {
@@ -5291,9 +5276,9 @@ function Get-Region {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not $Global:VarCache.ContainsKey("Regions")) {Get-Regions -Silent}
+    if (-not (Test-Path Variable:Global:GlobalRegions)) {Get-Regions -Silent}
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
-    if ($Global:VarCache.Regions.ContainsKey($Region)) {$Global:VarCache.Regions[$Region]} else {foreach($r in @($Global:VarCache.Regions.Keys)) {if ($Region -match "^$($r)") {$Global:VarCache.Regions[$r];return}};$Region}
+    if ($Global:GlobalRegions.ContainsKey($Region)) {$Global:GlobalRegions[$Region]} else {foreach($r in @($Global:GlobalRegions.Keys)) {if ($Region -match "^$($r)") {$Global:GlobalRegions[$r];return}};$Region}
 }
 
 function Get-Region2 {
@@ -5302,8 +5287,8 @@ function Get-Region2 {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not $Global:VarCache.ContainsKey("Regions2")) {Get-Regions2 -Silent}
-    if ($Global:VarCache.Regions2.ContainsKey($Region)) {$Global:VarCache.Regions2[$Region]}
+    if (-not (Test-Path Variable:Global:GlobalRegions2)) {Get-Regions2 -Silent}
+    if ($Global:GlobalRegions2.ContainsKey($Region)) {$Global:GlobalRegions2[$Region]}
 }
 
 function Get-Algorithms {
@@ -5316,14 +5301,14 @@ function Get-Algorithms {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if ($Force -or -not $Global:VarCache.ContainsKey("Algorithms") -or (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc -gt $Global:VarCache.AlgorithmsTimeStamp) {
-        $Global:VarCache.Algorithms = [System.Collections.Hashtable]::Synchronized(@{})
-        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:VarCache.Algorithms[$_.Name]=$_.Value}
-        $Global:VarCache.AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc
+    if ($Force -or -not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc -gt $Global:GlobalAlgorithmsTimeStamp) {
+        [hashtable]$Global:GlobalAlgorithms = @{}
+        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
+        $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
-        if ($Values) {$Global:VarCache.Algorithms.Values | Sort-Object -Unique}
-        else {$Global:VarCache.Algorithms.Keys | Sort-Object}
+        if ($Values) {$Global:GlobalAlgorithms.Values | Sort-Object -Unique}
+        else {$Global:GlobalAlgorithms.Keys | Sort-Object}
     }
 }
 
@@ -5337,14 +5322,14 @@ function Get-CoinsDB {
         [Parameter(Mandatory = $false)]
         [Switch]$Force = $false
     )
-    if ($Force -or -not $Global:VarCache.ContainsKey("CoinsDB") -or (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc -gt $Global:VarCache.CoinsDBTimeStamp) {
-        $Global:VarCache.CoinsDB = [System.Collections.Hashtable]::Synchronized(@{})
-        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:VarCache.CoinsDB[$_.Name]=$_.Value;$Global:VarCache.CoinsDB[$_.Name].Algo = Get-Algorithm $Global:VarCache.CoinsDB[$_.Name].Algo}
-        $Global:VarCache.CoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc
+    if ($Force -or -not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc -gt $Global:GlobalCoinsDBTimeStamp) {
+        [hashtable]$Global:GlobalCoinsDB = @{}
+        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value;$Global:GlobalCoinsDB[$_.Name].Algo = Get-Algorithm $Global:GlobalCoinsDB[$_.Name].Algo}
+        $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
-        if ($Values) {$Global:VarCache.CoinsDB.Values | Sort-Object -Unique}
-        else {$Global:VarCache.CoinsDB.Keys | Sort-Object}
+        if ($Values) {$Global:GlobalCoinsDB.Values | Sort-Object -Unique}
+        else {$Global:GlobalCoinsDB.Keys | Sort-Object}
     }
 }
 
@@ -5354,12 +5339,12 @@ function Get-EquihashCoins {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not $Global:VarCache.ContainsKey("EquihashCoins") -or (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc -gt $Global:VarCache.EquihashCoinsTimeStamp) {
-        $Global:VarCache.EquihashCoins = [System.Collections.Hashtable]::Synchronized(@{})
-        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:VarCache.EquihashCoins[$_.Name]=$_.Value}
-        $Global:VarCache.EquihashCoinsTimeStamp = (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins) -or (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc -gt $Global:GlobalEquihashCoinsTimeStamp) {
+        [hashtable]$Global:GlobalEquihashCoins = @{}
+        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
+        $Global:GlobalEquihashCoinsTimeStamp = (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc
     }
-    if (-not $Silent) {$Global:VarCache.EquihashCoins.Keys}
+    if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
 }
 
 function Get-EthDAGSizes {
@@ -5371,7 +5356,7 @@ function Get-EthDAGSizes {
         [Switch]$EnableRemoteUpdate = $false
     )
 
-    if (-not $Global:VarCache.ContainsKey("CoinsDB")) {Get-CoinsDB -Silent}
+    if (-not (Test-Path Variable:Global:GlobalCoinsDB)) {Get-CoinsDB -Silent}
 
     if ($EnableRemoteUpdate) {
         $Request = [PSCustomObject]@{}
@@ -5384,24 +5369,24 @@ function Get-EthDAGSizes {
     }
 
     if ($Request -and ($Request.PSObject.Properties | Measure-Object).Count -gt 10) {
-        Set-ContentJson -PathToFile ".\Data\ethdagsizes.json" -Data $Request -MD5hash (Get-ContentDataMD5hash $Global:VarCache.EthDAGSizes) > $null
+        Set-ContentJson -PathToFile ".\Data\ethdagsizes.json" -Data $Request -MD5hash (Get-ContentDataMD5hash $Global:GlobalEthDAGSizes) > $null
     } else {
         $Request = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
     }
-    $Global:VarCache.EthDAGSizes = [PSCustomObject]@{}
-    $Request.PSObject.Properties | Foreach-Object {$Global:VarCache.EthDAGSizes | Add-Member $_.Name ($_.Value/1Gb)}
+    $Global:GlobalEthDAGSizes = [PSCustomObject]@{}
+    $Request.PSObject.Properties | Foreach-Object {$Global:GlobalEthDAGSizes | Add-Member $_.Name ($_.Value/1Gb)}
 
-    $SingleAlgos = $Global:VarCache.CoinsDB.Values | Group-Object -Property Algo | Where-Object {$_.Count -eq 1} | Select-Object -ExpandProperty Name
-    $Global:VarCache.Algorithms2EthDagSizes = [PSCustomObject]@{}
-    $Global:VarCache.CoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Global:VarCache.EthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -in $SingleAlgos -and $Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Foreach-Object {
-        if ($Global:VarCache.Algorithms2EthDagSizes.$Algo -eq $null) {
-            $Global:VarCache.Algorithms2EthDagSizes | Add-Member $Algo $Global:VarCache.EthDAGSizes.$Coin -Force
-        } elseif ($Global:VarCache.Algorithms2EthDagSizes.$Algo -lt $Global:VarCache.EthDAGSizes.$Coin) {
-            $Global:VarCache.Algorithms2EthDagSizes.$Algo = $Global:VarCache.EthDAGSizes.$Coin
+    $SingleAlgos = $Global:GlobalCoinsDB.Values | Group-Object -Property Algo | Where-Object {$_.Count -eq 1} | Select-Object -ExpandProperty Name
+    $Global:GlobalAlgorithms2EthDagSizes = [PSCustomObject]@{}
+    $Global:GlobalCoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Global:GlobalEthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -in $SingleAlgos -and $Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Foreach-Object {
+        if ($Global:GlobalAlgorithms2EthDagSizes.$Algo -eq $null) {
+            $Global:GlobalAlgorithms2EthDagSizes | Add-Member $Algo $Global:GlobalEthDAGSizes.$Coin -Force
+        } elseif ($Global:GlobalAlgorithms2EthDagSizes.$Algo -lt $Global:GlobalEthDAGSizes.$Coin) {
+            $Global:GlobalAlgorithms2EthDagSizes.$Algo = $Global:GlobalEthDAGSizes.$Coin
         }
     }
 
-    if (-not $Silent) {$Global:VarCache.EthDAGSizes}
+    if (-not $Silent) {$Global:GlobalEthDAGSizes}
 }
 
 function Get-HttpStatusCodes {
@@ -5410,11 +5395,11 @@ function Get-HttpStatusCodes {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not $Global:VarCache.ContainsKey("HttpStatusCodes")) {
-        $Global:VarCache.HttpStatusCodes = Get-ContentByStreamReader "Data\httpstatuscodes.json" | ConvertFrom-Json -ErrorAction Ignore
+    if (-not (Test-Path Variable:Global:GlobalHttpStatusCodes)) {
+        $Global:GlobalHttpStatusCodes = Get-ContentByStreamReader "Data\httpstatuscodes.json" | ConvertFrom-Json -ErrorAction Ignore
     }
     if (-not $Silent) {
-        $Global:VarCache.HttpStatusCodes
+        $Global:GlobalHttpStatusCodes
     }
 }
 
@@ -5424,13 +5409,13 @@ function Get-NimqHashrates {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not $Global:VarCache.ContainsKey("NimqHashrates") -or (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc -gt $Global:VarCache.NimqHashratesTimeStamp) {
-        $Global:VarCache.NimqHashrates = [System.Collections.Hashtable]::Synchronized(@{})
-        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:VarCache.NimqHashrates[$_.Name]=$_.Value}
-        $Global:VarCache.NimqHashratesTimeStamp = (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates) -or (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc -gt $Global:GlobalNimqHashratesTimeStamp) {
+        [hashtable]$Global:GlobalNimqHashrates = @{}
+        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
+        $Global:GlobalNimqHashratesTimeStamp = (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc
 
     }
-    if (-not $Silent) {$Global:VarCache.NimqHashrates.Keys}
+    if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
 
 function Get-MinerUpdateDB {
@@ -5441,10 +5426,10 @@ function Get-MinerUpdateDB {
         [Parameter(Mandatory = $false)]
         [Switch]$Force = $false
     )
-    if ((Test-Path "Data\minerupdatedb.json") -and ($Force -or -not $Global:VarCache.ContainsKey("MinerUpdateDB") -or (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc -gt $Global:VarCache.MinerUpdateDBTimeStamp)) {
+    if ((Test-Path "Data\minerupdatedb.json") -and ($Force -or -not (Test-Path Variable:Global:GlobalMinerUpdateDB) -or (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc -gt $Global:GlobalMinerUpdateDBTimeStamp)) {
         $AlgoVariants = Get-AlgoVariants
-        $Global:VarCache.MinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:VarCache.MinerUpdateDB | Foreach-Object {
+        $Global:GlobalMinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalMinerUpdateDB | Foreach-Object {
             $_.FromVersion = Get-MinerVersion $_.FromVersion
             $_.ToVersion   = Get-MinerVersion $_.ToVersion
             $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
@@ -5454,10 +5439,10 @@ function Get-MinerUpdateDB {
                 }
             }
         }
-        $Global:VarCache.MinerUpdateDBTimeStamp = (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc
+        $Global:GlobalMinerUpdateDBTimeStamp = (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
-        $Global:VarCache.MinerUpdateDB
+        $Global:GlobalMinerUpdateDB
     }
 }
 
@@ -5469,12 +5454,12 @@ function Get-WalletsData {
         [Parameter(Mandatory = $false)]
         [Switch]$Force = $false
     )
-    if ($Force -or -not $Global:VarCache.ContainsKey("WalletsData") -or (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc -gt $Global:VarCache.WalletsDataTimeStamp) {
-        [PSCustomObject[]]$Global:VarCache.WalletsData = Get-ContentByStreamReader "Data\walletsdata.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:VarCache.WalletsDataTimeStamp = (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc
+    if ($Force -or -not (Test-Path Variable:Global:GlobalWalletsData) -or (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc -gt $Global:GlobalWalletsDataTimeStamp) {
+        [PSCustomObject[]]$Global:GlobalWalletsData = Get-ContentByStreamReader "Data\walletsdata.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalWalletsDataTimeStamp = (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
-        $Global:VarCache.WalletsData
+        $Global:GlobalWalletsData
     }
 }
 
@@ -5506,26 +5491,26 @@ function Get-PoolsInfo {
         [Switch]$Clear = $false
     )
     
-    if (-not $Global:VarCache.ContainsKey("PoolsInfo") -or $Global:VarCache.PoolsInfo -eq $null) {
-        $Global:VarCache.PoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:VarCache.PoolsInfo.PSObject.Properties | Foreach-Object {
+    if (-not (Test-Path Variable:Global:GlobalPoolsInfo) -or $Global:GlobalPoolsInfo -eq $null) {
+        $Global:GlobalPoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {
             $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
         }
     }
     if ($Name -and @("Algorithm","Currency","CoinSymbol","CoinName","Minable") -icontains $Name) {
         if ($Values.Count) {
             if ($AsObjects) {
-                $Global:VarCache.PoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
+                $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
             } else {
-                $Global:VarCache.PoolsInfo.PSObject.Properties | Where-Object {[RBMToolBox]::IsIntersect($_.Value.$Name,$Values)} | Select-Object -ExpandProperty Name | Sort-Object
+                $Global:GlobalPoolsInfo.PSObject.Properties | Where-Object {[RBMToolBox]::IsIntersect($_.Value.$Name,$Values)} | Select-Object -ExpandProperty Name | Sort-Object
             }
         } else {
-            $Global:VarCache.PoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
+            $Global:GlobalPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
         }
     } else {
-        $Global:VarCache.PoolsInfo.$Name
+        $Global:GlobalPoolsInfo.$Name
     }
-    if ($Clear) {$Global:VarCache.PoolsInfo = $null}
+    if ($Clear) {$Global:GlobalPoolsInfo = $null}
 }
 
 function Get-Regions {
@@ -5535,14 +5520,14 @@ function Get-Regions {
         [Switch]$Silent = $false,
         [Switch]$AsHash = $false
     )
-    if (-not $Global:VarCache.ContainsKey("Regions") -or (Get-ChildItem "Data\regions.json").LastWriteTimeUtc -gt $Global:VarCache.RegionsTimeStamp) {
-        $Global:VarCache.Regions = [System.Collections.Hashtable]::Synchronized(@{})
-        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:VarCache.Regions[$_.Name]=$_.Value}
-        $Global:VarCache.RegionsTimeStamp = (Get-ChildItem "Data\regions.json").LastWriteTimeUtc
+    if (-not (Test-Path Variable:Global:GlobalRegions) -or (Get-ChildItem "Data\regions.json").LastWriteTimeUtc -gt $Global:GlobalRegionsTimeStamp) {
+        [hashtable]$Global:GlobalRegions = @{}
+        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
+        $Global:GlobalRegionsTimeStamp = (Get-ChildItem "Data\regions.json").LastWriteTimeUtc
     }
     if (-not $Silent) {
-        if ($AsHash) {$Global:VarCache.Regions}
-        else {$Global:VarCache.Regions.Keys}
+        if ($AsHash) {$Global:GlobalRegions}
+        else {$Global:GlobalRegions.Keys}
     }
 }
 
@@ -5552,12 +5537,12 @@ function Get-Regions2 {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not $Global:VarCache.ContainsKey("Regions2") -or (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc -gt $Global:VarCache.Regions2TimeStamp) {
-        $Global:VarCache.Regions2 = [System.Collections.Hashtable]::Synchronized(@{})
-        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:VarCache.Regions2[$_.Name]=$_.Value}
-        $Global:VarCache.Regions2TimeStamp = (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc
+    if (-not (Test-Path Variable:Global:GlobalRegions2) -or (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc -gt $Global:GlobalRegions2TimeStamp) {
+        [hashtable]$Global:GlobalRegions2 = @{}
+        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
+        $Global:GlobalRegions2TimeStamp = (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc
     }
-    if (-not $Silent) {$Global:VarCache.Regions2.Keys}
+    if (-not $Silent) {$Global:GlobalRegions2.Keys}
 }
 
 function Get-WorldCurrencies {
@@ -5569,8 +5554,8 @@ function Get-WorldCurrencies {
         [Switch]$EnableRemoteUpdate = $false
     )
 
-    if (-not $Global:VarCache.ContainsKey("WorldCurrencies")) {
-        $Global:VarCache.WorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
+    if (-not (Test-Path Variable:Global:GlobalWorldCurrencies)) {
+        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
     }
 
     if ($EnableRemoteUpdate) {
@@ -5578,8 +5563,8 @@ function Get-WorldCurrencies {
         try {
             $Request = Invoke-GetUrlAsync "https://api.coinbase.com/v2/currencies" -cycletime 86400 -Jobkey "worldcurrencies"
             if ($Request.data -and ($Request.data | Measure-Object).Count -gt 100) {
-                Set-ContentJson -PathToFile ".\Data\worldcurrencies.json" -Data $Request.data.id -MD5hash (Get-ContentDataMD5hash $Global:VarCache.WorldCurrencies) > $null
-                $Global:VarCache.WorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
+                Set-ContentJson -PathToFile ".\Data\worldcurrencies.json" -Data $Request.data.id -MD5hash (Get-ContentDataMD5hash $Global:GlobalWorldCurrencies) > $null
+                $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
             }
         }
         catch {
@@ -5587,7 +5572,7 @@ function Get-WorldCurrencies {
         }
     }
 
-    if (-not $Silent) {$Global:VarCache.WorldCurrencies}
+    if (-not $Silent) {$Global:GlobalWorldCurrencies}
 }
 
 function Invoke-NvidiaSettings {
@@ -6175,7 +6160,7 @@ function Set-GpuGroupsConfigDefault {
             $GpuNames = Get-Device "amd","intel","nvidia" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
             foreach ($GpuName in $GpuNames) {
                 if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
-                elseif ($Preset.$GpuName -ne "") {$Global:VarCache.CachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
+                elseif ($Preset.$GpuName -ne "") {$Global:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
@@ -6222,7 +6207,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $SubsetType})
+                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $SubsetType})
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
@@ -7057,10 +7042,10 @@ function Get-CPUAffinity {
     if ($ToHex) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads) -ToHex}
     elseif ($ToInt) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads)}
     else {
-        @(if ($Threads -and $Threads -ne $Global:VarCache.CPUInfo.RealCores.Count) {
-            $a = $r = 0; $b = [Math]::Max(1,[int]($Global:VarCache.CPUInfo.Threads/$Global:VarCache.CPUInfo.Cores));
-            for($i=0;$i -lt [Math]::Min($Threads,$Global:VarCache.CPUInfo.Threads);$i++) {$a;$c=($a+$b)%$Global:VarCache.CPUInfo.Threads;if ($c -lt $a) {$r++;$a=$c+$r}else{$a=$c}}
-        } else {$Global:VarCache.CPUInfo.RealCores}) | Sort-Object
+        @(if ($Threads -and $Threads -ne $Global:GlobalCPUInfo.RealCores.Count) {
+            $a = $r = 0; $b = [Math]::Max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));
+            for($i=0;$i -lt [Math]::Min($Threads,$Global:GlobalCPUInfo.Threads);$i++) {$a;$c=($a+$b)%$Global:GlobalCPUInfo.Threads;if ($c -lt $a) {$r++;$a=$c+$r}else{$a=$c}}
+        } else {$Global:GlobalCPUInfo.RealCores}) | Sort-Object
     }
 }
 
@@ -7368,7 +7353,7 @@ function Get-Proxy {
         [Switch]$Force = $false
     )
 
-    if ($Force -or -not $Global:VarCache.ContainsKey("Proxy")) {
+    if ($Force -or -not (Test-Path Variable:Global:GlobalProxy)) {
 
         $Proxy = [PSCustomObject]@{
             Proxy       = $null
@@ -7402,9 +7387,9 @@ function Get-Proxy {
             }
         }
 
-        $Global:VarCache.Proxy = $Proxy
+        $Global:GlobalProxy = $Proxy
     }
-    if (-not $silent) {$Global:VarCache.Proxy}
+    if (-not $silent) {$Global:GlobalProxy}
 }
 
 function Set-Proxy {
@@ -8783,15 +8768,15 @@ param(
     $ArgumentsString = "$($Arguments -join ' ')"
 
     if ($CheckForErrors -and $ArgumentsString -notmatch "-i ") {
-        if (-not $Global:VarCache.ContainsKey("NvidiaSMIList")) {
-            $Global:VarCache.NvidiaSMIList = @(Invoke-NvidiaSmi -Arguments "--list-gpus" | Foreach-Object {if ($_ -match "UUID:\s+([A-Z0-9\-]+)") {$Matches[1]} else {"error"}} | Select-Object)
+        if (-not (Test-Path Variable:Global:GlobalNvidiaSMIList)) {
+            $Global:GlobalNvidiaSMIList = @(Invoke-NvidiaSmi -Arguments "--list-gpus" | Foreach-Object {if ($_ -match "UUID:\s+([A-Z0-9\-]+)") {$Matches[1]} else {"error"}} | Select-Object)
         }
         $DeviceId = 0
-        $GoodDevices = $Global:VarCache.NvidiaSMIList | Foreach-Object {if ($_ -ne "error") {$DeviceId};$DeviceId++}
+        $GoodDevices = $Global:GlobalNvidiaSMIList | Foreach-Object {if ($_ -ne "error") {$DeviceId};$DeviceId++}
         $Arguments += "-i $($GoodDevices -join ",")"
         $SMI_Result = Invoke-NvidiaSmi -Query $Query -Arguments $Arguments -Runas:$Runas
         $DeviceId = 0
-        $Global:VarCache.NvidiaSMIList | Foreach-Object {
+        $Global:GlobalNvidiaSMIList | Foreach-Object {
             if ($_ -ne "error") {$SMI_Result[$DeviceId];$DeviceId++}
             else {[PSCustomObject]@{}}
         }
@@ -9158,10 +9143,6 @@ function Set-OsFlags {
         $Global:IsMacOS   = $false
     }
 
-    if (-not (Test-Path Global:VarCache)) {
-        $Global:VarCache = [System.Collections.Hashtable]::Synchronized(@{})
-    }
-
     $Global:7zip = if ($Global:IsWindows) {".\7z.exe"} else {"7z"}
 
     if ($Global:IsLinux) {
@@ -9227,8 +9208,8 @@ function Get-MinerInstPath {
     )
     if ($Path -match "^(\.[/\\]Bin[/\\][^/\\]+)") {$Matches[1]}
     else {
-        if (-not $Global:VarCache.ContainsKey("MinersInstallationPath")) {$Global:VarCache.MinersInstallationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Bin")}
-        if ($Path.StartsWith($Global:VarCache.MinersInstallationPath) -and $Path.Substring($Global:VarCache.MinersInstallationPath.Length) -match "^([/\\][^/\\]+)") {"$($Global:VarCache.MinersInstallationPath)$($Matches[1])"}
+        if (-not (Test-Path Variable:Global:MinersInstallationPath)) {$Global:MinersInstallationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Bin")}
+        if ($Path.StartsWith($Global:MinersInstallationPath) -and $Path.Substring($Global:MinersInstallationPath.Length) -match "^([/\\][^/\\]+)") {"$($Global:MinersInstallationPath)$($Matches[1])"}
         else {Split-Path $Path}
     }
 }
@@ -9282,8 +9263,8 @@ function Get-LastSatPrice {
         [Double]$lastSatPrice = 0
     )
 
-    if ($Global:VarCache.Rates.$Currency -and -not $lastSatPrice) {$lastSatPrice = 1/$Global:VarCache.Rates.$Currency*1e8}
-    if (-not $Global:VarCache.Rates.$Currency -and $lastSatPrice) {$Global:VarCache.Rates.$Currency = 1/$lastSatPrice*1e8}
+    if ($Global:Rates.$Currency -and -not $lastSatPrice) {$lastSatPrice = 1/$Global:Rates.$Currency*1e8}
+    if (-not $Global:Rates.$Currency -and $lastSatPrice) {$Global:Rates.$Currency = 1/$lastSatPrice*1e8}
     $lastSatPrice
 }
 
@@ -9337,7 +9318,7 @@ function Get-PoolDataFromRequest {
     if (-not $Currency) {$Currency = $Request.config.symbol}
     if (-not $chartCurrency -and $Request.config.priceCurrency) {$chartCurrency = $Request.config.priceCurrency}
 
-    $lastSatPrice = if ($Global:VarCache.Rates.$Currency) {1/$Global:VarCache.Rates.$Currency*1e8} else {0}
+    $lastSatPrice = if ($Global:Rates.$Currency) {1/$Global:Rates.$Currency*1e8} else {0}
 
     if (-not $priceFromSession -and -not $lastSatPrice) {
         if     ($Request.price.btc)           {$lastSatPrice = 1e8*[decimal]$Request.price.btc}
@@ -9346,9 +9327,9 @@ function Get-PoolDataFromRequest {
         elseif ($Request.coinPrice."coin-btc"){$lastSatPrice = 1e8*[decimal]$Request.coinPrice."coin-btc"}
         else {
             $lastSatPrice = if ($Request.charts.price) {[decimal]($Request.charts.price | Select-Object -Last 1)[1]} else {0}
-            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Global:VarCache.Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Global:VarCache.Rates.$chartCurrency}
+            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Global:Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Global:Rates.$chartCurrency}
             elseif ($chartCurrency -eq "BTC" -and $lastSatPrice -lt 1.0) {$lastSatPrice*=1e8}
-            if (-not $lastSatPrice -and $Global:VarCache.Rates.$Currency) {$lastSatPrice = 1/$Global:VarCache.Rates.$Currency*1e8}
+            if (-not $lastSatPrice -and $Global:Rates.$Currency) {$lastSatPrice = 1/$Global:Rates.$Currency*1e8}
         }
     }
 
@@ -9358,7 +9339,7 @@ function Get-PoolDataFromRequest {
         $averageDifficulties = if ($Request.pool.stats.diffs.wavg24h) {$Request.pool.stats.diffs.wavg24h} elseif ($Request.charts.difficulty_1d) {$Request.charts.difficulty_1d} else {($Request.charts.difficulty | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average}
         if ($averageDifficulties) {
             $averagePrices = if ($Request.charts.price_1d) {$Request.charts.price_1d} elseif ($Request.charts.price) {($Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
-            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Global:VarCache.Rates.$chartCurrency) {$averagePrices *= 1e8/$Global:VarCache.Rates.$chartCurrency}
+            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Global:Rates.$chartCurrency) {$averagePrices *= 1e8/$Global:Rates.$chartCurrency}
             elseif ($chartCurrency -eq "BTC" -and $averagePrices -lt 1.0) {$averagePrices*=1e8}
             if (-not $averagePrices) {$averagePrices = $lastSatPrice}
             $profitDay = 86400/$averageDifficulties*$reward/$Divisor
@@ -9611,8 +9592,8 @@ param(
 )
 
     $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
-    if (-not $Global:VarCache.ContainsKey("BinanceCache")) {$Global:VarCache.BinanceCache = [System.Collections.Hashtable]::Synchronized(@{})}
-    if (-not $Cache -or -not $Global:VarCache.BinanceCache[$keystr] -or -not $Global:VarCache.BinanceCache[$keystr].request -or $Global:VarCache.BinanceCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if (-not (Test-Path Variable:Global:BinanceCache)) {$Global:BinanceCache = [hashtable]@{}}
+    if (-not $Cache -or -not $Global:BinanceCache[$keystr] -or -not $Global:BinanceCache[$keystr].request -or $Global:BinanceCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
         $Remote = $false
 
@@ -9661,11 +9642,11 @@ param(
             }
         }
 
-        if (-not $Global:VarCache.BinanceCache[$keystr] -or $Request) {
-            $Global:VarCache.BinanceCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        if (-not $Global:BinanceCache[$keystr] -or $Request) {
+            $Global:BinanceCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
     }
-    $Global:VarCache.BinanceCache[$keystr].request
+    $Global:BinanceCache[$keystr].request
 }
 
 function Invoke-NHRequest {
@@ -9698,8 +9679,8 @@ param(
     if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
 
     $keystr = Get-MD5Hash "$($endpoint)$(Get-HashtableAsJson $params)"
-    if (-not $Global:VarCache.ContainsKey("NHCache")) {$Global:VarCache.NHCache = [System.Collections.Hashtable]::Synchronized(@{})}
-    if (-not $Cache -or -not $Global:VarCache.NHCache[$keystr] -or -not $Global:VarCache.NHCache[$keystr].request -or $Global:VarCache.NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]@{}}
+    if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
         $Remote = $false
 
@@ -9758,11 +9739,11 @@ param(
             }
         }
 
-        if (-not $Global:VarCache.NHCache[$keystr] -or $Request) {
-            $Global:VarCache.NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        if (-not $Global:NHCache[$keystr] -or $Request) {
+            $Global:NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
     }
-    $Global:VarCache.NHCache[$keystr].request
+    $Global:NHCache[$keystr].request
 }
 
 function Get-PowerPrice {

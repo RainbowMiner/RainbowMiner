@@ -29,7 +29,7 @@ catch {
 
 $Pool_PoolFee = 0.68 # cost for exchange
 
-$Pool_CPUPort_Test = $Global:VarCache.CPUInfo.Cores * $Global:VarCache.CPUInfo.MaxClockSpeed * 4 / 1000
+$Pool_CPUPort_Test = $Global:GlobalCPUInfo.Cores * $Global:GlobalCPUInfo.MaxClockSpeed * 4 / 1000
 $Pool_CPUPort_Base = if ($Pool_CPUPort_Test -gt 0) {[Math]::Min([Math]::Pow(2,1+[Math]::Floor([Math]::Log($Pool_CPUPort_Test,2))),8192)} else {4}
 #$Pool_GPUPost_Test = $Global:DeviceCache.Devices.Where({$_.type -eq "gpu"}).Count
 $Pool_GPUPort_Base = 128 #if ($Pool_GPUPost_Test -gt 1) {8192} else {1024}

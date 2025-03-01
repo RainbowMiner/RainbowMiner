@@ -171,7 +171,7 @@ $Pools_Data | ForEach-Object {
             $ok = $Pool_ProfitRequest.algo -eq $Pool_RewardAlgo
 
             if ($ok) {
-                $btcPrice = if ($Global:VarCache.Rates.$Pool_Currency) {1/[double]$Global:VarCache.Rates.$Pool_Currency} else {0}
+                $btcPrice = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
                 $Pool_Price = $btcPrice * $Pool_ProfitRequest.per_day / $_.mh / $_.divisor
                 $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $($Pool_Price -gt 0) -Quiet
             }

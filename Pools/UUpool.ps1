@@ -52,10 +52,10 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
         $Pool_Hashrate = [Double]$hr_value  * $(Switch ($hr[1])  {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
         $Pool_Estimate = [Double]$est_value / $(Switch ($est[2]) {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
 
-        $lastBTCPrice = if ($Global:VarCache.Rates.$Pool_Currency) {1/[double]$Global:VarCache.Rates.$Pool_Currency}
-                        elseif ($Global:VarCache.Rates."$($_.coin)") {1/[double]$Global:VarCache.Rates."$($_.coin)"}
-                        elseif ($_.usd -and $Global:VarCache.Rates.USD) {$_.usd/$Global:VarCache.Rates.USD}
-                        elseif ($_.cny -and $Global:VarCache.Rates.CNY) {$_.cny/$Global:VarCache.Rates.CNY}
+        $lastBTCPrice = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency}
+                        elseif ($Global:Rates."$($_.coin)") {1/[double]$Global:Rates."$($_.coin)"}
+                        elseif ($_.usd -and $Global:Rates.USD) {$_.usd/$Global:Rates.USD}
+                        elseif ($_.cny -and $Global:Rates.CNY) {$_.cny/$Global:Rates.CNY}
                         else {0}
 
         if (-not $InfoOnly) {

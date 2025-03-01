@@ -116,7 +116,7 @@ class Miner {
     [String]GetVendor() {
         if ($this.Vendor -eq "") {
             $Devices = @($this.DeviceModel -split '-')
-            $this.Vendor  = $Global:VarCache.CachedDevices | Where-Object {$Devices -contains $_.Model} | Foreach-Object {$_.Vendor} | Select-Object -Unique
+            $this.Vendor  = $Global:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Foreach-Object {$_.Vendor} | Select-Object -Unique
         }
         return $this.Vendor
     }
@@ -719,7 +719,7 @@ class Miner {
 
         $IsAfterburner = Test-Afterburner
 
-        $DeviceVendor = $Global:VarCache.CachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
+        $DeviceVendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Foreach-Object {$_.Vendor} | Select-Object -Unique
 
         if ($Global:IsWindows) {
             if ($DeviceVendor -ne "NVIDIA" -and $IsAfterburner) {
@@ -755,7 +755,7 @@ class Miner {
                 }
                 [System.Collections.Generic.List[int]]$DeviceIds = @()
                 [System.Collections.Generic.List[string]]$CardIds   = @()
-                $Global:VarCache.CachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
+                $Global:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                     $VendorIndex = $_.Type_Vendor_Index
                     $CardId = $_.CardId
                     $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
@@ -3535,7 +3535,7 @@ class Xmrig6 : Miner {
 
                     if ($Device -eq "cpu") {
                         if ($Algo -eq "ghostrider") {
-                            $Parameters.Config.$Device | Add-Member "max-threads-hint" ([int](100 * $Parameters.Threads / $Global:VarCache.CPUInfo.Threads)) -Force
+                            $Parameters.Config.$Device | Add-Member "max-threads-hint" ([int](100 * $Parameters.Threads / $Global:GlobalCPUInfo.Threads)) -Force
                         }
                         $cix = @{}
                         $ThreadsAffinity = $ThreadsConfig.$Algo | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix["k$($_[1])"] = $_[0];$_[1]} else {$_}}

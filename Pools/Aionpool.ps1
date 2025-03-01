@@ -93,7 +93,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
                 $Pool_HR = $_.poolStats.poolHashrate
             }
 
-            $btcPrice       = if ($Global:VarCache.Rates.$Pool_Currency) {1/[double]$Global:VarCache.Rates.$Pool_Currency} else {0}
+            $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
             $btcRewardLive  = if ($Pool_HR) {$btcPrice * $blocks_reward * $Pool_BLK / $Pool_HR} else {0}
         }
 

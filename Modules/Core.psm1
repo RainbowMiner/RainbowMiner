@@ -100,19 +100,19 @@ function Start-Core {
 
         #Setup Core script variables
         $Global:StatsCache              = [System.Collections.Hashtable]::Synchronized(@{})
+        $Global:Rates                   = [System.Collections.Hashtable]::Synchronized(@{})
         [hashtable]$Global:DeviceCache  = @{}
         [hashtable]$Global:MinerInfo    = @{}
         [hashtable]$Global:MinerSpeeds  = @{}
 
-        $Global:ActiveMiners            = [System.Collections.ArrayList]::new()
-        $Global:WatchdogTimers          = [System.Collections.Generic.List[PSCustomObject]]::new()
-        $Global:CrashCounter            = [System.Collections.Generic.List[PSCustomObject]]::new()
-        $Global:AlgorithmMinerName      = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        $Global:Rates["BTC"] = [Double]1
+
+        $Global:ActiveMiners = [System.Collections.ArrayList]::new()
+        $Global:WatchdogTimers  = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $Global:CrashCounter = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $Global:AlgorithmMinerName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         $Global:PauseMiners = [PauseMiners]::new()
-
-        $Global:VarCache.Rates          = [System.Collections.Hashtable]::Synchronized(@{})
-        $Global:VarCache.Rates["BTC"]   = [Double]1
 
         #Setup session variables
         [hashtable]$Session.ConfigFiles = @{
@@ -271,8 +271,8 @@ function Start-Core {
     try {
         Write-Host "Detecting devices .. " -NoNewline
         $Global:DeviceCache.AllDevices = @(Get-Device "cpu","gpu" -IgnoreOpenCL -Refresh | Where-Object { $_ })
-        $Session.PhysicalCPUs = $Global:VarCache.CPUInfo.PhysicalCPUs
-        $Session.IsARM        = $Global:VarCache.CPUInfo.Vendor -eq "ARM" -or $Global:VarCache.CPUInfo.Features.ARM
+        $Session.PhysicalCPUs = $Global:GlobalCPUInfo.PhysicalCPUs
+        $Session.IsARM        = $Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM
         $CPUFound   = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
         $NVFound    = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"} | Measure-Object).Count
         $AMDFound   = ($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"} | Measure-Object).Count
@@ -282,7 +282,7 @@ function Start-Core {
             if ($CPUFound)   {$DevicesFound += "$($CPUFound) CPU"}
             if ($NVFound)    {
                 $CUDAVersion = $null
-                foreach ($Device in $Global:VarCache.CachedDevices) {
+                foreach ($Device in $Global:GlobalCachedDevices) {
                     if ($Device.Type -eq "Gpu" -and $Device.Vendor -eq "NVIDIA" -and $Device.OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)") {
                         $CUDAVersion = $Matches[1]
                         break
@@ -889,14 +889,14 @@ function Invoke-Core {
 
         #crosscheck for invalid cpu mining parameters to avoid system overload
         if ($Session.Config.DeviceName -match "^CPU") {
-            $CPUAffinityInt = (ConvertFrom-CPUAffinity "$($Session.Config.CPUMiningAffinity)" -ToInt) -band (Get-CPUAffinity $Global:VarCache.CPUInfo.Threads -ToInt)
+            $CPUAffinityInt = (ConvertFrom-CPUAffinity "$($Session.Config.CPUMiningAffinity)" -ToInt) -band (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)
             if ($CPUAffinityInt -eq 0) {
-                $CPUThreads = if ($Session.Config.CPUMiningThreads -gt 0) {$Session.Config.CPUMiningThreads} else {$Global:VarCache.CPUInfo.RealCores.Count}
+                $CPUThreads = if ($Session.Config.CPUMiningThreads -gt 0) {$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.RealCores.Count}
                 $CPUAffinityInt = Get-CPUAffinity $CPUThreads -ToInt
                 Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "Parameter CPUMiningAffinity (config.txt) is empty or contains errors. Falling back to $(Get-CPUAffinity $CPUThreads -ToHex)"
             }
-            if ($Session.Config.EnableAutoAdjustAffinity -and $Global:VarCache.CPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:VarCache.CPUInfo.Threads -ToInt)) {
-                $CPUThreads = ($Global:VarCache.CPUInfo.Threads - [Math]::Min(2,[int]($Global:VarCache.CPUInfo.Threads/2)))
+            if ($Session.Config.EnableAutoAdjustAffinity -and $Global:GlobalCPUInfo.Threads -gt 1 -and $CPUAffinityInt -eq (Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt)) {
+                $CPUThreads = ($Global:GlobalCPUInfo.Threads - [Math]::Min(2,[int]($Global:GlobalCPUInfo.Threads/2)))
                 $CPUAffinityInt = Get-CPUAffinity $CPUThreads -ToInt
                 Write-Log -Level "$(if ($Session.RoundCounter -eq 0) {"Warn"} else {"Info"})" "All threads selected for CPU mining! This will overload your system, auto-adjusting affinity to $(Get-CPUAffinity $CPUThreads -ToHex))"
             }
@@ -1091,7 +1091,7 @@ function Invoke-Core {
                                 IsLocked               = $Session.Config.APIlockConfig
                                 IsServer               = $Session.Config.RunMode -eq "Server"
                             }) -Depth 10
-        $API.CPUInfo = ConvertTo-Json $Global:VarCache.CPUInfo -Depth 10
+        $API.CPUInfo = ConvertTo-Json $Global:GlobalCPUInfo -Depth 10
         $PoolSetup = $null
         $AutoexPools = $null
     }
@@ -2004,7 +2004,7 @@ function Invoke-Core {
             $MinersConfig = Get-ConfigContent "Miners" -UpdateLastWriteTime
             if (Test-Config "Miners" -Health) {
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
-                $CPU_GlobalAffinityMask = Get-CPUAffinity $Global:VarCache.CPUInfo.Threads -ToInt
+                $CPU_GlobalAffinityMask = Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt
                 foreach ($CcMiner in @($MinersConfig.PSObject.Properties)) {
                     $CcMinerName = $CcMiner.Name
                     [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
@@ -2093,10 +2093,10 @@ function Invoke-Core {
     Write-Log "Updating exchange rates. "
     Update-Rates
 
-    #$API.Rates = ConvertTo-Json $Global:VarCache.Rates -Depth 10
-    #ConvertTo-Json $Global:VarCache.Rates -Depth 10 | Set-Content ".\Data\rates.json" -ErrorAction Ignore
+    #$API.Rates = ConvertTo-Json $Global:Rates -Depth 10
+    #ConvertTo-Json $Global:Rates -Depth 10 | Set-Content ".\Data\rates.json" -ErrorAction Ignore
     $ActualRates = [PSCustomObject]@{}
-    $Global:VarCache.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Global:VarCache.Rates.$_}
+    $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Global:Rates.$_}
     $API.ActualRates = $ActualRates
 
     #PowerPrice check
@@ -2105,7 +2105,7 @@ function Invoke-Core {
     $Session.CurrentPowerPriceBTC = 0
 
     if ($PowerPriceCurrency) {
-        if ($PowerPrice_Rate = [Double]$Global:VarCache.Rates."$($PowerPriceCurrency)") {
+        if ($PowerPrice_Rate = [Double]$Global:Rates."$($PowerPriceCurrency)") {
             $Session.PowerPriceBTC        = [Double]$Session.Config.PowerPrice/$PowerPrice_Rate
             $Session.FixedCostPerDayBTC   = [Double]$Session.Config.FixedCostPerDay/$PowerPrice_Rate
             $Session.CurrentPowerPriceBTC = [Double]$Session.CurrentPowerPrice/$PowerPrice_Rate
@@ -2239,8 +2239,8 @@ function Invoke-Core {
             $API.Balances = ConvertTo-Json $BalancesData -Depth 10
             #ConvertTo-Json $BalancesData -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\balances.json" -ErrorAction Ignore
 
-            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:VarCache.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:VarCache.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:VarCache.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:VarCache.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -notmatch "^\*" -and $_.BaseName -ne "Wallet" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
             if ($RefreshBalances) {$Session.ReportTotals = $true}
         }
@@ -4130,7 +4130,7 @@ function Invoke-Core {
                 "Speed"     {[void]$Miner_Table.Add(@{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'})}
                 "Diff"      {[void]$Miner_Table.Add(@{Label = "Diff"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.Difficulties.$_) {($m.Difficulties.$_ | ConvertTo-Float) -replace " "} else {"-"}}) -join ','}; Align = 'right'})}
                 "Power"     {[void]$Miner_Table.Add(@{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'})}
-                "Profit"    {foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {[void]$Miner_Table.Add(@{Label = "$Miner_Currency/Day"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:VarCache.Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:VarCache.Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"})}}
+                "Profit"    {foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {[void]$Miner_Table.Add(@{Label = "$Miner_Currency/Day"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"})}}
                 "TTF"       {[void]$Miner_Table.Add(@{Label = "TTF"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.BLK) {86400/$_.BLK | ConvertTo-TTF} else {"-"}}}; Align = 'right'})}
                 "Accuracy"  {[void]$Miner_Table.Add(@{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'})}
                 "Pool"      {[void]$Miner_Table.Add(@{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName -match "^\d+") {"-$($_.CoinName)"} elseif ($_.CoinSymbol) {"-$($_.CoinSymbol)"})"}}})}
@@ -4342,9 +4342,9 @@ function Invoke-Core {
                     -3 {$Miner_Currency_Out = "sat"; $CurrentProfitTotal_Out*=1e8;$CurrentProfitWithoutCostTotal_Out*=1e8;$CurrentProfit_Offset = 10;Break}
                 }
             }
-            if ($Global:VarCache.Rates.$Miner_Currency) {[void]$StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Global:VarCache.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Global:VarCache.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day")}
+            if ($Global:Rates.$Miner_Currency) {[void]$StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Global:Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Global:Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day")}
     }
-    if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:VarCache.Rates.$_}) {[void]$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:VarCache.Rates.$_} | Sort-Object | ForEach-Object { "$($_) $($Global:VarCache.Rates.$_)"})  -join ' = ')")}
+    if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:Rates.$_}) {[void]$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:Rates.$_} | Sort-Object | ForEach-Object { "$($_) $($Global:Rates.$_)"})  -join ' = ')")}
 
     $API.CurrentProfit = $CurrentProfitTotal
     $API.CurrentPower = [PSCustomObject]@{
@@ -4967,7 +4967,7 @@ function Start-SysInfo {
 
     $Global:GlobalSysInfoJob = $null
 
-    $CPU_tdp = if ($Session.Config.PowerCPUtdp) {$Session.Config.PowerCPUtdp} else {$Global:VarCache.CPUInfo.TDP}
+    $CPU_tdp = if ($Session.Config.PowerCPUtdp) {$Session.Config.PowerCPUtdp} else {$Global:GlobalCPUInfo.TDP}
     try {
         $Global:GlobalSysInfoJob = Start-ThreadJob -InitializationScript ([scriptblock]::Create("Set-Location `"$((Get-Location).Path -replace '"','``"')`"")) -FilePath ".\Scripts\SysInfo.ps1" -Name "SysInfo" -ArgumentList $PID, $Session.PhysicalCPUs, $CPU_tdp, $Session.IsARM -ErrorAction Stop
     } catch {
@@ -5026,16 +5026,16 @@ function Get-Balance {
     
     $Balances.currency | Select-Object -Unique | Sort-Object | Foreach-Object {[void]$CurrenciesWithBalances.Add($_)}
     @("BTC") + $Config.Currency | Select-Object -Unique | Sort-Object | Foreach-Object {[void]$CurrenciesToExchange.Add($_)}
-    $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Global:VarCache.Rates.ContainsKey($_)} | Foreach-Object {[void]$CurrenciesMissing.Add($_)}
+    $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Global:Rates.ContainsKey($_)} | Foreach-Object {[void]$CurrenciesMissing.Add($_)}
 
     if ($CurrenciesMissing.Count) {Update-Rates $CurrenciesMissing}
 
     $CurrenciesWithBalances | Foreach-Object {
         $Currency = $_
-        if ($Global:VarCache.Rates.ContainsKey($Currency) -and $Global:VarCache.Rates[$Currency]) {
+        if ($Global:Rates.ContainsKey($Currency) -and $Global:Rates[$Currency]) {
             $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
-            $CurrenciesToExchange | Where-Object {$Global:VarCache.Rates.ContainsKey($_)} | Foreach-Object {
-                $RatesAPI.$Currency | Add-Member $_ ($Global:VarCache.Rates.$_/$Global:VarCache.Rates.$Currency)
+            $CurrenciesToExchange | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {
+                $RatesAPI.$Currency | Add-Member $_ ($Global:Rates.$_/$Global:Rates.$Currency)
             }
         }
     }
@@ -5344,7 +5344,7 @@ function Invoke-ReportMinerStatus {
     $UncleanAlert = if ($Session.ReportUnclean) {$Session.ReportUnclean = $false; $true} else {$false}
     $ReportRates  = [PSCustomObject]@{}
 
-    $Session.Config.Currency | Where-Object {$Global:VarCache.Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:VarCache.Rates.$_ -Force}
+    $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
     [System.Collections.Generic.List[string]]$Including_Strings = @()
     if ($Session.ReportTotals)    {[void]$Including_Strings.Add("totals")}
@@ -5480,7 +5480,7 @@ function Invoke-ReportMinerStatus {
     $DeviceData = $null
     if ($Session.ReportDeviceData) {
         try {
-            ConvertTo-Json $Global:VarCache.CachedDevices -Depth 10 -Compress | Set-Content ".\Data\devicedata.json"
+            ConvertTo-Json $Global:GlobalCachedDevices -Depth 10 -Compress | Set-Content ".\Data\devicedata.json"
             if (Test-Path ".\Data\devicedata.json") {
                 if ($Session.IsCore -or $Session.EnableCurl) {
                     $DeviceData = Get-Item ".\Data\devicedata.json"
@@ -5675,7 +5675,7 @@ function Update-Rates {
 
     $WCSymbols   = Get-WorldCurrencies
     $BaseSymbols = @($Session.Config.Currency | Select-Object) + @("USD") | Select-Object -Unique
-    $GetSymbols  = @($Symbols | Select-Object) + @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object) + @($Global:VarCache.Rates.Keys) | Select-Object -Unique
+    $GetSymbols  = @($Symbols | Select-Object) + @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object) + @($Global:Rates.Keys) | Select-Object -Unique
     
     [hashtable]$NewRates   = @{}
     try {
@@ -5695,14 +5695,14 @@ function Update-Rates {
         } catch {Write-Log -Level Warn "Coinbase down. "}
     }
 
-    $Global:VarCache.Rates["BTC"] = $NewRates["BTC"] = [Double]1
+    $Global:Rates["BTC"] = $NewRates["BTC"] = [Double]1
 
     Compare-Object @($GetSymbols) @($NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
-        if ($_.SideIndicator -eq "==") {$Global:VarCache.Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
+        if ($_.SideIndicator -eq "==") {$Global:Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
         elseif ($Session.GetTicker -inotcontains $_.InputObject) {[void]$Session.GetTicker.Add($_.InputObject.ToUpper())}
     }
 
-    Compare-Object @($WCSymbols) @($Global:VarCache.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:VarCache.Rates[$_] = [Math]::Round($Global:VarCache.Rates[$_],3)}
+    Compare-Object @($WCSymbols) @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
 
     if ($Session.GetTicker.Count -gt 0) {
         try {
@@ -5711,7 +5711,7 @@ function Update-Rates {
             if (-not $RatesAPI.status) {
                 Write-Log "api.rbminer.net/cmc failed for $($SymbolStr)"
             } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
-                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Global:VarCache.Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}
+                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Global:Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}
                 if ($RatesAPI.ip -ne $null) {
                     $API.RemoteIP = $RatesAPI.ip
                 }

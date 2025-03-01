@@ -14,13 +14,13 @@ function Get-DeviceDebug {
     )
 
     if ($Name) {
-        if (-not $Global:VarCache.ContainsKey("DataDeviceList") -or -not $Global:VarCache.DataDeviceList) {$Global:VarCache.DataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
+        if (-not (Test-Path Variable:Global:GlobalDataDeviceList) -or -not $Global:GlobalDataDeviceList) {$Global:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = $_ -split '#'
             $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
             $Name_Split += @("*") * (100 - $Name_Split.Count)
 
-            $Name_Device = $Global:VarCache.DataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $Global:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
 
             $Name_Device
@@ -28,8 +28,8 @@ function Get-DeviceDebug {
     }
 
     # Try to get cached devices first to improve performance
-    if ($Global:VarCache.ContainsKey("CachedDevices") -and -not $Refresh) {
-        $Global:VarCache.CachedDevices | Foreach-Object {
+    if ((Test-Path Variable:Global:GlobalCachedDevices) -and -not $Refresh) {
+        $Global:GlobalCachedDevices | Foreach-Object {
             $Device = $_
             if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) {
                 $Device
@@ -118,12 +118,12 @@ function Get-DeviceDebug {
     #CPU detection
     try {$CPUFeatures = $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {$feat.($matches[1]) = [int]$matches[2]}}; $feat)} catch {}
     try {
-        if (-not $Global:VarCache.ContainsKey("GetDeviceCacheCIM")) {$Global:VarCache.GetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+        if (-not (Test-Path Variable:Global:GlobalGetDeviceCacheCIM)) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
         if (-not (Test-Path Variable:CPUFeatures)) {
             $CPUFeatures = [PSCustomObject]@{
-                physical_cpus = $Global:VarCache.GetDeviceCacheCIM.Count
-                cores = ($Global:VarCache.GetDeviceCacheCIM.NumberOfCores | Measure-Object -Sum).Sum
-                threads = ($Global:VarCache.GetDeviceCacheCIM.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                physical_cpus = $Global:GlobalGetDeviceCacheCIM.Count
+                cores = ($Global:GlobalGetDeviceCacheCIM.NumberOfCores | Measure-Object -Sum).Sum
+                threads = ($Global:GlobalGetDeviceCacheCIM.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
                 tryall = 1
             }
         }
@@ -134,14 +134,14 @@ function Get-DeviceDebug {
 
     try {
         $CPURealCores = [int[]](0..($CPUFeatures.threads - 1))
-        $CPUVendor = if ($GPUVendorLists.INTEL -icontains $Global:VarCache.GetDeviceCacheCIM[0].Manufacturer){"INTEL"}else{$Global:VarCache.GetDeviceCacheCIM[0].Manufacturer.ToUpper()}
+        $CPUVendor = if ($GPUVendorLists.INTEL -icontains $Global:GlobalGetDeviceCacheCIM[0].Manufacturer){"INTEL"}else{$Global:GlobalGetDeviceCacheCIM[0].Manufacturer.ToUpper()}
         if ($CPUVendor -eq "INTEL" -and $CPUFeatures.threads -gt $CPUFeatures.cores) {$CPURealCores = $CPURealCores | Where-Object {-not ($_ % [int]($CPUFeatures.threads/$CPUFeatures.cores))}}
 
         $CPUIndex = $PhysicalCPUIndex = 0
 
         foreach ($CPURealCore in @($CPURealCores)) {
             # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
-            $CIM = $Global:VarCache.GetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+            $CIM = $Global:GlobalGetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json -Depth 10 | ConvertFrom-Json
 
             $Device = [PSCustomObject]@{
                 Index = [Int]$Index
@@ -154,7 +154,7 @@ function Get-DeviceDebug {
                 CPU_Thread = $CPURealCore
                 CPU_Affinity = 1 -shl $CPURealCore
                 CPU_Features = $CPUFeatures
-                CIM = $Global:VarCache.GetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+                CIM = $Global:GlobalGetDeviceCacheCIM[$PhysicalCPUIndex] | ConvertTo-Json -Depth 10 | ConvertFrom-Json
                 Model = "CPU"
                 Model_Name = $CIM.Name
             }
@@ -171,7 +171,7 @@ function Get-DeviceDebug {
         Write-Host "CIM CPU detection has failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 
-    $Global:VarCache.CachedDevices = $Devices
+    $Global:GlobalCachedDevices = $Devices
     $Devices
 }
 
@@ -186,7 +186,7 @@ function Update-DeviceInformationDebug {
     
     $abReload = $true
 
-    $Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
+    $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
         
@@ -343,8 +343,8 @@ function Update-DeviceInformationDebug {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            $CPU_count = $Global:VarCache.CachedDevices.Features.physical_cpus | Select-Object -First 1
-            $CPUcore_count = ($Global:VarCache.CachedDevices | Where-Object Type -eq "Cpu" | Measure-Object).Count
+            $CPU_count = $Global:GlobalCachedDevices.Features.physical_cpus | Select-Object -First 1
+            $CPUcore_count = ($Global:GlobalCachedDevices | Where-Object Type -eq "Cpu" | Measure-Object).Count
             $CPUPowerDraw = 0
             if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
                 if ($abReload) {$Script:abMonitor.ReloadAll()}
@@ -361,21 +361,21 @@ function Update-DeviceInformationDebug {
             }
 
             if (-not $CPULoadCalc.Average) {
-                $Global:VarCache.GetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor
-                $CPULoadCalc = ($Global:VarCache.GetDeviceCacheCIM.LoadPercentage | Measure-Object -Average -Sum) | Select-Object -Property Average,Sum
+                $Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor
+                $CPULoadCalc = ($Global:GlobalGetDeviceCacheCIM.LoadPercentage | Measure-Object -Average -Sum) | Select-Object -Property Average,Sum
                 if (-not $CPULoadCalc.Average) {$CPULoadCalc.Average = 100;$CPULoadCalc.Sum = 100}
                 $CPULoadCalc.Sum *= $CPUcore_count
             }
 
             if (-not $CPUPowerDraw) {
                 if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
-                if (-not ($CPUPowerDraw = $Script:CpuTDP.(($Global:VarCache.CachedDevices.CIM.Name | Select-Object -First 1).Trim()))) {$CPUPowerDraw = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                if (-not ($CPUPowerDraw = $Script:CpuTDP.(($Global:GlobalCachedDevices.CIM.Name | Select-Object -First 1).Trim()))) {$CPUPowerDraw = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
                 if ($CPULoadCalc) {$CPUPowerDraw *= $CPULoadCalc.Average/100}
                 $CPUmethod = "tdp"
             }
 
-            $Global:VarCache.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-                $CPUCoreFrac = $(if ($CPULoadCores) {$CPULoadCores | Where-Object Name -eq $($_.CPU_Thread) | Select-Object -ExpandProperty PercentProcessorTime} else {@($Global:VarCache.GetDeviceCacheCIM)[$_.Type_PlatformId_Index].LoadPercentage})
+            $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $CPUCoreFrac = $(if ($CPULoadCores) {$CPULoadCores | Where-Object Name -eq $($_.CPU_Thread) | Select-Object -ExpandProperty PercentProcessorTime} else {@($Global:GlobalGetDeviceCacheCIM)[$_.Type_PlatformId_Index].LoadPercentage})
                 $_ | Add-Member Data ([PSCustomObject]@{
                     Cores         = [int]$_.CPU_Features.Cores
                     Threads       = [int]$_.CPU_Features.Threads

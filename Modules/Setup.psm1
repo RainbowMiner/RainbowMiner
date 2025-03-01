@@ -116,7 +116,7 @@ function Start-Setup {
         Write-Host " "
 
         try {
-            $TotalMem = (($Global:VarCache.DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","intel","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
+            $TotalMem = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","intel","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
             if ($IsWindows) {$TotalSwap = (Get-CimInstance Win32_PageFile | Select-Object -ExpandProperty FileSize | Measure-Object -Sum).Sum / 1GB}
             if ($TotalSwap -and $TotalMem -gt $TotalSwap) {
                 Write-Log -Level Warn "You should increase your windows pagefile to at least $TotalMem GB"
@@ -213,7 +213,7 @@ function Start-Setup {
                 if ($val -is [array]) {$val = $val -join ','}
                 if ($val -is [bool] -or -not $Config.$ConfigSetup_Name) {$Config | Add-Member $ConfigSetup_Name $val -Force}
             }
-            if (($Global:VarCache.DeviceCache.AllDevices | Where-Object Vendor -eq "AMD" | Measure-Object).Count -eq 0) {
+            if (($Global:DeviceCache.AllDevices | Where-Object Vendor -eq "AMD" | Measure-Object).Count -eq 0) {
                 $Config | Add-Member DisableMSIAmonitor $true -Force
             }
         } else {
@@ -1184,9 +1184,9 @@ function Start-Setup {
                             if ($Config.DeviceName -icontains "CPU") {
                                 $CurrentAffinity = ConvertFrom-CPUAffinity $Config.CPUMiningAffinity
                                 Write-Host " "
-                                Write-Host "Your CPU features $($Global:VarCache.CPUInfo.Threads) threads on $($Global:VarCache.CPUInfo.Cores) cores. " -ForegroundColor Yellow
+                                Write-Host "Your CPU features $($Global:GlobalCPUInfo.Threads) threads on $($Global:GlobalCPUInfo.Cores) cores. " -ForegroundColor Yellow
                                 Write-Host "Currently mining on the green threads: " -ForegroundColor Yellow -NoNewline
-                                for($thr=0;$thr -lt $Global:VarCache.CPUInfo.Threads;$thr++) {
+                                for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
                                     Write-Host " $thr " -BackgroundColor $(if ($thr -in $CurrentAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
                                 }
                                 if ($CurrentAffinity.Count) {
@@ -1195,11 +1195,11 @@ function Start-Setup {
                                     Write-Host " (no affinity set)"
                                 }
                                 Write-Host " "
-                                $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"enter 'clear'"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:VarCache.CPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"enter 'clear'"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 $Config.CPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
                                 if (Compare-Object @($NewAffinity|Select-Object) @($CurrentAffinity|Select-Object)) {
                                     Write-Host "Now mining on the green threads: " -ForegroundColor Yellow -NoNewline
-                                    for($thr=0;$thr -lt $Global:VarCache.CPUInfo.Threads;$thr++) {
+                                    for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
                                         Write-Host " $thr " -BackgroundColor $(if ($thr -in $NewAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
                                     }
                                     if ($NewAffinity.Count) {
@@ -1222,9 +1222,9 @@ function Start-Setup {
                         "gpuminingaffinity" {
                             $CurrentAffinity = ConvertFrom-CPUAffinity $Config.GPUMiningAffinity
                             Write-Host " "
-                            Write-Host "Your CPU features $($Global:VarCache.CPUInfo.Threads) threads on $($Global:VarCache.CPUInfo.Cores) cores. " -ForegroundColor Yellow
+                            Write-Host "Your CPU features $($Global:GlobalCPUInfo.Threads) threads on $($Global:GlobalCPUInfo.Cores) cores. " -ForegroundColor Yellow
                             Write-Host "GPU miners are currently using the green threads to validate their results: " -ForegroundColor Yellow -NoNewline
-                            for($thr=0;$thr -lt $Global:VarCache.CPUInfo.Threads;$thr++) {
+                            for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
                                 Write-Host " $thr " -BackgroundColor $(if ($thr -in $CurrentAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
                             }
                             if ($CurrentAffinity.Count) {
@@ -1233,11 +1233,11 @@ function Start-Setup {
                                 Write-Host " (no affinity set)"
                             }
                             Write-Host " "
-                            $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"enter 'clear'"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:VarCache.CPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"enter 'clear'"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             $Config.GPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
                             if (Compare-Object @($NewAffinity|Select-Object) @($CurrentAffinity|Select-Object)) {
                                 Write-Host "GPU miners now validating on the green threads: " -ForegroundColor Yellow -NoNewline
-                                for($thr=0;$thr -lt $Global:VarCache.CPUInfo.Threads;$thr++) {
+                                for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
                                     Write-Host " $thr " -BackgroundColor $(if ($thr -in $NewAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
                                 }
                                 if ($NewAffinity.Count) {
@@ -1434,7 +1434,7 @@ function Start-Setup {
                         }
                         "nvsmipath" {
                             $GlobalSetupStepStore = $false
-                            if ($Config.EnableOCProfiles -and ($Global:VarCache.DeviceCache.AllDevices | where-object vendor -eq "nvidia" | measure-object).count -gt 0) {
+                            if ($Config.EnableOCProfiles -and ($Global:DeviceCache.AllDevices | where-object vendor -eq "nvidia" | measure-object).count -gt 0) {
                                 $Config.NVSMIpath = Read-HostString -Prompt "Enter path to Nvidia NVSMI" -Default $Config.NVSMIpath -Characters '' | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 if (-not (Test-Path $Config.NVSMIpath)) {Write-Host "Nvidia NVSMI not found at given path. RainbowMiner will use included nvsmi" -ForegroundColor Yellow}
                                 $GlobalSetupStepStore = $true
