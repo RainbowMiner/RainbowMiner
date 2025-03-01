@@ -165,7 +165,7 @@ if (-not $InfoOnly) {
                     foreach ($Coin_Request in $AllCoins_Request) {
                         $Pool_HR = [int]$Coin_Request.profit.hashrate
                         $Pool_PriceUsd = if ($Pool_HR) {$Coin_Request.profit.revenue_usd / $Pool_HR * $Coin_Request.profit.minutes / 1440} else {0}
-                        $Pool_PriceBtc = if ($Global:Rates["USD"]) {$Pool_PriceUsd / $Global:Rates["USD"]} else {0}
+                        $Pool_PriceBtc = if ($Global:VarCache.Rates["USD"]) {$Pool_PriceUsd / $Global:VarCache.Rates["USD"]} else {0}
                         $Stat0 = Set-Stat -Name "$($Name)_$($Coin_Request.coin)_Profit" -Value $Pool_PriceBtc -Duration $StatSpan -ChangeDetection $false -HashRate $Coin_Request.workers.hashrate_pplnt -BlockRate $([double]$Coin_Request.profit.coins) -Quiet
                         if ($Coin_Request.coin -eq $Current_Coin.coin) {
                             $Stat = $Stat0
@@ -174,7 +174,7 @@ if (-not $InfoOnly) {
                 } else {
                     $Pool_HR = [int]$Current_Coin.profit.hashrate
                     $Pool_PriceUsd = if ($Pool_HR) {$Current_Coin.profit.revenue_usd / $Pool_HR * $Current_Coin.profit.minutes / 1440} else {0}
-                    $Pool_PriceBtc = if ($Global:Rates["USD"]) {$Pool_PriceUsd / $Global:Rates["USD"]} else {0}
+                    $Pool_PriceBtc = if ($Global:VarCache.Rates["USD"]) {$Pool_PriceUsd / $Global:VarCache.Rates["USD"]} else {0}
                     $Stat = Set-Stat -Name "$($Name)_$($Current_Coin.coin)_Profit" -Value $Pool_PriceBtc -Duration $StatSpan -ChangeDetection $false -HashRate $Current_Coin.workers.hashrate_pplnt -BlockRate $([double]$Current_Coin.profit.coins) -Quiet
                 }
 

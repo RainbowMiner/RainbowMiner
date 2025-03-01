@@ -81,7 +81,7 @@ $Pool_Request | Where-Object {$_.feeType -eq "PPLNSBF" -and ($Wallets."$($_.coin
         $lastBlocktime = if ($Pool_CoinRequest.lastPoolBlockTime) {([datetime]$Pool_CoinRequest.lastPoolBlockTime).ToUniversalTime()} else {[datetime]"1970-01-01T00:00:00"}
         $Pool_TSL      = ((Get-Date).ToUniversalTime() - $lastBlocktime).TotalSeconds - [int]$Session.TimeDiff
         $reward        = [int]$_.blockReward
-        $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+        $btcPrice      = if ($Global:VarCache.Rates.$Pool_Currency) {1/[double]$Global:VarCache.Rates.$Pool_Currency} else {0}
 
         $btcRewardLive =  if ($hashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $hashrate} else {0}
 

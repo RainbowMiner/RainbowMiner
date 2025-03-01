@@ -192,8 +192,10 @@ param(
 
     $Result = $null
 
-    if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
-    if (-not $Cache -or $Force -or -not $Global:MRRCache[$JobKey] -or -not $Global:MRRCache[$JobKey].request -or -not $Global:MRRCache[$JobKey].request.success -or $Global:MRRCache[$JobKey].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if (-not $Global:VarCache.ContainsKey("MRRCache")) {
+        $Global:VarCache.MRRCache = [System.Collections.Hashtable]::Synchronized(@{})
+    }
+    if (-not $Cache -or $Force -or -not $Global:VarCache.MRRCache[$JobKey] -or -not $Global:VarCache.MRRCache[$JobKey].request -or -not $Global:VarCache.MRRCache[$JobKey].request.success -or $Global:VarCache.MRRCache[$JobKey].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
         $Remote = $false
 
@@ -266,7 +268,7 @@ param(
             Write-Log -Level Warn "MiningRigRental error: $(if ($Data.data.message) {$Data.data.message} else {"unknown"})"
         }
 
-        if (($Data -and $Data.success) -or -not $Cache -or -not $Global:MRRCache[$JobKey]) {
+        if (($Data -and $Data.success) -or -not $Cache -or -not $Global:VarCache.MRRCache[$JobKey]) {
             if ($regex -and $regexfld -and $Data.data) {
                 if ($regexmatch) {
                     $Data.data = $Data.data | Where-Object {$_.$regexfld -match $regex}
@@ -281,15 +283,15 @@ param(
 
     if ($Cache) {
         if ($Result -eq $null) {
-            if ($Global:MRRCache[$JobKey]) {
-                $Result = $Global:MRRCache[$JobKey]
+            if ($Global:VarCache.MRRCache[$JobKey]) {
+                $Result = $Global:VarCache.MRRCache[$JobKey]
             }
         } else {
-            $Global:MRRCache[$JobKey] = $Result
+            $Global:VarCache.MRRCache[$JobKey] = $Result
         }
-    } elseif ($Global:MRRCache.ContainsKey($JobKey)) {
-        $Global:MRRCache[$JobKey] = $null
-        [void]$Global:MRRCache.Remove($JobKey)
+    } elseif ($Global:VarCache.MRRCache.ContainsKey($JobKey)) {
+        $Global:VarCache.MRRCache[$JobKey] = $null
+        [void]$Global:VarCache.MRRCache.Remove($JobKey)
     }
 
     if ($Result -ne $null) {
@@ -301,14 +303,14 @@ param(
     }
 
     try {
-        if ($Global:MRRCacheLastCleanup -eq $null -or $Global:MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            $Global:MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
-            $CacheKeys = $Global:MRRCache.Keys
-            if ($RemoveKeys = $CacheKeys | Where-Object {$_ -ne $JobKey -and $Global:MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Global:MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
+        if ($Global:VarCache.MRRCacheLastCleanup -eq $null -or $Global:VarCache.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
+            $Global:VarCache.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
+            $CacheKeys = $Global:VarCache.MRRCache.Keys
+            if ($RemoveKeys = $CacheKeys | Where-Object {$_ -ne $JobKey -and $Global:VarCache.MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Global:VarCache.MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
                 $RemoveKeys | Foreach-Object {
-                    if ($Global:MRRCache.ContainsKey($_)) {
-                        $Global:MRRCache[$_] = $null
-                        [void]$Global:MRRCache.Remove($_)
+                    if ($Global:VarCache.MRRCache.ContainsKey($_)) {
+                        $Global:VarCache.MRRCache[$_] = $null
+                        [void]$Global:VarCache.MRRCache.Remove($_)
                     }
                 }
             }
@@ -677,27 +679,27 @@ param(
 )
     if (-not $id) {return}
 
-    if (-not (Test-Path Variable:Global:MRRInfoCache)) {
-        [hashtable]$Global:MRRInfoCache = @{}
+    if (-not $Global:VarCache.ContainsKey("MRRInfoCache")) {
+        $Global:VarCache.MRRInfoCache = [System.Collections.Hashtable]::Synchronized(@{})
         if (Test-Path ".\Data\mrrinfo.json") {
             try {
                 $MrrInfo = Get-Content ".\Data\mrrinfo.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             } catch {
                 $MrrInfo = @()
             }
-            $MrrInfo | Foreach-Object {$Global:MRRInfoCache["$($_.rigid)"] = $_}
+            $MrrInfo | Foreach-Object {$Global:VarCache.MRRInfoCache["$($_.rigid)"] = $_}
         }
     }
 
-    if ($Rigs_Ids = $id | Where-Object {-not $Global:MRRInfoCache.ContainsKey("$_") -or $Global:MRRInfoCache."$_".port -eq "error" -or $Global:MRRInfoCache."$_".updated -lt (Get-Date).AddSeconds(-$cachetime).ToUniversalTime()} | Sort-Object) {
+    if ($Rigs_Ids = $id | Where-Object {-not $Global:VarCache.MRRInfoCache.ContainsKey("$_") -or $Global:VarCache.MRRInfoCache."$_".port -eq "error" -or $Global:VarCache.MRRInfoCache."$_".updated -lt (Get-Date).AddSeconds(-$cachetime).ToUniversalTime()} | Sort-Object) {
         $Updated = 0
         @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids -join ";")/port" $key $secret -Timeout 120 | Select-Object) | Foreach-Object {
-            $Global:MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
+            $Global:VarCache.MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
             $Updated++
         }
-        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $Global:MRRInfoCache.Values -Compress > $null}
+        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $Global:VarCache.MRRInfoCache.Values -Compress > $null}
     }
-    $id | Where-Object {$Global:MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$Global:MRRInfoCache."$_"}
+    $id | Where-Object {$Global:VarCache.MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$Global:VarCache.MRRInfoCache."$_"}
 }
 
 function Get-MiningRigRentalsDivisor {

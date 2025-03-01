@@ -120,7 +120,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "-.+$";$Pools_Re
 
         if (-not $Pool_HR) {$Pool_HR = ($Pool_StatsRequest.perfomance | Where-Object {$_.algo -eq "default" -or (Get-Algorithm $_.Name) -eq $Pool_Algorithm_Norm} | Measure-Object -Average -Property poolHashrate).Average}
 
-        $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
+        $btcPrice       = if ($Global:VarCache.Rates.$Pool_Currency) {1/[double]$Global:VarCache.Rates.$Pool_Currency} else {0}
         $btcRewardLive  = if ($Pool_HR) {$btcPrice * $blocks_reward * $Pool_BLK / $Pool_HR} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value $btcRewardLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_AlgoStats.hashrate -BlockRate $Pool_BLK -Quiet

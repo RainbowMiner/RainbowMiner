@@ -239,11 +239,11 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/miners" {
-            $Data = if ($API.Miners) {$API.Miners} else {"[]"}
+            $Data = if (Test-Path ".\Data\miners.json") {Get-ContentByStreamReader ".\Data\miners.json"} else {"[]"}
             Break
         }
         "/fastestminers" {
-            $Data = if ($API.FastestMiners) {$API.FastestMiners} else {"[]"}
+            $Data = if (Test-Path ".\Data\fastestminers.json") {Get-ContentByStreamReader ".\Data\fastestminers.json"} else {"[]"}
             Break
         }
         "/availminers" {
@@ -267,8 +267,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             $WTMdata = Get-WhatToMineData
             $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Foreach-Object {if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo}} | Select-Object)
             $WTMdata_result = [hashtable]@{}
-            if ($API.FastestMiners) {
-                $API_FastestMiners = ConvertFrom-Json $API.FastestMiners -ErrorAction Ignore
+            if (Test-Path ".\Data\fastestminers.json") {
+                $API_FastestMiners = Get-ContentByStreamReader ".\Data\fastestminers.json" | ConvertFrom-Json -ErrorAction Ignore
                 $API_FastestMiners | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                     $Group = $_.Group
                     $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = @(if ($_.algo -eq "ProgPow") {"ProgPowZ","ProgPowSero"} else {$_.algo});if (($One = $Group | Where-Object {$_.BaseAlgorithm -in $Algo} | Select-Object -First 1) -and (($OneHR = if ($One.HashRates."$($One.BaseAlgorithm)") {$One.HashRates."$($One.BaseAlgorithm)"} elseif ($One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)") {$One.HashRates."$($One.BaseAlgorithm)-$($One.DeviceModel)"} else {$One.HashRates."$($One.BaseAlgorithm)-GPU"}) -gt 0)) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($OneHR/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $Rates."$($Session.Config.PowerPriceCurrency)") {$Rates.USD/$Rates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
@@ -790,8 +790,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             "="*80 | Out-File $TestFileName -Append -Encoding utf8
             " " | Out-File $TestFileName -Append -Encoding utf8
 
-            if ($API.Miners) {
-                $API_Miners = ConvertFrom-Json $API.Miners -ErrorAction Ignore
+            if (Test-Path ".\Data\miners.json") {
+                $API_Miners = Get-ContentByStreamReader ".\Data\miners.json" | ConvertFrom-Json -ErrorAction Ignore
                 $API_Miners | Where-Object {$_.ListDevices -ne $null} | Select-Object -Unique -Property BaseName,Path,ListDevices,ListPlatforms | Sort-Object -Property BaseName | Where-Object {Test-Path $_.Path} | Foreach-Object {
                     try {
                         " " | Out-File $TestFileName -Append -Encoding utf8
@@ -1117,8 +1117,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             [hashtable]$JsonUri_Dates = @{}
             [hashtable]$Miners_List = @{}
             [System.Collections.ArrayList]$Out = @()
-            if ($API.Miners) {
-                $API_Miners = ConvertFrom-Json $API.Miners -ErrorAction Ignore
+            if (Test-Path ".\Data\miners.json") {
+                $API_Miners = Get-ContentByStreamReader ".\Data\miners.json" | ConvertFrom-Json -ErrorAction Ignore
 
                 $API_Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Foreach-Object {
                     if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {

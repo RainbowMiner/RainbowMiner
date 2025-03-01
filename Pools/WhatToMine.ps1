@@ -48,7 +48,7 @@ if ($ok) {
         if (($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and "$($_.CoinSymbol -replace "-HNO$")" -eq $Pool_Currency} | Measure-Object).Count) {
 
             if (-not ($lastSatPrice = Get-LastSatPrice $_.coin)) {
-                $lastSatPrice = if ($Global:Rates.USD -and $_.price -gt 0) {$_.price / $Global:Rates.USD * 1e8} else {0}
+                $lastSatPrice = if ($Global:VarCache.Rates.USD -and $_.price -gt 0) {$_.price / $Global:VarCache.Rates.USD * 1e8} else {0}
             }
 
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_HNO_Profit" -Value ($_.reward * $lastSatPrice / 1e8 / (ConvertFrom-Hash "1$($_.unit)")) -Duration $StatSpan -ChangeDetection $false -Quiet
@@ -101,7 +101,7 @@ if ($ok) {
         if (($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and "$($_.CoinSymbol -replace "-MST$")" -eq $Pool_Currency} | Measure-Object).Count) {
 
             if (-not ($lastSatPrice = Get-LastSatPrice $_.coin)) {
-                $lastSatPrice = if ($Global:Rates.USD -and $_.price -gt 0) {$_.price / $Global:Rates.USD * 1e8} else {0}
+                $lastSatPrice = if ($Global:VarCache.Rates.USD -and $_.price -gt 0) {$_.price / $Global:VarCache.Rates.USD * 1e8} else {0}
             }
 
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_MST_Profit" -Value ($_.reward * $lastSatPrice / 1e8) -Duration $StatSpan -ChangeDetection $false -Quiet
@@ -171,8 +171,8 @@ if ($ok) {
                     $btc_revenue = [double]$Pool_Request.coins.$_.btc_revenue
                     if (-not $btc_revenue) {
                         $ExCurrency = $Pool_Request.coins.$_.exchange_rate_curr
-                        if ($Global:Rates.$ExCurrency) {
-                            $lastSatPrice = Get-LastSatPrice $Pool_Currency ([double]$Pool_Request.coins.$_.exchange_rate / $Global:Rates.$ExCurrency * 1e8)
+                        if ($Global:VarCache.Rates.$ExCurrency) {
+                            $lastSatPrice = Get-LastSatPrice $Pool_Currency ([double]$Pool_Request.coins.$_.exchange_rate / $Global:VarCache.Rates.$ExCurrency * 1e8)
                             $btc_revenue = $lastSatPrice * [double]$Pool_Request.coins.$_.estimated_rewards / 1e8
                         }
                     }
@@ -185,8 +185,8 @@ if ($ok) {
                     $btc_revenue = [double]$Pool_Request.coins.$_.btc_revenue24
                     if (-not $btc_revenue) {
                         $ExCurrency = $Pool_Request.coins.$_.exchange_rate_curr
-                        if ($Global:Rates.$ExCurrency) {
-                            $lastSatPrice = Get-LastSatPrice $Pool_Currency ([double]$Pool_Request.coins.$_.exchange_rate24 / $Global:Rates.$ExCurrency * 1e8)
+                        if ($Global:VarCache.Rates.$ExCurrency) {
+                            $lastSatPrice = Get-LastSatPrice $Pool_Currency ([double]$Pool_Request.coins.$_.exchange_rate24 / $Global:VarCache.Rates.$ExCurrency * 1e8)
                             $btc_revenue = $lastSatPrice * [double]$Pool_Request.coins.$_.estimated_rewards24 / 1e8
                         }
                     }
@@ -270,8 +270,8 @@ if ($ok) {
                     $btc_revenue = [double]$Pool_CoinRequest.btc_revenue
                     if (-not $btc_revenue) {
                         $ExCurrency = $Pool_CoinRequest.exchange_rate_curr
-                        if ($Global:Rates.$ExCurrency) {
-                            $lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.tag ([double]$Pool_CoinRequest.exchange_rate / $Global:Rates.$ExCurrency * 1e8)
+                        if ($Global:VarCache.Rates.$ExCurrency) {
+                            $lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.tag ([double]$Pool_CoinRequest.exchange_rate / $Global:VarCache.Rates.$ExCurrency * 1e8)
                             $btc_revenue = $lastSatPrice * [double]$Pool_CoinRequest.estimated_rewards
                         }
                     }

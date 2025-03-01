@@ -91,7 +91,7 @@ foreach ($Pool_Algorithm in @("randomx", "progpow", "cuckoo")) {
             #blocks_per_day = 1440 * algorithm_percentage
             #rig_income = (rig_hashrate / network_hashrate) * (block_reward * blocks_per_day)
 
-            $btcPrice       = if ($Global:Rates."$($Pool_Currency)") {1/[double]$Global:Rates."$($Pool_Currency)"} else {0}
+            $btcPrice       = if ($Global:VarCache.Rates."$($Pool_Currency)") {1/[double]$Global:VarCache.Rates."$($Pool_Currency)"} else {0}
             $btcRewardLive  = $btcPrice * [double]($Pool_Request.data.poolBlocks.latest | Select-Object -Last 1).reward * 1440 * ($NetPer_Request.response."$($Pool_Algorithm)per" | Select-Object -Last 3 | Measure-Object -Average).Average / 100 / $NetBlock_Request.response."$($Pool_Algorithm)hashrate"
         } else {
             $btcRewardLive = 0

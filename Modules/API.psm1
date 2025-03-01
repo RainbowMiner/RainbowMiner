@@ -48,13 +48,13 @@
 
     # Setup runspacepool to launch the API webserver in separate threads
     $APIVars = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Rates', $Global:Rates, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $Global:API, $null))
     [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('StatsCache', $Global:StatsCache, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIAccessDB', $APIAccessDB, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('VarCache', $Global:VarCache, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Global:Session, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $Global:AsyncLoader, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $Global:APIClients, $null))
+    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIAccessDB', $Global:APIAccessDB, $null))
     if (Initialize-HttpClient) {
         [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new("GlobalHttpClient", $Global:GlobalHttpClient, $null))
     }

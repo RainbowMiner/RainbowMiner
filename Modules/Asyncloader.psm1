@@ -28,8 +28,9 @@ Param(
      # Setup runspace to launch the AsyncLoader in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
     $newRunspace.Open()
-    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
-    $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
+    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $Global:AsyncLoader)
+    $newRunspace.SessionStateProxy.SetVariable("Session", $Global:Session)
+    $newRunspace.SessionStateProxy.SetVariable("VarCache", $Global:VarCache)
     if (Initialize-HttpClient) {
         $newRunspace.SessionStateProxy.SetVariable("GlobalHttpClient", $Global:GlobalHttpClient)
     }

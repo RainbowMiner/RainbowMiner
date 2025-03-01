@@ -77,7 +77,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
         $Pool_TSL       = $timestamp - $blocks_measure.Maximum
         $reward         = $(if ($blocks) {($blocks | Where-Object {$_.reward -gt 0} | Measure-Object reward -Average).Average} else {0})
-        $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} elseif ($Global:Rates.USD -and $Pool_StateRequest.pricing_currency -eq "USD") {[double]$Pool_StateRequest.coin_price / $Global:Rates.USD} else {0}
+        $btcPrice       = if ($Global:VarCache.Rates.$Pool_Currency) {1/[double]$Global:VarCache.Rates.$Pool_Currency} elseif ($Global:VarCache.Rates.USD -and $Pool_StateRequest.pricing_currency -eq "USD") {[double]$Pool_StateRequest.coin_price / $Global:VarCache.Rates.USD} else {0}
         $difficulty     = $Pool_StateRequest.curr_diff / 4294967296 #2^32
         $Hashrate       = $Pool_StateRequest.pool_hashrate
         $btcRewardLive  = if ($Hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Hashrate} else {0}        

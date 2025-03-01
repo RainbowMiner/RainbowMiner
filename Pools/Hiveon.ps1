@@ -53,7 +53,7 @@ $Pool_Request.cryptoCurrencies | Where-Object {$Wallets."$($_.name)" -or $InfoOn
             }
         }
 
-        $Pool_Profit = if ($Pool_Divisor -and $Global:Rates.$Pool_Currency) {$Pool_Reward / $Pool_Divisor / $Global:Rates.$Pool_Currency} else {0}
+        $Pool_Profit = if ($Pool_Divisor -and $Global:VarCache.Rates.$Pool_Currency) {$Pool_Reward / $Pool_Divisor / $Global:VarCache.Rates.$Pool_Currency} else {0}
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_Profit -Duration $StatSpan -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
