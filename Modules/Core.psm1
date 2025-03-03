@@ -2768,7 +2768,7 @@ function Invoke-Core {
         })
 
         Write-Log -Level Info "End add missing combos"
-        ConvertTo-Json $AllMiners -Depth 10 | Set-Content ".\Cache\allminers.json"
+        #ConvertTo-Json $AllMiners -Depth 10 | Set-Content ".\Cache\allminers.json"
     }
 
     #Handle fastlane benchmarks

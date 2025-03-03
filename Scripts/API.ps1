@@ -245,7 +245,7 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             Break
         }
         "/miners" {
-            $Data = if ($API.Miners) {$API.Miners} else {"[]"}
+            $Data = if (Test-Path ".\Data\miners.json") {Get-ContentByStreamReader ".\Data\miners.json"} else {"[]"}
             Break
         }
         "/fastestminers" {
@@ -796,8 +796,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             "="*80 | Out-File $TestFileName -Append -Encoding utf8
             " " | Out-File $TestFileName -Append -Encoding utf8
 
-            if ($API.Miners) {
-                $API_Miners = ConvertFrom-Json $API.Miners -ErrorAction Ignore
+            if (Test-Path ".\Data\miners.json") {
+                $API_Miners = ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore
                 $API_Miners | Where-Object {$_.ListDevices -ne $null} | Select-Object -Unique -Property BaseName,Path,ListDevices,ListPlatforms | Sort-Object -Property BaseName | Where-Object {Test-Path $_.Path} | Foreach-Object {
                     try {
                         " " | Out-File $TestFileName -Append -Encoding utf8
@@ -1123,8 +1123,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             [hashtable]$JsonUri_Dates = @{}
             [hashtable]$Miners_List = @{}
             [System.Collections.ArrayList]$Out = @()
-            if ($API.Miners) {
-                $API_Miners = ConvertFrom-Json $API.Miners -ErrorAction Ignore
+            if (Test-Path ".\Data\miners.json") {
+                $API_Miners = ConvertFrom-Json "$(Get-ContentByStreamReader ".\Data\miners.json")" -ErrorAction Ignore
 
                 $API_Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Foreach-Object {
                     if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
