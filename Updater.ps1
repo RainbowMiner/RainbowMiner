@@ -61,7 +61,7 @@ try {
             $DownloadURI = $RBMVersion.DownloadURI
         }
         Write-Host "Updating from v$($RBMVersion.Version) to $UpdateTo" -ForegroundColor Yellow
-        Write-Host " (1/$($MaxPages)) Downloading $($RBMVersion.DownloadURI) .. "
+        Write-Host " (1/$($MaxPages)) Downloading $($DownloadURI) .. "
         
         if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" | Out-Null}
         $FileName = Join-Path ".\Downloads" (Split-Path $DownloadURI -Leaf)
