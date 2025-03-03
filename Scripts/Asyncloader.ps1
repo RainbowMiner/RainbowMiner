@@ -1,4 +1,6 @@
-﻿param($CurrentPwd)
+﻿using module ..\Modules\PauseMiners.psm1
+
+param($CurrentPwd)
 
 Set-Location $CurrentPwd
 
@@ -8,10 +10,10 @@ if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {
 
 $ProgressPreference = "SilentlyContinue"
 
-Import-Module ".\Modules\Include.psm1"
-Import-Module ".\Modules\WebLib.psm1"
-Import-Module ".\Modules\MiningRigRentals.psm1"
-Import-Module ".\Modules\PauseMiners.psm1"
+Import-Module .\Modules\Include.psm1
+Import-Module .\Modules\MiningRigRentals.psm1
+Import-Module .\Modules\TcpLib.psm1
+Import-Module .\Modules\WebLib.psm1
 
 Set-OsFlags
 
