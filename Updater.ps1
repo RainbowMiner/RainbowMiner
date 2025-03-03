@@ -102,6 +102,21 @@ try {
         $Params.PassThru = $true
         (Start-Process @Params).WaitForExit() > $null
 
+        if ($UpdateToMaster) {
+            $PathToMaster = ".\RainbowMiner-master"
+            if (Test-Path $PathToMaster) {
+                try {
+                    $FolderToRemove = if ($IsWindows) {"IncludesLinux"} else {"Includes"}
+                    $FolderToRemove = Join-Path $PathToMaster $FolderToRemove
+                    if (Test-Path $FolderToRemove) {
+                        Remove-Item -Path $FolderToRemove -Recurse -Force
+                    }
+                    Move-Item -Path (Join-Path $PathToMaster "*") -Destination $ToFullPath -Force
+                    Remove-Item -Path $PathToMaster -Recurse -Force
+                } catch {}
+            }
+        }
+
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
         if ($IsWindows) {
@@ -153,16 +168,6 @@ try {
 
         if (-not $DownloaderConfig.EnableKeepDownloads -and (Test-Path $FileName)) {
             Get-ChildItem $FileName -File | Foreach-Object {Remove-Item $_}
-        }
-
-        if ($UpdateToMaster) {
-            $FolderToRemove = if ($IsWindows) {".\IncludesLinux"} else {".\Includes"}
-            try {
-                if (Test-Path $FolderToRemove) {
-                    Remove-Item -Path $FolderToRemove -Recurse -Force
-                }
-            } catch {
-            }
         }
 
         Write-Host "Update finished. Restarting $Name .." -ForegroundColor Green
