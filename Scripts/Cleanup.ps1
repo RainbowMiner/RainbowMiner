@@ -15,6 +15,10 @@ $ConfigFiles.Keys | Foreach-Object {Set-Variable "$(if ($_ -ne "Config") {$_})Co
 
 $SavedFiles = @("Start.bat")
 
+if ($IsLinux -and (Test-Path ".\DotNet\Bin")) {
+    (Start-Process "chmod" -ArgumentList "777",(Resolve-Path ".\DotNet\Bin") -PassThru).WaitForExit(1000) > $null
+}
+
 Initialize-Session
 
 $DownloadsCleanup = $true
