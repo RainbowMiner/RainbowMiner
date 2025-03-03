@@ -1,4 +1,4 @@
-﻿using module ..\Modules\PauseMiners.psm1
+﻿using module .\Modules\PauseMiners.psm1
 
 param($CurrentPwd)
 

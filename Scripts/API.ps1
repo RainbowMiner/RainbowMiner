@@ -1,4 +1,4 @@
-﻿using module ..\Modules\MinerAPIs.psm1
+﻿using module .\Modules\MinerAPIs.psm1
 
 param([int]$ThreadID,$APIHttpListener,$CurrentPwd)
 
