@@ -1,7 +1,7 @@
-﻿Import-Module .\Modules\Include.psm1
-Import-Module .\Modules\WebLib.psm1
+﻿$DownloadList = $args
 
-$DownloadList = $args
+if (-not (Get-Module Include)) { Import-Module .\Modules\Include.psm1 }
+if (-not (Get-Module WebLib)) { Import-Module .\Modules\WebLib.psm1 }
 
 $LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data\localapiport.json" -Raw | ConvertFrom-Json}).LocalAPIport
 if (-not $LocalAPIport) {$LocalAPIport = 4000}

@@ -43,6 +43,8 @@ function Set-OsFlags {
     [CmdletBinding()]
     param([switch]$Mini)
 
+    if ($Global:OsFlagsSet) { return }
+
     if ($Global:IsWindows -eq $null) {
         $Global:IsWindows = [System.Environment]::OSVersion.Platform -eq "Win32NT" -or [System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore)
         $Global:IsLinux   = -not $IsWindows
@@ -100,6 +102,8 @@ function Set-OsFlags {
     }
 
     Initialize-DLLs -CSFileName "RBMToolBox.cs"
+
+    $Global:OsFlagsSet = $true
 }
 
 function Get-LinuxDistroInfo {

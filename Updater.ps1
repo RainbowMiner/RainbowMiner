@@ -1,6 +1,4 @@
-﻿using module .\Modules\Include.psm1
-
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
     [String]$calledfrom = "bat"
@@ -24,6 +22,9 @@ if (Test-Path "Start.bat.saved") {
     Remove-Item "Start.bat.saved" -Force
     if (Test-Path "start.sh.saved") {Remove-Item "start.sh.saved" -Force}
 }
+
+if (-not (Get-Module -Name Include)) { Import-Module .\Modules\Include.psm1 }
+if (-not (Get-Module -Name WebLib)) { Import-Module .\Modules\WebLib.psm1 }
 
 Set-OsFlags
 

@@ -5,9 +5,9 @@ $MyCommandParameters,
 $ConfigFiles
 )
 
-Import-Module .\Modules\Include.psm1
-Import-Module .\Modules\MinersLib.psm1
-Import-Module .\Modules\PoolsLib.psm1
+if (-not (Get-Module Include)) { Import-Module .\Modules\Include.psm1 }
+if (-not (Get-Module MinersLib)) { Import-Module .\Modules\MinersLib.psm1 }
+if (-not (Get-Module PoolsLib)) { Import-Module .\Modules\PoolsLib.psm1 }
 
 $Version = Get-Version $Version
 
