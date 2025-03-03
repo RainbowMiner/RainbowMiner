@@ -1,11 +1,13 @@
-﻿using module .\Modules\Include.psm1
-
-param(
+﻿param(
 $AllDevices,
 $Version,
 $MyCommandParameters,
 $ConfigFiles
 )
+
+Import-Module .\Modules\Include.psm1
+Import-Module .\Modules\MinersLib.psm1
+Import-Module .\Modules\PoolsLib.psm1
 
 $Version = Get-Version $Version
 
@@ -1933,7 +1935,7 @@ try {
         }
     }
 
-    $MinersContent = Get-MinersContent -Parameters @{InfoOnly = $true}
+    $MinersContent = Get-MinersContentRS -Parameters @{InfoOnly = $true}
 
     if ($RemoveMinerStats.Count -gt 0) {
         if (Test-Path ".\Stats\Miners") {

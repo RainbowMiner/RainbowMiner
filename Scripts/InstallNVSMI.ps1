@@ -1,8 +1,9 @@
-﻿using module .\Modules\Include.psm1
-
-param(
+﻿param(
 $NV_Version = ""
 )
+
+Import-Module .\Modules\Include.psm1
+Import-Module .\Modules\DeviceLib.psm1
 
 Initialize-Session
 

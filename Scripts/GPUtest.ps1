@@ -1,4 +1,5 @@
-﻿using module ..\Modules\Include.psm1
+﻿Import-Module .\Modules\Include.psm1
+Import-Module .\Modules\DeviceLib.psm1
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 

@@ -8,7 +8,10 @@ $ProgressPreference = "SilentlyContinue"
 
 Import-Module ".\Modules\Include.psm1"
 Import-Module ".\Modules\MiningRigRentals.psm1"
-Import-Module ".\Modules\APIhelper.psm1"
+Import-Module ".\Modules\APILib.psm1"
+Import-Module ".\Modules\ConfigLib.psm1"
+Import-Module ".\Modules\WebLib.psm1"
+Import-Module ".\Modules\WhatToMineLib.psm1"
 Import-Module ".\Modules\MinerAPIs.psm1"
 
 $BasePath = Join-Path $PWD "web"

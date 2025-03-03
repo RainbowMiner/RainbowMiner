@@ -1,10 +1,10 @@
-﻿using module ..\Modules\Include.psm1
-
-[CmdletBinding()]
-param(
+﻿param(
     [Parameter(Mandatory = $false)]
     [String]$mode = "root" # either "root" (using sudo) or "user"
 )
+
+Import-Module .\Modules\Include.psm1
+Import-Module .\Modules\DeviceLib.psm1
 
 Initialize-Session
 

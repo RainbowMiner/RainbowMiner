@@ -1,4 +1,4 @@
-﻿using module ..\Modules\Include.psm1
+﻿Import-Module .\Modules\Include.psm1
 
 Initialize-Session
 
@@ -16,6 +16,8 @@ if ($IsWindows) {
     }
 }
 Import-Module .\Modules\API.psm1
+Import-Module .\Modules\ConsoleLib.psm1
+Import-Module .\Modules\TcpLib.psm1
 
 if (-not (Test-Path ".\Config\config.txt")) {
     Write-Host "No config file found. Please start RainbowMiner first."

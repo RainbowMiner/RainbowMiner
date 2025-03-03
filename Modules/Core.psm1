@@ -99,11 +99,11 @@ function Start-Core {
         }
 
         #Setup Core script variables
-        $Global:StatsCache              = [System.Collections.Hashtable]::Synchronized(@{})
-        $Global:Rates                   = [System.Collections.Hashtable]::Synchronized(@{})
-        [hashtable]$Global:DeviceCache  = @{}
-        [hashtable]$Global:MinerInfo    = @{}
-        [hashtable]$Global:MinerSpeeds  = @{}
+        $Global:StatsCache   = [System.Collections.Hashtable]::Synchronized(@{})
+        $Global:Rates        = [System.Collections.Hashtable]::Synchronized(@{})
+        $Global:DeviceCache  = [System.Collections.Hashtable]::Synchronized(@{})
+        $Global:MinerInfo    = [System.Collections.Hashtable]::Synchronized(@{})
+        $Global:MinerSpeeds  = [System.Collections.Hashtable]@{}
 
         $Global:Rates["BTC"] = [Double]1
 
@@ -2064,7 +2064,7 @@ function Invoke-Core {
     Compare-Object @($Session.AvailMiners) @($Global:MinerInfo.Keys) | Foreach-Object {
         $CcMinerName = $_.InputObject
         Switch ($_.SideIndicator) {
-            "<=" {$Global:MinerInfo[$CcMinerName] = @(Get-MinersContent -MinerName $CcMinerName -Parameters @{InfoOnly = $true} | Select-Object -ExpandProperty Type);Break}
+            "<=" {$Global:MinerInfo[$CcMinerName] = @(Get-MinersContentRS -MinerName $CcMinerName -Parameters @{InfoOnly = $true} | Select-Object -ExpandProperty Type);Break}
             "=>" {[void]$Global:MinerInfo.Remove($CcMinerName);Break}
         }
         $MinerInfoChanged = $true
@@ -2596,7 +2596,7 @@ function Invoke-Core {
     $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
     if ($NewPools.Count -and (Test-Path "Miners")) {
 
-        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} | Foreach-Object {
+        Get-MinersContentRS -Parameters @{Pools = $Pools; InfoOnly = $false} | Foreach-Object {
             $Miner = $_
 
             $Miner_Name = $Miner.BaseName
@@ -5723,6 +5723,383 @@ function Update-Rates {
     }
 }
 
+#
+# Stats functions
+#
+
+function Set-Total {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        $Miner,
+        [Parameter(Mandatory = $false)]
+        [DateTime]$Updated = (Get-Date),
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
+    )
+
+    $Updated_UTC  = $Updated.ToUniversalTime()
+
+    $Path0        = "Stats\Totals"
+    $Path_Name    = "$($Miner.Pool[0])_Total.txt"
+    $PathCsv_Name = "Totals_$("{0:yyyy-MM-dd}" -f (Get-Date)).csv"
+
+    $Path    = "$Path0\$Path_Name"
+    $PathCsv = "$Path0\$PathCsv_Name"
+
+    try {
+        $Duration = $Miner.GetRunningTime($true)
+
+        $TotalProfit    = ($Miner.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {$Miner.Profit_Cost} else {0}))*$Duration.TotalDays 
+        $TotalCost      = $Miner.Profit_Cost * $Duration.TotalDays
+        $TotalPower     = $Miner.PowerDraw * $Duration.TotalDays
+        $Penalty        = [double]($Miner.PoolPenalty | Select-Object -First 1)
+        $PenaltyFactor  = 1-$Penalty/100
+        $TotalProfitApi = if ($PenaltyFactor -gt 0) {$TotalProfit/$PenaltyFactor} else {0}
+
+        if ($TotalProfit -gt 0) {
+            $CsvLine = [PSCustomObject]@{
+                Date        = $Updated
+                Date_UTC    = $Updated_UTC
+                PoolName    = "$($Miner.Pool | Select-Object -First 1)"
+                Algorithm   = "$($Miner.BaseAlgorithm | Select-Object -First 1)"
+                Currency    = "$($Miner.Currency -join '+')"
+                Rate        = [Math]::Round($Global:Rates.USD,2)
+                Profit      = [Math]::Round($TotalProfit*1e8,4)
+                ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)
+                Cost        = [Math]::Round($TotalCost*1e8,4)
+                Power       = [Math]::Round($TotalPower,3)
+                Penalty     = $Penalty
+                Duration    = [Math]::Round($Duration.TotalMinutes,3)
+                Donation    = "$(if ($Miner.Donator) {"1"} else {"0"})"
+            }
+            $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
+            if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+            $CsvLine | Export-ToCsvFile $PathCsv
+        }
+    } catch {
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Could not write to $($PathCsv_Name) "}
+    }
+
+    $Stat = Get-ContentByStreamReader $Path
+
+    try {
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
+        if ($Stat.ProfitApi -eq $null) {$Stat | Add-Member ProfitApi 0 -Force}
+        $Stat.Duration  += $Duration.TotalMinutes
+        $Stat.Cost      += $TotalCost
+        $Stat.Profit    += $TotalProfit
+        $Stat.ProfitApi += $TotalProfitApi
+        $Stat.Power     += $TotalPower
+        $Stat.Updated    = $Updated_UTC
+    } catch {
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) is corrupt and will be reset. "}
+        $Stat = [PSCustomObject]@{
+                    Pool          = $Miner.Pool[0]
+                    Duration      = $Duration.TotalMinutes
+                    Cost          = $TotalCost
+                    Profit        = $TotalProfit
+                    ProfitApi     = $TotalProfitApi
+                    Power         = $TotalPower
+                    Started       = $Updated_UTC
+                    Updated       = $Updated_UTC
+                }
+    }
+
+    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+    $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
+}
+
+function Set-TotalsAvg {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$CleanupOnly = $false
+    )
+
+    $Updated        = (Get-Date).ToUniversalTime()
+    $Path0          = "Stats\Totals"
+
+    $LastValid      = (Get-Date).AddDays(-30)
+    $LastValid_File = "Totals_$("{0:yyyy-MM-dd}" -f $LastValid)"
+    $Last1w_File    = "Totals_$("{0:yyyy-MM-dd}" -f $((Get-Date).AddDays(-8)))"
+
+    $Last1d = (Get-Date).AddDays(-1)
+    $Last1w = (Get-Date).AddDays(-7)
+
+    Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -lt $LastValid_File} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+
+    if ($CleanupOnly) {return}
+
+    $Totals = [PSCustomObject]@{}
+    Get-ChildItem "Stats\Totals" -Filter "*_TotalAvg.txt" | Foreach-Object {
+        $PoolName = $_.BaseName -replace "_TotalAvg"
+        $Started = (Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Ignore).Started
+        $Totals | Add-Member $PoolName ([PSCustomObject]@{
+                            Pool          = $PoolName
+                            Cost_1d       = 0
+                            Cost_1w       = 0
+                            Cost_Avg      = 0
+                            Profit_1d     = 0
+                            Profit_1w     = 0
+                            Profit_Avg    = 0
+                            ProfitApi_1d  = 0
+                            ProfitApi_1w  = 0
+                            ProfitApi_Avg = 0
+                            Power_1d      = 0
+                            Power_1w      = 0
+                            Power_Avg     = 0
+                            Started       = if ($Started) {$Started} else {$Updated}
+                            Updated       = $Updated
+                        })
+    }
+
+    try {
+        $FirstDate = $CurrentDate = ""
+        Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -ge $Last1w_File} | Sort-Object BaseName | Foreach-Object {
+            Import-Csv $_.FullName -ErrorAction Ignore | Where-Object {$_.Date -ge $Last1w -and [decimal]$_.Profit -gt 0 -and $_.Donation -ne "1" -and $Totals."$($_.PoolName)" -ne $null} | Foreach-Object {
+                if (-not $FirstDate) {$FirstDate = $_.Date}
+                $CurrentDate = $_.Date
+                $Totals."$($_.PoolName)".ProfitApi_1w += [decimal]$_.ProfitApi
+                $Totals."$($_.PoolName)".Profit_1w    += [decimal]$_.Profit
+                $Totals."$($_.PoolName)".Power_1w     += [decimal]$_.Power
+                $Totals."$($_.PoolName)".Cost_1w      += [decimal]$_.Cost
+                if ($_.Date -ge $Last1d) {
+                    $Totals."$($_.PoolName)".ProfitApi_1d += [decimal]$_.Profit
+                    $Totals."$($_.PoolName)".Profit_1d    += [decimal]$_.Profit
+                    $Totals."$($_.PoolName)".Power_1d     += [decimal]$_.Power
+                    $Totals."$($_.PoolName)".Cost_1d      += [decimal]$_.Cost
+                }
+            }
+        }
+    } catch {
+    }
+
+    if ($CurrentDate -gt $FirstDate) {
+        $Duration = [DateTime]$CurrentDate - [DateTime]$FirstDate
+        $Totals.PSObject.Properties | Foreach-Object {
+            try {
+                if ($Duration.TotalDays -le 1) {
+                    $_.Value.Profit_Avg    = $_.Value.Profit_1d
+                    $_.Value.ProfitApi_Avg = $_.Value.ProfitApi_1d
+                    $_.Value.Cost_Avg      = $_.Value.Cost_1d
+                    $_.Value.Power_Avg     = $_.Value.Power_1d
+                } else {
+                    $_.Value.Profit_Avg    = ($_.Value.Profit_1w / $Duration.TotalDays)
+                    $_.Value.ProfitApi_Avg = ($_.Value.ProfitApi_1w / $Duration.TotalDays)
+                    $_.Value.Cost_Avg      = ($_.Value.Cost_1w / $Duration.TotalDays)
+                    $_.Value.Power_Avg     = ($_.Value.Power_1w / $Duration.TotalDays)
+                }
+
+                if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+                $_.Value | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$($_.Name)_TotalAvg.txt" -Force
+            } catch {
+            }
+        }
+    }
+}
+
+function Set-Balance {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        $Balance,
+        [Parameter(Mandatory = $false)]
+        [DateTime]$Updated = (Get-Date),
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
+    )
+
+    $Updated_UTC = $Updated.ToUniversalTime()
+
+    $Name = "$($Balance.Name)_$($Balance.Currency)_Balance"
+
+    $Path0 = "Stats\Balances"
+    $Path = "$Path0\$($Name).txt"
+
+    $Stat = Get-ContentByStreamReader $Path
+
+    $Balance_Total = [Decimal]$Balance.Balance
+    $Balance_Paid  = [Decimal]$Balance.Paid
+
+    try {
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
+
+        $Stat = [PSCustomObject]@{
+                    PoolName = $Balance.Name
+                    Currency = $Balance.Currency
+                    Balance  = [Decimal]$Stat.Balance
+                    Paid     = [Decimal]$Stat.Paid
+                    Earnings = [Decimal]$Stat.Earnings
+                    Earnings_1h   = [Decimal]$Stat.Earnings_1h
+                    Earnings_1d   = [Decimal]$Stat.Earnings_1d
+                    Earnings_1w   = [Decimal]$Stat.Earnings_1w
+                    Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
+                    Last_Earnings = @($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object)
+                    Started  = [DateTime]$Stat.Started
+                    Updated  = [DateTime]$Stat.Updated
+        }
+
+        if ($Balance.Paid -ne $null) {
+            $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
+        } else {
+            $Earnings = [Decimal]($Balance_Total - $Stat.Balance)
+            if ($Earnings -lt 0) {$Earnings = $Balance_Total}
+        }
+
+        if ($Earnings -gt 0) {
+            $Stat.Balance   = $Balance_Total
+            $Stat.Paid      = $Balance_Paid
+            $Stat.Earnings += $Earnings
+            $Stat.Updated   = $Updated_UTC
+
+            $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
+
+            $Rate = [Decimal]$Global:Rates."$($Balance.Currency)"
+            if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+            
+            $CsvLine = [PSCustomObject]@{
+                Date      = $Updated
+                Date_UTC  = $Updated_UTC
+                PoolName  = $Balance.Name
+                Currency  = $Balance.Currency
+                Rate      = $Rate
+                Balance   = $Stat.Balance
+                Paid      = $Stat.Paid
+                Earnings  = $Stat.Earnings
+                Value     = $Earnings
+                Balance_Sat = if ($Rate -gt 0) {[int64]($Stat.Balance / $Rate * 1e8)} else {0}
+                Paid_Sat  = if ($Rate -gt 0) {[int64]($Stat.Paid  / $Rate * 1e8)} else {0}
+                Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
+                Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
+            }
+            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings_Localized.csv" -UseCulture
+            $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
+            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings.csv"
+        }
+
+        $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
+
+        $Stat.Earnings_1h = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1d = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1w = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
+
+        if ($Stat.Earnings_1w) {
+            $Duration = ($Updated_UTC - ($Stat.Last_Earnings | Select-Object -First 1).Date).TotalDays
+            if ($Duration -gt 1) {
+                $Stat.Earnings_Avg = [Decimal](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
+            } else {
+                $Stat.Earnings_Avg = $Stat.Earnings_1d
+            }
+        } else {
+            $Stat.Earnings_Avg = 0
+        }
+    } catch {
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
+        $Stat = [PSCustomObject]@{
+                    PoolName = $Balance.Namedown
+                    Currency = $Balance.Currency
+                    Balance  = $Balance_Total
+                    Paid     = $Balance_Paid
+                    Earnings = 0
+                    Earnings_1h   = 0
+                    Earnings_1d   = 0
+                    Earnings_1w   = 0
+                    Earnings_Avg  = 0
+                    Last_Earnings = @()
+                    Started  = $Updated_UTC
+                    Updated  = $Updated_UTC
+                }
+    }
+
+    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+    $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
+    $Stat
+}
+
+function Get-StatAverage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Average = '',
+        [Parameter(Mandatory = $False)]
+        [String]$Default = ''
+    )
+    Switch ($Average -replace "[^A-Za-z0-9_]+") {
+        {"Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week" -icontains $_} {$_;Break}
+        {"Minute5","Min5","Min_5","5Minute","5_Minute","5" -icontains $_} {"Minute_5";Break}
+        {"Minute10","Min10","Min_10","10Minute","10_Minute","10" -icontains $_} {"Minute_10";Break}
+        {"3Day","3_Day","Three_Day" -icontains $_} {"ThreeDay";Break}
+        default {if ($Default) {$Default} else {"Minute_10"}}
+    }
+}
+
+#
+# General functions
+#
+
+Function Write-ActivityLog {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()]$Miner,
+        [Parameter(Mandatory = $false)][Int]$Crashed = 0
+    )
+
+    Begin {
+        $ActiveStart = $Miner.GetActiveStart()
+        if (-not $ActiveStart) {return}
+    }
+    Process {
+        $Now = Get-Date
+        if ($Crashed) {
+            $Runtime = $Miner.GetRunningTime()
+            $NewCrash = [PSCustomObject]@{
+                Timestamp      = $Now
+                Start          = $ActiveStart
+                End            = $Miner.GetActiveLast()
+                Runtime        = $Runtime.TotalSeconds
+                Name           = $Miner.BaseName
+                Device         = @($Miner.DeviceModel)
+                Algorithm      = @($Miner.BaseAlgorithm)
+                Pool           = @($Miner.Pool)
+            }
+            [void]$Global:CrashCounter.Add($NewCrash)
+        }
+        $CrashTimeLimit = $Now.AddHours(-1)
+        $Global:CrashCounter.RemoveAll({ param($c) $c.Timestamp -le $CrashTimeLimit }) > $null
+
+        $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
+
+        $filename = ".\Logs\Activity_$(Get-Date -Format "yyyy-MM-dd").txt"
+
+        # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
+        if ($mutex.WaitOne(1000)) {
+            $ocmode = if ($Miner.DeviceModel -notmatch "^CPU") {$Session.OCmode} else {"off"}
+            "$([PSCustomObject]@{
+                ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $ActiveStart
+                ActiveLast     = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveLast()
+                Name           = $Miner.BaseName
+                Device         = @($Miner.DeviceModel)
+                Algorithm      = @($Miner.BaseAlgorithm)
+                Pool           = @($Miner.Pool)
+                Speed          = @($Miner.Speed_Live)
+                Profit         = $Miner.Profit
+                PowerDraw      = $Miner.PowerDraw
+                Ratio          = $Miner.RejectedShareRatio
+                Crashed        = $Crashed
+                OCmode         = $ocmode
+                OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
+                Donation       = $Session.IsDonationRun
+            } | ConvertTo-Json -Depth 10 -Compress)," | Out-File $filename -Append -Encoding utf8
+            $mutex.ReleaseMutex()
+        }
+        else {
+            Write-Error -Message "Activity log file is locked, unable to write message to $FileName."
+        }
+    }
+    End {}
+}
+
 function Update-WatchdogLevels {
     [CmdletBinding()]
     param(
@@ -5735,4 +6112,321 @@ function Update-WatchdogLevels {
     if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
     $Session.WatchdogInterval    = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
     $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
+}
+
+function Get-LastDrun {
+    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-ContentByStreamReader ".\Data\lastdrun.json" | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {}}
+}
+
+function Set-LastDrun {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
+    [DateTime]$Timer = (Get-Date).ToUniversalTime()
+)
+    $Timer = $Timer.ToUniversalTime();Set-ContentJson -Data ([PSCustomObject]@{lastdrun=[DateTime]$Timer}) -PathToFile ".\Data\lastdrun.json" > $null;$Timer
+}
+
+function Get-LastStartTime {
+    if (Test-Path ".\Data\starttime.json") {
+        try {[DateTime](Get-ContentByStreamReader ".\Data\starttime.json" | ConvertFrom-Json -ErrorAction Stop).starttime} catch {}
+        Remove-Item ".\Data\starttime.json" -Force -ErrorAction Ignore
+    }
+}
+
+function Set-LastStartTime {
+    Set-ContentJson -Data ([PSCustomObject]@{starttime=[DateTime]$Session.StartTime}) -PathToFile ".\Data\starttime.json" > $null
+}
+
+function Start-Autoexec {
+[cmdletbinding()]
+param(
+    [ValidateRange(-2, 10)]
+    [Parameter(Mandatory = $false)]
+    [Int]$Priority = 0
+)
+    if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Data\autoexec.default.txt")) {Copy-Item ".\Data\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
+    [System.Collections.Generic.List[PSCustomObject]]$Global:AutoexecCommands = @()
+    foreach($cmd in @(Get-ContentByStreamReader ".\Config\autoexec.txt" -ExpandLines | Select-Object)) {
+        if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
+            if (Test-Path $Matches[1]) {                
+                try {
+                    $FilePath     = [IO.Path]::GetFullPath("$($Matches[1])")
+                    $FileDir      = Split-Path $FilePath
+                    $FileName     = Split-Path -Leaf $FilePath
+                    $ArgumentList = "$($Matches[2].Trim())"
+                    
+                    # find and kill maroding processes
+                    $FileLike = "$(Join-Path $FileDir "*")"
+                    $ArgsLike = "* $($ArgumentList)"
+                    if ($IsWindows) {
+                        $processes = Get-CIMInstance CIM_Process | Where-Object {
+                            $_.ExecutablePath -and $_.ExecutablePath -like $FileLike -and 
+                            $_.ProcessName -like $FileName -and 
+                            (-not $ArgumentList -or $_.CommandLine -like $ArgsLike)
+                        }
+                        
+                        foreach($process in $processes) {
+                            Write-Log -Level Warn "Stop-Process $($process.ProcessName) with Id $($process.ProcessId)"
+                            Stop-Process -Id $process.ProcessId -Force -ErrorAction Ignore
+                        }
+                    } elseif ($IsLinux) {
+                        $processes = Get-Process | Where-Object {
+                            $_.Path -and 
+                            $_.Path -like $FileLike -and 
+                            $_.ProcessName -like $FileName -and 
+                            (-not $ArgumentList -or $_.CommandLine -like $ArgsLike)
+                        }
+
+                        foreach($process in $processes) {
+                            Write-Log -Level Warn "Stop-Process $($process.ProcessName) with Id $($process.Id)"
+                            if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($process.Id)" -Quiet > $null}
+                            else {Stop-Process -Id $process.Id -Force -ErrorAction Ignore}
+                        }
+                    }
+                    $processses = $null
+
+                    $Job = Start-SubProcess -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $FileDir -ShowMinerWindow $true -Priority $Priority -SetLDLIBRARYPATH -WinTitle "$FilePath $ArgumentList".Trim() -Quiet
+                    if ($Job) {
+                        $Job | Add-Member FilePath $FilePath -Force
+                        $Job | Add-Member Arguments $ArgumentList -Force
+                        Write-Log "Autoexec command started: $FilePath $ArgumentList"
+                        [void]$Global:AutoexecCommands.Add($Job)
+                    }
+                } catch {
+                    Write-Log -Level Warn "Command could not be started in autoexec.txt: $($Matches[1]) $($Matches[2])"
+                }
+            } else {
+                Write-Log -Level Warn "Command not found in autoexec.txt: $($Matches[1])"
+            }
+        }
+    }
+}
+
+function Stop-Autoexec {
+    $Global:AutoexecCommands | Where-Object {$_.ProcessId -or $_.Name} | Foreach-Object {
+        Stop-SubProcess -Job $_ -Title "Autoexec command" -Name "$($_.FilePath) $($_.Arguments)" -SkipWait
+    }
+}
+
+function Test-IsOnBattery {
+    [bool]$(if ($IsWindows) {
+        try {
+            -not (Get-CimInstance -classname BatteryStatus -namespace "root\wmi" -ErrorAction Stop).PowerOnline
+        } catch {
+        }
+    })
+}
+
+function Test-Internet {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $False)]
+        [string[]]$CheckDomains = @("www.google.com","www.amazon.com","www.coinbase.com","www.sina.com")
+    )
+
+    $tested = $false
+    $ok     = $false
+
+    try {
+        if ($CheckDomains -and $CheckDomains.Count) {
+            $Proxy = Get-Proxy
+
+            if ($IsWindows -and -not $Proxy.Proxy -and (Get-Command "Test-Connection" -ErrorAction Ignore)) {
+                $tested = $true
+                $oldProgressPreference = $Global:ProgressPreference
+                $Global:ProgressPreference = "SilentlyContinue"
+                Foreach ($url in $CheckDomains) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$ok = $true;break}}
+                $Global:ProgressPreference = $oldProgressPreference
+            }
+
+            if (-not $ok -and $Session.Curl) {
+                $tested = $true
+                $curlproxy = ""
+                if ($Proxy.Proxy) {
+                    $curlproxy = "-x `"$($Proxy.Proxy)`" "
+                    if ($Proxy.Username -and $Proxy.Password) {
+                        $curlproxy = "$($curlproxy)-U `"$($Proxy.Username):$($Proxy.Password)`" "
+                    }
+                }
+                Foreach ($url in $CheckDomains) {
+                    $Data = (Invoke-Exe $Session.Curl -ArgumentList "--head `"http://$($url)`" $($curlproxy)-m 1 --connect-timeout 1 -A `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36`" -q -w `"#~#%{response_code}`"" -WaitForExit 5) -split "#~#"
+                    if ($Data -and $Data.Count -gt 1 -and $Global:LASTEXEEXITCODE -eq 0 -and $Data[-1] -match "^[23]\d\d") {$ok = $true;break}
+                }
+            }
+        }
+    } catch {}
+
+    $ok -or -not $tested
+}
+
+function Test-CacheGrow {
+    [CmdletBinding()]
+    param(
+      [Parameter(Mandatory = $False)]
+      [String]$Title = "",
+      [Parameter(Mandatory = $False)]
+      [String[]]$Name
+    )
+
+    if ($Session.Debug -and $Title -ne "") {
+        Write-Log $Title
+        return
+    }
+
+    if ($Name.Count -eq 0) {
+        $Name = @("Where","min","ContainsKey","Substring","Foreach","Append","Contains","split","Replace","Pow","Insert","IndexOf","Log","Floor","EndsWith","IsNullOrEmpty","IsNullOrWhiteSpace")
+    }
+
+    if ($Script:CacheCount -eq $null) {
+        $Script:CacheCount = @{}
+    }
+
+    $bindingType = [System.Management.Automation.PSObject].Assembly.GetType("System.Management.Automation.Language.PSInvokeMemberBinder")
+    if ($bindingType) {
+        $cacheField = $bindingType.GetField("s_binderCache", [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Static)
+        if ($cacheField) {
+            $cache = $cacheField.GetValue($null)
+            if ($cache) {
+                $currentCount = @{}
+                foreach ($key in $cache.Keys) {
+                    $cacheName = $cache[$key].Name
+                    if ($cacheName -in $Name) {
+                        if ($currentCount.ContainsKey($cacheName)) {
+                            $currentCount[$cacheName]++
+                        } else {
+                            $currentCount[$cacheName]=1
+                        }
+                    }
+                }
+
+                foreach ($key in $currentCount.Keys) {
+                    if ( $Script:CacheCount.ContainsKey($Key) ) {
+                        if ( $currentCount[$key] -gt $Script:CacheCount[$key] ) {
+                            $diff = $currentCount[$key] - $Script:CacheCount[$key]
+                            if ($Title -ne "") {
+                                if (-not $Session.Debug) {
+                                    Write-Log "$($Title) CACHE $($key) increased $(if ($diff -ge 0) {"+"})$($diff)"
+                                }
+                            } else {
+                                [PSCustomObject]@{
+                                    Name = $key
+                                    Count = $currentCount[$key]
+                                    OldCount = $Script:CacheCount[$key]
+                                    Diff = $diff
+                                }
+                            }
+                        }
+                    }
+                    $Script:CacheCount[$key] = $currentCount[$key]
+                }
+            }
+        }
+    }
+}
+
+function Get-MinerUpdateDB {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Force = $false
+    )
+    if ((Test-Path "Data\minerupdatedb.json") -and ($Force -or -not (Test-Path Variable:Global:GlobalMinerUpdateDB) -or (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc -gt $Global:GlobalMinerUpdateDBTimeStamp)) {
+        $AlgoVariants = Get-AlgoVariants
+        $Global:GlobalMinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalMinerUpdateDB | Foreach-Object {
+            $_.FromVersion = Get-MinerVersion $_.FromVersion
+            $_.ToVersion   = Get-MinerVersion $_.ToVersion
+            $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
+            if ($_.Driver) {
+                $_.Driver | Foreach-Object {
+                    $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
+                }
+            }
+        }
+        $Global:GlobalMinerUpdateDBTimeStamp = (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc
+    }
+    if (-not $Silent) {
+        $Global:GlobalMinerUpdateDB
+    }
+}
+
+function Get-PowerPrice {
+    $PowerPrice = $Session.Config.PowerPrice
+
+    if ($Session.Config.OctopusTariffCode -ne '') {
+        if ($Session.Config.OctopusTariffCode -match "^E-[12]R-([A-Z0-9-]+)-[A-Z]$") {
+            $ProductCode = $Matches[1]
+            try {
+                $fromto = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK")
+                $OctopusRequest = Invoke-RestMethodAsync "https://api.octopus.energy/v1/products/$($ProductCode)/electricity-tariffs/$($Session.Config.OctopusTariffCode)/standard-unit-rates/?period_from={iso8601timestamp}" -timeout 10 -cycletime 600 -tag "octopuspower"
+                if ($OctopusRequest.count) {
+                    $OctopusRequest.results | Where-Object {(-not $_.valid_from -or $_.valid_from -le $fromto) -and (-not $_.valid_to -or $_.valid_to -gt $fromto)} | Foreach-Object {$PowerPrice = ([double]$_.value_inc_vat) / 100}
+                }
+            } catch {
+                Write-Log -Level Info "Octopus tariff code $($Session.Config.OctopusTariffCode) is not in the Octopus database. Sometimes the letter code part is correct, but the date part isn't. Try AGILE-18-02-21 or GO-18-06-12 or SILVER-2017-1"
+            }
+        } else {
+            Write-Log -Level Warn "Octopus tariff code has the wrong syntax. Use E-1R-{product_code}-{region_code}"
+        }
+    }
+    $PowerPrice
+}
+
+function Get-WindowState {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $False)]
+    [int64]$Id = $PID,
+    [Parameter(Mandatory = $False)]
+    [String]$Title = ""
+)
+    Initialize-User32Dll
+    try {
+        $hwnd = (ps -Id $Id)[0].MainWindowHandle
+        if ($hwnd -eq 0) {
+            $zero = [IntPtr]::Zero
+            $hwnd = [User32.WindowManagement]::FindWindowEx($zero,$zero,$zero,$Title)
+        }
+        $state = [User32.WindowManagement]::GetWindowLong($hwnd, -16)
+        # mask of 0x20000000 = minimized; 2 = minimize; 4 = restore
+        if ($state -band 0x20000000)    {"minimized"}
+        elseif ($state -band 0x1000000) {"maximized"}
+        else                            {"normal"}
+    } catch {"maximized"}
+}
+
+function Get-Combination {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Array]$Value, 
+        [Parameter(Mandatory = $false)]
+        [Int]$SizeMax = $Value.Count, 
+        [Parameter(Mandatory = $false)]
+        [Int]$SizeMin = 1
+    )
+
+    $Combination = [PSCustomObject]@{}
+
+    for ($i = 0; $i -lt $Value.Count; $i++) {
+        $Combination | Add-Member @{[Math]::Pow(2, $i) = $Value[$i]}
+    }
+
+    $Combination_Keys = $Combination | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+
+    for ($i = $SizeMin; $i -le $SizeMax; $i++) {
+        $x = [Math]::Pow(2, $i) - 1
+
+        while ($x -le [Math]::Pow(2, $Value.Count) - 1) {
+            [PSCustomObject]@{Combination = $Combination_Keys | Where-Object {$_ -band $x} | ForEach-Object {$Combination.$_}}
+            $smallest = ($x -band - $x)
+            $ripple = $x + $smallest
+            $new_smallest = ($ripple -band - $ripple)
+            $ones = (($new_smallest / $smallest) -shr 1) - 1
+            $x = $ripple -bor $ones
+        }
+    }
 }

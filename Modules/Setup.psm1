@@ -63,6 +63,41 @@ Param(
     Write-Host " "
 }
 
+function Get-PoolsInfo {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Name = "",
+        [Parameter(Mandatory = $false)]
+        [String[]]$Values = @(),
+        [Parameter(Mandatory = $false)]
+        [Switch]$AsObjects = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Clear = $false
+    )
+    
+    if (-not (Test-Path Variable:Global:GlobalPoolsInfo) -or $Script:ScriptPoolsInfo -eq $null) {
+        $Script:ScriptPoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Script:ScriptPoolsInfo.PSObject.Properties | Foreach-Object {
+            $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
+        }
+    }
+    if ($Name -and @("Algorithm","Currency","CoinSymbol","CoinName","Minable") -icontains $Name) {
+        if ($Values.Count) {
+            if ($AsObjects) {
+                $Script:ScriptPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
+            } else {
+                $Script:ScriptPoolsInfo.PSObject.Properties | Where-Object {[RBMToolBox]::IsIntersect($_.Value.$Name,$Values)} | Select-Object -ExpandProperty Name | Sort-Object
+            }
+        } else {
+            $Script:ScriptPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
+        }
+    } else {
+        $Script:ScriptPoolsInfo.$Name
+    }
+    if ($Clear) {$Script:ScriptPoolsInfo = $null}
+}
+
 function Start-Setup {
     [CmdletBinding()]
     param(
@@ -3798,4 +3833,6 @@ function Start-Setup {
             } until ($MRRSetupDone)
         }
     } until (-not $RunSetup)
+
+    $Script:ScriptPoolsInfo = $null
 }
