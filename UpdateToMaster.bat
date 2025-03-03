@@ -1,5 +1,5 @@
 @cd /d %~dp0
-@set "command=& .\Updater.ps1 -UpdateToMaster `$true"
+@set "command=& .\Updater.ps1 -UpdateToMaster $true"
 @echo off
 
 where pwsh.exe >nul 2>nul

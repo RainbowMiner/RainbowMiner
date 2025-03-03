@@ -15,6 +15,6 @@ export GPU_SINGLE_ALLOC_PERCENT=100
 export GPU_MAX_WORKGROUP_SIZE=256
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-command="& ./Updater.ps1 -UpdateToMaster `$true"
+command="& ./Updater.ps1 -UpdateToMaster \$true"
 
 pwsh -ExecutionPolicy bypass -Command ${command}
