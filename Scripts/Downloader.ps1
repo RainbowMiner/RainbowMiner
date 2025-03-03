@@ -1,5 +1,5 @@
 ﻿Import-Module .\Modules\Include.psm1
-Import-Module .\Modules\WebLib.ps1
+Import-Module .\Modules\WebLib.psm1
 
 $DownloadList = $args
 
