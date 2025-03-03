@@ -4593,7 +4593,11 @@ function Invoke-Core {
                                 try {
                                     if ([System.Console]::KeyAvailable) {
                                         $key = [System.Console]::ReadKey($true)
-                                        if (-not $key.Modifiers) {$key.key} elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
+                                        if (-not $key.Modifiers) {$key.key}
+                                        elseif ($key.Modifiers -eq "Control") {
+                                            if ($key.key -eq "C") {"X"}
+                                            elseif ($key.key -eq "U") {"c-U"}
+                                        }
                                     }
                                 } catch {
                                     Write-Log -Level Warn "Console not available. Please use the web console. ($($_.Exception.Message))"
@@ -4680,12 +4684,12 @@ function Invoke-Core {
                     $keyPressed = $true
                     Break
                 }
-                "@" {
+                "c-U" {
                     $Session.AutoUpdate = $true
                     $UpdateToMaster = $true
                     $API.Update = $false
                     Write-Log "User requests to update to MASTER"
-                    Write-Host -NoNewline "[@] pressed - automatic update of Rainbowminer will be started "
+                    Write-Host -NoNewline "[Ctrl-U] pressed - automatic update of Rainbowminer will be started "
                     $keyPressed = $true
                     Break
                 }
