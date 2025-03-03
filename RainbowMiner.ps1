@@ -1,6 +1,4 @@
-﻿using module .\Modules\Include.psm1
-
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
     [Alias("BTC")]
@@ -388,6 +386,8 @@ $ForceFullCollection = $true
 $EnableMinerStatus = $true
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
+
+Import-Module .\Modules\Include.psm1
 
 Initialize-Session
 
