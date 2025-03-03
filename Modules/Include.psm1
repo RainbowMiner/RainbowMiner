@@ -1756,7 +1756,7 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$ConvertDot = $false
 )
-    [System.Collections.Generic.List[string]]$Uri2 = @()
+    $Uri2 = [System.Collections.Generic.List[string]]::new()
     while ($Uri -match "^(.*?)({[^}]+})(.*?)$") {
         if ($Matches[1].Length) {[void]$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Matches[1]))}
         $Tmp=$Matches[2]

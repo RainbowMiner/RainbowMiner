@@ -131,7 +131,7 @@ function Start-Core {
             MRRAlgorithms = @{Path='';LastWriteTime=0;Healthy=$true}
         }
 
-        [System.Collections.Generic.List[string]]$Session.GetTicker = @()
+        $Session.GetTicker = [System.Collections.Generic.List[string]]::new()
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
         $Session.StartTimeCore     = (Get-Date).ToUniversalTime()
@@ -1359,7 +1359,7 @@ function Invoke-Core {
             $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
             if (Test-Config "Scheduler" -Health) {
                 if ($AllScheduler -isnot [array] -and $AllScheduler.value -ne $null) {$AllScheduler = $AllScheduler.value}
-                $Session.Config | Add-Member Scheduler ([System.Collections.Generic.List[PSCustomObject]]@()) -Force
+                $Session.Config | Add-Member Scheduler ([System.Collections.Generic.List[PSCustomObject]]::new()) -Force
                 $AllScheduler | Foreach-Object {
                     $_ | Add-Member Name "$($_.Name)" -Force
                     $_ | Add-Member DayOfWeek $([string]("$($_.DayOfWeek -replace "[^0-6\*]+")"[0])) -Force
@@ -2895,8 +2895,8 @@ function Invoke-Core {
     $MinerFaultToleranceGPU = $Session.Config.MinerFaultToleranceGPU/100
     $MinerPowerPrice        = (100+$Session.Config.PowerOffsetPercent)*24/100000 * $Session.CurrentPowerPriceBTC
 
-    [hashtable]$AllMiners_VersionCheck = @{}
-    [System.Collections.Generic.List[string]]$Miner_Arguments_List = @()
+    $AllMiners_VersionCheck = [hashtable]@{}
+    $Miner_Arguments_List   = [System.Collections.Generic.List[string]]::new()
 
     foreach ( $Miner in $AllMiners ) {
 
@@ -2939,8 +2939,9 @@ function Invoke-Core {
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = $Miner_ShareCheck = -1
             $Miner_HashAdjust = $Miner_Hash2Adjust = -111
             $Miner_CommonCommands_found = $false
-            [System.Collections.Generic.List[string]]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
-            $Miner_CommonCommands_array.AddRange([System.Collections.Generic.List[string]]@($Miner.BaseAlgorithm -split '-' | Select-Object))
+            $Miner_CommonCommands_array = [System.Collections.Generic.List[string]]::new()
+            [void]$Miner_CommonCommands_array.AddRange([string[]]@($Miner.BaseName,$Miner.DeviceModel))
+            [void]$Miner_CommonCommands_array.AddRange([string[]]@($Miner.BaseAlgorithm -split '-' | Select-Object))
             for($i=$Miner_CommonCommands_array.Count;$i -gt 0; $i--) {
                 $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
                 if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
@@ -3253,11 +3254,13 @@ function Invoke-Core {
     $Miners_DownloadListPrq = @()
     $Miners_DownloadMsgPrq  = $null
 
-    $Miners = [System.Collections.Generic.List[PSCustomObject]]($AllMiners.Where({
-        (Test-Path $_.Path) -and
-        ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and
+    $Miners = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+    $AllMiners.Where({ 
+        (Test-Path $_.Path) -and 
+        ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and 
         $AllMiners_VersionCheck[$_.BaseName].Ok
-    }))
+    }).ForEach({ [void]$Miners.Add($_) })
 
     if (($AllMiners.Count -ne $Miners.Count) -or $Session.StartDownloader) {
 
@@ -4120,7 +4123,7 @@ function Invoke-Core {
         Write-Host $Miner_DeviceTitle
         Write-Host $("=" * $Miner_DeviceTitle.Length)
 
-        [System.Collections.Generic.List[hashtable]]$Miner_Table = @()
+        $Miner_Table = [System.Collections.Generic.List[PSCustomObject]]::new()
 
         foreach ($col in $Session.Config.UIProfitColumns) {
             Switch ($col) {
@@ -4289,7 +4292,7 @@ function Invoke-Core {
         $NextBalances = $Session.Config.BalanceUpdateMinutes-[int]((Get-Date).ToUniversalTime()-$Session.Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
         Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Session.Updatetracker.Balances)) (next update $($NextBalances)): "        
-        [System.Collections.Generic.List[hashtable]]$ColumnFormat = @()
+        $ColumnFormat = [System.Collections.Generic.List[hashtable]]::new()
         [void]$ColumnFormat.Add(@{Name = "Name"; Expression = {if ($_.Name -match "^\*") {$ColumnMark -replace "{value}","$($_.Name)"} else {$_.Name}}})
         if (($BalancesData.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
             [void]$ColumnFormat.Add(@{Name = "Sym"; Expression = {if ($_.BaseName -ne "Wallet" -and $_.Currency -and (-not $Session.Config.Pools."$($_.Name)".AECurrency -or $Session.Config.Pools."$($_.Name)".AECurrency -eq $_.Currency)) {$ColumnMark -replace "{value}","$($_.Currency)"} else {$_.Currency}}})
@@ -4329,7 +4332,7 @@ function Invoke-Core {
     }
 
     #Display exchange rates
-    [System.Collections.Generic.List[string]]$StatusLine = @()
+    $StatusLine = [System.Collections.Generic.List[string]]::new()
     foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
             $Miner_Currency_Out = $Miner_Currency
             $CurrentProfitTotal_Out = $CurrentProfitTotal
@@ -4490,8 +4493,9 @@ function Invoke-Core {
     Write-Log (Get-MemoryUsage -forceFullCollection).MemText
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    [System.Collections.Generic.List[string]]$cmdMenu = @("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset")
-    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {$cmdMenu.Insert(0,"[U]pdate RainbowMiner") > $null}
+    $cmdMenu = [System.Collections.Generic.List[string]]::new()
+    [void]$cmdMenu.AddRange([string[]]@("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset"))
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {[void]$cmdMenu.Insert(0,"[U]pdate RainbowMiner")}
     if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun){[void]$cmdMenu.Add("[C]onfiguration")}
     [void]$cmdMenu.Add("[V]erbose$(if ($Session.Config.UIstyle -eq "full"){" off"})")
     if (-not $Global:PauseMiners.Test() -or $Global:PauseMiners.TestIA()) {[void]$cmdMenu.Add("[P]ause$(if ($Global:PauseMiners.Test()){" off"})")}
@@ -4505,6 +4509,7 @@ function Invoke-Core {
     $SomeMinersFailed = $false
     $MinerStart = $Session.Timer
     $WarnedConsole = $false
+    $UpdateToMaster = $false
     do {        
         $TimerBackup = $Session.Timer
 
@@ -4596,6 +4601,7 @@ function Invoke-Core {
                                 }
                             }
 
+
         if ($keyPressedValue) {
 
             switch ($keyPressedValue) {
@@ -4671,6 +4677,15 @@ function Invoke-Core {
                     $API.Update = $false
                     Write-Log "User requests to update to v$($ConfirmedVersion.RemoteVersion)"
                     Write-Host -NoNewline "[U] pressed - automatic update of Rainbowminer will be started "
+                    $keyPressed = $true
+                    Break
+                }
+                "@" {
+                    $Session.AutoUpdate = $true
+                    $UpdateToMaster = $true
+                    $API.Update = $false
+                    Write-Log "User requests to update to MASTER"
+                    Write-Host -NoNewline "[@] pressed - automatic update of Rainbowminer will be started "
                     $keyPressed = $true
                     Break
                 }
@@ -4776,7 +4791,7 @@ function Invoke-Core {
             if ($IsWindows) {
                 $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath
                 if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
-                    if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core"};& .\Updater.ps1 @Update_Parameters}
+                    if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core";UpdateToMaster=$UpdateToMaster};& .\Updater.ps1 @Update_Parameters}
                     $StartWindowState = Get-WindowState -Title $Session.MainWindowTitle
                     $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
                     if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}
@@ -4793,7 +4808,7 @@ function Invoke-Core {
                     }
                 }
             } else {
-                if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core"};& .\Updater.ps1 @Update_Parameters}
+                if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core";UpdateToMaster=$UpdateToMaster};& .\Updater.ps1 @Update_Parameters}
                 $Session.Stopp = $true
             }
         }
@@ -4838,7 +4853,7 @@ function Stop-Core {
     if (Test-Path ".\reboot.txt") {Remove-Item ".\reboot.txt" -Force -ErrorAction Ignore}
 
     Write-Log "Gracefully halting RainbowMiner"
-    [System.Collections.Generic.List[string]]$ExcavatorWindowsClosed = @()
+    $ExcavatorWindowsClosed = [System.Collections.Generic.List[string]]::new()
     foreach ( $Miner in $Global:ActiveMiners ) {
         if ($Miner.Activated -gt 0 -or $Miner.GetStatus() -eq [MinerStatus]::Running) {
             if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
@@ -4894,7 +4909,7 @@ function Stop-Core {
 
             $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
             if (Test-OCDaemon) {
-                [System.Collections.Generic.List[string]]$Cmd = @()
+                $Cmd = [System.Collections.Generic.List[string]]::new()
                 [void]$Cmd.Add("screen -ls `"$WorkerName`" |  grep '[0-9].$($WorkerName)_' | (")
                 [void]$Cmd.Add("  IFS=`$(printf '\t');")
                 [void]$Cmd.Add("  sed `"s/^`$IFS//`" |")
@@ -4921,7 +4936,7 @@ function Stop-Core {
             $WorkerName = ($Session.Config.WorkerName -replace "[^A-Z0-9_-]").ToLower()
 
             if (Test-OCDaemon) {
-                [System.Collections.Generic.List[string]]$Cmd = @()
+                $Cmd = [System.Collections.Generic.List[string]]::new()
                 [void]$Cmd.Add("if tmux has-session 2>/dev/null; then")
                 [void]$Cmd.Add("  tmux list-sessions -F '#{session_name}' | grep '$($WorkerName)_' | (")
                 [void]$Cmd.Add("    while read -r name; do")
@@ -5004,10 +5019,11 @@ function Get-Balance {
     }
 
     if (-not (Test-Path Variable:Global:CachedPoolBalances) -or $Refresh) {
-        $Global:CachedPoolBalances = @(Get-BalancesContent -Config $Config | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Currency} | Group-Object -Property Caption | Foreach-Object {
+        $Global:CachedPoolBalances = [System.Collections.Generic.List[PSCustomObject]]::new()
+        Get-BalancesContent -Config $Config | Where-Object {-not $Config.ExcludeCoinsymbolBalances.Count -or $Config.ExcludeCoinsymbolBalances -notcontains $_.Currency} | Group-Object -Property Caption | Foreach-Object {
             if ($_.Count -gt 1){foreach ($p in @("Balance","Pending","Total","Paid","Earned","Payouts")) {if (Get-Member -InputObject $_.Group[0] -Name $p) {if ($p -eq "Payouts") {$_.Group[0].$p = @($_.Group.$p | Select-Object)} else {$_.Group[0].$p = ($_.Group.$p | Measure-Object -Sum).Sum}}}}
-            $_.Group[0]
-        })
+            [void]$Global:CachedPoolBalances.AddRange([PSCustomObject[]]$_.Group[0])
+        }
     }
 
     $Balances = $Global:CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json -ErrorAction Ignore
@@ -5018,9 +5034,9 @@ function Get-Balance {
     if (-not $Balances) {return}
 
     #Get exchange rates for all payout currencies
-    [System.Collections.Generic.List[string]]$CurrenciesWithBalances = @()
-    [System.Collections.Generic.List[string]]$CurrenciesToExchange   = @()
-    [System.Collections.Generic.List[string]]$CurrenciesMissing = @()
+    $CurrenciesWithBalances = [System.Collections.Generic.List[string]]::new()
+    $CurrenciesToExchange   = [System.Collections.Generic.List[string]]::new()
+    $CurrenciesMissing      = [System.Collections.Generic.List[string]]::new()
 
     $RatesAPI = [PSCustomObject]@{}
     
@@ -5346,7 +5362,7 @@ function Invoke-ReportMinerStatus {
 
     $Session.Config.Currency | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
-    [System.Collections.Generic.List[string]]$Including_Strings = @()
+    $Including_Strings = [System.Collections.Generic.List[string]]::new()
     if ($Session.ReportTotals)    {[void]$Including_Strings.Add("totals")}
     if ($Session.ReportMinerData) {[void]$Including_Strings.Add("minerdata")}
     if ($Session.ReportPoolsData) {[void]$Including_Strings.Add("poolsdata")}
@@ -5364,7 +5380,7 @@ function Invoke-ReportMinerStatus {
             $Profit += [Double]$Miner.Profit
             $PowerDraw += [Double]$Miner_PowerDraw
 
-            [System.Collections.Generic.List[PSCustomObject]]$Devices = @()
+            $Devices = [System.Collections.Generic.List[PSCustomObject]]::new()
             Get-Device $Miner.DeviceName | Foreach-Object {
                 if ($_.Type -eq "GPU") {
                     if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
@@ -6146,7 +6162,7 @@ param(
     [Int]$Priority = 0
 )
     if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Data\autoexec.default.txt")) {Copy-Item ".\Data\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
-    [System.Collections.Generic.List[PSCustomObject]]$Global:AutoexecCommands = @()
+    $Global:AutoexecCommands = [System.Collections.Generic.List[PSCustomObject]]::new()
     foreach($cmd in @(Get-ContentByStreamReader ".\Config\autoexec.txt" -ExpandLines | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
             if (Test-Path $Matches[1]) {                

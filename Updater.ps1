@@ -1,7 +1,9 @@
 ﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [String]$calledfrom = "bat"
+    [String]$calledfrom = "bat",
+    [Parameter(Mandatory = $false)]
+    [Bool]$UpdateToMaster = $false
 )
 
 if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
@@ -50,17 +52,24 @@ $Name = "RainbowMiner"
 $MaxPages = if ($IsWindows) {"3"} else {"4"}
 
 try {
-    if ($RBMVersion.RemoteVersion -gt $RBMVersion.Version -and $RBMVersion.DownloadURI) {
-        Write-Host "Updating from v$($RBMVersion.Version) to v$($RBMVersion.RemoteVersion)" -ForegroundColor Yellow
+    if (($RBMVersion.RemoteVersion -gt $RBMVersion.Version -and $RBMVersion.DownloadURI) -or $UpdateToMaster) {
+        if ($UpdateToMaster) {
+            $UpdateTo = "MASTER"
+            $DownloadURI = "https://github.com/RainbowMiner/RainbowMiner/archive/master.zip"
+        } else {
+            $UpdateTo = "v$($RBMVersion.RemoteVersion)"
+            $DownloadURI = $RBMVersion.DownloadURI
+        }
+        Write-Host "Updating from v$($RBMVersion.Version) to $UpdateTo" -ForegroundColor Yellow
         Write-Host " (1/$($MaxPages)) Downloading $($RBMVersion.DownloadURI) .. "
         
         if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" | Out-Null}
-        $FileName = Join-Path ".\Downloads" (Split-Path $RBMVersion.DownloadURI -Leaf)
+        $FileName = Join-Path ".\Downloads" (Split-Path $DownloadURI -Leaf)
         if (Test-Path $FileName) {Remove-Item $FileName}
 
-        if ($RBMVersion.DownloadURI -eq "") {throw}
+        if ($DownloadURI -eq "") {throw}
 
-        Invoke-WebRequest $RBMVersion.DownloadURI -OutFile $FileName -UseBasicParsing -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
+        Invoke-WebRequest $DownloadURI -OutFile $FileName -UseBasicParsing -Proxy $Proxy.Proxy -ProxyCredential $Proxy.Credentials
 
         if (-not (Test-Path $FileName) -or (Get-Item $FileName).Length -lt 2MB) {throw}
 
