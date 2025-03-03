@@ -4486,12 +4486,6 @@ function Invoke-Core {
 
     if ($IsWindows) {$Host.UI.RawUI.FlushInputBuffer()}
 
-    [System.GC]::Collect()
-    [System.GC]::WaitForPendingFinalizers()
-    [System.GC]::Collect()
-
-    Write-Log (Get-MemoryUsage -forceFullCollection).MemText
-
     $cursorPosition = $host.UI.RawUI.CursorPosition
     $cmdMenu = [System.Collections.Generic.List[string]]::new()
     [void]$cmdMenu.AddRange([string[]]@("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset"))
