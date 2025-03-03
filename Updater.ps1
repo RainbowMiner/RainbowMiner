@@ -155,6 +155,16 @@ try {
             Get-ChildItem $FileName -File | Foreach-Object {Remove-Item $_}
         }
 
+        if ($UpdateToMaster) {
+            $FolderToRemove = if ($IsWindows) {".\IncludesLinux"} else {".\Includes"}
+            try {
+                if (Test-Path $FolderToRemove) {
+                    Remove-Item -Path $FolderToRemove -Recurse -Force
+                }
+            } catch {
+            }
+        }
+
         Write-Host "Update finished. Restarting $Name .." -ForegroundColor Green
     } else {
         Write-Host "RainbowMiner is already uptodate. Restarting .." -ForegroundColor Green
