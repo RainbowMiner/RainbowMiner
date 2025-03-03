@@ -13,6 +13,7 @@ Import-Module .\Modules\ConfigLib.psm1
 Import-Module .\Modules\Include.psm1
 Import-Module .\Modules\MiningRigRentals.psm1
 Import-Module .\Modules\StatLib.psm1
+Import-Module .\Modules\TcpLib.psm1
 Import-Module .\Modules\WebLib.psm1
 Import-Module .\Modules\WhatToMineLib.psm1
 
