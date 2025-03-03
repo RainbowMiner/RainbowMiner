@@ -1857,7 +1857,12 @@ function Initialize-DLLs {
         [string]$DLLFolder = ".\DotNet\Bin"
     )
 
-    if (-not (Test-Path $DLLFolder)) {New-Item $DLLFolder -ItemType "directory" -Force > $null}
+    if (-not (Test-Path $DLLFolder)) {
+        New-Item $DLLFolder -ItemType "directory" -Force > $null
+        if ($IsLinux) {
+            (Start-Process "chmod" -ArgumentList "777",(Resolve-Path $DLLFolder) -PassThru).WaitForExit(1000) > $null
+        }
+    }
         
     $IsNetCore3Plus = $PSVersionTable.PSVersion.Major -ge 7 -and ($IsLinux -or $IsMacOS -or $IsCoreCLR) -and [System.Environment]::Version.Major -ge 3
 
@@ -1913,7 +1918,7 @@ function Initialize-DLLs {
                 if ($DLLFile) {
                     Add-Type -Path $DLLFile -ErrorAction Stop
                     if ($IsLinux) {
-                        (Start-Process "chmod" -ArgumentList "666",(Resolve-Path $DLLFile).Path -PassThru).WaitForExit(1000) > $null
+                        (Start-Process "chmod" -ArgumentList "777",(Resolve-Path $DLLFile) -PassThru).WaitForExit(1000) > $null
                     }
                 }
 
