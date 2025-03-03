@@ -16,9 +16,12 @@ function Initialize-Session {
             $Session.IsWin10        = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0")
         } elseif ($IsLinux) {
             try {
-                Get-ChildItem ".\IncludesLinux\bin\libc_version" -File -ErrorAction Stop | Foreach-Object {
+                Get-ChildItem ".\IncludesLinux\bash\libc_version.sh" -File -ErrorAction Stop | Foreach-Object {
                     (Start-Process "chmod" -ArgumentList "+x",$_.FullName -PassThru).WaitForExit(1000) > $null
-                    $Session.LibCVersion = Get-Version "$(& $_.FullName)"
+                    $libc_version = & $_.FullName
+                    if ($LASTEXITCODE -eq 0) {
+                        $Session.LibCVersion = Get-Version $libc_version
+                    }
                 }
             } catch {
             }
