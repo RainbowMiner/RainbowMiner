@@ -493,8 +493,11 @@ function Set-PoolsConfigDefault {
             $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $Done = [PSCustomObject]@{}
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";StatAverageStable = "";MaxMarginOfError = "100";SwitchingHysteresis="";MaxAllowedLuck="";MaxTimeSinceLastBlock="";MaxTimeToFind="";Region="";SSL="";BalancesKeepAlive=""}
-            $Session.PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
+            $PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notin @("Userpools")})
+
+            $Session.YiimpPools = @(Compare-Object $Pools @($PoolsConfigDefault.PSObject.Properties | Where-Object {$_.Value.Yiimp} | Foreach-Object {$_.Name}) -IncludeEqual -ExcludeDifferent | Foreach-Object {$_.InputObject})
+
             $Userpools = @()
             if ($UserpoolsPathToFile) {
                 $UserpoolsConfig = Get-ConfigContent $UserpoolsConfigName
@@ -519,9 +522,9 @@ function Set-PoolsConfigDefault {
                                 if (-not $Setup_Currencies) {$Setup_Currencies = @("BTC")}
                             } else {
                                 $Setup_Currencies = @("BTC")
-                                if ($Session.PoolsConfigDefault.$Pool_Name) {
-                                    if ($Session.PoolsConfigDefault.$Pool_Name.Fields) {$Setup_Content = $Session.PoolsConfigDefault.$Pool_Name.Fields}
-                                    $Setup_Currencies = @($Session.PoolsConfigDefault.$Pool_Name.Currencies)            
+                                if ($PoolsConfigDefault.$Pool_Name) {
+                                    if ($PoolsConfigDefault.$Pool_Name.Fields) {$Setup_Content = $PoolsConfigDefault.$Pool_Name.Fields}
+                                    $Setup_Currencies = @($PoolsConfigDefault.$Pool_Name.Currencies)            
                                 }
                             }
                             $Setup_Currencies | Foreach-Object {
@@ -530,11 +533,11 @@ function Set-PoolsConfigDefault {
                             }
                         }
                     }
-                    if ($Session.PoolsConfigDefault.$Pool_Name.Fields -ne $null) {
-                        foreach($SetupName in $Session.PoolsConfigDefault.$Pool_Name.Fields.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Session.PoolsConfigDefault.$Pool_Name.Fields.$SetupName -Force}}
+                    if ($PoolsConfigDefault.$Pool_Name.Fields -ne $null) {
+                        foreach($SetupName in $PoolsConfigDefault.$Pool_Name.Fields.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $PoolsConfigDefault.$Pool_Name.Fields.$SetupName -Force}}
                     }
                     foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Default.$SetupName -Force}}
-                    if ($Session.PoolsConfigDefault.$Pool_Name.Autoexchange -and (Get-Yes $Setup_Content.EnableAutoCoin)) {
+                    if ($PoolsConfigDefault.$Pool_Name.Autoexchange -and (Get-Yes $Setup_Content.EnableAutoCoin)) {
                         $Setup_Content.EnableAutoCoin = "0" # do not allow EnableAutoCoin for pools with autoexchange feature
                     }
                     $Done | Add-Member $Pool_Name $Setup_Content
@@ -550,7 +553,7 @@ function Set-PoolsConfigDefault {
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name): $($_.Exception.Message)"
         }
         finally {
-            $Done = $Pools = $Setup_Currencies = $Preset = $Preset_Copy = $null
+            $Done = $Pools = $Setup_Currencies = $Preset = $Preset_Copy = $PoolsConfigDefault = $null
         }
     }
     Test-Config $ConfigName -Exists

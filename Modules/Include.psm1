@@ -302,8 +302,9 @@ function Confirm-Version {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     if (-not (Test-Path Variable:Global:GlobalPoolFields)) {
-        if (-not $Session.PoolsConfigDefault) {$Session.PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"}
-        $Global:GlobalPoolFields = @($Session.PoolsConfigDefault.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","AllowZero","EnableAutoCoin","EnablePostBlockMining","CoinSymbolPBM","DataWindow","StatAverage","StatAverageStable","MaxMarginOfError","SwitchingHysteresis","MaxAllowedLuck","MaxTimeSinceLastBlock","MaxTimeToFind","Region","SSL","BalancesKeepAlive","Wallets","DefaultMinerSwitchCoinSymbol","ETH-Paymentmode","MiningMode") | Sort-Object -Unique
+        $PoolsConfigDefault = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
+        $Global:GlobalPoolFields = @($PoolsConfigDefault.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object) + @("Worker","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","AllowZero","EnableAutoCoin","EnablePostBlockMining","CoinSymbolPBM","DataWindow","StatAverage","StatAverageStable","MaxMarginOfError","SwitchingHysteresis","MaxAllowedLuck","MaxTimeSinceLastBlock","MaxTimeToFind","Region","SSL","BalancesKeepAlive","Wallets","DefaultMinerSwitchCoinSymbol","ETH-Paymentmode","MiningMode") | Sort-Object -Unique
+        $PoolsConfigDefault = $null
     }
     if ($Pool) {
         $Payout_Currencies = [PSCustomObject]@{}
@@ -1235,12 +1236,14 @@ function Get-WalletsData {
         [Parameter(Mandatory = $false)]
         [Switch]$Force = $false
     )
-    if ($Force -or -not $Session.GlobalWalletsData -or (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc -gt $Session.GlobalWalletsDataTimeStamp) {
-        $Session.GlobalWalletsData = @(Get-ContentByStreamReader "Data\walletsdata.json" | ConvertFrom-Json -ErrorAction Ignore)
-        $Session.GlobalWalletsDataTimeStamp = (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc
-    }
+    
+    #if ($Force -or -not $Session.GlobalWalletsData -or (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc -gt $Session.GlobalWalletsDataTimeStamp) {
+    #    $Session.GlobalWalletsData = @(Get-ContentByStreamReader "Data\walletsdata.json" | ConvertFrom-Json -ErrorAction Ignore)
+    #    $Session.GlobalWalletsDataTimeStamp = (Get-ChildItem "Data\walletsdata.json").LastWriteTimeUtc
+    #}
+
     if (-not $Silent) {
-        $Session.GlobalWalletsData
+        Get-ContentByStreamReader "Data\walletsdata.json" | ConvertFrom-Json -ErrorAction Ignore
     }
 }
 
