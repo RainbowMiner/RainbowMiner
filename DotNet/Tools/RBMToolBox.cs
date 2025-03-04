@@ -806,7 +806,8 @@ public static class RBMToolBox
         object[] array1 = ConvertToValueTypeOrStringArray(obj1);
         object[] array2 = ConvertToValueTypeOrStringArray(obj2);
 
-        HashSet<object> set1 = new HashSet<object>(array1);
+        HashSet<object> set1 = new HashSet<object>(array1, new CaseInsensitiveComparer());
+
         foreach (var value in array2)
         {
             if (set1.Contains(value))
@@ -817,9 +818,26 @@ public static class RBMToolBox
     }
 
     // Private functions
+#if NETCOREAPP3_0_OR_GREATER
+    private class CaseInsensitiveComparer : IEqualityComparer<object>
+    {
+        public new bool Equals(object x, object y)
+        {
+            if (x is string strX && y is string strY)
+                return string.Equals(strX, strY, StringComparison.OrdinalIgnoreCase);
+            return EqualityComparer<object>.Default.Equals(x, y);
+        }
+
+        public int GetHashCode(object obj)
+        {
+            if (obj is string str)
+                return StringComparer.OrdinalIgnoreCase.GetHashCode(str);
+            return obj?.GetHashCode() ?? 0;
+        }
+    }
+
     private static object UnwrapPSObject(object obj)
     {
-#if NETCOREAPP3_0_OR_GREATER
         if (obj is PSObject psObj)
         {
             object baseObj = psObj.BaseObject;
@@ -832,7 +850,61 @@ public static class RBMToolBox
 
             return obj;
         }
+        return obj;
+    }
+
+    private static object[] ConvertToValueTypeOrStringArray(object obj)
+    {
+        if (obj == null)
+            return Array.Empty<object>();
+
+        if (obj is Array arr && arr.Length > 0)
+        {
+            object[] result = new object[arr.Length];
+            for (int i = 0; i < arr.Length; i++)
+                result[i] = UnwrapPSObject(arr.GetValue(i));
+            return result;
+        }
+
+        if (obj is string str)
+            return new object[] { str };
+
+        if (obj is ValueType)
+            return new object[] { obj };
+
+        if (obj is IEnumerable enumerable)
+        {
+            List<object> list = new List<object>();
+            foreach (var item in enumerable)
+            {
+                list.Add(UnwrapPSObject(item));
+            }
+            return list.ToArray();
+        }
+
+        return Array.Empty<object>();
+    }
+
 #else
+    private class CaseInsensitiveComparer : IEqualityComparer<object>
+    {
+        public new bool Equals(object x, object y)
+        {
+            if (x is string && y is string)
+                return string.Equals((string)x, (string)y, StringComparison.OrdinalIgnoreCase);
+            return EqualityComparer<object>.Default.Equals(x, y);
+        }
+
+        public int GetHashCode(object obj)
+        {
+            if (obj is string)
+                return StringComparer.OrdinalIgnoreCase.GetHashCode((string)obj);
+            return obj != null ? obj.GetHashCode() : 0;
+        }
+    }
+
+    private static object UnwrapPSObject(object obj)
+    {
         if (obj is PSObject)
         {
             object baseObj = ((PSObject)obj).BaseObject;
@@ -845,37 +917,14 @@ public static class RBMToolBox
 
             return obj;
         }
-#endif
         return obj;
     }
 
     private static object[] ConvertToValueTypeOrStringArray(object obj)
     {
-#if NETCOREAPP3_0_OR_GREATER
-        // If it's already an array, convert it manually to an object array
-        if (obj is Array arr && arr.Length > 0)
-        {
-            object[] result = new object[arr.Length];
-            for (int i = 0; i < arr.Length; i++)
-                result[i] = UnwrapPSObject(arr.GetValue(i));
-            return result;
-        }
-
-        // If it's a string, treat it as an array of one string
-        if (obj is string str)
-            return new object[] { str };
-
-        // If it's a single ValueType, treat it as an array of one
-        if (obj is ValueType)
-            return new object[] { obj };
-
-        return Array.Empty<object>(); // If not ValueType or string, return empty array
-#else
-        // Handle null values
         if (obj == null)
-            return new object[0]; // Instead of Array.Empty<object>(), which is PS7+
+            return new object[0];
 
-        // If it's already an array, convert it manually to an object array
         Array arr = obj as Array;
         if (arr != null && arr.Length > 0)
         {
@@ -887,16 +936,24 @@ public static class RBMToolBox
             return result;
         }
 
-        // If it's a string, treat it as an array of one string
         if (obj is string)
             return new object[] { obj };
 
-        // If it's a ValueType (like int, double, bool), treat it as an array of one
         if (obj is ValueType)
             return new object[] { obj };
 
-        return new object[0]; // Return empty array if none of the conditions match
-#endif
+        if (obj is IEnumerable)
+        {
+            List<object> list = new List<object>();
+            foreach (var item in (IEnumerable)obj)
+            {
+                list.Add(UnwrapPSObject(item));
+            }
+            return list.ToArray();
+        }
+
+        return new object[0];
     }
+#endif
 
 }
