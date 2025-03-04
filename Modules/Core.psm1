@@ -1264,39 +1264,58 @@ function Invoke-Core {
             if (Test-Config "Algorithms" -Health) {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
                 $Global:AlgorithmMinerName.Clear()
+
+                $EmptyObject = $null
+
                 $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
                     $a = $_
-                    $Session.Config.Algorithms | Add-Member $a $AllAlgorithms.$a -Force
                     #$Algo_MRRPriceModifierPercent = "$($Session.Config.Algorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
                     $Algo_MaxTimeToFind           = (ConvertFrom-Time $Session.Config.Algorithms.$a.MaxTimeToFind)
-                    ([ordered]@{
+                    $newAlgo = $null
+                    $newAlgo = [PSCustomObject]@{
                         Penalty                 = ([Math]::Round([double]($Session.Config.Algorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
                         MinHashrate             = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrate)
                         MinHashrateSolo         = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrateSolo)
                         MinWorkers              = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinWorkers)
                         MaxTimeToFind           = $Algo_MaxTimeToFind
                         MSIAprofile             = ([int]$Session.Config.Algorithms.$a.MSIAprofile)
+                        OCProfile               = "$($Session.Config.Algorithms.$a.OCProfile)".Trim()
                         MinBLKRate              = $(if ($Algo_MaxTimeToFind) {86400/$Algo_MaxTimeToFind} else {0})
                         #MRREnable               = $(if ($Session.Config.Algorithms.$a.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRREnable} else {$true})
                         #MRRAllowExtensions      = $(if ($Session.Config.Algorithms.$a.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRRAllowExtensions} else {$null})
                         #MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
                         MinerName               = @(if ($Session.Config.Algorithms.$a.MinerName){[regex]::split("$($Session.Config.Algorithms.$a.MinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
                         ExcludeMinerName        = @(if ($Session.Config.Algorithms.$a.ExcludeMinerName){[regex]::split("$($Session.Config.Algorithms.$a.ExcludeMinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
-                    }).GetEnumerator() | Foreach-Object {
-                        if ([bool]$Session.Config.Algorithms.$a.PSObject.Properties["$($_.Name)"]) {
-                            $Session.Config.Algorithms.$a."$($_.Name)" = $_.Value
-                        } else {
-                            $Session.Config.Algorithms.$a | Add-Member "$($_.Name)" $_.Value -Force
+                    }
+
+                    if ($EmptyObject -eq $null) {
+                        $isEmpty = $true
+                        foreach( $prop in $newAlgo.PSObject.Properties.Name ) {
+                            if ($newAlgo.$prop) {
+                                $isEmpty = $false
+                                break
+                            }
                         }
-                        if ($Session.Config.Algorithms.$a.MinerName.Count -or $Session.Config.Algorithms.$a.ExcludeMinerName.Count) {
-                            [void]$Global:AlgorithmMinerName.Add($a)
+
+                        if ($isEmpty) {
+                            $EmptyObject = $newAlgo
                         }
+
+                    } elseif ([RBMToolBox]::CompareObject($EmptyObject,$newAlgo)) {
+                        $newAlgo = $null
+                        $newAlgo = $EmptyObject
+                    }
+
+                    $Session.Config.Algorithms | Add-Member $a $newAlgo -Force
+                    
+                    if ($Session.Config.Algorithms.$a.MinerName.Count -or $Session.Config.Algorithms.$a.ExcludeMinerName.Count) {
+                        [void]$Global:AlgorithmMinerName.Add($a)
                     }
                 }
             }
 
-            $AllAlgorithms = $null
-            Remove-Variable -Name AllAlgorithms -ErrorAction Ignore
+            $AllAlgorithms = $EmptyObject = $newAlgo = $null
+            Remove-Variable -Name AllAlgorithms,EmptyObject,newAlgo -ErrorAction Ignore
         }
     }
 
@@ -2005,6 +2024,10 @@ function Invoke-Core {
             if (Test-Config "Miners" -Health) {
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
                 $CPU_GlobalAffinityMask = Get-CPUAffinity $Global:GlobalCPUInfo.Threads -ToInt
+                
+                $EmptyObjects       = @{CPU=$null;GPU=$null;GPUDUAL=$null}
+                $EmptyObjectsString = @("Params","OCprofile","MSIAprofile","Penalty","HashAdjust","Difficulty","ShareCheck")
+
                 foreach ($CcMiner in @($MinersConfig.PSObject.Properties)) {
                     $CcMinerName = $CcMiner.Name
                     [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
@@ -2017,43 +2040,77 @@ function Invoke-Core {
                             $Tuning  = Get-Yes $p.Tuning
                             if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -notin @("MainAlgorithm","SecondaryAlgorithm","Disable","Tuning") -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($Disable -and $q -eq "Disable") -or ($Tuning -and $q -eq "Tuning")) {$true;break}})) {
                                 $CcMinerNameToAdd = $CcMinerName
+
+                                $newMiner = $null
+
+                                $newMiner = $p | Select-Object -ExcludeProperty MainAlgorithm, SecondaryAlgorithm
+
                                 if ($p.MainAlgorithm -ne '*') {
                                     $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.MainAlgorithm)"
                                     if ($p.SecondaryAlgorithm) {
                                         $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.SecondaryAlgorithm)"
                                         $Intensity = @($p.Intensity -replace "[^0-9\.,;]+" -split "[,;]+" | Where-Object {"$_" -ne ""} | Select-Object -Unique)
-                                        if ($p.Intensity -ne $null) {$p.Intensity = $Intensity} else {$p | Add-Member Intensity $Intensity -Force}
+                                        if ($newMiner.Intensity -ne $null) {$newMiner.Intensity = $Intensity} else {$newMiner | Add-Member Intensity $Intensity -Force}
                                     }
                                 }
-                                if ($p.MSIAprofile -ne $null -and $p.MSIAprofile -and $p.MSIAprofile -notmatch "^[1-5]$") {
-                                    Write-Log -Level Warn "Invalid MSIAprofile for $($CcMinerNameToAdd) in miners.config.txt: `"$($p.MSIAprofile)`" (empty or 1-5 allowed, only)"
-                                    $p.MSIAprofile = ""
+                                if ($newMiner.MSIAprofile -ne $null -and $newMiner.MSIAprofile -and $newMiner.MSIAprofile -notmatch "^[1-5]$") {
+                                    Write-Log -Level Warn "Invalid MSIAprofile for $($CcMinerNameToAdd) in miners.config.txt: `"$($newMiner.MSIAprofile)`" (empty or 1-5 allowed, only)"
+                                    $newMiner.MSIAprofile = ""
                                 }
-                                if ($p.Difficulty -ne $null) {$p.Difficulty = $p.Difficulty -replace "[^\d\.]"}
-                                if ($p.Affinity) {
-                                    $CPUAffinityInt = (ConvertFrom-CPUAffinity $p.Affinity -ToInt) -band $CPU_GlobalAffinityMask
+                                if ($newMiner.Difficulty -ne $null) {$newMiner.Difficulty = $newMiner.Difficulty -replace "[^\d\.]"}
+                                if ($newMiner.Affinity) {
+                                    $CPUAffinityInt = (ConvertFrom-CPUAffinity $newMiner.Affinity -ToInt) -band $CPU_GlobalAffinityMask
                                     if ($CPUAffinityInt) {
-                                        $p.Affinity = "0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt
-                                        if (-not $p.Threads) {
-                                            $CPUThreads = @(ConvertFrom-CPUAffinity $p.Affinity).Count
-                                            if ($p.Threads -eq $null) {$p | Add-Member Threads $Threads -Force} else {$p.Threads = $CPUThreads}
+                                        $newMiner.Affinity = "0x{0:x$(if($CPUAffinityInt -lt 65536){4}else{8})}" -f $CPUAffinityInt
+                                        if (-not $newMiner.Threads) {
+                                            $CPUThreads = @(ConvertFrom-CPUAffinity $newMiner.Affinity).Count
+                                            if ($newMiner.Threads -eq $null) {$newMiner | Add-Member Threads $Threads -Force} else {$newMiner.Threads = $CPUThreads}
                                         }
                                     } else {
-                                        $p.Affinity = ""
+                                        $newMiner.Affinity = ""
                                     }
                                 }
-                                if ($p.Threads -ne $null) {$p.Threads = [int]($p.Threads -replace "[^\d]")}
-                                if ($p.ShareCheck -ne $null -and $p.ShareCheck -ne "") {$p.ShareCheck = ConvertFrom-Time $p.ShareCheck}
-                                if ($p.Disable -ne $null) {$p.Disable = $Disable} else {$p | Add-Member Disable $Disable -Force}
-                                if ($p.Tuning -ne $null) {$p.Tuning = $Tuning} else {$p | Add-Member Tuning $Tuning -Force}
-                                $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $p -MemberType NoteProperty -Force
+                                if ($newMiner.Threads -ne $null) {$newMiner.Threads = [int]($newMiner.Threads -replace "[^\d]")}
+                                if ($newMiner.ShareCheck -ne $null -and $newMiner.ShareCheck -ne "") {$newMiner.ShareCheck = ConvertFrom-Time $p.ShareCheck}
+                                if ($newMiner.Disable -ne $null) {$newMiner.Disable = $Disable} else {$newMiner | Add-Member Disable $Disable -Force}
+                                if ($newMiner.Tuning -ne $null) {$newMiner.Tuning = $Tuning} else {$newMiner | Add-Member Tuning $Tuning -Force}
+
+                                $minerType = if ($newMiner.Threads -ne $null) {"CPU"} elseif ($newMiner.Hash2Adjust -ne $null) {"GPUDUAL"} else {"GPU"}
+
+                                if ($EmptyObjects[$minerType] -eq $null) {
+                                    if (-not $newMiner.Disable -and -not $newMiner.Tuning) {
+                                        $isEmpty = $true
+                                        foreach ( $prop in $EmptyObjectsString ) {
+                                            if ($newMiner.$prop -ne "") {
+                                                $isEmpty = $false
+                                                break
+                                            }
+                                        }
+                                        if ($isEmpty -and $minerType -ne "GPU") {
+                                            if ($minerType -eq "CPU" -and ($newMiner.Affinity -ne "" -or $newMiner.Threads)) { $isEmpty = $false }
+                                            elseif ($minerType -eq "GPUDUAL" -and ($newMiner.Hash2Adjust -ne "" -or $newMiner.Intensity)) { $isEmpty = $false }
+                                        }
+
+                                        if ($isEmpty) {
+                                            $EmptyObjects[$minerType] = $newMiner
+                                        }
+                                    }
+                                } elseif ([RBMToolBox]::CompareObject($newMiner,$EmptyObjects[$minerType])) {
+                                    $newMiner = $null
+                                    $newMiner = $EmptyObjects[$minerType]
+                                }
+
+                                if (-not $isEmpty) {
+                                    Write-Log -Level Info "[DEBUG] Add $CcMinerNameToAdd"
+                                }
+                                $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $newMiner -MemberType NoteProperty -Force
                             }
                         }
                     }
                 }
             }
-            $MinersConfig = $null
-            Remove-Variable -Name MinersConfig -ErrorAction Ignore
+            $MinersConfig = $EmptyObjects = $newMiner = $null
+            Remove-Variable -Name MinersConfig,EmptyObjects,newMiner -ErrorAction Ignore
         }
     }
 

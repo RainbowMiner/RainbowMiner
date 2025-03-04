@@ -337,7 +337,10 @@ function Set-MinersConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1"}
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
-            $AllMiners = if (Test-Path "Miners") {@(Get-MinersContentRS -Parameters @{InfoOnly = $true})}
+            $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
+            if (Test-Path "Miners") {
+                Get-MinersContentRS -Parameters @{InfoOnly = $true} | ForEach-Object { [void]$AllMiners.Add($_) }
+            }
 
             $MiningMode = $Session.Config.MiningMode
             if ($MiningMode -eq $null) {
@@ -355,17 +358,23 @@ function Set-MinersConfigDefault {
                 $MiningMode = "combo"
             }
 
+            $SetupDevices = [System.Collections.Generic.List[string]]::new()
+
             foreach ($a in @("CPU","AMD","INTEL","NVIDIA")) {
-                if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
-                else {
-                    $Devices = @($AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
-                    [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
+                $SetupDevices.Clear()
+                if ($a -eq "CPU") {
+                    [void]$SetupDevices.Add("CPU")
+                } else {
+                    $Devices = @($AllDevices | Where-Object {$_.Type -eq "Gpu" -and $_.Vendor -eq $a} | Foreach-Object {
+                        if (-not $SetupDevices.Contains($_.Model)) { [void]$SetupDevices.Add($_.Model) }
+                        [PSCustomObject]@{Model=$_.Model;Model_Name=$_.Model_Name;Name=$_.Name}
+                    })
                     if ($SetupDevices.Count -gt 1 -and $MiningMode -eq "combo") {
                         Get-DeviceSubsets $Devices | Foreach-Object {[void]$SetupDevices.Add($_.Model -join '-')}
                     }
                 }
                 
-                [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
+                $Miners = $AllMiners.Where({$_.Type -contains $a})
                 [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {
