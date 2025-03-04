@@ -2100,9 +2100,6 @@ function Invoke-Core {
                                     $newMiner = $EmptyObjects[$minerType]
                                 }
 
-                                if (-not $isEmpty) {
-                                    Write-Log -Level Info "[DEBUG] Add $CcMinerNameToAdd"
-                                }
                                 $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $newMiner -MemberType NoteProperty -Force
                             }
                         }
