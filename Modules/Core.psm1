@@ -1267,25 +1267,25 @@ function Invoke-Core {
 
                 $EmptyObject = $null
 
-                $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
-                    $a = $_
-                    #$Algo_MRRPriceModifierPercent = "$($Session.Config.Algorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
-                    $Algo_MaxTimeToFind           = (ConvertFrom-Time $Session.Config.Algorithms.$a.MaxTimeToFind)
+                foreach ( $a in $AllAlgorithms.PSObject.Properties.Name ) {
+                    if ($Session.Config.Algorithm.Count -and -not $Session.Config.Algorithm -contains $a) { continue }
+                    #$Algo_MRRPriceModifierPercent = "$($AllAlgorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
+                    $Algo_MaxTimeToFind           = (ConvertFrom-Time $AllAlgorithms.$a.MaxTimeToFind)
                     $newAlgo = $null
                     $newAlgo = [PSCustomObject]@{
-                        Penalty                 = ([Math]::Round([double]($Session.Config.Algorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
-                        MinHashrate             = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrate)
-                        MinHashrateSolo         = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinHashrateSolo)
-                        MinWorkers              = (ConvertFrom-Hash $Session.Config.Algorithms.$a.MinWorkers)
+                        Penalty                 = ([Math]::Round([double]($AllAlgorithms.$a.Penalty -replace "[^\d\.\-]+"),2))
+                        MinHashrate             = (ConvertFrom-Hash $AllAlgorithms.$a.MinHashrate)
+                        MinHashrateSolo         = (ConvertFrom-Hash $AllAlgorithms.$a.MinHashrateSolo)
+                        MinWorkers              = (ConvertFrom-Hash $AllAlgorithms.$a.MinWorkers)
                         MaxTimeToFind           = $Algo_MaxTimeToFind
-                        MSIAprofile             = ([int]$Session.Config.Algorithms.$a.MSIAprofile)
-                        OCProfile               = "$($Session.Config.Algorithms.$a.OCProfile)".Trim()
+                        MSIAprofile             = ([int]$AllAlgorithms.$a.MSIAprofile)
+                        OCProfile               = "$($AllAlgorithms.$a.OCProfile)".Trim()
                         MinBLKRate              = $(if ($Algo_MaxTimeToFind) {86400/$Algo_MaxTimeToFind} else {0})
-                        #MRREnable               = $(if ($Session.Config.Algorithms.$a.MRREnable -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRREnable} else {$true})
-                        #MRRAllowExtensions      = $(if ($Session.Config.Algorithms.$a.MRRAllowExtensions -ne "" -and $Session.Config.Algorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $Session.Config.Algorithms.$a.MRRAllowExtensions} else {$null})
+                        #MRREnable               = $(if ($AllAlgorithms.$a.MRREnable -ne $null) {Get-Yes $AllAlgorithms.$a.MRREnable} else {$true})
+                        #MRRAllowExtensions      = $(if ($AllAlgorithms.$a.MRRAllowExtensions -ne "" -and $AllAlgorithms.$a.MRRAllowExtensions -ne $null) {Get-Yes $AllAlgorithms.$a.MRRAllowExtensions} else {$null})
                         #MRRPriceModifierPercent = $(if ($Algo_MRRPriceModifierPercent -ne "") {[Math]::Max(-30,[Math]::Min(30,[Math]::Round([double]$Algo_MRRPriceModifierPercent,2)))} else {$null})
-                        MinerName               = @(if ($Session.Config.Algorithms.$a.MinerName){[regex]::split("$($Session.Config.Algorithms.$a.MinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
-                        ExcludeMinerName        = @(if ($Session.Config.Algorithms.$a.ExcludeMinerName){[regex]::split("$($Session.Config.Algorithms.$a.ExcludeMinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
+                        MinerName               = @(if ($AllAlgorithms.$a.MinerName){[regex]::split("$($AllAlgorithms.$a.MinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
+                        ExcludeMinerName        = @(if ($AllAlgorithms.$a.ExcludeMinerName){[regex]::split("$($AllAlgorithms.$a.ExcludeMinerName)".Trim(),"\s*[,;]+\s*") | Where-Object {$_}})
                     }
 
                     if ($EmptyObject -eq $null) {
