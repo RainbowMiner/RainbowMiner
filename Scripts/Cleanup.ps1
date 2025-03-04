@@ -19,7 +19,7 @@ if ($IsLinux -and (Test-Path ".\DotNet\Bin")) {
     (Start-Process "chmod" -ArgumentList "777",(Resolve-Path ".\DotNet\Bin") -PassThru).WaitForExit(1000) > $null
 }
 
-Initialize-Session
+Initialize-Session -NoDLLs
 
 $DownloadsCleanup = $true
 $MinersConfigCleanup = $true
@@ -1939,7 +1939,7 @@ try {
         }
     }
 
-    $MinersContent = Get-MinersContentRS -Parameters @{InfoOnly = $true}
+    $MinersContent = Get-MinersContent -Parameters @{InfoOnly = $true}
 
     if ($RemoveMinerStats.Count -gt 0) {
         if (Test-Path ".\Stats\Miners") {

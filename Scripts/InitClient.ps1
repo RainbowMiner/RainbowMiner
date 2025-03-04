@@ -1,6 +1,6 @@
 ﻿Import-Module .\Modules\Include.psm1
 
-Initialize-Session
+Initialize-Session -NoDLLs
 
 if ($IsWindows) {
     if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {

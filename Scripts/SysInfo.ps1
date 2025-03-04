@@ -2,7 +2,7 @@
 
 Import-Module ".\Modules\Include.psm1"
 
-Set-OsFlags
+Set-OsFlags -NoDLLs
 
 if ($IsLinux) {Import-Module ".\Modules\OCDaemon.psm1"}
 

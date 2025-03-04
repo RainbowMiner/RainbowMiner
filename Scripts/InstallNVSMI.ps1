@@ -5,7 +5,7 @@ $NV_Version = ""
 Import-Module .\Modules\Include.psm1
 Import-Module .\Modules\DeviceLib.psm1
 
-Initialize-Session
+Initialize-Session -NoDLLs
 
 if (-not (Test-IsElevated)) {
     Write-Output "WARNING: Admin Privileges needed. Exiting without installation"

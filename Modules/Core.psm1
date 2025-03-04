@@ -2118,7 +2118,7 @@ function Invoke-Core {
     Compare-Object @($Session.AvailMiners) @($Global:MinerInfo.Keys) | Foreach-Object {
         $CcMinerName = $_.InputObject
         Switch ($_.SideIndicator) {
-            "<=" {$Global:MinerInfo[$CcMinerName] = @(Get-MinersContentRS -MinerName $CcMinerName -Parameters @{InfoOnly = $true} | Select-Object -ExpandProperty Type);Break}
+            "<=" {$Global:MinerInfo[$CcMinerName] = @(Get-MinersContent -MinerName $CcMinerName -Parameters @{InfoOnly = $true} | Select-Object -ExpandProperty Type);Break}
             "=>" {[void]$Global:MinerInfo.Remove($CcMinerName);Break}
         }
         $MinerInfoChanged = $true
@@ -2650,7 +2650,7 @@ function Invoke-Core {
     $AllMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
     if ($NewPools.Count -and (Test-Path "Miners")) {
 
-        Get-MinersContentRS -Parameters @{Pools = $Pools; InfoOnly = $false} | Foreach-Object {
+        Get-MinersContent -Parameters @{Pools = $Pools; InfoOnly = $false} | Foreach-Object {
             $Miner = $_
 
             $Miner_Name = $Miner.BaseName

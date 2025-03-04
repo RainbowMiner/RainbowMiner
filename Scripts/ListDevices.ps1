@@ -3,7 +3,7 @@ Import-Module .\Modules\DeviceLib.psm1
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
-Initialize-Session
+Initialize-Session -NoDLLs
 
 function Get-DeviceDebug {
     [CmdletBinding()]

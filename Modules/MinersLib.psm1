@@ -55,9 +55,9 @@ function Get-MinersContent {
     Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {
         $scriptName = $_.BaseName
         $Parameters.InfoOnly -or (
-            [RBMToolBox]::IsIntersect($possibleDevices,@($Global:MinerInfo.$scriptName)) -and
-            ($Session.Config.MinerName.Count -eq 0 -or [RBMToolBox]::IsIntersect($Session.Config.MinerName,$_.BaseName)) -and
-            ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not [RBMToolBox]::IsIntersect($Session.Config.ExcludeMinerName,$_.BaseName))
+            (Test-Intersect $possibleDevices @($Global:MinerInfo.$scriptName)) -and
+            ($Session.Config.MinerName.Count -eq 0 -or (Test-Intersect $Session.Config.MinerName $_.BaseName)) -and
+            ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not (Test-Intersect $Session.Config.ExcludeMinerName,$_.BaseName))
         )
     } | Foreach-Object { 
         $scriptPath = $_.FullName
@@ -79,6 +79,86 @@ function Get-MinersContent {
                 Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
             }
         }
+    }
+}
+
+function Get-MinersContentMOD {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Hashtable]$Parameters = @{},
+        [Parameter(Mandatory = $false)]
+        [String]$MinerName = "*"
+    )
+
+    if ($Parameters.InfoOnly -eq $null) {$Parameters.InfoOnly = $false}
+
+    $possibleDevices = @($Global:DeviceCache.DevicesToVendors.Values | Sort-Object -Unique)
+    if ($Global:GlobalCPUInfo.Vendor -eq "ARM" -or $Global:GlobalCPUInfo.Features.ARM) {
+        for($i=0; $i -lt $possibleDevice.Count; $i++) { $possibleDevice[$i] = "ARM" + $possibleDevice[$i] }
+    }
+    
+    if (-not (Test-Path ".\Modules\Miners")) { New-Item ".\Modules\Miners" -ItemType "directory" > $null }
+
+    Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {
+        $scriptName = $_.BaseName
+        $Parameters.InfoOnly -or (
+            (Test-Intersect $possibleDevices @($Global:MinerInfo.$scriptName)) -and
+            ($Session.Config.MinerName.Count -eq 0 -or (Test-Intersect $Session.Config.MinerName $_.BaseName)) -and
+            ($Session.Config.ExcludeMinerName.Count -eq 0 -or -not (Test-Intersect $Session.Config.ExcludeMinerName,$_.BaseName))
+        )
+    } | Foreach-Object { 
+        $scriptName = $_.BaseName
+        $scriptFile = $_.FullName
+
+        $minerFunc = "Get-Miner$($scriptName)"
+        $modFile = Join-Path ".\Modules\Miners" ($minerFunc + ".psm1")
+
+        if (Test-Path $modFile) {
+            $lwt = (Get-ChildItem $modFile -File -ErrorAction Ignore).LastWriteTimeUtc
+            if ($lwt -lt $_.LastWriteTimeUtc) {
+                Remove-Item $modFile -Force
+            }
+        }
+
+        if (-not (Test-Path $modFile)) {
+            try {
+                $stream = [System.IO.StreamWriter]::new([IO.Path]::GetFullPath($modFile), $true)
+                [void]$stream.WriteLine("function $($minerFunc) {")
+                Get-Content -Path $scriptFile | ForEach-Object { if ($_ -notmatch "using module") {[void]$stream.WriteLine($_)} }
+                [void]$stream.WriteLine("}")
+            }
+            catch {
+                Write-Log -Level Warn "Creation of Modfile failed: $($_.Exception.Message)"
+            }
+            finally {
+                if ($stream -ne $null) {
+                    $stream.Close()
+                    $stream.Dispose()
+                }
+            }
+        }
+
+        $Parameters["Name"] = $scriptName
+
+        Import-Module $modFile -Scope Local
+
+         & $minerFunc @Parameters | Foreach-Object {
+            if ($Parameters.InfoOnly) {
+                $_ | Add-Member -NotePropertyMembers @{
+                    Name     = if ($_.Name) {$_.Name} else {$scriptName}
+                    BaseName = $scriptName
+                } -Force -PassThru
+            } elseif ($_.PowerDraw -eq 0) {
+                $_.PowerDraw = $Global:StatsCache."$($_.Name)_$($_.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
+                if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -contains $_.DeviceModel) {$_.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($_.DeviceModel)"}
+                $_
+            } else {
+                Write-Log -Level Warn "Miner module $($scriptName) returned invalid object. Please open an issue at https://github.com/rainbowminer/RainbowMiner/issues"
+            }
+        }
+
+        Remove-Module $minerFunc
     }
 }
 
@@ -108,14 +188,20 @@ function Get-MinersContentRS {
     $psCmd = $null
 
     try {
-        $runspace = [runspacefactory]::CreateRunspace()
-        if (-not $runspace) { throw "Failed to create Runspace!" }
-        $runspace.Open()
 
+        $initialSessionState = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
         foreach ($Var in $GlobalVars) {
             $VarRef = Get-Variable -Scope Global $Var -ValueOnly
-            $runspace.SessionStateProxy.SetVariable($Var, $VarRef)
+            [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new($Var, $VarRef, $null))
         }
+
+        foreach ($Module in @("Include","MinersLib")) {
+            [void]$initialSessionState.ImportPSModule((Resolve-Path ".\Modules\$($Module).psm1"))
+        }
+
+        $runspace = [runspacefactory]::CreateRunspace($initialSessionState)
+        if (-not $runspace) { throw "Failed to create Runspace!" }
+        $runspace.Open()
 
         $psCmd = [powershell]::Create()
         if (-not $psCmd) { throw "Failed to create PowerShell instance!" }
@@ -125,9 +211,7 @@ function Get-MinersContentRS {
             param ($Parameters, $MinerName)
             Set-Location $Session.MainPath
             try {
-                Import-Module .\Modules\Include.psm1 -Force
-                Import-Module .\Modules\MinersLib.psm1 -Force
-                Set-OsFlags -Mini
+                Set-OsFlags -NoDLLs
                 Get-MinersContent -Parameters $Parameters -MinerName $MinerName
             } catch {
                 Write-Log -Level Error "Error in Get-MinersContent: $_"

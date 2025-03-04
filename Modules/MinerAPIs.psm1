@@ -103,7 +103,11 @@ class Miner {
     $EthPillJob
     $WrapperJob
 
-    hidden [Array]$Data = @()
+    hidden $Data = $null
+
+    Miner() {
+        $this.ResetMinerData()
+    }
 
     [String]GetArguments() {
         return $this.Arguments -replace "\`$mport",$this.Port -replace "\`$memsizegb",$this.MemSizeGB
@@ -560,7 +564,7 @@ class Miner {
     }
 
     AddMinerData($Raw,$HashRate,$Difficulty,$PowerDraw,$Devices) {
-        $this.Data += [PSCustomObject]@{
+        [void]$this.Data.Add([PSCustomObject]@{
                 Raw        = if ($Global:Session.LogLevel -eq "Debug") {$Raw} else {$null}
                 HashRate   = $HashRate
                 Difficulty = $Difficulty
@@ -568,7 +572,7 @@ class Miner {
                 Date       = (Get-Date).ToUniversalTime()
                 PowerDraw  = if ($PowerDraw) {$PowerDraw} else {Get-DevicePowerDraw -DeviceName $this.DeviceName}
                 Round      = $this.Rounds
-            }
+            })
         $this.ActiveLast = Get-Date
     }
 
@@ -590,35 +594,79 @@ class Miner {
 
     CleanupMinerData() {
         if ($this.Data.Count -gt $this.MinSamples) {
-            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::Max($this.ExtendInterval,1)*2)
-            $i=0; While ($this.Data[$i].Date -lt $DataMinTime -and ($this.Data.Count - $i) -gt $this.MinSamples) {$i++}
-            if ($i -gt 0) {$this.Data = $this.Data | Select-Object -Skip $i}
+            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * [Math]::Max($this.ExtendInterval, 1) * 2)    
+            for ($i = 0; $i -lt $this.Data.Count; $i++) {
+                if ($this.Data[$i].Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) { break }
+            }
+            if ($i -gt 0) { [void]$this.Data.RemoveRange(0, $i) }
         }
     }
 
     ResetMinerData() {
-        $this.Data = @()
-    }
-
-    [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm[0]) {
-        $Intervals  = [Math]::Max($this.ExtendInterval,1)
-        $Timeframe  = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
-        return ($this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe} | Foreach-Object {
-            $Diff = $_.Difficulty.$Algorithm
-            if (-not $Diff -and $Algorithm -match "-") {$Diff = $_.Difficulty."$($Algorithm -replace '\-.*$')"}
-            $Diff
-        } | Measure-Object -Average).Average
-    }
-
-    [Double]GetCurrentDifficulty([String]$Algorithm = [String]$this.Algorithm[0]) {
-        return $this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Select-Object -Last 1 | Foreach-Object {
-            $Diff = $_.Difficulty.$Algorithm
-            if (-not $Diff -and $Algorithm -match "-") {$Diff = $_.Difficulty."$($Algorithm -replace '\-.*$')"}
-            $Diff
+        if ($this.Data -eq $null) {
+            $this.Data = [System.Collections.Generic.List[PSCustomObject]]::new()
+        } else {
+            [void]$this.Data.Clear()
         }
     }
 
+
+    [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm[0]) {
+        $Intervals = [Math]::Max($this.ExtendInterval, 1)
+        $Timeframe = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * $Intervals)
+        $AlgosDiffer = $Algorithm -match '-'
+        $AlgorithmBase = $Algorithm -replace '\-.*$'
+
+        $sum = 0
+        $count = 0
+
+        foreach ($item in $this.Data) {
+            if ($item.Date -lt $Timeframe) { continue }
+
+            if ($item.Difficulty -and ($item.Difficulty.$Algorithm -or ($AlgosDiffer -and $item.Difficulty.$AlgorithmBase))) {
+                $diff = $item.Difficulty.$Algorithm
+                if (-not $diff -and $AlgosDiffer) {
+                    $diff = $item.Difficulty.$AlgorithmBase
+                }
+
+                if ($diff) {
+                    $sum += $diff
+                    $count++
+                }
+            }
+        }
+
+        if ($count -gt 0) { $sum /= $count }
+        return $sum
+    }
+
+    [Double]GetCurrentDifficulty([String]$Algorithm = [String]$this.Algorithm[0]) {
+        $AlgosDiffer = $Algorithm -match '-'
+        $AlgorithmBase = $Algorithm -replace '\-.*$'
+
+        for ($i = $this.Data.Count - 1; $i -ge 0; $i--) {
+            $item = $this.Data[$i]
+
+            if ($item.Difficulty -and ($item.Difficulty.$Algorithm -or ($AlgosDiffer -and $item.Difficulty.$AlgorithmBase))) {
+                $diff = $item.Difficulty.$Algorithm
+                if (-not $diff -and $AlgosDiffer) {
+                    $diff = $item.Difficulty.$AlgorithmBase
+                }
+
+                if ($diff) {
+                    return $diff
+                }
+            }
+        }
+
+        return 0
+    }
+
     [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm[0],[Bool]$Safe = $true) {
+        $AlgosDiffer = $Algorithm -match '-'
+        $AlgorithmBase = $Algorithm -replace '\-.*$'
+
+
         if (($this.Data | Where-Object Device | Measure-Object).Count) {
             $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
         } else {
@@ -627,7 +675,7 @@ class Miner {
 
         $Intervals = [Math]::Max($this.ExtendInterval,1)
         $Timeframe = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
-        $HashData  = $this.Data | Where-Object {$_.HashRate -and ($_.HashRate.$Algorithm -or $_.HashRate."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe}
+        $HashData  = $this.Data | Where-Object {$_.HashRate -and ($_.HashRate.$Algorithm -or ($AlgosDiffer -and $_.HashRate.$AlgorithmBase)) -and ($_.Date -ge $Timeframe)}
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.075}
         $MinHashRate = 1-[Math]::Min($MaxVariance/2,0.1)
 
@@ -641,7 +689,7 @@ class Miner {
 
             $HashData | ForEach-Object {
                 $Data_HashRates = $_.HashRate.$Algorithm
-                if (-not $Data_HashRates -and $Algorithm -match "-") {$Data_HashRates = $_.HashRate."$($Algorithm -replace '\-.*$')"}
+                if (-not $Data_HashRates -and $AlgosDiffer) {$Data_HashRates = $_.HashRate.$AlgorithmBase}
 
                 $Data_Devices = $_.Device
                 if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
@@ -675,8 +723,18 @@ class Miner {
     }
 
     [Int64]GetPowerDraw() {
-        $TimeFrame = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * [Math]::Max($this.ExtendInterval,1))
-        return ($this.Data | Where-Object {$_.PowerDraw -and $_.Date -ge $TimeFrame} | Select-Object -ExpandProperty PowerDraw | Measure-Object -Average).Average
+        $TimeFrame = (Get-Date).ToUniversalTime().AddSeconds(-$this.DataInterval * [Math]::Max($this.ExtendInterval, 1))
+        $sum = 0
+        $count = 0
+
+        foreach ($item in $this.Data) {
+            if ($item.PowerDraw -and $item.Date -ge $TimeFrame) {
+                $sum += $item.PowerDraw
+                $count++
+            }
+        }
+        if ($count -gt 0) { $sum = [Math]::Round($sum / $count) }
+        return $sum
     }
 
     [bool]HasDevFees() {

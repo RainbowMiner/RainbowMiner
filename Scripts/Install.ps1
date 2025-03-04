@@ -6,7 +6,7 @@
 Import-Module .\Modules\Include.psm1
 Import-Module .\Modules\DeviceLib.psm1
 
-Initialize-Session
+Initialize-Session -NoDLLs
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 

@@ -8,15 +8,6 @@ if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Tran
 
 $ProgressPreference = "SilentlyContinue"
 
-Import-Module .\Modules\APILib.psm1
-Import-Module .\Modules\ConfigLib.psm1
-Import-Module .\Modules\Include.psm1
-Import-Module .\Modules\MiningRigRentals.psm1
-Import-Module .\Modules\StatLib.psm1
-Import-Module .\Modules\TcpLib.psm1
-Import-Module .\Modules\WebLib.psm1
-Import-Module .\Modules\WhatToMineLib.psm1
-
 $BasePath = Join-Path $PWD "web"
 
 Set-OsFlags

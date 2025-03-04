@@ -4,9 +4,9 @@
 
 function Initialize-Session {
     [CmdletBinding()]
-    param([switch]$Mini)
+    param([switch]$Mini,[switch]$NoDLLs)
 
-    Set-OsFlags -Mini:$Mini
+    Set-OsFlags -Mini:$Mini -NoDLLs:$NoDLLs
 
     if (-not (Test-Path Variable:Global:Session)) {
         $Global:Session = [System.Collections.Hashtable]::Synchronized(@{})
@@ -44,7 +44,7 @@ function Initialize-Session {
 
 function Set-OsFlags {
     [CmdletBinding()]
-    param([switch]$Mini)
+    param([switch]$Mini,[switch]$NoDLLs)
 
     if ($Global:OsFlagsSet) { return }
 
@@ -94,17 +94,19 @@ function Set-OsFlags {
        [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
     }
 
-    if (-not (Test-IsCore)) {
-        Initialize-DLLs -CSFileName "SSL.cs"
-        [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName TrustAllCertsPolicy
-    }
+    if (-not $NoDLLs) {
+        if (-not (Test-IsCore)) {
+            Initialize-DLLs -CSFileName "SSL.cs"
+            [System.Net.ServicePointManager]::CertificatePolicy = New-Object -TypeName TrustAllCertsPolicy
+        }
 
-    if ($IsWindows -and -not $Mini) {
-        Initialize-DLLs -CSFileName "CPUID.cs"
-        Initialize-DLLs -CSFileName "UserInput.cs"
-    }
+        if ($IsWindows -and -not $Mini) {
+            Initialize-DLLs -CSFileName "CPUID.cs"
+            Initialize-DLLs -CSFileName "UserInput.cs"
+        }
 
-    Initialize-DLLs -CSFileName "RBMToolBox.cs"
+        Initialize-DLLs -CSFileName "RBMToolBox.cs"
+    }
 
     $Global:OsFlagsSet = $true
 }
@@ -1350,8 +1352,7 @@ function Test-TimeSync {
         else
         {
             # Exception if not exists
-            $ConfiguredNTPServerNameRaw = [RBMToolBox]::Trim((Get-ItemProperty `
-                -Path HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Parameters -Name 'NtpServer').NtpServer)
+            $ConfiguredNTPServerNameRaw = [RBMToolBox]::Trim((Get-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Parameters -Name 'NtpServer').NtpServer)
         }
 
         if ($ConfiguredNTPServerNameRaw)
@@ -1850,6 +1851,16 @@ function Test-IsCore
 function Test-IsPS7
 {
     $Session.IsPS7 -or ($Session.IsPS7 -eq $null -and $PSVersionTable.PSVersion -ge (Get-Version "7.0"))
+}
+
+function Test-Intersect
+{
+    param([string[]]$arr1,[string[]]$arr2)
+    foreach ($a in $arr1) {
+        foreach ($b in $arr2) {
+            if ($a -eq $b) { return $true }
+        }
+    }
 }
 
 function Initialize-DLLs {

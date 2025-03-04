@@ -47,23 +47,27 @@
     $Global:APIAccessDB  = [System.Collections.Hashtable]::Synchronized(@{})
 
     # Setup runspacepool to launch the API webserver in separate threads
-    $APIVars = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Rates', $Global:Rates, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('StatsCache', $Global:StatsCache, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
-    [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIAccessDB', $APIAccessDB, $null))
+    $initialSessionState = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('API', $API, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Rates', $Global:Rates, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('StatsCache', $Global:StatsCache, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIClients', $APIClients, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('APIAccessDB', $APIAccessDB, $null))
     if (Initialize-HttpClient) {
-        [void]$APIVars.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new("GlobalHttpClient", $Global:GlobalHttpClient, $null))
+        [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new("GlobalHttpClient", $Global:GlobalHttpClient, $null))
+    }
+
+    foreach ($Module in @("APILib","ConfigLib","Include","MiningRigRentals","StatLib","TcpLib","WebLib","WhatToMineLib")) {
+        [void]$initialSessionState.ImportPSModule((Resolve-Path ".\Modules\$($Module).psm1"))
     }
 
     $MinThreads = 1
     $MaxThreads = if ($Session.Config.APIthreads) {$Session.Config.APIthreads} elseif ($API.IsServer) {$MinThreads = 2;[Math]::Min($Global:GlobalCPUInfo.Threads,8)} else {[Math]::Min($Global:GlobalCPUInfo.Cores,2)}
     $MaxThreads = [Math]::Max($MinThreads,$MaxThreads)
 
-    $Global:APIRunspacePool = [RunspaceFactory]::CreateRunspacePool(1, $MaxThreads, $APIVars, $Host)
+    $Global:APIRunspacePool = [RunspaceFactory]::CreateRunspacePool(1, $MaxThreads, $initialSessionState, $Host)
     $Global:APIRunspacePool.Open()
 
     $APIScript = [ScriptBlock]::Create((Get-Content ".\Scripts\API.ps1" -Raw))

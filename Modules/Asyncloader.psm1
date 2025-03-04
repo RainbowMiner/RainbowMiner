@@ -25,14 +25,20 @@ Param(
     # Setup additional, global variables for server handling
     $Global:AsyncLoaderListeners   = [System.Collections.ArrayList]@()
 
-     # Setup runspace to launch the AsyncLoader in a separate thread
-    $newRunspace = [runspacefactory]::CreateRunspace()
-    $newRunspace.Open()
-    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
-    $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
+    $initialSessionState = [Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('AsyncLoader', $AsyncLoader, $null))
+    [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new('Session', $Session, $null))
     if (Initialize-HttpClient) {
-        $newRunspace.SessionStateProxy.SetVariable("GlobalHttpClient", $Global:GlobalHttpClient)
+        [void]$initialSessionState.Variables.Add([Management.Automation.Runspaces.SessionStateVariableEntry]::new("GlobalHttpClient", $Global:GlobalHttpClient, $null))
     }
+
+    foreach ($Module in @("Include","MiningRigRentals","TcpLib","WebLib")) {
+        [void]$initialSessionState.ImportPSModule((Resolve-Path ".\Modules\$($Module).psm1"))
+    }
+
+     # Setup runspace to launch the AsyncLoader in a separate thread
+    $newRunspace = [runspacefactory]::CreateRunspace($initialSessionState)
+    $newRunspace.Open()
 
     $AsyncloaderScript = [ScriptBlock]::Create((Get-Content ".\Scripts\Asyncloader.ps1" -Raw))
 
