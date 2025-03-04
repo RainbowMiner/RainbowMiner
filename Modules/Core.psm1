@@ -1268,7 +1268,7 @@ function Invoke-Core {
                 $EmptyObject = $null
 
                 foreach ( $a in $AllAlgorithms.PSObject.Properties.Name ) {
-                    if ($Session.Config.Algorithm.Count -and -not $Session.Config.Algorithm -contains $a) { continue }
+                    if ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -notcontains $a) { continue }
                     #$Algo_MRRPriceModifierPercent = "$($AllAlgorithms.$a.MRRPriceModifierPercent -replace "[^\d\.\-]+")"
                     $Algo_MaxTimeToFind           = (ConvertFrom-Time $AllAlgorithms.$a.MaxTimeToFind)
                     $newAlgo = $null

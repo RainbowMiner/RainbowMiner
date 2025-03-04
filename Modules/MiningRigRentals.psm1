@@ -93,34 +93,59 @@ function Update-MiningRigRentalAlgorithmsConfig {
 
     if (Test-Config "MRRAlgorithms" -Health) {
         $Session.Config | Add-Member MRRAlgorithms ([PSCustomObject]@{}) -Force
-        $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
-            $a = $_
-            $Session.Config.MRRAlgorithms | Add-Member $a $AllAlgorithms.$a -Force
 
-            $Algo_Params = [ordered]@{
-                Enable          = $(if ($Session.Config.MRRAlgorithms.$a.Enable -ne $null) {Get-Yes $Session.Config.MRRAlgorithms.$a.Enable} else {$true})
-                AllowExtensions = $(if ($Session.Config.MRRAlgorithms.$a.AllowExtensions -ne "" -and $Session.Config.MRRAlgorithms.$a.AllowExtensions -ne $null) {Get-Yes $Session.Config.MRRAlgorithms.$a.AllowExtensions} else {$null})
+        $EmptyObject = $null
+        $EmptyObjectString = @("PriceModifierPercent","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceFactorDecayTime","PriceRiseExtensionPercent")
+
+        foreach ( $a in $AllAlgorithms.PSObject.Properties.Name ) {
+            if ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -notcontains $a) { continue }
+
+            $newAlgo = [PSCustomObject]@{
+                Enable          = $(if ($AllAlgorithms.$a.Enable -ne $null) {Get-Yes $AllAlgorithms.$a.Enable} else {$true})
+                AllowExtensions = $(if ($AllAlgorithms.$a.AllowExtensions -ne "" -and $AllAlgorithms.$a.AllowExtensions -ne $null) {Get-Yes $AllAlgorithms.$a.AllowExtensions} else {$null})
+                PriceModifierPercent = $null
+                PriceFactor = $null
+                PriceFactorMin = $null
+                PriceFactorDecayPercent = $null
+                PriceFactorDecayTime = $null
+                PriceRiseExtensionPercent = $null
+                DiffMessageTolerancyPercent = "$($AllAlgorithms.DiffMessageTolerancyPercent)".Trim()
             }
-            foreach ($Algo_Param in @("PriceModifierPercent","PriceFactor","PriceFactorMin","PriceFactorDecayPercent","PriceFactorDecayTime","PriceRiseExtensionPercent")) {
+
+            foreach ($Algo_Param in $EmptyObjectString) {
                 if ($Algo_Param -match "Time$") {
-                    $val = "$($Session.Config.MRRAlgorithms.$a.$Algo_Param)".Trim()
-                    $Algo_Params[$Algo_Param] = if ($val -ne "") {[Math]::Max((ConvertFrom-Time "$($val)"),$UpdateInterval) / 3600} else {$null}
+                    $val = "$($AllAlgorithms.$a.$Algo_Param)".Trim()
+                    if ($val -ne "") {$newAlgo.$Algo_Param = [Math]::Max((ConvertFrom-Time "$($val)"),$UpdateInterval) / 3600}
                 } else {
-                    $val = "$($Session.Config.MRRAlgorithms.$a.$Algo_Param -replace ",","." -replace "[^\d\.\-]+")"
-                    $Algo_Params[$Algo_Param] = if ($val -ne "") {[Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {$val[0] + "$($val.Substring(1) -replace "[^0-9\.]")"})} else {$null}
+                    $val = "$($AllAlgorithms.$a.$Algo_Param -replace ",","." -replace "[^\d\.\-]+")"
+                    if ($val -ne "") {$newAlgo.$Algo_Param = [Double]$(if ($val.Length -le 1) {$val -replace "[^0-9]"} else {$val[0] + "$($val.Substring(1) -replace "[^0-9\.]")"})}
                 }
             }
-            if ($Algo_Params["PriceModifierPercent"] -ne $Null) {
-                $Algo_Params["PriceModifierPercent"] = [Math]::Max(-30,[Math]::Min(30,[Math]::Round($Algo_Params["PriceModifierPercent"],2)))
+            if ($newAlgo.PriceModifierPercent -ne $Null) {
+                $newAlgo.PriceModifierPercent = [Math]::Max(-30,[Math]::Min(30,[Math]::Round($newAlgo.PriceModifierPercent,2)))
             }
-                
-            $Algo_Params.GetEnumerator() | Foreach-Object {
-                if ([bool]$Session.Config.MRRAlgorithms.$a.PSObject.Properties["$($_.Name)"]) {
-                    $Session.Config.MRRAlgorithms.$a."$($_.Name)" = $_.Value
-                } else {
-                    $Session.Config.MRRAlgorithms.$a | Add-Member "$($_.Name)" $_.Value -Force
+
+            if ($EmptyObject -eq $null) {
+                if ($newAlgo.Enable -and $newAlgo.DiffMessageTolerancyPercent -eq "" -and $newAlgo.AllowExtensions -eq $null) {
+                    $isEmpty = $true
+                    foreach( $prop in $EmptyObjectString ) {
+                        if ($newAlgo.$prop -ne $null) {
+                            $isEmpty = $false
+                            break
+                        }
+                    }
+
+                    if ($isEmpty) {
+                        $EmptyObject = $newAlgo
+                    }
                 }
+
+            } elseif ([RBMToolBox]::CompareObject($EmptyObject,$newAlgo)) {
+                $newAlgo = $null
+                $newAlgo = $EmptyObject
             }
+
+            $Session.Config.MRRAlgorithms | Add-Member $a $newAlgo -Force    
         }
     }
     
