@@ -143,8 +143,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             $Data = ConvertTo-Json ([PSCustomObject]@{Content = $CurrentConsole; Miners = $CurrentMiners; Timestamp = $ConsoleTimestamp; CmdMenu = $API.CmdMenu; CmdKey = $API.CmdKey})
 
-            $RunningMiners = $CurrentMiners = $CurrentConsole = $null
-            Remove-Variable -Name RunningMiners, CurrentMiners, CurrentConsole -ErrorAction Ignore
+            $RunningMiners = $CurrentMiners = $CurrentConsole = $ConsoleTimestamp = $null
+            Remove-Variable -Name RunningMiners, CurrentMiners, CurrentConsole, ConsoleTimestamp -ErrorAction Ignore
             break
         }
         "/cmdkey" {
@@ -166,6 +166,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                         AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                         Seconds  = [int64]$Timer.TotalSeconds
                                     }) -Depth 10
+            $Timer = $null
+            Remove-Variable -Name Timer -ErrorAction Ignore
             break
         }
         "/systemuptime" {
@@ -174,6 +176,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                                         AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                         Seconds  = [int64]$Timer.TotalSeconds
                                     }) -Depth 10
+            $Timer = $null
+            Remove-Variable -Name Timer -ErrorAction Ignore
             break
         }
         "/isserver" {
@@ -202,6 +206,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     }
                 } | Select-Object)
                 $Data = if ($AllMiners) {ConvertTo-Json $AllMiners -Depth 10} else {"[]"}
+                $AllMiners = $null
+                Remove-Variable -Name AllMiners -ErrorAction Ignore
             } else {
                 $Data = if ($API.RemoteMiners) {ConvertTo-Json $API.RemoteMiners -Depth 10} else {"[]"}
             }
@@ -299,8 +305,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
             }
 
-            $ConfigActual = $null
-            Remove-Variable -Name ConfigActual -ErrorAction Ignore
+            $ConfigName = $ConfigActual = $null
+            Remove-Variable -Name ConfigName, ConfigActual -ErrorAction Ignore
             Break
         }
         "/saveconfigjson" {
@@ -321,12 +327,12 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 } catch {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "[$ThreadID] Error writing config file $($Session.ConfigFiles[$ConfigName].Path): $($_.Exception.Message)" -Append -Timestamp
                 }
-                $ConfigActual = $ChangeTag = $null
-                Remove-Variable -Name ConfigActual, ChangeTag -ErrorAction Ignore
             }
 
             $Data = ConvertTo-Json ([PSCustomObject]@{Success=$Success}) -Depth 10
 
+            $ConfigName = $ConfigActual = $ChangeTag = $Success = $null
+            Remove-Variable -Name ConfigName, ConfigActual, ChangeTag, Success -ErrorAction Ignore
             Break
         }
         "/loadconfig" {
@@ -341,9 +347,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     [void]$ConfigParameters.Add($_ , $val)
                 }
                 $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters) -Depth 10
-
-                $ConfigSetup = $ConfigParameters = $null
-                Remove-Variable -Name ConfigSetup, ConfigParameters -ErrorAction Ignore
             } else {
                 $ConfigActual = Get-ConfigContent $ConfigName
                 if (-not $Session.ConfigFiles[$ConfigName].Healthy) {
@@ -392,9 +395,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         $Data = ConvertTo-Json $ConfigActual -Depth 10 -Compress
                     }
                 }
-                $ConfigActual = $PoolSetup = $null
-                Remove-Variable -Name ConfigActual, PoolSetup -ErrorAction Ignore
             }
+            $ConfigName = $ConfigSetup = $ConfigParameters = $ConfigActual = $MinerName = $MinerDevice = $PoolSetup = $RealConfig = $null
+            Remove-Variable -Name ConfigName, ConfigSetup, ConfigParameters, ConfigActual, MinerName, MinerDevice, PoolSetup, RealConfig -ErrorAction Ignore
             Break
         }
         "/saveconfig" {
@@ -571,8 +574,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false}) -Depth 10
             }
 
-            $ConfigActual = $Sorted = $DataSaved = $null
-            Remove-Variable -Name ConfigActual, Sorted, DataSaved -ErrorAction Ignore
+            $ConfigName = $ConfigPath = $ConfigActual = $ConfigChanged = $DataSaved = $PoolName = $NewCoin = $Value = $Type = $CoinSymbol = $i = $Sorted = $null
+            Remove-Variable -Name ConfigName, ConfigPath, ConfigActual, ConfigChanged, DataSaved, PoolName, NewCoin, Value, Type, CoinSymbol, i, Sorted -ErrorAction Ignore
             Break
         }
         "/loadminerstats" {
@@ -608,8 +611,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $ContentFileName = $ZipFileName
 
                 Remove-Item $ZipPath -Force -ErrorAction Ignore
-
             }
+            $Miner = $ZipDate = $ZipFileName = $ZipPath = $StatsPath = $Params = $null
+            Remove-Variable -Name Miner, ZipDate, ZipFileName, ZipPath, StatsPath, Params -ErrorAction Ignore
             Break
         }
         "/config" {
@@ -678,8 +682,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     $PurgeStrings = $null
                 }
             }
-            $p = $null
-            Remove-Variable -Name p -ErrorAction Ignore
 
             if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
             @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Sort-Object LastWriteTime | Foreach-Object {
@@ -687,7 +689,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $NewFile = "$DebugPath\$($_.Name)"
                 $PurgeString = Get-ContentByStreamReader $_
                 $PurgeStringsUnique.Where({$_ -and $_.Count}).Foreach({$PurgeString = $PurgeString -replace "($($_ -join "|"))","XXX"})
-                $PurgeString = $PurgeString -replace "onnected to [^\s]+:\d+","onnected to XXX:NNN"  -replace "Server [^\s]+:\d+","Server XXX:NNN" -replace "Port=\d+","Port=NNN" -replace "(\d+\.){3}\d+:\d+","X.X.X.X:NNN" -replace "(\d+\.){3}\d+","X.X.X.X" -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
+                $ip_regex = '\b(?!4\.)\d{1,3}(?:\.\d{1,3}){3}\b'
+                $PurgeString = $PurgeString -replace "onnected to [^\s]+:\d+","onnected to XXX:NNN"  -replace "Server [^\s]+:\d+","Server XXX:NNN" -replace "Port=\d+","Port=NNN" -replace "(\d+\.){3}\d+:\d+","X.X.X.X:NNN" -replace $ip_regex,"X.X.X.X" -replace "([0-9a-f]+:){7}[0-9a-f]+","X:X:X:X:X:X:X:X"
                 Out-File -InputObject $PurgeString -FilePath $NewFile
                 Get-ChildItem $NewFile | Foreach-Object {$_.LastWriteTime = $_.CreationTime = $_.LastAccessTime = $LastWriteTime}
             }
@@ -802,8 +805,6 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                     } catch {
                     }
                 }
-                $API_Miners = $null
-                Remove-Variable -Name API_Miners -ErrorAction Ignore
             }
 
             @(".\Data\lscpu.txt", ".\Data\gpu-count.txt", ".\Data\gpu-minerlist.txt", ".\Data\gpu-test.txt", ".\Data\alldevices.json", ".\Data\sysinfo.json") | Where-Object {Test-Path $_} | Foreach-Object {
@@ -834,8 +835,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
 
-            $Params = $PurgeString = $PurgeUnique = $PurgeStrings = $PurgeStringsUnique = $UserConfig = $RunningConfig = $CurrentConfig = $CurrentPool = $API_Miners = $null
-            Remove-Variable -Name Params, PurgeString, PurgeUnique, PurgeStrings, PurgeStringsUnique, UserConfig, RunningConfig, CurrentConfig, CurrentPool, API_Miners -ErrorAction Ignore
+            $API_Miners = $Arguments = $CurrentConfig = $CurrentPool = $DebugDate = $DebugPath = $ip_regex = $LastWriteTime = $NewFile = $Params = $PurgeString = $PurgeStrings = $PurgeStringsUnique = $PurgeUnique = $RunningConfig = $TestFileName = $UserConfig = $null
+            Remove-Variable -Name API_Miners, Arguments, CurrentConfig, CurrentPool, DebugDate, DebugPath, ip_regex, LastWriteTime, NewFile, Params, PurgeString, PurgeStrings, PurgeStringsUnique, PurgeUnique, RunningConfig, TestFileName, UserConfig -ErrorAction Ignore
             Break
         }
         "/setup.json" {
@@ -934,10 +935,9 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         rows = $Earnings
                     } | ConvertTo-Json -Depth 10
                 }
-                Remove-Variable -Name Earnings -ErrorAction Ignore
             }
-            $Earnings = $null
-            Remove-Variable -Name Earnings -ErrorAction Ignore
+            $Earnings = $Filter = $Order = $Rate = $Sort = $TotalNotFiltered = $null
+            Remove-Variable -Name Earnings, Filter, Order, Rate, Sort, TotalNotFiltered -ErrorAction Ignore
             Break
         }
         "/sessionvars" {           
@@ -1050,8 +1050,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Data = ConvertTo-Json @($Balances | Select-Object) -Depth 10
             }
 
-            $Balances = $null
-            Remove-Variable -Name Balances -ErrorAction Ignore
+            $BalanceGroup = $Balances = $Rate = $null
+            Remove-Variable -Name BalanceGroup, Balances, Rate -ErrorAction Ignore
             Break
         }
         "/payouts" {
@@ -1070,8 +1070,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             } | Sort-Object Date,Name,Currency | Select-Object) -Depth 10
 
-            $Balances = $null
-            Remove-Variable -Name Balances -ErrorAction Ignore
+            $Balances = $Balance_BaseName = $Balance_Currency = $null
+            Remove-Variable -Name Balances, Balance_BaseName, Balance_Currency -ErrorAction Ignore
             Break
         }
         "/rates" {
@@ -1089,8 +1089,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             } else {
                 $Data = ConvertTo-Json $Rates -Depth 10
             }
-            $CurrentRates = $null
-            Remove-Variable -Name CurrentRates -ErrorAction Ignore
+            $CurrentRates = $rate = $val = $null
+            Remove-Variable -Name CurrentRates, rate, val -ErrorAction Ignore
             Break
         }
         "/asyncloaderjobs" {
@@ -1161,16 +1161,14 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                         }
                     }
                 }
-                $API_Miners = $null
-                Remove-Variable -Name API_Miners -ErrorAction Ignore
             }
             $Data = ConvertTo-Json @($Out) -Depth 10
             $Out.Clear()
             $JsonUri_Dates.Clear()
             $Miners_List.Clear()
 
-            $Out = $JsonUri_Dates = $Miners_List = $API_Miners = $null
-            Remove-Variable -Name Out, JsonUri_Dates, Miners_List, API_Miners -ErrorAction Ignore
+            $Algo = $API_Miners = $JsonUri = $JsonUri_Dates = $Miner_DeviceModel = $Miner_Failed = $Miner_NeedsBenchmark = $Miner_Path = $Miners_Key = $Miners_List = $Out = $Ratio = $SecondAlgo = $Speed = $null
+            Remove-Variable -Name Algo, API_Miners, JsonUri, JsonUri_Dates, Miner_DeviceModel, Miner_Failed, Miner_NeedsBenchmark, Miner_Path, Miners_Key, Miners_List, Out, Ratio, SecondAlgo, Speed -ErrorAction Ignore
             Break
         }
         "/activity" {
@@ -1238,8 +1236,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 $Data = $Activities | ConvertTo-Json -Compress -Depth 10
             }
 
-            $Activities = $null
-            Remove-Variable -Name Activities -ErrorAction Ignore
+            $Active = $Activities = $AvgPowerDraw = $AvgProfit = $LimitDays = $One = $null
+            Remove-Variable -Name Active, Activities, AvgPowerDraw, AvgProfit, LimitDays, One -ErrorAction Ignore
             Break
         }
         "/computerstats" {
@@ -1272,8 +1270,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
 
             $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$API.ActualRates;PowerPrice=$API.CurrentPowerPrice;Power=$API.CurrentPower;Uptime=$Uptime;SysUptime=$SysUptime;RemoteIP=$API.RemoteIP} | ConvertTo-Json -Depth 10
 
-            $Timer = $Uptime = $SysUptime = $null
-            Remove-Variable -Name Timer, Uptime, SysUptime -ErrorAction Ignore
+            $Earnings_1d = $Earnings_Avg = $Profit = $SysUptime = $Timer = $Uptime = $null
+            Remove-Variable -Name Earnings_1d, Earnings_Avg, Profit, SysUptime, Timer, Uptime -ErrorAction Ignore
             Break
         }
         "/stop" {
@@ -1361,6 +1359,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             } else {
                 $Data = ConvertTo-Json $APIClients
             }
+            $Config = $null
+            Remove-Variable -Name Config -ErrorAction Ignore
             Break
         }
         "/action/toggleminer" {
@@ -1384,6 +1384,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             }
             $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}}) -Depth 10
+            $Status = $Count = $Vendor = $Name = $disabled = $null
+            Remove-Variable -Name Status, Count, Vendor, Name, disabled -ErrorAction Ignore
             Break
         }
         "/action/togglepool" {
@@ -1401,6 +1403,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 }
             }
             $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}}) -Depth 10
+            $Status = $Count = $Vendor = $Name = $disabled = $null
+            Remove-Variable -Name Status, Count, Vendor, Name, disabled -ErrorAction Ignore
             Break
         }
         "/getconfig" {
@@ -1437,8 +1441,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             }
             $Data = [PSCustomObject]@{Status=$Status;Content=$Result;ExcludeList=$Session.Config.ExcludeServerConfigVars} | ConvertTo-Json -Depth 10
 
-            $Result = $GetConfigA = $GetConfigNew = $null
-            Remove-Variable -Name Result, GetConfigA, GetConfigNew -ErrorAction Ignore
+            $Status = $Client = $PathToFile = $ConfigLwt = $Result = $GetConfigA = $GetConfigNew = $null
+            Remove-Variable -Name Status, Client, PathToFile, ConfigLwt, Result, GetConfigA, GetConfigNew -ErrorAction Ignore
             Break
         }
         "/getjob" {
@@ -1492,8 +1496,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 } catch {}
                 $Data = [PSCustomObject]@{Status=$Status;Content=if ($Result -is [array]) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
 
-                $pbody = $pheaders = $Result = $null
-                Remove-Variable -Name pbody, pheaders, Result -ErrorAction Ignore
+                $Status = $Client = $pbody = $pheaders = $Result = $null
+                Remove-Variable -Name Status, Client, pbody, pheaders, Result -ErrorAction Ignore
             }
             break
         }
@@ -1546,8 +1550,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 } catch {}
                 $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
 
-                $Result = $null
-                Remove-Variable -Name Result -ErrorAction Ignore
+                $Client = $cycletime = $nonce = $regex = $regexfld = $regexmatch = $Result = $Status = $null
+                Remove-Variable -Name Client, cycletime, nonce, regex, regexfld, regexmatch, Result, Status -ErrorAction Ignore
             }
             break
         }
@@ -1578,8 +1582,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 } catch {}
                 $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
 
-                $Result = $null
-                Remove-Variable -Name Result -ErrorAction Ignore
+                $Status = $Client = $Params = $Result = $null
+                Remove-Variable -Name Status, Client, Params, Result -ErrorAction Ignore
             }
             break
         }
@@ -1611,8 +1615,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
                 } catch {}
                 $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
 
-                $Result = $null
-                Remove-Variable -Name Result -ErrorAction Ignore
+                $Status = $Client = $Params = $Result = $null
+                Remove-Variable -Name Status, Client, Params, Result -ErrorAction Ignore
             }
             break
         }
@@ -1657,8 +1661,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             }
             $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
 
-            $ActiveMiners = $StatsCPU = $StatsGPU = $Pool_Request = $Mrr_Data = $null
-            Remove-Variable -Name ActiveMiners, StatsCPU, StatsGPU, Pool_Request, Mrr_Data -ErrorAction Ignore
+            $ActiveMiners = $Algo = $CpuDevices = $GpuDevices = $Mrr_Data = $Pool_Request = $Speed = $StatsCPU = $StatsGPU = $null
+            Remove-Variable -Name ActiveMiners, Algo, CpuDevices, GpuDevices, Mrr_Data, Pool_Request, Speed, StatsCPU, StatsGPU -ErrorAction Ignore
             break
         }
         "/mrrrigs" {
@@ -1716,8 +1720,8 @@ While ($APIHttpListener.IsListening -and -not $API.Stop) {
             }
             $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
 
-            $StatsCPU = $StatsGPU = $AllRigs_Request = $Pool_Request = $Pool_Data = $Mrr_Data = $ActiveMiners = $null
-            Remove-Variable -Name StatsCPU, StatsGPU, Pool_Request, Pool_Data, Mrr_Data, ActiveMiners -ErrorAction Ignore
+            $ActiveMiners = $AllRigs_Request = $Algo = $CpuDevices = $GpuDevices = $Mrr_Data = $Pool_Data = $Pool_Request = $Rig = $Speed = $StatsCPU = $StatsGPU = $null
+            Remove-Variable -Name ActiveMiners, AllRigs_Request, Algo, CpuDevices, GpuDevices, Mrr_Data, Pool_Data, Pool_Request, Rig, Speed, StatsCPU, StatsGPU -ErrorAction Ignore
             break
         }
         "/mrrcontrol" {
