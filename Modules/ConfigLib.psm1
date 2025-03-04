@@ -206,7 +206,7 @@ function Set-CombosConfigDefault {
                         $Subset = $_.Model
                         $SubsetModel= $Subset -join '-'
                         if ($Preset.$SubsetType.$SubsetModel -eq $null) {
-                            $SubsetDefault = -not $GpuGroups.Count -or ($FullGpuGroups | Where-Object {$SubsetModel -match $_} | Measure-Object).Count -or -not [RBMToolBox]::IsIntersect($GpuGroups,$_.Model)
+                            $SubsetDefault = -not $GpuGroups.Count -or ($FullGpuGroups | Where-Object {$SubsetModel -match $_} | Measure-Object).Count -or -not (Test-Intersect $GpuGroups $_.Model)
                             if ($SubsetDefault -and $GpuCount -gt 3) {
                                 if (($FullCombosByCategory.GetEnumerator() | Where-Object {(Compare-Object $Subset $_.Value -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq $_.Value.Count} | Foreach-Object {$_.Value.Count} | Measure-Object -Sum).Sum -ne $Subset.Count) {
                                     $SubsetDefault = "0"

@@ -87,7 +87,7 @@ function Get-PoolsInfo {
             if ($AsObjects) {
                 $Script:ScriptPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
             } else {
-                $Script:ScriptPoolsInfo.PSObject.Properties | Where-Object {[RBMToolBox]::IsIntersect($_.Value.$Name,$Values)} | Select-Object -ExpandProperty Name | Sort-Object
+                $Script:ScriptPoolsInfo.PSObject.Properties | Where-Object {Test-Intersect $_.Value.$Name $Values} | Select-Object -ExpandProperty Name | Sort-Object
             }
         } else {
             $Script:ScriptPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object

@@ -2377,31 +2377,33 @@ function Invoke-Core {
         param($Pool)
 
         $Pool_Name = $Pool.Name
-        $Pool_Algo = $Pool.Algorithm0
+        $Pool_Algo = [string[]]$Pool.Algorithm0
         $Pool_CoinSymbol = $Pool.CoinSymbol
         $Pool_CoinName = $Pool.CoinName
 
         $Pool_CheckForUnprofitableAlgo = -not $Session.Config.DisableUnprofitableAlgolist -and -not ($Pool.Exclusive -and -not $Pool.Idle)
-        if ($Pool_CoinSymbol) { $Pool_Algo = @($Pool_Algo, "$($Pool_Algo)-$($Pool_CoinSymbol)") }
+        if ($Pool_CoinSymbol) { $Pool_Algo = [string[]]@($Pool_Algo, "$($Pool_Algo)-$($Pool_CoinSymbol)") }
 
         return -not (
-            ($Pool.SSL -or $Session.Config.Pools.$Pool_Name.SSL -ne 2) -and
+            (
+                $Pool.SSL -or $Session.Config.Pools.$Pool_Name.SSL -ne 2
+            ) -and
             (
                 ($ServerPoolNames.Count -and $ServerPoolNames.Contains($Pool_Name)) -or (
                     -not ( (-not $Session.Config.Pools.$Pool_Name) -or
                         ($Test_PoolName.Count -and -not $Test_PoolName.Contains($Pool_Name)) -or
                         ($Test_ExcludePoolName.Count -and $Test_ExcludePoolName.Contains($Pool_Name)) -or
-                        ($Test_Algorithm.Count -and -not [RBMToolBox]::IsIntersect($Test_Algorithm, $Pool_Algo)) -or
-                        ($Test_ExcludeAlgorithm.Count -and [RBMToolBox]::IsIntersect($Test_ExcludeAlgorithm, $Pool_Algo)) -or
-                        ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and [RBMToolBox]::IsIntersect($UnprofitableAlgos.Algorithms, $Pool_Algo)) -or
-                        ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms.Count -and [RBMToolBox]::IsIntersect($UnprofitableAlgos.Pools.$Pool_Name.Algorithms, $Pool_Algo)) -or
+                        ($Test_Algorithm.Count -and -not $Test_Algorithm.Overlaps($Pool_Algo)) -or
+                        ($Test_ExcludeAlgorithm.Count -and $Test_ExcludeAlgorithm.Overlaps($Pool_Algo)) -or
+                        ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Algorithms -and $UnprofitableAlgos.Algorithms.Count -and (Test-Intersect $UnprofitableAlgos.Algorithms $Pool_Algo)) -or
+                        ($Pool_CheckForUnprofitableAlgo -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms -and $UnprofitableAlgos.Pools.$Pool_Name.Algorithms.Count -and (Test-Intersect $UnprofitableAlgos.Pools.$Pool_Name.Algorithms $Pool_Algo)) -or
                         ($Pool_CheckForUnprofitableAlgo -and $Pool_CoinSymbol -and $UnprofitableAlgos.Coins -and $UnprofitableAlgos.Coins.Count -and $UnprofitableAlgos.Coins -contains $Pool_CoinSymbol) -or
                         ($Pool_CheckForUnprofitableAlgo -and $Pool_CoinSymbol -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -and $UnprofitableAlgos.Pools.$Pool_Name.Coins.Count -and $UnprofitableAlgos.Pools.$Pool_Name.Coins -contains $Pool_CoinSymbol) -or
                         ($Test_CoinSymbol.Count -and $Pool_CoinSymbol -and -not $Test_CoinSymbol.Contains($Pool_CoinSymbol)) -or
                         ($Test_ExcludeCoin.Count -and $Pool_CoinName -and $Test_ExcludeCoin.Contains($Pool_CoinName)) -or
                         ($Test_ExcludeCoinSymbol.Count -and $Pool_CoinSymbol -and $Test_ExcludeCoinSymbol.Contains($Pool_CoinSymbol)) -or
-                        ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not [RBMToolBox]::IsIntersect($Session.Config.Pools.$Pool_Name.Algorithm, $Pool_Algo)) -or
-                        ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and [RBMToolBox]::IsIntersect($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm, $Pool_Algo)) -or
+                        ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Test-Intersect $Session.Config.Pools.$Pool_Name.Algorithm $Pool_Algo)) -or
+                        ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Test-Intersect $Session.Config.Pools.$Pool_Name.ExcludeAlgorithm $Pool_Algo)) -or
                         ($Pool_CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and $Session.Config.Pools.$Pool_Name.CoinName -notcontains $Pool_CoinName) -or
                         ($Pool_CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoin -contains $Pool_CoinName) -or
                         ($Pool_CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.CoinSymbol -notcontains $Pool_CoinSymbol) -or
@@ -2688,8 +2690,8 @@ function Invoke-Core {
                 if ($Session.Config.Devices.$Device) {
                     $DeviceConfig = $Session.Config.Devices.$Device
                     if (($DeviceConfig.DisableDualMining -and $Miner.HashRates.PSObject.Properties.Name.Count -gt 1) -or
-                        ($DeviceConfig.Algorithm.Count -gt 0 -and -not [RBMToolBox]::IsIntersect($DeviceConfig.Algorithm, $BaseAlgos)) -or
-                        ($DeviceConfig.ExcludeAlgorithm.Count -gt 0 -and [RBMToolBox]::IsIntersect($DeviceConfig.ExcludeAlgorithm, $BaseAlgos)) -or
+                        ($DeviceConfig.Algorithm.Count -gt 0 -and -not (Test-Intersect $DeviceConfig.Algorithm $BaseAlgos)) -or
+                        ($DeviceConfig.ExcludeAlgorithm.Count -gt 0 -and (Test-Intersect $DeviceConfig.ExcludeAlgorithm $BaseAlgos)) -or
                         ($DeviceConfig.MinerName.Count -gt 0 -and $DeviceConfig.MinerName -notcontains $Miner_Name) -or
                         ($DeviceConfig.ExcludeMinerName.Count -gt 0 -and $DeviceConfig.ExcludeMinerName -contains $Miner_Name)) {
                         return
@@ -3179,7 +3181,7 @@ function Invoke-Core {
 
             if ($Global:StatsCache.ContainsKey($Miner_StatKey) -and (($Global:StatsCache[$Miner_StatKey].Version -ne $null -and $Global:StatsCache[$Miner_StatKey].Version -ne $AllMiners_VersionCheck[$Miner.BaseName].Version) -or ($Global:StatsCache[$Miner_StatKey].Version -eq $null -and $Global:StatsCache[$Miner_StatKey].Updated -lt $AllMiners_VersionCheck[$Miner.BaseName].Date))) {
             
-                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] -or [RBMToolBox]::IsIntersect($AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel],$Miner_BaseAlgorithm)) {
+                if (-not $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] -or (Test-Intersect $AllMiners_VersionCheck[$Miner.BaseName].Algos[$Miner.DeviceModel] $Miner_BaseAlgorithm)) {
 
                     [void]$Global:StatsCache.Remove($Miner_StatKey)
 
@@ -3574,7 +3576,7 @@ function Invoke-Core {
         $Miner_IsExclusiveMiner   = $false
         $Miner_Pools = $Miner.Pools.PSObject.Properties.Value
         $Miner_Pools | Foreach-Object {
-            $Miner_IsFocusWalletMiner = $Miner_IsFocusWalletMiner -or ($Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and [RBMToolBox]::IsIntersect($Session.Config.Pools."$($_.Name)".FocusWallet,$_.Currency))
+            $Miner_IsFocusWalletMiner = $Miner_IsFocusWalletMiner -or ($Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and (Test-Intersect $Session.Config.Pools."$($_.Name)".FocusWallet $_.Currency))
             $Miner_IsExclusiveMiner   = $Miner_IsExclusiveMiner -or $_.Exclusive
         }
 
@@ -3933,7 +3935,7 @@ function Invoke-Core {
         Get-Process | Where-Object {
             $_.Path -and
             $_.Path -like "$(Get-Location)/Bin/*" -and
-            -not [RBMToolBox]::IsIntersect($Running_ProcessIds, @($_.Id, $_.Parent.Id)) -and
+            -not (Test-Intersect $Running_ProcessIds @($_.Id, $_.Parent.Id)) -and
             $Running_MinerPaths.Contains($_.ProcessName)
         } | ForEach-Object {
             Write-Log -Level Warn "Stopping Process: $($_.ProcessName) with Id $($_.Id)"
@@ -3968,7 +3970,7 @@ function Invoke-Core {
         elseif ($IsLinux) {
             Get-Process | Where-Object {
                 $_.ProcessName -eq "OhGodAnETHlargementPill-r2" -and
-                -not [RBMToolBox]::IsIntersect($Running_ProcessIds, @($_.Id, $_.Parent.Id))
+                -not (Test-Intersect $Running_ProcessIds @($_.Id, $_.Parent.Id))
             } | ForEach-Object {
                 Write-Log -Level Warn "Stopping Process: $($_.ProcessName) with Id $($_.Id)"
                 if (Test-OCDaemon) {
@@ -4048,7 +4050,7 @@ function Invoke-Core {
                 foreach ($Miner_Algorithm in $Miner.Algorithm) {
                     $Miner_Pool = $Pools.$Miner_Algorithm.Name
 
-                    if ([RBMToolBox]::IsIntersect(@($Miner_Name,$Miner_Algorithm,$Miner_Pool),$Session.Config.ExcludeFromWatchdog)) {
+                    if (Test-Intersect @($Miner_Name,$Miner_Algorithm,$Miner_Pool) $Session.Config.ExcludeFromWatchdog) {
                         continue
                     }
 
