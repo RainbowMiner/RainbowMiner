@@ -60,7 +60,7 @@ $(function () {
                 var buttons = new Array();
                 $("#cmdmenu").empty()
                 $.each(result.CmdMenu,function(ix,item) {
-                    var k = item.match(/\[([A-Za-z])\]/)
+                    var k = item.match(/\[([A-Za-z\-]+)\]/)
                     if (k) {
                         var key = (k[1]).toUpperCase()
                         buttons.push('<button class="cmdkey" key="'+ key +'">' + item + "</button>")
@@ -75,6 +75,13 @@ $(function () {
                     event.stopPropagation()
                     if (cmdkey == '') {
                         cmdkey = $(this).attr('key')
+                        var confirm_msg = "";
+                        if (cmdkey == "CTRL-U") { confirm_msg = "Careful!\nUpdating to the latest pre-release is NOT without risk.\nDo you really want to proceed?" }
+                        else if (cmdkey == "X") { confirm_msg = "Really stop RainbowMiner now?" }
+                        if (confirm_msg != "") {
+                            if (!confirm(confirm_msg))
+                                return false;
+                        }
                         setButtonColors()
                         $.get('/cmdkey?CmdKey=' + cmdkey);
                     }

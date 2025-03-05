@@ -4557,11 +4557,16 @@ function Invoke-Core {
 
     if ($IsWindows) {$Host.UI.RawUI.FlushInputBuffer()}
 
+    $newRelease = $ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version
+
     $cursorPosition = $host.UI.RawUI.CursorPosition
     $cmdMenu = [System.Collections.Generic.List[string]]::new()
     [void]$cmdMenu.AddRange([string[]]@("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset"))
-    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {[void]$cmdMenu.Insert(0,"[U]pdate RainbowMiner")}
-    if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun){[void]$cmdMenu.Add("[C]onfiguration")}
+    if ($newRelease) {[void]$cmdMenu.Insert(0,"[U]pdate RainbowMiner")}
+    if (-not $Session.IsDonationRun -and -not $Session.IsServerDonationRun){
+        if (-not $newRelease) {[void]$cmdMenu.Add("[Ctrl-U]pdate to prerelease")}
+        [void]$cmdMenu.Add("[C]onfiguration")
+    }
     [void]$cmdMenu.Add("[V]erbose$(if ($Session.Config.UIstyle -eq "full"){" off"})")
     if (-not $Global:PauseMiners.Test() -or $Global:PauseMiners.TestIA()) {[void]$cmdMenu.Add("[P]ause$(if ($Global:PauseMiners.Test()){" off"})")}
     if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and -not $Session.IsServerDonationRun) {[void]$cmdMenu.Add("$(if ($LockMiners){"Un[l]ock"} else {"[L]ock"})")}
@@ -4661,7 +4666,7 @@ function Invoke-Core {
                                         if (-not $key.Modifiers) {$key.key}
                                         elseif ($key.Modifiers -eq "Control") {
                                             if ($key.key -eq "C") {"X"}
-                                            elseif ($key.key -eq "U") {"c-U"}
+                                            elseif ($key.key -eq "U") {"CTRL-U"}
                                         }
                                     }
                                 } catch {
@@ -4749,7 +4754,7 @@ function Invoke-Core {
                     $keyPressed = $true
                     Break
                 }
-                "c-U" {
+                "CTRL-U" {
                     $Session.AutoUpdate = $true
                     $UpdateToMaster = $true
                     $API.Update = $false
@@ -4839,7 +4844,7 @@ function Invoke-Core {
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
 
-    Write-Host (" " * 120)
+    Write-Host (" " * 135)
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
