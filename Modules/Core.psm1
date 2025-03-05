@@ -2249,6 +2249,7 @@ function Invoke-Core {
                 }
             }
         }
+        Get-CoinSymbol -Clear
     }
 
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force

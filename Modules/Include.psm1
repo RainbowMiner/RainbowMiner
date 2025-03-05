@@ -359,9 +359,15 @@ function Get-UnprofitableCpuAlgos {
 
 function Get-CoinSymbol {
     [CmdletBinding()]
-    param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)
+    param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse,[Switch]$Clear)
     
-    if (-not $Session.GlobalCoinNames -or -not $Session.GlobalCoinNames.Count) {
+    if ($Clear) {
+        $Global:GlobalCoinNames = $null
+        Remove-Variable GlobalCoinNames -Scope Global
+        return
+    }
+
+    if (-not $Global:GlobalCoinNames -or -not $Global:GlobalCoinNames.Count) {
         $Request = [PSCustomObject]@{}
         try {
             $Request = Invoke-GetUrlAsync "https://api.rbminer.net/data/coins.json" -cycletime 86400 -Jobkey "coins"
@@ -374,15 +380,15 @@ function Get-CoinSymbol {
             if (Test-Path "Data\coins.json") {try {$Request = Get-ContentByStreamReader "Data\coins.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
         } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
-        $Session.GlobalCoinNames = [hashtable]@{}
-        $Request.PSObject.Properties | Foreach-Object {$Session.GlobalCoinNames[$_.Name] = $_.Value}
+        $Global:GlobalCoinNames = [hashtable]@{}
+        $Request.PSObject.Properties | Foreach-Object {$Global:GlobalCoinNames[$_.Name] = $_.Value}
     }
     if (-not $Silent) {
         if ($Reverse) {
             $CoinName = $CoinName.ToUpper()
-            (Get-Culture).TextInfo.ToTitleCase("$($Session.GlobalCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
+            (Get-Culture).TextInfo.ToTitleCase("$($Global:GlobalCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName} | Select-Object -ExpandProperty Name -First 1)")
         } else {
-            $Session.GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
+            $Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
     }
 }
