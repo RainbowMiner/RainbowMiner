@@ -98,24 +98,26 @@ function Start-Core {
             Write-Host " "
         }
 
-        #Setup Core script variables
-        $Global:StatsCache   = [System.Collections.Hashtable]::Synchronized(@{})
-        $Global:Rates        = [System.Collections.Hashtable]::Synchronized(@{})
-        $Global:DeviceCache  = [System.Collections.Hashtable]::Synchronized(@{})
-        $Global:MinerInfo    = [System.Collections.Hashtable]::Synchronized(@{})
-        $Global:MinerSpeeds  = [System.Collections.Hashtable]@{}
+
+        #Setup Core variables that are used in Runspaces
+        $Global:StatsCache     = [System.Collections.Hashtable]::Synchronized(@{})
+        $Global:Rates          = [System.Collections.Hashtable]::Synchronized(@{})
+
+        #Setup Core global variables
+        $Global:DeviceCache    = [hashtable]@{}
+        $Global:MinerInfo      = [hashtable]@{}
+        $Global:MinerSpeeds    = [hashtable]@{}
+        $Global:ActiveMiners   = [System.Collections.ArrayList]::new()
+        $Global:WatchdogTimers = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $Global:CrashCounter   = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $Global:AlgorithmMinerName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         $Global:Rates["BTC"] = [Double]1
-
-        $Global:ActiveMiners = [System.Collections.ArrayList]::new()
-        $Global:WatchdogTimers  = [System.Collections.Generic.List[PSCustomObject]]::new()
-        $Global:CrashCounter = [System.Collections.Generic.List[PSCustomObject]]::new()
-        $Global:AlgorithmMinerName = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         $Global:PauseMiners = [PauseMiners]::new()
 
         #Setup session variables
-        [hashtable]$Session.ConfigFiles = @{
+        $Session.ConfigFiles = [hashtable]@{
             Config        = @{Path='';LastWriteTime=0;Healthy=$false}
             Devices       = @{Path='';LastWriteTime=0;Healthy=$false}
             Miners        = @{Path='';LastWriteTime=0;Healthy=$false}
@@ -608,7 +610,7 @@ function Start-Core {
     $Session.Timer      = (Get-Date).ToUniversalTime()
     $Session.NextReport = (Get-Date).ToUniversalTime()
     $Session.DecayStart = (Get-Date).ToUniversalTime()
-    [hashtable]$Session.Updatetracker = @{
+    $Session.Updatetracker = [hashtable]@{
         Balances   = 0
         TimeDiff   = 0
         MinerSave  = if (Test-Path ".\Data\minerdata.json") {Get-ChildItem ".\Data\minerdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
@@ -1925,7 +1927,7 @@ function Invoke-Core {
             Combos = [PSCustomObject]@{}
             FullComboModels = [PSCustomObject]@{}
         }
-        [hashtable]$Global:DeviceCache.DevicesToVendors = @{}
+        $Global:DeviceCache.DevicesToVendors = [hashtable]@{}
 
         $Session.Config | Add-Member DeviceModel @($Global:DeviceCache.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
         $Session.Config | Add-Member CUDAVersion $Session.CUDAVersion -Force
@@ -1983,7 +1985,7 @@ function Invoke-Core {
             @("AMD","INTEL","NVIDIA","CPU") | Foreach-Object {$Global:DeviceCache.DevicesByTypes.$_ += $Global:DeviceCache.DevicesByTypes.Combos.$_}
         }
 
-        [hashtable]$Global:DeviceCache.DeviceNames = @{}
+        $Global:DeviceCache.DeviceNames = [hashtable]@{}
         @("AMD","INTEL","NVIDIA","CPU") | Foreach-Object {
             $Global:DeviceCache.DevicesByTypes.$_ | Group-Object Model | Foreach-Object {$Global:DeviceCache.DeviceNames[$_.Name] = @($_.Group | Select-Object -ExpandProperty Name | Sort-Object)}
         }
@@ -2110,10 +2112,8 @@ function Invoke-Core {
         }
     }
 
-    #$API.Config     = ConvertTo-Json $Session.Config -Depth 10
-
     $MinerInfoChanged = $false
-    if (-not (Test-Path ".\Data\minerinfo.json")) {$Global:MinerInfo = @{}}
+    if (-not (Test-Path ".\Data\minerinfo.json")) {$Global:MinerInfo = [hashtable]@{}}
     Compare-Object @($Session.AvailMiners) @($Global:MinerInfo.Keys) | Foreach-Object {
         $CcMinerName = $_.InputObject
         Switch ($_.SideIndicator) {
@@ -2123,8 +2123,6 @@ function Invoke-Core {
         $MinerInfoChanged = $true
     }
     if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Global:MinerInfo -Compress > $null}
-
-    #$API.MinerInfo = $Global:MinerInfo
 
     #Check for GPU failure and reboot, if needed
     if ($Session.Config.RebootOnGPUFailure) { 
@@ -2175,7 +2173,7 @@ function Invoke-Core {
     Write-Log "Loading saved statistics. "
 
     Get-Stat -Miners -Quiet
-    [hashtable]$Disabled      = Get-Stat -Disabled
+    [hashtable]$Disabled = Get-Stat -Disabled
 
     #$API.Stats = $Global:StatsCache
     #ConvertTo-Json $Global:StatsCache -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\stats.json" -ErrorAction Ignore
@@ -2195,8 +2193,6 @@ function Invoke-Core {
         }
         if ($Miner_Remove) {[void]$Global:MinerSpeeds.Remove($Miner_Key)}
     }
-
-    #$API.MinerSpeeds = $Global:MinerSpeeds
 
     #Load information about the pools
     Write-Log "Loading pool information. "
@@ -5150,7 +5146,7 @@ function Get-Balance {
 
     $WorldCurrencies = Get-WorldCurrencies
 
-    [hashtable]$Digits = @{}
+    $Digits = [hashtable]@{}
     $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($WorldCurrencies -icontains $_) {2} else {8}}
 
     $CurrenciesWithBalances | ForEach-Object {
@@ -5765,7 +5761,7 @@ function Update-Rates {
     $BaseSymbols = @($Session.Config.Currency | Select-Object) + @("USD") | Select-Object -Unique
     $GetSymbols  = @($Symbols | Select-Object) + @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object) + @($Global:Rates.Keys) | Select-Object -Unique
     
-    [hashtable]$NewRates   = @{}
+    $NewRates    = [hashtable]@{}
     try {
         $NewCoinbase = (Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase").data.rates
         if ($NewCoinbase.BTC) {

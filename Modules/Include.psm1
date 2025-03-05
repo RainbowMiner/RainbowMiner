@@ -374,7 +374,7 @@ function Get-CoinSymbol {
             if (Test-Path "Data\coins.json") {try {$Request = Get-ContentByStreamReader "Data\coins.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
         } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
-        $Session.GlobalCoinNames = [System.Collections.Hashtable]@{}
+        $Session.GlobalCoinNames = [hashtable]@{}
         $Request.PSObject.Properties | Foreach-Object {$Session.GlobalCoinNames[$_.Name] = $_.Value}
     }
     if (-not $Silent) {
@@ -1029,7 +1029,7 @@ function Get-AlgorithmMap {
         [Switch]$Silent = $false
     )
     if (-not $Session.GlobalAlgorithmMap -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc -gt $Session.GlobalAlgorithmMapTimeStamp) {
-        $Session.GlobalAlgorithmMap = [System.Collections.Hashtable]@{}
+        $Session.GlobalAlgorithmMap = [hashtable]@{}
         (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GlobalAlgorithmMap[$_.Name]=$_.Value}
         $Session.GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTimeUtc
     }
@@ -1125,7 +1125,7 @@ function Get-Algorithms {
         [Switch]$Values = $false
     )
     if ($Force -or -not $Session.GlobalAlgorithms -or (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc -gt $Session.GlobalAlgorithmsTimeStamp) {
-        $Session.GlobalAlgorithms = [System.Collections.Hashtable]@{}
+        $Session.GlobalAlgorithms = [hashtable]@{}
         (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GlobalAlgorithms[$_.Name]=$_.Value}
         $Session.GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTimeUtc
     }
@@ -1146,7 +1146,7 @@ function Get-CoinsDB {
         [Switch]$Force = $false
     )
     if ($Force -or -not $Session.GlobalCoinsDB -or (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc -gt $Session.GlobalCoinsDBTimeStamp) {
-        $Session.GlobalCoinsDB = [System.Collections.Hashtable]@{}
+        $Session.GlobalCoinsDB = [hashtable]@{}
         (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GlobalCoinsDB[$_.Name]=$_.Value;$Session.GlobalCoinsDB[$_.Name].Algo = Get-Algorithm $Session.GlobalCoinsDB[$_.Name].Algo}
         $Session.GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTimeUtc
     }
@@ -1163,7 +1163,7 @@ function Get-EquihashCoins {
         [Switch]$Silent = $false
     )
     if (-not $Session.GlobalEquihashCoins -or (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc -gt $Session.GlobalEquihashCoinsTimeStamp) {
-        $Session.GlobalEquihashCoins = [System.Collections.Hashtable]@{}
+        $Session.GlobalEquihashCoins = [hashtable]@{}
         (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GlobalEquihashCoins[$_.Name]=$_.Value}
         $Session.GlobalEquihashCoinsTimeStamp = (Get-ChildItem "Data\equihashcoins.json").LastWriteTimeUtc
     }
@@ -1220,7 +1220,7 @@ function Get-NimqHashrates {
         [Switch]$Silent = $false
     )
     if (-not $Session.GlobalNimqHashrates -or (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc -gt $Session.GlobalNimqHashratesTimeStamp) {
-        $Session.GlobalNimqHashrates = [System.Collections.Hashtable]@{}
+        $Session.GlobalNimqHashrates = [hashtable]@{}
         (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GlobalNimqHashrates[$_.Name]=$_.Value}
         $Session.GlobalNimqHashratesTimeStamp = (Get-ChildItem "Data\nimqhashrates.json").LastWriteTimeUtc
 
@@ -1255,7 +1255,7 @@ function Get-Regions {
         [Switch]$AsHash = $false
     )
     if (-not $Session.GlobalRegions -or (Get-ChildItem "Data\regions.json").LastWriteTimeUtc -gt $Session.GlobalRegionsTimeStamp) {
-        $Session.GlobalRegions = [System.Collections.Hashtable]@{}
+        $Session.GlobalRegions = [hashtable]@{}
         (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GlobalRegions[$_.Name]=$_.Value}
         $Session.GlobalRegionsTimeStamp = (Get-ChildItem "Data\regions.json").LastWriteTimeUtc
     }
@@ -1272,7 +1272,7 @@ function Get-Regions2 {
         [Switch]$Silent = $false
     )
     if (-not $Session.GlobalRegions2 -or (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc -gt $Session.GlobalRegions2TimeStamp) {
-        $Session.GlobalRegions2 = [System.Collections.Hashtable]@{}
+        $Session.GlobalRegions2 = [hashtable]@{}
         (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GlobalRegions2[$_.Name]=$_.Value}
         $Session.GlobalRegions2TimeStamp = (Get-ChildItem "Data\regions2.json").LastWriteTimeUtc
     }
