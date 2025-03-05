@@ -680,25 +680,24 @@ function Invoke-Core {
         #$Global:ActiveMiners.RemoveAll({ param($m) $m.AccessLast -and $m.AccessLast -lt $activeTime }) > $null
 
         #cleanup cache
-        try {
-            $bindingType = [System.Management.Automation.PSObject].Assembly.GetType("System.Management.Automation.Language.PSInvokeMemberBinder")
-            if ($bindingType) {
-                $cacheField = $bindingType.GetField("s_binderCache", "NonPublic, Static")
-                if ($cacheField) {
-                    $cache = $cacheField.GetValue($null)
-                    if ($cache -is [object] -and $cache.PSObject.Methods["Clear"]) {
-                        $cache.Clear()
-                        Write-Log -Level Info "Cache cleared :)"
+        if ($Session.RoundCounter -gt 0) {
+            try {
+                $bindingType = [System.Management.Automation.PSObject].Assembly.GetType("System.Management.Automation.Language.PSInvokeMemberBinder")
+                if ($bindingType) {
+                    $cacheField = $bindingType.GetField("s_binderCache", "NonPublic, Static")
+                    if ($cacheField) {
+                        $cache = $cacheField.GetValue($null)
+                        if ($cache -is [object] -and $cache.PSObject.Methods["Clear"]) {
+                            $cache.Clear()
+                            Write-Log -Level Info "Cache cleared :)"
+                        }
                     }
                 }
+            } catch {
+                Write-Log -Level Info "Cache clear failed :("
             }
-        } catch {
-            Write-Log -Level Info "Cache clear failed :("
         }
     }
-
-    #Update databases every round
-    Get-MinerUpdateDB -Silent
 
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
 
@@ -2954,6 +2953,8 @@ function Invoke-Core {
     $AllMiners_VersionCheck = [hashtable]@{}
     $Miner_Arguments_List   = [System.Collections.Generic.List[string]]::new()
 
+    $MinerUpdateDB = $null
+
     foreach ( $Miner in $AllMiners ) {
 
         $Miner_AlgoNames = @($Miner.HashRates.PSObject.Properties.Name | Select-Object)
@@ -3119,7 +3120,22 @@ function Invoke-Core {
                     } elseif ($Session.Config.AutoBenchmarkMode -ne "all") { # -eq "updated"
                         $Miner_FromVersion = Get-MinerVersion $Miner_Uri
 
-                        $Miner_VersionCheck = $Global:GlobalMinerUpdateDB | Where-Object {$_.MinerName -eq $Miner.BaseName -and $_.FromVersion -ge $Miner_FromVersion -and $_.ToVersion -le $Miner_Version}
+                        if ($MinerUpdateDB -eq $null -and (Test-Path "Data\minerupdatedb.json")) {
+                            $AlgoVariants = Get-AlgoVariants
+                            $MinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore
+                            $MinerUpdateDB | Foreach-Object {
+                                $_.FromVersion = Get-MinerVersion $_.FromVersion
+                                $_.ToVersion   = Get-MinerVersion $_.ToVersion
+                                $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
+                                if ($_.Driver) {
+                                    $_.Driver | Foreach-Object {
+                                        $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
+                                    }
+                                }
+                            }
+                        }
+
+                        $Miner_VersionCheck = $MinerUpdateDB | Where-Object {$_.MinerName -eq $Miner.BaseName -and $_.FromVersion -ge $Miner_FromVersion -and $_.ToVersion -le $Miner_Version}
 
                         if ($Miner_VersionCheck -and ($Miner_VersionCheck | Where-Object {$_.ToVersion -eq $Miner_Version} | Measure-Object).Count) {
                             $AllMiners_VersionCheck[$Miner.BaseName].MVC = $Miner_VersionCheck                            
@@ -3305,6 +3321,8 @@ function Invoke-Core {
         if (-not $Miner.ExtendInterval -or $Session.Config.DisableExtendInterval) {$Miner.ExtendInterval = 1}
         if (-not $Miner.Penalty) {$Miner.Penalty = 0}
     }
+
+    $MinerUpdateDB = $AlgoVariants = $null
 
     $Miners_DownloadList    = @()
     $Miners_DownloadListPrq = @()
@@ -6392,34 +6410,6 @@ function Test-CacheGrow {
                 }
             }
         }
-    }
-}
-
-function Get-MinerUpdateDB {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $false)]
-        [Switch]$Silent = $false,
-        [Parameter(Mandatory = $false)]
-        [Switch]$Force = $false
-    )
-    if ((Test-Path "Data\minerupdatedb.json") -and ($Force -or -not (Test-Path Variable:Global:GlobalMinerUpdateDB) -or (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc -gt $Global:GlobalMinerUpdateDBTimeStamp)) {
-        $AlgoVariants = Get-AlgoVariants
-        $Global:GlobalMinerUpdateDB = Get-ContentByStreamReader "Data\minerupdatedb.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:GlobalMinerUpdateDB | Foreach-Object {
-            $_.FromVersion = Get-MinerVersion $_.FromVersion
-            $_.ToVersion   = Get-MinerVersion $_.ToVersion
-            $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
-            if ($_.Driver) {
-                $_.Driver | Foreach-Object {
-                    $_.Algorithm   = $_.Algorithm.Foreach({$algo = Get-Algorithm $_;if ($AlgoVariants.$algo) {$AlgoVariants.$algo} else {$algo}})
-                }
-            }
-        }
-        $Global:GlobalMinerUpdateDBTimeStamp = (Get-ChildItem "Data\minerupdatedb.json").LastWriteTimeUtc
-    }
-    if (-not $Silent) {
-        $Global:GlobalMinerUpdateDB
     }
 }
 
