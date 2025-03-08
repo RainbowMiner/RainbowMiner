@@ -7,14 +7,16 @@
     $ConfigName = "MRR"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if (-not (Test-Path $PathToFile) -or (Test-Config $ConfigName -LastWriteTime) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MRRConfigDefault.ps1").LastWriteTimeUtc) {
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MRRConfigDefault.ps1").LastWriteTimeUtc
+    if ((Test-Config $ConfigName -LastWriteTime) -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+
             $Default = [PSCustomObject]@{EnableAutoCreate="";AutoCreateMinProfitPercent="";AutoCreateMinProfitBTC="";AutoCreateMaxMinHours="";AutoUpdateMinPriceChangePercent="";AutoCreateAlgorithm="";EnableAutoUpdate="";EnableAutoExtend="";AutoExtendTargetPercent="";AutoExtendMaximumPercent="";AutoBonusExtendForHours="";AutoBonusExtendByHours="";AutoBonusExtendTimes="";EnableAutoPrice="";EnableMinimumPrice="";EnableAutoAdjustMinHours="";EnableUpdateTitle="";EnableUpdateDescription="";EnableUpdatePriceModifier="";EnablePowerDrawAddOnly="";AutoPriceModifierPercent="";PriceBTC="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";PowerDrawFactor="";MinHours="";MaxHours="";MaxMinHours="";AllowExtensions="";AllowRentalDuringPause="";PriceCurrencies="";Title ="";Description="";ProfitAverageTime="";DiffMessageTolerancyPercent=""}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
             
@@ -27,7 +29,10 @@
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
                 $Sorted | Add-Member $_ $Preset.$_ -Force
             }
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
+            }
             $Session.ConfigFiles[$ConfigName].Healthy = $true
             Set-ConfigLastWriteTime $ConfigName
         }
@@ -50,14 +55,16 @@ function Set-MiningRigRentalAlgorithmsConfigDefault {
     $ConfigName = "$(if ($Folder) {"$Folder/"})MRRAlgorithms"
     if (-not (Test-Config $ConfigName)) {return}
     $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-    if ($Force -or -not (Test-Path $PathToFile) -or (Test-Config $ConfigName -LastWriteTime) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MRRAlgorithmsConfigDefault.ps1").LastWriteTimeUtc) {
+
+    $ForceWrite = -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTimeUtc -lt (Get-ChildItem ".\Data\MRRAlgorithmsConfigDefault.ps1").LastWriteTimeUtc
+    if ($Force -or $ForceWrite) {
         if (Test-Path $PathToFile) {
             $Preset = Get-ConfigContent $ConfigName
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
-            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Preset_Copy = $Preset | ConvertTo-Json -Depth 10 -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             $Default = [PSCustomObject]@{Enable="1";PriceModifierPercent="";PriceFactor="";PriceFactorMin="";PriceFactorDecayPercent="";PriceFactorDecayTime="";PriceRiseExtensionPercent="";AllowExtensions="";DiffMessageTolerancyPercent=""}
             $Setup = Get-ChildItemContent ".\Data\MRRAlgorithmsConfigDefault.ps1"
             $AllAlgorithms = Get-MiningRigRentalAlgos
@@ -66,17 +73,20 @@ function Set-MiningRigRentalAlgorithmsConfigDefault {
                 if (-not $Preset.$Algorithm_Norm) {$Preset | Add-Member $Algorithm_Norm $(if ($Setup.$Algorithm_Norm) {$Setup.$Algorithm_Norm} else {[PSCustomObject]@{}}) -Force}
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Algorithm_Norm.$SetupName -eq $null){$Preset.$Algorithm_Norm | Add-Member $SetupName $Default.$SetupName -Force}}
             }
+
             $Sorted = [PSCustomObject]@{}
-            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {                
-                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
-                $Sorted | Add-Member $_ $Preset.$_ -Force
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            if ($ForceWrite -or -not [RBMToolBox]::CompareObject($Sorted,$Preset_Copy)) {
+                Set-ContentJson -PathToFile $PathToFile -Data $Sorted > $null
             }
-            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
             $Session.ConfigFiles[$ConfigName].Healthy = $true
         }
         catch{
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
             $Session.ConfigFiles[$ConfigName].Healthy = $false
+        }
+        finally {
+            $Preset = $Sorted = $Preset_Copy = $null
         }
     }
     Test-Config $ConfigName -Exists
