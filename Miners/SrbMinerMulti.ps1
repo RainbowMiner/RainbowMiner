@@ -13,15 +13,15 @@ if (-not $Global:DeviceCache.DevicesByTypes.AMD -and -not $Global:DeviceCache.De
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "2.7.9"
+$Version = "2.8.0"
 $Cuda = "11.7"
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.7.9-srbminermulti/SRBMiner-Multi-2-7-9-Linux.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.0-srbminermulti/SRBMiner-Multi-2-8-0-Linux.tar.gz"
 } else {
     $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.7.9-srbminermulti/SRBMiner-Multi-2-7-9-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.0-srbminermulti/SRBMiner-Multi-2-8-0-win64.zip"
 }
 
 $Commands = [PSCustomObject[]]@(
@@ -188,7 +188,7 @@ if ($InfoOnly) {
     return
 }
 
-$ValidCompute_AMD    = @("RDNA3","RDNA2","RDNA1","GCN51","GCN50")
+$ValidCompute_AMD    = @("RDNA4","RDNA3","RDNA2","RDNA1","GCN51","GCN50")
 $ValidCompute_NVIDIA = @("Pascal","Turing","Ampere","Ada","Hopper","Blackwell")
 
 if (-not (Test-Path "$(Join-Path $Session.MainPath "Bin\ANY-SRBMinerMulti\Cache\verthash.dat")")) {
