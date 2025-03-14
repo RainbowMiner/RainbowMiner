@@ -43,7 +43,7 @@ if ($started) {
         } else {
             $ScreenProcessId = Invoke-Expression $ScreenCmd
         }
-        if ($ScreenProcessId) {$ScreenProcessId = $ScreenProcessId.Trim()}
+        if ($ScreenProcessId) {$ScreenProcessId = "$($ScreenProcessId)".Trim()}
     } until ($ScreenProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
 
     if (-not $ScreenProcessId) {
