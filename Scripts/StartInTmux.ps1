@@ -29,14 +29,14 @@ if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
     }
 }
 
-$StartLog = @()
+$StartLog = [System.Collections.Generic.List[string]]@()
 
 if ($started) {
     $StopWatch.Restart()
 
     do {
         Start-Sleep -Milliseconds 500
-        $ScreenCmd = "tmux display-message -p -t $ScreenName '#{pid}'"
+        $ScreenCmd = "tmux list-panes -t $ScreenName -F '#{pane_pid}'"
         if ($EnableMinersAsRoot -and (Test-OCDaemon)) {
             $ScreenProcessId = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.$OCDcount.$ScreenName" -Cmd $ScreenCmd
             $OCDcount++
@@ -46,9 +46,9 @@ if ($started) {
     } until ($ScreenProcessId -or ($StopWatch.Elapsed.TotalSeconds) -ge 5)
 
     if (-not $ScreenProcessId) {
-        $StartLog += "Failed to get tmux session: $ScreenName"
+        [void]$StartLog.Add("Failed to get tmux session: $ScreenName")
     } else {
-        $StartLog += "Success: found tmux session $ScreenName"
+        [void]$StartLog.Add("Success: found tmux session $ScreenName with id $($ScreenProcessId)")
 
         $MinerExecutable = Split-Path $FilePath -Leaf
 
@@ -61,17 +61,17 @@ if ($started) {
                     if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
                 }
             } else {
-                $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $($_.Parent).Parent.Id -eq $ScreenProcessId}
+                $Process = Get-Process | Where-Object {$_.Name -eq $MinerExecutable -and $_.Parent.Id -eq $ScreenProcessId}
                 if ($Process) {$Process.Id | Set-Content $PIDPath -ErrorAction Ignore}
             }
         } until ($Process -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
 
         if ($Process) {
-            $StartLog += "Success: got id $($Process.Id) for $MinerExecutable in tmux session $ScreenName"
+            [void]$StartLog.Add("Success: got id $($Process.Id) for $MinerExecutable in tmux session $ScreenName")
         } else {
-            $StartLog += "Failed to get process for tmux session $ScreenName with id $ScreenProcessId"
-            $StartLog += "List of processes:"
-            Get-Process | Where-Object {$_.Path -and $_.Path -like "$($CurrentPwd)/Bin/*"} | Foreach-Object {$StartLog += "$($_.Name)`t$($_.Id)`t$($_.Parent.Id)"}
+            [void]$StartLog.Add("Failed to get process for tmux session $ScreenName with id $ScreenProcessId")
+            [void]$StartLog.Add("List of processes:")
+            Get-Process | Where-Object {$_.Path -and $_.Path -like "$($CurrentPwd)/Bin/*"} | Foreach-Object {[void]$StartLog.Add("$($_.Name)`t$($_.Id)`t$($_.Parent.Id)")}
         }
 
     }
