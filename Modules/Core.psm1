@@ -1913,7 +1913,7 @@ function Invoke-Core {
     }
 
     #load device(s) information and device combos
-    if ($CheckConfig -or $CheckCombos -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0 -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName | Measure-Object).Count -gt 0) {
+    if ($CheckConfig -or $CheckCombos -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName) -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName)) {
         if ($Session.RoundCounter -ne 0) {Write-Log "Device configuration changed. Refreshing now."}
 
         #Load information about the devices
@@ -3513,7 +3513,7 @@ function Invoke-Core {
                     $m.Path -eq $Miner.Path -and
                     $m.Arguments -eq $Miner.Arguments -and
                     $m.API -eq $Miner.API -and
-                    (Compare-Object $Miner.Algorithm ($m.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0) {
+                    -not (Compare-Object $Miner.Algorithm ($m.HashRates.PSObject.Properties.Name | Select-Object))) {
 
                     $m.Profit_Bias = $m.Profit_Unbias * $MinerSwitchingHysteresis
                     if ($Miner.IsRunningFirstRounds) {$m.Profit_Bias *= 100}
@@ -3576,7 +3576,7 @@ function Invoke-Core {
                 $m.Path -eq $Miner.Path -and
                 $m.Arguments -eq $Miner.Arguments -and
                 $m.API -eq $Miner.API -and
-                (Compare-Object $m.Algorithm ($Miner.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
+                -not (Compare-Object $m.Algorithm ($Miner.HashRates.PSObject.Properties.Name | Select-Object))
             ) {
                 $ActiveMiner = $m
                 break
@@ -3772,9 +3772,13 @@ function Invoke-Core {
             $Miners_PBM_Remove = @()
             $Miners_PBM | Foreach-Object {
                 $Miner_PBM = $_
-                if ($BestMiner = $ActiveMiners_Sorted | Where-Object {$_.PostBlockMining -eq 0 -and (Compare-Object $Miner_PBM.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Select-Object -First 1) {
-                    $BestMiner_Profit = $BestMiner.Profit + $(if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost -ne $null -and $BestMiner.Profit_Cost -gt 0) {$BestMiner.Profit_Cost})
-                    $Miner_PBM_Profit = $Miner_PBM.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner_PBM.Profit_Cost -ne $null -and $Miner_PBM.Profit_Cost -gt 0) {$Miner_PBM.Profit_Cost})
+                if ($BestMiner = $ActiveMiners_Sorted | Where-Object {$_.PostBlockMining -eq 0 -and -not (Compare-Object $Miner_PBM.DeviceName $_.DeviceName)} | Select-Object -First 1) {
+                    $BestMiner_Profit = $BestMiner.Profit
+                    if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost -ne $null -and $BestMiner.Profit_Cost -gt 0) { $BestMiner_Profit += $BestMiner.Profit_Cost }
+
+                    $Miner_PBM_Profit = $Miner_PBM.Profit
+                    if ($Session.Config.UsePowerPrice -and $Miner_PBM.Profit_Cost -ne $null -and $Miner_PBM.Profit_Cost -gt 0) { $Miner_PBM_Profit += $Miner_PBM.Profit_Cost }
+
                     if ($BestMiner_Profit * $Session.Config.Coins."$($Miner_PBM.CoinSymbol)".MinProfitPercent / 100 -gt $Miner_PBM_Profit) {
                         $BestMiners += $BestMiner
                         $Miners_PBM_Remove += $Miner_PBM
@@ -3791,7 +3795,7 @@ function Invoke-Core {
             $BestMiners2 = @()
             $ActiveMiners_Sorted | Select-Object DeviceName -Unique | ForEach-Object {
                 $Miner_GPU = $_
-                if ($BestMiner = $ActiveMiners_Sorted | Where-Object {-not $_.NoCPUMining -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Select-Object -First 1) {
+                if ($BestMiner = $ActiveMiners_Sorted | Where-Object {-not $_.NoCPUMining -and -not (Compare-Object $Miner_GPU.DeviceName $_.DeviceName)} | Select-Object -First 1) {
                     $BestMiners2 += $BestMiner
                 }
             }
@@ -3828,7 +3832,7 @@ function Invoke-Core {
                 $Combo_Name    = $_.Name
                 $Combo_Devices = @($_.Group.DeviceName | Select-Object -Unique | Sort-Object)
                 $BestMiners_Multi = if ($_.Count -gt 1) {
-                    $BestMiners | Where-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.Algorithm -join '')$($_.Currency)$($_.CoinSymbol)" -eq $Combo_Name -and (Compare-Object $_.DeviceName $Combo_Devices | Measure-Object).Count -eq 0} | Sort-Object Profit_Bias -Descending | Select-Object -First 1
+                    $BestMiners | Where-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.Algorithm -join '')$($_.Currency)$($_.CoinSymbol)" -eq $Combo_Name -and -not (Compare-Object $_.DeviceName $Combo_Devices)} | Sort-Object Profit_Bias -Descending | Select-Object -First 1
                 }
                 if ($BestMiners_Multi -and (($_.Group.Profit_Bias | Measure-Object -Sum).Sum*$Session.Config.MinComboOverSingleRatio -lt $BestMiners_Multi.Profit_Bias)) {$BestMiners_Multi} else {$_.Group}
             }
@@ -5250,7 +5254,7 @@ function Get-BestMinerDeviceCombos {
     )
     if ($BestMiners) {
         $BestMiners_DeviceNames = @($BestMiners | Foreach-Object {$_.DeviceName} | Select-Object -Unique | Sort-Object)
-        $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {(Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames | Measure-Object).Count -eq 0})
+        $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {-not (Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames)})
         $Miners_Device_Combos | ForEach-Object {
             $Miner_Device_Combo = $_.Combination
             [PSCustomObject]@{
