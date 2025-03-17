@@ -3756,8 +3756,7 @@ function Invoke-Core {
     if ($Miners.Count -gt 0) {
         
         #Get most profitable miner combination
-
-        $ActiveMiners_Sorted = @($Global:ActiveMiners | Where-Object {$_.Enabled -and ($_.NeedsBenchmark -or -not $_.BenchmarkOnly)} | Sort-Object @{Expression={$_.IsExclusiveMiner}; Descending = $true}, @{Expression={$_.IsLocked}; Descending = $true}, @{Expression={($_ | Where-Object Profit -EQ $null | Measure-Object).Count}; Descending = $true}, @{Expression={$_.IsFocusWalletMiner}; Descending=$true}, @{Expression={$_.PostBlockMining -gt 0}; Descending=$true}, @{Expression={$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}; Descending=$true}, @{Expression={($_ | Measure-Object Profit_Bias -Sum).Sum}; Descending=$true}, @{Expression={$_.Benchmarked}; Descending=$true}, @{Expression={$_.ExtendInterval}; Descending=$true}, @{Expression={$_.Algorithm[0] -eq $_.BaseAlgorithm[0]}; Descending=$true})
+        $ActiveMiners_Sorted = @($Global:ActiveMiners | Where-Object {$_.Enabled -and ($_.NeedsBenchmark -or -not $_.BenchmarkOnly)} | Sort-Object @{Expression={$_.IsExclusiveMiner}; Descending = $true}, @{Expression={$_.IsLocked}; Descending = $true}, @{Expression={$_.Profit -eq $null}; Descending = $true}, @{Expression={$_.IsFocusWalletMiner}; Descending=$true}, @{Expression={$_.PostBlockMining -gt 0}; Descending=$true}, @{Expression={$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}; Descending=$true}, @{Expression={[double]$_.Profit_Bias}; Descending=$true}, @{Expression={$_.Benchmarked}; Descending=$true}, @{Expression={$_.ExtendInterval}; Descending=$true}, @{Expression={$_.Algorithm[0] -eq $_.BaseAlgorithm[0]}; Descending=$true})
 
         $BestMiners = @()
 
@@ -5311,25 +5310,23 @@ function Set-MinerStats {
                     $Statset++
                 }
 
-                # Find the WatchdogTimer without using Where-Object
                 $WatchdogTimer = $null
                 foreach ($wdTimer in $Global:WatchdogTimers) {
                     if ($wdTimer.MinerName -eq $Miner.Name -and 
                         $wdTimer.PoolName -eq $Miner.Pool[$Miner_Index] -and 
                         $wdTimer.Algorithm -eq $Miner_Algorithm) {
                         $WatchdogTimer = $wdTimer
-                        break  # Stop searching once found
+                        break
                     }
                 }
 
                 # Update WatchdogTimer if found
                 if ($WatchdogTimer) {
-                    $wdTime = (Get-Date).ToUniversalTime()
-                    $WatchdogTimer.Active = $wdTime
+                    $WatchdogTimer.Active = (Get-Date).ToUniversalTime()
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
                     } elseif ($Miner_Benchmarking -or ($Miner_Speed -and $Miner.Rounds -lt [Math]::Max($Miner.ExtendedInterval,1)-1)) {
-                        $WatchdogTimer.Kicked = $wdTime
+                        $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
                     } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds(-$Session.WatchdogInterval)) {
                         $Miner_Failed = $true
                     }
@@ -5374,7 +5371,8 @@ function Set-MinerStats {
                 }
 
                 if ($BestMiner) {
-                    $CurrentProfit = $BestMiner.Profit + $(if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost) { $BestMiner.Profit_Cost } else { 0 })
+                    $CurrentProfit = $BestMiner.Profit
+                    if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost) { $CurrentProfit += $BestMiner.Profit_Cost }
                     if ($CurrentProfit -gt 0) {
                         if ($CurrentModel -ne "CPU") {
                             $CurrentProfitGPU    += $CurrentProfit
@@ -5446,7 +5444,7 @@ function Invoke-ReportMinerStatus {
     $TempAlert = 0
 
     $minerreport = ConvertTo-Json @(
-        $Global:ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.Status -eq [MinerStatus]::Running} | ForEach-Object {
+        $Global:ActiveMiners | Where-Object {$_.Activated -gt 0 -and $_.Status -eq [MinerStatus]::Running} | ForEach-Object {
             $Miner = $_
             $Miner_PowerDraw = $Miner.GetPowerDraw()
             $Profit += [Double]$Miner.Profit
