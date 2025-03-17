@@ -65,7 +65,7 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
     $Pool_CoinSymbol = $Pool_Coins.$Pool_Algorithm.Symbol
     $Pool_PoolFee    = [Double]$Pool_Request.$_.fees
 
-    $PoolCoins_Result = $PoolCoins_Request.PSObject.Properties.Value | Where-Object {$_.algo -eq $Pool_Algorithm -and [double]$_.estimate -gt 0}
+    $PoolCoins_Result = $PoolCoins_Request.PSObject.Properties.Value | Where-Object {$_.algo -eq $Pool_Algorithm} #-and [double]$_.estimate -gt 0}
 
     if (-not $PoolCoins_Result -and -not $InfoOnly) {return}
 
