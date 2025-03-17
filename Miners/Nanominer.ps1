@@ -141,12 +141,12 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                     $Wallet    = if ($Pools.$MainAlgorithm_Norm.Wallet) {$Pools.$MainAlgorithm_Norm.Wallet} else {$Pools.$MainAlgorithm_Norm.User}
 
                     $PaymentId = $null
-                    if ($Wallet -match "^(.+?)[\.\+]([0-9a-f]{16,})") {
-                        $Wallet    = $Matches[1]
-                        $PaymentId = $Matches[2]
-                    } elseif ($MainAlgorithm_Norm -match "^RandomHash") {
-                        $PaymentId = "0"
-                    }
+                    #if ($Wallet -match "^(.+?)[\.\+]([0-9a-f]{16,})") {
+                    #    $Wallet    = $Matches[1]
+                    #    $PaymentId = $Matches[2]
+                    #} elseif ($MainAlgorithm_Norm -match "^RandomHash") {
+                    #    $PaymentId = "0"
+                    #}
 
                     #$Wallet = $Wallet -replace "@","%40"
 
