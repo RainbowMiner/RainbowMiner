@@ -1020,7 +1020,7 @@ function Update-DeviceInformation {
                                             }
 
                                             if ($Changed) {
-                                                $_.Data.Method = "$(if ($_.Data.Method) {";"})ab"
+                                                $_.Data.Method = "$(if ($_.Data.Method) {"$($_.Data.Method);"})ab"
                                             }
                                         }
                                         $DeviceId++
@@ -1068,7 +1068,7 @@ function Update-DeviceInformation {
                                                 }
 
                                                 if ($Changed) {
-                                                    $_.Data.Method = "$(if ($_.Data.Method) {";"})odvii8"
+                                                    $_.Data.Method = "$(if ($_.Data.Method) {"$($_.Data.Method);"})odvii8"
                                                 }
                                             }
 
