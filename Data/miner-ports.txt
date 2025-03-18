@@ -145,7 +145,7 @@
 368	ClaymoreDual
 369	Gminer294
 370	OneZeroMiner
-371	OneZeroMiner125
+371	OneZeroMiner143
 372	Xmrig4Xdag
 373	TTminerBeta
 374	SccMiner
