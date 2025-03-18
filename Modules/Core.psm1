@@ -677,10 +677,6 @@ function Invoke-Core {
         Get-Regions -Silent
         Get-Regions2 -Silent
 
-        #cleanup Active Miners
-        #$activeTime = (Get-Date).AddHours(-12)
-        #$Global:ActiveMiners.RemoveAll({ param($m) $m.AccessLast -and $m.AccessLast -lt $activeTime }) > $null
-
         #cleanup cache
         if ($Session.RoundCounter -gt 0) {
             try {
@@ -2175,9 +2171,6 @@ function Invoke-Core {
     Get-Stat -Miners -Quiet
     [hashtable]$Disabled = Get-Stat -Disabled
 
-    #$API.Stats = $Global:StatsCache
-    #ConvertTo-Json $Global:StatsCache -Depth 10 -ErrorAction Ignore | Set-Content ".\Data\stats.json" -ErrorAction Ignore
-
     #Validate Minerspeeds
     foreach($Miner_Key in @($Global:MinerSpeeds.Keys)) {
         $Miner_Remove = $false
@@ -2435,7 +2428,7 @@ function Invoke-Core {
     $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
 
     if ($Session.WatchdogReset -gt $Session.WatchdogInterval) {
-        [void]$Global:WatchdogTimers.RemoveAll({ param($c) $c.Kicked -le $WDResetTime -and $c.Active -le $WDIntervalTime })
+        [void]$Global:WatchdogTimers.RemoveAll({ param($c) $c.Kicked -le $WDResetTime })
     }
 
     # Apply watchdog filtering only if multiple pools are selected
@@ -2516,7 +2509,7 @@ function Invoke-Core {
         $NewPools | Where-Object {-not $_.SoloMining} | Select-Object Algorithm0,CoinSymbol,Hashrate,StablePrice | Group-Object -Property {"$($_.Algorithm0)-$($_.CoinSymbol)"} | Foreach-Object {$Pools_Hashrates[$_.Name] = ($_.Group | Where-Object StablePrice | Select-Object -ExpandProperty Hashrate | Measure-Object -Maximum).Maximum;if (-not $Pools_Hashrates[$_.Name]) {$Pools_Hashrates[$_.Name]=1}}
         $NewPools | Where-Object {-not $_.SoloMining -and $_.TSL -ne $null -and $Session.Config.Pools."$($_.Name)".EnablePostBlockMining -and $_.CoinSymbol -and ($_.TSL -lt $Session.Config.Coins."$($_.CoinSymbol)".PostBlockMining)} | Foreach-Object {$_ | Add-Member PostBlockMining $true -Force}
 
-        $ActiveRunningMiners = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $ActiveRunningMiners = [System.Collections.ArrayList]::new()
 
         $Global:ActiveMiners | Where-Object { $_.Status -eq [MinerStatus]::Running } | Foreach-Object { [void]$ActiveRunningMiners.Add($_) }
 
@@ -3542,9 +3535,9 @@ function Invoke-Core {
             if ($Group.Group.Count -eq 1) {
                 $Group.Group[0]
             } else {
-                $SortedGroup = $Group.Group | Sort-Object -Property @{Expression={$_.Profit -eq $null}; Descending = $true}, @{Expression={[double]($_.Profit_Bias - $_.Profit_Cost_Bias)}; Descending = $true}, @{Expression={$_.Profit -ne 0}; Descending = $true}, Name
+                $SortedGroup = $Group.Group | Sort-Object -Property @{Expression={$_.Profit -eq $null}; Descending = $true}, @{Expression={[double]$_.Profit_Bias - $_.Profit_Cost_Bias}; Descending = $true}, @{Expression={$_.Profit -ne 0}; Descending = $true}, Name
                 $TopBaseName = $SortedGroup[0].BaseName
-                $SortedGroup.Where({ $_.BaseName -eq $TopBaseName })
+                $SortedGroup | Where-Object { $_.BaseName -eq $TopBaseName }
             }
         }
     }
@@ -3876,7 +3869,7 @@ function Invoke-Core {
             $Miner.Activated -gt 0 -and 
             $Miner.Status -eq [MinerStatus]::Running) {
 
-            Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/')."
+            Write-Log "$(if ($Miner.Restart) {"Restarting"} else {"Stopping"}) miner $($Miner.Name) on pool $($Miner.Pool -join '/')."
             $Miner.SetStatus([MinerStatus]::Idle)
             $Miner.Stopped = $true
             $Miner.Restart = $false
@@ -4004,7 +3997,7 @@ function Invoke-Core {
 
     # Process Active Miners that should start
     foreach ($Miner in $Global:ActiveMiners) {
-        if ($Miner.Best -eq $true -and $Miner.Status -ne [MinerStatus]::Running) {
+        if ($Miner.Best -and ($Miner.Status -ne [MinerStatus]::Running)) {
 
             if ($Miner.DeviceModel -ne "CPU") {
                 if ($Session.Config.EnableResetVega) { Reset-Vega $Miner.DeviceName }
