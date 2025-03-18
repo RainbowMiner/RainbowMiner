@@ -141,10 +141,11 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor -and (-not $_.Version -or [version]$_.Version -le [version]$Version)} | ForEach-Object {
             $First = $true
 
-            $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-            $SecondAlgorithm_Norm_0 = if ($_.SecondaryAlgorithm) {Get-Algorithm $_.SecondaryAlgorithm} else {$null}
-
             $MainAlgorithm_0  = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+            $SecondAlgorithm_0 = $_.SecondaryAlgorithm
+
+            $MainAlgorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
+            $SecondAlgorithm_Norm_0 = if ($SecondAlgorithm_0) {Get-Algorithm $SecondAlgorithm_0} else {$null}
 
             $HasEthproxy = $MainAlgorithm_Norm_0 -match $Global:RegexAlgoHasEthproxy
 
@@ -162,6 +163,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
             foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)","$($MainAlgorithm_Norm_0)-GPU")) {
                 if (-not $Pools.$MainAlgorithm_Norm.Host) {continue}
+                if ($MainAlgorithm_0 -eq "kaspa" -and $Pools.$MainAlgorithm_Norm.User -notmatch "^kaspa") {continue}
 
                 if ($Pools.$MainAlgorithm_Norm.CoinSymbol) {
                     $check_algo = $false
@@ -194,7 +196,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
 
                     if ($check_algo) {
                         $Miner_Coin = Get-Coin $Pools.$MainAlgorithm_Norm.CoinSymbol
-                        if ($Miner_Coin.Algo -ne $MainAlgorithm_Norm_0) {return}
+                        if ($Miner_Coin.Algo -ne $MainAlgorithm_Norm_0) {continue}
                     }
                 }
 
@@ -240,6 +242,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","INTEL","NVIDIA")) {
                             }
 
                             foreach($SecondAlgorithm_Norm in @($SecondAlgorithm_Norm_0,"$($SecondAlgorithm_Norm_0)-$($Miner_Model)","$($SecondAlgorithm_Norm_0)-GPU")) {
+                                if ($SecondAlgorithm_0 -eq "kaspa" -and $Pools.$SecondAlgorithm_Norm.User -notmatch "^kaspa") {continue}
                                 if ($Pools.$SecondAlgorithm_Norm.Host -and $Pools.$SecondAlgorithm_Norm.User -and (-not $ExcludePoolName -or $Pools.$SecondAlgorithm_Norm.Host -notmatch $ExcludePoolName) -and (-not $_.CoinSymbol2 -or $_.CoinSymbol2 -icontains $Pools.$SecondAlgorithm_Norm.CoinSymbol) -and (-not $_.ExcludeCoinSymbol2 -or $_.ExcludeCoinSymbol2 -inotcontains $Pools.$SecondAlgorithm_Norm.CoinSymbol)) {
 
                                     $SecondPool_Port = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
