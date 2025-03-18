@@ -2509,19 +2509,18 @@ function Invoke-Core {
         $NewPools | Where-Object {-not $_.SoloMining} | Select-Object Algorithm0,CoinSymbol,Hashrate,StablePrice | Group-Object -Property {"$($_.Algorithm0)-$($_.CoinSymbol)"} | Foreach-Object {$Pools_Hashrates[$_.Name] = ($_.Group | Where-Object StablePrice | Select-Object -ExpandProperty Hashrate | Measure-Object -Maximum).Maximum;if (-not $Pools_Hashrates[$_.Name]) {$Pools_Hashrates[$_.Name]=1}}
         $NewPools | Where-Object {-not $_.SoloMining -and $_.TSL -ne $null -and $Session.Config.Pools."$($_.Name)".EnablePostBlockMining -and $_.CoinSymbol -and ($_.TSL -lt $Session.Config.Coins."$($_.CoinSymbol)".PostBlockMining)} | Foreach-Object {$_ | Add-Member PostBlockMining $true -Force}
 
-        $ActiveRunningMiners = [System.Collections.ArrayList]::new()
+        $Miner = $null
+        foreach ($Miner in $Global:ActiveMiners) {
+            if ($Miner.Status -eq [MinerStatus]::Running) {
+                for ($i = 0; $i -lt $Miner.Pool.Count; $i++) {
+                    $Pool_Ix = "$($Miner.Pool | Select-Object -Index $i)-$($Miner.BaseAlgorithm | Select-Object -Index $i)-$($Miner.CoinSymbol | Select-Object -Index $i)"
 
-        $Global:ActiveMiners | Where-Object { $_.Status -eq [MinerStatus]::Running } | Foreach-Object { [void]$ActiveRunningMiners.Add($_) }
+                    if (-not $Pools_Running.ContainsKey($Pool_Ix) -or $Pools_Running[$Pool_Ix] -gt $Miner.Rounds) {
+                        $Pools_Running[$Pool_Ix] = $Miner.Rounds
+                    }
 
-        foreach ($Miner in $ActiveRunningMiners) {
-            for ($i = 0; $i -lt $Miner.Pool.Count; $i++) {
-                $Pool_Ix = "$($Miner.Pool | Select-Object -Index $i)-$($Miner.BaseAlgorithm | Select-Object -Index $i)-$($Miner.CoinSymbol | Select-Object -Index $i)"
-
-                if (-not $Pools_Running.ContainsKey($Pool_Ix) -or $Pools_Running[$Pool_Ix] -gt $Miner.Rounds) {
-                    $Pools_Running[$Pool_Ix] = $Miner.Rounds
+                    $Pools_Benchmarking[$Pool_Ix] = $Pools_Benchmarking[$Pool_Ix] -or $Miner.NeedsBenchmark
                 }
-
-                $Pools_Benchmarking[$Pool_Ix] = $Pools_Benchmarking[$Pool_Ix] -or $Miner.NeedsBenchmark
             }
         }
 
@@ -3472,7 +3471,8 @@ function Invoke-Core {
     Write-Log "Reset active miners."
 
     #Reset the active miners
-    foreach ( $Miner in $Global:ActiveMiners ) {
+    $Miner = $null
+    foreach ($Miner in $Global:ActiveMiners) {
         $Miner.Profit = 0
         $Miner.Profit_Bias = 0
         $Miner.Profit_Unbias = 0
@@ -3499,9 +3499,11 @@ function Invoke-Core {
     #Don't penalize active miners and apply switching hysteresis, also make sure FirstRounds is respected 
     $MinerSwitchingHysteresis = 1 + $Session.Config.MinerSwitchingHysteresis/100
 
-    foreach ( $Miner in $Global:ActiveMiners ) {
+    $Miner = $null
+    foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Status -eq [MinerStatus]::Running) {
-            foreach ( $m in $Miners ) {
+            $m = $null
+            foreach ($m in $Miners) {
                 if ($m.Name -eq $Miner.Name -and
                     $m.Path -eq $Miner.Path -and
                     $m.Arguments -eq $Miner.Arguments -and
@@ -3560,9 +3562,10 @@ function Invoke-Core {
     Write-Log "Update active miners."
     
     #Update the active miners
-    foreach ( $Miner in $Miners ) {
+    $Miner = $null
+    foreach ($Miner in $Miners) {
 
-        $ActiveMiner = $null
+        $ActiveMiner = $m = $null
         foreach ($m in $Global:ActiveMiners) {
             if (
                 $m.Name -eq $Miner.Name -and
@@ -3733,7 +3736,8 @@ function Invoke-Core {
 
     $ActiveMiners_DeviceNames = @(($Global:ActiveMiners | Where-Object {$_.Enabled}).DeviceName | Select-Object -Unique | Sort-Object)
 
-    foreach ( $Miner in $Global:ActiveMiners ) {
+    $Miner = $null
+    foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Profit_Cost_Bias -gt 0) {
             $Miner.Profit_Bias -= $Miner.Profit_Cost_Bias
         }
@@ -3854,6 +3858,7 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0) {Write-Host "Starting mining operation .."}
 
     #Stop failed miners
+    $Miner = $null
     foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.GetStatus() -eq [MinerStatus]::RunningFailed) {
             Write-Log "Stopping crashed miner ($($Miner.Name)) "
@@ -3864,6 +3869,7 @@ function Invoke-Core {
     }
 
     # Stop miners in the active list depending on profitability
+    $Miner = $null
     foreach ($Miner in $Global:ActiveMiners) {
         if ((-not $Miner.Best -or $Session.RestartMiners -or $Miner.Restart) -and 
             $Miner.Activated -gt 0 -and 
@@ -3910,6 +3916,7 @@ function Invoke-Core {
 
     #Kill maroding miners
     $Running_ProcessIds = [System.Collections.Generic.HashSet[int]]::new()
+    $Miner = $null
     foreach ($Miner in $Global:ActiveMiners) {
         foreach ($ProcessId in $Miner.GetProcessIds()) {
             if ($ProcessId) { [void]$Running_ProcessIds.Add($ProcessId) }
@@ -3917,6 +3924,7 @@ function Invoke-Core {
     }
 
     $Running_MinerPaths = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Miner = $null
     foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Path) {
             $MinerPath = Split-Path -Leaf $Miner.Path
@@ -3961,6 +3969,7 @@ function Invoke-Core {
     if ($Session.Config.EthPillEnable -ne "disable") {
         $Running_ProcessIds = [System.Collections.Generic.List[int]]::new()
 
+        $Miner = $null
         foreach ($Miner in $Global:ActiveMiners) {
             if ($Miner.EthPillJob) {
                 [void]$Running_ProcessIds.Add($Miner.EthPillJob.ProcessId)
@@ -3996,6 +4005,7 @@ function Invoke-Core {
     if ($Session.Config.Delay -gt 0) {Start-Sleep $Session.Config.Delay} #Wait to prevent BSOD
 
     # Process Active Miners that should start
+    $Miner = $null
     foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Best -and ($Miner.Status -ne [MinerStatus]::Running)) {
 
@@ -4006,8 +4016,9 @@ function Invoke-Core {
                 if ($MSIAenabled) {
                     $MSIAplannedprofile = [System.Collections.Generic.HashSet[int]]::new()
 
-                    foreach ($Miner in $Global:ActiveMiners) {
-                        if ($Miner.Best -eq $true -and $Miner.MSIAprofile -ne $null -and $Miner.MSIAprofile -gt 0) {
+                    $m = $null
+                    foreach ($m in $Global:ActiveMiners) {
+                        if ($m.Best -and $m.MSIAprofile -ne $null -and $m.MSIAprofile -gt 0) {
                             [void]$MSIAplannedprofile.Add($Miner.MSIAprofile)
                         }
                     }
@@ -4106,6 +4117,7 @@ function Invoke-Core {
     $IsExclusiveRun = $Session.IsExclusiveRun
 
     $NextIsExclusiveRun = $false
+    $Miner = $null
     foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.IsExclusiveMiner -and $Miner.Status -eq [MinerStatus]::Running) {
             $NextIsExclusiveRun = $true
@@ -4378,6 +4390,7 @@ function Invoke-Core {
     $CurrentPowerDrawCPU = 0
     $CurrentPowerDrawGPU = 0
 
+    $Miner = $null
     foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Status -eq [MinerStatus]::Running) {
             $CurrentProfitTotal += $Miner.Profit
@@ -4847,7 +4860,8 @@ function Invoke-Core {
     Set-MinerStats ($Session.Timer - $MinerStart)
 
     #Cleanup stopped miners
-    foreach ( $Miner in $Global:ActiveMiners ) {
+    $Miner = $null
+    foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Stopped) {
             $Miner.StopMiningPostCleanup()
         }
@@ -4922,7 +4936,8 @@ function Stop-Core {
 
     Write-Log "Gracefully halting RainbowMiner"
     $ExcavatorWindowsClosed = [System.Collections.Generic.List[string]]::new()
-    foreach ( $Miner in $Global:ActiveMiners ) {
+    $Miner = $null
+    foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Activated -gt 0 -or $Miner.GetStatus() -eq [MinerStatus]::Running) {
             if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
                 Write-Log "Closing miner $($Miner.Name)"
@@ -5277,7 +5292,8 @@ function Set-MinerStats {
     )
 
     $Miner_Failed_Total = 0
-    foreach ( $Miner in $Global:ActiveMiners ) {
+    $Miner = $null
+    foreach ($Miner in $Global:ActiveMiners) {
 
         if ($Miner.New) {$Miner.New = [Boolean]($Miner.BaseAlgorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Sub $Global:DeviceCache.DevicesToVendors[$Miner.DeviceModel])})}
 
@@ -5358,7 +5374,7 @@ function Set-MinerStats {
 
         foreach ($CurrentModel in $Session.Config.DeviceModel) {
             if ($CurrentModel -notmatch "-") {
-                $BestMiner = $null
+                $Miner = $BestMiner = $null
                 foreach ($Miner in $Global:ActiveMiners) {
                     if ($Miner.Profit -ne $null -and $Miner.DeviceModel -eq $CurrentModel -and $Miner.Pool -notcontains "MiningRigRentals") {
                         if (-not $BestMiner -or $Miner.Profit -gt $BestMiner.Profit) {
@@ -5714,7 +5730,8 @@ function Update-ActiveMiners {
     $MinersUpdated = 0
     $MinersFailed  = 0
     $ExclusiveMinersFailed = 0
-    foreach ( $Miner in $Global:ActiveMiners ) {
+    $Miner = $null
+    foreach ($Miner in $Global:ActiveMiners) {
         if ($Miner.Best) {
             $Miner_Status = $Miner.GetStatus()
             if ($Miner_Status -eq [MinerStatus]::Running) {
