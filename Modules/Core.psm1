@@ -2942,6 +2942,7 @@ function Invoke-Core {
 
     $AllMiners_VersionCheck = [hashtable]@{}
     $Miner_Arguments_List   = [System.Collections.Generic.List[string]]::new()
+    $Miner_Paths            = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     $MinerUpdateDB = $null
 
@@ -3099,6 +3100,8 @@ function Invoke-Core {
             }
 
             $Miner_UriJson = Join-Path (Get-MinerInstPath $Miner.Path) "_uri.json"
+
+            [void]$Miner_Paths.Add($Miner.Path)
 
             if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {
 
@@ -3356,26 +3359,34 @@ function Invoke-Core {
 
     #$Global:StatsCache = $null
 
+    $AllMiners = $null
+    Remove-Variable -Name AllMiners -ErrorAction Ignore
+
     #Open firewall ports for all miners
     if ($IsWindows) {
         try {
             if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
                 if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
-                    if ($Global:MinerFirewalls -eq $null) {$Global:MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
-                    $OpenFirewallFor = "$(@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Global:MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ConvertTo-Json -Depth 10 -Compress)"
-                    if ($OpenFirewallFor -ne "") {
-                        Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); ('$OpenFirewallFor' | ConvertFrom-Json -ErrorAction Ignore) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
+                    if ($Global:MinerFirewalls -eq $null) {
+                        $Global:MinerFirewalls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                        foreach( $AppWall in Get-NetFirewallApplicationFilter ) {
+                            if ($AppWall.Program -like "$(Get-Location)\Bin\*") {
+                                [void]$Global:MinerFirewalls.Add($AppWall.Program)
+                            }
+                        }
+                    }
+
+                    [void]$Miner_Paths.ExceptWith($Global:MinerFirewalls)
+
+                    if ($Miner_Paths.Count) {
+                        Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) -ArgumentList "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) { " -SkipEditionCheck" }); @('$($Miner_Paths -join "','")') | ForEach-Object {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -Verb runAs -WindowStyle Hidden
                         $Global:MinerFirewalls = $null
-                        $OpenFirewallFor = $null
-                        Remove-Variable -Name OpenFirewallFor -ErrorAction Ignore
                     }
                 }
             }
         } catch {}
     }
-
-    $AllMiners = $null
-    Remove-Variable -Name AllMiners -ErrorAction Ignore
+    $Miner_Paths = $null
 
     # Remove miners with developer fee
     if ($Session.Config.ExcludeMinersWithFee) {
