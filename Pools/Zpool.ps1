@@ -100,6 +100,10 @@ $Pool_Request.PSObject.Properties.Name | ForEach-Object {
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
+    if ($Pool_Algorithm_Norm -eq "FiroPow" -and $Pool_CoinSymbol -eq "SCC") {
+        $Pool_CoinSymbol = $Pool_CoinName = $null
+    }
+
     foreach($Pool_SSL in ($false,$true)) {
         if ($Pool_SSL) {
             if (-not $Pool_Request.$_.ssl_port) {continue}
