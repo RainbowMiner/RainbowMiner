@@ -3367,6 +3367,7 @@ function Invoke-Core {
         try {
             if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
                 if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
+                    Write-Log -Level Warn "Firewall now"
                     if ($Global:MinerFirewalls -eq $null) {
                         $Global:MinerFirewalls = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                         foreach( $AppWall in Get-NetFirewallApplicationFilter ) {
@@ -3379,7 +3380,11 @@ function Invoke-Core {
                     [void]$Miner_Paths.ExceptWith($Global:MinerFirewalls)
 
                     if ($Miner_Paths.Count) {
-                        Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) -ArgumentList "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) { " -SkipEditionCheck" }); @('$($Miner_Paths -join "','")') | ForEach-Object {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -Verb runAs -WindowStyle Hidden
+                        $ScriptBlock = "
+                            Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) { " -SkipEditionCheck" })
+                            @('$($Miner_Paths -join "','")') | ForEach-Object {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}
+                        "
+                        Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) -ArgumentList "-Command &{ $ScriptBlock }" -Verb runAs -WindowStyle Hidden
                         $Global:MinerFirewalls = $null
                     }
                 }
