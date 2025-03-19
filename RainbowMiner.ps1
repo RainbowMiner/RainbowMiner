@@ -476,7 +476,11 @@ if (Test-Path $ConfigFile) {
 }
 
 #Start the log
-if (-not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\$(if ($SetupOnly) {"Setup"} else {"RainbowMiner"})_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
+if (-not $psISE -and $Session.LogLevel -ne "Silent") {
+    try {
+        Start-Transcript ".\Logs\$(if ($SetupOnly) {"Setup"} else {"RainbowMiner"})_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
+    } catch { }
+}
 
 Write-Log "Starting RainbowMiner v$($Session.Version)"
 
@@ -513,8 +517,10 @@ if ($IsWindows -and $Session.IsAdmin) {
 
 #Begin capture of the current console output
 if (-not $SetupOnly) {
-    Start-Transcript ".\Logs\console.txt" > $null
-    $Session.ConsoleCapture = $true
+    try {
+        Start-Transcript ".\Logs\console.txt" > $null
+        $Session.ConsoleCapture = $true
+    } catch { }
 }
 
 if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
@@ -525,7 +531,9 @@ if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
 
         #Stop the console capture
         if ($Session.ConsoleCapture) {
-            Stop-Transcript > $null
+            try {
+                Stop-Transcript > $null
+            } catch { }
             $Session.ConsoleCapture = $false
         }
 
@@ -550,13 +558,17 @@ if (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly) {
 
 #Stop the console capture
 if ($Session.ConsoleCapture) {
-    Stop-Transcript > $null
+    try {
+        Stop-Transcript > $null
+    } catch { }
     $Session.ConsoleCapture = $false
 }
 
 #Stop the log
 if (-not $psISE -and $Session.LogLevel -ne "Silent") {
-    Stop-Transcript
+    try {
+        Stop-Transcript
+    } catch { }
 }
 
 if ($IsWindows) {

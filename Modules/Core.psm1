@@ -4147,8 +4147,10 @@ function Invoke-Core {
 
     if (-not $Session.ConsoleCapture) {
         #Begin capture of the current console output
-        Start-Transcript ".\Logs\console.txt" -Force > $null
-        $Session.ConsoleCapture = $true
+        try {
+            Start-Transcript ".\Logs\console.txt" -Force > $null
+            $Session.ConsoleCapture = $true
+        } catch { }
     }
 
     if ([Math]::Abs($Session.TimeDiff) -gt 60) {
@@ -5434,7 +5436,9 @@ function Invoke-ReportMinerStatus {
 
     #Stop the console capture
     if ($Session.ConsoleCapture) {
-        Stop-Transcript > $null
+        try {
+            Stop-Transcript > $null
+        } catch { }
         $Session.ConsoleCapture = $false
     }
 
