@@ -3354,9 +3354,6 @@ function Invoke-Core {
     $Miners_Downloading    = $Miners_DownloadList.Count
     $Miners_DownloadingPrq = $Miners_DownloadListPrq.Count
 
-    $AllMiners = $null
-    Remove-Variable -Name AllMiners -ErrorAction Ignore
-
     #$Global:StatsCache = $null
 
     #Open firewall ports for all miners
@@ -3376,6 +3373,9 @@ function Invoke-Core {
             }
         } catch {}
     }
+
+    $AllMiners = $null
+    Remove-Variable -Name AllMiners -ErrorAction Ignore
 
     # Remove miners with developer fee
     if ($Session.Config.ExcludeMinersWithFee) {
