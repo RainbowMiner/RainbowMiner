@@ -36,9 +36,9 @@ function Initialize-Session {
         $Session.UnixEpoch          = [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, ([System.DateTimeKind]::Utc))
 
         Set-Variable RegexAlgoHasEthproxy -Option Constant -Scope Global -Value "^Etc?hash|ProgPow|^Meraki|UbqHash"
-        Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|^FiroPow|^Meraki|UbqHash|Octopus"
+        Set-Variable RegexAlgoHasDAGSize -Option Constant -Scope Global -Value "^Etc?hash|^KawPow|ProgPow|^FiroPow|^MeowPow|^Meraki|^NexaPow|^SccPow|UbqHash|Octopus"
         Set-Variable RegexAlgoIsEthash -Option Constant -Scope Global -Value "^Etc?hash|UbqHash"
-        Set-Variable RegexAlgoIsProgPow -Option Constant -Scope Global -Value "^KawPow|ProgPow|^FiroPow|^Meraki"
+        Set-Variable RegexAlgoIsProgPow -Option Constant -Scope Global -Value "^KawPow|ProgPow|^FiroPow|^MeowPow|^Meraki|^NexaPow|^SccPow|Octopus"
     }
 }
 
@@ -1204,12 +1204,22 @@ function Get-EthDAGSizes {
         $Request = Get-ContentByStreamReader ".\Data\ethdagsizes.json" | ConvertFrom-Json -ErrorAction Ignore
     }
     $Session.GlobalEthDAGSizes = [PSCustomObject]@{}
+    $Session.GlobalAlgorithms2EthDagSizes = [PSCustomObject]@{}
+
     $Request.PSObject.Properties | Foreach-Object {$Session.GlobalEthDAGSizes | Add-Member $_.Name ($_.Value/1Gb)}
 
-    $SingleAlgos = $Session.GlobalCoinsDB.Values | Group-Object -Property Algo | Where-Object {$_.Count -eq 1} | Select-Object -ExpandProperty Name
-    $Session.GlobalAlgorithms2EthDagSizes = [PSCustomObject]@{}
-    $Session.GlobalCoinsDB.GetEnumerator() | Where-Object {$Coin = $_.Name -replace "-.+$";$Session.GlobalEthDAGSizes.$Coin} | Where-Object {$Algo = Get-Algorithm $_.Value.Algo;$Algo -in $SingleAlgos -and $Algo -match $Global:RegexAlgoHasDAGSize -and $_.Value.Name -notmatch "Testnet"} | Foreach-Object {
-        if ($Session.GlobalAlgorithms2EthDagSizes.$Algo -eq $null) {
+    $SingleAlgos = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $Session.GlobalCoinsDB.Values | Group-Object -Property Algo | Where-Object {$_.Count -eq 1 -or $_.Name -eq "FiroPow" -or $_.Name -eq "ProgPowEpic" -or $_.Name -eq "ProgPowZ"} | Foreach-Object {[void]$SingleAlgos.Add($_.Name)}
+
+    foreach ( $Coin in $Session.GlobalCoinsDB.Keys ) {
+        $Coin = $Coin -replace "-.+$"
+        if (-not $Session.GlobalEthDAGSizes.$Coin) { continue }
+        $CoinData = $Session.GlobalCoinsDB.$Coin
+        if (-not $SingleAlgos.Contains($CoinData.Algo)) { continue }
+        if ($CoinData.Name -match "testnet") { continue }
+        if ($CoinData.Algo -notmatch $Global:RegexAlgoHasDAGSize) { continue }
+        
+        if (-not $Session.GlobalAlgorithms2EthDagSizes.PSObject.Properties[$Algo]) {
             $Session.GlobalAlgorithms2EthDagSizes | Add-Member $Algo $Session.GlobalEthDAGSizes.$Coin -Force
         } elseif ($Session.GlobalAlgorithms2EthDagSizes.$Algo -lt $Session.GlobalEthDAGSizes.$Coin) {
             $Session.GlobalAlgorithms2EthDagSizes.$Algo = $Session.GlobalEthDAGSizes.$Coin
